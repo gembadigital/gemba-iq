@@ -1,0 +1,24 @@
+{
+  "name": "Gemba IQ Enterprise Workspace",
+  "short_name": "Gemba IQ",
+  "description": "Enterprise-grade mail merge assistant and digital lean transformation workspace powered by Microsoft Graph API & CRM intelligence",
+  "start_url": "/",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#f8fafc",
+  "theme_color": "#4f46e5",
+  "icons": [
+    {
+      "src": "/gmb_iq_logo.jpg",
+      "sizes": "192x192",
+      "type": "image/jpeg",
+      "purpose": "any"
+    },
+    {
+      "src": "/gmb_iq_logo.jpg",
+      "sizes": "512x512",
+      "type": "image/jpeg",
+      "purpose": "any"
+    }
+  ]
+}

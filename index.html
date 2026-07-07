@@ -1,0 +1,32 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Gemba IQ Enterprise Workspace</title>
+    <!-- PWA Manifest & Icons -->
+    <link rel="manifest" href="/manifest.json" />
+    <meta name="theme-color" content="#4f46e5" />
+    <link rel="icon" type="image/jpeg" href="/gmb_iq_logo.jpg" />
+    <link rel="apple-touch-icon" href="/gmb_iq_logo.jpg" />
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet" />
+  </head>
+  <body class="bg-[#f8fafc] text-slate-900 overflow-x-hidden antialiased">
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+    <script>
+      // Service Worker Registration for PWA support
+      if ("serviceWorker" in navigator) {
+        window.addEventListener("load", () => {
+          navigator.serviceWorker.register("/sw.js")
+            .then((reg) => console.log("Service Worker successfully registered!", reg.scope))
+            .catch((err) => console.error("Service Worker registration failed:", err));
+        });
+      }
+    </script>
+  </body>
+</html>
+

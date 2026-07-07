@@ -1,0 +1,8 @@
+{
+  "name": "Gemba IQ Enterprise Workspace",
+  "description": "A progressive web app that integrates Microsoft 365 Outlook with excel/csv mail merge capabilities to send highly personalized individual emails with rich templates, attachment support, sending controls, PDF reporting, and an advanced CRM Company Discovery Engine for finding and analyzing targets.",
+  "requestFramePermissions": [],
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}

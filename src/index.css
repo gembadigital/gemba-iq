@@ -1,0 +1,1168 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&family=JetBrains+Mono:wght@400;500;600&display=swap');
+@import "tailwindcss";
+
+@variant dark (&:where(.dark, .dark *));
+
+@theme {
+  --font-sans: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, Monaco, monospace;
+  --font-display: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  
+  --color-brand-50: #eaf2ff;
+  --color-brand-100: #eaf2ff;
+  --color-brand-200: #c5dcff;
+  --color-brand-300: #9fc5ff;
+  --color-brand-400: #4a8fff;
+  --color-brand-500: #1E3A5F;
+  --color-brand-600: #162c4a;
+  --color-brand-700: #0f1e33;
+  --color-brand-800: #08111c;
+  
+  --color-ms-blue: #1E3A5F;
+  --color-ms-bg-blue: #1E3A5F;
+
+  --font-size-xs: 13px;
+  --font-size-sm: 14px;
+  --font-size-base: 14px;
+  --font-size-lg: 16px;
+  --font-size-xl: 20px;
+  --font-size-2xl: 24px;
+  --font-size-3xl: 28px;
+}
+
+@layer utilities {
+  .ms-border {
+    border-color: #E6EAF0;
+  }
+  .dark .ms-border {
+    border-color: #323130;
+  }
+}
+
+/* Custom Base / Component Styles */
+@layer base {
+  body {
+    font-family: var(--font-sans);
+    background-color: #F7F8FC !important;
+    font-size: 14px;
+    line-height: 1.5;
+    color: #1a1a24;
+  }
+  .dark body {
+    background-color: #0c0a09 !important;
+    color: #f3f2f1;
+  }
+}
+
+/* Elegant custom scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
+}
+
+/* Rich Text Editor Styles */
+.editor-bubble-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 6px;
+  color: #475569;
+  transition: all 0.2s;
+}
+
+.editor-bubble-btn:hover {
+  background-color: #f1f5f9;
+  color: #0f172a;
+}
+
+.editor-bubble-btn.active {
+  background-color: #e2e8f0;
+  color: #0078d4;
+}
+
+/* Custom shadow patterns matching fluent UI */
+.fluent-card {
+  box-shadow: 0 1.6px 3.6px 0 rgba(0,0,0,0.132), 0 0.3px 0.9px 0 rgba(0,0,0,0.108);
+}
+
+.fluent-card-hover {
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.fluent-card-hover:hover {
+  box-shadow: 0 6.4px 14.4px 0 rgba(0,0,0,0.132), 0 1.2px 3.6px 0 rgba(0,0,0,0.108);
+  transform: translateY(-2px);
+}
+
+/* ==========================================================================
+   ATTIO CRM / MINIMALIST HIGH-CONTRAST ENGINE OVERRIDES
+   ========================================================================== */
+.notion-layout {
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif !important;
+  --font-sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif !important;
+}
+
+/* Yüksek Okunabilirlik: Gündüz şartlarında ultra net ve yüksek kontrastlı arka plan */
+.notion-layout body,
+.notion-layout .min-h-screen,
+.notion-layout main,
+.notion-layout .bg-[#F3F2F1] {
+  background-color: #fafafa !important;
+  color: #0c0a09 !important; /* Derin siyah/ton, maksimum kontrast */
+}
+
+/* Yüksek Okunabilirlik: Gece şartlarında (saha kullanımı) gözü yormayan ama yüksek kontrast sunan karanlık mod */
+.notion-layout.dark body,
+.notion-layout.dark .min-h-screen,
+.notion-layout.dark main,
+.notion-layout.dark .bg-[#11100f] {
+  background-color: #09090b !important; /* Güvenli siyah */
+  color: #fafafa !important; /* Kristal beyazlığı */
+}
+
+/* Attio Sidebar (Light) - Temiz ayrım çizgisi ve geniş negatif alan */
+.notion-layout aside,
+.notion-layout .bg-[#F3F2F1].dark\:bg-[#1b1a19] {
+  background-color: #ffffff !important;
+  border-right: 1px solid #d4d4d8 !important; /* Daha da görünür kontrast */
+  padding: 1.5rem 1.25rem !important; /* Geniş boşluklar */
+}
+
+/* Attio Sidebar (Dark) */
+.notion-layout.dark aside,
+.notion-layout.dark .bg-[#F3F2F1].dark\:bg-[#1b1a19] {
+  background-color: #0c0a09 !important;
+  border-right: 1px solid #27272a !important;
+  padding: 1.5rem 1.25rem !important;
+}
+
+/* Attio Card Styling: Elegant rounded cells, soft clean borders, pure white backgrounds, bol negatif boşluk */
+.notion-layout .fluent-card,
+.notion-layout div.bg-white:not(button):not(input):not(select):not(textarea):not(a),
+.notion-layout div.rounded-xl:not(button):not(input):not(select):not(textarea):not(a),
+.notion-layout div.rounded-2xl:not(button):not(input):not(select):not(textarea):not(a),
+.notion-layout div.shadow-sm:not(button):not(input):not(select):not(textarea):not(a),
+.notion-layout div.shadow-md:not(button):not(input):not(select):not(textarea):not(a),
+.notion-layout div.shadow-lg:not(button):not(input):not(select):not(textarea):not(a) {
+  background-color: #ffffff !important;
+  box-shadow: 0 1px 3px 0 rgba(9, 9, 11, 0.05), 0 1px 2px -1px rgba(9, 9, 11, 0.05) !important;
+  border-radius: 8px !important;
+  border: 1px solid #e4e4e7 !important;
+  padding: 1.75rem !important; /* Modern Minimalizm: Bol negatif boşluk */
+}
+
+.notion-layout.dark .fluent-card,
+.notion-layout.dark div.bg-white:not(button):not(input):not(select):not(textarea):not(a),
+.notion-layout.dark div.rounded-xl:not(button):not(input):not(select):not(textarea):not(a),
+.notion-layout.dark div.rounded-2xl:not(button):not(input):not(select):not(textarea):not(a),
+.notion-layout.dark div.shadow-sm:not(button):not(input):not(select):not(textarea):not(a),
+.notion-layout.dark div.shadow-md:not(button):not(input):not(select):not(textarea):not(a),
+.notion-layout.dark div.shadow-lg:not(button):not(input):not(select):not(textarea):not(a),
+.notion-layout.dark .bg-[#201f1e],
+.notion-layout.dark .bg-[#252423] {
+  background-color: #121214 !important;
+  box-shadow: none !important;
+  border-radius: 8px !important;
+  border: 1px solid #27272a !important;
+  padding: 1.75rem !important; /* Modern Minimalizm: Bol negatif boşluk */
+}
+
+/* Cards Hover in Notion / Attio */
+.notion-layout .fluent-card-hover:hover,
+.notion-layout .bg-white:hover {
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -2px rgba(0, 0, 0, 0.05) !important;
+  border-color: #a1a1aa !important; /* Keskin odaklanma */
+  background-color: #ffffff !important;
+  transform: translateY(-1px) !important;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1) !important;
+}
+.notion-layout.dark .fluent-card-hover:hover,
+.notion-layout.dark .bg-white:hover {
+  border-color: #52525b !important;
+  background-color: #1c1917 !important;
+}
+
+/* Notion/Attio Buttons */
+.notion-layout button,
+.notion-layout select,
+.notion-layout input,
+.notion-layout textarea {
+  border-radius: 6px !important;
+}
+
+/* Header, Input, Border Colors with High Contrast for field-operations */
+.notion-layout .border,
+.notion-layout .border-slate-200,
+.notion-layout .border-[#EDEBE9],
+.notion-layout .border-indigo-200 {
+  border-color: #d4d4d8 !important; /* Mühendislik odaklı kesin kenarlıklar */
+}
+.notion-layout.dark .border,
+.notion-layout.dark .border-[#323130],
+.notion-layout.dark .border-slate-800,
+.notion-layout.dark .border-indigo-950\/40 {
+  border-color: #27272a !important;
+}
+
+/* Attio Inputs with Spacious Padding & Max Contrast */
+.notion-layout input,
+.notion-layout select,
+.notion-layout textarea {
+  background-color: #ffffff !important;
+  border: 1px solid #c8c8cc !important;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace !important; /* Mühendislik havası için mono form doldurma */
+  box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.02) !important;
+  padding: 0.625rem 0.875rem !important; /* Negatif boşluklu girdiler */
+  color: #0c0a09 !important;
+}
+.notion-layout.dark input,
+.notion-layout.dark select,
+.notion-layout.dark textarea {
+  background-color: #0c0a09 !important;
+  border: 1px solid #3f3f46 !important;
+  color: #f4f4f5 !important;
+}
+
+/* Highlight tags with Attio look */
+.notion-layout .bg-indigo-500\/10,
+.notion-layout .bg-indigo-50 {
+  background-color: rgba(37, 99, 235, 0.08) !important;
+  color: #2563eb !important;
+  font-family: ui-monospace, SFMono-Regular, monospace !important;
+}
+.notion-layout .bg-emerald-500\/10,
+.notion-layout .bg-emerald-50 {
+  background-color: rgba(22, 163, 74, 0.08) !important;
+  color: #16a34a !important;
+  font-family: ui-monospace, SFMono-Regular, monospace !important;
+}
+.notion-layout .bg-amber-500\/10,
+.notion-layout .bg-amber-50 {
+  background-color: rgba(217, 119, 6, 0.1) !important;
+  color: #d97706 !important;
+  font-family: ui-monospace, SFMono-Regular, monospace !important;
+}
+
+/* Mühendislik Havası: Tablo hücreleri ve veri satırlarında hesaplanmış, kesin monospace fontlar */
+.notion-layout table th,
+.notion-layout table td,
+.notion-layout .font-mono,
+.notion-layout [class*="font-mono"] {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace !important;
+}
+
+/* Table styling with High Contrast & Perfect Gaps */
+.notion-layout table th {
+  background-color: #f4f4f5 !important;
+  font-weight: 600 !important;
+  font-size: 11px !important;
+  color: #3f3f46 !important;
+  letter-spacing: 0.05em !important;
+  border-bottom: 2px solid #e4e4e7 !important;
+  padding: 0.875rem 1rem !important;
+}
+.notion-layout.dark table th {
+  background-color: #18181b !important;
+  color: #a1a1aa !important;
+  border-bottom: 2px solid #27272a !important;
+}
+
+.notion-layout table td {
+  padding: 1rem !important; /* Boşluklu satırlar */
+}
+
+/* ==========================================================================
+   2026 MODERN SAAS LAYOUT ENGINE (70% Linear, 15% Apple, 10% Notion, 5% Stripe)
+   ========================================================================== */
+.saas-layout {
+  font-family: "Plus Jakarta Sans", "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif !important;
+  letter-spacing: -0.015em;
+}
+
+/* Soft neutral backgrounds (#FAFAFA) and dark high-end charcoal (#09090b) */
+.saas-layout body,
+.saas-layout .min-h-screen,
+.saas-layout main,
+.saas-layout .bg-[#F3F2F1],
+.saas-layout .bg-[#f3f2f1] {
+  background-color: #FAFAFA !important;
+  color: #0d0d12 !important;
+}
+
+.saas-layout.dark body,
+.saas-layout.dark .min-h-screen,
+.saas-layout.dark main,
+.saas-layout.dark .bg-[#11100f],
+.saas-layout.dark .bg-[#11100f] {
+  background-color: #09090b !important;
+  color: #fafafa !important;
+}
+
+/* Sidebar Styling: Premium Linear Left rail */
+.saas-layout aside,
+.saas-layout .bg-[#201f1e] {
+  background-color: #ffffff !important;
+  border-right: 1px solid rgba(0, 0, 0, 0.04) !important;
+  box-shadow: none !important;
+}
+
+.saas-layout.dark aside,
+.saas-layout.dark .bg-[#201f1e] {
+  background-color: #0c0c0e !important;
+  border-right: 1px solid rgba(255, 255, 255, 0.04) !important;
+  box-shadow: none !important;
+}
+
+/* Borderless sections & rounded corners 12px for cards */
+.saas-layout .fluent-card,
+.saas-layout div.bg-white:not(button):not(input):not(select):not(textarea):not(a),
+.saas-layout div.rounded-xl:not(button):not(input):not(select):not(textarea):not(a),
+.saas-layout div.rounded-2xl:not(button):not(input):not(select):not(textarea):not(a),
+.saas-layout div.shadow-sm:not(button):not(input):not(select):not(textarea):not(a),
+.saas-layout div.shadow-md:not(button):not(input):not(select):not(textarea):not(a),
+.saas-layout div.shadow-lg:not(button):not(input):not(select):not(textarea):not(a) {
+  background-color: #ffffff !important;
+  border: 1px solid rgba(0, 0, 0, 0.04) !important;
+  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.01), 0 1px 2px -1px rgba(0, 0, 0, 0.01) !important;
+  border-radius: 12px !important;
+}
+
+.saas-layout.dark .fluent-card,
+.saas-layout.dark div.bg-white:not(button):not(input):not(select):not(textarea):not(a),
+.saas-layout.dark div.rounded-xl:not(button):not(input):not(select):not(textarea):not(a),
+.saas-layout.dark div.rounded-2xl:not(button):not(input):not(select):not(textarea):not(a),
+.saas-layout.dark div.shadow-sm:not(button):not(input):not(select):not(textarea):not(a),
+.saas-layout.dark div.shadow-md:not(button):not(input):not(select):not(textarea):not(a),
+.saas-layout.dark div.shadow-lg:not(button):not(input):not(select):not(textarea):not(a),
+.saas-layout.dark .bg-[#201f1e],
+.saas-layout.dark .bg-[#252423],
+.saas-layout.dark .bg-[#11100f] {
+  background-color: #121215 !important;
+  border: 1px solid rgba(255, 255, 255, 0.04) !important;
+  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px -1px rgba(0, 0, 0, 0.1) !important;
+  border-radius: 12px !important;
+}
+
+/* Smooth interactions on cards */
+.saas-layout .fluent-card-hover {
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1) !important;
+}
+.saas-layout .fluent-card-hover:hover {
+  box-shadow: 0 12px 24px -10px rgba(0, 0, 0, 0.04) !important;
+  border-color: rgba(0, 0, 0, 0.08) !important;
+  transform: translateY(-1px) !important;
+}
+.saas-layout.dark .fluent-card-hover:hover {
+  box-shadow: 0 12px 24px -10px rgba(0, 0, 0, 0.4) !important;
+  border-color: rgba(255, 255, 255, 0.08) !important;
+  transform: translateY(-1px) !important;
+}
+
+/* Inputs, buttons, selections: rounded-xl with subtle shadows */
+.saas-layout button,
+.saas-layout select,
+.saas-layout input,
+.saas-layout textarea {
+  border-radius: 10px !important;
+  transition: all 0.15s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.saas-layout input,
+.saas-layout select,
+.saas-layout textarea {
+  background-color: #ffffff !important;
+  border: 1px solid rgba(0, 0, 0, 0.08) !important;
+  box-shadow: 0 1px 2px 0 rgba(0,0,0,0.02) !important;
+}
+
+.saas-layout.dark input,
+.saas-layout.dark select,
+.saas-layout.dark textarea {
+  background-color: #18181b !important;
+  border: 1px solid rgba(255, 255, 255, 0.08) !important;
+  box-shadow: none !important;
+}
+
+/* Focus and active states */
+.saas-layout input:focus,
+.saas-layout select:focus,
+.saas-layout textarea:focus {
+  border-color: #0078D4 !important;
+  box-shadow: 0 0 0 2px rgba(0, 120, 212, 0.12) !important;
+}
+
+/* Layout border colors */
+.saas-layout .border,
+.saas-layout .border-slate-200,
+.saas-layout .border-[#EDEBE9],
+.saas-layout .border-indigo-200 {
+  border-color: rgba(0, 0, 0, 0.04) !important;
+}
+.saas-layout.dark .border,
+.saas-layout.dark .border-[#323130],
+.saas-layout.dark .border-slate-800,
+.saas-layout.dark .border-indigo-950\/40 {
+  border-color: rgba(255, 255, 255, 0.04) !important;
+}
+
+/* Modern minimal table styles to improve visual density and readability */
+.saas-layout table {
+  border-collapse: collapse !important;
+}
+.saas-layout table th {
+  background-color: rgba(0, 0, 0, 0.01) !important;
+  font-weight: 600 !important;
+  font-size: 11px !important;
+  color: #64748b !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.05em !important;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.04) !important;
+}
+.saas-layout.dark table th {
+  background-color: rgba(255, 255, 255, 0.01) !important;
+  color: #94a3b8 !important;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.04) !important;
+}
+.saas-layout table td {
+  border-bottom: 1px solid rgba(0, 0, 0, 0.03) !important;
+}
+.saas-layout.dark table td {
+  border-bottom: 1px solid rgba(255, 255, 255, 0.03) !important;
+}
+
+/* Stripe and Linear gradient badges */
+.saas-layout .bg-indigo-500\/10,
+.saas-layout .bg-indigo-50 {
+  background-color: rgba(99, 102, 241, 0.06) !important;
+  color: #6366f1 !important;
+  border: 1px solid rgba(99, 102, 241, 0.12) !important;
+}
+.saas-layout .bg-emerald-500\/10,
+.saas-layout .bg-emerald-50 {
+  background-color: rgba(16, 185, 129, 0.06) !important;
+  color: #10b981 !important;
+  border: 1px solid rgba(16, 185, 129, 0.12) !important;
+}
+.saas-layout .bg-amber-500\/10,
+.saas-layout .bg-amber-50 {
+  background-color: rgba(245, 158, 11, 0.06) !important;
+  color: #f59e0b !important;
+  border: 1px solid rgba(245, 158, 11, 0.12) !important;
+}
+.saas-layout .bg-rose-500\/10,
+.saas-layout .bg-rose-50 {
+  background-color: rgba(244, 63, 94, 0.06) !important;
+  color: #f43f5e !important;
+  border: 1px solid rgba(244, 63, 94, 0.12) !important;
+}
+
+.saas-layout .font-sans {
+  font-family: "Plus Jakarta Sans", "Inter", sans-serif !important;
+}
+
+/* Force the + Company creation button to always be solid blue with white text */
+div#root:nth-of-type(1) > div:nth-of-type(1) > main:nth-of-type(1) > div:nth-of-type(2) > div:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(2) > button:nth-of-type(3),
+#create-company-btn-action {
+  background-color: #0078D4 !important;
+  color: #ffffff !important;
+  border: 1px solid #005a9e !important;
+}
+
+div#root:nth-of-type(1) > div:nth-of-type(1) > main:nth-of-type(1) > div:nth-of-type(2) > div:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(2) > button:nth-of-type(3):hover,
+#create-company-btn-action:hover {
+  background-color: #005a9e !important;
+  color: #ffffff !important;
+  opacity: 0.95;
+}
+
+div#root:nth-of-type(1) > div:nth-of-type(1) > main:nth-of-type(1) > div:nth-of-type(2) > div:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(2) > button:nth-of-type(3) *,
+#create-company-btn-action * {
+  color: #ffffff !important;
+}
+
+/* ==========================================================================
+   UNIFIED CORPORATE DESIGN SYSTEM (COHESIVE SCHEME UNIFICATION)
+   ========================================================================== */
+
+/* 1. BUTTON UNIFICATION (EXCLUDING SPECIAL RED/GREEN STATUS STATES) */
+button, 
+.unified-btn {
+  font-family: var(--font-sans);
+  font-size: 12px !important;
+  font-weight: 600 !important;
+  border-radius: 8px !important;
+  transition: all 0.15s ease-in-out !important;
+}
+
+/* Primary/Brand Solid Buttons across all pages */
+button[class*="bg-[#0078D4]"],
+button[class*="bg-blue-"],
+button[class*="bg-indigo-"],
+button[class*="bg-brand-"],
+button[class*="bg-violet-"]:not([class*="-55"]):not([class*="-105"]),
+button[class*="bg-primary"],
+button#create-company-btn-action,
+.btn-primary-unified {
+  background-color: #0078D4 !important;
+  color: #ffffff !important;
+  border: 1px solid #005a9e !important;
+  box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05) !important;
+}
+
+button[class*="bg-[#0078D4]"]:hover,
+button[class*="bg-blue-"]:hover,
+button[class*="bg-indigo-"]:hover,
+button[class*="bg-brand-"]:hover,
+button[class*="bg-violet-"]:not([class*="-55"]):not([class*="-105"]):hover,
+button[class*="bg-primary"]:hover,
+.btn-primary-unified:hover {
+  background-color: #005a9e !important;
+  border-color: #004578 !important;
+  opacity: 1 !important;
+}
+
+button[class*="bg-[#0078D4]"] *,
+button[class*="bg-blue-"] *,
+button[class*="bg-indigo-"] *,
+button[class*="bg-brand-"] *,
+button[class*="bg-primary"] * {
+  color: #ffffff !important;
+}
+
+/* Secondary / Bordered Buttons */
+button[class*="border-[#EDEBE9]"],
+button[class*="bg-white"]:not([class*="bg-blue-"]):not([class*="bg-indigo-"]):not([class*="bg-brand-"]):not([class*="bg-[#0078D4]"]):not([class*="bg-rose-"]):not([class*="bg-red-"]):not([class*="bg-red-600"]):not([class*="bg-emerald-"]),
+button[class*="bg-[#FAF9F8]"]:not([class*="bg-[#0078D4]"]):not([class*="bg-rose-"]):not([class*="bg-red-"]),
+button[class*="border-slate-"]:not([class*="bg-[#0078D4]"]):not([class*="bg-rose-"]):not([class*="bg-red-"]):not([class*="bg-emerald-"]),
+button[class*="border-zinc-"]:not([class*="bg-[#0078D4]"]):not([class*="bg-rose-"]):not([class*="bg-red-"]):not([class*="bg-emerald-"]),
+button[class*="border-gray-"]:not([class*="bg-[#0078D4]"]):not([class*="bg-rose-"]):not([class*="bg-red-"]):not([class*="bg-emerald-"]) {
+  background-color: #ffffff !important;
+  border: 1px solid #EDEBE9 !important;
+  color: #323130 !important;
+}
+
+.dark button[class*="border-[#EDEBE9]"],
+.dark button[class*="bg-white"]:not([class*="bg-blue-"]):not([class*="bg-indigo-"]):not([class*="bg-brand-"]):not([class*="bg-[#0078D4]"]):not([class*="bg-rose-"]):not([class*="bg-red-"]):not([class*="bg-red-600"]):not([class*="bg-emerald-"]),
+.dark button[class*="bg-[#FAF9F8]"]:not([class*="bg-[#0078D4]"]):not([class*="bg-rose-"]):not([class*="bg-red-"]),
+.dark button[class*="border-slate-"]:not([class*="bg-[#0078D4]"]):not([class*="bg-rose-"]):not([class*="bg-red-"]):not([class*="bg-emerald-"]),
+.dark button[class*="border-zinc-"]:not([class*="bg-[#0078D4]"]):not([class*="bg-rose-"]):not([class*="bg-red-"]):not([class*="bg-emerald-"]),
+.dark button[class*="border-gray-"]:not([class*="bg-[#0078D4]"]):not([class*="bg-rose-"]):not([class*="bg-red-"]):not([class*="bg-emerald-"]) {
+  background-color: #252423 !important;
+  border: 1px solid #323130 !important;
+  color: #f3f2f1 !important;
+}
+
+button[class*="border-[#EDEBE9]"]:hover,
+button[class*="bg-white"]:hover:not([class*="bg-blue-"]):not([class*="bg-indigo-"]):not([class*="bg-brand-"]):not([class*="bg-[#0078D4]"]):not([class*="bg-rose-"]):not([class*="bg-red-"]):not([class*="bg-red-600"]),
+button[class*="border-slate-"]:hover:not([class*="bg-[#0078D4]"]):not([class*="bg-rose-"]),
+button[class*="border-zinc-"]:hover:not([class*="bg-[#0078D4]"]):not([class*="bg-rose-"]),
+button[class*="border-gray-"]:hover:not([class*="bg-[#0078D4]"]):not([class*="bg-rose-"]) {
+  background-color: #f3f2f1 !important;
+}
+
+.dark button[class*="border-[#EDEBE9]"]:hover,
+.dark button[class*="bg-white"]:hover:not([class*="bg-blue-"]):not([class*="bg-indigo-"]):not([class*="bg-brand-"]):not([class*="bg-[#0078D4]"]):not([class*="bg-rose-"]):not([class*="bg-red-"]):not([class*="bg-red-600"]),
+.dark button[class*="border-slate-"]:hover:not([class*="bg-[#0078D4]"]):not([class*="bg-rose-"]),
+.dark button[class*="border-zinc-"]:hover:not([class*="bg-[#0078D4]"]):not([class*="bg-rose-"]),
+.dark button[class*="border-gray-"]:hover:not([class*="bg-[#0078D4]"]):not([class*="bg-rose-"]) {
+  background-color: #1f1e1d !important;
+}
+
+/* 2. BORDER COLOR UNIFICATION (EXCLUDING BADGE BORDERS) */
+.border,
+.border-b,
+.border-t,
+.border-l,
+.border-r,
+[class*="border-slate-"],
+[class*="border-zinc-"],
+[class*="border-gray-"],
+[class*="border-[#EDEBE9]"],
+[class*="border-[#323130]"] {
+  border-color: #EDEBE9 !important;
+}
+
+.dark .border,
+.dark .border-b,
+.dark .border-t,
+.dark .border-l,
+.dark .border-r,
+.dark [class*="border-slate-"],
+.dark [class*="border-zinc-"],
+.dark [class*="border-gray-"],
+.dark [class*="border-[#EDEBE9]"],
+.dark [class*="border-[#323130]"] {
+  border-color: #323130 !important;
+}
+
+/* Divide rules */
+.divide-y > :not([hidden]) ~ :not([hidden]),
+[class*="divide-"] > :not([hidden]) ~ :not([hidden]) {
+  border-color: #EDEBE9 !important;
+}
+.dark .divide-y > :not([hidden]) ~ :not([hidden]),
+.dark [class*="divide-"] > :not([hidden]) ~ :not([hidden]) {
+  border-color: #323130 !important;
+}
+
+/* 3. TYPOGRAPHY AND HEADINGS HIERARCHY UNIFICATION */
+h1, .h1-title,
+[class*="font-display"][class*="text-xl"],
+[class*="font-sans"][class*="text-xl"] {
+  font-family: var(--font-display) !important;
+  font-size: 1.25rem !important; /* 20px - Unified */
+  font-weight: 700 !important;
+  letter-spacing: -0.02em !important;
+  color: #1f2937 !important; /* gray-800 / slate-900 */
+}
+
+h2, .h2-title,
+[class*="font-display"][class*="text-lg"],
+[class*="font-sans"][class*="text-lg"] {
+  font-family: var(--font-display) !important;
+  font-size: 1.1rem !important; /* ~18px - Unified */
+  font-weight: 600 !important;
+  letter-spacing: -0.01em !important;
+  color: #1f2937 !important;
+}
+
+h3, .h3-title,
+[class*="font-display"][class*="text-base"],
+[class*="font-sans"][class*="text-base"] {
+  font-family: var(--font-display) !important;
+  font-size: 0.95rem !important; /* ~15px - Unified */
+  font-weight: 600 !important;
+  color: #374151 !important;
+}
+
+h4, .h4-title,
+[class*="font-display"][class*="text-sm"],
+[class*="font-sans"][class*="text-sm"] {
+  font-family: var(--font-display) !important;
+  font-size: 0.85rem !important; /* ~13.5px - Unified */
+  font-weight: 600 !important;
+  color: #4b5563 !important;
+}
+
+.dark h1, .dark .h1-title { color: #f3f4f6 !important; }
+.dark h2, .dark .h2-title { color: #f3f4f6 !important; }
+.dark h3, .dark .h3-title { color: #e5e7eb !important; }
+.dark h4, .dark .h4-title { color: #d1d5db !important; }
+
+/* 4. SUBTEXT PUNTO & COLOR UNIFICATION */
+p[class*="text-xs"],
+span[class*="text-xs"],
+div[class*="text-xs"]:not([class*="bg-"]):not([class*="p-"]):not([class*="border-"]),
+p[class*="text-[10px]"],
+p[class*="text-[11px]"],
+p[class*="text-[9px]"],
+.subtext-unified {
+  font-family: var(--font-sans) !important;
+  font-size: 11px !important; /* 11px unified subtext */
+  color: #64748b !important; /* slate-500 */
+}
+
+.dark p[class*="text-xs"],
+.dark span[class*="text-xs"],
+.dark div[class*="text-xs"]:not([class*="bg-"]):not([class*="p-"]):not([class*="border-"]),
+.dark p[class*="text-[10px]"],
+.dark p[class*="text-[11px]"],
+.dark p[class*="text-[9px]"],
+.dark .subtext-unified {
+  color: #94a3b8 !important; /* slate-400 */
+}
+
+/* Ensure form input and label pairings follow high contrast layout rules */
+label {
+  font-family: var(--font-sans) !important;
+  font-size: 11px !important;
+  font-weight: 600 !important;
+  color: #374151 !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.05em !important;
+}
+
+.dark label {
+  color: #d1d5db !important;
+}
+
+/* 5. INPUT, TEXTAREA & SELECT MODERNIZATION AND FONT ENLARGEMENT */
+input[type="text"],
+input[type="number"],
+input[type="email"],
+input[type="tel"],
+input[type="search"],
+input[type="password"],
+input[type="date"],
+input[type="time"],
+textarea,
+select,
+.unified-input {
+  font-family: var(--font-sans) !important;
+  font-size: 14px !important; /* Font size increased by 1 point (14px from standard 13px) for premium legibility */
+  font-weight: 500 !important;
+  background-color: #ffffff !important;
+  border: 1px solid #D2D0CE !important; /* Premium clean Microsoft-style border */
+  border-radius: 8px !important;
+  padding: 10px 14px !important; /* Elegant modern spacing/padding */
+  color: #323130 !important;
+  transition: all 0.15s ease-in-out !important;
+  box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.02) !important;
+}
+
+/* Ensure placeholder styling matches our premium theme */
+input::placeholder,
+textarea::placeholder {
+  color: #a19f9d !important;
+  font-size: 13px !important;
+}
+
+.dark input[type="text"],
+.dark input[type="number"],
+.dark input[type="email"],
+.dark input[type="tel"],
+.dark input[type="search"],
+.dark input[type="password"],
+.dark input[type="date"],
+.dark input[type="time"],
+.dark textarea,
+.dark select,
+.dark .unified-input {
+  background-color: #252423 !important;
+  border: 1px solid #484644 !important;
+  color: #f3f2f1 !important;
+  box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.2) !important;
+}
+
+.dark input::placeholder,
+.dark textarea::placeholder {
+  color: #797775 !important;
+}
+
+/* Hover and Focus States */
+input[type="text"]:hover,
+input[type="number"]:hover,
+input[type="email"]:hover,
+input[type="tel"]:hover,
+input[type="search"]:hover,
+input[type="password"]:hover,
+input[type="date"]:hover,
+input[type="time"]:hover,
+textarea:hover,
+select:hover {
+  border-color: #A19F9D !important;
+}
+
+.dark input[type="text"]:hover,
+.dark input[type="number"]:hover,
+.dark input[type="email"]:hover,
+.dark input[type="tel"]:hover,
+.dark input[type="search"]:hover,
+.dark input[type="password"]:hover,
+.dark input[type="date"]:hover,
+.dark input[type="time"]:hover,
+.dark textarea:hover,
+.dark select:hover {
+  border-color: #8a8886 !important;
+}
+
+input[type="text"]:focus,
+input[type="number"]:focus,
+input[type="email"]:focus,
+input[type="tel"]:focus,
+input[type="search"]:focus,
+input[type="password"]:focus,
+input[type="date"]:focus,
+input[type="time"]:focus,
+textarea:focus,
+select:focus {
+  outline: none !important;
+  border-color: #0078D4 !important;
+  box-shadow: 0 0 0 2px rgba(0, 120, 212, 0.15) !important;
+}
+
+.dark input[type="text"]:focus,
+.dark input[type="number"]:focus,
+.dark input[type="email"]:focus,
+.dark input[type="tel"]:focus,
+.dark input[type="search"]:focus,
+.dark input[type="password"]:focus,
+.dark input[type="date"]:focus,
+.dark input[type="time"]:focus,
+.dark textarea:focus,
+.dark select:focus {
+  border-color: #2899f5 !important;
+  box-shadow: 0 0 0 2px rgba(40, 153, 245, 0.25) !important;
+}
+
+/* Print Overrides for Flawless PDF Management Exports */
+@media print {
+  aside,
+  header,
+  .no-print,
+  button,
+  select,
+  input,
+  .print-hidden,
+  .global-export-bar {
+    display: none !important;
+  }
+  
+  body, 
+  main, 
+  #root, 
+  div {
+    background-color: #ffffff !important;
+    background: #ffffff !important;
+    color: #000000 !important;
+    box-shadow: none !important;
+    border-color: #e4e4e7 !important;
+  }
+  
+  main {
+    margin: 0 !important;
+    padding: 0 !important;
+    width: 100% !important;
+  }
+  
+  .fluent-card {
+    border: 1px solid #d4d4d8 !important;
+    box-shadow: none !important;
+    margin-bottom: 2rem !important;
+    page-break-inside: avoid !important;
+  }
+
+  table {
+    width: 100% !important;
+    border-collapse: collapse !important;
+    page-break-inside: auto !important;
+  }
+
+  tr {
+    page-break-inside: avoid !important;
+    page-break-after: auto !important;
+  }
+
+  h1, h2, h3, h4 {
+    color: #000000 !important;
+    page-break-after: avoid !important;
+  }
+}
+
+/* ==========================================================================
+   ENTERPRISE DESIGN SYSTEM INJECTIONS & OVERRIDES (INDUSTRIAL DESIGN SYSTEM)
+   ========================================================================== */
+
+/* 1. LAYOUT AND CONTAINER SPACE SYSTEM */
+main > div,
+.enterprise-page-container,
+[class*="p-6"]:not(button):not(input),
+[class*="p-8"]:not(button):not(input) {
+  padding: 24px !important; /* Proper spacing, was 32px/40px */
+  max-width: 1600px !important;
+  margin-left: auto !important;
+  margin-right: auto !important;
+  width: 100% !important;
+}
+
+/* Spacing between major elements */
+.space-y-6 > :not([hidden]) ~ :not([hidden]),
+.space-y-8 > :not([hidden]) ~ :not([hidden]) {
+  margin-top: 24px !important;
+}
+
+/* Grid gaps */
+.grid {
+  gap: 20px !important;
+}
+
+/* 2. MODERN MINIMAL CARDS */
+div.fluent-card,
+div.bg-white:not(button):not(input):not(select):not(textarea):not(a),
+div.rounded-xl:not(button):not(input):not(select):not(textarea):not(a),
+div.rounded-2xl:not(button):not(input):not(select):not(textarea):not(a),
+div.shadow-sm:not(button):not(input):not(select):not(textarea):not(a),
+div.shadow-md:not(button):not(input):not(select):not(textarea):not(a),
+div.shadow-lg:not(button):not(input):not(select):not(textarea):not(a) {
+  background-color: #FFFFFF !important;
+  border-radius: 6px !important; /* Clean industrial corner radius, similar to Azure/Notion */
+  padding: 20px !important;
+  border: 1px solid #E6EAF0 !important; /* Card Border: #E6EAF0 */
+  box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.02) !important;
+}
+
+.dark div.fluent-card,
+.dark div.bg-white:not(button):not(input):not(select):not(textarea):not(a),
+.dark div.rounded-xl:not(button):not(input):not(select):not(textarea):not(a),
+.dark div.rounded-2xl:not(button):not(input):not(select):not(textarea):not(a),
+.dark div.shadow-sm:not(button):not(input):not(select):not(textarea):not(a),
+.dark div.shadow-md:not(button):not(input):not(select):not(textarea):not(a),
+.dark div.shadow-lg:not(button):not(input):not(select):not(textarea):not(a) {
+  background-color: #121215 !important;
+  border-radius: 6px !important;
+  padding: 20px !important;
+  border: 1px solid #2d2d30 !important;
+  box-shadow: none !important;
+}
+
+/* 3. INPUT FIELDS (INDUSTRIAL ENTERPRISE) */
+input[type="text"],
+input[type="number"],
+input[type="email"],
+input[type="tel"],
+input[type="search"],
+input[type="password"],
+input[type="date"],
+input[type="time"],
+select,
+textarea {
+  height: 38px !important; /* Slimmer industrial height, 38px instead of 48px */
+  border-radius: 4px !important; /* Clean rectangular inputs */
+  font-size: 14px !important; /* Body / input text: 14px */
+  padding: 8px 12px !important;
+  border: 1px solid #D2D0CE !important;
+  background-color: #ffffff !important;
+  color: #1a1a24 !important;
+}
+
+textarea {
+  height: auto !important;
+  min-height: 100px !important;
+}
+
+input::placeholder,
+textarea::placeholder,
+select::placeholder {
+  font-size: 13px !important;
+  color: #8a8886 !important;
+}
+
+/* Input Labels */
+label,
+[class*="text-xs"][class*="uppercase"] {
+  font-size: 13px !important; /* Labels: 13px */
+  font-weight: 600 !important;
+  color: #4b5563 !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.03em !important;
+}
+
+.dark label,
+.dark [class*="text-xs"][class*="uppercase"] {
+  color: #a1a1aa !important;
+}
+
+/* 4. BUTTON SYSTEM */
+button[class*="px-"]:not(.tab-header):not([class*="p-1"]):not([class*="p-1.5"]):not([class*="p-2"]):not([class*="w-8"]),
+button.btn-primary-unified,
+button.unified-btn {
+  height: 38px !important; /* Industrial height: 38px */
+  border-radius: 4px !important; /* Industrial corners */
+  font-size: 14px !important; /* Typographic consistency: 14px */
+  font-weight: 500 !important;
+  padding: 8px 16px !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 8px !important;
+}
+
+/* Buttons color mapping to primary (#1E3A5F) */
+button[class*="bg-blue-"],
+button[class*="bg-indigo-"],
+button[class*="bg-brand-"],
+button[class*="bg-[#0078D4]"],
+button[class*="bg-[#0f62fe]"],
+button[class*="bg-primary"],
+button.btn-primary-unified {
+  background-color: #1E3A5F !important; /* Primary: #1E3A5F */
+  border: 1px solid #162c4a !important;
+  color: #ffffff !important;
+}
+
+button[class*="bg-blue-"]:hover,
+button[class*="bg-indigo-"]:hover,
+button[class*="bg-brand-"]:hover,
+button[class*="bg-[#0078D4]"]:hover,
+button[class*="bg-[#0f62fe]"]:hover,
+button[class*="bg-primary"]:hover {
+  background-color: #162c4a !important;
+  border-color: #0f1e33 !important;
+}
+
+/* 5. TABLES SYSTEM (EXCELLENT READABILITY) */
+table {
+  width: 100% !important;
+  border-collapse: collapse !important;
+}
+
+thead {
+  position: sticky !important;
+  top: 0 !important;
+  z-index: 10 !important;
+  background-color: #F7F8FC !important; /* Light gray header */
+}
+
+thead th,
+table th {
+  font-size: 13px !important; /* Header font size */
+  font-weight: 600 !important;
+  color: #4b5563 !important;
+  background-color: #f1f5f9 !important; /* Light gray header background */
+  text-align: left !important;
+  padding: 10px 16px !important;
+  border-bottom: 1px solid #E6EAF0 !important; /* Subtle border */
+}
+
+.dark thead th,
+.dark table th {
+  background-color: #18181b !important;
+  color: #a1a1aa !important;
+  border-bottom: 1px solid #2d2d30 !important;
+}
+
+tbody tr,
+table tr:not(thead tr) {
+  height: 44px !important; /* Better industrial density, not too tall */
+  transition: background-color 0.15s ease-in-out !important;
+}
+
+/* Alternating row hover and styling */
+tbody tr:nth-child(even) {
+  background-color: #FAFBFD;
+}
+.dark tbody tr:nth-child(even) {
+  background-color: #151518;
+}
+
+tbody tr:hover,
+table tr:not(thead tr):hover {
+  background-color: #f1f5f9 !important; /* Alternating row hover */
+}
+
+.dark tbody tr:hover,
+.dark table tr:not(thead tr):hover {
+  background-color: #1e293b !important;
+}
+
+/* Selected rows with light blue background (#EAF2FF) */
+tbody tr.selected-row,
+tbody tr[class*="bg-blue-50"],
+tbody tr[class*="bg-indigo-50"],
+tbody tr[class*="bg-indigo-500/10"],
+tbody tr:has(input[type="checkbox"]:checked) {
+  background-color: #EAF2FF !important; /* Selected Background: #EAF2FF */
+}
+
+.dark tbody tr.selected-row,
+.dark tbody tr[class*="bg-blue-50"] {
+  background-color: #1e2d42 !important;
+}
+
+tbody td,
+table td {
+  font-size: 14px !important; /* Body: 14px */
+  padding: 10px 16px !important;
+  border-bottom: 1px solid #E6EAF0 !important; /* Subtle border */
+  color: #374151 !important;
+}
+
+.dark tbody td,
+.dark table td {
+  border-bottom: 1px solid #2d2d30 !important;
+  color: #d1d5db !important;
+}
+
+/* 6. ENTERPRISE KPI CARDS */
+/* KPI cards should be identical white cards, with no background fills except for semantic color values */
+div.grid div.bg-white:has(span[class*="uppercase"]):has(div[class*="text-2xl"]),
+div.grid div.bg-white:has(span[class*="uppercase"]):has(div[class*="text-3xl"]),
+div.grid div.bg-white:has(span[class*="uppercase"]):has(p[class*="font-bold"]) {
+  background-color: #FFFFFF !important;
+  border-radius: 6px !important;
+  padding: 20px !important;
+  border: 1px solid #E6EAF0 !important;
+  box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.02) !important;
+  height: auto !important;
+  min-height: 110px !important;
+  max-height: none !important;
+  display: flex !important;
+  flex-direction: column !important;
+  justify-content: space-between !important;
+}
+
+/* Ensure colors are restricted to values, not backgrounds */
+.text-emerald-500, .text-emerald-600, .text-green-500, .text-green-600 {
+  color: #1F8A5B !important; /* Success: #1F8A5B */
+}
+.text-amber-500, .text-amber-600, .text-orange-500, .text-orange-600, .text-[#D97706] {
+  color: #D97706 !important; /* Warning: #D97706 */
+}
+.text-red-500, .text-red-600, .text-rose-500, .text-rose-600, .text-danger, .text-[#C0392B] {
+  color: #C0392B !important; /* Danger: #C0392B */
+}
+
+/* 7. TYPOGRAPHY AND HEADING UTILITIES */
+h1, .page-title, [class*="text-3xl"]:not(p):not(span):not(h2):not(h3) {
+  font-size: 28px !important; /* Page Title: 28px */
+  font-weight: 700 !important;
+  line-height: 1.3 !important;
+  letter-spacing: -0.02em !important;
+  color: #1e293b !important;
+}
+
+h2, .section-title, [class*="text-2xl"]:not(p):not(span):not(h1):not(h3) {
+  font-size: 20px !important; /* Section Title: 20px */
+  font-weight: 600 !important;
+  line-height: 1.4 !important;
+  letter-spacing: -0.01em !important;
+  color: #1e293b !important;
+}
+
+h3, .card-title, [class*="text-lg"]:not(p):not(span):not(td):not(h1):not(h2) {
+  font-size: 16px !important; /* Card Titles */
+  font-weight: 600 !important;
+  line-height: 1.4 !important;
+  color: #334155 !important;
+}
+
+.dark h1, .dark .page-title { color: #f8fafc !important; }
+.dark h2, .dark .section-title { color: #f1f5f9 !important; }
+.dark h3, .dark .card-title { color: #e2e8f0 !important; }
+
+/* 8. SCROLLBARS AND GENERAL ENHANCEMENTS */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 3px;
+}
+.dark ::-webkit-scrollbar-thumb {
+  background: #3f3f46;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
+}
+
+
+
