@@ -150,7 +150,7 @@ export const CrmDb = {
     const companies = this.getCompanies();
     
     // Check if duplicate name exists
-    const existing = companies.find(c => c.name.toLowerCase().trim() === (companyData.name || "").toLowerCase().trim());
+    const existing = companies.find(c => c.name && c.name.toLowerCase().trim() === (companyData.name || "").toLowerCase().trim());
     if (existing) {
       return existing;
     }
@@ -342,7 +342,7 @@ export const CrmDb = {
     const processed = deals.map(d => {
       let companyId = d.companyId;
       if (!companyId && d.companyName) {
-        const comp = companies.find(c => c.name.toLowerCase().trim() === d.companyName.toLowerCase().trim());
+        const comp = companies.find(c => (c.name ?? "").toLowerCase().trim() === (d.companyName ?? "").toLowerCase().trim());
         companyId = comp ? comp.id : this.createCompany({ name: d.companyName }).id;
         d.companyId = companyId;
       }
