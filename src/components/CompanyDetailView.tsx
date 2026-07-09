@@ -227,7 +227,7 @@ export default function CompanyDetailView({
           { id: "opportunities", label: lang === "TR" ? "Satış Fırsatları" : "Opportunities", icon: <Briefcase className="w-3.5 h-3.5" /> },
           { id: "proposals", label: lang === "TR" ? "Teklifler" : "Proposals", icon: <FileCheck2 className="w-3.5 h-3.5" /> },
           { id: "emails", label: lang === "TR" ? "E-postalar" : "Emails Hub", icon: <Mail className="w-3.5 h-3.5" /> },
-          { id: "documents", label: lang === "TR" ? "Belgeler" : "Attachments", icon: <Paperclip className="w-3.5 h-3.5" /> },
+          { id: "documents", label: lang === "TR" ? "Belgeler" : "Documents", icon: <Paperclip className="w-3.5 h-3.5" /> },
           { id: "opex", label: lang === "TR" ? "Lean Teşhis / Opex" : "Lean Opex Matrix", icon: <Award className="w-3.5 h-3.5" /> },
           { id: "revenue", label: lang === "TR" ? "Finansal Ciro" : "Revenue Ledger", icon: <DollarSign className="w-3.5 h-3.5" /> },
           { id: "audit", label: lang === "TR" ? "Denetim Günlüğü" : "Audit Log History", icon: <Layers className="w-3.5 h-3.5" /> }

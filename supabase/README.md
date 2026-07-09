@@ -7,11 +7,13 @@ Apply the multi-tenant foundation before first login with onboarding.
 1. Open the [Supabase SQL Editor](https://supabase.com/dashboard) for your project.
 2. Run `migrations/001_organizations.sql`.
 3. Run `migrations/002_invitations.sql`.
+4. Run `migrations/003_documents.sql`.
 
 This creates:
 
 - `organizations`, `profiles`, `organization_members`
 - `invitations` with owner/admin-managed invites
+- `documents` table and `organization-documents` storage bucket
 - RPCs for onboarding, inviting, accepting, and listing members
 - Row Level Security scoped to each organization
 

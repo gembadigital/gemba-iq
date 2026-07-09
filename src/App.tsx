@@ -14,6 +14,7 @@ import CompaniesView from "./components/CompaniesView";
 import ProposalManagementView from "./components/ProposalManagementView";
 import TasksView from "./components/TasksView";
 import ContractManagerView from "./components/ContractManagerView";
+import DocumentsView from "./components/documents/DocumentsView";
 import ServicesView from "./components/ServicesView";
 import RevenueManagementView from "./components/RevenueManagementView";
 import CompanyDiscoveryView from "./components/CompanyDiscoveryView";
@@ -166,7 +167,7 @@ export default function App() {
   ]);
 
   // Navigation State
-  const [activeTab, setActiveTab] = useState<"company-discovery" | "revenue-management" | "dashboard" | "designer" | "lead-generator" | "lead-profiles" | "ai-sales-assistant" | "target-accounts" | "deal-management" | "sales-dashboard" | "services" | "create-proposal" | "campaign-manager" | "progress" | "history" | "companies-registry" | "proposal-management" | "todo-list" | "contract-manager" | "administration">("revenue-management");
+  const [activeTab, setActiveTab] = useState<"company-discovery" | "revenue-management" | "dashboard" | "designer" | "lead-generator" | "lead-profiles" | "ai-sales-assistant" | "target-accounts" | "deal-management" | "sales-dashboard" | "services" | "create-proposal" | "campaign-manager" | "progress" | "history" | "companies-registry" | "proposal-management" | "todo-list" | "contract-manager" | "documents" | "administration">("revenue-management");
   const [activityReportMenuExpanded, setActivityReportMenuExpanded] = useState<boolean>(true);
   const [companiesMenuExpanded, setCompaniesMenuExpanded] = useState<boolean>(true);
   const [dealsMenuExpanded, setDealsMenuExpanded] = useState<boolean>(true);
@@ -687,6 +688,7 @@ export default function App() {
       "proposal-management": { parent: "Deal Management", child: "Proposal Management" },
       "create-proposal": { parent: "Deal Management", child: "Create Proposal" },
       "todo-list": { parent: "CRM", child: "Tasks" },
+      "documents": { parent: "CRM", child: "Documents" },
       "contract-manager": { parent: "CRM", child: "Contract Manager" },
       "campaign-manager": { parent: "Campaign", child: "Campaign Manager" },
       "dashboard": { parent: "Campaign", child: "Campaign Dashboard" },
@@ -1016,6 +1018,14 @@ export default function App() {
               id="todo-list"
               icon={isNotionMode ? <span className="text-base">☑️</span> : <CheckSquare className="w-[20px] h-[20px] flex-shrink-0 text-blue-500" />}
               label="Tasks"
+              activeBorderClass="border-l-[#0078D4]"
+              isSubmenu={false}
+            />
+
+            <SidebarButton
+              id="documents"
+              icon={isNotionMode ? <span className="text-base">📁</span> : <FileText className="w-[20px] h-[20px] flex-shrink-0 text-indigo-500" />}
+              label="Documents"
               activeBorderClass="border-l-[#0078D4]"
               isSubmenu={false}
             />
@@ -1695,6 +1705,10 @@ export default function App() {
 
             {activeTab === "todo-list" && (
               <TasksView />
+            )}
+
+            {activeTab === "documents" && (
+              <DocumentsView />
             )}
 
             {activeTab === "contract-manager" && (
