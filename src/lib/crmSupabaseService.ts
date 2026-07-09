@@ -42,6 +42,7 @@ type Row = {
   data: Record<string, unknown>;
   company_id?: string | null;
   deal_id?: string | null;
+  contact_id?: string | null;
 };
 
 async function requireClient() {
@@ -111,6 +112,8 @@ function rowToProposal(row: Row): Proposal {
     id: row.id,
     organization_id: row.organization_id,
     companyId: row.company_id || (row.data as Proposal).companyId,
+    dealId: row.deal_id || (row.data as Proposal).dealId,
+    contactId: row.contact_id || (row.data as Proposal).contactId,
   };
 }
 
@@ -237,7 +240,8 @@ export async function persistProposals(proposals: Proposal[]) {
     id: proposal.id,
     organization_id: organizationId,
     company_id: proposal.companyId,
-    deal_id: (proposal as Proposal & { dealId?: string }).dealId || null,
+    deal_id: proposal.dealId || null,
+    contact_id: proposal.contactId || null,
     created_by: createdBy,
     data: proposal,
   }));

@@ -9,6 +9,7 @@ Apply the multi-tenant foundation before first login with onboarding.
 3. Run `migrations/002_invitations.sql`.
 4. Run `migrations/003_documents.sql`.
 5. Run `migrations/004_crm.sql`.
+6. Run `migrations/005_proposals_enterprise.sql`.
 
 This creates:
 
@@ -16,6 +17,7 @@ This creates:
 - `invitations` with owner/admin-managed invites
 - `documents` table and `organization-documents` storage bucket
 - `companies`, `contacts`, `deals`, `proposals`, `tasks` CRM tables
+- `proposal_number_sequences`, `proposal_templates`, `proposal_timeline_events`, `proposal_audit_logs`
 - RPCs for onboarding, inviting, accepting, and listing members
 - Row Level Security scoped to each organization
 

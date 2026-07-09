@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from "react";
 import { X, Plus, Sparkles, Check, Calculator, AlertTriangle } from "lucide-react";
-import { Proposal, ProposalOption, PRE_POPULATED_TEMPLATES } from "../types/proposal";
+import { Proposal, ProposalOption, PRE_POPULATED_TEMPLATES, ProposalTemplate } from "../types/proposal";
 import { Company } from "./CompaniesView";
 import CompanyAutocomplete from "./CompanyAutocomplete";
 import { useLanguage } from "../lib/LanguageContext";
+import { CrmDb } from "../lib/CrmDb";
 
 interface ProposalFormModalProps {
   isOpen: boolean;
@@ -12,6 +13,7 @@ interface ProposalFormModalProps {
   initialProposal?: Proposal | null;
   companies: Company[];
   onAddCompany: (company: Company) => void;
+  wordTemplates?: ProposalTemplate[];
 }
 
 export default function ProposalFormModal({
@@ -21,9 +23,13 @@ export default function ProposalFormModal({
   initialProposal,
   companies,
   onAddCompany,
+  wordTemplates = [],
 }: ProposalFormModalProps) {
   const { lang } = useLanguage();
   const [selectedCompanyId, setSelectedCompanyId] = useState("");
+  const [selectedDealId, setSelectedDealId] = useState("");
+  const [selectedContactId, setSelectedContactId] = useState("");
+  const [selectedWordTemplateId, setSelectedWordTemplateId] = useState("");
   const [companySearch, setCompanySearch] = useState("");
   const [showAddCompanyInline, setShowAddCompanyInline] = useState(false);
 
@@ -98,6 +104,9 @@ export default function ProposalFormModal({
     if (isOpen) {
       if (initialProposal) {
         setSelectedCompanyId(initialProposal.companyId);
+        setSelectedDealId(initialProposal.dealId || "");
+        setSelectedContactId(initialProposal.contactId || "");
+        setSelectedWordTemplateId(initialProposal.wordTemplateId || "");
         setProposalSubject(initialProposal.proposalSubject);
         setContactPerson(initialProposal.contactPerson);
         setContactEmail(initialProposal.contactEmail || "");
@@ -140,6 +149,9 @@ export default function ProposalFormModal({
       } else {
         // Defaults
         setSelectedCompanyId("");
+        setSelectedDealId("");
+        setSelectedContactId("");
+        setSelectedWordTemplateId("");
         setProposalSubject("");
         setContactPerson("");
         setContactEmail("");
@@ -312,12 +324,27 @@ export default function ProposalFormModal({
   useEffect(() => {
     if (selectedCompanyId) {
       const comp = companies.find((c) => c.id === selectedCompanyId);
-      if (comp) {
+      if (comp && !selectedContactId) {
         setContactPerson(comp.customFields?.contactName || comp.name + " Representative");
         setContactEmail(comp.customFields?.contactEmail || "contact@gembapartner.com");
       }
     }
-  }, [selectedCompanyId, companies]);
+  }, [selectedCompanyId, companies, selectedContactId]);
+
+  const companyDeals = selectedCompanyId
+    ? CrmDb.getDeals().filter((d) => d.companyId === selectedCompanyId || d.companyName === companies.find((c) => c.id === selectedCompanyId)?.name)
+    : [];
+  const companyContacts = selectedCompanyId ? CrmDb.getContactsByCompany(selectedCompanyId) : [];
+
+  useEffect(() => {
+    if (selectedContactId) {
+      const contact = companyContacts.find((c) => c.id === selectedContactId);
+      if (contact) {
+        setContactPerson(`${contact.firstName} ${contact.lastName}`.trim());
+        setContactEmail(contact.email || contactEmail);
+      }
+    }
+  }, [selectedContactId, companyContacts]);
 
   const calculateOptionTotal = (opt: ProposalOption): number => {
     return opt.manDays * opt.dailyRate + opt.expenses;
@@ -338,6 +365,8 @@ export default function ProposalFormModal({
     const company = companies.find((c) => c.id === selectedCompanyId);
     if (!company) return;
 
+    const linkedDeal = selectedDealId ? CrmDb.getDeals().find((d) => d.id === selectedDealId) : undefined;
+
     // Filter and build pure option set
     const finalOptions: { [key: string]: ProposalOption } = {};
     currentActiveOptionKeys.forEach((key) => {
@@ -354,6 +383,10 @@ export default function ProposalFormModal({
       proposalNumber: initialProposal?.proposalNumber || "",
       companyId: selectedCompanyId,
       companyName: company.name,
+      dealId: selectedDealId || undefined,
+      dealName: linkedDeal?.dealName,
+      contactId: selectedContactId || undefined,
+      wordTemplateId: selectedWordTemplateId || undefined,
       contactPerson,
       contactEmail,
       proposalSubject,
@@ -560,6 +593,56 @@ export default function ProposalFormModal({
                   className="w-full p-2 border border-slate-205 bg-white dark:bg-zinc-800 rounded outline-none mt-1"
                   placeholder="contact@company.com"
                 />
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div>
+                <label className="block text-[9px] text-slate-400 font-bold uppercase font-mono">Linked Deal</label>
+                <select
+                  value={selectedDealId}
+                  onChange={(e) => setSelectedDealId(e.target.value)}
+                  className="w-full p-2 border border-slate-205 bg-white dark:bg-zinc-800 rounded outline-none mt-1"
+                  disabled={!selectedCompanyId}
+                >
+                  <option value="">-- No deal --</option>
+                  {companyDeals.map((d) => (
+                    <option key={d.id} value={d.id}>
+                      {d.dealName || d.companyName}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              <div>
+                <label className="block text-[9px] text-slate-400 font-bold uppercase font-mono">CRM Contact</label>
+                <select
+                  value={selectedContactId}
+                  onChange={(e) => setSelectedContactId(e.target.value)}
+                  className="w-full p-2 border border-slate-205 bg-white dark:bg-zinc-800 rounded outline-none mt-1"
+                  disabled={!selectedCompanyId}
+                >
+                  <option value="">-- Manual contact --</option>
+                  {companyContacts.map((c) => (
+                    <option key={c.id} value={c.id}>
+                      {c.firstName} {c.lastName} {c.email ? `(${c.email})` : ""}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              <div>
+                <label className="block text-[9px] text-slate-400 font-bold uppercase font-mono">Word Template</label>
+                <select
+                  value={selectedWordTemplateId}
+                  onChange={(e) => setSelectedWordTemplateId(e.target.value)}
+                  className="w-full p-2 border border-slate-205 bg-white dark:bg-zinc-800 rounded outline-none mt-1"
+                >
+                  <option value="">-- Default template --</option>
+                  {wordTemplates.map((t) => (
+                    <option key={t.id} value={t.id}>
+                      {t.name}
+                    </option>
+                  ))}
+                </select>
               </div>
             </div>
           </div>

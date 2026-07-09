@@ -28,12 +28,27 @@ import {
   ChevronRight,
   X
 } from "lucide-react";
-import { Proposal, ProposalVersion, ProposalOption } from "../types/proposal";
+import { Proposal, ProposalVersion, ProposalOption, ProposalTemplate, ProposalTimelineEvent, ProposalAuditLog, ProposalApprovalStatus } from "../types/proposal";
+import { PROPOSAL_PLACEHOLDERS } from "../lib/proposalPlaceholderEngine";
 import ProposalFormModal from "./ProposalFormModal";
 import { Company } from "./CompaniesView";
 import { CrmDb } from "../lib/CrmDb";
-import { generateProposalPdfBlob, generateProposalPdfBlobUrl } from "../lib/proposalPdf";
-import { saveProposalPdfDocument } from "../lib/enterpriseDocumentService";
+import { generateProposalPdfBlobUrl } from "../lib/proposalPdf";
+import {
+  createEnterpriseProposal,
+  createProposalRevision,
+  deleteEnterpriseProposal,
+  listProposalTemplates,
+  loadProposalEnterpriseMeta,
+  renderProposalWordContent,
+  saveProposalTemplate,
+  deleteProposalTemplate,
+  mapStatusToApproval,
+  sendProposalEmail,
+  setProposalApprovalStatus,
+  storeProposalPdf,
+  updateEnterpriseProposal,
+} from "../lib/proposalService";
 
 export default function ProposalManagementView() {
   const { lang, t } = useLanguage();
@@ -91,6 +106,15 @@ export default function ProposalManagementView() {
   // Selected proposal for full detail & PDF view
   const [selectedProposalForDetail, setSelectedProposalForDetail] = useState<Proposal | null>(null);
   const [detailPdfUrl, setDetailPdfUrl] = useState<string>("");
+  const [proposalTimeline, setProposalTimeline] = useState<ProposalTimelineEvent[]>([]);
+  const [proposalAuditLog, setProposalAuditLog] = useState<ProposalAuditLog[]>([]);
+  const [wordTemplates, setWordTemplates] = useState<ProposalTemplate[]>([]);
+  const [showTemplateManager, setShowTemplateManager] = useState(false);
+  const [editingTemplate, setEditingTemplate] = useState<ProposalTemplate | null>(null);
+
+  useEffect(() => {
+    void listProposalTemplates().then(setWordTemplates).catch(console.error);
+  }, []);
 
   useEffect(() => {
     let url = "";
@@ -98,13 +122,10 @@ export default function ProposalManagementView() {
       try {
         url = generateProposalPdfBlobUrl(selectedProposalForDetail, lang);
         setDetailPdfUrl(url);
-        const blob = generateProposalPdfBlob(selectedProposalForDetail, lang);
-        void saveProposalPdfDocument({
-          blob,
-          proposalId: selectedProposalForDetail.id,
-          companyId: selectedProposalForDetail.companyId,
-          proposalNumber: selectedProposalForDetail.proposalNumber,
-          companyName: selectedProposalForDetail.companyName,
+        void storeProposalPdf(selectedProposalForDetail, lang);
+        void loadProposalEnterpriseMeta(selectedProposalForDetail.id).then((meta) => {
+          setProposalTimeline(meta.timeline);
+          setProposalAuditLog(meta.auditLog);
         });
       } catch (err) {
         console.error("Failed to generate PDF Blob URL:", err);
@@ -112,6 +133,8 @@ export default function ProposalManagementView() {
       }
     } else {
       setDetailPdfUrl("");
+      setProposalTimeline([]);
+      setProposalAuditLog([]);
     }
     return () => {
       if (url) {
@@ -152,41 +175,34 @@ export default function ProposalManagementView() {
     setIsModalOpen(true);
   };
 
-  const handleSaveProposal = (proposalData: Proposal) => {
-    if (editingProposal) {
-      // Modify existing
-      setProposals((prev) =>
-        prev.map((p) => (p.id === proposalData.id ? { ...proposalData, lastUpdate: new Date().toLocaleString() } : p))
-      );
-    } else {
-      // Find latest sequence number
-      const nextSeq = proposals.length > 0 ? Math.max(...proposals.map((p) => p.sequenceNo)) + 1 : 42;
-      
-      const now = new Date();
-      const yy = String(now.getFullYear()).slice(-2);
-      const mm = String(now.getMonth() + 1).padStart(2, '0');
-      const formattedNum = `${yy}${mm}-${nextSeq}`;
-
-      const newProp: Proposal = {
-        ...proposalData,
-        sequenceNo: nextSeq,
-        proposalNumber: formattedNum,
-        createdBy: "GP",
-        lastUpdate: new Date().toLocaleString()
-      };
-      setProposals((prev) => [...prev, newProp]);
+  const handleSaveProposal = async (proposalData: Proposal) => {
+    try {
+      if (editingProposal) {
+        const updated = await updateEnterpriseProposal({ ...proposalData, id: editingProposal.id });
+        setProposals((prev) => prev.map((p) => (p.id === updated.id ? updated : p)));
+      } else {
+        const created = await createEnterpriseProposal(proposalData);
+        setProposals((prev) => [...prev, created]);
+      }
+      setIsModalOpen(false);
+    } catch (err) {
+      console.error(err);
+      alert(err instanceof Error ? err.message : "Failed to save quotation.");
     }
-    setIsModalOpen(false);
   };
 
   const handleDeleteProposal = (id: string) => {
     setDeletingProposalId(id);
   };
 
-  const handleConfirmDelete = () => {
+  const handleConfirmDelete = async () => {
     if (deletingProposalId) {
-      const nextProposals = proposals.filter((p) => p.id !== deletingProposalId);
-      setProposals(nextProposals);
+      try {
+        await deleteEnterpriseProposal(deletingProposalId);
+        setProposals((prev) => prev.filter((p) => p.id !== deletingProposalId));
+      } catch (err) {
+        console.error(err);
+      }
       setDeletingProposalId(null);
     }
   };
@@ -198,38 +214,21 @@ export default function ProposalManagementView() {
     setRevisionReasonText("");
   };
 
-  const handleSaveRevision = () => {
+  const handleSaveRevision = async () => {
     if (!revisingProposal) return;
-
-    const currentVerNumber = parseInt(revisingProposal.currentVersion.replace("V", "")) || 1;
-    const nextVerStr = `V${currentVerNumber + 1}`;
-
-    const newVersionObj: ProposalVersion = {
-      version: nextVerStr,
-      date: new Date().toISOString(),
-      reason: revisionReasonText || "Client request clarification",
-      changes: revisionNotes || "Options list and rates updated.",
-      owner: revisingProposal.owner,
-      subject: revisingProposal.proposalSubject,
-      currency: revisingProposal.currency,
-      options: { ...revisingProposal.options },
-      services: [...revisingProposal.services],
-      totalBudget: revisingProposal.totalBudget,
-      taxes: revisingProposal.taxes,
-      grandTotal: revisingProposal.grandTotal
-    };
-
-    const updatedProposal: Proposal = {
-      ...revisingProposal,
-      currentVersion: nextVerStr,
-      status: "Revision Requested",
-      versions: [...revisingProposal.versions, newVersionObj],
-      lastUpdate: new Date().toLocaleString()
-    };
-
-    setProposals((prev) => prev.map((p) => (p.id === revisingProposal.id ? updatedProposal : p)));
-    setRevisingProposal(null);
-    alert(`Proposal cloned and bumped successfully to ${nextVerStr}! You can now edit its values.`);
+    try {
+      const updated = await createProposalRevision(
+        revisingProposal,
+        revisionReasonText || "Client request clarification",
+        revisionNotes || "Options list and rates updated."
+      );
+      setProposals((prev) => prev.map((p) => (p.id === revisingProposal.id ? updated : p)));
+      setRevisingProposal(null);
+      alert(`Proposal cloned and bumped successfully to ${updated.currentVersion}!`);
+    } catch (err) {
+      console.error(err);
+      alert(err instanceof Error ? err.message : "Failed to create revision.");
+    }
   };
 
   // Switch Active Version preview
@@ -314,53 +313,24 @@ export default function ProposalManagementView() {
     if (!sendingProposal) return;
 
     try {
-      // 1. Simulating sending Outlook integration
-      console.log(`Sending email via Outlook/Exchange to ${emailTo}...`);
+      const updated = await sendProposalEmail(sendingProposal, {
+        to: emailTo,
+        cc: emailCC,
+        bcc: emailBCC,
+        subject: emailSubject,
+        body: emailBody,
+        attachments: [
+          ...(attachPdf ? [`Proposal_${sendingProposal.proposalNumber}_${sendingProposal.currentVersion}.pdf`] : []),
+          ...(attachWord ? [`Proposal_${sendingProposal.proposalNumber}_${sendingProposal.currentVersion}.docx`] : []),
+          ...attachCustom,
+        ],
+      });
 
-      // 2. Automatically sync and push corresponding Deal to 'Proposal Submitted' stage!
-      const deals = CrmDb.getDeals();
-      if (deals.length > 0) {
-        const targetIdx = deals.findIndex(
-          (d) => String(d.companyName).toLowerCase().includes(sendingProposal.companyName.toLowerCase()) ||
-                 String(sendingProposal.companyName).toLowerCase().includes(String(d.companyName).toLowerCase())
-        );
-
-        const timestampStr = new Date().toLocaleString();
-        if (targetIdx !== -1) {
-          const emailRecord = {
-            id: `email-${Date.now()}`,
-            sender: "Gemba Partner Advisor (GP)",
-            recipient: emailTo,
-            date: timestampStr,
-            subject: emailSubject,
-            body: emailBody.replace(/<[^>]*>/g, ""), // clean html tags
-            attachments: [
-              ...(attachPdf ? [`Proposal_${sendingProposal.proposalNumber}_${sendingProposal.currentVersion}.pdf`] : []),
-              ...(attachWord ? [`Proposal_${sendingProposal.proposalNumber}_${sendingProposal.currentVersion}.docx`] : []),
-              ...attachCustom
-            ]
-          };
-
-          const updatedDeals = [...deals];
-          updatedDeals[targetIdx] = {
-            ...updatedDeals[targetIdx],
-            stage: "Proposal Submitted",
-            dealEmails: [...(updatedDeals[targetIdx].dealEmails || []), emailRecord],
-          };
-          CrmDb.saveDeals(updatedDeals);
-          console.log("Successfully moved linked CRM Deal object to 'Proposal Submitted' stage.");
-        }
-      }
-
-      // 3. Update active proposal status to 'Sent'
-      setProposals((prev) =>
-        prev.map((p) => (p.id === sendingProposal.id ? { ...p, status: "Sent", lastUpdate: new Date().toLocaleString() } : p))
-      );
-
-      alert(`B2B Offer dispatch and CRM synchronization completed! Corresponding CRM Deal is now moved to the Proposal Submitted stage.`);
+      setProposals((prev) => prev.map((p) => (p.id === updated.id ? updated : p)));
+      alert(`B2B Offer dispatch and CRM synchronization completed!`);
       setSendingProposal(null);
-    } catch (error: any) {
-      alert("Error dispatching Outlook message: " + error.message);
+    } catch (error: unknown) {
+      alert("Error dispatching Outlook message: " + (error instanceof Error ? error.message : "Unknown error"));
     }
   };
 
@@ -400,139 +370,12 @@ export default function ProposalManagementView() {
 
   // Download Word doc simulated
   const handleDownloadWordDoc = (proposal: Proposal) => {
-    let serviceText = (proposal.services || []).map((s) => `<li><strong>${s}</strong></li>`).join("");
-    
-    let optionsText = "";
-    Object.entries(proposal.options).forEach(([key, opt]) => {
-      const budget = opt.manDays * opt.dailyRate + opt.expenses;
-      optionsText += `
-        <tr>
-          <td><strong>${key}</strong></td>
-          <td>${opt.training ? "✓" : "-"} Training, ${opt.consulting ? "✓" : "-"} Consulting, ${opt.workshop ? "✓ text" : "-"} Workshop</td>
-          <td>${opt.manDays} Days</td>
-          <td>${proposal.currency} ${opt.dailyRate} /day</td>
-          <td>${proposal.currency} ${opt.expenses}</td>
-          <td><strong>${proposal.currency} ${budget.toLocaleString()}</strong></td>
-        </tr>
-      `;
-    });
-
+    const template = wordTemplates.find((t) => t.id === proposal.wordTemplateId);
+    const bodyContent = renderProposalWordContent(proposal, template?.content);
     const docContent = `
       <html xmlns:o='urn:schemas-microsoft-com:office:office' xmlns:w='urn:schemas-microsoft-com:office:word' xmlns='http://www.w3.org/TR/REC-html40'>
-      <head>
-        <title>${proposal.proposalSubject}</title>
-        <style>
-          body { font-family: 'Segoe UI', Arial, sans-serif; padding: 20px; line-height: 1.5; color: #1e293b; }
-          h1 { color: #16a34a; font-size: 24pt; border-bottom: 2px solid #16a34a; padding-bottom: 5px; }
-          h2 { color: #0f172a; font-size: 16pt; margin-top: 25px; border-bottom: 1px solid #cbd5e1; padding-bottom: 3px; }
-          table { width: 100%; border-collapse: collapse; margin-top: 15px; }
-          th, td { border: 1px solid #cbd5e1; padding: 10px; text-align: left; font-size: 10pt; }
-          th { background-color: #f8fafc; font-weight: bold; }
-          .footer { margin-top: 50px; border-top: 1px dotted #cbd5e1; padding-top: 10px; font-size: 9pt; color: #64748b; }
-          p, li { font-size: 10pt; }
-        </style>
-      </head>
-      <body>
-        ${proposal.coverImage ? `
-        <div style="text-align: center; margin-bottom: 30px;">
-          <img src="${proposal.coverImage}" style="max-width: 100%; max-height: 250px; object-fit: contain; margin: 0 auto;" />
-        </div>
-        ` : `
-        <div style="text-align: center; margin-bottom: 40px;">
-          <h3 style="color:#64748b; font-weight:bold; letter-spacing:2px; font-size:12pt; margin:0;">GEMBA PARTNER</h3>
-          <p style="font-size:9pt; color:#94a3b8; font-style:italic; margin:4px 0 0 0;">Continuous Improvement &amp; Operational Excellence Consultancy</p>
-        </div>
-        `}
-
-        ${proposal.pageImage ? `
-        <div style="text-align: right; margin-bottom: 15px;">
-          <img src="${proposal.pageImage}" style="max-height: 45px; object-fit: contain;" />
-        </div>
-        ` : ""}
-
-        <h1>B2B CONSULTING PROPOSAL</h1>
-        <p><strong>Proposal Ref:</strong> PROP-${proposal.proposalNumber}</p>
-        <p><strong>Offer Date:</strong> ${proposal.date}</p>
-        <p><strong>Prepared for:</strong> ${proposal.companyName}</p>
-        <p><strong>Target Contact:</strong> ${proposal.contactPerson} (${proposal.contactEmail || "N/A"})</p>
-        <p><strong>Consultancy Partner:</strong> ${proposal.owner}</p>
-
-        ${proposal.coverPage ? `
-        <div style="margin-top: 25px; margin-bottom: 25px; padding: 15px; background-color: #f1f5f9; border-left: 4px solid #16a34a;">
-          <h3 style="margin: 0; color: #0f172a; font-size: 13pt;">${proposal.coverPage}</h3>
-        </div>
-        ` : ""}
-
-        <h2>1. Executive Summary &amp; Continuous Goals</h2>
-        <p>${proposal.description || "A custom corporate intervention designed to isolate bottlenecks and stabilize visual management boards."}</p>
-
-        ${proposal.methodology ? `
-        <h2>2. Lean Methodology &amp; Structural Approach</h2>
-        <div style="font-size: 10pt; line-height: 1.6;">${proposal.methodology}</div>
-        ` : ""}
-
-        ${proposal.projectPlan ? `
-        <h2>3. Phase-by-Phase Project Plan</h2>
-        <div style="font-size: 10pt; line-height: 1.6;">${proposal.projectPlan}</div>
-        ` : ""}
-
-        ${proposal.timeline ? `
-        <h2>4. Timeline &amp; Sprints Milestones</h2>
-        <div style="font-size: 10pt; line-height: 1.6;">${proposal.timeline}</div>
-        ` : ""}
-
-        <h2>5. Services Scope Included</h2>
-        <ul>${serviceText}</ul>
-
-        <h2>6. Option Packages and Detailed Budgets</h2>
-        <table>
-          <thead>
-            <tr>
-              <th>Package Selection</th>
-              <th>Pillars Associated</th>
-              <th>Man-Days</th>
-              <th>Daily Rate</th>
-              <th>Expenses Allowance</th>
-              <th>Est. Cost</th>
-            </tr>
-          </thead>
-          <tbody>
-            ${optionsText}
-          </tbody>
-        </table>
-
-        <div style="margin-top: 25px; padding: 15px; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px;">
-          <p><strong>Subtotal Value:</strong> ${proposal.currency} ${proposal.totalBudget.toLocaleString()}</p>
-          <p><strong>Official VAT (20%):</strong> ${proposal.currency} ${proposal.taxes.toLocaleString()}</p>
-          <h3 style="color:#16a34a; margin: 10px 0 0 0;">GRAND TOTAL QUOTED BUDGET: ${proposal.currency} ${proposal.grandTotal.toLocaleString()}</h3>
-        </div>
-
-        ${proposal.terms ? `
-        <h2>7. Terms, Conditions &amp; Scope Protections</h2>
-        <div style="font-size: 10pt; line-height: 1.6;">${proposal.terms}</div>
-        ` : ""}
-
-        <h2>8. Authorization &amp; Signatures</h2>
-        <p>By signing below, Both Parties agree to the technical terms, payment schedules, and timeline milestone charts defined in this baseline.</p>
-        <table style="border:none; margin-top: 30px;">
-          <tr style="border:none;">
-            <td style="border:none; width:50%;">
-              <p>Prepared by:</p>
-              <br><br><br>
-              <p>_________________________<br><strong>Gemba Partner Advisor</strong></p>
-            </td>
-            <td style="border:none; width:50%;">
-              <p>Accepted by client:</p>
-              <br><br><br>
-              <p>_________________________<br><strong>${proposal.companyName} Representative</strong></p>
-            </td>
-          </tr>
-        </table>
-
-        <div class="footer">
-          <p>Confidential proposal. Handled electronically. Valid for 30 calendar days from date stamp.</p>
-        </div>
-      </body>
+      <head><meta charset="utf-8"><title>${proposal.proposalSubject}</title></head>
+      <body>${bodyContent}</body>
       </html>
     `;
 
@@ -544,6 +387,74 @@ export default function ProposalManagementView() {
     document.body.appendChild(a);
     a.click();
     document.body.removeChild(a);
+  };
+
+  const handleSetApproval = async (
+    proposal: Proposal,
+    approvalStatus: ProposalApprovalStatus,
+    notes?: string
+  ) => {
+    try {
+      const updated = await setProposalApprovalStatus(proposal, approvalStatus, notes);
+      setProposals((prev) => prev.map((p) => (p.id === updated.id ? updated : p)));
+      if (selectedProposalForDetail?.id === updated.id) {
+        setSelectedProposalForDetail(updated);
+        const meta = await loadProposalEnterpriseMeta(updated.id);
+        setProposalTimeline(meta.timeline);
+        setProposalAuditLog(meta.auditLog);
+      }
+    } catch (err) {
+      console.error(err);
+      alert(err instanceof Error ? err.message : "Failed to update approval status.");
+    }
+  };
+
+  const handleSaveTemplate = async () => {
+    if (!editingTemplate?.name?.trim()) {
+      alert("Template name is required.");
+      return;
+    }
+    try {
+      const saved = await saveProposalTemplate({
+        id: editingTemplate.id,
+        name: editingTemplate.name,
+        description: editingTemplate.description,
+        content: editingTemplate.content,
+        templateType: "word",
+        isDefault: editingTemplate.isDefault,
+      });
+      setWordTemplates((prev) => {
+        const exists = prev.find((t) => t.id === saved.id);
+        return exists ? prev.map((t) => (t.id === saved.id ? saved : t)) : [saved, ...prev];
+      });
+      setEditingTemplate(null);
+    } catch (err) {
+      console.error(err);
+      alert(err instanceof Error ? err.message : "Failed to save template.");
+    }
+  };
+
+  const handleDeleteTemplate = async (templateId: string) => {
+    if (!confirm("Delete this Word template?")) return;
+    try {
+      await deleteProposalTemplate(templateId);
+      setWordTemplates((prev) => prev.filter((t) => t.id !== templateId));
+    } catch (err) {
+      console.error(err);
+      alert(err instanceof Error ? err.message : "Failed to delete template.");
+    }
+  };
+
+  const getApprovalStatusLabel = (proposal: Proposal) => {
+    const status = proposal.approvalStatus || mapStatusToApproval(proposal.status);
+    if (lang !== "TR") return status;
+    switch (status) {
+      case "Draft": return "Taslak";
+      case "Sent": return "Gönderildi";
+      case "Approved": return "Onaylandı";
+      case "Rejected": return "Reddedildi";
+      default: return status;
+    }
   };
 
   // Calculations for summary boxes, separated by currency!
@@ -614,14 +525,25 @@ export default function ProposalManagementView() {
               : "Establish, revise, audit, and dispatch executive B2B quotes synced to CRM opportunities"}
           </p>
         </div>
-        <button
-          onClick={() => {
-            window.dispatchEvent(new CustomEvent("change-tab", { detail: "create-proposal" }));
-          }}
-          className="bg-green-600 hover:bg-green-700 text-white font-extrabold px-5 py-2 rounded-lg flex items-center gap-1.5 shadow-sm hover:shadow active:scale-[0.98] transition-all text-xs cursor-pointer animate-pulse"
-        >
-          <Plus className="w-4 h-4" /> {lang === "TR" ? "Teklif Oluştur" : "Create Proposal"}
-        </button>
+        <div className="flex items-center gap-2">
+          <button
+            onClick={() => {
+              setShowTemplateManager(true);
+              setEditingTemplate(null);
+            }}
+            className="bg-slate-100 hover:bg-slate-200 dark:bg-zinc-800 dark:hover:bg-zinc-700 text-slate-700 dark:text-zinc-200 font-extrabold px-4 py-2 rounded-lg flex items-center gap-1.5 text-xs cursor-pointer border border-slate-200 dark:border-zinc-700"
+          >
+            <FileText className="w-4 h-4" /> {lang === "TR" ? "Word Şablonları" : "Word Templates"}
+          </button>
+          <button
+            onClick={() => {
+              window.dispatchEvent(new CustomEvent("change-tab", { detail: "create-proposal" }));
+            }}
+            className="bg-green-600 hover:bg-green-700 text-white font-extrabold px-5 py-2 rounded-lg flex items-center gap-1.5 shadow-sm hover:shadow active:scale-[0.98] transition-all text-xs cursor-pointer animate-pulse"
+          >
+            <Plus className="w-4 h-4" /> {lang === "TR" ? "Teklif Oluştur" : "Create Proposal"}
+          </button>
+        </div>
       </div>
 
       {/* KPI Cards above - exactly 4 cards: Verilen, Onay Bekleyen, Kazanılan, Kaybedilen */}
@@ -1060,6 +982,7 @@ export default function ProposalManagementView() {
         initialProposal={editingProposal}
         companies={companies}
         onAddCompany={handleAddCompany}
+        wordTemplates={wordTemplates}
       />
 
       {/* REVISION CREATION TEXT MODAL */}
@@ -1526,15 +1449,15 @@ export default function ProposalManagementView() {
                     {selectedProposalForDetail.proposalNumber}
                   </span>
                   <span className={`px-2 py-0.5 rounded-full text-[9px] font-extrabold ${
-                    selectedProposalForDetail.status === "Accepted"
+                    (selectedProposalForDetail.approvalStatus || mapStatusToApproval(selectedProposalForDetail.status)) === "Approved"
                       ? "bg-green-100 text-green-800 dark:bg-green-950/45 dark:text-green-400"
-                      : selectedProposalForDetail.status === "Rejected"
+                      : (selectedProposalForDetail.approvalStatus || mapStatusToApproval(selectedProposalForDetail.status)) === "Rejected"
                       ? "bg-red-100 text-red-800 dark:bg-red-950/40 dark:text-red-400"
-                      : selectedProposalForDetail.status === "Sent"
+                      : (selectedProposalForDetail.approvalStatus || mapStatusToApproval(selectedProposalForDetail.status)) === "Sent"
                       ? "bg-blue-100 text-blue-800 dark:bg-blue-950/40 dark:text-blue-400"
                       : "bg-slate-100 text-slate-700 dark:bg-zinc-800 dark:text-zinc-400"
                   }`}>
-                    {getStatusLabel(selectedProposalForDetail.status, lang)}
+                    {getApprovalStatusLabel(selectedProposalForDetail)}
                   </span>
                 </div>
                 <h2 className="text-sm font-black text-slate-800 dark:text-zinc-100 mt-1.5 truncate max-w-lg">
@@ -1543,7 +1466,35 @@ export default function ProposalManagementView() {
               </div>
 
               {/* Action Buttons */}
-              <div className="flex items-center gap-3">
+              <div className="flex items-center gap-2 flex-wrap justify-end">
+                {selectedProposalForDetail.approvalStatus !== "Approved" && (
+                  <button
+                    onClick={() => handleSetApproval(selectedProposalForDetail, "Approved")}
+                    className="bg-green-600 hover:bg-green-700 text-white p-2 px-3 rounded-lg font-extrabold text-[11px] flex items-center gap-1.5 cursor-pointer"
+                  >
+                    <CheckCircle className="w-3.5 h-3.5" />
+                    {lang === "TR" ? "Onayla" : "Approve"}
+                  </button>
+                )}
+                {selectedProposalForDetail.approvalStatus !== "Rejected" && (
+                  <button
+                    onClick={() => {
+                      const notes = prompt(lang === "TR" ? "Red nedeni (isteğe bağlı):" : "Rejection reason (optional):");
+                      void handleSetApproval(selectedProposalForDetail, "Rejected", notes || undefined);
+                    }}
+                    className="bg-red-600 hover:bg-red-700 text-white p-2 px-3 rounded-lg font-extrabold text-[11px] flex items-center gap-1.5 cursor-pointer"
+                  >
+                    <X className="w-3.5 h-3.5" />
+                    {lang === "TR" ? "Reddet" : "Reject"}
+                  </button>
+                )}
+                <button
+                  onClick={() => handleOpenSendPanel(selectedProposalForDetail)}
+                  className="bg-blue-600 hover:bg-blue-700 text-white p-2 px-3 rounded-lg font-extrabold text-[11px] flex items-center gap-1.5 cursor-pointer"
+                >
+                  <Send className="w-3.5 h-3.5" />
+                  {lang === "TR" ? "E-posta Gönder" : "Send Email"}
+                </button>
                 <button
                   onClick={() => handleDownloadWordDoc(selectedProposalForDetail)}
                   className="bg-white hover:bg-slate-50 dark:bg-zinc-850 dark:hover:bg-zinc-800 text-slate-700 dark:text-zinc-200 p-2 px-3 rounded-lg border border-slate-200 dark:border-zinc-700 font-extrabold text-[11px] flex items-center gap-1.5 transition-all shadow-xs cursor-pointer"
@@ -1626,6 +1577,22 @@ export default function ProposalManagementView() {
                     </div>
 
                     <div className="space-y-1">
+                      <span className="text-[9px] text-slate-400 font-bold block">{lang === "TR" ? "Bağlı Fırsat / Deal" : "Linked Deal"}</span>
+                      <p className="text-[11px] font-bold text-slate-800 dark:text-zinc-200">
+                        {selectedProposalForDetail.dealName || (selectedProposalForDetail.dealId
+                          ? CrmDb.getDeals().find((d) => d.id === selectedProposalForDetail.dealId)?.dealName || selectedProposalForDetail.dealId
+                          : (lang === "TR" ? "Bağlı değil" : "Not linked"))}
+                      </p>
+                    </div>
+
+                    <div className="space-y-1">
+                      <span className="text-[9px] text-slate-400 font-bold block">{lang === "TR" ? "Word Şablonu" : "Word Template"}</span>
+                      <p className="text-[11px] font-bold text-slate-800 dark:text-zinc-200">
+                        {wordTemplates.find((t) => t.id === selectedProposalForDetail.wordTemplateId)?.name || (lang === "TR" ? "Varsayılan" : "Default")}
+                      </p>
+                    </div>
+
+                    <div className="space-y-1">
                       <span className="text-[9px] text-slate-400 font-bold block">{lang === "TR" ? "Aktif Sürüm" : "Active Version"}</span>
                       <p className="text-[11px] font-mono font-bold text-slate-800 dark:text-zinc-200">
                         {selectedProposalForDetail.currentVersion}
@@ -1633,6 +1600,51 @@ export default function ProposalManagementView() {
                     </div>
                   </div>
                 </div>
+
+                {/* Proposal Timeline */}
+                {proposalTimeline.length > 0 && (
+                  <div className="space-y-2.5">
+                    <h3 className="text-[10px] font-extrabold text-slate-400 font-mono uppercase tracking-wider">
+                      {lang === "TR" ? "Teklif Zaman Çizelgesi" : "Proposal Timeline"}
+                    </h3>
+                    <div className="space-y-2 max-h-48 overflow-y-auto pr-1">
+                      {proposalTimeline.map((evt) => (
+                        <div key={evt.id} className="p-2.5 bg-blue-50/50 dark:bg-blue-950/10 border border-blue-100 dark:border-blue-900/30 rounded-lg text-[10px] space-y-0.5">
+                          <div className="flex items-center justify-between">
+                            <span className="font-bold text-blue-700 dark:text-blue-400">{evt.title}</span>
+                            <span className="text-[8px] font-mono text-slate-400">{new Date(evt.createdAt).toLocaleString()}</span>
+                          </div>
+                          {evt.description && (
+                            <p className="text-slate-600 dark:text-zinc-400">{evt.description}</p>
+                          )}
+                          <span className="text-[8px] font-mono text-slate-400 uppercase">{evt.eventType}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* Audit Log */}
+                {proposalAuditLog.length > 0 && (
+                  <div className="space-y-2.5">
+                    <h3 className="text-[10px] font-extrabold text-slate-400 font-mono uppercase tracking-wider">
+                      {lang === "TR" ? "Denetim Kaydı" : "Audit Log"}
+                    </h3>
+                    <div className="space-y-2 max-h-48 overflow-y-auto pr-1">
+                      {proposalAuditLog.map((entry) => (
+                        <div key={entry.id} className="p-2.5 bg-slate-50 dark:bg-zinc-900/30 border border-slate-150 dark:border-zinc-850 rounded-lg text-[10px] space-y-0.5">
+                          <div className="flex items-center justify-between">
+                            <span className="font-mono font-extrabold text-slate-700 dark:text-zinc-300">{entry.action}</span>
+                            <span className="text-[8px] font-mono text-slate-400">{new Date(entry.createdAt).toLocaleString()}</span>
+                          </div>
+                          {entry.actorName && (
+                            <p className="text-slate-500 dark:text-zinc-400">{entry.actorName}</p>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
 
                 {/* 2. Executive Focus Description */}
                 <div className="space-y-2">
@@ -1800,6 +1812,142 @@ export default function ProposalManagementView() {
 
             </div>
 
+          </div>
+        </div>
+      )}
+
+      {/* WORD TEMPLATE MANAGER */}
+      {showTemplateManager && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4">
+          <div className="bg-white dark:bg-zinc-900 rounded-2xl w-full max-w-4xl border border-slate-100 p-6 space-y-4 text-xs max-h-[90vh] overflow-y-auto">
+            <div className="flex items-center justify-between border-b pb-3">
+              <div className="flex items-center gap-2">
+                <FileText className="w-5 h-5 text-emerald-600" />
+                <span className="font-extrabold text-sm text-slate-800 dark:text-zinc-150">
+                  {lang === "TR" ? "Word Şablon Yönetimi" : "Word Template Management"}
+                </span>
+              </div>
+              <button
+                onClick={() => {
+                  setShowTemplateManager(false);
+                  setEditingTemplate(null);
+                }}
+                className="text-slate-450 hover:text-red-500 font-bold"
+              >
+                CLOSE
+              </button>
+            </div>
+
+            <div className="flex justify-between items-center">
+              <p className="text-slate-500 text-[11px]">
+                {lang === "TR"
+                  ? "Placeholder'lar: {{company_name}}, {{proposal_number}}, {{grand_total}} vb."
+                  : "Use placeholders like {{company_name}}, {{proposal_number}}, {{grand_total}}, etc."}
+              </p>
+              <button
+                onClick={() =>
+                  setEditingTemplate({
+                    id: "",
+                    name: "",
+                    content: "<h1>{{cover_page}}</h1>\n<p>{{company_name}} — {{proposal_number}}</p>\n<p>{{description}}</p>\n<p>{{grand_total}}</p>",
+                    templateType: "word",
+                    placeholders: [],
+                  })
+                }
+                className="bg-emerald-600 hover:bg-emerald-700 text-white px-3 py-1.5 rounded font-bold cursor-pointer flex items-center gap-1"
+              >
+                <Plus className="w-3.5 h-3.5" /> {lang === "TR" ? "Yeni Şablon" : "New Template"}
+              </button>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+              {wordTemplates.map((tpl) => (
+                <div key={tpl.id} className="p-3 border border-slate-200 dark:border-zinc-800 rounded-xl space-y-2">
+                  <div className="flex items-center justify-between">
+                    <span className="font-bold text-slate-800 dark:text-zinc-200">{tpl.name}</span>
+                    <div className="flex gap-1">
+                      <button
+                        onClick={() => setEditingTemplate(tpl)}
+                        className="p-1 hover:bg-slate-100 dark:hover:bg-zinc-800 rounded cursor-pointer"
+                      >
+                        <Edit className="w-3.5 h-3.5" />
+                      </button>
+                      <button
+                        onClick={() => void handleDeleteTemplate(tpl.id)}
+                        className="p-1 hover:bg-red-50 text-red-600 rounded cursor-pointer"
+                      >
+                        <Trash2 className="w-3.5 h-3.5" />
+                      </button>
+                    </div>
+                  </div>
+                  {tpl.description && <p className="text-slate-500 text-[10px]">{tpl.description}</p>}
+                  <p className="text-[9px] font-mono text-slate-400 truncate">
+                    {(tpl.placeholders || []).join(", ") || PROPOSAL_PLACEHOLDERS.slice(0, 5).join(", ")}
+                  </p>
+                </div>
+              ))}
+              {wordTemplates.length === 0 && (
+                <p className="text-slate-400 italic col-span-2 text-center py-6">
+                  {lang === "TR" ? "Henüz şablon yok. Yeni şablon oluşturun." : "No templates yet. Create your first template."}
+                </p>
+              )}
+            </div>
+
+            {editingTemplate && (
+              <div className="border-t pt-4 space-y-3">
+                <h4 className="font-bold text-slate-700 dark:text-zinc-300">
+                  {editingTemplate.id ? (lang === "TR" ? "Şablonu Düzenle" : "Edit Template") : (lang === "TR" ? "Yeni Şablon" : "New Template")}
+                </h4>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                  <div>
+                    <label className="block text-[9px] text-slate-400 font-bold uppercase">{lang === "TR" ? "Şablon Adı" : "Template Name"} *</label>
+                    <input
+                      type="text"
+                      value={editingTemplate.name}
+                      onChange={(e) => setEditingTemplate({ ...editingTemplate, name: e.target.value })}
+                      className="w-full p-2 border border-slate-200 bg-white dark:bg-zinc-800 rounded mt-1"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-[9px] text-slate-400 font-bold uppercase">{lang === "TR" ? "Açıklama" : "Description"}</label>
+                    <input
+                      type="text"
+                      value={editingTemplate.description || ""}
+                      onChange={(e) => setEditingTemplate({ ...editingTemplate, description: e.target.value })}
+                      className="w-full p-2 border border-slate-200 bg-white dark:bg-zinc-800 rounded mt-1"
+                    />
+                  </div>
+                </div>
+                <div>
+                  <label className="block text-[9px] text-slate-400 font-bold uppercase mb-1">
+                    {lang === "TR" ? "Şablon İçeriği (HTML + Placeholder)" : "Template Content (HTML + Placeholders)"}
+                  </label>
+                  <textarea
+                    value={editingTemplate.content}
+                    onChange={(e) => setEditingTemplate({ ...editingTemplate, content: e.target.value })}
+                    rows={10}
+                    className="w-full p-2 border border-slate-200 bg-white dark:bg-zinc-800 rounded font-mono text-[11px]"
+                  />
+                  <p className="text-[9px] text-slate-400 mt-1">
+                    {PROPOSAL_PLACEHOLDERS.join(" · ")}
+                  </p>
+                </div>
+                <div className="flex justify-end gap-2">
+                  <button
+                    onClick={() => setEditingTemplate(null)}
+                    className="px-4 py-1.5 bg-slate-100 hover:bg-slate-200 rounded font-bold cursor-pointer"
+                  >
+                    {lang === "TR" ? "İptal" : "Cancel"}
+                  </button>
+                  <button
+                    onClick={() => void handleSaveTemplate()}
+                    className="px-4 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded font-extrabold cursor-pointer"
+                  >
+                    {lang === "TR" ? "Kaydet" : "Save Template"}
+                  </button>
+                </div>
+              </div>
+            )}
           </div>
         </div>
       )}

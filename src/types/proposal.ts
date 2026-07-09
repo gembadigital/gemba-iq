@@ -1,3 +1,36 @@
+export type ProposalApprovalStatus = "Draft" | "Sent" | "Approved" | "Rejected";
+
+export interface ProposalTimelineEvent {
+  id: string;
+  proposalId: string;
+  eventType: string;
+  title: string;
+  description?: string;
+  metadata?: Record<string, unknown>;
+  createdAt: string;
+}
+
+export interface ProposalAuditLog {
+  id: string;
+  proposalId: string;
+  action: string;
+  actorName?: string;
+  details?: Record<string, unknown>;
+  createdAt: string;
+}
+
+export interface ProposalTemplate {
+  id: string;
+  name: string;
+  description?: string;
+  templateType: "word" | "section";
+  content: string;
+  placeholders: string[];
+  isDefault?: boolean;
+  createdAt?: string;
+  updatedAt?: string;
+}
+
 export interface ProposalOption {
   training: boolean;
   consulting: boolean;
@@ -40,6 +73,9 @@ export interface Proposal {
   proposalNumber: string;
   companyId: string;
   companyName: string;
+  dealId?: string;
+  dealName?: string;
+  contactId?: string;
   contactPerson: string;
   contactEmail?: string;
   proposalSubject: string;
@@ -48,6 +84,8 @@ export interface Proposal {
   owner: string;
   description: string;
   status: "Draft" | "Sent" | "Under Evaluation" | "Revision Requested" | "Accepted" | "Rejected" | "Cancelled";
+  approvalStatus?: ProposalApprovalStatus;
+  wordTemplateId?: string;
   
   rejectedReason?: string;
   cancelledReason?: string;
@@ -69,6 +107,8 @@ export interface Proposal {
   createdBy: string;
   lastUpdate: string;
   leadStage?: string;
+  timelineEvents?: ProposalTimelineEvent[];
+  auditLog?: ProposalAuditLog[];
 
   // Custom templates and images
   coverPage?: string;
