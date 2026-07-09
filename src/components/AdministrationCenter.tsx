@@ -1,4 +1,6 @@
 import React, { useState, useEffect } from "react";
+import { useAuth } from "../lib/AuthContext";
+import { getUserDisplayName, getUserEmail, getUserInitials } from "../lib/authHelpers";
 import {
   Building,
   Users,
@@ -105,6 +107,10 @@ interface AdministrationCenterProps {
 
 export default function AdministrationCenter({ onClose, initialSubTab }: AdministrationCenterProps) {
   const { lang: selectedLanguage, setLang: setSelectedLanguage, t } = useLanguage();
+  const { user } = useAuth();
+  const adminDisplayName = getUserDisplayName(user);
+  const adminEmail = getUserEmail(user);
+  const adminInitials = getUserInitials(user);
   const [activeSubTab, setActiveSubTab] = useState<string>(initialSubTab || "organization");
 
   React.useEffect(() => {
@@ -1032,12 +1038,12 @@ export default function AdministrationCenter({ onClose, initialSubTab }: Adminis
         <div className="flex flex-col sm:flex-row items-center gap-3">
 
           <div className="text-right hidden sm:block">
-            <span className="text-xs font-bold text-slate-900 dark:text-zinc-200 block">Atakan Zehir</span>
-            <span className="text-[10px] font-mono text-slate-405 block">a.zehir@gembapartner.com</span>
+            <span className="text-xs font-bold text-slate-900 dark:text-zinc-200 block">{adminDisplayName}</span>
+            <span className="text-[10px] font-mono text-slate-405 block">{adminEmail}</span>
             <span className="text-[9px] font-semibold text-emerald-500 bg-emerald-50 dark:bg-emerald-950/20 px-1.5 py-0.5 rounded-md mt-1 inline-block">Lisans: Aktif</span>
           </div>
           <div className="w-11 h-11 bg-indigo-550 group-hover:bg-indigo-600 rounded-lg flex items-center justify-center text-white font-black text-sm shadow-md cursor-pointer border-2 border-slate-100 dark:border-zinc-800 mr-2">
-            AZ
+            {adminInitials}
           </div>
           <div className="flex items-center gap-3">
             {showSavedMsg && (

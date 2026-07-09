@@ -20,6 +20,9 @@ import CompanyDiscoveryView from "./components/CompanyDiscoveryView";
 import AdministrationCenter from "./components/AdministrationCenter";
 import GlobalSearchBar from "./components/GlobalSearchBar";
 import { useLanguage } from "./lib/LanguageContext";
+import { useAuth } from "./lib/AuthContext";
+import { getUserDisplayName, getUserEmail, getUserInitials } from "./lib/authHelpers";
+import { useNavigate } from "react-router-dom";
 const logoImage = "https://lh3.googleusercontent.com/d/13bNnthJU4LIICB4iiF1a4GH1PEn05MBx";
 
 import {
@@ -73,6 +76,11 @@ import {
 
 export default function App() {
   const { lang, setLang, t } = useLanguage();
+  const { user, signOut } = useAuth();
+  const navigate = useNavigate();
+  const displayName = getUserDisplayName(user);
+  const userEmail = getUserEmail(user);
+  const userInitials = getUserInitials(user);
   const [isLangDropdownOpen, setIsLangDropdownOpen] = useState(false);
 
   // New Dropdown and navigation sub-states for polished top bar
@@ -403,6 +411,12 @@ export default function App() {
       console.error("Manual token validation failed:", error);
       throw error;
     }
+  };
+
+  const handleLogout = async () => {
+    setIsUserDropdownOpen(false);
+    await signOut();
+    navigate("/login", { replace: true });
   };
 
   // Demo Sandbox connection setup
@@ -1473,7 +1487,7 @@ export default function App() {
                 }`}
                 style={{ backgroundColor: "#203a43", background: "linear-gradient(to right, #2c5364, #203a43, #0f2027)" }}
               >
-                AZ
+                {userInitials}
               </button>
 
               {isUserDropdownOpen && (
@@ -1482,11 +1496,11 @@ export default function App() {
                   <div className="absolute right-0 mt-2 w-56 bg-white dark:bg-[#141414] border border-slate-200 dark:border-zinc-800 rounded-xl shadow-lg py-1.5 z-50 animate-in fade-in slide-in-from-top-2 duration-150">
                     <div className="px-3.5 py-2.5 border-b border-slate-100 dark:border-zinc-800 flex items-center gap-2">
                       <div className="w-7 h-7 rounded-full bg-indigo-600 flex items-center justify-center text-white font-extrabold text-[10px]">
-                        AZ
+                        {userInitials}
                       </div>
                       <div className="min-w-0 flex-1 text-left">
-                        <span className="text-xs font-bold text-slate-800 dark:text-zinc-200 block truncate">Atakan Zehir</span>
-                        <span className="text-[9px] text-slate-400 dark:text-zinc-500 font-sans block truncate">a.zehir@gembapartner.com</span>
+                        <span className="text-xs font-bold text-slate-800 dark:text-zinc-200 block truncate">{displayName}</span>
+                        <span className="text-[9px] text-slate-400 dark:text-zinc-500 font-sans block truncate">{userEmail}</span>
                       </div>
                     </div>
 
@@ -1572,10 +1586,7 @@ export default function App() {
                     <div className="border-t border-slate-50 dark:border-zinc-800/60 mt-1 pt-1">
                       <button
                         type="button"
-                        onClick={() => {
-                          setIsUserDropdownOpen(false);
-                          alert(t("Atakan Zehir logged out successfully."));
-                        }}
+                        onClick={handleLogout}
                         className="w-full text-left px-3.5 py-2 text-xs font-bold text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/20 transition-colors flex items-center gap-2 cursor-pointer"
                       >
                         <X className="w-3.5 h-3.5" />
