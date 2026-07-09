@@ -17,6 +17,7 @@ import {
 } from "lucide-react";
 import { useLanguage } from "../../lib/LanguageContext";
 import { useOrganization } from "../../lib/OrganizationContext";
+import { CrmDb } from "../../lib/CrmDb";
 import {
   ALLOWED_EXTENSIONS,
   DOCUMENT_FOLDERS,
@@ -75,6 +76,7 @@ export default function DocumentExplorer({
   const [uploads, setUploads] = useState<UploadProgressState[]>([]);
 
   const [search, setSearch] = useState("");
+  const [companyFilter, setCompanyFilter] = useState("");
   const [typeFilter, setTypeFilter] = useState("");
   const [uploaderFilter, setUploaderFilter] = useState("");
   const [tagFilter, setTagFilter] = useState("");
@@ -84,11 +86,26 @@ export default function DocumentExplorer({
   const [renameValue, setRenameValue] = useState("");
   const [moveFolder, setMoveFolder] = useState<DocumentFolderKey>("other");
   const [actionModal, setActionModal] = useState<"rename" | "move" | null>(null);
+  const [actionError, setActionError] = useState<string | null>(null);
+
+  const companies = useMemo(() => {
+    if (companyId) return [];
+    return CrmDb.getCompanies();
+  }, [companyId]);
+
+  const runAction = async (action: () => Promise<void>) => {
+    setActionError(null);
+    try {
+      await action();
+    } catch (err) {
+      setActionError(err instanceof Error ? err.message : "Action failed.");
+    }
+  };
 
   const filters = useMemo<DocumentListFilters>(
     () => ({
       folder: selectedFolder,
-      companyId,
+      companyId: companyId || companyFilter || undefined,
       search,
       extension: typeFilter || undefined,
       uploaderId: uploaderFilter || undefined,
@@ -96,7 +113,7 @@ export default function DocumentExplorer({
       sortBy,
       sortDir,
     }),
-    [selectedFolder, companyId, search, typeFilter, uploaderFilter, tagFilter, sortBy, sortDir]
+    [selectedFolder, companyId, companyFilter, search, typeFilter, uploaderFilter, tagFilter, sortBy, sortDir]
   );
 
   const uploaders = useMemo(
@@ -207,62 +224,76 @@ export default function DocumentExplorer({
   };
 
   const handleDownload = async (doc: EnterpriseDocument) => {
-    const url = await getSignedDownloadUrl(doc);
-    const anchor = document.createElement("a");
-    anchor.href = url;
-    anchor.download = doc.filename;
-    anchor.click();
+    await runAction(async () => {
+      const url = await getSignedDownloadUrl(doc);
+      const anchor = document.createElement("a");
+      anchor.href = url;
+      anchor.download = doc.filename;
+      anchor.click();
+    });
   };
 
   const openVersions = async (doc: EnterpriseDocument) => {
-    const history = await getDocumentVersions(doc.document_group_id);
-    setVersions(history);
-    setShowVersions(true);
+    await runAction(async () => {
+      const history = await getDocumentVersions(doc.document_group_id);
+      setVersions(history);
+      setShowVersions(true);
+    });
   };
 
   const handleRename = async () => {
     if (!selectedDoc || !renameValue.trim()) return;
-    await renameDocument(selectedDoc.id, renameValue.trim());
-    setActionModal(null);
-    await loadDocuments();
+    await runAction(async () => {
+      await renameDocument(selectedDoc.id, renameValue.trim());
+      setActionModal(null);
+      await loadDocuments();
+    });
   };
 
   const handleMove = async () => {
     if (!selectedDoc) return;
-    await moveDocument(selectedDoc.id, moveFolder);
-    setActionModal(null);
-    await loadDocuments();
+    await runAction(async () => {
+      await moveDocument(selectedDoc.id, moveFolder);
+      setActionModal(null);
+      await loadDocuments();
+    });
   };
 
   const handleCopy = async (doc: EnterpriseDocument) => {
-    await copyDocument(doc.id, selectedFolder);
-    await loadDocuments();
+    await runAction(async () => {
+      await copyDocument(doc.id, selectedFolder);
+      await loadDocuments();
+    });
   };
 
   const handleDelete = async (doc: EnterpriseDocument) => {
     if (!window.confirm(tr ? "Bu belge silinsin mi?" : "Delete this document?")) return;
-    await deleteDocument(doc.id);
-    if (selectedDoc?.id === doc.id) {
-      setSelectedDoc(null);
-      setPreviewUrl(null);
-    }
-    await loadDocuments();
+    await runAction(async () => {
+      await deleteDocument(doc.id);
+      if (selectedDoc?.id === doc.id) {
+        setSelectedDoc(null);
+        setPreviewUrl(null);
+      }
+      await loadDocuments();
+    });
   };
 
   const handleNewVersion = async (file: File) => {
     if (!selectedDoc) return;
-    await uploadDocumentVersion(selectedDoc.id, file, (progress) => {
-      setUploads([
-        {
-          fileId: selectedDoc.id,
-          fileName: file.name,
-          progress,
-          status: "uploading",
-        },
-      ]);
+    await runAction(async () => {
+      await uploadDocumentVersion(selectedDoc.id, file, (progress) => {
+        setUploads([
+          {
+            fileId: selectedDoc.id,
+            fileName: file.name,
+            progress,
+            status: "uploading",
+          },
+        ]);
+      });
+      setUploads([]);
+      await loadDocuments();
     });
-    setUploads([]);
-    await loadDocuments();
   };
 
   return (
@@ -349,7 +380,7 @@ export default function DocumentExplorer({
             </div>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-5 gap-2">
+          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-6 gap-2">
             <div className="relative md:col-span-2">
               <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
               <input
@@ -359,6 +390,20 @@ export default function DocumentExplorer({
                 className="w-full pl-9 pr-3 py-2 rounded-xl border border-slate-200 dark:border-zinc-700 text-sm bg-white dark:bg-zinc-900"
               />
             </div>
+            {!companyId && (
+              <select
+                value={companyFilter}
+                onChange={(e) => setCompanyFilter(e.target.value)}
+                className="text-sm rounded-xl border border-slate-200 dark:border-zinc-700 px-3 py-2 bg-white dark:bg-zinc-900"
+              >
+                <option value="">{tr ? "Tüm şirketler" : "All companies"}</option>
+                {companies.map((company) => (
+                  <option key={company.id} value={company.id}>
+                    {company.name}
+                  </option>
+                ))}
+              </select>
+            )}
             <select
               value={typeFilter}
               onChange={(e) => setTypeFilter(e.target.value)}
@@ -451,6 +496,12 @@ export default function DocumentExplorer({
             </div>
           )}
 
+          {actionError && (
+            <div className="mb-4 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">
+              {actionError}
+            </div>
+          )}
+
           {loading ? (
             <div className="flex items-center justify-center py-16 text-slate-500">
               <Loader2 className="w-5 h-5 animate-spin mr-2" />
@@ -464,38 +515,74 @@ export default function DocumentExplorer({
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
               {documents.map((doc) => (
-                <button
+                <div
                   key={doc.id}
-                  type="button"
-                  onClick={() => setSelectedDoc(doc)}
-                  className={`text-left rounded-2xl border p-4 transition-all hover:shadow-sm ${
+                  className={`rounded-2xl border p-4 transition-all hover:shadow-sm ${
                     selectedDoc?.id === doc.id
                       ? "border-[#1E3A5F] bg-[#1E3A5F]/5"
                       : "border-slate-200 dark:border-zinc-800 hover:border-slate-300"
                   }`}
                 >
-                  <div className="flex items-start gap-3">
-                    <div className="w-10 h-10 rounded-xl bg-slate-100 dark:bg-zinc-800 flex items-center justify-center">
-                      {isImageExtension(doc.extension) ? (
-                        <FileImage className="w-5 h-5 text-emerald-600" />
-                      ) : isPdfExtension(doc.extension) ? (
-                        <FileText className="w-5 h-5 text-rose-600" />
-                      ) : (
-                        <File className="w-5 h-5 text-slate-500" />
-                      )}
+                  <button
+                    type="button"
+                    onClick={() => setSelectedDoc(doc)}
+                    className="w-full text-left"
+                  >
+                    <div className="flex items-start gap-3">
+                      <div className="w-10 h-10 rounded-xl bg-slate-100 dark:bg-zinc-800 flex items-center justify-center">
+                        {isImageExtension(doc.extension) ? (
+                          <FileImage className="w-5 h-5 text-emerald-600" />
+                        ) : isPdfExtension(doc.extension) ? (
+                          <FileText className="w-5 h-5 text-rose-600" />
+                        ) : (
+                          <File className="w-5 h-5 text-slate-500" />
+                        )}
+                      </div>
+                      <div className="min-w-0 flex-1">
+                        <p className="font-semibold text-sm text-slate-900 dark:text-zinc-100 truncate">{doc.filename}</p>
+                        <p className="text-xs text-slate-500 mt-1">
+                          {formatFileSize(doc.file_size)} · v{doc.version} · {new Date(doc.created_at).toLocaleDateString()}
+                        </p>
+                        <p className="text-[11px] text-slate-400 mt-1 truncate">
+                          {doc.uploader_name || doc.uploader_id.slice(0, 8)}
+                          {doc.tags.length > 0 ? ` · ${doc.tags.join(", ")}` : ""}
+                        </p>
+                      </div>
                     </div>
-                    <div className="min-w-0 flex-1">
-                      <p className="font-semibold text-sm text-slate-900 dark:text-zinc-100 truncate">{doc.filename}</p>
-                      <p className="text-xs text-slate-500 mt-1">
-                        {formatFileSize(doc.file_size)} · v{doc.version} · {new Date(doc.created_at).toLocaleDateString()}
-                      </p>
-                      <p className="text-[11px] text-slate-400 mt-1 truncate">
-                        {doc.uploader_name || doc.uploader_id.slice(0, 8)}
-                        {doc.tags.length > 0 ? ` · ${doc.tags.join(", ")}` : ""}
-                      </p>
+                  </button>
+                  {compact && (
+                    <div className="mt-3 flex items-center gap-2 border-t border-slate-100 dark:border-zinc-800 pt-3">
+                      <button
+                        type="button"
+                        onClick={() => void handleDownload(doc)}
+                        className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg border text-[11px] font-semibold"
+                      >
+                        <Download className="w-3 h-3" />
+                        {tr ? "İndir" : "Download"}
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setSelectedDoc(doc);
+                          setRenameValue(doc.filename);
+                          setActionModal("rename");
+                        }}
+                        className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg border text-[11px] font-semibold"
+                      >
+                        <Pencil className="w-3 h-3" />
+                        {tr ? "Adlandır" : "Rename"}
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => void handleDelete(doc)}
+                        className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg border border-rose-200 text-rose-600 text-[11px] font-semibold"
+                      >
+                        <Trash2 className="w-3 h-3" />
+                        {tr ? "Sil" : "Delete"}
+                      </button>
                     </div>
-                  </div>
-                </button>
+                  )}
+                </div>
               ))}
             </div>
           )}

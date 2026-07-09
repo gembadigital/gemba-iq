@@ -321,16 +321,6 @@ export async function updateDocumentMetadata(
 export async function deleteDocument(documentId: string): Promise<void> {
   const client = await requireClient();
 
-  const { data: doc, error: fetchError } = await client
-    .from("documents")
-    .select("storage_path")
-    .eq("id", documentId)
-    .single();
-
-  if (fetchError || !doc) {
-    throw new Error(fetchError?.message || "Document not found.");
-  }
-
   const { error } = await client
     .from("documents")
     .update({ is_deleted: true })
@@ -339,8 +329,6 @@ export async function deleteDocument(documentId: string): Promise<void> {
   if (error) {
     throw new Error(error.message);
   }
-
-  await client.storage.from(DOCUMENTS_BUCKET).remove([doc.storage_path]);
 }
 
 export async function moveDocument(documentId: string, targetFolder: DocumentFolderKey): Promise<EnterpriseDocument> {
@@ -491,6 +479,28 @@ export async function uploadDocumentVersion(
   );
 }
 
+export async function findProposalDocument(proposalId: string): Promise<EnterpriseDocument | null> {
+  const client = await requireClient();
+  const organizationId = await requireOrgId();
+
+  const { data, error } = await client
+    .from("documents")
+    .select("*")
+    .eq("organization_id", organizationId)
+    .eq("proposal_id", proposalId)
+    .eq("folder", "proposals")
+    .eq("is_deleted", false)
+    .order("created_at", { ascending: false })
+    .limit(1)
+    .maybeSingle();
+
+  if (error) {
+    throw new Error(error.message);
+  }
+
+  return (data as EnterpriseDocument) || null;
+}
+
 export async function saveProposalPdfDocument(params: {
   blob: Blob;
   proposalId: string;
@@ -499,6 +509,11 @@ export async function saveProposalPdfDocument(params: {
   companyName: string;
 }): Promise<EnterpriseDocument | null> {
   try {
+    const existing = await findProposalDocument(params.proposalId);
+    if (existing) {
+      return existing;
+    }
+
     const filename = `Proposal_${params.proposalNumber}_${params.companyName.replace(/[^a-zA-Z0-9_-]+/g, "_")}.pdf`;
     return await uploadBlobDocument({
       blob: params.blob,
