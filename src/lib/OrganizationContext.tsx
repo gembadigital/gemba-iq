@@ -1,4 +1,4 @@
-import React, { createContext, useCallback, useContext, useEffect, useMemo, useState } from "react";
+import React, { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from "react";
 import { useAuth } from "./AuthContext";
 import { useLanguage } from "./LanguageContext";
 import type { Organization, OrganizationMember, OrganizationRole, Profile, WelcomeWizardData } from "../types/organization";
@@ -37,6 +37,23 @@ interface OrganizationContextValue {
 
 const OrganizationContext = createContext<OrganizationContextValue | undefined>(undefined);
 
+const ORG_BOOTSTRAP_TIMEOUT_MS = 10_000;
+
+function withTimeout<T>(promise: Promise<T>, ms: number, message: string): Promise<T> {
+  return new Promise<T>((resolve, reject) => {
+    const timer = window.setTimeout(() => reject(new Error(message)), ms);
+    promise
+      .then((value) => {
+        window.clearTimeout(timer);
+        resolve(value);
+      })
+      .catch((err) => {
+        window.clearTimeout(timer);
+        reject(err);
+      });
+  });
+}
+
 function syncLegacyOrgSettings(
   organization: Organization,
   profile: Profile | null,
@@ -73,10 +90,13 @@ export function OrganizationProvider({ children }: { children: React.ReactNode }
   const [profile, setProfile] = useState<Profile | null>(null);
   const [organization, setOrganization] = useState<Organization | null>(null);
   const [membership, setMembership] = useState<OrganizationMember | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const loadSeq = useRef(0);
 
   const loadOrganization = useCallback(async () => {
+    const seq = ++loadSeq.current;
+
     if (!user) {
       setProfile(null);
       setOrganization(null);
@@ -90,7 +110,13 @@ export function OrganizationProvider({ children }: { children: React.ReactNode }
     setError(null);
 
     try {
-      let bootstrap = await fetchOrganizationBootstrap(user.id);
+      let bootstrap = await withTimeout(
+        fetchOrganizationBootstrap(user.id),
+        ORG_BOOTSTRAP_TIMEOUT_MS,
+        "Organization profile load timed out."
+      );
+      if (seq !== loadSeq.current) return;
+
       const pendingToken = getPendingInvitationToken();
 
       if (!bootstrap.membership && pendingToken) {
@@ -99,7 +125,12 @@ export function OrganizationProvider({ children }: { children: React.ReactNode }
             fullName: (user.user_metadata?.full_name as string | undefined) || undefined,
           });
           clearPendingInvitationToken();
-          bootstrap = await fetchOrganizationBootstrap(user.id);
+          bootstrap = await withTimeout(
+            fetchOrganizationBootstrap(user.id),
+            ORG_BOOTSTRAP_TIMEOUT_MS,
+            "Organization profile load timed out."
+          );
+          if (seq !== loadSeq.current) return;
         } catch {
           // Join page will surface invitation errors if auto-accept fails.
         }
@@ -117,22 +148,29 @@ export function OrganizationProvider({ children }: { children: React.ReactNode }
 
       if (bootstrap.organization) {
         syncLegacyOrgSettings(bootstrap.organization, bootstrap.profile, user.email ?? "");
-        if (bootstrap.profile?.language === "TR" || bootstrap.profile?.language === "EN") {
-          setLang(bootstrap.profile.language);
-        } else if (bootstrap.organization.language === "TR" || bootstrap.organization.language === "EN") {
-          setLang(bootstrap.organization.language);
+        const nextLang =
+          bootstrap.profile?.language === "TR" || bootstrap.profile?.language === "EN"
+            ? bootstrap.profile.language
+            : bootstrap.organization.language === "TR" || bootstrap.organization.language === "EN"
+              ? bootstrap.organization.language
+              : null;
+        if (nextLang) {
+          setLang(nextLang);
         }
       }
     } catch (err) {
+      if (seq !== loadSeq.current) return;
       const message = err instanceof Error ? err.message : "Failed to load organization.";
       setError(message);
       setProfile(null);
       setOrganization(null);
       setMembership(null);
     } finally {
-      setLoading(false);
+      if (seq === loadSeq.current) {
+        setLoading(false);
+      }
     }
-  }, [user, setLang]);
+  }, [user]);
 
   useEffect(() => {
     if (authLoading) return;

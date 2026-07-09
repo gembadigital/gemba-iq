@@ -48,29 +48,35 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     let mounted = true;
     let subscription: { unsubscribe: () => void } | null = null;
-    const timeoutId = window.setTimeout(() => {
-      if (!mounted) return;
-      setInitError("Authentication initialization timed out. You can still try to sign in.");
+    let finished = false;
+
+    const finishLoading = () => {
+      if (!mounted || finished) return;
+      finished = true;
       setLoading(false);
+    };
+
+    const timeoutId = window.setTimeout(() => {
+      if (!mounted || finished) return;
+      setInitError("Authentication initialization timed out. You can still try to sign in.");
+      finishLoading();
     }, 8000);
 
     const initialize = async () => {
-      const client = await initSupabase();
-      if (!mounted) return;
-
-      window.clearTimeout(timeoutId);
-
-      if (!client) {
-        setInitError(CONFIG_ERROR);
-        setIsConfigured(false);
-        setLoading(false);
-        return;
-      }
-
-      setInitError(null);
-      setIsConfigured(true);
-
       try {
+        const client = await initSupabase();
+        if (!mounted) return;
+
+        if (!client) {
+          setInitError(CONFIG_ERROR);
+          setIsConfigured(false);
+          finishLoading();
+          return;
+        }
+
+        setInitError(null);
+        setIsConfigured(true);
+
         const {
           data: { session: initialSession },
         } = await client.auth.getSession();
@@ -78,24 +84,26 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         if (!mounted) return;
         setSession(initialSession);
         setUser(initialSession?.user ?? null);
-        setLoading(false);
+
+        const {
+          data: { subscription: authSubscription },
+        } = client.auth.onAuthStateChange((_event, nextSession) => {
+          if (!mounted) return;
+          setSession(nextSession);
+          setUser(nextSession?.user ?? null);
+          finishLoading();
+        });
+
+        subscription = authSubscription;
+        finishLoading();
       } catch (err) {
         if (!mounted) return;
         console.error("Auth session initialization failed:", err);
         setInitError(err instanceof Error ? err.message : "Failed to initialize authentication.");
-        setLoading(false);
+        finishLoading();
+      } finally {
+        window.clearTimeout(timeoutId);
       }
-
-      const {
-        data: { subscription: authSubscription },
-      } = client.auth.onAuthStateChange((_event, nextSession) => {
-        if (!mounted) return;
-        setSession(nextSession);
-        setUser(nextSession?.user ?? null);
-        setLoading(false);
-      });
-
-      subscription = authSubscription;
     };
 
     void initialize();

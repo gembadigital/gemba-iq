@@ -121,16 +121,19 @@ function rowToTask(row: Row): Task {
   return { ...(row.data as Task), id: row.id };
 }
 
-export async function loadOrganizationCrm(): Promise<CrmSnapshot> {
+export async function loadOrganizationCrm(organizationId?: string): Promise<CrmSnapshot> {
   const client = await requireClient();
-  const organizationId = await requireOrgId();
+  const orgId = organizationId || getActiveOrganizationId();
+  if (!orgId) {
+    throw new Error("No active organization found.");
+  }
 
   const [companiesRes, contactsRes, dealsRes, proposalsRes, tasksRes] = await Promise.all([
-    client.from("companies").select("*").eq("organization_id", organizationId),
-    client.from("contacts").select("*").eq("organization_id", organizationId),
-    client.from("deals").select("*").eq("organization_id", organizationId),
-    client.from("proposals").select("*").eq("organization_id", organizationId),
-    client.from("tasks").select("*").eq("organization_id", organizationId),
+    client.from("companies").select("*").eq("organization_id", orgId),
+    client.from("contacts").select("*").eq("organization_id", orgId),
+    client.from("deals").select("*").eq("organization_id", orgId),
+    client.from("proposals").select("*").eq("organization_id", orgId),
+    client.from("tasks").select("*").eq("organization_id", orgId),
   ]);
 
   for (const res of [companiesRes, contactsRes, dealsRes, proposalsRes, tasksRes]) {

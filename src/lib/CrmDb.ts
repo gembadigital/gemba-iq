@@ -182,8 +182,8 @@ export const CrmDb = {
     return cache.loaded;
   },
 
-  async hydrateFromSupabase(): Promise<void> {
-    const snapshot = await loadOrganizationCrm();
+  async hydrateFromSupabase(organizationId?: string): Promise<void> {
+    const snapshot = await loadOrganizationCrm(organizationId);
     applySnapshot(snapshot);
   },
 
