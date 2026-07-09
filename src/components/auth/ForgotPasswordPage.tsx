@@ -5,7 +5,7 @@ import { useLanguage } from "../../lib/LanguageContext";
 import AuthLayout, { AuthButton, AuthError, AuthField, AuthSuccess } from "./AuthLayout";
 
 export default function ForgotPasswordPage() {
-  const { resetPassword, user } = useAuth();
+  const { resetPassword, user, initError } = useAuth();
   const { lang } = useLanguage();
 
   const [email, setEmail] = useState("");
@@ -54,6 +54,7 @@ export default function ForgotPasswordPage() {
       }
     >
       <form onSubmit={handleSubmit} className="space-y-4">
+        <AuthError message={initError} />
         <AuthError message={error} />
         <AuthSuccess message={success} />
         <AuthField

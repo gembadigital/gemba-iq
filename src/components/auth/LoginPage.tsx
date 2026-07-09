@@ -5,7 +5,7 @@ import { useLanguage } from "../../lib/LanguageContext";
 import AuthLayout, { AuthButton, AuthError, AuthField } from "./AuthLayout";
 
 export default function LoginPage() {
-  const { signIn, user } = useAuth();
+  const { signIn, user, initError } = useAuth();
   const { lang } = useLanguage();
   const navigate = useNavigate();
   const location = useLocation();
@@ -49,6 +49,7 @@ export default function LoginPage() {
       }
     >
       <form onSubmit={handleSubmit} className="space-y-4">
+        <AuthError message={initError} />
         <AuthError message={error} />
         <AuthField
           id="email"

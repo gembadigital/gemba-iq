@@ -1,11 +1,13 @@
 import React, { createContext, useContext, useEffect, useMemo, useState } from "react";
 import type { Session, User } from "@supabase/supabase-js";
-import { supabase } from "./supabaseClient";
+import { getSupabase, isSupabaseConfigured, supabaseConfigError } from "./supabaseClient";
 
 interface AuthContextValue {
   user: User | null;
   session: Session | null;
   loading: boolean;
+  initError: string | null;
+  isConfigured: boolean;
   signIn: (email: string, password: string) => Promise<{ error: string | null }>;
   signUp: (email: string, password: string, fullName: string) => Promise<{ error: string | null; needsEmailVerification: boolean }>;
   signOut: () => Promise<void>;
@@ -32,24 +34,50 @@ function mapAuthError(message: string): string {
   return message;
 }
 
+function notConfiguredError(): string {
+  return supabaseConfigError ?? "Authentication is not configured.";
+}
+
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
+  const [initError, setInitError] = useState<string | null>(null);
 
   useEffect(() => {
+    if (!isSupabaseConfigured) {
+      setInitError(supabaseConfigError);
+      setLoading(false);
+      return;
+    }
+
+    const client = getSupabase();
+    if (!client) {
+      setInitError("Failed to initialize Supabase client.");
+      setLoading(false);
+      return;
+    }
+
     let mounted = true;
 
-    supabase.auth.getSession().then(({ data: { session: initialSession } }) => {
-      if (!mounted) return;
-      setSession(initialSession);
-      setUser(initialSession?.user ?? null);
-      setLoading(false);
-    });
+    client.auth
+      .getSession()
+      .then(({ data: { session: initialSession } }) => {
+        if (!mounted) return;
+        setSession(initialSession);
+        setUser(initialSession?.user ?? null);
+        setLoading(false);
+      })
+      .catch((err: Error) => {
+        if (!mounted) return;
+        console.error("Auth session initialization failed:", err);
+        setInitError(err.message || "Failed to initialize authentication.");
+        setLoading(false);
+      });
 
     const {
       data: { subscription },
-    } = supabase.auth.onAuthStateChange((_event, nextSession) => {
+    } = client.auth.onAuthStateChange((_event, nextSession) => {
       setSession(nextSession);
       setUser(nextSession?.user ?? null);
       setLoading(false);
@@ -66,19 +94,27 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       user,
       session,
       loading,
+      initError,
+      isConfigured: isSupabaseConfigured,
       signIn: async (email, password) => {
-        const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+        const client = getSupabase();
+        if (!client) return { error: notConfiguredError() };
+
+        const { data, error } = await client.auth.signInWithPassword({ email, password });
         if (error) {
           return { error: mapAuthError(error.message) };
         }
         if (data.user && !data.user.email_confirmed_at) {
-          await supabase.auth.signOut();
+          await client.auth.signOut();
           return { error: "Please verify your email before signing in." };
         }
         return { error: null };
       },
       signUp: async (email, password, fullName) => {
-        const { data, error } = await supabase.auth.signUp({
+        const client = getSupabase();
+        if (!client) return { error: notConfiguredError(), needsEmailVerification: false };
+
+        const { data, error } = await client.auth.signUp({
           email,
           password,
           options: {
@@ -93,22 +129,31 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         return { error: null, needsEmailVerification };
       },
       signOut: async () => {
-        await supabase.auth.signOut();
+        const client = getSupabase();
+        if (client) {
+          await client.auth.signOut();
+        }
         setSession(null);
         setUser(null);
       },
       resetPassword: async (email) => {
-        const { error } = await supabase.auth.resetPasswordForEmail(email, {
+        const client = getSupabase();
+        if (!client) return { error: notConfiguredError() };
+
+        const { error } = await client.auth.resetPasswordForEmail(email, {
           redirectTo: `${window.location.origin}/reset-password`,
         });
         return { error: error ? mapAuthError(error.message) : null };
       },
       updatePassword: async (password) => {
-        const { error } = await supabase.auth.updateUser({ password });
+        const client = getSupabase();
+        if (!client) return { error: notConfiguredError() };
+
+        const { error } = await client.auth.updateUser({ password });
         return { error: error ? mapAuthError(error.message) : null };
       },
     }),
-    [user, session, loading]
+    [user, session, loading, initError]
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

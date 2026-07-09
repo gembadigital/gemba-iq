@@ -5,7 +5,7 @@ import { useLanguage } from "../../lib/LanguageContext";
 import AuthLayout, { AuthButton, AuthError, AuthField, AuthSuccess } from "./AuthLayout";
 
 export default function RegisterPage() {
-  const { signUp, user } = useAuth();
+  const { signUp, user, initError } = useAuth();
   const { lang } = useLanguage();
 
   const [fullName, setFullName] = useState("");
@@ -71,6 +71,7 @@ export default function RegisterPage() {
       }
     >
       <form onSubmit={handleSubmit} className="space-y-4">
+        <AuthError message={initError} />
         <AuthError message={error} />
         <AuthSuccess message={success} />
         <AuthField

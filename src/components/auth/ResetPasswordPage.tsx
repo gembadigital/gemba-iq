@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import { Link, Navigate, useNavigate } from "react-router-dom";
 import { useAuth } from "../../lib/AuthContext";
 import { useLanguage } from "../../lib/LanguageContext";
-import { supabase } from "../../lib/supabaseClient";
+import { getSupabase } from "../../lib/supabaseClient";
 import AuthLayout, { AuthButton, AuthError, AuthField, AuthSuccess } from "./AuthLayout";
 
 export default function ResetPasswordPage() {
@@ -18,16 +18,37 @@ export default function ResetPasswordPage() {
   const [ready, setReady] = useState(false);
 
   useEffect(() => {
-    supabase.auth.getSession().then(({ data: { session: recoverySession } }) => {
+    const client = getSupabase();
+    if (!client) {
       setReady(true);
-      if (!recoverySession) {
+      setError(
+        lang === "TR"
+          ? "Kimlik doğrulama yapılandırılmamış. Lütfen yönetici ile iletişime geçin."
+          : "Authentication is not configured. Please contact your administrator."
+      );
+      return;
+    }
+
+    client.auth
+      .getSession()
+      .then(({ data: { session: recoverySession } }) => {
+        setReady(true);
+        if (!recoverySession) {
+          setError(
+            lang === "TR"
+              ? "Geçersiz veya süresi dolmuş sıfırlama bağlantısı. Lütfen yeni bir bağlantı isteyin."
+              : "Invalid or expired reset link. Please request a new one."
+          );
+        }
+      })
+      .catch(() => {
+        setReady(true);
         setError(
           lang === "TR"
-            ? "Geçersiz veya süresi dolmuş sıfırlama bağlantısı. Lütfen yeni bir bağlantı isteyin."
-            : "Invalid or expired reset link. Please request a new one."
+            ? "Oturum doğrulanamadı. Lütfen yeni bir sıfırlama bağlantısı isteyin."
+            : "Could not verify session. Please request a new reset link."
         );
-      }
-    });
+      });
   }, [lang]);
 
   if (session && success) {
