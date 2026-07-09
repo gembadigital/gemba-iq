@@ -4,8 +4,10 @@ import fs from "fs";
 import dotenv from "dotenv";
 import { createServer as createViteServer } from "vite";
 
-// Load environment variables
-dotenv.config();
+const projectRoot = process.cwd();
+
+// Load environment variables from project root .env
+dotenv.config({ path: path.join(projectRoot, ".env") });
 
 import { GoogleGenAI } from "@google/genai";
 const ai = new GoogleGenAI({
@@ -1500,8 +1502,10 @@ async function startApp() {
   if (process.env.NODE_ENV !== "production") {
     // Development mode
     const vite = await createViteServer({
+      root: projectRoot,
+      configFile: path.join(projectRoot, "vite.config.ts"),
       server: { middlewareMode: true },
-      appType: "spa"
+      appType: "spa",
     });
     app.use(vite.middlewares);
   } else {
