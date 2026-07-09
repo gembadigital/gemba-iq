@@ -1,13 +1,16 @@
 import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL?.trim() ?? "";
-const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY?.trim() ?? "";
+const supabaseAnonKey =
+  import.meta.env.VITE_SUPABASE_ANON_KEY?.trim() ||
+  import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY?.trim() ||
+  "";
 
 export const isSupabaseConfigured = Boolean(supabaseUrl && supabaseAnonKey);
 
 export const supabaseConfigError = isSupabaseConfigured
   ? null
-  : "Supabase is not configured. Set VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY in your environment.";
+  : "Supabase is not configured. Set VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY (or VITE_SUPABASE_PUBLISHABLE_KEY) in your environment.";
 
 let supabaseClient: SupabaseClient | null = null;
 
@@ -19,8 +22,6 @@ if (isSupabaseConfigured) {
       detectSessionInUrl: true,
     },
   });
-} else {
-  console.warn(supabaseConfigError);
 }
 
 export function getSupabase(): SupabaseClient | null {
