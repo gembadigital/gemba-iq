@@ -42,6 +42,17 @@ app.get("/api/env", (_req, res) => {
   });
 });
 
+// API: Send organization invitation email via Supabase Auth
+app.post("/api/invitations/send", async (req, res) => {
+  try {
+    const handler = (await import("./api/invitations/send.js")).default;
+    await handler(req, res);
+  } catch (error) {
+    console.error("Invitation send handler failed:", error);
+    res.status(500).json({ error: "Failed to send invitation." });
+  }
+});
+
 // API: Health / Config Endpoint
 app.get("/api/config", (req, res) => {
   const appUrl = (process.env.APP_URL || "").replace(/\/$/, "");

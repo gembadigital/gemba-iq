@@ -41,6 +41,7 @@ interface AuthFieldProps {
   placeholder?: string;
   autoComplete?: string;
   required?: boolean;
+  disabled?: boolean;
 }
 
 export function AuthField({
@@ -52,6 +53,7 @@ export function AuthField({
   placeholder,
   autoComplete,
   required = true,
+  disabled = false,
 }: AuthFieldProps) {
   return (
     <div>
@@ -66,7 +68,8 @@ export function AuthField({
         placeholder={placeholder}
         autoComplete={autoComplete}
         required={required}
-        className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-zinc-700 bg-white dark:bg-[#0c0c0e] text-sm text-slate-900 dark:text-zinc-100 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-[#1E3A5F]/20 focus:border-[#1E3A5F] dark:focus:border-indigo-500 transition-colors"
+        disabled={disabled}
+        className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-zinc-700 bg-white dark:bg-[#0c0c0e] text-sm text-slate-900 dark:text-zinc-100 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-[#1E3A5F]/20 focus:border-[#1E3A5F] dark:focus:border-indigo-500 transition-colors disabled:opacity-70 disabled:cursor-not-allowed"
       />
     </div>
   );

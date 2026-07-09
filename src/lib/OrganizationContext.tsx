@@ -1,12 +1,21 @@
 import React, { createContext, useCallback, useContext, useEffect, useMemo, useState } from "react";
 import { useAuth } from "./AuthContext";
 import { useLanguage } from "./LanguageContext";
-import type { Organization, OrganizationMember, Profile, WelcomeWizardData } from "../types/organization";
+import type { Organization, OrganizationMember, OrganizationRole, Profile, WelcomeWizardData } from "../types/organization";
 import {
   completeWelcomeWizard,
   fetchOrganizationBootstrap,
   needsOnboarding as checkNeedsOnboarding,
 } from "./organizationService";
+import {
+  acceptOrganizationInvitation,
+  recordProfileLogin,
+} from "./invitationService";
+import {
+  canInviteUsers,
+  clearPendingInvitationToken,
+  getPendingInvitationToken,
+} from "./invitationConstants";
 import { setActiveOrganizationContext } from "./tenantStorage";
 
 interface OrganizationContextValue {
@@ -14,6 +23,8 @@ interface OrganizationContextValue {
   organization: Organization | null;
   membership: OrganizationMember | null;
   organizationId: string | null;
+  memberRole: OrganizationRole | null;
+  canInviteUsers: boolean;
   loading: boolean;
   needsOnboarding: boolean;
   error: string | null;
@@ -79,10 +90,30 @@ export function OrganizationProvider({ children }: { children: React.ReactNode }
     setError(null);
 
     try {
-      const bootstrap = await fetchOrganizationBootstrap(user.id);
+      let bootstrap = await fetchOrganizationBootstrap(user.id);
+      const pendingToken = getPendingInvitationToken();
+
+      if (!bootstrap.membership && pendingToken) {
+        try {
+          await acceptOrganizationInvitation(pendingToken, {
+            fullName: (user.user_metadata?.full_name as string | undefined) || undefined,
+          });
+          clearPendingInvitationToken();
+          bootstrap = await fetchOrganizationBootstrap(user.id);
+        } catch {
+          // Join page will surface invitation errors if auto-accept fails.
+        }
+      } else if (bootstrap.membership && pendingToken) {
+        clearPendingInvitationToken();
+      }
+
       setProfile(bootstrap.profile);
       setOrganization(bootstrap.organization);
       setMembership(bootstrap.membership);
+
+      if (bootstrap.membership) {
+        void recordProfileLogin();
+      }
 
       if (bootstrap.organization) {
         syncLegacyOrgSettings(bootstrap.organization, bootstrap.profile, user.email ?? "");
@@ -133,6 +164,7 @@ export function OrganizationProvider({ children }: { children: React.ReactNode }
 
     const actorEmail = user?.email ?? "";
     const companyName = organization?.name ?? "Organization";
+    const memberRole = membership?.role ?? null;
     const needsOnboarding = !!user && !loading && checkNeedsOnboarding({ profile, organization, membership });
 
     return {
@@ -140,6 +172,8 @@ export function OrganizationProvider({ children }: { children: React.ReactNode }
       organization,
       membership,
       organizationId: organization?.id ?? null,
+      memberRole,
+      canInviteUsers: canInviteUsers(memberRole),
       loading: authLoading || loading,
       needsOnboarding,
       error,

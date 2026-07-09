@@ -1,12 +1,14 @@
 import React, { Suspense, lazy } from "react";
 import { BrowserRouter, Navigate, Route, Routes, useLocation } from "react-router-dom";
 import { useAuth } from "./lib/AuthContext";
+import { getPendingInvitationToken } from "./lib/invitationConstants";
 import { OrganizationProvider, useOrganization } from "./lib/OrganizationContext";
 import AuthLoadingScreen from "./components/auth/AuthLoadingScreen";
 import LoginPage from "./components/auth/LoginPage";
 import RegisterPage from "./components/auth/RegisterPage";
 import ForgotPasswordPage from "./components/auth/ForgotPasswordPage";
 import ResetPasswordPage from "./components/auth/ResetPasswordPage";
+import JoinPage from "./components/auth/JoinPage";
 import WelcomeWizard from "./components/onboarding/WelcomeWizard";
 
 const App = lazy(() => import("./App"));
@@ -15,6 +17,7 @@ function ProtectedApp() {
   const { user } = useAuth();
   const { needsOnboarding, loading: orgLoading } = useOrganization();
   const location = useLocation();
+  const pendingInvitationToken = getPendingInvitationToken();
 
   if (!user) {
     return <Navigate to="/login" replace state={{ from: location }} />;
@@ -25,6 +28,9 @@ function ProtectedApp() {
   }
 
   if (needsOnboarding) {
+    if (pendingInvitationToken) {
+      return <Navigate to={`/join?token=${encodeURIComponent(pendingInvitationToken)}`} replace />;
+    }
     return <WelcomeWizard />;
   }
 
@@ -45,6 +51,7 @@ function AppRoutes() {
   return (
     <OrganizationProvider>
       <Routes>
+        <Route path="/join" element={<JoinPage />} />
         <Route path="/login" element={user ? <Navigate to="/" replace /> : <LoginPage />} />
         <Route path="/register" element={user ? <Navigate to="/" replace /> : <RegisterPage />} />
         <Route path="/forgot-password" element={user ? <Navigate to="/" replace /> : <ForgotPasswordPage />} />

@@ -1,12 +1,16 @@
-import React, { useState } from "react";
-import { Link, Navigate } from "react-router-dom";
+import React, { useEffect, useState } from "react";
+import { Link, Navigate, useSearchParams } from "react-router-dom";
 import { useAuth } from "../../lib/AuthContext";
 import { useLanguage } from "../../lib/LanguageContext";
+import { setPendingInvitationToken } from "../../lib/invitationConstants";
+import { getInvitationPreview } from "../../lib/invitationService";
 import AuthLayout, { AuthButton, AuthError, AuthField, AuthSuccess } from "./AuthLayout";
 
 export default function RegisterPage() {
   const { signUp, user, initError } = useAuth();
   const { lang } = useLanguage();
+  const [searchParams] = useSearchParams();
+  const inviteToken = searchParams.get("token") || "";
 
   const [fullName, setFullName] = useState("");
   const [email, setEmail] = useState("");
@@ -15,9 +19,24 @@ export default function RegisterPage() {
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const [inviteLockedEmail, setInviteLockedEmail] = useState(false);
+
+  useEffect(() => {
+    if (!inviteToken) return;
+    setPendingInvitationToken(inviteToken);
+    void (async () => {
+      try {
+        const preview = await getInvitationPreview(inviteToken);
+        setEmail(preview.invited_email);
+        setInviteLockedEmail(true);
+      } catch {
+        // Registration can continue without preview.
+      }
+    })();
+  }, [inviteToken]);
 
   if (user) {
-    return <Navigate to="/" replace />;
+    return <Navigate to={inviteToken ? `/join?token=${encodeURIComponent(inviteToken)}` : "/"} replace />;
   }
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -35,7 +54,7 @@ export default function RegisterPage() {
     }
 
     setLoading(true);
-    const result = await signUp(email.trim(), password, fullName.trim());
+    const result = await signUp(email.trim(), password, fullName.trim(), inviteToken || undefined);
     setLoading(false);
 
     if (result.error) {
@@ -46,8 +65,8 @@ export default function RegisterPage() {
     if (result.needsEmailVerification) {
       setSuccess(
         lang === "TR"
-          ? "Kayıt başarılı. Lütfen hesabınızı etkinleştirmek için e-postanızdaki doğrulama bağlantısına tıklayın."
-          : "Registration successful. Please check your email and click the verification link to activate your account."
+          ? "Kayıt başarılı. Daveti tamamlamak için e-postanızdaki doğrulama bağlantısına tıklayın."
+          : "Registration successful. Check your email and click the verification link to complete the invitation."
       );
       return;
     }
@@ -56,15 +75,27 @@ export default function RegisterPage() {
   };
 
   const tr = lang === "TR";
+  const authQuery = inviteToken ? `?token=${encodeURIComponent(inviteToken)}` : "";
 
   return (
     <AuthLayout
       title={tr ? "Kayıt Ol" : "Create Account"}
-      subtitle={tr ? "Gemba IQ için yeni bir hesap oluşturun" : "Create a new Gemba IQ account"}
+      subtitle={
+        inviteToken
+          ? tr
+            ? "Organizasyon davetinizi tamamlamak için hesap oluşturun"
+            : "Create your account to complete the organization invitation"
+          : tr
+            ? "Gemba IQ için yeni bir hesap oluşturun"
+            : "Create a new Gemba IQ account"
+      }
       footer={
         <span className="text-slate-500 dark:text-zinc-400">
           {tr ? "Zaten hesabınız var mı?" : "Already have an account?"}{" "}
-          <Link to="/login" className="font-semibold text-[#1E3A5F] dark:text-indigo-400 hover:underline">
+          <Link
+            to={`/login${authQuery}`}
+            className="font-semibold text-[#1E3A5F] dark:text-indigo-400 hover:underline"
+          >
             {tr ? "Giriş Yap" : "Sign In"}
           </Link>
         </span>
@@ -90,6 +121,7 @@ export default function RegisterPage() {
           onChange={setEmail}
           placeholder="you@company.com"
           autoComplete="email"
+          disabled={inviteLockedEmail}
         />
         <AuthField
           id="password"

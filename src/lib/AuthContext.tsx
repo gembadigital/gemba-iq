@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useEffect, useMemo, useState } from "react";
 import type { Session, User } from "@supabase/supabase-js";
 import { getSupabase, initSupabase } from "./supabaseClient";
+import { recordProfileLogin } from "./invitationService";
 
 interface AuthContextValue {
   user: User | null;
@@ -9,7 +10,7 @@ interface AuthContextValue {
   initError: string | null;
   isConfigured: boolean;
   signIn: (email: string, password: string) => Promise<{ error: string | null }>;
-  signUp: (email: string, password: string, fullName: string) => Promise<{ error: string | null; needsEmailVerification: boolean }>;
+  signUp: (email: string, password: string, fullName: string, inviteToken?: string) => Promise<{ error: string | null; needsEmailVerification: boolean }>;
   signOut: () => Promise<void>;
   resetPassword: (email: string) => Promise<{ error: string | null }>;
   updatePassword: (password: string) => Promise<{ error: string | null }>;
@@ -125,18 +126,26 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           await client.auth.signOut();
           return { error: "Please verify your email before signing in." };
         }
+        void recordProfileLogin();
         return { error: null };
       },
-      signUp: async (email, password, fullName) => {
+      signUp: async (email, password, fullName, inviteToken) => {
         const client = getSupabase() ?? (await initSupabase());
         if (!client) return { error: CONFIG_ERROR, needsEmailVerification: false };
+
+        const redirectPath = inviteToken
+          ? `/join?token=${encodeURIComponent(inviteToken)}`
+          : "/login";
 
         const { data, error } = await client.auth.signUp({
           email,
           password,
           options: {
-            emailRedirectTo: `${window.location.origin}/login`,
-            data: { full_name: fullName.trim() },
+            emailRedirectTo: `${window.location.origin}${redirectPath}`,
+            data: {
+              full_name: fullName.trim(),
+              invitation_token: inviteToken || null,
+            },
           },
         });
         if (error) {

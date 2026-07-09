@@ -1,7 +1,9 @@
-import React, { useState } from "react";
-import { Link, Navigate, useLocation, useNavigate } from "react-router-dom";
+import React, { useEffect, useState } from "react";
+import { Link, Navigate, useLocation, useNavigate, useSearchParams } from "react-router-dom";
 import { useAuth } from "../../lib/AuthContext";
 import { useLanguage } from "../../lib/LanguageContext";
+import { setPendingInvitationToken } from "../../lib/invitationConstants";
+import { getInvitationPreview } from "../../lib/invitationService";
 import AuthLayout, { AuthButton, AuthError, AuthField } from "./AuthLayout";
 
 export default function LoginPage() {
@@ -9,12 +11,30 @@ export default function LoginPage() {
   const { lang } = useLanguage();
   const navigate = useNavigate();
   const location = useLocation();
-  const from = (location.state as { from?: { pathname: string } })?.from?.pathname ?? "/";
+  const [searchParams] = useSearchParams();
+  const inviteToken = searchParams.get("token") || "";
+  const from = (location.state as { from?: { pathname: string } })?.from?.pathname
+    ?? (inviteToken ? `/join?token=${encodeURIComponent(inviteToken)}` : "/");
 
   const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const [inviteLockedEmail, setInviteLockedEmail] = useState(false);
+  const [password, setPassword] = useState("");
+
+  useEffect(() => {
+    if (!inviteToken) return;
+    setPendingInvitationToken(inviteToken);
+    void (async () => {
+      try {
+        const preview = await getInvitationPreview(inviteToken);
+        setEmail(preview.invited_email);
+        setInviteLockedEmail(true);
+      } catch {
+        // Login can continue without preview.
+      }
+    })();
+  }, [inviteToken]);
 
   if (user) {
     return <Navigate to={from} replace />;
@@ -34,15 +54,27 @@ export default function LoginPage() {
   };
 
   const tr = lang === "TR";
+  const authQuery = inviteToken ? `?token=${encodeURIComponent(inviteToken)}` : "";
 
   return (
     <AuthLayout
       title={tr ? "Giriş Yap" : "Sign In"}
-      subtitle={tr ? "Gemba IQ hesabınıza erişin" : "Access your Gemba IQ account"}
+      subtitle={
+        inviteToken
+          ? tr
+            ? "Davetinizi tamamlamak için giriş yapın"
+            : "Sign in to complete your invitation"
+          : tr
+            ? "Gemba IQ hesabınıza erişin"
+            : "Access your Gemba IQ account"
+      }
       footer={
         <span className="text-slate-500 dark:text-zinc-400">
           {tr ? "Hesabınız yok mu?" : "Don't have an account?"}{" "}
-          <Link to="/register" className="font-semibold text-[#1E3A5F] dark:text-indigo-400 hover:underline">
+          <Link
+            to={`/register${authQuery}`}
+            className="font-semibold text-[#1E3A5F] dark:text-indigo-400 hover:underline"
+          >
             {tr ? "Kayıt Ol" : "Register"}
           </Link>
         </span>
@@ -59,6 +91,7 @@ export default function LoginPage() {
           onChange={setEmail}
           placeholder="you@company.com"
           autoComplete="email"
+          disabled={inviteLockedEmail}
         />
         <AuthField
           id="password"
