@@ -344,13 +344,13 @@ export default function ContractManagerView() {
   const { lang } = useLanguage();
 
   // --- STATE FOR VARIABLES FORM ---
-  const [contractNo, setContractNo] = useState(() => localStorage.getItem("crm_contract_no") || "1001");
-  const [companyTitle, setCompanyTitle] = useState(() => localStorage.getItem("crm_contract_company_title") || "Acme Endüstriyel Çözümler San. ve Tic. Ltd. Şti.");
-  const [companyAddress, setCompanyAddress] = useState(() => localStorage.getItem("crm_contract_company_address") || "Hadımköy Organize Sanayi Bölgesi, 3. Cadde No:14, Arnavutköy/İstanbul");
-  const [taxOffice, setTaxOffice] = useState(() => localStorage.getItem("crm_contract_tax_office") || "");
-  const [taxNo, setTaxNo] = useState(() => localStorage.getItem("crm_contract_tax_no") || "");
+  const [contractNo, setContractNo] = useState(() => CrmDb.getKv("crm_contract_no", "1001"));
+  const [companyTitle, setCompanyTitle] = useState(() => CrmDb.getKv("crm_contract_company_title", "Acme Endüstriyel Çözümler San. ve Tic. Ltd. Şti."));
+  const [companyAddress, setCompanyAddress] = useState(() => CrmDb.getKv("crm_contract_company_address", "Hadımköy Organize Sanayi Bölgesi, 3. Cadde No:14, Arnavutköy/İstanbul"));
+  const [taxOffice, setTaxOffice] = useState(() => CrmDb.getKv("crm_contract_tax_office", ""));
+  const [taxNo, setTaxNo] = useState(() => CrmDb.getKv("crm_contract_tax_no", ""));
   
-  const [subject, setSubject] = useState(() => localStorage.getItem("crm_contract_subject") || "Yalın Üretim Hattı Kurulumu ve Operasyonel İsraf Analizi projesi");
+  const [subject, setSubject] = useState(() => CrmDb.getKv("crm_contract_subject", "Yalın Üretim Hattı Kurulumu ve Operasyonel İsraf Analizi projesi"));
   const [contractDate, setContractDate] = useState(() => {
     const today = new Date();
     const offset = today.getTimezoneOffset();
@@ -358,22 +358,22 @@ export default function ContractManagerView() {
     return localToday.toISOString().split('T')[0];
   });
   const [validityMonths, setValidityMonths] = useState<number>(() => {
-    const saved = localStorage.getItem("crm_contract_validity_months");
+    const saved = CrmDb.getKv("crm_contract_validity_months", "");
     return saved ? parseInt(saved) : 12;
   });
 
-  const [projectManager, setProjectManager] = useState(() => localStorage.getItem("crm_contract_pm") || "Ahmet Yılmaz");
-  const [projectManagerTC, setProjectManagerTC] = useState(() => localStorage.getItem("crm_contract_pm_tc") || "12345678901");
+  const [projectManager, setProjectManager] = useState(() => CrmDb.getKv("crm_contract_pm", "Ahmet Yılmaz"));
+  const [projectManagerTC, setProjectManagerTC] = useState(() => CrmDb.getKv("crm_contract_pm_tc", "12345678901"));
   const [contractValue, setContractValue] = useState<number>(() => {
-    const saved = localStorage.getItem("crm_contract_value");
+    const saved = CrmDb.getKv("crm_contract_value", "");
     return saved ? parseFloat(saved) : 250000;
   });
   
   const [currency, setCurrency] = useState("TRY");
   const [contractValueWords, setContractValueWords] = useState("");
 
-  const [customTemplateText, setCustomTemplateText] = useState(() => localStorage.getItem("crm_contract_custom_template") || "");
-  const [customTemplateName, setCustomTemplateName] = useState(() => localStorage.getItem("crm_contract_custom_template_name") || "Yüklenmiş Word Şablonu");
+  const [customTemplateText, setCustomTemplateText] = useState(() => CrmDb.getKv("crm_contract_custom_template", ""));
+  const [customTemplateName, setCustomTemplateName] = useState(() => CrmDb.getKv("crm_contract_custom_template_name", "Yüklenmiş Word Şablonu"));
   const [isUploading, setIsUploading] = useState(false);
 
   // Load companies from CrmDb
@@ -394,12 +394,12 @@ export default function ContractManagerView() {
     setContractDate(localToday.toISOString().split('T')[0]);
 
     // Automatically fill contract subject with selected proposal service if it changed
-    const activeService = localStorage.getItem("crm_contract_selected_service_name");
+    const activeService = CrmDb.getKv("crm_contract_selected_service_name", "");
     if (activeService) {
-      const lastService = localStorage.getItem("crm_contract_last_synced_service");
+      const lastService = CrmDb.getKv("crm_contract_last_synced_service", "");
       if (activeService !== lastService) {
         setSubject(`${activeService} Hizmeti`);
-        localStorage.setItem("crm_contract_last_synced_service", activeService);
+        CrmDb.setKv("crm_contract_last_synced_service", activeService);
       }
     }
   }, []);
@@ -411,40 +411,37 @@ export default function ContractManagerView() {
 
   // Persist form inputs local storage
   useEffect(() => {
-    localStorage.setItem("crm_contract_no", contractNo);
-    localStorage.setItem("crm_contract_company_title", companyTitle);
-    localStorage.setItem("crm_contract_company_address", companyAddress);
-    localStorage.setItem("crm_contract_tax_office", taxOffice);
-    localStorage.setItem("crm_contract_tax_no", taxNo);
-    localStorage.setItem("crm_contract_subject", subject);
-    localStorage.setItem("crm_contract_date", contractDate);
-    localStorage.setItem("crm_contract_validity_months", validityMonths.toString());
-    localStorage.setItem("crm_contract_pm", projectManager);
-    localStorage.setItem("crm_contract_pm_tc", projectManagerTC);
-    localStorage.setItem("crm_contract_value", contractValue.toString());
-    localStorage.setItem("crm_contract_custom_template", customTemplateText);
-    localStorage.setItem("crm_contract_custom_template_name", customTemplateName);
+    CrmDb.setKv("crm_contract_no", contractNo);
+    CrmDb.setKv("crm_contract_company_title", companyTitle);
+    CrmDb.setKv("crm_contract_company_address", companyAddress);
+    CrmDb.setKv("crm_contract_tax_office", taxOffice);
+    CrmDb.setKv("crm_contract_tax_no", taxNo);
+    CrmDb.setKv("crm_contract_subject", subject);
+    CrmDb.setKv("crm_contract_date", contractDate);
+    CrmDb.setKv("crm_contract_validity_months", validityMonths.toString());
+    CrmDb.setKv("crm_contract_pm", projectManager);
+    CrmDb.setKv("crm_contract_pm_tc", projectManagerTC);
+    CrmDb.setKv("crm_contract_value", contractValue.toString());
+    CrmDb.setKv("crm_contract_custom_template", customTemplateText);
+    CrmDb.setKv("crm_contract_custom_template_name", customTemplateName);
   }, [contractNo, companyTitle, companyAddress, taxOffice, taxNo, subject, contractDate, validityMonths, projectManager, projectManagerTC, contractValue, customTemplateText, customTemplateName]);
 
   // --- TEMPLATE & LETTERHEAD SELECTORS ---
   const [selectedTemplateId, setSelectedTemplateId] = useState(() => {
-    const saved = localStorage.getItem("crm_contract_template_id");
-    return saved || "consulting_agreement";
+    return CrmDb.getKv("crm_contract_template_id", "consulting_agreement");
   });
   const [selectedLetterheadId, setSelectedLetterheadId] = useState("page_png_letterhead");
 
   useEffect(() => {
-    localStorage.setItem("crm_contract_template_id", selectedTemplateId);
+    CrmDb.setKv("crm_contract_template_id", selectedTemplateId);
   }, [selectedTemplateId]);
 
   // Helper to dynamically get the corporate page template background image
   const getCompanyPageTemplate = () => {
-    for (let i = 0; i < localStorage.length; i++) {
-      const key = localStorage.key(i);
-      if (key && key.startsWith("crm_png_template_page_")) {
-        const val = localStorage.getItem(key);
-        if (val) return val;
-      }
+    const templateMeta = CrmDb.getKv<Record<string, unknown>>("crm_uploaded_page_templates", {});
+    for (const sid of Object.keys(templateMeta)) {
+      const val = CrmDb.getKv<string | null>(`crm_png_template_page_${sid}`, null);
+      if (val) return val;
     }
     return "/page.png"; // Fallback to standard page.png
   };
@@ -455,13 +452,13 @@ export default function ContractManagerView() {
   const [isEditMode, setIsEditMode] = useState(false);
   
   const [hasManualEdits, setHasManualEdits] = useState(() => {
-    return localStorage.getItem("crm_contract_has_manual_edits") === "true";
+    return CrmDb.getKv<string>("crm_contract_has_manual_edits", "false") === "true";
   });
 
   const [editedBody, setEditedBody] = useState(() => {
-    const hasManual = localStorage.getItem("crm_contract_has_manual_edits") === "true";
+    const hasManual = CrmDb.getKv<string>("crm_contract_has_manual_edits", "false") === "true";
     if (hasManual) {
-      const saved = localStorage.getItem("crm_contract_edited_body_autosave");
+      const saved = CrmDb.getKv("crm_contract_edited_body_autosave", "");
       if (saved) return saved;
     }
     return "";
@@ -475,9 +472,9 @@ export default function ContractManagerView() {
 
   const lastSavedRef = useRef(editedBody);
 
-  // Sync manual edit flag to localStorage
+  // Sync manual edit flag to CrmDb
   useEffect(() => {
-    localStorage.setItem("crm_contract_has_manual_edits", hasManualEdits ? "true" : "false");
+    CrmDb.setKv("crm_contract_has_manual_edits", hasManualEdits ? "true" : "false");
   }, [hasManualEdits]);
 
   // Track if content has changed since last save
@@ -496,8 +493,8 @@ export default function ContractManagerView() {
     const interval = setInterval(() => {
       if (editedBody && editedBody !== lastSavedRef.current) {
         setAutoSaveStatus("saving");
-        localStorage.setItem("crm_contract_edited_body_autosave", editedBody);
-        localStorage.setItem("crm_contract_has_manual_edits", "true");
+        CrmDb.setKv("crm_contract_edited_body_autosave", editedBody);
+        CrmDb.setKv("crm_contract_has_manual_edits", "true");
         setHasManualEdits(true);
         lastSavedRef.current = editedBody;
         setHasUnsavedChanges(false);
@@ -526,8 +523,8 @@ export default function ContractManagerView() {
     if (isEditMode) {
       // Manual Save action when locking
       setAutoSaveStatus("saving");
-      localStorage.setItem("crm_contract_edited_body_autosave", editedBody);
-      localStorage.setItem("crm_contract_has_manual_edits", "true");
+      CrmDb.setKv("crm_contract_edited_body_autosave", editedBody);
+      CrmDb.setKv("crm_contract_has_manual_edits", "true");
       setHasManualEdits(true);
       lastSavedRef.current = editedBody;
       setHasUnsavedChanges(false);
@@ -540,8 +537,8 @@ export default function ContractManagerView() {
   const handleResetToTemplate = () => {
     if (window.confirm("Manuel olarak yaptığınız tüm değişiklikler silinecektir. Şablona dönmek istediğinizden emin misiniz?")) {
       setHasManualEdits(false);
-      localStorage.removeItem("crm_contract_edited_body_autosave");
-      localStorage.setItem("crm_contract_has_manual_edits", "false");
+      CrmDb.setKv("crm_contract_edited_body_autosave", "");
+      CrmDb.setKv("crm_contract_has_manual_edits", "false");
       const baseText = generatePopulatedText();
       setEditedBody(baseText);
       lastSavedRef.current = baseText;
@@ -1381,7 +1378,7 @@ export default function ContractManagerView() {
 
     const updatedCompanies = [...companies, newCompany];
     setCompanies(updatedCompanies);
-    localStorage.setItem("crm_won_companies", JSON.stringify(updatedCompanies));
+    CrmDb.saveCompanies(updatedCompanies);
     alert(`"${cleanedName}" unvanı ve girilen adres/vergi verileriyle birlikte yeni şirket kaydı başarıyla oluşturuldu!`);
   };
 
@@ -1489,8 +1486,8 @@ export default function ContractManagerView() {
                         setCustomTemplateText("");
                         setCustomTemplateName("");
                         setSelectedTemplateId("consulting_agreement");
-                        localStorage.removeItem("crm_contract_custom_template");
-                        localStorage.removeItem("crm_contract_custom_template_name");
+                        CrmDb.setKv("crm_contract_custom_template", "");
+                        CrmDb.setKv("crm_contract_custom_template_name", "");
                       }
                     }}
                     className="text-[10px] text-red-500 hover:text-red-700 font-bold px-2 py-1.5 bg-red-50 dark:bg-red-950/20 border border-red-200 dark:border-red-900/35 rounded hover:bg-red-100 transition"

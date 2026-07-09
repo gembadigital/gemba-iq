@@ -180,12 +180,12 @@ export default function GlobalSearchBar() {
     setQuery("");
     setIsOpen(false);
 
-    // Save target ID to localStorage so the target tab can automatically select/open it
-    localStorage.setItem("crm_active_target_id", result.targetId);
+    // Save target ID to CrmDb so the target tab can automatically select/open it
+    CrmDb.setKv("crm_active_target_id", result.targetId);
     if (result.type === "project") {
-      localStorage.setItem("crm_deal_management_subtab", "projects");
+      CrmDb.setKv("crm_deal_management_subtab", "projects");
     } else {
-      localStorage.setItem("crm_deal_management_subtab", "board");
+      CrmDb.setKv("crm_deal_management_subtab", "board");
     }
 
     // Trigger global navigation event

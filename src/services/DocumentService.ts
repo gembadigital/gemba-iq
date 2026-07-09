@@ -70,13 +70,9 @@ export const DocumentService = {
   // RETRIEVE ALL DOCUMENTS (METADATA)
   // -------------------------------------------------------------
   getDocuments(): DocumentMetadata[] {
-    const saved = localStorage.getItem("enterprise_documents");
-    if (saved) {
-      try {
-        return JSON.parse(saved);
-      } catch (e) {
-        console.error("Error reading enterprise documents", e);
-      }
+    const saved = CrmDb.getKv<DocumentMetadata[]>("enterprise_documents", []);
+    if (saved.length > 0) {
+      return saved;
     }
     
     // Seed initial documents based on CrmDb.getDocuments() to keep parity
@@ -112,12 +108,12 @@ export const DocumentService = {
         description: "Migrated from standard CRM repository."
       };
     });
-    localStorage.setItem("enterprise_documents", JSON.stringify(initialDocs));
+    CrmDb.setKv("enterprise_documents", initialDocs);
     return initialDocs;
   },
 
   saveDocuments(docs: DocumentMetadata[]) {
-    localStorage.setItem("enterprise_documents", JSON.stringify(docs));
+    CrmDb.setKv("enterprise_documents", docs);
     
     // Re-sync with CrmDb for backward compatibility so other views still see them
     const activeCrmDocs: CrmDocument[] = docs
@@ -135,7 +131,7 @@ export const DocumentService = {
         link: "#",
         content: d.fileContent
       }));
-    localStorage.setItem("crm_documents", JSON.stringify(activeCrmDocs));
+    CrmDb.saveDocuments(activeCrmDocs);
   },
 
   // Get active documents for a company

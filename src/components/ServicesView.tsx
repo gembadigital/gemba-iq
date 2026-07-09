@@ -47,6 +47,7 @@ import { convertCurrencyToTurkishWords, convertNumberToTurkishWords } from "./Co
 import { jsPDF } from "jspdf";
 import Docxtemplater from "docxtemplater";
 import PizZip from "pizzip";
+import { CrmDb } from "../lib/CrmDb";
 
 // --- CORE INTERFACES ---
 interface ServiceCard {
@@ -450,13 +451,13 @@ export default function ServicesView({
   }, [defaultTab]);
 
   const [serviceCards, setServiceCards] = useState<ServiceCard[]>(() => {
-    const saved = localStorage.getItem("crm_service_cards");
-    return saved ? JSON.parse(saved) : DEFAULT_SERVICE_CARDS;
+    const saved = CrmDb.getKv<ServiceCard[] | null>("crm_service_cards", null);
+    return saved && saved.length > 0 ? saved : DEFAULT_SERVICE_CARDS;
   });
 
-  // Save Service Cards to LocalStorage
+  // Save Service Cards
   useEffect(() => {
-    localStorage.setItem("crm_service_cards", JSON.stringify(serviceCards));
+    CrmDb.setKv("crm_service_cards", serviceCards);
   }, [serviceCards]);
 
   // --- STATE FOR EDITING SERVICE CARDS ---
@@ -482,51 +483,35 @@ export default function ServicesView({
 
   // Store custom uploaded PNG template (cover.png) info per service Id
   const [uploadedCoverTemplates, setUploadedCoverTemplates] = useState<{[key: string]: {name: string, size: string, uploadedAt: string}}>(() => {
-    const saved = localStorage.getItem("crm_uploaded_cover_templates");
-    return saved ? JSON.parse(saved) : {};
+    return CrmDb.getKv("crm_uploaded_cover_templates", {});
   });
 
   // Store custom uploaded PNG template (page.png) info per service Id
   const [uploadedPageTemplates, setUploadedPageTemplates] = useState<{[key: string]: {name: string, size: string, uploadedAt: string}}>(() => {
-    const saved = localStorage.getItem("crm_uploaded_page_templates");
-    return saved ? JSON.parse(saved) : {};
+    return CrmDb.getKv("crm_uploaded_page_templates", {});
   });
 
   const [inMemoryCoverTemplates, setInMemoryCoverTemplates] = useState<{[key: string]: string}>(() => {
     const loaded: {[key: string]: string} = {};
-    const saved = localStorage.getItem("crm_uploaded_cover_templates");
-    if (saved) {
-      try {
-        const parsed = JSON.parse(saved);
-        Object.keys(parsed).forEach(sid => {
-          const content = localStorage.getItem(`crm_png_template_cover_${sid}`);
-          if (content) {
-            loaded[sid] = content;
-          }
-        });
-      } catch (e) {
-        console.warn("Storage cover restore error:", e);
+    const parsed = CrmDb.getKv<Record<string, unknown>>("crm_uploaded_cover_templates", {});
+    Object.keys(parsed).forEach(sid => {
+      const content = CrmDb.getKv<string | null>(`crm_png_template_cover_${sid}`, null);
+      if (content) {
+        loaded[sid] = content;
       }
-    }
+    });
     return loaded;
   });
 
   const [inMemoryPageTemplates, setInMemoryPageTemplates] = useState<{[key: string]: string}>(() => {
     const loaded: {[key: string]: string} = {};
-    const saved = localStorage.getItem("crm_uploaded_page_templates");
-    if (saved) {
-      try {
-        const parsed = JSON.parse(saved);
-        Object.keys(parsed).forEach(sid => {
-          const content = localStorage.getItem(`crm_png_template_page_${sid}`);
-          if (content) {
-            loaded[sid] = content;
-          }
-        });
-      } catch (e) {
-        console.warn("Storage page restore error:", e);
+    const parsed = CrmDb.getKv<Record<string, unknown>>("crm_uploaded_page_templates", {});
+    Object.keys(parsed).forEach(sid => {
+      const content = CrmDb.getKv<string | null>(`crm_png_template_page_${sid}`, null);
+      if (content) {
+        loaded[sid] = content;
       }
-    }
+    });
     return loaded;
   });
 
@@ -622,13 +607,9 @@ export default function ServicesView({
 
   // Integrated Email Draft Templates
   const [emailTemplates, setEmailTemplates] = useState<{ id: string; name: string; subject: string; body: string }[]>(() => {
-    const saved = localStorage.getItem("crm_email_templates");
-    if (saved) {
-      try {
-        return JSON.parse(saved);
-      } catch (err) {
-        // ignore
-      }
+    const saved = CrmDb.getKv<{ id: string; name: string; subject: string; body: string }[] | null>("crm_email_templates", null);
+    if (saved && saved.length > 0) {
+      return saved;
     }
     return [
       {
@@ -671,30 +652,23 @@ export default function ServicesView({
 
   // Dynamic proposal sequence calculation from proposal archive
   useEffect(() => {
-    const saved = localStorage.getItem("crm_proposals");
+    const list = CrmDb.getProposals();
     let maxSeq = 43; // Default highest sequence in standard seed demo
-    if (saved) {
-      try {
-        const list = JSON.parse(saved);
-        if (Array.isArray(list) && list.length > 0) {
-          list.forEach((p: any) => {
-            if (p.sequenceNo && typeof p.sequenceNo === "number" && p.sequenceNo > maxSeq) {
-              maxSeq = p.sequenceNo;
-            }
-            if (p.proposalNumber) {
-              const parts = p.proposalNumber.split("-");
-              if (parts.length === 2) {
-                const seq = parseInt(parts[1], 10);
-                if (!isNaN(seq) && seq > maxSeq) {
-                  maxSeq = seq;
-                }
-              }
-            }
-          });
+    if (list.length > 0) {
+      list.forEach((p: any) => {
+        if (p.sequenceNo && typeof p.sequenceNo === "number" && p.sequenceNo > maxSeq) {
+          maxSeq = p.sequenceNo;
         }
-      } catch (err) {
-        // ignore
-      }
+        if (p.proposalNumber) {
+          const parts = p.proposalNumber.split("-");
+          if (parts.length === 2) {
+            const seq = parseInt(parts[1], 10);
+            if (!isNaN(seq) && seq > maxSeq) {
+              maxSeq = seq;
+            }
+          }
+        }
+      });
     }
     const nextSeq = maxSeq + 1;
     setSeqNumber(String(nextSeq));
@@ -722,28 +696,19 @@ export default function ServicesView({
 
   // Duplicate proposal number warning checker
   useEffect(() => {
-    const saved = localStorage.getItem("crm_proposals");
-    if (saved && proposalNumber) {
-      try {
-        const list = JSON.parse(saved);
-        const duplicate = list.some((p: any) => p.proposalNumber === proposalNumber);
-        setIsDuplicateNumber(duplicate);
-      } catch (e) {
-        setIsDuplicateNumber(false);
-      }
+    if (proposalNumber) {
+      const list = CrmDb.getProposals();
+      const duplicate = list.some((p: any) => p.proposalNumber === proposalNumber);
+      setIsDuplicateNumber(duplicate);
     } else {
       setIsDuplicateNumber(false);
     }
   }, [proposalNumber]);
 
   useEffect(() => {
-    const saved = localStorage.getItem("crm_won_companies");
-    if (saved) {
-      try {
-        setRegisteredCompanies(JSON.parse(saved));
-      } catch (e) {
-        setRegisteredCompanies([]);
-      }
+    const companies = CrmDb.getCompanies();
+    if (companies.length > 0) {
+      setRegisteredCompanies(companies);
     } else {
       // Fallback
       setRegisteredCompanies([
@@ -816,12 +781,12 @@ export default function ServicesView({
   
   // Terms and conditions for the active wizard document
   const [wizardTermsAndConditions, setWizardTermsAndConditions] = useState(() => {
-    return localStorage.getItem("crm_persistent_general_terms") || "";
+    return CrmDb.getKv("crm_persistent_general_terms", "");
   });
 
   // Load persistent general terms across all templates, or fall back to service default if empty
   useEffect(() => {
-    const savedGlobalTerms = localStorage.getItem("crm_persistent_general_terms");
+    const savedGlobalTerms = CrmDb.getKv("crm_persistent_general_terms", "");
     if (savedGlobalTerms) {
       setWizardTermsAndConditions(savedGlobalTerms);
     } else if (selectedService) {
@@ -829,11 +794,11 @@ export default function ServicesView({
     }
   }, [selectedCardId]);
 
-  // Save selected service name to localStorage for auto-filling the contract scope
+  // Save selected service name for auto-filling the contract scope
   useEffect(() => {
     const activeService = serviceCards.find(c => c.id === selectedCardId) || serviceCards[0];
     if (activeService) {
-      localStorage.setItem("crm_contract_selected_service_name", activeService.name || "");
+      CrmDb.setKv("crm_contract_selected_service_name", activeService.name || "");
     }
   }, [selectedCardId, serviceCards]);
 
@@ -1717,7 +1682,7 @@ export default function ServicesView({
 
   // Sync email templates changes to local storage
   useEffect(() => {
-    localStorage.setItem("crm_email_templates", JSON.stringify(emailTemplates));
+    CrmDb.setKv("crm_email_templates", emailTemplates);
   }, [emailTemplates]);
 
   // Compile mail template variables reactively based on placeholders
@@ -1896,19 +1861,11 @@ export default function ServicesView({
     };
 
     // Save/push into Proposal Management list ("crm_proposals")
-    const existingProposalsRaw = localStorage.getItem("crm_proposals");
-    let proposalsList = [];
-    if (existingProposalsRaw) {
-      try {
-        proposalsList = JSON.parse(existingProposalsRaw);
-      } catch (e) {
-        proposalsList = [];
-      }
-    }
+    let proposalsList = CrmDb.getProposals();
     // Prevent duplicate number rows
     proposalsList = proposalsList.filter((p: any) => p.proposalNumber !== proposalNumber);
     proposalsList.unshift(newProposal);
-    localStorage.setItem("crm_proposals", JSON.stringify(proposalsList));
+    CrmDb.saveProposals(proposalsList);
 
     // Save/push into Deal Management Pipeline list ("smart_mailmerge_deals")
     const newDeal: any = {
@@ -1946,19 +1903,11 @@ export default function ServicesView({
       ]
     };
 
-    const existingDealsRaw = localStorage.getItem("smart_mailmerge_deals");
-    let dealsList = [];
-    if (existingDealsRaw) {
-      try {
-        dealsList = JSON.parse(existingDealsRaw);
-      } catch (e) {
-        dealsList = [];
-      }
-    }
+    let dealsList = CrmDb.getDeals();
     // Avoid double creation of same sequence
     dealsList = dealsList.filter((d: any) => d.proposalNumber !== proposalNumber);
     dealsList.unshift(newDeal);
-    localStorage.setItem("smart_mailmerge_deals", JSON.stringify(dealsList));
+    CrmDb.saveDeals(dealsList);
 
     if (!silent) {
       // Step 5 trigger: Save database AND open print PDF immediately!
@@ -2571,12 +2520,12 @@ export default function ServicesView({
                                   const updated = { ...uploadedCoverTemplates };
                                   delete updated[selectedEditCardId];
                                   setUploadedCoverTemplates(updated);
-                                  localStorage.setItem("crm_uploaded_cover_templates", JSON.stringify(updated));
+                                  CrmDb.setKv("crm_uploaded_cover_templates", updated);
 
                                   const updatedMem = { ...inMemoryCoverTemplates };
                                   delete updatedMem[selectedEditCardId];
                                   setInMemoryCoverTemplates(updatedMem);
-                                  localStorage.removeItem(`crm_png_template_cover_${selectedEditCardId}`);
+                                  CrmDb.setKv(`crm_png_template_cover_${selectedEditCardId}`, "");
 
                                   // Delete from server
                                   fetch(`/api/templates/cover/${selectedEditCardId}`, { method: "DELETE" })
@@ -2643,8 +2592,8 @@ export default function ServicesView({
                                         [selectedEditCardId]: nextInfo
                                       };
                                       setUploadedCoverTemplates(updated);
-                                      localStorage.setItem("crm_uploaded_cover_templates", JSON.stringify(updated));
-                                      localStorage.setItem(`crm_png_template_cover_${selectedEditCardId}`, `/templates/cover_${selectedEditCardId}.png`);
+                                      CrmDb.setKv("crm_uploaded_cover_templates", updated);
+                                      CrmDb.setKv(`crm_png_template_cover_${selectedEditCardId}`, `/templates/cover_${selectedEditCardId}.png`);
                                       alert("Kapak şablonu başarıyla eklendi ve sunucuya kaydedildi!");
                                     })
                                     .catch(err => {
@@ -2659,8 +2608,8 @@ export default function ServicesView({
                                         [selectedEditCardId]: nextInfo
                                       };
                                       setUploadedCoverTemplates(updated);
-                                      localStorage.setItem("crm_uploaded_cover_templates", JSON.stringify(updated));
-                                      localStorage.setItem(`crm_png_template_cover_${selectedEditCardId}`, base64);
+                                      CrmDb.setKv("crm_uploaded_cover_templates", updated);
+                                      CrmDb.setKv(`crm_png_template_cover_${selectedEditCardId}`, base64);
                                       alert("Kapak şablonu yerel tarayıcıya kaydedildi (sunucu bağlantı hatası).");
                                     });
                                   };
@@ -2689,12 +2638,12 @@ export default function ServicesView({
                                   const updated = { ...uploadedPageTemplates };
                                   delete updated[selectedEditCardId];
                                   setUploadedPageTemplates(updated);
-                                  localStorage.setItem("crm_uploaded_page_templates", JSON.stringify(updated));
+                                  CrmDb.setKv("crm_uploaded_page_templates", updated);
 
                                   const updatedMem = { ...inMemoryPageTemplates };
                                   delete updatedMem[selectedEditCardId];
                                   setInMemoryPageTemplates(updatedMem);
-                                  localStorage.removeItem(`crm_png_template_page_${selectedEditCardId}`);
+                                  CrmDb.setKv(`crm_png_template_page_${selectedEditCardId}`, "");
 
                                   // Delete from server
                                   fetch(`/api/templates/page/${selectedEditCardId}`, { method: "DELETE" })
@@ -2761,8 +2710,8 @@ export default function ServicesView({
                                         [selectedEditCardId]: nextInfo
                                       };
                                       setUploadedPageTemplates(updated);
-                                      localStorage.setItem("crm_uploaded_page_templates", JSON.stringify(updated));
-                                      localStorage.setItem(`crm_png_template_page_${selectedEditCardId}`, `/templates/page_${selectedEditCardId}.png`);
+                                      CrmDb.setKv("crm_uploaded_page_templates", updated);
+                                      CrmDb.setKv(`crm_png_template_page_${selectedEditCardId}`, `/templates/page_${selectedEditCardId}.png`);
                                       alert("İç sayfa şablonu başarıyla eklendi ve sunucuya kaydedildi!");
                                     })
                                     .catch(err => {
@@ -2777,8 +2726,8 @@ export default function ServicesView({
                                         [selectedEditCardId]: nextInfo
                                       };
                                       setUploadedPageTemplates(updated);
-                                      localStorage.setItem("crm_uploaded_page_templates", JSON.stringify(updated));
-                                      localStorage.setItem(`crm_png_template_page_${selectedEditCardId}`, base64);
+                                      CrmDb.setKv("crm_uploaded_page_templates", updated);
+                                      CrmDb.setKv(`crm_png_template_page_${selectedEditCardId}`, base64);
                                       alert("İç sayfa şablonu yerel tarayıcıya kaydedildi (sunucu bağlantı hatası).");
                                     });
                                   };
@@ -3525,7 +3474,7 @@ export default function ServicesView({
                       <button
                         type="button"
                         onClick={() => {
-                          localStorage.setItem("crm_persistent_general_terms", wizardTermsAndConditions);
+                          CrmDb.setKv("crm_persistent_general_terms", wizardTermsAndConditions);
                           alert("Genel şartlar başarıyla kalıcı olarak sisteme kaydedildi! Tüm yeni tekliflerde bu taslak otomatik kullanılacaktır.");
                           setToastMessage("Genel Şartlar Kaydedildi!");
                         }}

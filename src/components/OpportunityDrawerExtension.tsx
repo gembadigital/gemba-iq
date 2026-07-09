@@ -571,15 +571,12 @@ export function OpexAssessmentSection({ deal, onUpdateDeal, lang, t, readOnly = 
   const [proposalsList, setProposalsList] = useState<Proposal[]>([]);
   useEffect(() => {
     try {
-      const saved = localStorage.getItem("crm_proposals");
-      if (saved) {
-        const parsed = JSON.parse(saved) as Proposal[];
-        const filtered = parsed.filter(p => 
-          p.companyName && deal.companyName &&
-          (p.companyName.toLowerCase().trim() === deal.companyName.toLowerCase().trim() || p.companyId === deal.companyId)
-        );
-        setProposalsList(filtered);
-      }
+      const parsed = CrmDb.getProposals();
+      const filtered = parsed.filter(p => 
+        p.companyName && deal.companyName &&
+        (p.companyName.toLowerCase().trim() === deal.companyName.toLowerCase().trim() || p.companyId === deal.companyId)
+      );
+      setProposalsList(filtered);
     } catch (_) {}
   }, [deal]);
 
@@ -1198,35 +1195,32 @@ export function ProposalContractSection({
   // Load associated proposals
   const loadProposals = () => {
     try {
-      const saved = localStorage.getItem("crm_proposals");
-      if (saved) {
-        const parsed = JSON.parse(saved) as Proposal[];
-        // Filter proposals associated with this deal
-        let filtered = parsed.filter(p => 
-          p.companyName && deal.companyName &&
-          (p.companyName.toLowerCase().trim() === deal.companyName.toLowerCase().trim() || p.companyId === deal.companyId)
-        );
+      const parsed = CrmDb.getProposals();
+      // Filter proposals associated with this deal
+      let filtered = parsed.filter(p => 
+        p.companyName && deal.companyName &&
+        (p.companyName.toLowerCase().trim() === deal.companyName.toLowerCase().trim() || p.companyId === deal.companyId)
+      );
 
-        // Filter soft-deleted depending on Admin Recovery switch
-        if (!showDeletedProposals) {
-          filtered = filtered.filter(p => !(p as any).isDeleted);
-        }
+      // Filter soft-deleted depending on Admin Recovery switch
+      if (!showDeletedProposals) {
+        filtered = filtered.filter(p => !(p as any).isDeleted);
+      }
 
-        setProposals(filtered);
+      setProposals(filtered);
 
-        if (filtered.length > 0) {
-          // Default to first active or match previous selected
-          const stillExists = filtered.find(p => p.id === selectedProposalId);
-          if (stillExists) {
-            setActiveProposal(stillExists);
-          } else {
-            setActiveProposal(filtered[0]);
-            setSelectedProposalId(filtered[0].id);
-          }
+      if (filtered.length > 0) {
+        // Default to first active or match previous selected
+        const stillExists = filtered.find(p => p.id === selectedProposalId);
+        if (stillExists) {
+          setActiveProposal(stillExists);
         } else {
-          setActiveProposal(null);
-          setSelectedProposalId("");
+          setActiveProposal(filtered[0]);
+          setSelectedProposalId(filtered[0].id);
         }
+      } else {
+        setActiveProposal(null);
+        setSelectedProposalId("");
       }
     } catch (_) {}
   };
@@ -1236,21 +1230,18 @@ export function ProposalContractSection({
   }, [deal, showDeletedProposals]);
 
   const saveProposalsToStorage = (updatedList: Proposal[]) => {
-    localStorage.setItem("crm_proposals", JSON.stringify(updatedList));
+    CrmDb.saveProposals(updatedList);
     // Reload state
     try {
-      const saved = localStorage.getItem("crm_proposals");
-      if (saved) {
-        const parsed = JSON.parse(saved) as Proposal[];
-        let filtered = parsed.filter(p => 
-          p.companyName && deal.companyName &&
-          (p.companyName.toLowerCase().trim() === deal.companyName.toLowerCase().trim() || p.companyId === deal.companyId)
-        );
-        if (!showDeletedProposals) {
-          filtered = filtered.filter(p => !(p as any).isDeleted);
-        }
-        setProposals(filtered);
+      const parsed = CrmDb.getProposals();
+      let filtered = parsed.filter(p => 
+        p.companyName && deal.companyName &&
+        (p.companyName.toLowerCase().trim() === deal.companyName.toLowerCase().trim() || p.companyId === deal.companyId)
+      );
+      if (!showDeletedProposals) {
+        filtered = filtered.filter(p => !(p as any).isDeleted);
       }
+      setProposals(filtered);
     } catch (_) {}
   };
 
@@ -1263,12 +1254,12 @@ export function ProposalContractSection({
   // Navigates to Proposal Wizard preselected
   const handleOpenProposalWizard = () => {
     // Write pre-selected details for ServicesView Wizard
-    localStorage.setItem("crm_wizard_preselected_company", JSON.stringify({
+    CrmDb.setKv("crm_wizard_preselected_company", {
       id: deal.companyId || "comp-temp",
       companyName: deal.companyName,
       contactPerson: deal.contactPerson,
       contactEmail: deal.contactEmail || ""
-    }));
+    });
 
     if (onNavigateToTab) {
       onNavigateToTab("create-proposal");
@@ -1363,7 +1354,7 @@ export function ProposalContractSection({
   const handleSaveRevision = () => {
     if (!activeProposal) return;
     try {
-      const savedList = JSON.parse(localStorage.getItem("crm_proposals") || "[]") as Proposal[];
+      const savedList = CrmDb.getProposals();
       const propIdx = savedList.findIndex(p => p.id === activeProposal.id);
       
       if (propIdx > -1) {
@@ -1426,7 +1417,7 @@ export function ProposalContractSection({
   // 4. Duplicate Proposal
   const handleDuplicateProposal = (prop: Proposal) => {
     try {
-      const savedList = JSON.parse(localStorage.getItem("crm_proposals") || "[]") as Proposal[];
+      const savedList = CrmDb.getProposals();
       const nextSeq = savedList.length > 0 ? Math.max(...savedList.map((p) => p.sequenceNo)) + 1 : 101;
       
       const now = new Date();
@@ -1467,7 +1458,7 @@ export function ProposalContractSection({
       : `Are you sure you want to soft-delete this proposal?\nProposal No: #${prop.proposalNumber}\n(Admins will be able to recover this proposal.)`;
     if (window.confirm(msg)) {
       try {
-        const savedList = JSON.parse(localStorage.getItem("crm_proposals") || "[]") as Proposal[];
+        const savedList = CrmDb.getProposals();
         const updated = savedList.map(p => {
           if (p.id === prop.id) {
             return { ...p, isDeleted: true };
@@ -1493,7 +1484,7 @@ export function ProposalContractSection({
   // Recover proposal (Admin Only feature)
   const handleRecoverProposal = (propId: string) => {
     try {
-      const savedList = JSON.parse(localStorage.getItem("crm_proposals") || "[]") as Proposal[];
+      const savedList = CrmDb.getProposals();
       const updated = savedList.map(p => {
         if (p.id === propId) {
           return { ...p, isDeleted: false };
@@ -1562,7 +1553,7 @@ export function ProposalContractSection({
       
       // Update proposal status
       try {
-        const savedList = JSON.parse(localStorage.getItem("crm_proposals") || "[]") as Proposal[];
+        const savedList = CrmDb.getProposals();
         const updated = savedList.map(p => {
           if (p.id === activeProposal.id) {
             return { ...p, status: "Accepted" as any };

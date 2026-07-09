@@ -186,8 +186,8 @@ export default function CompaniesView() {
 
   // Custom Fields Configurations
   const [customFieldDefs, setCustomFieldDefs] = useState<CustomFieldDefinition[]>(() => {
-    const saved = localStorage.getItem("crm_company_custom_field_defs");
-    return saved ? JSON.parse(saved) : [];
+    const saved = CrmDb.getCompanyCustomFieldDefs();
+    return (saved as CustomFieldDefinition[]) || [];
   });
   const [isFieldCustomizerOpen, setIsFieldCustomizerOpen] = useState(false);
   const [newFieldForm, setNewFieldForm] = useState<Partial<CustomFieldDefinition>>({
@@ -276,7 +276,7 @@ export default function CompaniesView() {
   }, [companies]);
 
   useEffect(() => {
-    localStorage.setItem("crm_company_custom_field_defs", JSON.stringify(customFieldDefs));
+    CrmDb.saveCompanyCustomFieldDefs(customFieldDefs);
   }, [customFieldDefs]);
 
   // Handle external search or deep navigation links
@@ -285,15 +285,15 @@ export default function CompaniesView() {
       const latest = CrmDb.getCompanies() as any[];
       setCompanies(latest);
       
-      const targetId = localStorage.getItem("crm_active_target_id") || localStorage.getItem("active_company_detail_id");
+      const targetId = CrmDb.getKv("crm_active_target_id", "") || CrmDb.getKv("active_company_detail_id", "");
       if (targetId) {
         const found = latest.find(c => c.id === targetId);
         if (found) {
           setSelectedCompany(found);
           setDetailTab("overview");
         }
-        localStorage.removeItem("crm_active_target_id");
-        localStorage.removeItem("active_company_detail_id");
+        CrmDb.setKv("crm_active_target_id", "");
+        CrmDb.setKv("active_company_detail_id", "");
       }
     };
     reload();
@@ -320,8 +320,7 @@ export default function CompaniesView() {
   // Log Change History / Audit log persistent structure
   const logAudit = (companyId: string, field: string, oldVal: string, newVal: string, user: string) => {
     const key = `crm_company_audit_logs_${companyId}`;
-    const saved = localStorage.getItem(key);
-    const logs = saved ? JSON.parse(saved) : [];
+    const logs = CrmDb.getKv<any[]>(key, []);
     
     logs.unshift({
       id: `audit-${Date.now()}`,
@@ -332,7 +331,7 @@ export default function CompaniesView() {
       timestamp: new Date().toISOString()
     });
     
-    localStorage.setItem(key, JSON.stringify(logs));
+    CrmDb.setKv(key, logs);
   };
 
   // Timeline logged activities helper

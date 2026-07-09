@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useMemo } from "react";
 import { useLanguage } from "../lib/LanguageContext";
+import { CrmDb } from "../lib/CrmDb";
 import {
   Search,
   Building,
@@ -357,32 +358,26 @@ const INITIAL_DISCOVERY_DATABASE = [
 export default function CompanyDiscoveryView() {
   const { lang, t } = useLanguage();
   // --- STATE FOR DISCOVERY DATA & PERSISTED LISTS ---
-  const [discoveryDb, setDiscoveryDb] = useState<any[]>(() => {
-    const saved = localStorage.getItem("crm_discovery_db");
-    return saved ? JSON.parse(saved) : INITIAL_DISCOVERY_DATABASE;
-  });
+  const [discoveryDb, setDiscoveryDb] = useState<any[]>(() =>
+    CrmDb.getKv<any[]>("crm_discovery_db", [])
+  );
 
-  const [targetAccounts, setTargetAccounts] = useState<TargetAccount[]>(() => {
-    const saved = localStorage.getItem("smart_mailmerge_target_accounts");
-    return saved ? JSON.parse(saved) : [];
-  });
+  const [targetAccounts, setTargetAccounts] = useState<TargetAccount[]>(() =>
+    CrmDb.getKv<TargetAccount[]>("smart_mailmerge_target_accounts", [])
+  );
 
-  const [wonCompanies, setWonCompanies] = useState<Company[]>(() => {
-    const saved = localStorage.getItem("crm_won_companies");
-    return saved ? JSON.parse(saved) : [];
-  });
+  const [wonCompanies, setWonCompanies] = useState<Company[]>(() => CrmDb.getCompanies());
 
-  // Save changes to localStorage
   useEffect(() => {
-    localStorage.setItem("crm_discovery_db", JSON.stringify(discoveryDb));
+    CrmDb.setKv("crm_discovery_db", discoveryDb);
   }, [discoveryDb]);
 
   useEffect(() => {
-    localStorage.setItem("smart_mailmerge_target_accounts", JSON.stringify(targetAccounts));
+    CrmDb.setKv("smart_mailmerge_target_accounts", targetAccounts);
   }, [targetAccounts]);
 
   useEffect(() => {
-    localStorage.setItem("crm_won_companies", JSON.stringify(wonCompanies));
+    CrmDb.saveCompanies(wonCompanies);
   }, [wonCompanies]);
 
   // --- SUB TABS ---

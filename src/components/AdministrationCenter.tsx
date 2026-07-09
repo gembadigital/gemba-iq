@@ -37,6 +37,7 @@ import {
 } from "lucide-react";
 import { useLanguage } from "../lib/LanguageContext";
 import { DocumentService } from "../services/DocumentService";
+import { CrmDb } from "../lib/CrmDb";
 import OrganizationUsersPanel from "./admin/OrganizationUsersPanel";
 const logoImage = "https://lh3.googleusercontent.com/d/13bNnthJU4LIICB4iiF1a4GH1PEn05MBx";
 
@@ -157,12 +158,12 @@ export default function AdministrationCenter({ onClose, initialSubTab }: Adminis
     return () => window.clearTimeout(timer);
   }, [toast]);
 
-  const [simulateEmailError, setSimulateEmailError] = useState<boolean>(() => {
-    return localStorage.getItem("crm_simulate_email_error") === "true";
-  });
+  const [simulateEmailError, setSimulateEmailError] = useState<boolean>(() =>
+    CrmDb.getKv<boolean>("crm_simulate_email_error", false)
+  );
 
   useEffect(() => {
-    localStorage.setItem("crm_simulate_email_error", String(simulateEmailError));
+    CrmDb.setKv("crm_simulate_email_error", simulateEmailError);
   }, [simulateEmailError]);
 
   // 2.2 Permissions Matrix state

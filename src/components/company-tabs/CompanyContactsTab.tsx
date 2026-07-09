@@ -72,27 +72,20 @@ export default function CompanyContactsTab({
 
     if (editingContactId) {
       // Edit in CrmDb
-      const allSaved = localStorage.getItem("crm_contacts");
-      if (allSaved) {
-        try {
-          const list: Contact[] = JSON.parse(allSaved);
-          const updated = list.map(c => 
-            c.id === editingContactId 
-              ? { ...c, ...formState } 
-              : c
-          );
-          localStorage.setItem("crm_contacts", JSON.stringify(updated));
-          
-          if (onLogTimelineEvent) {
-            onLogTimelineEvent(
-              t("Contact Updated"),
-              `${formState.firstName} ${formState.lastName} (${formState.department})`,
-              "system"
-            );
-          }
-        } catch (err) {
-          console.error("Save contacts failed", err);
-        }
+      const list = CrmDb.getContacts();
+      const updated = list.map(c => 
+        c.id === editingContactId 
+          ? { ...c, ...formState } 
+          : c
+      );
+      CrmDb.saveContacts(updated);
+      
+      if (onLogTimelineEvent) {
+        onLogTimelineEvent(
+          t("Contact Updated"),
+          `${formState.firstName} ${formState.lastName} (${formState.department})`,
+          "system"
+        );
       }
     } else {
       // Add in CrmDb
@@ -166,23 +159,16 @@ export default function CompanyContactsTab({
 
   const handleDeleteContact = (id: string, name: string) => {
     if (confirm(t("Are you sure you want to delete {name}?").replace("{name}", name))) {
-      const allSaved = localStorage.getItem("crm_contacts");
-      if (allSaved) {
-        try {
-          const list: Contact[] = JSON.parse(allSaved);
-          const filtered = list.filter(c => c.id !== id);
-          localStorage.setItem("crm_contacts", JSON.stringify(filtered));
-          
-          if (onLogTimelineEvent) {
-            onLogTimelineEvent(
-              t("Contact Deleted"),
-              name,
-              "system"
-            );
-          }
-        } catch (err) {
-          console.error("Delete contacts failed", err);
-        }
+      const list = CrmDb.getContacts();
+      const filtered = list.filter(c => c.id !== id);
+      CrmDb.saveContacts(filtered);
+      
+      if (onLogTimelineEvent) {
+        onLogTimelineEvent(
+          t("Contact Deleted"),
+          name,
+          "system"
+        );
       }
       reloadContacts();
     }

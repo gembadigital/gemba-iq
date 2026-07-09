@@ -44,8 +44,8 @@ export default function CompanyRevenueTab({
   // Billing Schedule local state
   const [billingList, setBillingList] = useState<BillingItem[]>(() => {
     const key = `crm_company_billing_${companyId}`;
-    const saved = localStorage.getItem(key);
-    if (saved) return JSON.parse(saved);
+    const saved = CrmDb.getKv<BillingItem[] | null>(key, null);
+    if (saved && saved.length > 0) return saved;
 
     // Default mock milestones based on deals
     const defaults: BillingItem[] = [
@@ -53,13 +53,13 @@ export default function CompanyRevenueTab({
       { id: "b2", milestone: lang === "TR" ? "Aşama 2: Kaizen Blitz & SMED Kalıp Hızlandırma (%40)" : "Milestone 2: Kaizen Blitz & SMED Speedup (40%)", amount: 20000, date: "2026-07-20", status: "Pending" },
       { id: "b3", milestone: lang === "TR" ? "Aşama 3: Standart İş SOP Kartları ve OEE Kapanış Raporu (%30)" : "Milestone 3: Standard SOP Deployment & Final OEE Audit (30%)", amount: 15000, date: "2026-08-30", status: "Draft" }
     ];
-    localStorage.setItem(key, JSON.stringify(defaults));
+    CrmDb.setKv(key, defaults);
     return defaults;
   });
 
   const saveBillingList = (updated: BillingItem[]) => {
     setBillingList(updated);
-    localStorage.setItem(`crm_company_billing_${companyId}`, JSON.stringify(updated));
+    CrmDb.setKv(`crm_company_billing_${companyId}`, updated);
   };
 
   // Metrics

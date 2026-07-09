@@ -492,7 +492,7 @@ export default function DealManagementView({ initialTab = "dashboard", onNavigat
       const newComp = CrmDb.createCompany({ name: companyName });
       id = newComp.id;
     }
-    localStorage.setItem("active_company_detail_id", id);
+    CrmDb.setKv("active_company_detail_id", id);
     window.dispatchEvent(new CustomEvent("crm-navigate", { detail: { tab: "companies-registry" } }));
   };
 
@@ -504,26 +504,7 @@ export default function DealManagementView({ initialTab = "dashboard", onNavigat
   }, [initialTab]);
   const [dealViewStyle, setDealViewStyle] = useState<"kanban" | "list">("kanban");
 
-  const [deals, setDeals] = useState<Deal[]>(() => {
-    const loaded = CrmDb.getDeals();
-    if (loaded && loaded.length > 0) {
-      const has7d = loaded.some((d: any) => d.id === "deal-delayed-7d");
-      const has20d = loaded.some((d: any) => d.id === "deal-delayed-20d");
-      if (!has7d || !has20d) {
-        const extra = [];
-        const d7d = INITIAL_DEALS.find(x => x.id === "deal-delayed-7d");
-        const d20d = INITIAL_DEALS.find(x => x.id === "deal-delayed-20d");
-        if (!has7d && d7d) extra.push(d7d);
-        if (!has20d && d20d) extra.push(d20d);
-        const combined = [...loaded, ...extra];
-        CrmDb.saveDeals(combined);
-        return combined;
-      }
-      return loaded;
-    }
-    CrmDb.saveDeals(INITIAL_DEALS);
-    return INITIAL_DEALS;
-  });
+  const [deals, setDeals] = useState<Deal[]>(() => CrmDb.getDeals());
 
   const [projects, setProjects] = useState<ProjectRecord[]>(() => {
     const loaded = CrmDb.getProjects();
@@ -531,13 +512,13 @@ export default function DealManagementView({ initialTab = "dashboard", onNavigat
   });
 
   const [activeStages, setActiveStages] = useState<string[]>(() => {
-    const saved = localStorage.getItem("crm_active_pipeline_stages");
-    return saved ? JSON.parse(saved) : DEFAULT_STAGES;
+    const saved = CrmDb.getPipelineStages();
+    return saved && saved.length > 0 ? saved : DEFAULT_STAGES;
   });
 
   const [stageMetadata, setStageMetadata] = useState<{[key: string]: { collapsed: boolean; description: string }}>(() => {
-    const saved = localStorage.getItem("crm_active_stage_metadata");
-    return saved ? JSON.parse(saved) : INITIAL_STAGE_METADATA;
+    const saved = CrmDb.getStageMetadata();
+    return saved ? (saved as {[key: string]: { collapsed: boolean; description: string }}) : INITIAL_STAGE_METADATA;
   });
 
   // Top Toolbar Filter & Search states
@@ -606,8 +587,7 @@ export default function DealManagementView({ initialTab = "dashboard", onNavigat
 
   // Exchange Connection Simulated Status
   const [isExchangeConnected, setIsExchangeConnected] = useState<boolean>(() => {
-    const saved = localStorage.getItem("exchange_connected_sync");
-    return saved === "true";
+    return CrmDb.getKv<string>("exchange_connected_sync", "false") === "true";
   });
 
   // Email form states
@@ -692,10 +672,8 @@ export default function DealManagementView({ initialTab = "dashboard", onNavigat
   });
 
   const [leadSourcesList, setLeadSourcesList] = useState<string[]>(() => {
-    try {
-      const saved = localStorage.getItem("crm_lead_sources");
-      if (saved) return JSON.parse(saved);
-    } catch (_) {}
+    const saved = CrmDb.getLeadSources();
+    if (saved && saved.length > 0) return saved;
     return [
       "Cold Call",
       "Warm Lead",
@@ -736,7 +714,7 @@ export default function DealManagementView({ initialTab = "dashboard", onNavigat
   const [reminderClientType, setReminderClientType] = useState<"mailto" | "gmail" | "outlook" | "outlook-corp">("mailto");
   const [reminderTemplateMode, setReminderTemplateMode] = useState<"7_day" | "20_day" | "custom">("7_day");
 
-  // Save changes to localStorage via CrmDb to preserve single source of truth relational mapping
+  // Save changes via CrmDb to preserve single source of truth relational mapping
   useEffect(() => {
     CrmDb.saveDeals(deals);
   }, [deals]);
@@ -746,16 +724,20 @@ export default function DealManagementView({ initialTab = "dashboard", onNavigat
   }, [projects]);
 
   useEffect(() => {
-    localStorage.setItem("crm_active_pipeline_stages", JSON.stringify(activeStages));
+    CrmDb.savePipelineStages(activeStages);
   }, [activeStages]);
 
   useEffect(() => {
-    localStorage.setItem("crm_active_stage_metadata", JSON.stringify(stageMetadata));
+    CrmDb.saveStageMetadata(stageMetadata);
   }, [stageMetadata]);
 
   useEffect(() => {
-    localStorage.setItem("exchange_connected_sync", String(isExchangeConnected));
+    CrmDb.setKv("exchange_connected_sync", String(isExchangeConnected));
   }, [isExchangeConnected]);
+
+  useEffect(() => {
+    CrmDb.saveLeadSources(leadSourcesList);
+  }, [leadSourcesList]);
 
   // Handle stage creation
   const handleAddNewStage = (e: React.FormEvent) => {
@@ -1109,7 +1091,6 @@ export default function DealManagementView({ initialTab = "dashboard", onNavigat
         if (newDeals.length > 0) {
           setDeals((prev) => {
             const merged = [...prev, ...newDeals];
-            localStorage.setItem("smart_mailmerge_deals", JSON.stringify(merged));
             return merged;
           });
           alert(`${newDeals.length} deals successfully imported!`);
@@ -1391,7 +1372,7 @@ export default function DealManagementView({ initialTab = "dashboard", onNavigat
   const handleSendReminderMail = () => {
     if (!reminderSelectedDeal) return;
 
-    const isSimulatedError = localStorage.getItem("crm_simulate_email_error") === "true";
+    const isSimulatedError = CrmDb.getKv<string>("crm_simulate_email_error", "false") === "true";
     if (isSimulatedError) {
       setEmailSendError({
         code: "ERR_REMINDER_CONN_FAILED_503",
@@ -1465,7 +1446,6 @@ export default function DealManagementView({ initialTab = "dashboard", onNavigat
     });
 
     setDeals(updatedDeals);
-    localStorage.setItem("smart_mailmerge_deals", JSON.stringify(updatedDeals));
     
     setIsReminderMailboxOpen(false);
     alert("Hatırlatma e-postası başarıyla hazırlandı ve mail uygulamasında açıldı!");
@@ -1484,7 +1464,7 @@ export default function DealManagementView({ initialTab = "dashboard", onNavigat
       return;
     }
 
-    const isSimulatedError = localStorage.getItem("crm_simulate_email_error") === "true";
+    const isSimulatedError = CrmDb.getKv<string>("crm_simulate_email_error", "false") === "true";
     if (isSimulatedError) {
       setEmailSendError({
         code: "ERR_MAIL_OAUTH_TOKEN_EXPIRED_401",
@@ -2068,7 +2048,6 @@ export default function DealManagementView({ initialTab = "dashboard", onNavigat
                                     }
                                     return d;
                                   });
-                                  localStorage.setItem("smart_mailmerge_deals", JSON.stringify(updated));
                                   return updated;
                                 });
                               }}
@@ -2126,7 +2105,6 @@ export default function DealManagementView({ initialTab = "dashboard", onNavigat
                                     onConfirm: () => {
                                       setDeals(prev => {
                                         const updated = prev.filter(p => p.id !== deal.id);
-                                        localStorage.setItem("smart_mailmerge_deals", JSON.stringify(updated));
                                         return updated;
                                       });
                                     }
@@ -2481,7 +2459,6 @@ export default function DealManagementView({ initialTab = "dashboard", onNavigat
                                             onConfirm: () => {
                                               setDeals(prev => {
                                                 const updated = prev.filter(p => p.id !== deal.id);
-                                                localStorage.setItem("smart_mailmerge_deals", JSON.stringify(updated));
                                                 return updated;
                                               });
                                             }
@@ -2794,7 +2771,6 @@ export default function DealManagementView({ initialTab = "dashboard", onNavigat
                                     if (!leadSourcesList.includes(trimmed)) {
                                       const updated = [...leadSourcesList, trimmed];
                                       setLeadSourcesList(updated);
-                                      localStorage.setItem("crm_lead_sources", JSON.stringify(updated));
                                     }
                                     setDealFormState({ ...dealFormState, leadSource: trimmed });
                                     setCustomSourceInput("");

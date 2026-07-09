@@ -1,9 +1,20 @@
 import { Company } from "../components/CompaniesView";
 import { Deal, ProjectRecord } from "../components/DealManagementView";
+import type { Task, TaskColumn, TaskNotification, NotificationSettings } from "../components/TasksView";
 import { Proposal } from "../types/proposal";
-import { getTenantActorName, resolveOrganizationId, tenantStorageKey } from "./tenantStorage";
+import { getTenantActorName } from "./tenantStorage";
+import {
+  type CrmSnapshot,
+  type OrgAuxiliaryData,
+  loadOrganizationCrm,
+  persistAuxiliary,
+  persistCompanies,
+  persistContacts,
+  persistDeals,
+  persistProposals,
+  persistTasks,
+} from "./crmSupabaseService";
 
-// Unified CRM interfaces
 export interface Contact {
   id: string;
   organization_id?: string;
@@ -42,7 +53,7 @@ export interface CrmDocument {
   proposalId?: string;
   projectId?: string;
   name: string;
-  type: string; // "Proposal", "Contract", "Attachment", "Report", "Invoice"
+  type: string;
   size: string;
   date: string;
   link?: string;
@@ -64,101 +75,242 @@ export interface CrmActivity {
   result?: string;
 }
 
-// Default initial companies matching CompaniesView.tsx
-export const INITIAL_COMPANIES: Company[] = [
-  {
-    id: "company-1",
-    accountOwner: "GP Admin",
-    name: "ABC Automotive",
-    phone: "+90 (532) 111 2233",
-    website: "abcauto.com",
-    customerStatus: "Active Customer",
-    description: "Highly automated Tier-1 automotive glass manufacturer.",
-    billingAddress: "Organize Sanayi Bolgesi, 4. Cadde No: 12",
-    billingCity: "Bursa",
-    billingDistrict: "Nilüfer",
-    billingCountry: "Türkiye",
-    billingPostalCode: "16140",
-    industry: "Automotive",
-    employeeCount: 450,
-    subIndustry: "Glass Components",
-    shift: "3 Shifts",
-    managementTeam: "John Smith (COO), Ahmet Can (MD)",
-    annualRevenue: "15,000,000",
-    annualRevenueCurrency: "€",
-    productionType: "Continuous Flow Assembly",
-    squareMeter: "25,000",
-    digitalInfrastructure: "ERP Cloud, OEE Monitoring",
-    customFields: {}
-  },
-  {
-    id: "company-2",
-    accountOwner: "GP Admin",
-    name: "Kordsa Tekstil",
-    phone: "+90 (262) 444 5566",
-    website: "kordsa.com",
-    customerStatus: "Implementation",
-    description: "Multi-national industrial nylon and polyester yarn producer.",
-    billingAddress: "Alikahya Fatih Mahallesi, Sanayi Bulvari No: 90",
-    billingCity: "Kocaeli",
-    billingDistrict: "İzmit",
-    billingCountry: "Türkiye",
-    billingPostalCode: "41310",
-    industry: "Textiles",
-    employeeCount: 1200,
-    subIndustry: "Industrial Yarn",
-    shift: "4 Shifts (Continuous)",
-    managementTeam: "Bülent Ersoy (Plant Director)",
-    annualRevenue: "120,500,000",
-    annualRevenueCurrency: "$",
-    productionType: "Spinning & Weaving",
-    squareMeter: "85,005",
-    digitalInfrastructure: "SAP Hana, SCADA, Custom Andon",
-    customFields: {}
-  }
-];
+type CrmCache = {
+  companies: Company[];
+  contacts: Contact[];
+  deals: Deal[];
+  proposals: Proposal[];
+  projects: ProjectRecord[];
+  emails: CrmEmail[];
+  activities: CrmActivity[];
+  documents: CrmDocument[];
+  tasks: Task[];
+  auxiliary: OrgAuxiliaryData;
+  loaded: boolean;
+};
 
-// Helper to seed the database
-export const CrmDb = {
-  // -------------------------------------------------------------
-  // COMPANIES CRUD
-  // -------------------------------------------------------------
-  getCompanies(): Company[] {
-    const saved = localStorage.getItem(tenantStorageKey("crm_won_companies"));
-    if (saved) {
-      try {
-        const parsed = JSON.parse(saved);
-        return parsed.map((c: Company) => ({
-          ...c,
-          customFields: c.customFields || {}
-        }));
-      } catch (e) {
-        console.error("Error parsing crm_won_companies, resetting", e);
+const cache: CrmCache = {
+  companies: [],
+  contacts: [],
+  deals: [],
+  proposals: [],
+  projects: [],
+  emails: [],
+  activities: [],
+  documents: [],
+  tasks: [],
+  auxiliary: {
+    emails: [],
+    activities: [],
+    projects: [],
+    crmDocuments: [],
+    taskColumns: [],
+    crmUsers: [],
+    notificationSettings: null,
+    taskNotifications: [],
+    pipelineStages: null,
+    stageMetadata: null,
+    leadSources: null,
+    companyCustomFieldDefs: null,
+    kvStore: {},
+  },
+  loaded: false,
+};
+
+function persistSoon(fn: () => Promise<void>) {
+  void fn().catch((err) => console.error("CRM persist failed:", err));
+}
+
+function syncAuxiliaryFromCache() {
+  cache.auxiliary.emails = cache.emails;
+  cache.auxiliary.activities = cache.activities;
+  cache.auxiliary.projects = cache.projects;
+  cache.auxiliary.crmDocuments = cache.documents;
+}
+
+function applySnapshot(snapshot: CrmSnapshot) {
+  cache.companies = snapshot.companies.map((c) => ({ ...c, customFields: c.customFields || {} }));
+  cache.contacts = snapshot.contacts;
+  cache.deals = snapshot.deals;
+  cache.proposals = snapshot.proposals;
+  cache.tasks = snapshot.tasks;
+  cache.auxiliary = snapshot.auxiliary;
+  cache.emails = snapshot.auxiliary.emails || [];
+  cache.activities = snapshot.auxiliary.activities || [];
+  cache.projects = snapshot.auxiliary.projects || [];
+  cache.documents = snapshot.auxiliary.crmDocuments || [];
+  cache.loaded = true;
+}
+
+function joinDealsWithCompanies(deals: Deal[]): Deal[] {
+  const companies = cache.companies;
+  return deals.map((deal) => {
+    const next = { ...deal };
+    let companyId = next.companyId;
+    if (!companyId && next.companyName) {
+      const comp = companies.find(
+        (c) => c.name.toLowerCase().trim() === next.companyName.toLowerCase().trim()
+      );
+      if (comp) companyId = comp.id;
+    }
+    if (companyId) {
+      const comp = companies.find((c) => c.id === companyId);
+      if (comp) {
+        next.companyId = companyId;
+        next.companyName = comp.name;
+        next.industry = comp.industry;
       }
     }
-    // Seed default if not found
-    localStorage.setItem(tenantStorageKey("crm_won_companies"), JSON.stringify(INITIAL_COMPANIES));
-    return INITIAL_COMPANIES;
+    return next;
+  });
+}
+
+function joinProposalsWithCompanies(proposals: Proposal[]): Proposal[] {
+  const companies = cache.companies;
+  return proposals.map((proposal) => {
+    const next = { ...proposal };
+    if (next.companyId) {
+      const comp = companies.find((c) => c.id === next.companyId);
+      if (comp) next.companyName = comp.name;
+    }
+    return next;
+  });
+}
+
+export const CrmDb = {
+  isLoaded(): boolean {
+    return cache.loaded;
+  },
+
+  async hydrateFromSupabase(): Promise<void> {
+    const snapshot = await loadOrganizationCrm();
+    applySnapshot(snapshot);
+  },
+
+  resetCache(): void {
+    cache.loaded = false;
+    cache.companies = [];
+    cache.contacts = [];
+    cache.deals = [];
+    cache.proposals = [];
+    cache.projects = [];
+    cache.emails = [];
+    cache.activities = [];
+    cache.documents = [];
+    cache.tasks = [];
+  },
+
+  getKv<T>(key: string, fallback: T): T {
+    const value = cache.auxiliary.kvStore[key];
+    return (value as T) ?? fallback;
+  },
+
+  setKv(key: string, value: unknown): void {
+    cache.auxiliary.kvStore[key] = value;
+    syncAuxiliaryFromCache();
+    persistSoon(() => persistAuxiliary(cache.auxiliary));
+  },
+
+  getTaskColumns(): TaskColumn[] {
+    return cache.auxiliary.taskColumns || [];
+  },
+
+  saveTaskColumns(columns: TaskColumn[]): void {
+    cache.auxiliary.taskColumns = columns;
+    syncAuxiliaryFromCache();
+    persistSoon(() => persistAuxiliary(cache.auxiliary));
+  },
+
+  getCrmUsers(): string[] {
+    return cache.auxiliary.crmUsers || [];
+  },
+
+  saveCrmUsers(users: string[]): void {
+    cache.auxiliary.crmUsers = users;
+    syncAuxiliaryFromCache();
+    persistSoon(() => persistAuxiliary(cache.auxiliary));
+  },
+
+  getNotificationSettings(): NotificationSettings | null {
+    return cache.auxiliary.notificationSettings;
+  },
+
+  saveNotificationSettings(settings: NotificationSettings): void {
+    cache.auxiliary.notificationSettings = settings;
+    syncAuxiliaryFromCache();
+    persistSoon(() => persistAuxiliary(cache.auxiliary));
+  },
+
+  getTaskNotifications(): TaskNotification[] {
+    return cache.auxiliary.taskNotifications || [];
+  },
+
+  saveTaskNotifications(notifications: TaskNotification[]): void {
+    cache.auxiliary.taskNotifications = notifications;
+    syncAuxiliaryFromCache();
+    persistSoon(() => persistAuxiliary(cache.auxiliary));
+  },
+
+  getPipelineStages(): string[] | null {
+    return cache.auxiliary.pipelineStages;
+  },
+
+  savePipelineStages(stages: string[]): void {
+    cache.auxiliary.pipelineStages = stages;
+    syncAuxiliaryFromCache();
+    persistSoon(() => persistAuxiliary(cache.auxiliary));
+  },
+
+  getStageMetadata(): Record<string, unknown> | null {
+    return cache.auxiliary.stageMetadata;
+  },
+
+  saveStageMetadata(metadata: Record<string, unknown>): void {
+    cache.auxiliary.stageMetadata = metadata;
+    syncAuxiliaryFromCache();
+    persistSoon(() => persistAuxiliary(cache.auxiliary));
+  },
+
+  getLeadSources(): string[] | null {
+    return cache.auxiliary.leadSources;
+  },
+
+  saveLeadSources(sources: string[]): void {
+    cache.auxiliary.leadSources = sources;
+    syncAuxiliaryFromCache();
+    persistSoon(() => persistAuxiliary(cache.auxiliary));
+  },
+
+  getCompanyCustomFieldDefs(): unknown[] {
+    return cache.auxiliary.companyCustomFieldDefs || [];
+  },
+
+  saveCompanyCustomFieldDefs(defs: unknown[]): void {
+    cache.auxiliary.companyCustomFieldDefs = defs;
+    syncAuxiliaryFromCache();
+    persistSoon(() => persistAuxiliary(cache.auxiliary));
+  },
+
+  getCompanies(): Company[] {
+    return cache.companies.map((c) => ({ ...c, customFields: c.customFields || {} }));
   },
 
   saveCompanies(companies: Company[]) {
-    localStorage.setItem(tenantStorageKey("crm_won_companies"), JSON.stringify(companies));
-    // Propagate changes to all related modules (Deals, Proposals, Projects)
-    this.propagateCompanyChanges(companies);
+    cache.companies = companies.map((c) => ({ ...c, customFields: c.customFields || {} }));
+    this.propagateCompanyChanges(cache.companies);
+    persistSoon(() => persistCompanies(cache.companies));
   },
 
   getCompanyById(companyId: string): Company | undefined {
-    return this.getCompanies().find(c => c.id === companyId);
+    return this.getCompanies().find((c) => c.id === companyId);
   },
 
   createCompany(companyData: Partial<Company>): Company {
     const companies = this.getCompanies();
-    
-    // Check if duplicate name exists
-    const existing = companies.find(c => c.name && c.name.toLowerCase().trim() === (companyData.name || "").toLowerCase().trim());
-    if (existing) {
-      return existing;
-    }
+    const existing = companies.find(
+      (c) => c.name && c.name.toLowerCase().trim() === (companyData.name || "").toLowerCase().trim()
+    );
+    if (existing) return existing;
 
     const newCompany: Company = {
       id: companyData.id || `company-${Date.now()}`,
@@ -185,16 +337,15 @@ export const CrmDb = {
       productionType: companyData.productionType || "",
       squareMeter: companyData.squareMeter || "",
       digitalInfrastructure: companyData.digitalInfrastructure || "",
-      customFields: companyData.customFields || {}
+      customFields: companyData.customFields || {},
     };
 
     companies.push(newCompany);
     this.saveCompanies(companies);
 
-    // Also automatically create an initial contact for this company
     if (companyData.managementTeam) {
       const parts = companyData.managementTeam.split(",");
-      parts.forEach((p, idx) => {
+      parts.forEach((p) => {
         const namePart = p.split("(")[0].trim();
         if (namePart) {
           const nameWords = namePart.split(" ");
@@ -207,7 +358,7 @@ export const CrmDb = {
             email: `${firstName.toLowerCase()}@${newCompany.website || "company.com"}`,
             phone: newCompany.phone,
             department: "Management",
-            leadStatus: "Active"
+            leadStatus: "Active",
           });
         }
       });
@@ -216,286 +367,125 @@ export const CrmDb = {
     return newCompany;
   },
 
-  // -------------------------------------------------------------
-  // CONTACTS CRUD
-  // -------------------------------------------------------------
   getContacts(): Contact[] {
-    const saved = localStorage.getItem(tenantStorageKey("crm_contacts"));
-    if (saved) {
-      try {
-        return JSON.parse(saved);
-      } catch (e) {
-        console.error("Error parsing crm_contacts, resetting", e);
-      }
-    }
-    // Seed initial contacts from Lead Profiles & Companies
-    const initialContacts: Contact[] = [
-      {
-        id: "contact-1",
-        companyId: "company-1",
-        firstName: "John",
-        lastName: "Smith",
-        email: "john.smith@abcauto.com",
-        phone: "+90 (532) 111 2233",
-        department: "Operations",
-        leadStatus: "Contacted",
-        leadSegment: "Tier 1"
-      },
-      {
-        id: "contact-2",
-        companyId: "company-1",
-        firstName: "Ahmet",
-        lastName: "Can",
-        email: "ahmet.can@abcauto.com",
-        phone: "+90 (532) 111 2233",
-        department: "Management",
-        leadStatus: "Contacted",
-        leadSegment: "Tier 1"
-      },
-      {
-        id: "contact-3",
-        companyId: "company-2",
-        firstName: "Bülent",
-        lastName: "Ersoy",
-        email: "b.ersoy@kordsa.com",
-        phone: "+90 (262) 444 5566",
-        department: "Plant Management",
-        leadStatus: "Proposal Phase",
-        leadSegment: "Enterprise"
-      }
-    ];
-    localStorage.setItem(tenantStorageKey("crm_contacts"), JSON.stringify(initialContacts));
-    return initialContacts;
+    return [...cache.contacts];
   },
 
   saveContacts(contacts: Contact[]) {
-    localStorage.setItem(tenantStorageKey("crm_contacts"), JSON.stringify(contacts));
+    cache.contacts = contacts;
+    persistSoon(() => persistContacts(cache.contacts));
   },
 
   getContactsByCompany(companyId: string): Contact[] {
-    return this.getContacts().filter(c => c.companyId === companyId);
+    return this.getContacts().filter((c) => c.companyId === companyId);
   },
 
   createContact(contactData: Partial<Contact>): Contact {
     const contacts = this.getContacts();
     const newContact: Contact = {
       id: contactData.id || `contact-${Date.now()}-${Math.floor(Math.random() * 1000)}`,
-      companyId: contactData.companyId || "company-1",
+      companyId: contactData.companyId || "",
       firstName: contactData.firstName || "Yeni",
       lastName: contactData.lastName || "Kişi",
       email: contactData.email || "",
       phone: contactData.phone || "",
       department: contactData.department || "Operations",
       leadStatus: contactData.leadStatus || "New",
-      leadSegment: contactData.leadSegment || "Standard"
+      leadSegment: contactData.leadSegment || "Standard",
     };
     contacts.push(newContact);
     this.saveContacts(contacts);
     return newContact;
   },
 
-  // -------------------------------------------------------------
-  // DEALS CRUD (Uses master companies relational model)
-  // -------------------------------------------------------------
   getDeals(): Deal[] {
-    const saved = localStorage.getItem(tenantStorageKey("smart_mailmerge_deals"));
-    if (saved) {
-      try {
-        const parsed = JSON.parse(saved);
-        // Clean and auto-map company ID and data to ensure perfect relational joins
-        const companies = this.getCompanies();
-        return parsed.map((d: Deal) => {
-          // If deal does not have companyId, find or create company
-          let companyId = d.companyId;
-          if (!companyId && d.companyName) {
-            const comp = companies.find(c => c.name.toLowerCase().trim() === d.companyName.toLowerCase().trim());
-            if (comp) {
-              companyId = comp.id;
-            } else {
-              // Auto-create company to enforce single source of truth
-              const newComp = this.createCompany({
-                name: d.companyName,
-                phone: d.contactPhone,
-                website: d.contactEmail ? d.contactEmail.split("@")[1] : "",
-                industry: d.industry
-              });
-              companyId = newComp.id;
-            }
-            d.companyId = companyId;
-          }
-
-          // Enforce relational join updates (changes in company propagate instantly)
-          if (companyId) {
-            const comp = companies.find(c => c.id === companyId);
-            if (comp) {
-              d.companyName = comp.name;
-              d.industry = comp.industry;
-            }
-          }
-          return d;
-        });
-      } catch (e) {
-        console.error("Error parsing deals, resetting", e);
-      }
-    }
-    return [];
+    return joinDealsWithCompanies(cache.deals);
   },
 
   saveDeals(deals: Deal[]) {
-    // Before saving, ensure all deals are linked with valid companyIds and synced
     const companies = this.getCompanies();
-    const processed = deals.map(d => {
-      let companyId = d.companyId;
-      if (!companyId && d.companyName) {
-        const comp = companies.find(c => (c.name ?? "").toLowerCase().trim() === (d.companyName ?? "").toLowerCase().trim());
-        companyId = comp ? comp.id : this.createCompany({ name: d.companyName }).id;
-        d.companyId = companyId;
+    const processed = deals.map((deal) => {
+      const next = { ...deal };
+      let companyId = next.companyId;
+      if (!companyId && next.companyName) {
+        const comp = companies.find(
+          (c) => (c.name ?? "").toLowerCase().trim() === (next.companyName ?? "").toLowerCase().trim()
+        );
+        companyId = comp ? comp.id : this.createCompany({ name: next.companyName }).id;
+        next.companyId = companyId;
       }
-      return d;
+      return next;
     });
-    localStorage.setItem(tenantStorageKey("smart_mailmerge_deals"), JSON.stringify(processed));
+    cache.deals = processed;
+    persistSoon(() => persistDeals(cache.deals));
   },
 
   getDealsByCompany(companyId: string): Deal[] {
-    return this.getDeals().filter(d => d.companyId === companyId);
+    return this.getDeals().filter((d) => d.companyId === companyId);
   },
 
-  // -------------------------------------------------------------
-  // PROPOSALS CRUD
-  // -------------------------------------------------------------
   getProposals(): Proposal[] {
-    const saved = localStorage.getItem(tenantStorageKey("crm_proposals"));
-    if (saved) {
-      try {
-        const parsed = JSON.parse(saved);
-        const companies = this.getCompanies();
-        return parsed.map((p: Proposal) => {
-          let companyId = p.companyId;
-          if (!companyId && p.companyName) {
-            const comp = companies.find(c => c.name.toLowerCase().trim() === p.companyName.toLowerCase().trim());
-            companyId = comp ? comp.id : "company-1";
-            p.companyId = companyId;
-          }
-          if (companyId) {
-            const comp = companies.find(c => c.id === companyId);
-            if (comp) {
-              p.companyName = comp.name;
-            }
-          }
-          return p;
-        });
-      } catch (e) {
-        console.error("Error parsing proposals", e);
-      }
-    }
-    return [];
+    return joinProposalsWithCompanies(cache.proposals);
   },
 
   saveProposals(proposals: Proposal[]) {
-    localStorage.setItem(tenantStorageKey("crm_proposals"), JSON.stringify(proposals));
+    cache.proposals = proposals;
+    persistSoon(() => persistProposals(cache.proposals));
   },
 
   getProposalsByCompany(companyId: string): Proposal[] {
-    return this.getProposals().filter(p => p.companyId === companyId);
+    return this.getProposals().filter((p) => p.companyId === companyId);
   },
 
-  // -------------------------------------------------------------
-  // PROJECTS CRUD
-  // -------------------------------------------------------------
   getProjects(): ProjectRecord[] {
-    const saved = localStorage.getItem(tenantStorageKey("smart_mailmerge_projects"));
-    if (saved) {
-      try {
-        const parsed = JSON.parse(saved);
-        const companies = this.getCompanies();
-        return parsed.map((p: any) => {
-          // Relational resolve companyName from companyId
-          if (p.companyId) {
-            const comp = companies.find(c => c.id === p.companyId);
-            if (comp) {
-              p.companyName = comp.name;
-            }
-          }
-          return p;
-        });
-      } catch (e) {
-        console.error("Error parsing projects", e);
+    const companies = this.getCompanies();
+    return cache.projects.map((project) => {
+      const next = { ...project };
+      if ((next as ProjectRecord & { companyId?: string }).companyId) {
+        const comp = companies.find((c) => c.id === (next as ProjectRecord & { companyId?: string }).companyId);
+        if (comp) next.companyName = comp.name;
       }
-    }
-    return [];
+      return next;
+    });
   },
 
   saveProjects(projects: ProjectRecord[]) {
-    localStorage.setItem(tenantStorageKey("smart_mailmerge_projects"), JSON.stringify(projects));
+    cache.projects = projects;
+    syncAuxiliaryFromCache();
+    persistSoon(() => persistAuxiliary(cache.auxiliary));
   },
 
   getProjectsByCompany(companyId: string): ProjectRecord[] {
-    return this.getProjects().filter(p => (p as any).companyId === companyId);
+    return this.getProjects().filter((p) => (p as ProjectRecord & { companyId?: string }).companyId === companyId);
   },
 
-  // -------------------------------------------------------------
-  // EMAILS CRUD (Unifies deal emails & campaigns)
-  // -------------------------------------------------------------
   getEmails(): CrmEmail[] {
-    const saved = localStorage.getItem(tenantStorageKey("crm_emails"));
-    if (saved) {
-      try {
-        return JSON.parse(saved);
-      } catch (e) {
-        console.error("Error parsing crm_emails", e);
-      }
-    }
-    
-    // Seed initial emails from current database
-    const initialEmails: CrmEmail[] = [
-      {
-        id: "email-1",
-        companyId: "company-1",
-        dealId: "deal-1",
-        sender: "john.smith@abcauto.com",
-        recipient: "info@gembapartner.com",
-        date: "2026-06-20T10:00:00.000Z",
-        subject: "RE: Shopfloor Diagnostic VSM Workshop schedule confirmation",
-        body: "Hi Team,\n\nWe would love to finalize the diagnostic date for Nilüfer plant. Monday looks great. Let's send the meeting invite.\n\nBest,\nJohn Smith",
-        isIncoming: true
-      },
-      {
-        id: "email-2",
-        companyId: "company-1",
-        dealId: "deal-1",
-        sender: "info@gembapartner.com",
-        recipient: "john.smith@abcauto.com",
-        date: "2026-06-19T14:30:00.000Z",
-        subject: "Shopfloor Diagnostic VSM Workshop schedule confirmation",
-        body: "Dear John,\n\nWe have prepared the diagnostic agenda. Please find attached the list of required data points before Monday's Gemba Walk.\n\nBest regards,\nGemba Partner Consultant",
-        isIncoming: false
-      }
-    ];
-    localStorage.setItem(tenantStorageKey("crm_emails"), JSON.stringify(initialEmails));
-    return initialEmails;
+    return [...cache.emails];
   },
 
   saveEmails(emails: CrmEmail[]) {
-    localStorage.setItem(tenantStorageKey("crm_emails"), JSON.stringify(emails));
+    cache.emails = emails;
+    syncAuxiliaryFromCache();
+    persistSoon(() => persistAuxiliary(cache.auxiliary));
   },
 
   getEmailsByCompany(companyId: string): CrmEmail[] {
-    return this.getEmails().filter(e => e.companyId === companyId);
+    return this.getEmails().filter((e) => e.companyId === companyId);
   },
 
   getEmailsByDeal(dealId: string): CrmEmail[] {
-    return this.getEmails().filter(e => e.dealId === dealId);
+    return this.getEmails().filter((e) => e.dealId === dealId);
   },
 
   getEmailsByProject(projectId: string): CrmEmail[] {
-    return this.getEmails().filter(e => e.projectId === projectId);
+    return this.getEmails().filter((e) => e.projectId === projectId);
   },
 
   createEmail(emailData: Partial<CrmEmail>): CrmEmail {
     const emails = this.getEmails();
     const newEmail: CrmEmail = {
       id: emailData.id || `email-${Date.now()}-${Math.floor(Math.random() * 1000)}`,
-      companyId: emailData.companyId || "company-1",
+      companyId: emailData.companyId || "",
       dealId: emailData.dealId,
       proposalId: emailData.proposalId,
       projectId: emailData.projectId,
@@ -505,63 +495,32 @@ export const CrmDb = {
       subject: emailData.subject || "No Subject",
       body: emailData.body || "",
       attachments: emailData.attachments,
-      isIncoming: emailData.isIncoming || false
+      isIncoming: emailData.isIncoming || false,
     };
     emails.unshift(newEmail);
     this.saveEmails(emails);
     return newEmail;
   },
 
-  // -------------------------------------------------------------
-  // DOCUMENTS CRUD (Proposal PDFs, contracts, attachments, reports)
-  // -------------------------------------------------------------
   getDocuments(): CrmDocument[] {
-    const saved = localStorage.getItem(tenantStorageKey("crm_documents"));
-    if (saved) {
-      try {
-        return JSON.parse(saved);
-      } catch (e) {
-        console.error("Error parsing crm_documents", e);
-      }
-    }
-
-    const initialDocs: CrmDocument[] = [
-      {
-        id: "doc-1",
-        companyId: "company-1",
-        dealId: "deal-1",
-        proposalId: "prop-1",
-        name: "Shopfloor_VSM_Diagnostic_Offer_v1.pdf",
-        type: "Proposal",
-        size: "2.4 MB",
-        date: "2026-06-14"
-      },
-      {
-        id: "doc-2",
-        companyId: "company-1",
-        name: "Ocak_Faturasi_Kurumsal_Egitim.pdf",
-        type: "Invoice",
-        size: "1.1 MB",
-        date: "2026-06-18"
-      }
-    ];
-    localStorage.setItem(tenantStorageKey("crm_documents"), JSON.stringify(initialDocs));
-    return initialDocs;
+    return [...cache.documents];
   },
 
   saveDocuments(docs: CrmDocument[]) {
-    localStorage.setItem(tenantStorageKey("crm_documents"), JSON.stringify(docs));
+    cache.documents = docs;
+    syncAuxiliaryFromCache();
+    persistSoon(() => persistAuxiliary(cache.auxiliary));
   },
 
   getDocumentsByCompany(companyId: string): CrmDocument[] {
-    return this.getDocuments().filter(d => d.companyId === companyId);
+    return this.getDocuments().filter((d) => d.companyId === companyId);
   },
 
   createDocument(docData: Partial<CrmDocument>): CrmDocument {
     const docs = this.getDocuments();
     const newDoc: CrmDocument = {
       id: docData.id || `doc-${Date.now()}`,
-      companyId: docData.companyId || "company-1",
+      companyId: docData.companyId || "",
       dealId: docData.dealId,
       proposalId: docData.proposalId,
       projectId: docData.projectId,
@@ -570,70 +529,36 @@ export const CrmDb = {
       size: docData.size || "100 KB",
       date: docData.date || new Date().toISOString().split("T")[0],
       link: docData.link,
-      content: docData.content
+      content: docData.content,
     };
     docs.unshift(newDoc);
     this.saveDocuments(docs);
     return newDoc;
   },
 
-  // -------------------------------------------------------------
-  // ACTIVITIES / TIMELINE CRUD
-  // -------------------------------------------------------------
   getActivities(): CrmActivity[] {
-    const saved = localStorage.getItem(tenantStorageKey("crm_activities"));
-    if (saved) {
-      try {
-        return JSON.parse(saved);
-      } catch (e) {
-        console.error("Error parsing crm_activities", e);
-      }
-    }
-
-    const initialActivities: CrmActivity[] = [
-      {
-        id: "act-1",
-        companyId: "company-1",
-        dealId: "deal-1",
-        type: "meeting",
-        title: "Discovery Meeting Completed",
-        description: "Diagnosed shopfloor waste in manufacturing plant in Bursa. COO John Smith attended.",
-        date: "2026-06-14T11:00:00.000Z",
-        user: "Atakan Zehir",
-        result: "Positive. Proposal requested."
-      },
-      {
-        id: "act-2",
-        companyId: "company-1",
-        dealId: "deal-1",
-        type: "call",
-        title: "Follow-up phone call regarding rates",
-        description: "Discussed the daily consultant rates. Approved 1200 USD option.",
-        date: "2026-06-15T15:30:00.000Z",
-        user: "Atakan Zehir"
-      }
-    ];
-    localStorage.setItem(tenantStorageKey("crm_activities"), JSON.stringify(initialActivities));
-    return initialActivities;
+    return [...cache.activities];
   },
 
   saveActivities(activities: CrmActivity[]) {
-    localStorage.setItem(tenantStorageKey("crm_activities"), JSON.stringify(activities));
+    cache.activities = activities;
+    syncAuxiliaryFromCache();
+    persistSoon(() => persistAuxiliary(cache.auxiliary));
   },
 
   getActivitiesByCompany(companyId: string): CrmActivity[] {
-    return this.getActivities().filter(a => a.companyId === companyId);
+    return this.getActivities().filter((a) => a.companyId === companyId);
   },
 
   getActivitiesByDeal(dealId: string): CrmActivity[] {
-    return this.getActivities().filter(a => a.dealId === dealId);
+    return this.getActivities().filter((a) => a.dealId === dealId);
   },
 
   createActivity(activityData: Partial<CrmActivity>): CrmActivity {
     const activities = this.getActivities();
     const newActivity: CrmActivity = {
       id: activityData.id || `act-${Date.now()}`,
-      companyId: activityData.companyId || "company-1",
+      companyId: activityData.companyId || "",
       dealId: activityData.dealId,
       proposalId: activityData.proposalId,
       projectId: activityData.projectId,
@@ -642,101 +567,95 @@ export const CrmDb = {
       description: activityData.description || "",
       date: activityData.date || new Date().toISOString(),
       user: activityData.user || getTenantActorName(),
-      result: activityData.result
+      result: activityData.result,
     };
     activities.unshift(newActivity);
     this.saveActivities(activities);
     return newActivity;
   },
 
-  // -------------------------------------------------------------
-  // CASCADE PROPAGATION (CHANGES IN COMPANY AUTOMATICALLY UPDATE OTHER ENTITIES)
-  // -------------------------------------------------------------
-  propagateCompanyChanges(companies: Company[]) {
-    // 1. Update Deals
-    const savedDeals = localStorage.getItem(tenantStorageKey("smart_mailmerge_deals"));
-    if (savedDeals) {
-      try {
-        const deals = JSON.parse(savedDeals) as Deal[];
-        let updated = false;
-        const nextDeals = deals.map(d => {
-          if (d.companyId) {
-            const company = companies.find(c => c.id === d.companyId);
-            if (company && (d.companyName !== company.name || d.industry !== company.industry)) {
-              d.companyName = company.name;
-              d.industry = company.industry;
-              updated = true;
-            }
-          }
-          return d;
-        });
-        if (updated) {
-          localStorage.setItem(tenantStorageKey("smart_mailmerge_deals"), JSON.stringify(nextDeals));
-        }
-      } catch (e) {
-        console.error("Error cascading company changes to deals", e);
-      }
-    }
-
-    // 2. Update Proposals
-    const savedProps = localStorage.getItem(tenantStorageKey("crm_proposals"));
-    if (savedProps) {
-      try {
-        const props = JSON.parse(savedProps) as Proposal[];
-        let updated = false;
-        const nextProps = props.map(p => {
-          if (p.companyId) {
-            const company = companies.find(c => c.id === p.companyId);
-            if (company && p.companyName !== company.name) {
-              p.companyName = company.name;
-              updated = true;
-            }
-          }
-          return p;
-        });
-        if (updated) {
-          localStorage.setItem(tenantStorageKey("crm_proposals"), JSON.stringify(nextProps));
-        }
-      } catch (e) {
-        console.error("Error cascading company changes to proposals", e);
-      }
-    }
-
-    // 3. Update Projects
-    const savedProjects = localStorage.getItem(tenantStorageKey("smart_mailmerge_projects"));
-    if (savedProjects) {
-      try {
-        const projects = JSON.parse(savedProjects) as any[];
-        let updated = false;
-        const nextProjects = projects.map(p => {
-          if (p.companyId) {
-            const company = companies.find(c => c.id === p.companyId);
-            if (company && p.companyName !== company.name) {
-              p.companyName = company.name;
-              updated = true;
-            }
-          }
-          return p;
-        });
-        if (updated) {
-          localStorage.setItem(tenantStorageKey("smart_mailmerge_projects"), JSON.stringify(nextProjects));
-        }
-      } catch (e) {
-        console.error("Error cascading company changes to projects", e);
-      }
-    }
+  getTasks(): Task[] {
+    return [...cache.tasks];
   },
 
-  // -------------------------------------------------------------
-  // AUTOCOMPLETE SEARCH UTILITY
-  // -------------------------------------------------------------
+  saveTasks(tasks: Task[]) {
+    cache.tasks = tasks;
+    persistSoon(() => persistTasks(cache.tasks));
+  },
+
+  createTask(taskData: Partial<Task>): Task {
+    const tasks = this.getTasks();
+    const newTask: Task = {
+      id: taskData.id || `task-${Date.now()}`,
+      title: taskData.title || "New Task",
+      description: taskData.description || "",
+      status: taskData.status || "not_started",
+      assignee: taskData.assignee || getTenantActorName(),
+      dueDate: taskData.dueDate || new Date().toISOString().split("T")[0],
+      priority: taskData.priority || "Medium",
+    };
+    tasks.push(newTask);
+    this.saveTasks(tasks);
+    return newTask;
+  },
+
+  propagateCompanyChanges(companies: Company[]) {
+    const deals = this.getDeals();
+    let dealsUpdated = false;
+    const nextDeals = deals.map((deal) => {
+      if (deal.companyId) {
+        const company = companies.find((c) => c.id === deal.companyId);
+        if (company && (deal.companyName !== company.name || deal.industry !== company.industry)) {
+          dealsUpdated = true;
+          return { ...deal, companyName: company.name, industry: company.industry };
+        }
+      }
+      return deal;
+    });
+    if (dealsUpdated) this.saveDeals(nextDeals);
+
+    const proposals = this.getProposals();
+    let proposalsUpdated = false;
+    const nextProposals = proposals.map((proposal) => {
+      if (proposal.companyId) {
+        const company = companies.find((c) => c.id === proposal.companyId);
+        if (company && proposal.companyName !== company.name) {
+          proposalsUpdated = true;
+          return { ...proposal, companyName: company.name };
+        }
+      }
+      return proposal;
+    });
+    if (proposalsUpdated) this.saveProposals(nextProposals);
+
+    const projects = this.getProjects();
+    let projectsUpdated = false;
+    const nextProjects = projects.map((project) => {
+      const companyId = (project as ProjectRecord & { companyId?: string }).companyId;
+      if (companyId) {
+        const company = companies.find((c) => c.id === companyId);
+        if (company && project.companyName !== company.name) {
+          projectsUpdated = true;
+          return { ...project, companyName: company.name };
+        }
+      }
+      return project;
+    });
+    if (projectsUpdated) this.saveProjects(nextProjects);
+  },
+
   autocompleteCompanies(query: string): Company[] {
     if (!query) return [];
     const companies = this.getCompanies();
     const cleanQuery = query.toLowerCase().trim();
-    return companies.filter(c => 
-      c.name.toLowerCase().includes(cleanQuery) || 
-      (c.website && c.website.toLowerCase().includes(cleanQuery))
+    return companies.filter(
+      (c) =>
+        c.name.toLowerCase().includes(cleanQuery) ||
+        (c.website && c.website.toLowerCase().includes(cleanQuery))
     );
-  }
+  },
 };
+
+export async function hydrateCrmCache(): Promise<void> {
+  await CrmDb.hydrateFromSupabase();
+}

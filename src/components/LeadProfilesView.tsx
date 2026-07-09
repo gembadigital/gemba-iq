@@ -27,6 +27,7 @@ import {
 import { LeadProfile, Recipient } from "../types";
 import EmailLeadDiscoveryView from "./EmailLeadDiscoveryView";
 import CompanyAutocomplete from "./CompanyAutocomplete";
+import { CrmDb } from "../lib/CrmDb";
 
 interface LeadProfilesViewProps {
   onPushToMailMerge: (newRecs: Recipient[]) => void;
@@ -658,8 +659,7 @@ export default function LeadProfilesView({
           }}
           onAddCompaniesToMaster={(companyName, domain, industry) => {
             try {
-              const savedCompanies = localStorage.getItem("crm_tracked_discovered_companies") || "[]";
-              const parsed = JSON.parse(savedCompanies);
+              const parsed = CrmDb.getKv<any[]>("crm_tracked_discovered_companies", []);
               if (!parsed.some((c: any) => c.name.toLowerCase() === companyName.toLowerCase())) {
                 parsed.push({ 
                   id: `comp_${Date.now()}`, 
@@ -670,14 +670,13 @@ export default function LeadProfilesView({
                   employeeCount: "50-100", 
                   source: "Email Discovery" 
                 });
-                localStorage.setItem("crm_tracked_discovered_companies", JSON.stringify(parsed));
+                CrmDb.setKv("crm_tracked_discovered_companies", parsed);
               }
             } catch (err) {}
           }}
           onAddTargetAccount={(companyName, domain) => {
             try {
-              const savedTargets = localStorage.getItem("crm_target_accounts") || "[]";
-              const parsed = JSON.parse(savedTargets);
+              const parsed = CrmDb.getKv<any[]>("crm_target_accounts", []);
               if (!parsed.some((t: any) => t.name.toLowerCase() === companyName.toLowerCase())) {
                 parsed.push({ 
                   id: `target_${Date.now()}`, 
@@ -686,7 +685,7 @@ export default function LeadProfilesView({
                   segment: "Tier 1",
                   status: "Cold outreach"
                 });
-                localStorage.setItem("crm_target_accounts", JSON.stringify(parsed));
+                CrmDb.setKv("crm_target_accounts", parsed);
               }
             } catch (err) {}
           }}

@@ -97,8 +97,7 @@ export default function CompanyDetailView({
     // 2. Log system audit if changed
     if (fieldChanged && oldValue !== newValue) {
       const key = `crm_company_audit_logs_${updated.id}`;
-      const saved = localStorage.getItem(key);
-      const logs = saved ? JSON.parse(saved) : [];
+      const logs = CrmDb.getKv<any[]>(key, []);
       logs.unshift({
         id: `audit-${Date.now()}`,
         field: fieldChanged,
@@ -107,7 +106,7 @@ export default function CompanyDetailView({
         user: "Atakan Zehir",
         timestamp: new Date().toISOString()
       });
-      localStorage.setItem(key, JSON.stringify(logs));
+      CrmDb.setKv(key, logs);
     }
 
     // 3. Notify parent component
@@ -438,8 +437,7 @@ export default function CompanyDetailView({
             </div>
 
             {(() => {
-              const saved = localStorage.getItem(`crm_company_audit_logs_${company.id}`);
-              const logs = saved ? JSON.parse(saved) : [];
+              const logs = CrmDb.getKv<any[]>(`crm_company_audit_logs_${company.id}`, []);
 
               if (logs.length === 0) {
                 return (

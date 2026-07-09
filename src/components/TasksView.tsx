@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useLanguage } from "../lib/LanguageContext";
+import { CrmDb } from "../lib/CrmDb";
 import { 
   CheckSquare, 
   CheckCircle, 
@@ -283,61 +284,19 @@ const DEFAULT_COLUMNS: TaskColumn[] = [
   { id: "completed", title: "Completed" },
 ];
 
-const DEFAULT_TASKS: Task[] = [
-  {
-    id: "task-1",
-    title: "Müşteri Teklifini Hazırla",
-    description: "Acme Corp için revize edilmiş ürün teklifini ve maliyet projeksiyonunu tamamla.",
-    status: "not_started",
-    assignee: "GP",
-    dueDate: "2026-06-25",
-    priority: "High"
-  },
-  {
-    id: "task-2",
-    title: "Gemba Demo Sunumu",
-    description: "Yeni leads grubu için verimlilik ve süreç optimizasyonu demo sunumunu gerçekleştir.",
-    status: "in_progress",
-    assignee: "Ahmet Yılmaz",
-    dueDate: "2026-06-20",
-    priority: "Medium"
-  },
-  {
-    id: "task-3",
-    title: "Sözleşme Revizyonu",
-    description: "Hukuk departmanının ilettiği revizelerin sözleşmeye uygulanması ve müşteri onayının beklenmesi.",
-    status: "on_hold",
-    assignee: "Elif Demir",
-    dueDate: "2026-06-30",
-    priority: "Low"
-  },
-  {
-    id: "task-4",
-    title: "E-posta Kampanyası Analizi",
-    description: "Haziran ayı e-posta gönderimlerinin açılma ve dönüşüm oranlarının toplanarak Excel tablosuna aktarılması.",
-    status: "completed",
-    assignee: "Can Özkan",
-    dueDate: "2026-06-18",
-    priority: "High"
-  }
-];
-
 export default function TasksView() {
   const { lang, t } = useLanguage();
   // --- STATE PERSISTENCE ---
   const [columns, setColumns] = useState<TaskColumn[]>(() => {
-    const saved = localStorage.getItem("crm_task_columns");
-    return saved ? JSON.parse(saved) : DEFAULT_COLUMNS;
+    const saved = CrmDb.getTaskColumns();
+    return saved.length > 0 ? saved : DEFAULT_COLUMNS;
   });
 
-  const [tasks, setTasks] = useState<Task[]>(() => {
-    const saved = localStorage.getItem("crm_tasks");
-    return saved ? JSON.parse(saved) : DEFAULT_TASKS;
-  });
+  const [tasks, setTasks] = useState<Task[]>(() => CrmDb.getTasks());
 
   const [crmUsers, setCrmUsers] = useState<string[]>(() => {
-    const saved = localStorage.getItem("crm_users");
-    return saved ? JSON.parse(saved) : DEFAULT_CRM_USERS;
+    const saved = CrmDb.getCrmUsers();
+    return saved.length > 0 ? saved : DEFAULT_CRM_USERS;
   });
 
   const [activeView, setActiveView] = useState<"kanban" | "list">("kanban");
@@ -359,15 +318,15 @@ export default function TasksView() {
 
   // Save changes
   useEffect(() => {
-    localStorage.setItem("crm_task_columns", JSON.stringify(columns));
+    CrmDb.saveTaskColumns(columns);
   }, [columns]);
 
   useEffect(() => {
-    localStorage.setItem("crm_tasks", JSON.stringify(tasks));
+    CrmDb.saveTasks(tasks);
   }, [tasks]);
 
   useEffect(() => {
-    localStorage.setItem("crm_users", JSON.stringify(crmUsers));
+    CrmDb.saveCrmUsers(crmUsers);
   }, [crmUsers]);
 
   // --- COLUMN MENUS STATE ---
@@ -394,14 +353,10 @@ export default function TasksView() {
   const [activeMainTab, setActiveMainTab] = useState<"board" | "notifications" | "settings">("board");
   
   const [notificationSettings, setNotificationSettings] = useState<NotificationSettings>(() => {
-    const saved = localStorage.getItem("crm_notification_settings");
-    return saved ? JSON.parse(saved) : DEFAULT_NOTIFICATION_SETTINGS;
+    return CrmDb.getNotificationSettings() ?? DEFAULT_NOTIFICATION_SETTINGS;
   });
 
-  const [notifications, setNotifications] = useState<TaskNotification[]>(() => {
-    const saved = localStorage.getItem("crm_task_notifications");
-    return saved ? JSON.parse(saved) : [];
-  });
+  const [notifications, setNotifications] = useState<TaskNotification[]>(() => CrmDb.getTaskNotifications());
 
   const [simulatedDate, setSimulatedDate] = useState<string>("2026-06-20");
   const [isSimulatedDateActive, setIsSimulatedDateActive] = useState<boolean>(false);
@@ -946,11 +901,11 @@ export default function TasksView() {
   }, [tasks, simulatedDate, isSimulatedDateActive]);
 
   useEffect(() => {
-    localStorage.setItem("crm_notification_settings", JSON.stringify(notificationSettings));
+    CrmDb.saveNotificationSettings(notificationSettings);
   }, [notificationSettings]);
 
   useEffect(() => {
-    localStorage.setItem("crm_task_notifications", JSON.stringify(notifications));
+    CrmDb.saveTaskNotifications(notifications);
   }, [notifications]);
 
   // --- DRAG AND DROP HANDLERS ---
@@ -1985,7 +1940,6 @@ export default function TasksView() {
                           }
                         };
                         setNotificationSettings(updated);
-                        localStorage.setItem("crm_notification_settings", JSON.stringify(updated));
                         showToast("Hatırlatıcı ayarları güncellendi.");
                       }}
                       className="mt-0.5 rounded text-[#0078D4] focus:ring-[#0078D4]"
@@ -2009,7 +1963,6 @@ export default function TasksView() {
                           }
                         };
                         setNotificationSettings(updated);
-                        localStorage.setItem("crm_notification_settings", JSON.stringify(updated));
                         showToast("Hatırlatıcı ayarları güncellendi.");
                       }}
                       className="mt-0.5 rounded text-[#0078D4] focus:ring-[#0078D4]"
@@ -2042,7 +1995,6 @@ export default function TasksView() {
                           }
                         };
                         setNotificationSettings(updated);
-                        localStorage.setItem("crm_notification_settings", JSON.stringify(updated));
                         showToast("Gecikme taraması ayarı güncellendi.");
                       }}
                       className="rounded text-[#0078D4]"
@@ -2067,7 +2019,6 @@ export default function TasksView() {
                             }
                           };
                           setNotificationSettings(updated);
-                          localStorage.setItem("crm_notification_settings", JSON.stringify(updated));
                           showToast("Ayar degistirildi.");
                         }}
                         className="mt-0.5 rounded text-rose-600"
@@ -2091,7 +2042,6 @@ export default function TasksView() {
                             }
                           };
                           setNotificationSettings(updated);
-                          localStorage.setItem("crm_notification_settings", JSON.stringify(updated));
                           showToast("Ayar degistirildi.");
                         }}
                         className="mt-0.5 rounded text-rose-600"
@@ -2115,7 +2065,6 @@ export default function TasksView() {
                             }
                           };
                           setNotificationSettings(updated);
-                          localStorage.setItem("crm_notification_settings", JSON.stringify(updated));
                           showToast("Ayar degistirildi.");
                         }}
                         className="mt-0.5 rounded text-rose-600"
@@ -2160,7 +2109,6 @@ export default function TasksView() {
                         escalationRules: { ...notificationSettings.escalationRules, day1Enabled: e.target.checked }
                       };
                       setNotificationSettings(updated);
-                      localStorage.setItem("crm_notification_settings", JSON.stringify(updated));
                     }}
                     className="rounded text-[#0078D4]"
                   />
@@ -2178,7 +2126,6 @@ export default function TasksView() {
                             escalationRules: { ...notificationSettings.escalationRules, day1Recipient: e.target.value }
                           };
                           setNotificationSettings(updated);
-                          localStorage.setItem("crm_notification_settings", JSON.stringify(updated));
                         }}
                         className="w-full px-2.5 py-1.5 bg-white dark:bg-[#1b1a19] border border-slate-200 dark:border-[#323130] rounded text-xs"
                       />
@@ -2194,7 +2141,6 @@ export default function TasksView() {
                             escalationRules: { ...notificationSettings.escalationRules, day1Role: e.target.value }
                           };
                           setNotificationSettings(updated);
-                          localStorage.setItem("crm_notification_settings", JSON.stringify(updated));
                         }}
                         className="w-full px-2.5 py-1.5 bg-white dark:bg-[#1b1a19] border border-slate-200 dark:border-[#323130] rounded text-xs"
                       />
@@ -2219,7 +2165,6 @@ export default function TasksView() {
                         escalationRules: { ...notificationSettings.escalationRules, day3Enabled: e.target.checked }
                       };
                       setNotificationSettings(updated);
-                      localStorage.setItem("crm_notification_settings", JSON.stringify(updated));
                     }}
                     className="rounded text-[#0078D4]"
                   />
@@ -2237,7 +2182,6 @@ export default function TasksView() {
                             escalationRules: { ...notificationSettings.escalationRules, day3Recipient: e.target.value }
                           };
                           setNotificationSettings(updated);
-                          localStorage.setItem("crm_notification_settings", JSON.stringify(updated));
                         }}
                         className="w-full px-2.5 py-1.5 bg-white dark:bg-[#1b1a19] border border-slate-200 dark:border-[#323130] rounded text-xs"
                       />
@@ -2253,7 +2197,6 @@ export default function TasksView() {
                             escalationRules: { ...notificationSettings.escalationRules, day3Role: e.target.value }
                           };
                           setNotificationSettings(updated);
-                          localStorage.setItem("crm_notification_settings", JSON.stringify(updated));
                         }}
                         className="w-full px-2.5 py-1.5 bg-white dark:bg-[#1b1a19] border border-slate-200 dark:border-[#323130] rounded text-xs"
                       />
@@ -2278,7 +2221,6 @@ export default function TasksView() {
                         escalationRules: { ...notificationSettings.escalationRules, day7Enabled: e.target.checked }
                       };
                       setNotificationSettings(updated);
-                      localStorage.setItem("crm_notification_settings", JSON.stringify(updated));
                     }}
                     className="rounded text-[#0078D4]"
                   />
@@ -2296,7 +2238,6 @@ export default function TasksView() {
                             escalationRules: { ...notificationSettings.escalationRules, day7Recipient: e.target.value }
                           };
                           setNotificationSettings(updated);
-                          localStorage.setItem("crm_notification_settings", JSON.stringify(updated));
                         }}
                         className="w-full px-2.5 py-1.5 bg-white dark:bg-[#1b1a19] border border-slate-200 dark:border-[#323130] rounded text-xs"
                       />
@@ -2312,7 +2253,6 @@ export default function TasksView() {
                             escalationRules: { ...notificationSettings.escalationRules, day7Role: e.target.value }
                           };
                           setNotificationSettings(updated);
-                          localStorage.setItem("crm_notification_settings", JSON.stringify(updated));
                         }}
                         className="w-full px-2.5 py-1.5 bg-white dark:bg-[#1b1a19] border border-slate-200 dark:border-[#323130] rounded text-xs"
                       />
@@ -2325,7 +2265,6 @@ export default function TasksView() {
               <button
                 type="button"
                 onClick={() => {
-                  localStorage.setItem("crm_notification_settings", JSON.stringify(notificationSettings));
                   showToast("Tüm eskalasyon ayarları başarıyla kaydedildi!");
                 }}
                 className="px-4 py-2 bg-[#0078D4] hover:bg-[#005a9e] text-white text-xs font-bold rounded cursor-pointer"
@@ -2356,7 +2295,6 @@ export default function TasksView() {
                       emailTemplates: { ...notificationSettings.emailTemplates, companyName: e.target.value }
                     };
                     setNotificationSettings(updated);
-                    localStorage.setItem("crm_notification_settings", JSON.stringify(updated));
                   }}
                   className="w-full px-2.5 py-1.5 bg-white dark:bg-[#1b1a19] border border-slate-200 dark:border-[#323130] rounded text-xs font-semibold"
                 />
@@ -2373,7 +2311,6 @@ export default function TasksView() {
                       emailTemplates: { ...notificationSettings.emailTemplates, logoUrl: e.target.value }
                     };
                     setNotificationSettings(updated);
-                    localStorage.setItem("crm_notification_settings", JSON.stringify(updated));
                   }}
                   className="w-full px-2.5 py-1.5 bg-white dark:bg-[#1b1a19] border border-slate-200 dark:border-[#323130] rounded text-xs"
                 />
@@ -2392,7 +2329,6 @@ export default function TasksView() {
                       emailTemplates: { ...notificationSettings.emailTemplates, overdueSubject: e.target.value }
                     };
                     setNotificationSettings(updated);
-                    localStorage.setItem("crm_notification_settings", JSON.stringify(updated));
                   }}
                   className="w-full px-3 py-2 bg-slate-50 dark:bg-[#252423] border border-slate-200 dark:border-[#323130] rounded text-xs font-bold"
                 />
@@ -2409,7 +2345,6 @@ export default function TasksView() {
                       emailTemplates: { ...notificationSettings.emailTemplates, dueSoonSubject: e.target.value }
                     };
                     setNotificationSettings(updated);
-                    localStorage.setItem("crm_notification_settings", JSON.stringify(updated));
                   }}
                   className="w-full px-3 py-2 bg-slate-55 bg-slate-50 dark:bg-[#252423] border border-slate-200 dark:border-[#323130] rounded text-xs font-bold"
                 />
@@ -2424,7 +2359,6 @@ export default function TasksView() {
               <button
                 type="button"
                 onClick={() => {
-                  localStorage.setItem("crm_notification_settings", JSON.stringify(notificationSettings));
                   showToast("E-posta şablon parametreleri başarıyla kaydedildi.");
                 }}
                 className="px-4 py-2 bg-[#0078D4] hover:bg-[#005a9e] text-white text-xs font-bold rounded cursor-pointer"

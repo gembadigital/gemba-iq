@@ -49,125 +49,20 @@ export default function ProposalManagementView() {
       const newComp = CrmDb.createCompany({ name: companyName });
       id = newComp.id;
     }
-    localStorage.setItem("active_company_detail_id", id);
+    CrmDb.setKv("active_company_detail_id", id);
     window.dispatchEvent(new CustomEvent("crm-navigate", { detail: { tab: "companies-registry" } }));
   };
 
-  const [proposals, setProposals] = useState<Proposal[]>(() => {
-    const saved = localStorage.getItem("crm_proposals");
-    if (saved) return JSON.parse(saved);
-    
-    // Seed some initial demo proposals
-    const demo: Proposal[] = [
-      {
-        id: "prop-1",
-        sequenceNo: 42,
-        proposalNumber: "2606-42",
-        companyId: "comp-1",
-        companyName: "ABC Automotive",
-        contactPerson: "John Smith",
-        contactEmail: "john.smith@abcauto.com",
-        proposalSubject: "Shopfloor Muda Mapping and cellular manufacturing implementation",
-        date: "14.06.2026",
-        currency: "$",
-        owner: "GP (Gemba Partner)",
-        description: "Focusing on WIP reduction and TIMWOODS audits.",
-        status: "Accepted",
-        services: ["Lean Transformation", "5S Training"],
-        options: {
-          "Option 1": { training: true, consulting: true, workshop: true, manDays: 15, dailyRate: 1200, expenses: 1500 }
-        },
-        totalBudget: 19500,
-        taxes: 3900,
-        grandTotal: 23400,
-        currentVersion: "V1",
-        versions: [
-          {
-            version: "V1",
-            date: "2026-06-14T10:00:00.000Z",
-            reason: "Initial offer",
-            changes: "Created baseline presentation.",
-            owner: "GP (Gemba Partner)",
-            subject: "Shopfloor Muda Mapping",
-            currency: "$",
-            options: {
-              "Option 1": { training: true, consulting: true, workshop: true, manDays: 15, dailyRate: 1200, expenses: 1500 }
-            },
-            services: ["Lean Transformation", "5S Training"],
-            totalBudget: 19500,
-            taxes: 3900,
-            grandTotal: 23400
-          }
-        ],
-        createdBy: "GP",
-        lastUpdate: "14.06.2026 12:00:00"
-      },
-      {
-        id: "prop-2",
-        sequenceNo: 43,
-        proposalNumber: "2606-43",
-        companyId: "comp-2",
-        companyName: "Yıldız Kimya",
-        contactPerson: "Ahmet Yıldız",
-        contactEmail: "ahmet@yildizkimya.com.tr",
-        proposalSubject: "OPEX Diagnostic Assessment and Scrap Rate Audit",
-        date: "18.06.2026",
-        currency: "₺",
-        owner: "GP (Gemba Partner)",
-        description: "Analyzing heat treatment and packaging assembly lines.",
-        status: "Draft",
-        services: ["OPEX Assessment"],
-        options: {
-          "Option 1": { training: false, consulting: true, workshop: true, manDays: 10, dailyRate: 25000, expenses: 8000 }
-        },
-        totalBudget: 258000,
-        taxes: 51600,
-        grandTotal: 309600,
-        currentVersion: "V1",
-        versions: [
-          {
-            version: "V1",
-            date: "2026-06-18T09:12:00.000Z",
-            reason: "Initial draft",
-            changes: "Muda auditing roadmap set.",
-            owner: "GP",
-            subject: "OPEX Diagnostic Assessment",
-            currency: "₺",
-            options: {
-              "Option 1": { training: false, consulting: true, workshop: true, manDays: 10, dailyRate: 25000, expenses: 8000 }
-            },
-            services: ["OPEX Assessment"],
-            totalBudget: 258000,
-            taxes: 51600,
-            grandTotal: 309600
-          }
-        ],
-        createdBy: "GP",
-        lastUpdate: "18.06.2026 11:32:00"
-      }
-    ];
-    return demo;
-  });
+  const [proposals, setProposals] = useState<Proposal[]>(() => CrmDb.getProposals());
 
-  const [companies, setCompanies] = useState<Company[]>(() => {
-    const saved = localStorage.getItem("crm_won_companies");
-    if (saved) return JSON.parse(saved);
-    
-    // Default fallback list of companies
-    return [
-      { id: "comp-1", companyName: "ABC Automotive", locationMain: "Nilüfer, Bursa", contactName: "John Smith", contactEmail: "john.smith@abcauto.com" },
-      { id: "comp-2", companyName: "Yıldız Kimya", locationMain: "Gebze, Kocaeli", contactName: "Ahmet Yıldız", contactEmail: "ahmet@yildizkimya.com.tr" },
-      { id: "comp-3", companyName: "Beta Electronics", locationMain: "Manisa, TR", contactName: "Sophia Loren", contactEmail: "sloren@betaelectronics.com" }
-    ];
-  });
+  const [companies, setCompanies] = useState<Company[]>(() => CrmDb.getCompanies());
 
-  // Keep localStorage synchronizer active
   useEffect(() => {
-    localStorage.setItem("crm_proposals", JSON.stringify(proposals));
+    CrmDb.saveProposals(proposals);
   }, [proposals]);
 
   useEffect(() => {
-    localStorage.setItem("crm_won_companies", JSON.stringify(companies));
+    CrmDb.saveCompanies(companies);
   }, [companies]);
 
   // Form Modal States
@@ -292,7 +187,6 @@ export default function ProposalManagementView() {
     if (deletingProposalId) {
       const nextProposals = proposals.filter((p) => p.id !== deletingProposalId);
       setProposals(nextProposals);
-      localStorage.setItem("crm_proposals", JSON.stringify(nextProposals));
       setDeletingProposalId(null);
     }
   };
@@ -424,10 +318,8 @@ export default function ProposalManagementView() {
       console.log(`Sending email via Outlook/Exchange to ${emailTo}...`);
 
       // 2. Automatically sync and push corresponding Deal to 'Proposal Submitted' stage!
-      const dealListSaved = localStorage.getItem("smart_mailmerge_deals");
-      if (dealListSaved) {
-        let deals: any[] = JSON.parse(dealListSaved);
-        // Find matching deal by companyName
+      const deals = CrmDb.getDeals();
+      if (deals.length > 0) {
         const targetIdx = deals.findIndex(
           (d) => String(d.companyName).toLowerCase().includes(sendingProposal.companyName.toLowerCase()) ||
                  String(sendingProposal.companyName).toLowerCase().includes(String(d.companyName).toLowerCase())
@@ -435,7 +327,6 @@ export default function ProposalManagementView() {
 
         const timestampStr = new Date().toLocaleString();
         if (targetIdx !== -1) {
-          // Add Email to Deal history
           const emailRecord = {
             id: `email-${Date.now()}`,
             sender: "Gemba Partner Advisor (GP)",
@@ -450,11 +341,13 @@ export default function ProposalManagementView() {
             ]
           };
 
-          deals[targetIdx].stage = "Proposal Submitted"; // Sync Stage status
-          deals[targetIdx].dealEmails = [...(deals[targetIdx].dealEmails || []), emailRecord];
-          deals[targetIdx].lastUpdated = timestampStr;
-          
-          localStorage.setItem("smart_mailmerge_deals", JSON.stringify(deals));
+          const updatedDeals = [...deals];
+          updatedDeals[targetIdx] = {
+            ...updatedDeals[targetIdx],
+            stage: "Proposal Submitted",
+            dealEmails: [...(updatedDeals[targetIdx].dealEmails || []), emailRecord],
+          };
+          CrmDb.saveDeals(updatedDeals);
           console.log("Successfully moved linked CRM Deal object to 'Proposal Submitted' stage.");
         }
       }

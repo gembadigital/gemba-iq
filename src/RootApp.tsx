@@ -3,6 +3,7 @@ import { BrowserRouter, Navigate, Route, Routes, useLocation } from "react-route
 import { useAuth } from "./lib/AuthContext";
 import { getPendingInvitationToken } from "./lib/invitationConstants";
 import { OrganizationProvider, useOrganization } from "./lib/OrganizationContext";
+import { CrmProvider } from "./lib/CrmContext";
 import AuthLoadingScreen from "./components/auth/AuthLoadingScreen";
 import LoginPage from "./components/auth/LoginPage";
 import RegisterPage from "./components/auth/RegisterPage";
@@ -35,9 +36,11 @@ function ProtectedApp() {
   }
 
   return (
-    <Suspense fallback={<AuthLoadingScreen />}>
-      <App />
-    </Suspense>
+    <CrmProvider>
+      <Suspense fallback={<AuthLoadingScreen />}>
+        <App />
+      </Suspense>
+    </CrmProvider>
   );
 }
 
