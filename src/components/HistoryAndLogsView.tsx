@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { Campaign, MailboxSession } from "../types";
 import { generateCampaignReport } from "../utils/pdfGenerator";
 import { useLanguage } from "../lib/LanguageContext";
+import { getCampaignTranslation } from "./campaignI18n";
 import {
   FileText,
   Calendar,
@@ -24,7 +25,12 @@ interface HistoryAndLogsViewProps {
 }
 
 export default function HistoryAndLogsView({ logs, onDeleteLog, session }: HistoryAndLogsViewProps) {
-  const { t } = useLanguage();
+  const { lang, t: globalT } = useLanguage();
+  const t = (key: string) => getCampaignTranslation(lang, key) ?? globalT(key) ?? key;
+  const tx = (text: string) => {
+    const translated = t(text);
+    return translated !== text ? translated : text;
+  };
   const [selectedCampaignId, setSelectedCampaignId] = useState<string | null>(
     logs.length > 0 ? logs[0].id : null
   );
@@ -104,7 +110,7 @@ export default function HistoryAndLogsView({ logs, onDeleteLog, session }: Histo
                         <span className="text-[9px] font-mono text-slate-400">{timeStr}</span>
                       </div>
                       <h4 className={`text-xs font-bold truncate mt-1 ${isSelected ? "text-slate-900 dark:text-brand-300" : "text-slate-700 dark:text-slate-300"}`}>
-                        {log.subject}
+                        {tx(log.subject)}
                       </h4>
                       <div className="flex items-center gap-3 mt-1.5 text-[10px] text-slate-400 font-medium">
                         <span>{t("Recipients:")} <strong>{log.recipients.length}</strong></span>
@@ -155,7 +161,7 @@ export default function HistoryAndLogsView({ logs, onDeleteLog, session }: Histo
                   <h3 className="text-sm font-bold text-slate-800 dark:text-slate-100">
                     {t("Campaign Audit performance report")}
                   </h3>
-                  <p className="text-[10px] text-slate-400 mt-1 font-mono">ID: {selectedCampaign.id}</p>
+                  <p className="text-[10px] text-slate-400 mt-1 font-mono">{t("ID:")} {selectedCampaign.id}</p>
                 </div>
                 <button
                   id="btn-audit-download"
@@ -193,7 +199,7 @@ export default function HistoryAndLogsView({ logs, onDeleteLog, session }: Histo
                 <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">{t("General details")}</label>
                 <div className="p-4 bg-[#F3F2F1]/30 dark:bg-[#252423]/10 border border-[#EDEBE9] dark:border-[#323130] rounded text-xs space-y-2 leading-relaxed">
                   <p className="text-slate-650 dark:text-slate-350">
-                    <strong className="text-slate-850 dark:text-slate-100 font-bold">{t("Subject Lines:")}</strong> {selectedCampaign.subject}
+                    <strong className="text-slate-850 dark:text-slate-100 font-bold">{t("Subject Lines:")}</strong> {tx(selectedCampaign.subject)}
                   </p>
                   <p className="text-slate-650 dark:text-slate-350">
                     <strong className="text-slate-850 dark:text-slate-100 font-bold">{t("Attachments:")}</strong>{" "}
@@ -237,12 +243,12 @@ export default function HistoryAndLogsView({ logs, onDeleteLog, session }: Histo
                             {rec.status === "success" ? (
                               <span className="text-emerald-600 font-bold flex items-center gap-1 text-[10px]">
                                 <CheckCircle className="w-3.5 h-3.5 text-emerald-500" />
-                                {t("Delivered")} {selectedCampaign.trackingConnected && `(Opened: ${rec.openCount})`}
+                                {t("Delivered")} {selectedCampaign.trackingConnected && t("(Opened: {count})").replace("{count}", String(rec.openCount))}
                               </span>
                             ) : (
                               <span className="text-rose-600 font-bold flex items-center gap-1 text-[10px]">
                                 <AlertCircle className="w-3.5 h-3.5 text-rose-500" />
-                                {t("Failed:")} {rec.errorMessage?.substring(0, 30) || "Unknown Error"}
+                                {t("Failed:")} {rec.errorMessage?.substring(0, 30) || t("Unknown Error")}
                               </span>
                             )}
                           </td>

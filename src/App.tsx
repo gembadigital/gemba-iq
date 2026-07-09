@@ -4,7 +4,6 @@ import DashboardView from "./components/DashboardView";
 import CampaignDesigner from "./components/CampaignDesigner";
 import SendingProgressView from "./components/SendingProgressView";
 import HistoryAndLogsView from "./components/HistoryAndLogsView";
-import GembaLogo from "./components/GembaLogo";
 import LeadMailGenerator from "./components/LeadMailGenerator";
 import LeadProfilesView from "./components/LeadProfilesView";
 import CampaignManagerView from "./components/CampaignManagerView";
@@ -149,11 +148,11 @@ export default function App() {
   }, [logoUrl]);
   
   // Custom mock notifications list to power interactive notification badge/dropdown
-  const [notifications, setNotifications] = useState<Array<{ id: string; textTR: string; textEN: string; time: string; read: boolean }>>([
-    { id: "1", textTR: "Banu Kaya yeni bir B2B teklifi oluşturdu.", textEN: "Banu Kaya created a new B2B proposal.", time: "5 dk önce / 5m ago", read: false },
-    { id: "2", textTR: "Gemini AI Satış Koçu analizi tamamladı.", textEN: "Gemini AI Sales Coach completed analysis.", time: "15 dk önce / 15m ago", read: false },
-    { id: "3", textTR: "Exchange Online e-posta sunucu bağlantısı kuruldu.", textEN: "Exchange Online email server connection established.", time: "1 sa önce / 1h ago", read: true },
-    { id: "4", textTR: "Tavily derin arama motoru entegrasyonu aktif hale getirildi.", textEN: "Tavily deep search engine integration activated.", time: "2 sa önce / 2h ago", read: true }
+  const [notifications, setNotifications] = useState<Array<{ id: string; textKey: string; timeKey: string; read: boolean }>>([
+    { id: "1", textKey: "Banu Kaya created a new B2B proposal.", timeKey: "5 minutes ago", read: false },
+    { id: "2", textKey: "Gemini AI Sales Coach completed analysis.", timeKey: "15 minutes ago", read: false },
+    { id: "3", textKey: "Exchange Online email server connection established.", timeKey: "1 hour ago", read: true },
+    { id: "4", textKey: "Tavily deep search engine integration activated.", timeKey: "2 hours ago", read: true }
   ]);
 
   // Navigation State
@@ -705,28 +704,20 @@ export default function App() {
       >
         <div className={`flex flex-col h-full ${sidebarCollapsed ? "py-2 px-0" : "py-[12px] px-0"}`}>
           {/* Main Launcher App Branding Header */}
-          <div className={`flex pb-[12px] mb-[12px] select-none border-b ${isNotionMode ? "border-[#1f1f1f]/10 dark:border-white/10" : "border-[#EDEBE9] dark:border-[#323130]"} ${sidebarCollapsed ? "justify-center px-2" : "items-center gap-3 px-6"}`}>
+          <div className={`flex pb-[12px] mb-[12px] select-none border-b ${isNotionMode ? "border-[#1f1f1f]/10 dark:border-white/10" : "border-[#EDEBE9] dark:border-[#323130]"} ${sidebarCollapsed ? "justify-center items-center px-2" : "items-center justify-start gap-3 px-6"}`}>
             {isNotionMode ? (
               <span className="text-2xl" role="img" aria-label="Notion icon">🧠</span>
             ) : (
-              <div className="w-8 h-8 bg-white dark:bg-white rounded-lg flex items-center justify-center shadow-xs flex-shrink-0 select-none overflow-hidden animate-in spin-in duration-300 border border-slate-200/40">
-                <img 
-                  src={logoUrl} 
-                  alt="Logo" 
-                  className="w-full h-full object-contain p-0.5" 
-                  referrerPolicy="no-referrer" 
-                />
-              </div>
+              <img
+                src="/logos/GIQ.png"
+                alt="Gemba IQ"
+                className="h-[40px] w-auto object-contain shrink-0"
+              />
             )}
             {!sidebarCollapsed && (
-              <div>
-                <h2 className="text-[24px] font-semibold text-slate-800 dark:text-slate-100 font-display tracking-tight uppercase leading-none">
-                  Gemba IQ
-                </h2>
-                <span className="text-[14px] font-normal text-indigo-600 dark:text-zinc-400 font-sans block mt-1">
-                  {isNotionMode ? "✍️ Notion Minimalist" : "Outlook / Exchange Suite"}
-                </span>
-              </div>
+              <h2 className="text-[24px] font-semibold text-slate-800 dark:text-slate-100 font-display tracking-tight uppercase leading-none">
+                GEMBA IQ
+              </h2>
             )}
           </div>
 
@@ -1118,8 +1109,6 @@ export default function App() {
 
         {/* Workspace info & mode footer */}
         <div className={`p-4 border-t space-y-3.5 text-xs ${isNotionMode ? "border-[#1f1f1f]/10 dark:border-white/10" : "border-[#EDEBE9] dark:border-[#323130]"}`}>
-          <GembaLogo collapsed={sidebarCollapsed} />
-
           {/* Theme switcher & Collapse toggler */}
           <div className={`flex ${sidebarCollapsed ? "flex-col items-center gap-3" : "items-center justify-between"}`}>
             {!sidebarCollapsed && (
@@ -1157,6 +1146,14 @@ export default function App() {
               </button>
             </div>
           </div>
+
+          <div className="pt-4 pb-5 border-t border-[#e5e7eb] flex justify-center">
+            <img
+              src="/logos/Gdogo5.png"
+              alt="Gemba Partner"
+              className={`h-auto object-contain max-w-full ${sidebarCollapsed ? "w-12" : "w-[140px]"}`}
+            />
+          </div>
         </div>
       </aside>
 
@@ -1177,10 +1174,8 @@ export default function App() {
             ? "bg-white/90 dark:bg-[#191919]/90 border-[#1f1f1f]/10 dark:border-white/10" 
             : "bg-white/90 dark:bg-[#1b1a19]/90 border-[#EDEBE9] dark:border-[#323130] shadow-xs"
         }`}>
-          {/* LEFT AREA: Logo & Breadcrumbs */}
+          {/* LEFT AREA: Breadcrumbs */}
           <div className="flex items-center gap-3 shrink-0">
-            <GembaLogo collapsed={true} className="!w-auto !justify-start shrink-0" />
-            <div className="h-4 w-[1px] bg-slate-200 dark:bg-zinc-800 shrink-0" />
             <div className="flex items-center gap-1.5 text-xs text-slate-500 dark:text-zinc-400 font-sans select-none">
               <span className="font-semibold text-slate-450 dark:text-zinc-500">{breadcrumbs.parent}</span>
               <span className="text-slate-300 dark:text-zinc-700">/</span>
@@ -1223,7 +1218,7 @@ export default function App() {
                   <div className="fixed inset-0 z-45" onClick={() => setIsNotificationsOpen(false)} />
                   <div className="absolute right-0 mt-2 w-80 bg-white dark:bg-[#141414] border border-slate-200 dark:border-zinc-800 rounded-xl shadow-lg py-1.5 z-50 animate-in fade-in slide-in-from-top-2 duration-150">
                     <div className="px-3 py-2 border-b border-slate-100 dark:border-zinc-800 flex items-center justify-between">
-                      <span className="text-xs font-bold text-slate-850 dark:text-zinc-200">{lang === "TR" ? "Bildirimler" : "Notifications"}</span>
+                      <span className="text-xs font-bold text-slate-850 dark:text-zinc-200">{t("Notifications")}</span>
                       {notifications.some(n => !n.read) && (
                         <button
                           onClick={() => {
@@ -1231,7 +1226,7 @@ export default function App() {
                           }}
                           className="text-[10px] text-indigo-600 dark:text-indigo-400 hover:underline font-semibold cursor-pointer"
                         >
-                          {lang === "TR" ? "Tümünü okundu say" : "Mark all as read"}
+                          {t("Mark all as read")}
                         </button>
                       )}
                     </div>
@@ -1249,9 +1244,9 @@ export default function App() {
                           <span className={`w-1.5 h-1.5 rounded-full mt-1.5 shrink-0 ${!n.read ? "bg-indigo-550" : "bg-transparent"}`} />
                           <div className="flex-1 min-w-0">
                             <p className="text-xs text-slate-700 dark:text-zinc-300 leading-relaxed font-sans text-left">
-                              {lang === "TR" ? n.textTR : n.textEN}
+                              {t(n.textKey)}
                             </p>
-                            <span className="text-[9px] text-slate-400 dark:text-zinc-500 font-mono block mt-1 text-left">{n.time}</span>
+                            <span className="text-[9px] text-slate-400 dark:text-zinc-500 font-mono block mt-1 text-left">{t(n.timeKey)}</span>
                           </div>
                         </div>
                       ))}
@@ -1276,9 +1271,9 @@ export default function App() {
                     ? "bg-slate-100 dark:bg-zinc-800 border-indigo-200 dark:border-zinc-700 text-indigo-650 dark:text-zinc-150"
                     : "bg-white dark:bg-[#141414] hover:bg-slate-50 dark:hover:bg-zinc-800 text-slate-700 dark:text-zinc-350 border-slate-200 dark:border-zinc-800 shadow-[0_1px_2px_rgba(0,0,0,0.01)]"
                 }`}
-                title={lang === "TR" ? "Dili Değiştir" : "Change Language"}
+                title={t("Change Language")}
               >
-                <span>{lang === "TR" ? "🇹🇷" : "🇬🇧"}</span>
+                <span>{t("🇬🇧")}</span>
                 <span className="font-mono text-[11px] tracking-wide">{lang}</span>
                 <ChevronDown className={`w-3 h-3 text-slate-450 transition-transform duration-150 ${isLangDropdownOpen ? "rotate-180" : ""}`} />
               </button>
@@ -1294,9 +1289,7 @@ export default function App() {
                         setIsLangDropdownOpen(false);
                       }}
                       className={`w-full flex items-center gap-2 px-3 py-2 text-xs font-bold transition-all cursor-pointer ${
-                        lang === "TR"
-                          ? "bg-indigo-50/80 dark:bg-zinc-800 text-indigo-650 dark:text-white"
-                          : "text-slate-700 hover:bg-slate-50 dark:text-zinc-350 dark:hover:bg-zinc-800/50"
+                        t("text-slate-700 hover:bg-slate-50 dark:text-zinc-350 dark:hover:bg-zinc-800/50")
                       }`}
                     >
                       <span className="text-sm">🇹🇷</span>
@@ -1347,7 +1340,7 @@ export default function App() {
                   <div className="fixed inset-0 z-45" onClick={() => setIsSettingsDropdownOpen(false)} />
                   <div className="absolute right-0 mt-2 w-56 bg-white dark:bg-[#141414] border border-slate-200 dark:border-zinc-800 rounded-xl shadow-lg py-1.5 z-50 animate-in fade-in slide-in-from-top-2 duration-150">
                     <div className="px-3 py-1.5 text-[9px] font-bold text-slate-400 dark:text-zinc-500 uppercase tracking-wider border-b border-slate-50 dark:border-zinc-850 mb-1 text-left">
-                      {lang === "TR" ? "Sistem Yönetimi" : "System Administration"}
+                      {t("System Administration")}
                     </div>
                     
                     <button
@@ -1361,7 +1354,7 @@ export default function App() {
                       className="w-full text-left px-3 py-2 text-xs font-semibold text-slate-700 dark:text-zinc-300 hover:bg-slate-50 dark:hover:bg-zinc-800/60 transition-colors flex items-center gap-2 cursor-pointer"
                     >
                       <Building className="w-3.5 h-3.5 text-indigo-500" />
-                      <span>{lang === "TR" ? "Genel Ayarlar" : "General Settings"}</span>
+                      <span>{t("General Settings")}</span>
                     </button>
                     
                     <button
@@ -1375,7 +1368,7 @@ export default function App() {
                       className="w-full text-left px-3 py-2 text-xs font-semibold text-slate-700 dark:text-zinc-300 hover:bg-slate-50 dark:hover:bg-zinc-800/60 transition-colors flex items-center gap-2 cursor-pointer"
                     >
                       <Users className="w-3.5 h-3.5 text-blue-500" />
-                      <span>{lang === "TR" ? "Kullanıcılar" : "Users"}</span>
+                      <span>{t("Users")}</span>
                     </button>
                     
                     <button
@@ -1389,7 +1382,7 @@ export default function App() {
                       className="w-full text-left px-3 py-2 text-xs font-semibold text-slate-700 dark:text-zinc-300 hover:bg-slate-50 dark:hover:bg-zinc-800/60 transition-colors flex items-center gap-2 cursor-pointer"
                     >
                       <Lock className="w-3.5 h-3.5 text-amber-500" />
-                      <span>{lang === "TR" ? "Roller & Yetkiler" : "Roles & Permissions"}</span>
+                      <span>{t("Roles & Permissions")}</span>
                     </button>
                     
                     <button
@@ -1402,7 +1395,7 @@ export default function App() {
                       className="w-full text-left px-3 py-2 text-xs font-semibold text-slate-700 dark:text-zinc-300 hover:bg-slate-50 dark:hover:bg-zinc-800/60 transition-colors flex items-center gap-2 cursor-pointer"
                     >
                       <Mail className="w-3.5 h-3.5 text-emerald-500" />
-                      <span>{lang === "TR" ? "E-Posta Ayarları" : "Email Settings"}</span>
+                      <span>{t("Email Settings")}</span>
                     </button>
                     
                     <button
@@ -1416,7 +1409,7 @@ export default function App() {
                       className="w-full text-left px-3 py-2 text-xs font-semibold text-slate-700 dark:text-zinc-300 hover:bg-slate-50 dark:hover:bg-zinc-800/60 transition-colors flex items-center gap-2 cursor-pointer"
                     >
                       <Sliders className="w-3.5 h-3.5 text-sky-500" />
-                      <span>{lang === "TR" ? "Depolama Sağlayıcıları" : "Storage Providers"}</span>
+                      <span>{t("Storage Providers")}</span>
                     </button>
                     
                     <button
@@ -1430,7 +1423,7 @@ export default function App() {
                       className="w-full text-left px-3 py-2 text-xs font-semibold text-slate-700 dark:text-zinc-300 hover:bg-slate-50 dark:hover:bg-zinc-800/60 transition-colors flex items-center gap-2 cursor-pointer"
                     >
                       <Layers className="w-3.5 h-3.5 text-indigo-550" />
-                      <span>{lang === "TR" ? "Entegrasyonlar" : "Integrations"}</span>
+                      <span>{t("Integrations")}</span>
                     </button>
                     
                     <button
@@ -1444,7 +1437,7 @@ export default function App() {
                       className="w-full text-left px-3 py-2 text-xs font-semibold text-slate-700 dark:text-zinc-300 hover:bg-slate-50 dark:hover:bg-zinc-800/60 transition-colors flex items-center gap-2 cursor-pointer"
                     >
                       <Sparkles className="w-3.5 h-3.5 text-yellow-500 animate-pulse" />
-                      <span>{lang === "TR" ? "Yapay Zeka Ayarları" : "AI Settings"}</span>
+                      <span>{t("AI Settings")}</span>
                     </button>
                     
                     <button
@@ -1458,7 +1451,7 @@ export default function App() {
                       className="w-full text-left px-3 py-2 text-xs font-semibold text-slate-700 dark:text-zinc-300 hover:bg-slate-50 dark:hover:bg-zinc-800/60 transition-colors flex items-center gap-2 border-t border-slate-50 dark:border-zinc-800/50 mt-1 pt-1.5 cursor-pointer"
                     >
                       <History className="w-3.5 h-3.5 text-slate-450" />
-                      <span>{lang === "TR" ? "Sistem Günlükleri" : "System Logs"}</span>
+                      <span>{t("System Logs")}</span>
                     </button>
                   </div>
                 </>
@@ -1509,7 +1502,7 @@ export default function App() {
                         className="w-full text-left px-3.5 py-2 text-xs text-slate-700 dark:text-zinc-300 hover:bg-slate-50 dark:hover:bg-zinc-800/60 transition-colors flex items-center gap-2 cursor-pointer"
                       >
                         <Users className="w-3.5 h-3.5 text-slate-400" />
-                        <span>{lang === "TR" ? "Profilim" : "My Profile"}</span>
+                        <span>{t("My Profile")}</span>
                       </button>
 
                       <button
@@ -1522,7 +1515,7 @@ export default function App() {
                         className="w-full text-left px-3.5 py-2 text-xs text-slate-700 dark:text-zinc-300 hover:bg-slate-50 dark:hover:bg-zinc-800/60 transition-colors flex items-center gap-2 cursor-pointer"
                       >
                         <Sliders className="w-3.5 h-3.5 text-slate-400" />
-                        <span>{lang === "TR" ? "Tercihler" : "Preferences"}</span>
+                        <span>{t("Preferences")}</span>
                       </button>
 
                       <button
@@ -1534,7 +1527,7 @@ export default function App() {
                         className="w-full text-left px-3.5 py-2 text-xs text-slate-700 dark:text-zinc-350 hover:bg-slate-50 dark:hover:bg-zinc-800/60 transition-colors flex items-center gap-2 cursor-pointer"
                       >
                         <Bell className="w-3.5 h-3.5 text-slate-400" />
-                        <span>{lang === "TR" ? "Bildirimler" : "Notifications"}</span>
+                        <span>{t("Notifications")}</span>
                       </button>
 
                       <button
@@ -1546,7 +1539,7 @@ export default function App() {
                         className="w-full text-left px-3.5 py-2 text-xs text-slate-700 dark:text-zinc-300 hover:bg-slate-50 dark:hover:bg-zinc-800/60 transition-colors flex items-center gap-2 cursor-pointer"
                       >
                         <Globe className="w-3.5 h-3.5 text-slate-400" />
-                        <span>{lang === "TR" ? "Dil Değiştir (EN)" : "Change Language (TR)"}</span>
+                        <span>{t("Change Language (TR)")}</span>
                       </button>
 
                       <button
@@ -1558,7 +1551,7 @@ export default function App() {
                         className="w-full text-left px-3.5 py-2 text-xs text-slate-700 dark:text-zinc-300 hover:bg-slate-50 dark:hover:bg-zinc-800/60 transition-colors flex items-center gap-2 cursor-pointer"
                       >
                         {darkMode ? <Sun className="w-3.5 h-3.5 text-amber-500" /> : <Moon className="w-3.5 h-3.5 text-slate-400" />}
-                        <span>{lang === "TR" ? "Temayı Değiştir" : "Switch Themes"}</span>
+                        <span>{t("Switch Themes")}</span>
                       </button>
 
                       <button
@@ -1572,7 +1565,7 @@ export default function App() {
                         className="w-full text-left px-3.5 py-2 text-xs text-slate-700 dark:text-zinc-300 hover:bg-slate-50 dark:hover:bg-zinc-800/60 transition-colors flex items-center gap-2 cursor-pointer"
                       >
                         <Settings className="w-3.5 h-3.5 text-slate-400" />
-                        <span>{lang === "TR" ? "Hesap Ayarları" : "Account Settings"}</span>
+                        <span>{t("Account Settings")}</span>
                       </button>
                     </div>
 
@@ -1581,12 +1574,12 @@ export default function App() {
                         type="button"
                         onClick={() => {
                           setIsUserDropdownOpen(false);
-                          alert(lang === "TR" ? "Atakan Zehir güvenli şekilde çıkış yaptı." : "Atakan Zehir logged out successfully.");
+                          alert(t("Atakan Zehir logged out successfully."));
                         }}
                         className="w-full text-left px-3.5 py-2 text-xs font-bold text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/20 transition-colors flex items-center gap-2 cursor-pointer"
                       >
                         <X className="w-3.5 h-3.5" />
-                        <span>{lang === "TR" ? "Güvenli Çıkış" : "Logout"}</span>
+                        <span>{t("Logout")}</span>
                       </button>
                     </div>
                   </div>

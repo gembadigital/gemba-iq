@@ -1,4 +1,14 @@
 import React, { useState, useEffect } from "react";
+import { useLanguage } from "../lib/LanguageContext";
+import {
+  getCampaignTranslation,
+  getCampaignStatusLabel,
+  getCampaignChannelLabel,
+  getCampaignSegmentLabel,
+  translateCampaignContent,
+  CAMPAIGN_MONTH_KEYS,
+  STOCK_IMAGE_NAME_KEYS,
+} from "./campaignI18n";
 import {
   Calendar as CalendarIcon,
   Compass,
@@ -162,6 +172,14 @@ interface CampaignManagerViewProps {
 }
 
 export default function CampaignManagerView({ onPushToMailComposer }: CampaignManagerViewProps) {
+  const { lang, t: globalT } = useLanguage();
+  const t = (key: string) => getCampaignTranslation(lang, key) ?? globalT(key) ?? key;
+  const formatStatus = (status: string) => getCampaignStatusLabel(t, status);
+  const formatChannel = (channel: string) => getCampaignChannelLabel(t, channel);
+  const formatSegment = (segment: string) => getCampaignSegmentLabel(t, segment);
+  const tc = (entityId: string, field: "subject" | "body" | "text", fallback: string) =>
+    translateCampaignContent(t, entityId, field, fallback);
+  const monthNames = CAMPAIGN_MONTH_KEYS.map((k) => t(k));
   // Navigation active outreach sub-tab
   const [subTab, setSubTab] = useState<"linkedin" | "email">("linkedin");
 
@@ -225,10 +243,7 @@ export default function CampaignManagerView({ onPushToMailComposer }: CampaignMa
   const [isSyncing, setIsSyncing] = useState(false);
   const [currentYear, setCurrentYear] = useState(2026);
   const [currentMonth, setCurrentMonth] = useState(5); // June
-  const monthNames = [
-    "January", "February", "March", "April", "May", "June",
-    "July", "August", "September", "October", "November", "December"
-  ];
+
 
   // --- Save lists to local storage ---
   useEffect(() => {
@@ -268,7 +283,7 @@ export default function CampaignManagerView({ onPushToMailComposer }: CampaignMa
         setPosts(updatedPosts);
       }
 
-      // 2. Process Email Campaigns Auto-Dispatch
+      // 2. Process {t("Email Campaigns")} Auto-Dispatch
       const updatedEmails = campaigns.map(c => {
         if (c.status === "SCHEDULED") {
           const campDateTime = new Date(`${c.date}T${c.time}`);
@@ -317,7 +332,7 @@ export default function CampaignManagerView({ onPushToMailComposer }: CampaignMa
   };
 
   const handleConfigureCookies = () => {
-    alert("Simulation: LinkedIn Auth Cookies successfully authenticated & loaded into Playwright background launcher!");
+    alert(t("Simulation: LinkedIn Auth Cookies successfully authenticated & loaded into Playwright background launcher!"));
   };
 
   // --- LinkedIn Handler Logics ---
@@ -337,7 +352,7 @@ export default function CampaignManagerView({ onPushToMailComposer }: CampaignMa
   const handleScheduleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!postText.trim()) {
-      alert("Please write update copy or let Gemini generate it!");
+      alert(t("Please write update copy or let Gemini generate it!"));
       return;
     }
 
@@ -357,7 +372,7 @@ export default function CampaignManagerView({ onPushToMailComposer }: CampaignMa
 
     setPosts([newPost, ...posts]);
     setPostText("");
-    alert(`Successfully registered LinkedIn update template! Scheduled queue will deploy this to your ${targetChannel} page.`);
+    alert(t("Successfully registered LinkedIn update template! Scheduled queue will deploy this to your {channel} page.").replace("{channel}", formatChannel(targetChannel)));
   };
 
   const handleDeletePost = (id: string) => {
@@ -391,11 +406,11 @@ export default function CampaignManagerView({ onPushToMailComposer }: CampaignMa
   const handleEmailCampaignSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!emailSubject.trim()) {
-      alert("Please state a Subject Line first!");
+      alert(t("Please state a Subject Line first!"));
       return;
     }
     if (!emailBodyText.trim()) {
-      alert("Please compose email message copy first!");
+      alert(t("Please compose email message copy first!"));
       return;
     }
 
@@ -414,7 +429,7 @@ export default function CampaignManagerView({ onPushToMailComposer }: CampaignMa
     setCampaigns([newCampaign, ...campaigns]);
     setEmailSubject("");
     setEmailBodyText("");
-    alert("Successfully registered Email Campaign! It has been locked on the dispatch calendar.");
+    alert(t("Successfully registered Email Campaign! It has been locked on the dispatch calendar."));
   };
 
   const handleDeleteCampaign = (id: string) => {
@@ -439,7 +454,7 @@ export default function CampaignManagerView({ onPushToMailComposer }: CampaignMa
     if (onPushToMailComposer) {
       onPushToMailComposer(subj, body);
     } else {
-      alert("Error: Primary App layout merge callback not bound.");
+      alert(t("Error: Primary App layout merge callback not bound."));
     }
   };
 
@@ -447,7 +462,7 @@ export default function CampaignManagerView({ onPushToMailComposer }: CampaignMa
   const handleGeminiAssist = async (action: "write" | "polish") => {
     if (subTab === "linkedin") {
       if (action === "write" && !aiTopic.trim()) {
-        setAiError("Please type a topic first!");
+        setAiError(t("Please type a topic first!"));
         return;
       }
       setAiLoading(true);
@@ -468,7 +483,7 @@ export default function CampaignManagerView({ onPushToMailComposer }: CampaignMa
 
         if (!response.ok) {
           const errData = await response.json();
-          throw new Error(errData.error || "Failed to contact Gemini strategist.");
+          throw new Error(errData.error || t("Failed to contact Gemini strategist."));
         }
 
         const data = await response.json();
@@ -487,19 +502,7 @@ export default function CampaignManagerView({ onPushToMailComposer }: CampaignMa
         }
       } catch (err: any) {
         console.warn("LinkedIn Gemini assist failed, using beautiful local B2B LinkedIn template generator:", err);
-        const focusTopic = aiTopic.trim() || "Yalın Üretim ve Dijitalleşme";
-        const fallbackPost = `🎯 Sektörümüzün En Büyük Kaybı: Gizli İsraflar (Muda) ve Düşük OEE!
-
-Üretici dostlarımızla yaptığımız son görüşmelerde en çok duyduğumuz ortak sorun: "Beklenmeyen donanım duruşları ve yüksek COPQ (Kötü Kalite Maliyeti)".
-
-Eğer siz de fabrikanızda operasyonel mükemmellik (OpEx) süreçlerini optimize etmek istiyorsanız, şunlara odaklanmalısınız:
-1️⃣ Operatör seviyesinde anlık 5S disiplini
-2️⃣ Hat duruş sürelerini (Lean & Kaizen) dijital olarak takip etme
-3️⃣ Çekme sistemine (Kanban) dayalı yarı mamul kontrolü
-
-Sizin işletmenizde bu kayıpları azaltmak için hangi yöntemler kullanılıyor? Deneyimlerinizi yorumlarda paylaşın! 👇
-
-#operasyonelmukemmellik #yalinuretim #OEE #b2b #kaizen #sanayidedijitallesme`;
+        const fallbackPost = t("fallback.linkedin.post");
         setPostText(fallbackPost);
         setTags(["operasyonelmukemmellik", "yalinuretim", "oee", "industrial"]);
       } finally {
@@ -508,11 +511,11 @@ Sizin işletmenizde bu kayıpları azaltmak için hangi yöntemler kullanılıyo
     } else {
       // Email Campaign AI
       if (action === "write" && !aiEmailTopic.trim()) {
-        setAiEmailError("Please type an Email Campaign Focus theme first!");
+        setAiEmailError(t("Please type an Email Campaign Focus theme first!"));
         return;
       }
       if (action === "polish" && !emailBodyText.trim()) {
-        setAiEmailError("Draft some initial content or outline in the body first to let Gemini optimize it!");
+        setAiEmailError(t("Draft some initial content or outline in the body first to let Gemini optimize it!"));
         return;
       }
 
@@ -536,7 +539,7 @@ Sizin işletmenizde bu kayıpları azaltmak için hangi yöntemler kullanılıyo
 
         if (!response.ok) {
           const errData = await response.json();
-          throw new Error(errData.error || "Failed to contact Gemini email strategist.");
+          throw new Error(errData.error || t("Failed to contact Gemini email strategist."));
         }
 
         const data = await response.json();
@@ -558,20 +561,9 @@ Sizin işletmenizde bu kayıpları azaltmak için hangi yöntemler kullanılıyo
         }
       } catch (err: any) {
         console.warn("Email Gemini assist failed, using beautiful local B2B Email Campaign generator:", err);
-        const focusTopic = aiEmailTopic.trim() || "OEE ve Hurda Azaltma Kampanyası";
-        setEmailSubject(`${focusTopic} | Fabrika Verimlilik Değerlendirmesi`);
-        setEmailBodyText(`Sayın Yetkili,
-
-İşletmenizin operasyonel sürdürülebilirlik ve hammadde optimizasyon standartlarını artırma yönündeki vizyoner yaklaşımını ilgiyle takip ediyoruz.
-
-Sektör liderlerinin bugünkü en büyük önceliği dikey üretim hatlarındaki duruş kayıplarını minimuma indirmektir. Bizler, geliştirdiğimiz dijital OEE takip ve Kaizen metodolojileri ile kayıpları %18'e varan oranlarda azalttık.
-
-Bu konuda hazırladığımız 1 sayfalık "Hızlı Yalın Dönüşüm ve Muda Analizi" kılavuzunu sizinle paylaşmak için can atıyoruz.
-
-Gelecek hafta salı günü kısa bir online kahve sohbeti düzenleyebilir miyiz?
-
-Saygılarımızla,
-Gemba IQ AI İş Geliştirme Danışmanları`);
+        const focusTopic = aiEmailTopic.trim() || t("OEE and Scrap Reduction Campaign");
+        setEmailSubject(t("{topic} | Factory Efficiency Assessment").replace("{topic}", focusTopic));
+        setEmailBodyText(t("fallback.email.body"));
       } finally {
         setAiEmailLoading(false);
       }
@@ -650,15 +642,15 @@ Gemba IQ AI İş Geliştirme Danışmanları`);
           </div>
           <div>
             <h1 className="text-sm font-bold tracking-tight text-slate-800 dark:text-slate-100 flex items-center gap-2 flex-wrap">
-              {isEmail ? "Email Campaign Scheduler" : "LinkedIn Post Scheduler"}
+              {isEmail ? t("Email Campaign Scheduler") : t("LinkedIn Post Scheduler")}
               <span className="text-[10px] bg-slate-100 dark:bg-[#252423] border border-[#EDEBE9] dark:border-[#323130] text-[#0078D4] dark:text-brand-300 px-2.5 py-0.5 rounded font-mono">
-                {isEmail ? "B2B Outreach Matrix" : "Playwright Automation"}
+                {isEmail ? t("B2B Outreach Matrix") : t("Playwright Automation")}
               </span>
             </h1>
             <p className="text-xs text-slate-500 font-sans mt-1">
               {isEmail 
-                ? "Program and monitor automatic weekly or monthly email template campaigns locked to target dispatches" 
-                : "Professional corporate pipeline scheduler for LinkedIn page and thought leadership accounts"}
+                ? t("Program and monitor automatic weekly or monthly email template campaigns locked to target dispatches") 
+                : t("Professional corporate pipeline scheduler for LinkedIn page and thought leadership accounts")}
             </p>
           </div>
         </div>
@@ -675,7 +667,7 @@ Gemba IQ AI İş Geliştirme Danışmanları`);
             }`}
           >
             <Users className="w-3.5 h-3.5" />
-            LinkedIn posts
+            {t("LinkedIn posts")}
           </button>
           
           <button
@@ -688,7 +680,7 @@ Gemba IQ AI İş Geliştirme Danışmanları`);
             }`}
           >
             <Mail className="w-3.5 h-3.5" />
-            Email Campaigns
+            {t("Email Campaigns")}
           </button>
         </div>
 
@@ -698,10 +690,10 @@ Gemba IQ AI İş Geliştirme Danışmanları`);
             onClick={handleSeedCampaignData}
             id="campaign-manager-seed-demo"
             className="px-3 py-1.5 rounded bg-[#FAF9F8] dark:bg-[#252423] hover:bg-slate-100 dark:hover:bg-[#323130] text-xs text-slate-700 dark:text-slate-200 border border-[#EDEBE9] dark:border-[#323130] font-semibold transition flex items-center gap-1.5 cursor-pointer shadow-sm text-[11px]"
-            title="Seed baseline schedules for selected channel"
+            title={t("Seed baseline schedules for selected channel")}
           >
             <Compass className="w-3.5 h-3.5 text-indigo-500" />
-            Seed {isEmail ? "Emails" : "Posts"}
+{isEmail ? t("Seed Emails") : t("Seed Posts")}
           </button>
 
           <button
@@ -710,7 +702,7 @@ Gemba IQ AI İş Geliştirme Danışmanları`);
             className="px-3 py-1.5 rounded bg-[#FAF9F8] dark:bg-[#252423] hover:bg-slate-100 dark:hover:bg-[#323130] text-xs text-slate-700 dark:text-slate-200 border border-[#EDEBE9] dark:border-[#323130] font-semibold transition flex items-center gap-1.5 cursor-pointer shadow-sm text-[11px]"
           >
             <RefreshCw className={`w-3.5 h-3.5 text-blue-500 ${isSyncing ? "animate-spin" : ""}`} />
-            Sync
+{t("Sync")}
           </button>
 
           {!isEmail && (
@@ -720,7 +712,7 @@ Gemba IQ AI İş Geliştirme Danışmanları`);
               className="px-3 py-1.5 rounded bg-[#0078D4] hover:bg-[#106ebe] text-xs text-white font-semibold transition flex items-center gap-1.5 cursor-pointer shadow-sm text-[11px]"
             >
               <Key className="w-3.5 h-3.5" />
-              Cookies
+{t("Cookies")}
             </button>
           )}
         </div>
@@ -730,11 +722,11 @@ Gemba IQ AI İş Geliştirme Danışmanları`);
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4" id="campaign-stats-banner">
         <div className="bg-white dark:bg-[#1b1a19] border border-[#EDEBE9] dark:border-[#323130] rounded p-4 flex items-center justify-between shadow-sm">
           <div>
-            <span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider block">Scheduled</span>
+            <span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider block">{t("Scheduled")}</span>
             <span className="text-xl font-bold tracking-tight text-blue-600 dark:text-blue-400 mt-1 block">
               {mainScheduledCount}
             </span>
-            <span className="text-[10px] text-slate-500 mt-1 block">Lock in Pipeline</span>
+            <span className="text-[10px] text-slate-500 mt-1 block">{t("Lock in Pipeline")}</span>
           </div>
           <div className="p-2 rounded bg-blue-50 dark:bg-blue-950/20 border border-blue-100 dark:border-blue-900">
             <Clock className="w-5 h-5 text-blue-505 dark:text-blue-400" />
@@ -744,12 +736,12 @@ Gemba IQ AI İş Geliştirme Danışmanları`);
         <div className="bg-white dark:bg-[#1b1a19] border border-[#EDEBE9] dark:border-[#323130] rounded p-4 flex items-center justify-between shadow-sm">
           <div>
             <span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider block">
-              {isEmail ? "Dispatched" : "Posted"}
+{isEmail ? t("Dispatched") : t("Posted")}
             </span>
             <span className="text-xl font-bold tracking-tight text-emerald-600 dark:text-emerald-400 mt-1 block">
               {mainTransmittedCount}
             </span>
-            <span className="text-[10px] text-slate-500 mt-1 block">Successfully Sent</span>
+            <span className="text-[10px] text-slate-500 mt-1 block">{t("Successfully Sent")}</span>
           </div>
           <div className="p-2 rounded bg-emerald-50 dark:bg-emerald-950/20 border border-emerald-100 dark:border-emerald-900">
             <FileCheck className="w-5 h-5 text-emerald-605 dark:text-emerald-400" />
@@ -758,11 +750,11 @@ Gemba IQ AI İş Geliştirme Danışmanları`);
 
         <div className="bg-white dark:bg-[#1b1a19] border border-[#EDEBE9] dark:border-[#323130] rounded p-4 flex items-center justify-between shadow-sm">
           <div>
-            <span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider block">Errors</span>
+            <span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider block">{t("Errors")}</span>
             <span className="text-xl font-bold tracking-tight text-rose-600 dark:text-rose-450 mt-1 block">
               {mainFailedCount}
             </span>
-            <span className="text-[10px] text-slate-500 mt-1 block">Logs normal</span>
+            <span className="text-[10px] text-slate-500 mt-1 block">{t("Logs normal")}</span>
           </div>
           <div className="p-2 rounded bg-rose-50 dark:bg-rose-950/20 border border-rose-100 dark:border-rose-900">
             <AlertCircle className="w-5 h-5 text-rose-505 dark:text-rose-400" />
@@ -771,11 +763,11 @@ Gemba IQ AI İş Geliştirme Danışmanları`);
 
         <div className="bg-white dark:bg-[#1b1a19] border border-[#EDEBE9] dark:border-[#323130] rounded p-4 flex items-center justify-between shadow-sm">
           <div>
-            <span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider block">Total Database Rows</span>
+            <span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider block">{t("Total Database Rows")}</span>
             <span className="text-xl font-bold tracking-tight text-slate-700 dark:text-slate-300 mt-1 block">
               {mainTotalCount}
             </span>
-            <span className="text-[10px] text-slate-500 mt-1 block">Campaign configurations</span>
+            <span className="text-[10px] text-slate-500 mt-1 block">{t("Campaign configurations")}</span>
           </div>
           <div className="p-2 rounded bg-slate-50 dark:bg-slate-900 border border-slate-100 dark:border-slate-800">
             <FileText className="w-5 h-5 text-slate-505" />
@@ -795,7 +787,7 @@ Gemba IQ AI İş Geliştirme Danışmanları`);
               <div className="flex items-center gap-2">
                 <CalendarIcon className={`w-4.5 h-4.5 ${isEmail ? "text-amber-500" : "text-[#0078D4]"}`} />
                 <span className="font-bold text-slate-800 dark:text-slate-100 text-xs uppercase tracking-wider flex items-center gap-1.5">
-                  {monthNames[currentMonth]} {currentYear} Outreach Agenda
+{t("{month} {year} Outreach Agenda").replace("{month}", monthNames[currentMonth]).replace("{year}", String(currentYear))}
                 </span>
               </div>
 
@@ -805,7 +797,7 @@ Gemba IQ AI İş Geliştirme Danışmanları`);
                   type="button"
                   onClick={handlePrevMonth}
                   className="p-1 hover:bg-slate-100 dark:hover:bg-[#323130] text-slate-600 dark:text-slate-300 rounded transition cursor-pointer"
-                  title="Previous Month"
+                  title={t("Previous Month")}
                 >
                   <ChevronLeft className="w-4 h-4" />
                 </button>
@@ -818,13 +810,13 @@ Gemba IQ AI İş Geliştirme Danışmanları`);
                   }}
                   className="px-2 py-0.5 hover:bg-slate-100 dark:hover:bg-[#323130] text-[10px] uppercase font-bold text-slate-500 dark:text-slate-405 rounded transition cursor-pointer"
                 >
-                  Today
+{t("Today")}
                 </button>
                 <button
                   type="button"
                   onClick={handleNextMonth}
                   className="p-1 hover:bg-slate-100 dark:hover:bg-[#323130] text-slate-600 dark:text-slate-300 rounded transition cursor-pointer"
-                  title="Next Month"
+                  title={t("Next Month")}
                 >
                   <ChevronRight className="w-4 h-4" />
                 </button>
@@ -833,13 +825,13 @@ Gemba IQ AI İş Geliştirme Danışmanları`);
 
             {/* Calendar Weekday headers */}
             <div className="grid grid-cols-7 gap-1 text-center text-[10px] font-bold text-slate-400 dark:text-slate-505 mb-2 uppercase tracking-wide font-mono">
-              <div>Mon</div>
-              <div>Tue</div>
-              <div>Wed</div>
-              <div>Thu</div>
-              <div>Fri</div>
-              <div>Sat</div>
-              <div>Sun</div>
+              <div>{t("Mon")}</div>
+              <div>{t("Tue")}</div>
+              <div>{t("Wed")}</div>
+              <div>{t("Thu")}</div>
+              <div>{t("Fri")}</div>
+              <div>{t("Sat")}</div>
+              <div>{t("Sun")}</div>
             </div>
 
             {/* Calendar Days Slots */}
@@ -889,7 +881,7 @@ Gemba IQ AI İş Geliştirme Danışmanları`);
                           }
                         }}
                         className="text-[#0078D4] dark:text-brand-350 opacity-0 group-hover:opacity-100 transition absolute right-1 top-1 p-0.5 hover:bg-slate-100 dark:hover:bg-[#252423] rounded cursor-pointer"
-                        title="Set as Target Dispatch Date"
+                        title={t("Set as Target Dispatch Date")}
                       >
                         <Plus className="w-3 h-3" />
                       </button>
@@ -914,13 +906,13 @@ Gemba IQ AI İş Geliştirme Danışmanları`);
                                 ? "bg-emerald-50 text-emerald-800 border-emerald-150 dark:bg-emerald-950/20 dark:text-emerald-400"
                                 : "bg-amber-50 text-amber-850 border-amber-100 dark:bg-amber-955/20 dark:text-amber-400"
                             }`}
-                            title={`[${c.targetSegment}] ${c.subject}`}
+                            title={`[${formatSegment(c.targetSegment)}] ${tc(c.id, "subject", c.subject)}`}
                           >
-                            📧 {c.subject.substring(0, 10)}...
+                            📧 {tc(c.id, "subject", c.subject).substring(0, 10)}...
                           </div>
                         ))
                       ) : (
-                        // LinkedIn posts rendering on calendar
+                        // {t("LinkedIn posts")} rendering on calendar
                         posts.filter(p => p.date === dateKey).map((p) => (
                           <div
                             key={p.id}
@@ -937,7 +929,7 @@ Gemba IQ AI İş Geliştirme Danışmanları`);
                                 ? "bg-emerald-50 text-emerald-700 border-emerald-100 dark:bg-emerald-950/20 dark:text-emerald-405"
                                 : "bg-blue-50 text-[#0078D4] border-blue-100 dark:bg-blue-950/20 dark:text-brand-300"
                             }`}
-                            title={`[${p.channel}] ${p.text}`}
+                            title={`[${formatChannel(p.channel)}] ${tc(p.id, "text", p.text)}`}
                           >
                             🔗 {p.channel.split(" ")[1] || p.channel}
                           </div>
@@ -953,11 +945,11 @@ Gemba IQ AI İş Geliştirme Danışmanları`);
             <div className="mt-4 pt-3 border-t border-[#EDEBE9] dark:border-[#323130] flex flex-wrap gap-x-4 gap-y-2 justify-center text-[10px] font-mono text-slate-400 dark:text-slate-505">
               <div className="flex items-center gap-1.5">
                 <span className={`w-2.5 h-2.5 rounded block ${isEmail ? "bg-amber-500" : "bg-blue-500"}`}></span>
-                <span>Active Scheduled Outreach</span>
+                <span>{t("Active Scheduled Outreach")}</span>
               </div>
               <div className="flex items-center gap-1.5">
                 <span className="w-2.5 h-2.5 rounded bg-emerald-500 block"></span>
-                <span>Dispatched Outreach</span>
+                <span>{t("Dispatched Outreach")}</span>
               </div>
             </div>
           </div>
@@ -968,11 +960,11 @@ Gemba IQ AI İş Geliştirme Danışmanları`);
               <h3 className="text-xs font-bold text-slate-800 dark:text-slate-100 uppercase tracking-wider flex items-center gap-1.5">
                 <ListOrdered className={`w-4 h-4 ${isEmail ? "text-amber-500" : "text-[#0078D4]"}`} />
                 <span>
-                  {isEmail ? "Scheduled Email Pipeline Queue" : "Chronological Post Pipeline Queue"}
+                  {isEmail ? t("Scheduled Email Pipeline Queue") : t("Chronological Post Pipeline Queue")}
                 </span>
               </h3>
               <span className="text-[10px] text-slate-400 dark:text-slate-550 font-mono">
-                {isEmail ? campaigns.length : posts.length} Campaigns Active
+                {isEmail ? campaigns.length : posts.length} {t("Campaigns Active")}
               </span>
             </div>
 
@@ -981,7 +973,7 @@ Gemba IQ AI İş Geliştirme Danışmanları`);
                 // Email Campaign Pipeline Queue
                 campaigns.length === 0 ? (
                   <div className="text-center py-10 text-xs text-slate-400">
-                    No active email campaigns listed on the pipeline roster. Select "Seed Emails" to draft weekly layouts instantly.
+{t("No active email campaigns listed on the pipeline roster.")} {t('Select "Seed Emails" to draft weekly layouts instantly.')}
                   </div>
                 ) : (
                   campaigns.map(c => {
@@ -1013,21 +1005,21 @@ Gemba IQ AI İş Geliştirme Danışmanları`);
                             <div className="min-w-0 flex-1">
                               <div className="flex items-center gap-2 flex-wrap">
                                 <span className="text-xs font-bold text-slate-800 dark:text-slate-200 truncate max-w-[280px]">
-                                  {c.subject}
+                                  {tc(c.id, "subject", c.subject)}
                                 </span>
                                 <span className="text-[10px] text-slate-400 font-mono bg-slate-50 dark:bg-slate-800 px-1.5 py-0.5 rounded border border-[#EDEBE9] dark:border-[#323130]">
-                                  Target: {c.targetSegment}
+{t("Target:")} {formatSegment(c.targetSegment)}
                                 </span>
                                 <span className={`text-[8px] font-bold px-2 py-0.5 rounded-full border ${
                                   c.status === "DISPATCHED"
                                     ? "bg-emerald-50 text-emerald-700 border-emerald-100 dark:bg-emerald-900/10"
                                     : "bg-amber-50 text-amber-800 border-amber-100"
                                 }`}>
-                                  {c.status}
+{formatStatus(c.status)}
                                 </span>
                               </div>
                               <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5 line-clamp-1 italic font-sans">
-                                {c.body}
+                                {tc(c.id, "body", c.body)}
                               </p>
                             </div>
                           </div>
@@ -1036,14 +1028,14 @@ Gemba IQ AI İş Geliştirme Danışmanları`);
                           <div className="flex items-center gap-2 shrink-0">
                             {c.status === "DISPATCHED" && (
                               <div className="hidden sm:flex items-center gap-2 text-[10px] text-emerald-600 dark:text-emerald-450 font-mono font-bold bg-emerald-50/60 dark:bg-emerald-950/10 px-2 py-0.5 rounded border border-emerald-105">
-                                <span>📧 {c.opensCount} Opens</span>
+<span>{t("📧 {count} Opens").replace("{count}", String(c.opensCount))}</span>
                                 <span>•</span>
-                                <span>🔗 {c.clicksCount} Clicks</span>
+<span>{t("🔗 {count} Clicks").replace("{count}", String(c.clicksCount))}</span>
                               </div>
                             )}
                             <div className="text-slate-450 hover:text-slate-700 dark:hover:text-slate-300 transition-all flex items-center gap-1">
                               <span className="text-[10px] uppercase font-mono tracking-wider font-bold text-[#0078D4] dark:text-brand-300 mr-1">
-                                {isExpanded ? "Collapse" : "Expand details"}
+{isExpanded ? t("Collapse") : t("Expand details")}
                               </span>
                               <ChevronRight className={`w-3.5 h-3.5 transform transition-transform duration-200 ${isExpanded ? "rotate-90 text-[#0078D4] dark:text-brand-350" : ""}`} />
                             </div>
@@ -1057,26 +1049,26 @@ Gemba IQ AI İş Geliştirme Danışmanları`);
                             {/* Metadata Details Grid */}
                             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3">
                               <div className="bg-white dark:bg-[#252423] p-2.5 rounded border border-[#EDEBE9] dark:border-[#323130]">
-                                <span className="text-[9px] uppercase tracking-wide font-bold text-slate-400 block">Planned Target Segment</span>
+                                <span className="text-[9px] uppercase tracking-wide font-bold text-slate-400 block">{t("Planned Target Segment")}</span>
                                 <span className="text-xs font-semibold text-slate-700 dark:text-slate-205 mt-1 block truncate" title={c.targetSegment}>
-                                  {c.targetSegment}
+{formatSegment(c.targetSegment)}
                                 </span>
                               </div>
                               <div className="bg-white dark:bg-[#252423] p-2.5 rounded border border-[#EDEBE9] dark:border-[#323130]">
-                                <span className="text-[9px] uppercase tracking-wide font-bold text-slate-400 block">Dispatch Calendar Window</span>
+                                <span className="text-[9px] uppercase tracking-wide font-bold text-slate-400 block">{t("Dispatch Calendar Window")}</span>
                                 <span className="text-xs font-semibold text-slate-700 dark:text-slate-205 mt-1 block flex items-center gap-1">
                                   <Clock className="w-3.5 h-3.5 text-amber-500" />
-                                  {c.date} at {c.time}
+{t("{date} at {time}").replace("{date}", c.date).replace("{time}", c.time)}
                                 </span>
                               </div>
                               <div className="bg-white dark:bg-[#252423] p-2.5 rounded border border-[#EDEBE9] dark:border-[#323130]">
-                                <span className="text-[9px] uppercase tracking-wide font-bold text-slate-400 block">Template Statistics</span>
+                                <span className="text-[9px] uppercase tracking-wide font-bold text-slate-400 block">{t("Template Statistics")}</span>
                                 <span className="text-xs font-semibold text-slate-700 dark:text-slate-205 mt-1 block">
-                                  {wordCount} Words • {charCount} Chars • ~{readTime} Min read
+{t("{words} Words • {chars} Chars • ~{minutes} Min read").replace("{words}", String(wordCount)).replace("{chars}", String(charCount)).replace("{minutes}", String(readTime))}
                                 </span>
                               </div>
                               <div className="bg-white dark:bg-[#252423] p-2.5 rounded border border-[#EDEBE9] dark:border-[#323130]">
-                                <span className="text-[9px] uppercase tracking-wide font-bold text-slate-400 block">Detected Fields (Tags)</span>
+                                <span className="text-[9px] uppercase tracking-wide font-bold text-slate-400 block">{t("Detected Fields (Tags)")}</span>
                                 <span className="text-xs font-semibold text-slate-700 dark:text-slate-205 mt-1 block truncate">
                                   {detectedTags.length > 0 ? (
                                     <span className="flex flex-wrap gap-1">
@@ -1087,7 +1079,7 @@ Gemba IQ AI İş Geliştirme Danışmanları`);
                                       ))}
                                     </span>
                                   ) : (
-                                    <span className="text-slate-400 italic">None detected</span>
+                                    <span className="text-slate-400 italic">{t("None detected")}</span>
                                   )}
                                 </span>
                               </div>
@@ -1095,17 +1087,17 @@ Gemba IQ AI İş Geliştirme Danışmanları`);
 
                             {/* Live Interactive Preview Box */}
                             <div className="space-y-2">
-                              <span className="font-bold text-slate-700 dark:text-slate-300 uppercase text-[10px] tracking-wide block">Email Mailmerge Blueprint Preview:</span>
+                              <span className="font-bold text-slate-700 dark:text-slate-300 uppercase text-[10px] tracking-wide block">{t("Email Mailmerge Blueprint Preview:")}</span>
                               <div className="bg-white dark:bg-[#111] border border-[#EDEBE9] dark:border-[#323130] rounded p-4 font-sans space-y-3 shadow-inner max-h-[220px] overflow-y-auto">
                                 <div className="border-b border-slate-100 dark:border-slate-800 pb-2 mb-2">
-                                  <span className="text-slate-400 font-mono text-[10px] uppercase block">Subject Line</span>
+<span className="text-slate-400 font-mono text-[10px] uppercase block">{t("Subject Line")}</span>
                                   <h4 className="text-xs font-bold text-slate-850 dark:text-slate-150 truncate mt-0.5">
-                                    {c.subject}
+                                    {tc(c.id, "subject", c.subject)}
                                   </h4>
                                 </div>
-                                <span className="text-slate-400 font-mono text-[10px] uppercase block">Body Template Payload</span>
+                                <span className="text-slate-400 font-mono text-[10px] uppercase block">{t("Body Template Payload")}</span>
                                 <p className="text-xs text-slate-700 dark:text-slate-350 font-sans whitespace-pre-line leading-relaxed">
-                                  {c.body}
+                                  {tc(c.id, "body", c.body)}
                                 </p>
                               </div>
                             </div>
@@ -1116,16 +1108,16 @@ Gemba IQ AI İş Geliştirme Danışmanları`);
                               {c.status === "DISPATCHED" ? (
                                 <div className="text-[10px] text-slate-500 font-mono flex items-center gap-2">
                                   <span className="bg-emerald-100 dark:bg-emerald-950/20 text-emerald-800 dark:text-emerald-400 px-2 py-0.5 rounded font-bold">
-                                    Simulated Delivery Stats Logged
+{t("Simulated Delivery Stats Logged")}
                                   </span>
-                                  <span>Opens: {c.opensCount}</span>
+<span>{t("Opens:")} {c.opensCount}</span>
                                   <span>•</span>
-                                  <span>Clicks: {c.clicksCount}</span>
+<span>{t("Clicks:")} {c.clicksCount}</span>
                                 </div>
                               ) : (
                                 <div className="text-[11px] text-amber-700 dark:text-amber-400 font-semibold flex items-center gap-1.5">
                                   <Clock className="w-3.5 h-3.5 text-amber-500" />
-                                  <span>Pending on Local Automation Calendar. Status is SCHEDULED</span>
+<span>{t("Pending on Local Automation Calendar. Status is SCHEDULED")}</span>
                                 </div>
                               )}
 
@@ -1135,10 +1127,10 @@ Gemba IQ AI İş Geliştirme Danışmanları`);
                                   type="button"
                                   onClick={() => handlePushToMailMergeEditor(c.subject, c.body)}
                                   className="px-3 py-1.5 bg-white hover:bg-amber-500 hover:text-white dark:bg-[#252423] dark:hover:bg-amber-600 text-slate-705 dark:text-slate-205 border border-[#EDEBE9] dark:border-[#323130] rounded cursor-pointer text-xs font-bold transition flex items-center gap-1.5 shadow-sm"
-                                  title="Push template contents directly into composer workspace"
+title={t("Push template contents directly into composer workspace")}
                                 >
                                   <Send className="w-3.5 h-3.5" />
-                                  <span>Send to Composer</span>
+<span>{t("Send to Composer")}</span>
                                 </button>
 
                                 {c.status === "SCHEDULED" && (
@@ -1146,10 +1138,10 @@ Gemba IQ AI İş Geliştirme Danışmanları`);
                                     type="button"
                                     onClick={() => handleDispatchEmailCampaignNow(c.id)}
                                     className="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded cursor-pointer text-xs font-bold transition flex items-center gap-1.5 shadow-sm"
-                                    title="Manually release locked pipeline template draft for immediate custom batch processing"
+title={t("Manually release locked pipeline template draft for immediate custom batch processing")}
                                   >
                                     <FileCheck className="w-3.5 h-3.5" />
-                                    <span>Dispatch Now</span>
+<span>{t("Dispatch Now")}</span>
                                   </button>
                                 )}
 
@@ -1158,15 +1150,15 @@ Gemba IQ AI İş Geliştirme Danışmanları`);
                                   onClick={() => {
                                     setConfirmDeleteModal({
                                       isOpen: true,
-                                      title: "Kampanya Silinecek",
-                                      message: "Geri dönüşüm kutusuna taşınsın mı?",
+                                      title: t("Delete Campaign"),
+                                      message: t("Move to recycle bin?"),
                                       onConfirm: () => {
                                         handleDeleteCampaign(c.id);
                                       }
                                     });
                                   }}
                                   className="p-1.5 bg-rose-50 dark:bg-rose-950/10 hover:bg-rose-600 hover:text-white border border-rose-200 dark:border-rose-900 rounded cursor-pointer text-xs text-rose-600 transition shadow-sm"
-                                  title="Cancel and wipe scheduled item"
+title={t("Cancel and wipe scheduled item")}
                                 >
                                   <Trash2 className="w-4 h-4" />
                                 </button>
@@ -1183,7 +1175,7 @@ Gemba IQ AI İş Geliştirme Danışmanları`);
                 // LinkedIn Campaign Pipeline Queue
                 posts.length === 0 ? (
                   <div className="text-center py-10 text-xs text-slate-400">
-                    No active post structures. Click "Seed Posts" above to load beautiful template pipelines.
+{t('No active post structures. Click "Seed Posts" above to load beautiful template pipelines.')}
                   </div>
                 ) : (
                   posts.map(p => (
@@ -1198,34 +1190,34 @@ Gemba IQ AI İş Geliştirme Danışmanları`);
                       <div className="flex items-center gap-3 min-w-0 flex-1">
                         <img
                           src={p.imageUrl}
-                          alt="Media Connection"
+alt={t("Media Connection")}
                           className="w-10 h-10 rounded object-cover shadow-sm flex-shrink-0"
                         />
                         <div className="min-w-0">
                           <div className="flex items-center gap-2 flex-wrap">
                             <span className="text-xs font-bold text-slate-800 dark:text-slate-205">
-                              {p.channel} Post
+{t("{channel} Post").replace("{channel}", formatChannel(p.channel))}
                             </span>
                             <span className="text-[9px] font-mono text-slate-450">
-                              ID: {p.id.substring(5, 12)}
+{t("ID:")} {p.id.substring(5, 12)}
                             </span>
                             <span className={`text-[8px] font-bold px-2 py-0.5 rounded-full border ${
                               p.status === "POSTED"
                                 ? "bg-emerald-50 text-emerald-700 border-emerald-100"
                                 : "bg-blue-50 text-blue-700 border-blue-100"
                             }`}>
-                              {p.status}
+{formatStatus(p.status)}
                             </span>
                           </div>
                           <p className="text-xs text-slate-650 dark:text-slate-350 mt-1 line-clamp-1 whitespace-pre-line font-sans">
-                            {p.text}
+                            {tc(p.id, "text", p.text)}
                           </p>
                           <div className="flex items-center gap-2 mt-1.5 text-[10px] text-slate-450 dark:text-slate-500 font-mono">
                             <Clock className="w-3.5 h-3.5" />
-                            <span>Dispatch: {p.date} at {p.time}</span>
+<span>{t("Dispatch: {date} at {time}").replace("{date}", p.date).replace("{time}", p.time)}</span>
                             {p.status === "POSTED" && (
                               <span className="text-slate-400">
-                                • 👍 {p.reactions} Likes • {p.comments} Comments
+• {t("👍 {count} Likes • {comments} Comments").replace("{count}", String(p.reactions)).replace("{comments}", String(p.comments))}
                               </span>
                             )}
                           </div>
@@ -1239,7 +1231,7 @@ Gemba IQ AI İş Geliştirme Danışmanları`);
                             type="button"
                             onClick={() => handlePublishNow(p.id)}
                             className="p-1.5 bg-[#FAF9F8] hover:bg-emerald-600 hover:text-white dark:bg-[#252423] dark:hover:bg-emerald-700 text-slate-500 border border-[#EDEBE9] dark:border-[#323130] rounded cursor-pointer transition shadow-sm"
-                            title="Publish Update Immediately"
+title={t("Publish Update Immediately")}
                           >
                             <Send className="w-3.5 h-3.5" />
                           </button>
@@ -1248,7 +1240,7 @@ Gemba IQ AI İş Geliştirme Danışmanları`);
                           type="button"
                           onClick={() => handleDeletePost(p.id)}
                           className="p-1.5 bg-[#FAF9F8] hover:bg-rose-600 hover:text-white dark:bg-[#252423] dark:hover:bg-rose-700 text-slate-550 border border-[#EDEBE9] dark:border-[#323130] rounded cursor-pointer transition shadow-sm"
-                          title="Delete Post"
+title={t("Delete Post")}
                         >
                           <Trash2 className="w-3.5 h-3.5" />
                         </button>
@@ -1273,9 +1265,9 @@ Gemba IQ AI İş Geliştirme Danışmanları`);
                 <div>
                   <h3 className="text-xs font-bold text-slate-800 dark:text-slate-100 uppercase tracking-wider flex items-center gap-1.5">
                     <FileText className="w-4 h-4 text-amber-500" />
-                    <span>Draft Email Composer Card</span>
+<span>{t("Draft Email Composer Card")}</span>
                   </h3>
-                  <p className="text-[10px] text-slate-400">Write high-conversion B2B partnership templates</p>
+                  <p className="text-[10px] text-slate-400">{t("Write high-conversion B2B partnership templates")}</p>
                 </div>
 
                 <button
@@ -1284,24 +1276,24 @@ Gemba IQ AI İş Geliştirme Danışmanları`);
                   className="text-[10px] text-amber-650 hover:underline flex items-center gap-1 font-bold focus:outline-none cursor-pointer"
                 >
                   <HelpCircle className="w-3.5 h-3.5" />
-                  Guide
+{t("Guide")}
                 </button>
               </div>
 
               {showEditorHelp && (
                 <div className="p-3 bg-[#FAF9F8] dark:bg-[#252423] border border-[#EDEBE9] dark:border-[#323130] rounded text-[10px] text-slate-705 dark:text-slate-300 leading-relaxed space-y-2">
                   <div>
-                    <strong>Supported HTML formatting rules:</strong>
+<strong>{t("Supported HTML formatting rules:")}</strong>
                     <ul className="list-disc pl-4 mt-1 space-y-0.5 text-slate-400 font-mono text-[9px]">
-                      <li><code>&lt;b&gt;bold text&lt;/b&gt;</code> for emphasis weight</li>
-                      <li><code>&lt;i&gt;italicized text&lt;/i&gt;</code> for highlights</li>
-                      <li><code>&lt;p&gt;new paragraph spacing&lt;/p&gt;</code></li>
+<li><code>&lt;b&gt;{t("bold text")}&lt;/b&gt;</code> {t("for emphasis weight")}</li>
+<li><code>&lt;i&gt;{t("italicized text")}&lt;/i&gt;</code> {t("for highlights")}</li>
+<li><code>&lt;p&gt;{t("new paragraph spacing")}&lt;/p&gt;</code></li>
                     </ul>
                   </div>
                   <div>
-                    <strong>Supported Merge Tag Keys:</strong>
+<strong>{t("Supported Merge Tag Keys:")}</strong>
                     <p className="mt-1 text-slate-400 leading-normal">
-                      Insert variables standard syntax exactly surrounded by double braces (e.g. <code>{"{{FirstName}}"}</code>). Standard properties map to spreadsheet lines.
+{t("Insert variables standard syntax exactly surrounded by double braces (e.g. {{FirstName}}). Standard properties map to spreadsheet lines.")}
                     </p>
                   </div>
                 </div>
@@ -1311,45 +1303,45 @@ Gemba IQ AI İş Geliştirme Danışmanları`);
                 {/* Recipient Segment Dropdown */}
                 <div>
                   <label className="block text-[10px] uppercase font-bold text-slate-400 mb-1.5">
-                    Recipient Group Segment
+{t("Recipient Group Segment")}
                   </label>
                   <select
                     value={targetSegment}
                     onChange={e => setTargetSegment(e.target.value)}
                     className="w-full bg-[#FAF9F8] dark:bg-[#252423] border border-[#EDEBE9] dark:border-[#323130] rounded p-2 text-xs text-slate-800 dark:text-slate-200 outline-none"
                   >
-                    <option value="Warm Enterprise Leads">Warm Enterprise Leads</option>
-                    <option value="Hot Cyber & Ops Leads">Hot Cyber & Ops Leads</option>
-                    <option value="All Contacted Profiles">All Contacted Profiles</option>
-                    <option value="Standard Audit Targets">Standard Audit Targets</option>
+<option value="Warm Enterprise Leads">{t("Warm Enterprise Leads")}</option>
+<option value="Hot Cyber & Ops Leads">{t("Hot Cyber & Ops Leads")}</option>
+<option value="All Contacted Profiles">{t("All Contacted Profiles")}</option>
+<option value="Standard Audit Targets">{t("Standard Audit Targets")}</option>
                   </select>
                 </div>
 
                 {/* Email Subject line */}
                 <div className="space-y-1">
                   <div className="flex items-center justify-between">
-                    <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Subject Line</label>
+<label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">{t("Subject Line")}</label>
                     <div className="flex gap-1">
                       <button
                         type="button"
                         onClick={() => handleInjectTagToSubject("Company")}
                         className="text-[9px] font-bold text-amber-600 bg-amber-50 hover:bg-amber-100 dark:bg-amber-950/20 px-1.5 py-0.5 rounded border border-amber-200/50 cursor-pointer"
                       >
-                        +Company
+                        +{t("Company")}
                       </button>
                       <button
                         type="button"
                         onClick={() => handleInjectTagToSubject("FirstName")}
                         className="text-[9px] font-bold text-amber-600 bg-amber-50 hover:bg-amber-100 dark:bg-amber-955/20 px-1.5 py-0.5 rounded border border-amber-200/50 cursor-pointer"
                       >
-                        +FirstName
+                        +{t("First Name")}
                       </button>
                     </div>
                   </div>
                   <input
                     type="text"
                     required
-                    placeholder="e.g. Action Plan details for {{Company}} logistics"
+placeholder={t("e.g. Action Plan details for {{Company}} logistics")}
                     value={emailSubject}
                     onChange={e => setEmailSubject(e.target.value)}
                     className="w-full text-xs border border-[#EDEBE9] dark:border-[#323130] rounded px-3 py-2.5 bg-[#FAF9F8] dark:bg-[#11100f] text-slate-800 dark:text-slate-200 focus:outline-none focus:border-amber-500"
@@ -1359,7 +1351,7 @@ Gemba IQ AI İş Geliştirme Danışmanları`);
                 {/* Merge Tag interactive parameters */}
                 <div className="space-y-1.5">
                   <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">
-                    Parameter Chips (Click to Inject):
+{t("Parameter Chips (Click to Inject):")}
                   </label>
                   <div className="flex flex-wrap gap-1">
                     {["FirstName", "LastName", "Company", "Department", "Industry", "RequestedService"].map((tag) => (
@@ -1379,12 +1371,12 @@ Gemba IQ AI İş Geliştirme Danışmanları`);
                 {/* Rich Body composing */}
                 <div>
                   <label className="block text-[10px] uppercase font-bold text-slate-400 mb-1.5">
-                    Email Message Body Copy
+{t("Email Message Body Copy")}
                   </label>
                   <textarea
                     rows={8}
                     required
-                    placeholder="Compose structured business template strategy. Embed merge indicators such as {{FirstName}} and {{Company}} naturally..."
+placeholder={t("Compose structured business template strategy. Embed merge indicators such as {{FirstName}} and {{Company}} naturally...")}
                     value={emailBodyText}
                     onChange={e => setEmailBodyText(e.target.value)}
                     className="w-full bg-[#FAF9F8] dark:bg-[#252423] border border-[#EDEBE9] dark:border-[#323130] rounded p-2.5 text-xs text-slate-800 dark:text-slate-200 focus:outline-none focus:border-amber-500 leading-relaxed font-mono"
@@ -1395,7 +1387,7 @@ Gemba IQ AI İş Geliştirme Danışmanları`);
                 <div className="grid grid-cols-2 gap-2">
                   <div>
                     <label className="block text-[10px] uppercase font-bold text-slate-400 mb-1">
-                      Schedule Date (Target Dispatch)
+{t("Schedule Date (Target Dispatch)")}
                     </label>
                     <input
                       type="date"
@@ -1407,7 +1399,7 @@ Gemba IQ AI İş Geliştirme Danışmanları`);
                   </div>
                   <div>
                     <label className="block text-[10px] uppercase font-bold text-slate-400 mb-1">
-                      Dispatch Time Target
+{t("Dispatch Time Target")}
                     </label>
                     <input
                       type="time"
@@ -1426,7 +1418,7 @@ Gemba IQ AI İş Geliştirme Danışmanları`);
                     className="w-full bg-[#FAF9F8] hover:bg-slate-100 dark:bg-[#252423] dark:hover:bg-[#323130] text-slate-800 dark:text-slate-203 border border-[#EDEBE9] dark:border-[#323130] font-bold py-2 rounded flex items-center justify-center gap-1.5 cursor-pointer shadow-sm text-xs transition h-9"
                   >
                     <CalendarIcon className="w-4 h-4 text-amber-500" />
-                    <span>Lock in Calendar</span>
+<span>{t("Lock in Calendar")}</span>
                   </button>
 
                   {/* Transmit to primary Mail merge editor */}
@@ -1434,7 +1426,7 @@ Gemba IQ AI İş Geliştirme Danışmanları`);
                     type="button"
                     onClick={() => {
                       if (!emailSubject.trim() || !emailBodyText.trim()) {
-                        alert("Compose both Subject and Body copy first!");
+                        alert(t("Compose both Subject and Body copy first!"));
                         return;
                       }
                       handlePushToMailMergeEditor(emailSubject, emailBodyText);
@@ -1442,7 +1434,7 @@ Gemba IQ AI İş Geliştirme Danışmanları`);
                     className="w-full bg-amber-600 hover:bg-amber-700 text-white font-bold py-2 rounded flex items-center justify-center gap-1.5 cursor-pointer shadow-sm text-xs transition-colors h-9"
                   >
                     <Send className="w-4 h-4 animate-pulse" />
-                    <span>Transmit to Mail Merge</span>
+<span>{t("Transmit to Mail Merge")}</span>
                   </button>
                 </div>
               </form>
@@ -1452,17 +1444,17 @@ Gemba IQ AI İş Geliştirme Danışmanları`);
                 <div className="flex items-center justify-between">
                   <h4 className="text-xs font-bold text-slate-800 dark:text-slate-200 flex items-center gap-1.5">
                     <Sparkles className="w-3.5 h-3.5 text-amber-500 animate-pulse" />
-                    <span>Gemini B2B Email Coprighter</span>
+<span>{t("Gemini B2B Email Coprighter")}</span>
                   </h4>
                   <span className="text-[9px] text-slate-405 font-mono">
-                    gemini-3.5-flash server-side
+{t("gemini-3.5-flash server-side")}
                   </span>
                 </div>
 
                 <div className="space-y-2">
                   <input
                     type="text"
-                    placeholder="E.g. Inviting CEO to Prague site audit"
+placeholder={t("E.g. Inviting CEO to Prague site audit")}
                     value={aiEmailTopic}
                     onChange={e => setAiEmailTopic(e.target.value)}
                     className="w-full bg-[#FAF9F8] dark:bg-[#252423] border border-[#EDEBE9] dark:border-[#323130] rounded px-2.5 py-1.5 text-xs text-slate-800 dark:text-slate-200 focus:outline-none"
@@ -1485,12 +1477,12 @@ Gemba IQ AI İş Geliştirme Danışmanları`);
                       {aiEmailLoading ? (
                         <>
                           <RefreshCw className="w-3.5 h-3.5 animate-spin" />
-                          <span>Scribing...</span>
+<span>{t("Scribing...")}</span>
                         </>
                       ) : (
                         <>
                           <Sparkles className="w-3.5 h-3.5 text-amber-500" />
-                          <span>Draft Pitch Email</span>
+<span>{t("Draft Pitch Email")}</span>
                         </>
                       )}
                     </button>
@@ -1504,12 +1496,12 @@ Gemba IQ AI İş Geliştirme Danışmanları`);
                       {aiEmailLoading ? (
                         <>
                           <RefreshCw className="w-3.5 h-3.5 animate-spin" />
-                          <span>Polishing...</span>
+<span>{t("Polishing...")}</span>
                         </>
                       ) : (
                         <>
                           <Sparkles className="w-3.5 h-3.5 text-blue-500" />
-                          <span>Optimize Draft</span>
+<span>{t("Optimize Draft")}</span>
                         </>
                       )}
                     </button>
@@ -1524,14 +1516,14 @@ Gemba IQ AI İş Geliştirme Danışmanları`);
             <div className="bg-white dark:bg-[#1b1a19] border border-[#EDEBE9] dark:border-[#323130] rounded p-5 shadow-sm space-y-4" id="post-editor-form">
               <h3 className="font-bold text-slate-800 dark:text-slate-100 text-xs uppercase tracking-wider flex items-center gap-2 border-b border-[#EDEBE9] dark:border-[#323130] pb-2">
                 <FileText className="w-4 h-4 text-[#0078D4]" />
-                <span>Draft LinkedIn Post Card</span>
+<span>{t("Draft LinkedIn Post Card")}</span>
               </h3>
 
               <form onSubmit={handleScheduleSubmit} className="space-y-4 text-xs">
                 {/* Target Channel option list */}
                 <div>
                   <label className="block text-[10px] uppercase font-bold text-slate-400 dark:text-slate-505 mb-1.5">
-                    Target Channel Account
+{t("Target Channel Account")}
                   </label>
                   <div className="grid grid-cols-3 gap-2">
                     {/* Channel Buttons */}
@@ -1552,10 +1544,10 @@ Gemba IQ AI İş Geliştirme Danışmanları`);
                           }`}>
                             {ch.substring(0, 1)}
                           </div>
-                          <span className="text-[10px] font-bold text-slate-800 dark:text-slate-200">{ch}</span>
+<span className="text-[10px] font-bold text-slate-800 dark:text-slate-200">{formatChannel(ch)}</span>
                         </div>
                         <span className="text-[8px] text-slate-405 font-mono">
-                          {ch === "Personal" ? "Profile" : "Page"}
+{ch === "Personal" ? t("Profile") : t("Page")}
                         </span>
                       </button>
                     ))}
@@ -1566,16 +1558,16 @@ Gemba IQ AI İş Geliştirme Danışmanları`);
                 <div>
                   <div className="flex items-center justify-between mb-1.5">
                     <label className="block text-[10px] uppercase font-bold text-slate-400 dark:text-slate-500">
-                      Share Update Copy Text
+{t("Share Update Copy Text")}
                     </label>
                     <span className="text-[10px] text-slate-400 dark:text-slate-500 font-mono">
-                      {postText.length} / 3000 chars
+{t("{count} / 3000 chars").replace("{count}", String(postText.length))}
                     </span>
                   </div>
                   <textarea
                     rows={4}
                     required
-                    placeholder="Write your LinkedIn copy or utilize the Gemini Assistant below to compose a structured leadership summary..."
+placeholder={t("Write your LinkedIn copy or utilize the Gemini Assistant below to compose a structured leadership summary...")}
                     value={postText}
                     onChange={e => setPostText(e.target.value)}
                     className="w-full bg-[#FAF9F8] dark:bg-[#252423] border border-[#EDEBE9] dark:border-[#323130] rounded p-2.5 text-xs text-slate-800 dark:text-slate-200 focus:outline-none focus:border-[#0078D4] transition leading-relaxed placeholder:text-slate-400"
@@ -1585,11 +1577,11 @@ Gemba IQ AI İş Geliştirme Danışmanları`);
                 {/* Hashtag Chest input */}
                 <div>
                   <label className="block text-[10px] uppercase font-bold text-slate-400 dark:text-slate-500 mb-1">
-                    Hashtags Pill Chest
+{t("Hashtags Pill Chest")}
                   </label>
                   <div className="flex flex-wrap gap-1 mb-2 bg-[#FAF9F8] dark:bg-[#252423] p-2 rounded border border-[#EDEBE9] dark:border-[#323130] min-h-[36px]">
                     {tags.length === 0 ? (
-                      <span className="text-[10px] text-slate-400 italic">No hashtags loaded</span>
+                      <span className="text-[10px] text-slate-400 italic">{t("No hashtags loaded")}</span>
                     ) : (
                       tags.map((tag, idx) => (
                         <span
@@ -1611,7 +1603,7 @@ Gemba IQ AI İş Geliştirme Danışmanları`);
                   <div className="flex gap-1.5">
                     <input
                       type="text"
-                      placeholder="Add custom tag (e.g. operationalexcellence)"
+placeholder={t("Add custom tag (e.g. operationalexcellence)")}
                       value={hashtagInput}
                       onChange={e => setHashtagInput(e.target.value)}
                       onKeyDown={e => {
@@ -1637,7 +1629,7 @@ Gemba IQ AI İş Geliştirme Danışmanları`);
                       }}
                       className="px-3 bg-[#FAF9F8] hover:bg-slate-100 dark:bg-[#252423] dark:hover:bg-[#323130] border border-[#EDEBE9] dark:border-[#323130] rounded text-slate-705 dark:text-slate-200 transition font-semibold cursor-pointer"
                     >
-                      Add
+{t("Add")}
                     </button>
                   </div>
                 </div>
@@ -1646,7 +1638,7 @@ Gemba IQ AI İş Geliştirme Danışmanları`);
                 <div className="grid grid-cols-2 gap-2">
                   <div>
                     <label className="block text-[10px] uppercase font-bold text-slate-400 dark:text-slate-505 mb-1">
-                      Schedule Date
+{t("Schedule Date")}
                     </label>
                     <input
                       type="date"
@@ -1658,7 +1650,7 @@ Gemba IQ AI İş Geliştirme Danışmanları`);
                   </div>
                   <div>
                     <label className="block text-[10px] uppercase font-bold text-slate-400 dark:text-slate-505 mb-1">
-                      Target Dispatch Time
+{t("Target Dispatch Time")}
                     </label>
                     <input
                       type="time"
@@ -1673,7 +1665,7 @@ Gemba IQ AI İş Geliştirme Danışmanları`);
                 {/* Post Media Picker */}
                 <div>
                   <label className="block text-[10px] uppercase font-bold text-slate-400 dark:text-slate-500 mb-1.5">
-                    Post Media Stock Photo
+{t("Post Media Stock Photo")}
                   </label>
                   <div className="grid grid-cols-4 gap-2 mb-2">
                     {STOCK_IMAGES.map((img) => (
@@ -1686,12 +1678,12 @@ Gemba IQ AI İş Geliştirme Danışmanları`);
                             ? "ring-2 ring-[#0078D4] border-transparent"
                             : "border-[#EDEBE9] dark:border-[#323130] opacity-70 hover:opacity-100"
                         }`}
-                        title={img.name}
+title={t(STOCK_IMAGE_NAME_KEYS[img.id] || img.name)}
                       >
-                        <img src={img.url} alt={img.name} className="w-full h-full object-cover" />
+<img src={img.url} alt={t(STOCK_IMAGE_NAME_KEYS[img.id] || img.name)} className="w-full h-full object-cover" />
                         <div className="absolute inset-0 bg-black/10 flex items-end p-1">
                           <span className="text-[8px] text-white truncate w-full font-sans bg-black/30 px-1 rounded">
-                            {img.name.split(" ")[0]}
+{t(STOCK_IMAGE_NAME_KEYS[img.id]?.split(" ")[0] || img.name.split(" ")[0])}
                           </span>
                         </div>
                       </button>
@@ -1704,12 +1696,12 @@ Gemba IQ AI İş Geliştirme Danışmanları`);
                         <ImageIcon className="w-4 h-4 text-[#0078D4]" />
                       </div>
                       <div className="text-left font-sans">
-                        <span className="text-[10px] font-semibold text-slate-700 dark:text-slate-350 block leading-tight">Select your own media</span>
-                        <span className="text-[9px] text-slate-400 block mt-0.5">Max size: 5MB</span>
+                        <span className="text-[10px] font-semibold text-slate-700 dark:text-slate-350 block leading-tight">{t("Select your own media")}</span>
+                        <span className="text-[9px] text-slate-400 block mt-0.5">{t("Max size: 5MB")}</span>
                       </div>
                     </div>
                     <label className="cursor-pointer bg-[#FAF9F8] hover:bg-slate-100 dark:bg-[#252423] dark:hover:bg-[#323130] border border-[#EDEBE9] dark:border-[#323130] px-2.5 py-1.5 rounded text-[10px] font-bold text-slate-700 dark:text-slate-300 transition shadow-sm">
-                      Browse
+{t("Browse")}
                       <input
                         type="file"
                         accept="image/*"
@@ -1737,7 +1729,7 @@ Gemba IQ AI İş Geliştirme Danışmanları`);
                   className="w-full bg-[#0078D4] hover:bg-[#106ebe] text-white font-bold py-2 rounded flex items-center justify-center gap-1.5 cursor-pointer shadow-sm text-xs transition-colors h-9"
                 >
                   <CalendarIcon className="w-4 h-4" />
-                  <span>Lock In Schedule on Calendar</span>
+<span>{t("Lock In Schedule on Calendar")}</span>
                 </button>
               </form>
 
@@ -1746,17 +1738,17 @@ Gemba IQ AI İş Geliştirme Danışmanları`);
                 <div className="flex items-center justify-between">
                   <h4 className="text-xs font-bold text-slate-805 dark:text-slate-200 flex items-center gap-1.5">
                     <Sparkles className="w-3.5 h-3.5 text-amber-500" />
-                    <span>Gemini AI Strategy Assistant</span>
+<span>{t("Gemini AI Strategy Assistant")}</span>
                   </h4>
                   <span className="text-[9px] text-slate-500 font-mono">
-                    gemini-3.5-flash server-side
+                    {t("gemini-3.5-flash server-side")}
                   </span>
                 </div>
 
                 <div className="space-y-2">
                   <input
                     type="text"
-                    placeholder="Enter custom post topic (e.g. Digitizing Gemba board values)"
+placeholder={t("Enter custom post topic (e.g. Digitizing Gemba board values)")}
                     value={aiTopic}
                     onChange={e => setAiTopic(e.target.value)}
                     className="w-full bg-[#FAF9F8] dark:bg-[#252423] border border-[#EDEBE9] dark:border-[#323130] rounded px-2.5 py-1.5 text-xs text-slate-805 dark:text-slate-200 focus:outline-none"
@@ -1779,12 +1771,12 @@ Gemba IQ AI İş Geliştirme Danışmanları`);
                       {aiLoading ? (
                         <>
                           <RefreshCw className="w-3.5 h-3.5 animate-spin" />
-                          <span>Scribing...</span>
+                          <span>{t("Scribing...")}</span>
                         </>
                       ) : (
                         <>
                           <Sparkles className="w-3.5 h-3.5 text-amber-500" />
-                          <span>Write Post Draft</span>
+<span>{t("Write Post Draft")}</span>
                         </>
                       )}
                     </button>
@@ -1798,12 +1790,12 @@ Gemba IQ AI İş Geliştirme Danışmanları`);
                       {aiLoading ? (
                         <>
                           <RefreshCw className="w-3.5 h-3.5 animate-spin" />
-                          <span>Polishing...</span>
+                          <span>{t("Polishing...")}</span>
                         </>
                       ) : (
                         <>
                           <Sparkles className="w-3.5 h-3.5 text-blue-500" />
-                          <span>Polish Current Draft</span>
+<span>{t("Polish Current Draft")}</span>
                         </>
                       )}
                     </button>
@@ -1818,7 +1810,7 @@ Gemba IQ AI İş Geliştirme Danışmanları`);
             <div className="bg-white dark:bg-[#1b1a19] border border-[#EDEBE9] dark:border-[#323130] rounded p-5 shadow-sm text-left space-y-3">
               <h4 className="text-xs font-bold text-slate-400 flex items-center gap-1.5 uppercase tracking-wider">
                 <BookOpen className="w-4 h-4 text-emerald-500" />
-                <span>Campaign Manager Directives</span>
+<span>{t("Campaign Manager Directives")}</span>
               </h4>
               <div className="text-[11px] text-slate-550 space-y-2.5 leading-relaxed font-sans">
                 <div className="flex gap-2">
@@ -1826,7 +1818,7 @@ Gemba IQ AI İş Geliştirme Danışmanları`);
                     1
                   </span>
                   <p>
-                    <strong>Variables Native Translation</strong>: Write standard variables inside double brackets such as <code>{"{{FirstName}}"}</code> and <code>{"{{Company}}"}</code>. These fields map perfectly to imported mail-merge lists.
+                    <strong>{t("Variables Native Translation")}</strong>: {t("Write standard variables inside double brackets such as {{FirstName}} and {{Company}}. These fields map perfectly to imported mail-merge lists.")}
                   </p>
                 </div>
                 <div className="flex gap-2">
@@ -1834,7 +1826,7 @@ Gemba IQ AI İş Geliştirme Danışmanları`);
                     2
                   </span>
                   <p>
-                    <strong>Omni-channel synchronization</strong>: Any draft created under Email Campaigns can be instantly locked with a schedule OR pushed directly to the Mail Merge Builder.
+                    <strong>{t("Omni-channel synchronization")}</strong>: {t("Any draft created under Email Campaigns can be instantly locked with a schedule OR pushed directly to the Mail Merge Builder.")}
                   </p>
                 </div>
               </div>
@@ -1846,7 +1838,7 @@ Gemba IQ AI İş Geliştirme Danışmanları`);
               <div className="bg-white dark:bg-[#1b1a19] border border-[#EDEBE9] dark:border-[#323130] rounded p-5 shadow-sm space-y-3">
                 <h4 className="text-xs font-bold text-slate-800 dark:text-slate-205 flex items-center gap-1.5 uppercase tracking-wider">
                   <Eye className="w-4 h-4 text-blue-500" />
-                  <span>Live LinkedIn Feed Preview</span>
+<span>{t("Live LinkedIn Feed Preview")}</span>
                 </h4>
 
                 {/* LinkedIn-style visual simulator card */}
@@ -1860,25 +1852,25 @@ Gemba IQ AI İş Geliştirme Danışmanları`);
                         <div className="flex items-center gap-1.5 flex-wrap">
                           <span className="text-xs font-bold hover:text-blue-700 hover:underline cursor-pointer block leading-none">
                             {targetChannel === "Gemba Lean"
-                              ? "Gemba Partner Lean Management"
+? t("Gemba Partner Lean Management")
                               : targetChannel === "Gemba Digital"
-                              ? "Gemba Digital Operational Tech"
-                              : "Dr. Sofia Vargas (Personal)"}
+? t("Gemba Digital Operational Tech")
+: t("Dr. Sofia Vargas (Personal)")}
                           </span>
-                          <span className="text-[10px] text-slate-400 font-mono">• 1st</span>
+<span className="text-[10px] text-slate-400 font-mono">• {t("1st")}</span>
                         </div>
                         <span className="text-[9px] text-slate-500 line-clamp-1 leading-normal mt-0.5">
                           {targetChannel === "Gemba Lean"
-                            ? "B2B Consulting & Lean Process Excellence Partner"
+? t("B2B Consulting & Lean Process Excellence Partner")
                             : targetChannel === "Gemba Digital"
-                            ? "Industrial IoT & SCADA Automation Integrators"
-                            : "Principal Consultant at Gemba Advisory Prague"}
+? t("Industrial IoT & SCADA Automation Integrators")
+: t("Principal Consultant at Gemba Advisory Prague")}
                         </span>
                         <div className="flex items-center gap-1 text-[9px] text-slate-400 mt-0.5">
-                          <span className="font-semibold bg-blue-50 text-blue-600 px-1.5 py-0.2 rounded font-sans">Scheduled</span>
+                          <span className="font-semibold bg-blue-50 text-blue-600 px-1.5 py-0.2 rounded font-sans">{t("Scheduled")}</span>
                           <span>•</span>
                           <Clock className="w-2.5 h-2.5 text-slate-400" />
-                          <span className="font-mono">{scheduleDate} at {scheduleTime}</span>
+<span className="font-mono">{t("{date} at {time}").replace("{date}", scheduleDate).replace("{time}", scheduleTime)}</span>
                         </div>
                       </div>
                     </div>
@@ -1888,8 +1880,13 @@ Gemba IQ AI İş Geliştirme Danışmanları`);
                   <div className="px-3 py-1 space-y-2 text-xs">
                     <p className="text-slate-800 whitespace-pre-line leading-relaxed">
                       {postText.trim() === ""
-                        ? "This is where your live LinkedIn copy will appear. Start drafting manually or query our Gemini Assistant to outline content."
-                        : postText}
+                        ? t("This is where your live LinkedIn copy will appear. Start drafting manually or query our Gemini Assistant to outline content.")
+                        : (() => {
+                            const matchedPost = posts.find(
+                              (p) => p.text === postText || tc(p.id, "text", p.text) === postText
+                            );
+                            return matchedPost ? tc(matchedPost.id, "text", matchedPost.text) : postText;
+                          })()}
                     </p>
                     <p className="font-semibold text-blue-700 flex flex-wrap gap-x-1.5 gap-y-0.5 font-mono text-[10px]">
                       {tags.map((tag, idx) => (
@@ -1901,7 +1898,7 @@ Gemba IQ AI İş Geliştirme Danışmanları`);
                   {/* Selected Photo visual block */}
                   {selectedImage && (
                     <div className="mt-2 aspect-video bg-slate-100 overflow-hidden border-y border-slate-100">
-                      <img src={selectedImage} alt="Post Attachment" className="w-full h-full object-cover" />
+<img src={selectedImage} alt={t("Post Attachment")} className="w-full h-full object-cover" />
                     </div>
                   )}
 
@@ -1909,9 +1906,9 @@ Gemba IQ AI İş Geliştirme Danışmanları`);
                   <div className="px-3 py-1.5 flex items-center justify-between border-b border-slate-150 text-[10px] text-slate-500">
                     <div className="flex items-center gap-1">
                       <span className="bg-blue-100 text-[#0078D4] p-0.5 rounded-full text-[8px] font-bold">👍</span>
-                      <span>{previewReactionsCount} Reactions</span>
+<span>{previewReactionsCount} {t("Reactions")}</span>
                     </div>
-                    <span>1 Comment • {targetChannel === "Gemba Lean" ? "2" : "0"} Reposts</span>
+<span>{t("1 Comment • {count} Reposts").replace("{count}", targetChannel === "Gemba Lean" ? "2" : "0")}</span>
                   </div>
 
                   <div className="px-1 py-1 grid grid-cols-4 gap-0.5 text-slate-500 text-[10px] font-semibold text-center">
@@ -1925,16 +1922,16 @@ Gemba IQ AI İş Geliştirme Danışmanları`);
                         previewLiked ? "text-blue-600" : ""
                       }`}
                     >
-                      <ThumbsUp className="w-3.5 h-3.5" /> Like
+<ThumbsUp className="w-3.5 h-3.5" /> {t("Like")}
                     </button>
                     <button type="button" className="py-1.5 hover:bg-slate-50 rounded flex items-center justify-center gap-1 transition-all cursor-pointer">
-                      <MessageSquare className="w-3.5 h-3.5" /> Comment
+<MessageSquare className="w-3.5 h-3.5" /> {t("Comment")}
                     </button>
                     <button type="button" className="py-1.5 hover:bg-slate-50 rounded flex items-center justify-center gap-1 transition-all cursor-pointer">
-                      <Repeat2 className="w-3.5 h-3.5" /> Repost
+<Repeat2 className="w-3.5 h-3.5" /> {t("Repost")}
                     </button>
                     <button type="button" className="py-1.5 hover:bg-slate-50 rounded flex items-center justify-center gap-1 transition-all cursor-pointer">
-                      <Send className="w-3.5 h-3.5" /> Send
+<Send className="w-3.5 h-3.5" /> {t("Send")}
                     </button>
                   </div>
                 </div>
@@ -1944,7 +1941,7 @@ Gemba IQ AI İş Geliştirme Danışmanları`);
               <div className="bg-white dark:bg-[#1b1a19] border border-[#EDEBE9] dark:border-[#323130] rounded p-5 shadow-sm text-left space-y-3">
                 <h4 className="text-xs font-bold text-slate-800 dark:text-slate-200 flex items-center gap-1.5 uppercase tracking-wider">
                   <BookOpen className="w-4 h-4 text-emerald-500" />
-                  <span>Scheduler System Directives</span>
+<span>{t("Scheduler System Directives")}</span>
                 </h4>
                 <div className="text-[11px] text-slate-600 dark:text-slate-400 space-y-2.5 leading-relaxed font-sans">
                   <div className="flex gap-2">
@@ -1952,7 +1949,7 @@ Gemba IQ AI İş Geliştirme Danışmanları`);
                       1
                     </span>
                     <p>
-                      <strong>Company & Individual Channels</strong>: Target account endpoints map directly to your brand ecosystems. Playwright automates the session authentication routine on-the-fly.
+<strong>{t("Company & Individual Channels")}</strong>: {t("Target account endpoints map directly to your brand ecosystems. Playwright automates the session authentication routine on-the-fly.")}
                     </p>
                   </div>
                   <div className="flex gap-2">
@@ -1960,7 +1957,7 @@ Gemba IQ AI İş Geliştirme Danışmanları`);
                       2
                     </span>
                     <p>
-                      <strong>Simulation Fallbacks Enabled</strong>: If active LinkedIn session cookies are missing or stale, the scheduler initiates browser automation in <strong>simulation mode</strong> to log active posts.
+<strong>{t("Simulation Fallbacks Enabled")}</strong>: {t("If active LinkedIn session cookies are missing or stale, the scheduler initiates browser automation in simulation mode to log active posts.")}
                     </p>
                   </div>
                 </div>
@@ -1979,10 +1976,10 @@ Gemba IQ AI İş Geliştirme Danışmanları`);
               <Trash2 className="w-6 h-6 animate-pulse" />
             </div>
             <h3 className="font-extrabold text-slate-800 dark:text-zinc-100 text-sm mb-2">
-              {confirmDeleteModal.title || "Kayıt Silinecek"}
+{confirmDeleteModal.title || t("Delete Record")}
             </h3>
             <p className="text-slate-500 dark:text-zinc-400 text-xs mb-6 font-semibold animate-pulse">
-              {confirmDeleteModal.message || "Geri dönüşüm kutusuna taşınsın mı?"}
+{confirmDeleteModal.message || t("Move to recycle bin?")}
             </p>
             <div className="flex gap-3 justify-center select-none font-bold">
               <button
@@ -1990,7 +1987,7 @@ Gemba IQ AI İş Geliştirme Danışmanları`);
                 onClick={() => setConfirmDeleteModal({ isOpen: false, onConfirm: () => {} })}
                 className="border border-slate-200 dark:border-zinc-800 text-slate-600 dark:text-zinc-300 hover:bg-slate-50 dark:hover:bg-zinc-900 px-4 py-2 text-xs rounded-lg transition-colors cursor-pointer w-24"
               >
-                İptal
+{t("Cancel")}
               </button>
               <button
                 type="button"
@@ -2000,7 +1997,7 @@ Gemba IQ AI İş Geliştirme Danışmanları`);
                 }}
                 className="bg-rose-600 hover:bg-rose-700 text-white px-4 py-2 text-xs rounded-lg transition-colors cursor-pointer shadow-sm w-24 active:scale-95 transition-transform"
               >
-                Sil
+{t("Delete")}
               </button>
             </div>
           </div>

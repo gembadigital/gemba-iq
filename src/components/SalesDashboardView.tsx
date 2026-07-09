@@ -1,6 +1,6 @@
 import React, { useState, useMemo } from "react";
 import { useLanguage } from "../lib/LanguageContext";
-import { getSystemCurrency } from "../lib/currencyHelper";
+import { getSystemCurrency, getSystemLocale } from "../lib/currencyHelper";
 import SalesCoachAI from "./SalesCoachAI";
 import {
   TrendingUp,
@@ -96,7 +96,7 @@ export default function SalesDashboardView({ deals, onSelectDeal }: SalesDashboa
   // Format currency
   const formatCur = (v: number) => {
     const { code } = getSystemCurrency();
-    return new Intl.NumberFormat("en-US", {
+    return new Intl.NumberFormat(getSystemLocale(), {
       style: "currency",
       currency: code,
       maximumFractionDigits: 0

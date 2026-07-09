@@ -41,11 +41,20 @@ export function getSystemCurrency(): SystemCurrency {
   return { code, symbol };
 }
 
+export function getSystemLocale(): string {
+  const lang = localStorage.getItem("system_language") || "TR";
+  return lang === "EN" ? "en-US" : "tr-TR";
+}
+
 export function formatSystemCurrency(v: number): string {
   const { code } = getSystemCurrency();
-  return new Intl.NumberFormat("tr-TR", {
+  return new Intl.NumberFormat(getSystemLocale(), {
     style: "currency",
     currency: code,
     maximumFractionDigits: 0
   }).format(v);
+}
+
+export function formatSystemNumber(v: number): string {
+  return new Intl.NumberFormat(getSystemLocale()).format(v);
 }

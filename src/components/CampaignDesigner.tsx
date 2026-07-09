@@ -1,4 +1,6 @@
 import React, { useState, useRef, useEffect } from "react";
+import { useLanguage } from "../lib/LanguageContext";
+import { getCampaignTranslation } from "./campaignI18n";
 import { Recipient, AttachmentFile } from "../types";
 import { parseSpreadsheet } from "../utils/excelImport";
 import * as XLSX from "xlsx";
@@ -51,6 +53,8 @@ export default function CampaignDesigner({
   onLaunchCampaign,
   isConnected
 }: CampaignDesignerProps) {
+  const { lang, t: globalT } = useLanguage();
+  const t = (key: string) => getCampaignTranslation(lang, key) ?? globalT(key) ?? key;
   const [dragActive, setDragActive] = useState(false);
   const [isListExpanded, setIsListExpanded] = useState(false);
   const [attachmentDragActive, setAttachmentDragActive] = useState(false);
@@ -84,7 +88,7 @@ export default function CampaignDesigner({
 
       if (!response.ok) {
         const errorData = await response.json();
-        throw new Error(errorData.error || "Failed to receive assistance from Gemini.");
+        throw new Error(errorData.error || t("Failed to receive assistance from Gemini."));
       }
 
       const val = await response.json();
@@ -95,53 +99,32 @@ export default function CampaignDesigner({
         if (val.body) {
           setTemplateBody(val.body);
         }
-        setAiSuccess(action === "write" ? "Draft completed and applied successfully!" : "Mail polished and applied successfully!");
+        setAiSuccess(action === "write" ? t("Draft completed and applied successfully!") : t("Mail polished and applied successfully!"));
       } else {
-        throw new Error("Could not apply generative template.");
+        throw new Error(t("Could not apply generative template."));
       }
     } catch (err: any) {
       console.warn("Gemini assistant invocation failed, generating standard B2B outreach draft locally:", err);
       
-      let fallbackSubject = subject || "İş Verimliliği ve Süreç İyileştirme Fırsatları";
+      let fallbackSubject = subject || t("Business Efficiency and Process Improvement Opportunities");
       let fallbackBody = templateBody;
 
       if (action === "write") {
         const uppercaseInstr = aiInstruction.toUpperCase();
         if (uppercaseInstr.includes("TEKLİF") || uppercaseInstr.includes("OFFER")) {
-          fallbackSubject = "B2B Yalın Dönüşüm & Operasyonel Mükemmellik Proje Teklifi";
-          fallbackBody = `Sayın Yetkili,
-
-İşletmenizde üretim süreçlerini optimize etmek ve verimsizlikleri en aza indirmek üzere hazırladığımız iş birliği modelini paylaşmak isteriz.
-
-Bu kapsamdaki ana hedeflerimiz şunlardır:
-- OEE Oranlarında ve Hat Verimliliğinde Artış
-- Hurda ve İsraf Maliyetlerinin Azaltılması
-- Yalın Standartlar ve Sürekli İyileştirme
-
-Detaylı bir ön etüt çalışması ve fabrika turu planlamak adına uygun olduğunuz bir zamanı bizimle paylaşabilir misiniz?
-
-Saygılarımızla,
-Gemba IQ Danışmanlık Grubu`;
+          fallbackSubject = t("B2B Lean Transformation & Operational Excellence Project Proposal");
+          fallbackBody = t("fallback.designer.proposal_body");
         } else {
-          fallbackSubject = "Süreç İyileştirme ve Yalın Dönüşüm İş Birliği Talebi";
-          fallbackBody = `Sayın Yetkili,
-
-Faaliyet gösterdiğiniz sektördeki operasyonel verimlilik kriterlerini yakından takip etmekteyiz. Fabrika sahanızda gizlenmiş israfları (Muda) ve kayıpları tespit ederek OEE oranlarınızı artırmayı hedefleyen uzman kadromuzla yanınızdayız.
-
-Yalın Üretim, 5S, Kaizen ve ISO sertifikasyon süreçlerinizi dijital ortamda koordine ederek maliyet azaltma projelerinizi hızlandırabiliriz.
-
-Önümüzdeki hafta içinde 15 dakikalık kısa bir tanışma araması gerçekleştirebilir miyiz?
-
-Saygılarımızla,
-Gemba IQ Danışmanlık Grubu`;
+          fallbackSubject = t("Process Improvement and Lean Transformation Collaboration Request");
+          fallbackBody = t("fallback.designer.collab_body");
         }
         setSubject(fallbackSubject);
         setTemplateBody(fallbackBody);
-        setAiSuccess("⚠️ (API Kotasız Çevrimdışı Mod) Standart B2B outreach e-postası başarıyla oluşturuldu.");
+        setAiSuccess(t("⚠️ (API Quota Offline Mode) Standard B2B outreach email generated successfully."));
       } else {
-        fallbackBody = templateBody + "\n\n---\n[Yerel B2B İyileştirme Filtresi Uygulandı]";
+        fallbackBody = templateBody + "\n\n---\n" + t("[Local B2B Improvement Filter Applied]");
         setTemplateBody(fallbackBody);
-        setAiSuccess("⚠️ (API Kotasız Çevrimdışı Mod) E-posta metniniz yerel standart filtrelerle iyileştirildi.");
+        setAiSuccess(t("⚠️ (API Quota Offline Mode) Email text improved with local standard filters."));
       }
     } finally {
       setAiLoading(false);
@@ -155,20 +138,20 @@ Gemba IQ Danışmanlık Grubu`;
     }
 
     const headers = [
-      "ID",
-      "First Name",
-      "Last Name",
-      "Email Address",
-      "Company",
-      "Department",
-      "Address",
-      "Industry",
-      "Scheduled Date",
-      "Custom Field 1",
-      "Custom Field 2",
-      "Custom Field 3",
-      "Delivery Status",
-      "Open Count"
+      t("ID"),
+      t("First Name"),
+      t("Last Name"),
+      t("Email Address"),
+      t("Company"),
+      t("Department"),
+      t("Address"),
+      t("Industry"),
+      t("Scheduled Date"),
+      t("Custom Field 1"),
+      t("Custom Field 2"),
+      t("Custom Field 3"),
+      t("Delivery Status"),
+      t("Open Count")
     ];
 
     const rows = recipients.map(r => [
@@ -184,7 +167,7 @@ Gemba IQ Danışmanlık Grubu`;
       r.CustomField1 || "",
       r.CustomField2 || "",
       r.CustomField3 || "",
-      r.status || "idle",
+      r.status || t("Idle"),
       r.openCount || 0
     ]);
 
@@ -204,7 +187,7 @@ Gemba IQ Danışmanlık Grubu`;
     } else if (type === "xls") {
       try {
         let html = `<html xmlns:o=\"urn:schemas-microsoft-com:office:office\" xmlns:x=\"urn:schemas-microsoft-com:office:excel\" xmlns=\"http://www.w3.org/TR/REC-html40\">`;
-        html += `<head><meta charset=\"utf-8\"><!--[if gte mso 9]><xml><x:ExcelWorkbook><x:ExcelWorksheets><x:ExcelWorksheet><x:Name>Recipients</x:Name><x:WorksheetOptions><x:DisplayGridlines/></x:WorksheetOptions></x:ExcelWorksheet></x:ExcelWorksheets></x:ExcelWorkbook></xml><![endif]--></head><body>`;
+        html += `<head><meta charset=\"utf-8\"><!--[if gte mso 9]><xml><x:ExcelWorkbook><x:ExcelWorksheets><x:ExcelWorksheet><x:Name>${t("Recipients")}</x:Name><x:WorksheetOptions><x:DisplayGridlines/></x:WorksheetOptions></x:ExcelWorksheet></x:ExcelWorksheets></x:ExcelWorkbook></xml><![endif]--></head><body>`;
         html += `<table border=\"1\">`;
         
         html += `<tr style=\"background-color: #0078D4; color: #ffffff; font-weight: bold;\">`;
@@ -253,7 +236,7 @@ Gemba IQ Danışmanlık Grubu`;
         { wch: 14 }, // Status
         { wch: 10 }  // Open Count
       ];
-      XLSX.utils.book_append_sheet(wb, ws, "Recipients");
+      XLSX.utils.book_append_sheet(wb, ws, t("Recipients"));
       XLSX.writeFile(wb, `recipient_list_${new Date().toISOString().split("T")[0]}.xlsx`);
     }
   };
@@ -285,7 +268,7 @@ Gemba IQ Danışmanlık Grubu`;
       }, 3000);
     } catch (err) {
       console.error("Local storage quota limit reached on manual save:", err);
-      alert("Save warning: The working campaign draft is too large to fit in browser local storage quota (5MB limit). However, your campaign and recipient lists remain loaded and active in-memory. Please proceed with sending.");
+      alert(t("Save warning: The working campaign draft is too large to fit in browser local storage quota (5MB limit). However, your campaign and recipient lists remain loaded and active in-memory. Please proceed with sending."));
     }
   };
 
@@ -353,12 +336,12 @@ Gemba IQ Danışmanlık Grubu`;
     setManError("");
 
     if (!manEmail || !manEmail.trim()) {
-      setManError("Email address field is required.");
+      setManError(t("Email address field is required."));
       return;
     }
 
     if (!manEmail.includes("@")) {
-      setManError("Please input a valid email formatting.");
+      setManError(t("Please input a valid email formatting."));
       return;
     }
 
@@ -453,7 +436,7 @@ Gemba IQ Danışmanlık Grubu`;
       setRecipients(parsed);
       setSelectedPreviewIndex(0);
     } catch (err: any) {
-      setImportError(err.message || "Failed parsing spreadsheet format.");
+      setImportError(err.message || t("Failed parsing spreadsheet format."));
     }
   };
 
@@ -581,8 +564,8 @@ Gemba IQ Danışmanlık Grubu`;
   const baseMergedHTML = computeMergedContent(templateBody, currentPreviewRecipient);
   const headerLayoutHTML = `
 <div class="app-header" style="display: flex; align-items: center; background: white; padding: 15px 25px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.02); margin-bottom: 20px; border: 1px solid #e2e8f0;">
-    <img src="https://docs.google.com/uc?export=view&id=1RsaHnpwhk4IjOcaNixAbqGG2x5uuei33" alt="Gemba Partner Logo" style="height:45px; width:auto; object-fit:contain; vertical-align:middle; margin-right:12px; border-radius:4px;">
-    <div class="app-title" style="font-size: 20px; font-weight: 700; color: #1a202c; font-family: sans-serif;">Gemba Partner - Saha Tespit & ROI Analizörü</div>
+<img src="https://docs.google.com/uc?export=view&id=1RsaHnpwhk4IjOcaNixAbqGG2x5uuei33" alt="${t("Gemba Partner Logo")}" style="height:45px; width:auto; object-fit:contain; vertical-align:middle; margin-right:12px; border-radius:4px;">
+<div class="app-title" style="font-size: 20px; font-weight: 700; color: #1a202c; font-family: sans-serif;">${t("Gemba Partner - Field Audit & ROI Analyzer")}</div>
 </div>
   `;
   const rawBodyHTML = headerLayoutHTML + baseMergedHTML;
@@ -602,8 +585,8 @@ Gemba IQ Danışmanlık Grubu`;
             <Sparkles className="w-5 h-5 animate-pulse text-amber-500" />
           </div>
           <div>
-            <h2 className="text-base font-bold text-slate-800 dark:text-zinc-100 font-sans">Campaign Draft Designer</h2>
-            <p className="text-xs text-slate-500 font-sans">Upload your recipient database, design personalized HTML email blueprints, and configure smart attachment overrides.</p>
+            <h2 className="text-base font-bold text-slate-800 dark:text-zinc-100 font-sans">{t("Campaign Draft Designer")}</h2>
+            <p className="text-xs text-slate-500 font-sans">{t("Upload your recipient database, design personalized HTML email blueprints, and configure smart attachment overrides.")}</p>
           </div>
         </div>
       </div>
@@ -630,13 +613,13 @@ Gemba IQ Danışmanlık Grubu`;
             <div>
               <h3 className="text-sm font-semibold text-slate-800 dark:text-slate-100 flex items-center gap-2">
                 <UserCheck className="w-4.5 h-4.5 text-[#0078D4]" />
-                1. Recipient List
+{t("1. Recipient List")}
               </h3>
               <div className="flex flex-wrap items-center gap-x-2 gap-y-1 mt-0.5">
-                <p className="text-xs text-slate-500 dark:text-slate-400">Excel or CSV spreadsheets, load unlimited recipient records</p>
+                <p className="text-xs text-slate-500 dark:text-slate-400">{t("Excel or CSV spreadsheets, load unlimited recipient records")}</p>
                 <span className="inline-flex items-center gap-1 text-[10px] px-2 py-0.5 rounded-full bg-[#f3f2f1] dark:bg-[#252423] text-slate-700 dark:text-slate-300 font-medium border border-slate-200 dark:border-slate-800">
                   <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
-                  Auto-Save Active (Keeps list if closed/offline)
+                  {t("Auto-Save Active (Keeps list if closed/offline)")}
                 </span>
               </div>
             </div>
@@ -651,17 +634,17 @@ Gemba IQ Danışmanlık Grubu`;
                       ? "bg-emerald-600 border-emerald-600 text-white hover:bg-emerald-700"
                       : "bg-[#0078D4] border-[#0078D4] text-white hover:bg-[#005a9e]"
                   }`}
-                  title="Force save the current recipient list immediately"
+                  title={t("Force save the current recipient list immediately")}
                 >
                   {showSaveSuccess ? (
                     <>
                       <Check className="w-3.5 h-3.5" />
-                      <span>List Saved!</span>
+                      <span>{t("List Saved!")}</span>
                     </>
                   ) : (
                     <>
                       <Save className="w-3.5 h-3.5" />
-                      <span>Save List</span>
+                      <span>{t("Save List")}</span>
                     </>
                   )}
                 </button>
@@ -670,10 +653,10 @@ Gemba IQ Danışmanlık Grubu`;
                   id="btn-import-recipients"
                   onClick={() => fileInputRef.current?.click()}
                   className="text-xs font-bold text-[#0078D4] dark:text-[#50b1ff] hover:text-[#005a9e] dark:hover:text-[#80c5ff] px-2.5 py-1.5 border border-blue-250 dark:border-blue-900/40 rounded bg-blue-50/40 dark:bg-blue-950/10 hover:bg-blue-50 dark:hover:bg-blue-950/20 transition-all flex items-center gap-1 cursor-pointer shadow-sm"
-                  title="Import a new spreadsheet to replace or update the active recipient list"
+title={t("Import a new spreadsheet to replace or update the active recipient list")}
                 >
                   <Upload className="w-3.5 h-3.5" />
-                  <span>Import List</span>
+                  <span>{t("Import List")}</span>
                 </button>
                 <span className="text-slate-300 dark:text-[#323130] w-px h-5 self-center" />
                 <button
@@ -681,20 +664,20 @@ Gemba IQ Danışmanlık Grubu`;
                   id="btn-export-recipients-xlsx"
                   onClick={() => exportRecipients("xlsx")}
                   className="text-xs font-bold text-emerald-600 dark:text-emerald-400 hover:text-emerald-700 dark:hover:text-emerald-300 px-2.5 py-1.5 border border-emerald-200 dark:border-emerald-900/40 rounded bg-emerald-50/40 dark:bg-emerald-950/10 hover:bg-emerald-50 dark:hover:bg-emerald-950/20 transition-all flex items-center gap-1 cursor-pointer"
-                  title="Export current Recipient list to Excel"
+title={t("Export current Recipient list to Excel")}
                 >
                   <FileSpreadsheet className="w-3.5 h-3.5" />
-                  <span>Excel (XLSX)</span>
+                  <span>{t("Excel (XLSX)")}</span>
                 </button>
                 <button
                   type="button"
                   id="btn-export-recipients-csv"
                   onClick={() => exportRecipients("csv")}
                   className="text-xs font-bold text-white hover:opacity-90 rounded bg-[#14b15b] hover:bg-[#129a4f] transition-all flex items-center gap-1 cursor-pointer border border-[#14b15b] px-2.5 py-1.5"
-                  title="Export current Recipient list to CSV"
+title={t("Export current Recipient list to CSV")}
                 >
                   <FileText className="w-3.5 h-3.5 text-white" />
-                  <span>CSV</span>
+                  <span>{t("CSV")}</span>
                 </button>
                 <span className="text-slate-300 dark:text-[#323130] w-px h-5 self-center" />
                 <button
@@ -702,7 +685,7 @@ Gemba IQ Danışmanlık Grubu`;
                   onClick={clearRecipients}
                   className="text-xs font-bold text-rose-500 hover:text-rose-600 px-3 py-1.5 rounded hover:bg-rose-50 dark:hover:bg-rose-950/20 transition-all cursor-pointer"
                 >
-                  Clear All ({recipients.length})
+{t("Clear All ({count})").replace("{count}", String(recipients.length))}
                 </button>
               </div>
             )}
@@ -722,21 +705,21 @@ Gemba IQ Danışmanlık Grubu`;
             >
               <FileSpreadsheet className="w-12 h-12 text-slate-400 mb-3 animate-pulse" />
               <p className="text-xs font-bold text-slate-705 dark:text-slate-300">
-                Drag and drop your Excel (.xlsx) or CSV file here
+                {t("Drag and drop your Excel (.xlsx) or CSV file here")}
               </p>
-              <p className="text-[11px] text-slate-400 mt-1 mb-4">or choose from local directory</p>
+              <p className="text-[11px] text-slate-400 mt-1 mb-4">{t("or choose from local directory")}</p>
               
               <button
                 id="btn-upload-browse"
                 onClick={() => fileInputRef.current?.click()}
                 className="bg-white dark:bg-[#252423] hover:bg-slate-50 dark:hover:bg-[#252423] border border-[#EDEBE9] dark:border-[#323130] text-slate-700 dark:text-slate-200 text-xs font-bold px-4 py-2.5 rounded shadow-sm transition-all cursor-pointer"
               >
-                Browse Sheet Files
+                {t("Browse Sheet Files")}
               </button>
 
               <div className="flex items-center gap-2 mt-4 text-[10px] text-slate-405 font-medium">
                 <Info className="w-3.5 h-3.5" />
-                Headers: FirstName, LastName, Company, Email, Address, Industry, ScheduledDate, Department, CustomField(1-3)
+                {t("Headers: FirstName, LastName, Company, Email, Address, Industry, ScheduledDate, Department, CustomField(1-3)")}
               </div>
             </div>
           ) : (
@@ -747,7 +730,7 @@ Gemba IQ Danışmanlık Grubu`;
                 <div className="flex items-center gap-1.5">
                   <FileSpreadsheet className="w-4 h-4 text-[#0078D4]" />
                   <span className="text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-widest font-mono">
-                    Alıcı Listesi Detay Matrisi ({recipients.length} kayıt)
+{t("Recipient List Detail Matrix ({count} records)").replace("{count}", String(recipients.length))}
                   </span>
                 </div>
                 <div className="flex items-center gap-2">
@@ -756,10 +739,10 @@ Gemba IQ Danışmanlık Grubu`;
                     type="button"
                     onClick={() => setIsListExpanded(!isListExpanded)}
                     className="text-xs font-bold bg-white hover:bg-slate-50 dark:bg-[#252423] dark:hover:bg-[#323130] text-[#0078D4] dark:text-brand-300 px-3 py-1.5 border border-[#EDEBE9] dark:border-[#323130] rounded flex items-center gap-1.5 cursor-pointer transition-all shadow-sm hover:scale-[1.02]"
-                    title={isListExpanded ? "Ekranı Daralt" : "Ekranı Genişlet"}
+                    title={isListExpanded ? t("Collapse Screen") : t("Expand Screen")}
                   >
                     {isListExpanded ? <Minimize2 className="w-4 h-4 text-rose-500" /> : <Maximize2 className="w-4 h-4 text-indigo-500" />}
-                    <span>{isListExpanded ? "Ekranı Daralt" : "Ekranı Genişlet"}</span>
+<span>{isListExpanded ? t("Collapse Screen") : t("Expand Screen")}</span>
                   </button>
 
                   {/* 2. Export İndirme oku (.xls biçiminde) */}
@@ -767,10 +750,10 @@ Gemba IQ Danışmanlık Grubu`;
                     type="button"
                     onClick={() => exportRecipients("xls")}
                     className="text-xs font-bold bg-[#107c41] hover:bg-[#0b592e] text-white px-3 py-1.5 rounded flex items-center gap-1.5 cursor-pointer transition-all shadow-sm hover:scale-[1.02]"
-                    title="Listeyi Excel (.xls) formatında indir"
+                    title={t("Download list as Excel (.xls) format")}
                   >
                     <Download className="w-4 h-4 text-white animate-bounce" style={{ animationDuration: "2.5s" }} />
-                    <span>XLS İndir (Excel)</span>
+                    <span>{t("Download XLS (Excel)")}</span>
                   </button>
                 </div>
               </div>
@@ -780,7 +763,7 @@ Gemba IQ Danışmanlık Grubu`;
                 <div className="flex items-center justify-between">
                   <span className="text-xs font-bold text-slate-700 dark:text-slate-300 flex items-center gap-1.5">
                     <span className="w-2 h-2 rounded-full bg-[#0078D4]" />
-                    Interactive Bulk Filter & Checkbox Selector
+                    {t("Interactive Bulk Filter & Checkbox Selector")}
                   </span>
                   {(filterCompany || filterAddress || filterIndustry || filterDate) && (
                     <button
@@ -788,69 +771,69 @@ Gemba IQ Danışmanlık Grubu`;
                       onClick={clearBatchFilters}
                       className="text-xs text-[#0078D4] hover:text-[#006cc0] font-bold transition-all cursor-pointer"
                     >
-                      Clear Filters
+                      {t("Clear Filters")}
                     </button>
                   )}
                 </div>
                 
                 <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 text-xs">
                   <div>
-                    <label className="text-[10px] font-bold text-slate-450 dark:text-slate-400 uppercase tracking-wider block mb-1">Company Name</label>
+                    <label className="text-[10px] font-bold text-slate-450 dark:text-slate-400 uppercase tracking-wider block mb-1">{t("Company Name")}</label>
                     <input
                       type="text"
                       value={filterCompany}
                       onChange={(e) => setFilterCompany(e.target.value)}
-                      placeholder="e.g., Apple, ACME"
+placeholder={t("e.g., Apple, ACME")}
                       className="w-full p-2 rounded border border-[#EDEBE9] dark:border-[#323130] bg-white dark:bg-[#252423] text-xs focus:border-[#0078D4] focus:ring-1 focus:ring-[#0078D4]"
                     />
                   </div>
                   <div>
-                    <label className="text-[10px] font-bold text-slate-450 dark:text-slate-400 uppercase tracking-wider block mb-1">City / Address</label>
+                    <label className="text-[10px] font-bold text-slate-450 dark:text-slate-400 uppercase tracking-wider block mb-1">{t("City / Address")}</label>
                     <input
                       type="text"
                       value={filterAddress}
                       onChange={(e) => setFilterAddress(e.target.value)}
-                      placeholder="e.g., London, Paris"
+placeholder={t("e.g., London, Paris")}
                       className="w-full p-2 rounded border border-[#EDEBE9] dark:border-[#323130] bg-white dark:bg-[#252423] text-xs focus:border-[#0078D4] focus:ring-1 focus:ring-[#0078D4]"
                     />
                   </div>
                   <div>
-                    <label className="text-[10px] font-bold text-slate-450 dark:text-slate-400 uppercase tracking-wider block mb-1">Industry</label>
+<label className="text-[10px] font-bold text-slate-450 dark:text-slate-400 uppercase tracking-wider block mb-1">{t("Industry")}</label>
                     <input
                       type="text"
                       value={filterIndustry}
                       onChange={(e) => setFilterIndustry(e.target.value)}
-                      placeholder="e.g., Finance, Retail"
+placeholder={t("e.g., Finance, Retail")}
                       className="w-full p-2 rounded border border-[#EDEBE9] dark:border-[#323130] bg-white dark:bg-[#252423] text-xs focus:border-[#0078D4] focus:ring-1 focus:ring-[#0078D4]"
                     />
                   </div>
                   <div>
-                    <label className="text-[10px] font-bold text-slate-450 dark:text-slate-400 uppercase tracking-wider block mb-1">Planned Date</label>
+                    <label className="text-[10px] font-bold text-slate-450 dark:text-slate-400 uppercase tracking-wider block mb-1">{t("Planned Date")}</label>
                     <input
                       type="text"
                       value={filterDate}
                       onChange={(e) => setFilterDate(e.target.value)}
-                      placeholder="e.g., 2026-06-15"
+placeholder={t("e.g., 2026-06-15")}
                       className="w-full p-2 rounded border border-[#EDEBE9] dark:border-[#323130] bg-white dark:bg-[#252423] text-xs focus:border-[#0078D4] focus:ring-1 focus:ring-[#0078D4]"
                     />
                   </div>
                 </div>
 
                 <div className="flex flex-wrap items-center gap-3 pt-2 border-t border-[#EDEBE9] dark:border-[#323130]/60 text-xs">
-                  <span className="text-[11px] text-slate-500 font-medium">Bulk Action for matching rows:</span>
+                  <span className="text-[11px] text-slate-500 font-medium">{t("Bulk Action for matching rows:")}</span>
                   <button
                     type="button"
                     onClick={() => handleBulkSelect(true)}
                     className="bg-[#f3f9fe] hover:bg-brand-100 dark:bg-blue-950/30 dark:hover:bg-blue-900/40 text-[#0078D4] dark:text-brand-300 border border-[#b8daf7]/60 dark:border-brand-900/50 text-[10px] font-bold px-2.5 py-1 rounded transition-all cursor-pointer"
                   >
-                    ☑ Select All Matches
+                    {t("☑ Select All Matches")}
                   </button>
                   <button
                     type="button"
                     onClick={() => handleBulkSelect(false)}
                     className="bg-white dark:bg-[#252423] hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-300 border border-[#EDEBE9] dark:border-slate-700 text-[10px] font-bold px-2.5 py-1 rounded transition-all cursor-pointer"
                   >
-                    ☐ Deselect All Matches
+                    {t("☐ Deselect All Matches")}
                   </button>
                 </div>
               </div>
@@ -860,7 +843,7 @@ Gemba IQ Danışmanlık Grubu`;
                   <table className="w-full text-left text-xs border-collapse">
                     <thead className="bg-[#F3F2F1] dark:bg-[#1b1a19] text-slate-500 font-bold sticky top-0 border-b border-[#EDEBE9] dark:border-[#323130] z-10">
                       <tr>
-                        <th className="p-3 w-10 text-center" title="Include/Choose Email in Merge">
+<th className="p-3 w-10 text-center" title={t("Include/Choose Email in Merge")}>
                           <input
                             type="checkbox"
                             checked={recipients.length > 0 && recipients.every((r) => r.isSelected !== false)}
@@ -871,16 +854,16 @@ Gemba IQ Danışmanlık Grubu`;
                             className="rounded border-[#EDEBE9] dark:border-[#323130] text-[#0078D4] focus:ring-[#0078D4] w-3.5 h-3.5 cursor-pointer"
                           />
                         </th>
-                        <th className="p-3 w-10 text-center" title="Preview parameters substitutions">Pre</th>
-                        <th className="p-3">Name</th>
-                        <th className="p-3">Email</th>
-                        <th className="p-3">Company</th>
-                        <th className="p-3">Address</th>
-                        <th className="p-3">Industry</th>
-                        <th className="p-3 text-indigo-600 dark:text-indigo-400">Scheduled Date</th>
-                        <th className="p-3">Department</th>
-                        <th className="p-3">Fields 1-3</th>
-                        <th className="p-3 w-20 text-center">Actions</th>
+<th className="p-3 w-10 text-center" title={t("Preview parameters substitutions")}>{t("Pre")}</th>
+                        <th className="p-3">{t("Name")}</th>
+                        <th className="p-3">{t("Email")}</th>
+<th className="p-3">{t("Company")}</th>
+<th className="p-3">{t("Address")}</th>
+<th className="p-3">{t("Industry")}</th>
+                        <th className="p-3 text-indigo-600 dark:text-indigo-400">{t("Scheduled Date")}</th>
+<th className="p-3">{t("Department")}</th>
+                        <th className="p-3">{t("Fields 1-3")}</th>
+<th className="p-3 w-20 text-center">{t("Actions")}</th>
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-[#EDEBE9] dark:divide-[#323130] text-slate-755 dark:text-slate-300">
@@ -943,14 +926,14 @@ Gemba IQ Danışmanlık Grubu`;
                                       value={rec.FirstName}
                                       onChange={(e) => handleUpdateRecipientField(rec.id, "FirstName", e.target.value)}
                                       className="w-1/2 px-1.5 py-1 text-xs border border-slate-300 dark:border-[#323130] bg-white dark:bg-[#11100f] rounded text-slate-800 dark:text-slate-100 focus:outline-none focus:border-[#0078D4]"
-                                      placeholder="First"
+                                      placeholder={t("First")}
                                     />
                                     <input
                                       type="text"
                                       value={rec.LastName}
                                       onChange={(e) => handleUpdateRecipientField(rec.id, "LastName", e.target.value)}
                                       className="w-1/2 px-1.5 py-1 text-xs border border-slate-300 dark:border-[#323130] bg-white dark:bg-[#11100f] rounded text-slate-800 dark:text-slate-100 focus:outline-none focus:border-[#0078D4]"
-                                      placeholder="Last"
+                                      placeholder={t("Last")}
                                     />
                                   </div>
                                 </td>
@@ -1007,21 +990,21 @@ Gemba IQ Danışmanlık Grubu`;
                                     <input
                                       type="text"
                                       value={rec.CustomField1 || ""}
-                                      placeholder="c1"
+                                      placeholder={t("c1")}
                                       onChange={(e) => handleUpdateRecipientField(rec.id, "CustomField1", e.target.value)}
                                       className="w-1/3 px-1 py-1 text-[10px] border border-slate-300 dark:border-[#323130] bg-white dark:bg-[#11100f] rounded focus:outline-none text-slate-800 dark:text-slate-100 placeholder-slate-405"
                                     />
                                     <input
                                       type="text"
                                       value={rec.CustomField2 || ""}
-                                      placeholder="c2"
+                                      placeholder={t("c2")}
                                       onChange={(e) => handleUpdateRecipientField(rec.id, "CustomField2", e.target.value)}
                                       className="w-1/3 px-1 py-1 text-[10px] border border-slate-300 dark:border-[#323130] bg-white dark:bg-[#11100f] rounded focus:outline-none text-slate-800 dark:text-slate-100 placeholder-slate-405"
                                     />
                                     <input
                                       type="text"
                                       value={rec.CustomField3 || ""}
-                                      placeholder="c3"
+                                      placeholder={t("c3")}
                                       onChange={(e) => handleUpdateRecipientField(rec.id, "CustomField3", e.target.value)}
                                       className="w-1/3 px-1 py-1 text-[10px] border border-slate-300 dark:border-[#323130] bg-white dark:bg-[#11100f] rounded focus:outline-none text-slate-800 dark:text-slate-100 placeholder-slate-405"
                                     />
@@ -1053,7 +1036,7 @@ Gemba IQ Danışmanlık Grubu`;
                                     type="button"
                                     onClick={() => setEditingRecipientId(null)}
                                     className="text-emerald-500 hover:text-emerald-600 hover:bg-emerald-50 dark:hover:bg-emerald-950/20 p-1.5 rounded transition-colors cursor-pointer"
-                                    title="Save changes"
+                                    title={t("Save changes")}
                                   >
                                     <Check className="w-3.5 h-3.5 animate-bounce" />
                                   </button>
@@ -1062,7 +1045,7 @@ Gemba IQ Danışmanlık Grubu`;
                                     type="button"
                                     onClick={() => setEditingRecipientId(rec.id)}
                                     className="text-[#0078D4] hover:text-[#006cc0] hover:bg-blue-50 dark:hover:bg-blue-950/20 p-1.5 rounded transition-colors cursor-pointer"
-                                    title="Edit Row"
+                                    title={t("Edit Row")}
                                   >
                                     <Edit3 className="w-3.5 h-3.5" />
                                   </button>
@@ -1080,7 +1063,7 @@ Gemba IQ Danışmanlık Grubu`;
                                     }
                                   }}
                                   className="text-rose-500 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/30 p-1.5 rounded transition-colors cursor-pointer"
-                                  title="Delete Recipient"
+                                  title={t("Delete Recipient")}
                                 >
                                   <Trash2 className="w-3.5 h-3.5" />
                                 </button>
@@ -1092,8 +1075,8 @@ Gemba IQ Danışmanlık Grubu`;
                   </table>
                 </div>
                 <div className="bg-[#F3F2F1] dark:bg-[#1b1a19] p-2.5 text-[10px] text-slate-500 flex items-center justify-between border-t border-[#EDEBE9] dark:border-[#323130]">
-                  <span>Total Imported Recipients: <strong>{recipients.length}</strong> loaded</span>
-                  <span>Click a row to load visual merge preview card</span>
+<span>{t("Total Imported Recipients:")} <strong>{recipients.length}</strong>{t(" loaded")}</span>
+                  <span>{t("Click a row to load visual merge preview card")}</span>
                 </div>
               </div>
             </div>
@@ -1102,25 +1085,25 @@ Gemba IQ Danışmanlık Grubu`;
           {/* Manual Email Input addition container */}
           <div className="mt-4 border border-[#EDEBE9] dark:border-[#323130] rounded p-4 bg-[#F3F2F1]/30 dark:bg-[#11100f]/15 space-y-3">
             <h4 className="text-xs font-bold text-slate-800 dark:text-slate-200 flex items-center justify-between">
-              <span>Add Recipient Manually</span>
-              <span className="text-[10px] text-slate-400 font-normal">Enter details instantly</span>
+              <span>{t("Add Recipient Manually")}</span>
+              <span className="text-[10px] text-slate-400 font-normal">{t("Enter details instantly")}</span>
             </h4>
             <form onSubmit={handleAddManualRecipient} className="grid grid-cols-2 lg:grid-cols-4 gap-3">
               <div>
-                <label className="text-[10px] uppercase text-slate-400 font-bold block mb-1">First Name</label>
+<label className="text-[10px] uppercase text-slate-400 font-bold block mb-1">{t("First Name")}</label>
                 <input
                   type="text"
-                  placeholder="John"
+placeholder={t("John")}
                   value={manFirstName}
                   onChange={(e) => setManFirstName(e.target.value)}
                   className="w-full text-xs p-2 rounded border border-[#EDEBE9] dark:border-[#323130] bg-white dark:bg-[#252423] focus:border-[#0078D4] focus:ring-1 focus:ring-[#0078D4]"
                 />
               </div>
               <div>
-                <label className="text-[10px] uppercase text-slate-400 font-bold block mb-1">Last Name</label>
+<label className="text-[10px] uppercase text-slate-400 font-bold block mb-1">{t("Last Name")}</label>
                 <input
                   type="text"
-                  placeholder="Doe"
+placeholder={t("Doe")}
                   value={manLastName}
                   onChange={(e) => setManLastName(e.target.value)}
                   className="w-full text-xs p-2 rounded border border-[#EDEBE9] dark:border-[#323130] bg-white dark:bg-[#252423] focus:border-[#0078D4] focus:ring-1 focus:ring-[#0078D4]"
@@ -1128,11 +1111,11 @@ Gemba IQ Danışmanlık Grubu`;
               </div>
               <div>
                 <label className="text-[10px] uppercase text-slate-450 font-bold block mb-1 text-slate-700 dark:text-slate-300">
-                  Email <span className="text-rose-500 font-bold">*</span>
+{t("Email")} <span className="text-rose-500 font-bold">*</span>
                 </label>
                 <input
                   type="email"
-                  placeholder="johndoe@email.com"
+placeholder={t("johndoe@email.com")}
                   value={manEmail}
                   required
                   onChange={(e) => setManEmail(e.target.value)}
@@ -1140,47 +1123,47 @@ Gemba IQ Danışmanlık Grubu`;
                 />
               </div>
               <div>
-                <label className="text-[10px] uppercase text-slate-400 font-bold block mb-1">Company</label>
+<label className="text-[10px] uppercase text-slate-400 font-bold block mb-1">{t("Company")}</label>
                 <input
                   type="text"
-                  placeholder="ACME Corp"
+placeholder={t("ACME Corp")}
                   value={manCompany}
                   onChange={(e) => setManCompany(e.target.value)}
                   className="w-full text-xs p-2 rounded border border-[#EDEBE9] dark:border-[#323130] bg-white dark:bg-[#252423] focus:border-[#0078D4] focus:ring-1 focus:ring-[#0078D4]"
                 />
               </div>
               <div>
-                <label className="text-[10px] uppercase text-slate-400 font-bold block mb-1">Department</label>
+<label className="text-[10px] uppercase text-slate-400 font-bold block mb-1">{t("Department")}</label>
                 <input
                   type="text"
-                  placeholder="Marketing"
+placeholder={t("Marketing")}
                   value={manDept}
                   onChange={(e) => setManDept(e.target.value)}
                   className="w-full text-xs p-2 rounded border border-[#EDEBE9] dark:border-[#323130] bg-white dark:bg-[#252423] focus:border-[#0078D4] focus:ring-1 focus:ring-[#0078D4]"
                 />
               </div>
               <div>
-                <label className="text-[10px] uppercase text-slate-400 font-bold block mb-1">Address (City/Street)</label>
+<label className="text-[10px] uppercase text-slate-400 font-bold block mb-1">{t("Address (City/Street)")}</label>
                 <input
                   type="text"
-                  placeholder="e.g., London, UK"
+placeholder={t("e.g., London, UK")}
                   value={manAddress}
                   onChange={(e) => setManAddress(e.target.value)}
                   className="w-full text-xs p-2 rounded border border-[#EDEBE9] dark:border-[#323130] bg-white dark:bg-[#252423] focus:border-[#0078D4] focus:ring-1 focus:ring-[#0078D4]"
                 />
               </div>
               <div>
-                <label className="text-[10px] uppercase text-slate-400 font-bold block mb-1">Industry</label>
+<label className="text-[10px] uppercase text-slate-400 font-bold block mb-1">{t("Industry")}</label>
                 <input
                   type="text"
-                  placeholder="e.g., Technology"
+placeholder={t("e.g., Technology")}
                   value={manIndustry}
                   onChange={(e) => setManIndustry(e.target.value)}
                   className="w-full text-xs p-2 rounded border border-[#EDEBE9] dark:border-[#323130] bg-white dark:bg-[#252423] focus:border-[#0078D4] focus:ring-1 focus:ring-[#0078D4]"
                 />
               </div>
               <div>
-                <label className="text-[10px] uppercase text-indigo-500 font-bold block mb-1">Scheduled Date & Time</label>
+<label className="text-[10px] uppercase text-indigo-500 font-bold block mb-1">{t("Scheduled Date & Time")}</label>
                 <input
                   type="datetime-local"
                   value={manScheduledDate}
@@ -1189,30 +1172,30 @@ Gemba IQ Danışmanlık Grubu`;
                 />
               </div>
               <div>
-                <label className="text-[10px] uppercase text-slate-400 font-bold block mb-1">Custom 1</label>
+<label className="text-[10px] uppercase text-slate-400 font-bold block mb-1">{t("Custom 1")}</label>
                 <input
                   type="text"
-                  placeholder="Merge Tag 1"
+placeholder={t("Merge Tag 1")}
                   value={manField1}
                   onChange={(e) => setManField1(e.target.value)}
                   className="w-full text-xs p-2 rounded border border-[#EDEBE9] dark:border-[#323130] bg-white dark:bg-[#252423] focus:border-[#0078D4] focus:ring-1 focus:ring-[#0078D4]"
                 />
               </div>
               <div>
-                <label className="text-[10px] uppercase text-slate-400 font-bold block mb-1">Custom 2</label>
+<label className="text-[10px] uppercase text-slate-400 font-bold block mb-1">{t("Custom 2")}</label>
                 <input
                   type="text"
-                  placeholder="Merge Tag 2"
+placeholder={t("Merge Tag 2")}
                   value={manField2}
                   onChange={(e) => setManField2(e.target.value)}
                   className="w-full text-xs p-2 rounded border border-[#EDEBE9] dark:border-[#323130] bg-white dark:bg-[#252423] focus:border-[#0078D4] focus:ring-1 focus:ring-[#0078D4]"
                 />
               </div>
               <div>
-                <label className="text-[10px] uppercase text-slate-400 font-bold block mb-1">Custom 3</label>
+<label className="text-[10px] uppercase text-slate-400 font-bold block mb-1">{t("Custom 3")}</label>
                 <input
                   type="text"
-                  placeholder="Merge Tag 3"
+placeholder={t("Merge Tag 3")}
                   value={manField3}
                   onChange={(e) => setManField3(e.target.value)}
                   className="w-full text-xs p-2 rounded border border-[#EDEBE9] dark:border-[#323130] bg-white dark:bg-[#252423] focus:border-[#0078D4] focus:ring-1 focus:ring-[#0078D4]"
@@ -1223,7 +1206,7 @@ Gemba IQ Danışmanlık Grubu`;
                   type="submit"
                   className="w-full bg-[#0078D4] hover:bg-[#006cc0] text-white font-bold text-xs py-2 px-3 rounded transition-all cursor-pointer shadow-sm flex items-center justify-center gap-1.5 h-[34px]"
                 >
-                  Add Recipient
+{t("Add Recipient")}
                 </button>
               </div>
             </form>
@@ -1246,9 +1229,9 @@ Gemba IQ Danışmanlık Grubu`;
             <div>
               <h3 className="text-sm font-semibold text-slate-800 dark:text-slate-100 flex items-center gap-2">
                 <Type className="w-4.5 h-4.5 text-[#0078D4]" />
-                2. Email Template Composer
+{t("2. Email Template Composer")}
               </h3>
-              <p className="text-xs text-slate-500 dark:text-slate-400">Formulate rich HTML body templates with placement parameters</p>
+              <p className="text-xs text-slate-500 dark:text-slate-400">{t("Formulate rich HTML body templates with placement parameters")}</p>
             </div>
             <button
               id="btn-composer-help"
@@ -1256,26 +1239,26 @@ Gemba IQ Danışmanlık Grubu`;
               className="text-[11px] text-[#0078D4] dark:text-brand-300 hover:underline flex items-center gap-1 font-bold"
             >
               <HelpCircle className="w-3.5 h-3.5" />
-              Formatting guide
+              {t("Formatting guide")}
             </button>
           </div>
 
           {showEditorHelp && (
             <div className="p-3.5 rounded bg-[#F3F2F1] dark:bg-[#252423] border border-[#EDEBE9] dark:border-[#323130] text-xs text-slate-600 dark:text-slate-300 leading-relaxed grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <strong>Supported HTML formatting parameters:</strong>
+<strong>{t("Supported HTML formatting parameters:")}</strong>
                 <ul className="list-disc pl-4 mt-1 space-y-1 text-slate-500 font-mono text-[10px]">
-                  <li><code>&lt;b&gt;bold text&lt;/b&gt;</code> for heavy weight</li>
-                  <li><code>&lt;i&gt;italicized text&lt;/i&gt;</code> for accents</li>
-                  <li><code>&lt;p&gt;new paragraph&lt;/p&gt;</code> spacing</li>
-                  <li><code>&lt;h2&gt;Header section&lt;/h2&gt;</code> for sections</li>
-                  <li><code>&lt;a href="url"&gt;Hyperlink text&lt;/a&gt;</code></li>
+<li><code>&lt;b&gt;{t("bold text")}&lt;/b&gt;</code> {t("for heavy weight")}</li>
+<li><code>&lt;i&gt;{t("italicized text")}&lt;/i&gt;</code> {t("for accents")}</li>
+<li><code>&lt;p&gt;{t("new paragraph")}&lt;/p&gt;</code> {t("spacing")}</li>
+<li><code>&lt;h2&gt;{t("Header section")}&lt;/h2&gt;</code> {t("for sections")}</li>
+<li><code>&lt;a href="url"&gt;{t("Hyperlink text")}&lt;/a&gt;</code></li>
                 </ul>
               </div>
               <div>
-                <strong>Merge Tag Syntax Rules:</strong>
+<strong>{t("Merge Tag Syntax Rules:")}</strong>
                 <p className="mt-1 text-slate-500">
-                  Ensure you surround merge tags exactly with curly braces (e.g. <code>{"{{FirstName}}"}</code>). Standard text substitutions are case-sensitive and match the spreadsheet grid columns.
+{t("Ensure you surround merge tags exactly with curly braces (e.g. {{FirstName}}). Standard text substitutions are case-sensitive and match the spreadsheet grid columns.")}
                 </p>
               </div>
             </div>
@@ -1283,13 +1266,13 @@ Gemba IQ Danışmanlık Grubu`;
 
           {/* Subject string */}
           <div className="space-y-1.5">
-            <label className="text-[10px] font-bold text-slate-405 uppercase tracking-wider block">Subject Line</label>
+            <label className="text-[10px] font-bold text-slate-405 uppercase tracking-wider block">{t("Subject Line")}</label>
             <input
               id="composer-subject-input"
               type="text"
               value={subject}
               onChange={(e) => setSubject(e.target.value)}
-              placeholder="e.g., Exclusive Corporate Partnership Update for {{Company}}"
+placeholder={t("e.g., Exclusive Corporate Partnership Update for {{Company}}")}
               className="w-full text-xs border border-[#EDEBE9] dark:border-[#323130] rounded px-4 py-2.5 bg-[#F3F2F1]/50 dark:bg-[#11100f] focus:bg-white dark:focus:bg-[#1b1a19] focus:outline-none focus:ring-1 focus:ring-[#0078D4] transition-all font-medium text-slate-800 dark:text-slate-200"
             />
           </div>
@@ -1298,7 +1281,7 @@ Gemba IQ Danışmanlık Grubu`;
           <div className="space-y-2">
             <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider flex items-center gap-1">
               <Sparkles className="w-3.5 h-3.5 text-[#0078D4]" />
-              Click metadata chips to inject parameter:
+              {t("Click metadata chips to inject parameter:")}
             </label>
             <div className="flex flex-wrap gap-1.5">
               {mergeTags.map((tag) => (
@@ -1319,21 +1302,21 @@ Gemba IQ Danışmanlık Grubu`;
           <div className="bg-[#F3F2F1] dark:bg-[#11100f] border border-[#EDEBE9] dark:border-[#323130] rounded px-2.5 py-1.5 flex items-center justify-between">
             <div className="flex items-center gap-1">
               <button
-                title="Bold"
+                title={t("Bold")}
                 onClick={() => applyFormat("<b>", "</b>")}
                 className="editor-bubble-btn text-xs font-bold font-mono"
               >
                 B
               </button>
               <button
-                title="Italic"
+                title={t("Italic")}
                 onClick={() => applyFormat("<i>", "</i>")}
                 className="editor-bubble-btn text-xs italic font-serif"
               >
                 I
               </button>
               <button
-                title="Underline"
+                title={t("Underline")}
                 onClick={() => applyFormat("<u>", "</u>")}
                 className="editor-bubble-btn text-xs underline"
               >
@@ -1341,40 +1324,40 @@ Gemba IQ Danışmanlık Grubu`;
               </button>
               <div className="w-px h-4 bg-slate-200 dark:bg-slate-805 mx-1"></div>
               <button
-                title="Paragraph"
+                title={t("Paragraph")}
                 onClick={() => applyFormat("<p>", "</p>")}
                 className="editor-bubble-btn text-xs font-semibold"
               >
                 P
               </button>
               <button
-                title="Header 2"
+                title={t("Header 2")}
                 onClick={() => applyFormat("<h2>", "</h2>")}
                 className="editor-bubble-btn text-xs font-bold"
               >
                 H2
               </button>
               <button
-                title="Link"
+                title={t("Link")}
                 onClick={() => applyFormat('<a href="https://">', "</a>")}
                 className="editor-bubble-btn text-xs font-mono"
               >
-                Link
+                {t("Link")}
               </button>
             </div>
-            <span className="text-[10px] text-slate-400 italic">Formatting generates HTML compliant mailings</span>
+            <span className="text-[10px] text-slate-400 italic">{t("Formatting generates HTML compliant mailings")}</span>
           </div>
 
           {/* HTML editor body */}
           <div className="space-y-1.5">
-            <label className="text-[10px] font-bold text-slate-405 uppercase tracking-wider block">HTML Rich text content</label>
+            <label className="text-[10px] font-bold text-slate-405 uppercase tracking-wider block">{t("HTML Rich text content")}</label>
             <textarea
               id="composer-body-textarea"
               ref={textAreaRef}
               value={templateBody}
               onChange={(e) => setTemplateBody(e.target.value)}
               rows={8}
-              placeholder={`Hello {{FirstName}},\n\nWriting to reach out regarding the department division updates at {{Company}}.\n\nBest wishes,\nTeam Corp`}
+              placeholder={t("Hello {{FirstName}},\n\nWriting to reach out regarding the department division updates at {{Company}}.\n\nBest wishes,\nTeam Corp")}
               className="w-full text-xs text-slate-800 dark:text-slate-200 font-mono border border-[#EDEBE9] dark:border-[#323130] rounded p-4 bg-[#F3F2F1]/50 dark:bg-[#11100f] focus:bg-white dark:focus:bg-[#1b1a19] focus:outline-none focus:ring-1 focus:ring-[#0078D4] transition-all leading-normal"
             />
           </div>
@@ -1388,10 +1371,10 @@ Gemba IQ Danışmanlık Grubu`;
                 </div>
                 <div>
                   <h4 className="text-xs font-bold text-slate-800 dark:text-slate-200 flex items-center gap-1.5 leading-none">
-                    Gemini AI Strategy Assistant
-                    <span className="bg-amber-100 text-amber-800 dark:bg-amber-900/60 dark:text-amber-300 text-[9px] px-1.5 py-0.5 rounded font-bold uppercase tracking-wide">Pro Draft Tool</span>
+                    {t("Gemini AI Strategy Assistant")}
+                    <span className="bg-amber-100 text-amber-800 dark:bg-amber-900/60 dark:text-amber-300 text-[9px] px-1.5 py-0.5 rounded font-bold uppercase tracking-wide">{t("Pro Draft Tool")}</span>
                   </h4>
-                  <p className="text-[10px] text-slate-500 dark:text-slate-400 mt-0.5">Author templates and draft campaign copy instantly with smart placeholders</p>
+                  <p className="text-[10px] text-slate-500 dark:text-slate-400 mt-0.5">{t("Author templates and draft campaign copy instantly with smart placeholders")}</p>
                 </div>
               </div>
             </div>
@@ -1412,11 +1395,11 @@ Gemba IQ Danışmanlık Grubu`;
             )}
 
             <div className="space-y-1.5">
-              <label htmlFor="ai-assist-prompt" className="text-[10px] font-bold text-slate-450 uppercase tracking-wider block">AI Copy Directions & Copywriting Strategy</label>
+              <label htmlFor="ai-assist-prompt" className="text-[10px] font-bold text-slate-450 uppercase tracking-wider block">{t("AI Copy Directions & Copywriting Strategy")}</label>
               <input
                 id="ai-assist-prompt"
                 type="text"
-                placeholder="e.g., exciting product update, friendly payment reminder, high-interest marketing outreach"
+                placeholder={t("e.g., exciting product update, friendly payment reminder, high-interest marketing outreach")}
                 value={aiInstruction}
                 onChange={(e) => setAiInstruction(e.target.value)}
                 className="w-full text-xs text-slate-700 dark:text-slate-300 border border-[#EDEBE9] dark:border-[#323130] rounded px-3 py-2 bg-white dark:bg-[#11100f] focus:outline-none focus:ring-1 focus:ring-[#0078D4]"
@@ -1438,12 +1421,12 @@ Gemba IQ Danışmanlık Grubu`;
                 {aiLoading ? (
                   <>
                     <span className="w-3 h-3 border-2 border-slate-300 border-t-slate-600 rounded-full animate-spin"></span>
-                    <span>Generating...</span>
+                    <span>{t("Generating...")}</span>
                   </>
                 ) : (
                   <>
                     <Sparkles className="w-3.5 h-3.5" />
-                    <span>Write Email Draft</span>
+                    <span>{t("Write Email Draft")}</span>
                   </>
                 )}
               </button>
@@ -1458,10 +1441,10 @@ Gemba IQ Danışmanlık Grubu`;
                     ? "bg-slate-100 text-slate-400 dark:bg-slate-800/40 dark:text-slate-600 cursor-not-allowed"
                     : "bg-white dark:bg-[#252423] text-slate-800 dark:text-slate-200 border border-[#EDEBE9] dark:border-[#323130] hover:bg-slate-50 dark:hover:bg-[#2d2c2b] cursor-pointer"
                 }`}
-                title={!templateBody ? "Please write mail text first to apply polishing strategies" : "Revamp existing text with prompt directions"}
+                title={!templateBody ? t("Please write mail text first to apply polishing strategies") : t("Revamp existing text with prompt directions")}
               >
                 <Edit3 className="w-3.5 h-3.5 text-[#0078D4]" />
-                <span>Polish Existing Mail</span>
+                <span>{t("Polish Existing Mail")}</span>
               </button>
             </div>
           </div>
@@ -1469,7 +1452,7 @@ Gemba IQ Danışmanlık Grubu`;
           {/* Attachments Upload section */}
           <div className="space-y-3 pt-3 border-t border-[#EDEBE9] dark:border-[#323130]">
             <label className="text-[10px] font-bold text-slate-405 uppercase tracking-wider block">
-              3. Campaign Attachments (Included on all sends)
+              {t("3. Campaign Attachments (Included on all sends)")}
             </label>
             
             {attachments.length > 0 && (
@@ -1483,14 +1466,14 @@ Gemba IQ Danışmanlık Grubu`;
                       <Paperclip className="w-3.5 h-3.5 text-indigo-500 flex-shrink-0" />
                       <div className="truncate">
                         <p className="font-semibold text-slate-700 dark:text-slate-300 truncate">{file.name}</p>
-                        <p className="text-[10px] text-slate-400 font-medium">{(file.size / 1024).toFixed(1)} KB</p>
+                        <p className="text-[10px] text-slate-400 font-medium">{(file.size / 1024).toFixed(1)}{t(" KB")}</p>
                       </div>
                     </div>
                     <button
                       id={`btn-del-file-${file.name}`}
                       onClick={() => deleteAttachment(file.name)}
                       className="text-slate-400 hover:text-rose-500 p-1 rounded hover:bg-slate-200 dark:hover:bg-slate-800 transition-colors"
-                      title="Remove attachment"
+                      title={t("Remove attachment")}
                     >
                       <Trash2 className="w-3.5 h-3.5" />
                     </button>
@@ -1514,16 +1497,16 @@ Gemba IQ Danışmanlık Grubu`;
                 <Upload className="w-8 h-8 text-slate-400" />
                 <div className="text-left">
                   <p className="text-xs font-bold text-slate-700 dark:text-slate-200">
-                    Drag and drop attachments or{" "}
+                    {t("Drag and drop attachments or")}{" "}
                     <button
                       id="btn-attachment-browse"
                       onClick={() => attachmentInputRef.current?.click()}
                       className="text-[#0078D4] underline font-bold hover:text-[#006cc0] inline cursor-pointer animate-pulse"
                     >
-                      browse local files
+                      {t("browse local files")}
                     </button>
                   </p>
-                  <p className="text-[10px] text-slate-400 mt-0.5">Documents, spreadsheets, PDFs, or images to enclose</p>
+                  <p className="text-[10px] text-slate-400 mt-0.5">{t("Documents, spreadsheets, PDFs, or images to enclose")}</p>
                 </div>
               </div>
               <input
@@ -1547,29 +1530,29 @@ Gemba IQ Danışmanlık Grubu`;
           <div>
             <h3 className="text-sm font-semibold text-slate-800 dark:text-slate-100 flex items-center gap-2">
               <Eye className="w-4.5 h-4.5 text-[#0078D4]" />
-              Live Merge Preview
+{t("Live Merge Preview")}
             </h3>
-            <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">Showing exact compiled template draft</p>
+            <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">{t("Showing exact compiled template draft")}</p>
           </div>
 
           <div className="border border-[#EDEBE9] dark:border-[#323130] rounded overflow-hidden bg-[#F3F2F1] dark:bg-[#11100f] shadow-inner max-h-[440px] overflow-y-auto">
             {/* Simulation Header browser styled layout */}
             <div className="bg-[#EDEBE9]/50 dark:bg-[#1b1a19] px-4 py-3 border-b border-[#EDEBE9] dark:border-[#323130] text-[11px] text-slate-500 flex flex-col gap-1">
               <div>
-                <span className="font-bold text-slate-400">TO: </span>
+                <span className="font-bold text-slate-400">{t("TO:")} </span>
                 {currentPreviewRecipient ? (
                   <span className="font-mono text-slate-700 dark:text-slate-300 font-semibold bg-white dark:bg-[#252423] px-2 py-0.5 rounded border border-[#EDEBE9] dark:border-[#323130]">
                     {`"${currentPreviewRecipient.FirstName} ${currentPreviewRecipient.LastName}" <${currentPreviewRecipient.Email}>`}
                     {currentPreviewRecipient.Company && ` @ ${currentPreviewRecipient.Company}`}
                   </span>
                 ) : (
-                  <span className="italic">No recipient spreadsheet loaded yet</span>
+                  <span className="italic">{t("No recipient spreadsheet loaded yet")}</span>
                 )}
               </div>
               <div className="mt-1 truncate">
-                <span className="font-bold text-slate-400">SUBJECT: </span>
+                <span className="font-bold text-slate-400">{t("SUBJECT:")} </span>
                 <span className="font-bold text-slate-705 dark:text-slate-200">
-                  {subject ? computeMergedContent(subject, currentPreviewRecipient) : "(Untitled Subject)"}
+                  {subject ? computeMergedContent(subject, currentPreviewRecipient) : t("(Untitled Subject)")}
                 </span>
               </div>
             </div>
@@ -1583,14 +1566,14 @@ Gemba IQ Danışmanlık Grubu`;
                 />
               ) : (
                 <div className="text-slate-405 italic text-center py-8">
-                  Email body draft is empty. Enter message content in the composer to view live substitutions instantly.
+                  {t("Email body draft is empty. Enter message content in the composer to view live substitutions instantly.")}
                 </div>
               )}
 
               {/* Attachments footer in preview */}
               {attachments.length > 0 && (
                 <div className="mt-6 pt-4 border-t border-[#EDEBE9] dark:border-[#323130]">
-                  <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block mb-1.5">Attachments Enclosed</span>
+                  <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block mb-1.5">{t("Attachments Enclosed")}</span>
                   <div className="flex flex-wrap gap-1.5">
                     {attachments.map((file) => (
                       <span
@@ -1612,14 +1595,14 @@ Gemba IQ Danışmanlık Grubu`;
             {recipients.length === 0 ? (
               <div className="p-3 bg-[#f3f9fe] dark:bg-blue-955/20 text-[11px] text-[#0078D4] dark:text-brand-300 rounded border border-[#ddebf7] dark:border-brand-900/30 flex gap-2">
                 <Info className="w-4.5 h-4.5 text-[#0078D4] flex-shrink-0" />
-                <span>Upload a spreadsheet or add manually to initiate the sending queue.</span>
+                <span>{t("Upload a spreadsheet or add manually to initiate the sending queue.")}</span>
               </div>
             ) : (
               <div className="space-y-2">
                 {(!subject || !templateBody) && (
                   <div className="p-2.5 bg-amber-50 dark:bg-amber-950/20 text-[10px] text-amber-800 dark:text-amber-400 rounded border border-amber-200/30 flex items-center gap-1.5 leading-relaxed">
                     <AlertCircle className="w-4 h-4 text-amber-500" />
-                    <span>Formatting warning: Subject line or Email body is currently empty. You can still proceed to preview the distribution queue, configure dispatch method, and save draft.</span>
+                    <span>{t("Formatting warning: Subject line or Email body is currently empty. You can still proceed to preview the distribution queue, configure dispatch method, and save draft.")}</span>
                   </div>
                 )}
                 <button
@@ -1628,7 +1611,7 @@ Gemba IQ Danışmanlık Grubu`;
                   className="w-full bg-[#0078D4] hover:bg-[#006cc0] text-white font-bold text-xs py-3 px-4 rounded shadow-sm transition-all flex items-center justify-center gap-2 cursor-pointer"
                 >
                   <CheckCircle className="w-4 h-4" />
-                  Proceed to Campaign Preview & Sending Queue
+                  {t("Proceed to Campaign Preview & Sending Queue")}
                   <ChevronRight className="w-3.5 h-3.5" />
                 </button>
               </div>

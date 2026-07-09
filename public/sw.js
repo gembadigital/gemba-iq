@@ -1,4 +1,4 @@
-const CACHE_NAME = "smart-mail-merge-cache-v1";
+const CACHE_NAME = "smart-mail-merge-cache-v2";
 
 // Install Lifecycle - Skip waiting to update service worker instantly
 self.addEventListener("install", (event) => {

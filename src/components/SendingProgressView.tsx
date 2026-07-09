@@ -1,4 +1,6 @@
 import React, { useState, useEffect } from "react";
+import { useLanguage } from "../lib/LanguageContext";
+import { getCampaignTranslation, getCampaignStatusLabel } from "./campaignI18n";
 import { Recipient, AttachmentFile, Campaign, MailboxSession } from "../types";
 import { generateCampaignReport } from "../utils/pdfGenerator";
 import {
@@ -44,6 +46,9 @@ export default function SendingProgressView({
   trackingService,
   onUpdateSession
 }: SendingProgressViewProps) {
+  const { lang, t: globalT } = useLanguage();
+  const t = (key: string) => getCampaignTranslation(lang, key) ?? globalT(key) ?? key;
+  const formatStatus = (status: string) => getCampaignStatusLabel(t, status);
   // Campaign progress engines state
   const [activeRecipients, setActiveRecipients] = useState<Recipient[]>([]);
   const [currentIndex, setCurrentIndex] = useState(0);
@@ -244,16 +249,16 @@ export default function SendingProgressView({
 
         try {
           if (!recipient.Email || !recipient.Email.trim()) {
-            throw new Error("Recipient email address is blank.");
+            throw new Error(t("Recipient email address is blank."));
           }
           if (!recipient.Email.includes("@")) {
             throw new Error(`Recipient has an invalid email format: "${recipient.Email}"`);
           }
           if (!subject || !subject.trim()) {
-            throw new Error("Merge execution halted: Subject line is empty.");
+            throw new Error(t("Merge execution halted: Subject line is empty."));
           }
           if (!templateBody || !templateBody.trim()) {
-            throw new Error("Merge execution halted: Template body is empty.");
+            throw new Error(t("Merge execution halted: Template body is empty."));
           }
 
           if (session?.isSandbox) {
@@ -263,7 +268,7 @@ export default function SendingProgressView({
             // Randomly simulated delivery exceptions (e.g., rare 10% fail margin for test evaluations)
             const isMockFail = Math.random() < 0.08;
             if (isMockFail) {
-              throw new Error("SMTP Mail delivery failure of recipient Exchange endpoint (code 550 - User Unknown)");
+              throw new Error(t("SMTP Mail delivery failure of recipient Exchange endpoint (code 550 - User Unknown)"));
             }
           } else {
             // Actuate REAL Outlook Microsoft Graph Send mail API requested by user specs
@@ -290,8 +295,8 @@ export default function SendingProgressView({
             // Prepend Gemba Partner Corporate Header Layout structure
             const headerLayoutHTML = `
 <div class="app-header" style="display: flex; align-items: center; background: white; padding: 15px 25px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.02); margin-bottom: 20px; border: 1px solid #e2e8f0;">
-    <img src="${logoUrl}" alt="Gemba Partner Logo" style="height:45px; width:auto; object-fit:contain; vertical-align:middle; margin-right:12px; border-radius:4px;">
-    <div class="app-title" style="font-size: 20px; font-weight: 700; color: #1a202c; font-family: sans-serif;">Gemba Partner - Saha Tespit & ROI Analizörü</div>
+<img src="${logoUrl}" alt="${t("Gemba Partner Logo")}" style="height:45px; width:auto; object-fit:contain; vertical-align:middle; margin-right:12px; border-radius:4px;">
+<div class="app-title" style="font-size: 20px; font-weight: 700; color: #1a202c; font-family: sans-serif;">${t("Gemba Partner - Field Audit & ROI Analyzer")}</div>
 </div>
             `;
             mergedBody = headerLayoutHTML + mergedBody;
@@ -374,7 +379,7 @@ export default function SendingProgressView({
 
               // Double check if it finally succeeded after retries
               if (!sendResponse.ok) {
-                let errorMsg = "Microsoft API delivery failure.";
+                let errorMsg = t("Microsoft API delivery failure.");
                 try {
                   const errJson = JSON.parse(responseText);
                   errorMsg = errJson.error || responseText || errorMsg;
@@ -407,8 +412,8 @@ export default function SendingProgressView({
             // Prepend Gemba Partner Corporate Header Layout structure
             const headerLayoutHTML = `
 <div class="app-header" style="display: flex; align-items: center; background: white; padding: 15px 25px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.02); margin-bottom: 20px; border: 1px solid #e2e8f0;">
-    <img src="${logoUrl}" alt="Gemba Partner Logo" style="height:45px; width:auto; object-fit:contain; vertical-align:middle; margin-right:12px; border-radius:4px;">
-    <div class="app-title" style="font-size: 20px; font-weight: 700; color: #1a202c; font-family: sans-serif;">Gemba Partner - Saha Tespit & ROI Analizörü</div>
+<img src="${logoUrl}" alt="${t("Gemba Partner Logo")}" style="height:45px; width:auto; object-fit:contain; vertical-align:middle; margin-right:12px; border-radius:4px;">
+<div class="app-title" style="font-size: 20px; font-weight: 700; color: #1a202c; font-family: sans-serif;">${t("Gemba Partner - Field Audit & ROI Analyzer")}</div>
 </div>
             `;
             mBody = headerLayoutHTML + mBody;
@@ -451,7 +456,7 @@ export default function SendingProgressView({
               id: `camp_sent_${recipient.id}_${Date.now()}`,
               subject: mSubject,
               body: mBody,
-              targetSegment: recipient.Company || "Direct Merge Outreach",
+              targetSegment: recipient.Company || t("Direct Merge Outreach"),
               date: emailDate,
               time: emailTime,
               status: "DISPATCHED" as const,
@@ -480,24 +485,24 @@ export default function SendingProgressView({
         } catch (error: any) {
           console.error("Mail transmission error:", error);
           setFailedCount((prev) => prev + 1);
-          updateRecipientStatus(recipient.id, "failed", error.message || "Failed to process SMTP Exchange Online handover.");
+          updateRecipientStatus(recipient.id, "failed", error.message || t("Failed to process SMTP Exchange Online handover."));
           
-          const errMessage = error.message || "Failed to process SMTP Exchange Online handover.";
-          let errCode = "ERR_MAIL_HANDOVER_FAILED";
-          let diagDetails = "Check your mail server credentials or access token configuration.";
+          const errMessage = error.message || t("Failed to process SMTP Exchange Online handover.");
+          let errCode = t("ERR_MAIL_HANDOVER_FAILED");
+          let diagDetails = t("Check your mail server credentials or access token configuration.");
 
           if (errMessage.toLowerCase().includes("permission") || errMessage.toLowerCase().includes("access denied") || errMessage.toLowerCase().includes("forbidden") || errMessage.toLowerCase().includes("403")) {
-            errCode = "ERR_SMTP_PERMISSION_DENIED_403";
-            diagDetails = "Scope required: Mail.Send (delegated). The connected account does not have sufficient tenant privileges to send messages.";
+            errCode = t("ERR_SMTP_PERMISSION_DENIED_403");
+            diagDetails = t("Scope required: Mail.Send (delegated). The connected account does not have sufficient tenant privileges to send messages.");
           } else if (errMessage.toLowerCase().includes("expired") || errMessage.toLowerCase().includes("lifetime validation") || errMessage.toLowerCase().includes("unauthorized") || errMessage.toLowerCase().includes("401")) {
-            errCode = "ERR_OAUTH_TOKEN_EXPIRED_401";
-            diagDetails = "The provided OAuth bearer token has expired or has been revoked. Perform a silent token refresh or prompt re-authentication.";
+            errCode = t("ERR_OAUTH_TOKEN_EXPIRED_401");
+            diagDetails = t("The provided OAuth bearer token has expired or has been revoked. Perform a silent token refresh or prompt re-authentication.");
           } else if (errMessage.toLowerCase().includes("smtp") || errMessage.toLowerCase().includes("550") || errMessage.toLowerCase().includes("delivery") || errMessage.toLowerCase().includes("unknown")) {
-            errCode = "ERR_SMTP_RELAY_HANDSHAKE_550";
-            diagDetails = "Mailbox unavailable or invalid SMTP relay parameters. SMTP handshaking rejected by the remote host.";
+            errCode = t("ERR_SMTP_RELAY_HANDSHAKE_550");
+            diagDetails = t("Mailbox unavailable or invalid SMTP relay parameters. SMTP handshaking rejected by the remote host.");
           } else if (errMessage.toLowerCase().includes("network") || errMessage.toLowerCase().includes("fetch") || errMessage.toLowerCase().includes("connection")) {
-            errCode = "ERR_CONN_TIMEOUT_504";
-            diagDetails = "Connection timeout. Failed to establish a socket stream with outlook.office.com/api endpoint.";
+            errCode = t("ERR_CONN_TIMEOUT_504");
+            diagDetails = t("Connection timeout. Failed to establish a socket stream with outlook.office.com/api endpoint.");
           }
 
           setLatestMailingError({
@@ -581,12 +586,12 @@ export default function SendingProgressView({
   // Launch merge execution loop
   const triggerCampaignStart = () => {
     if (!subject || !subject.trim()) {
-      alert("Merge execution halted: Subject line is empty. Please configure a Subject Line in the Mail Merge Builder first.");
+      alert(t("Merge execution halted: Subject line is empty. Please configure a Subject Line in the Mail Merge Builder first."));
       onBackToDesigner();
       return;
     }
     if (!templateBody || !templateBody.trim()) {
-      alert("Merge execution halted: Template body is empty. Please compose an HTML template body in the Mail Merge Builder first.");
+      alert(t("Merge execution halted: Template body is empty. Please compose an HTML template body in the Mail Merge Builder first."));
       onBackToDesigner();
       return;
     }
@@ -645,7 +650,7 @@ export default function SendingProgressView({
       }
     } catch (err: any) {
       console.error("Critical error in handleFinishCampaign:", err);
-      alert(`The campaign finished sending, but an error occurred during summary rendering: ${err.message || err}. All statuses are preserved in-memory.`);
+      alert(t("The campaign finished sending, but an error occurred during summary rendering: {error}. All statuses are preserved in-memory.").replace("{error}", String(err.message || err)));
     }
   };
 
@@ -710,17 +715,17 @@ export default function SendingProgressView({
             id="btn-back-designer"
             onClick={onBackToDesigner}
             className="p-2 bg-slate-50 hover:bg-slate-100 text-slate-500 dark:bg-zinc-800 dark:hover:bg-zinc-750 dark:text-slate-300 rounded-lg transition-colors cursor-pointer"
-            title="Edit Campaign Draft"
+            title={t("Edit Campaign Draft")}
           >
             <ArrowLeft className="w-5 h-5" />
           </button>
           <div>
-            <h2 className="text-base font-bold text-slate-800 dark:text-zinc-100 font-sans">Campaign Launch Center</h2>
-            <p className="text-xs text-slate-500 font-sans">Ready to broadcast mail merges and analyze automated live telemetry.</p>
+            <h2 className="text-base font-bold text-slate-800 dark:text-zinc-100 font-sans">{t("Campaign Launch Center")}</h2>
+            <p className="text-xs text-slate-500 font-sans">{t("Ready to broadcast mail merges and analyze automated live telemetry.")}</p>
           </div>
         </div>
         <span className="text-[10px] uppercase font-mono tracking-widest bg-[#F3F2F1] dark:bg-[#252423] border border-[#EDEBE9] dark:border-[#323130] px-3 py-1 rounded text-slate-500 font-[#252423] shrink-0 font-semibold">
-          Ready to dispatch
+          {t("Ready to dispatch")}
         </span>
       </div>
 
@@ -733,7 +738,7 @@ export default function SendingProgressView({
             <div className="bg-white dark:bg-[#1b1a19] border border-[#EDEBE9] dark:border-[#323130] rounded p-6 shadow-sm">
               <h3 className="text-sm font-semibold text-slate-800 dark:text-slate-100 mb-4 flex items-center gap-2">
                 <Users className="w-4.5 h-4.5 text-[#0078D4]" />
-                Campaign Launchpad Pre-Flight Checklist
+                {t("Campaign Launchpad Pre-Flight Checklist")}
               </h3>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -743,11 +748,11 @@ export default function SendingProgressView({
                     1
                   </div>
                   <div>
-                    <h4 className="text-xs font-bold text-slate-800 dark:text-slate-200">Exchange Online Server</h4>
+                    <h4 className="text-xs font-bold text-slate-800 dark:text-slate-200">{t("Exchange Online Server")}</h4>
                     <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5 leading-tight">
                       {session?.isConnected
-                        ? `${session.displayName} (${session.isSandbox ? "Sandbox Simulator" : "Outlook Active"})`
-                        : "Required: Connect M365 account first."}
+                        ? `${session.displayName} (${session.isSandbox ? t("Sandbox Simulator") : t("Outlook Active")})`
+                        : t("Required: Connect M365 account first.")}
                     </p>
                   </div>
                 </div>
@@ -758,9 +763,9 @@ export default function SendingProgressView({
                     2
                   </div>
                   <div>
-                    <h4 className="text-xs font-bold text-slate-800 dark:text-slate-200">Spreadsheet Unlimited Capacity</h4>
+                    <h4 className="text-xs font-bold text-slate-800 dark:text-slate-200">{t("Spreadsheet Unlimited Capacity")}</h4>
                     <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5 leading-tight">
-                      Batch contains <strong>{recipients.length}</strong> recipients. Unlimited bulk processor is fully enabled.
+{t("Batch contains {n} recipients. Unlimited bulk processor is fully enabled.").replace("{n}", String(recipients.length))}
                     </p>
                   </div>
                 </div>
@@ -771,9 +776,9 @@ export default function SendingProgressView({
                     3
                   </div>
                   <div>
-                    <h4 className="text-xs font-bold text-slate-805 dark:text-slate-200">Email Body templates</h4>
+                    <h4 className="text-xs font-bold text-slate-805 dark:text-slate-200">{t("Email Body templates")}</h4>
                     <p className="text-[11px] text-slate-400 mt-0.5 truncate max-w-[200px]">
-                      Subject: "{subject || "Missing subject"}"
+{t('Subject: "{subject}"').replace("{subject}", subject || t("Missing subject"))}
                     </p>
                   </div>
                 </div>
@@ -784,9 +789,9 @@ export default function SendingProgressView({
                     4
                   </div>
                   <div>
-                    <h4 className="text-xs font-bold text-slate-805 dark:text-slate-200">File Attachments</h4>
+                    <h4 className="text-xs font-bold text-slate-805 dark:text-slate-200">{t("File Attachments")}</h4>
                     <p className="text-[11px] text-slate-400 mt-0.5">
-                      {attachments.length > 0 ? `${attachments.length} files enclosed` : "No attachments included"}
+{attachments.length > 0 ? t("{n} files enclosed").replace("{n}", String(attachments.length)) : t("No attachments included")}
                     </p>
                   </div>
                 </div>
@@ -798,30 +803,30 @@ export default function SendingProgressView({
                 <div className="mt-4 p-3 rounded bg-amber-50 dark:bg-amber-955/20 text-[11px] leading-relaxed text-amber-800 dark:text-amber-400 flex gap-2 border border-amber-205 dark:border-amber-900/40">
                   <AlertCircle className="w-4.5 h-4.5 text-amber-500 flex-shrink-0 mt-0.5" />
                   <div>
-                    <span className="font-bold block">⚠️ Simulator Sandbox Mode Enabled:</span>
+<span className="font-bold block">{t("⚠️ Simulator Sandbox Mode Enabled:")}</span>
                     <p className="mt-0.5">
-                      This is a <strong>simulated sandbox</strong> for testing mail merges. The rows in the sender queue will change to <strong>"Drafted"</strong> or <strong>"Success"</strong> in the web app screen, but <strong>no real emails or draft messages are actually created in your physical Outlook account / mailbox</strong>.
+{t('This is a simulated sandbox for testing mail merges. The rows in the sender queue will change to "Drafted" or "Success" in the web app screen, but no real emails or draft messages are actually created in your physical Outlook account / mailbox')}
                     </p>
                     <p className="mt-1 font-semibold text-slate-800 dark:text-slate-200">
-                      To get real drafts sent to your actual mailbox, you must disconnect and connect your real mailbox via an Access Token or Azure flow.
+{t("To get real drafts sent to your actual mailbox, you must disconnect and connect your real mailbox via an Access Token or Azure flow.")}
                     </p>
                   </div>
                 </div>
               )}
 
-              {/* Campaign Dispatch & Scheduling Parameters */}
+              {/* {t("Campaign Dispatch & Scheduling Parameters")} */}
               <div className="mt-5 p-5 rounded-lg bg-slate-50 dark:bg-[#11100f] border border-[#EDEBE9] dark:border-[#323130] space-y-4">
                 <div className="flex items-center gap-2 border-b border-[#EDEBE9] dark:border-[#323130] pb-2">
                   <Clock className="w-4.5 h-4.5 text-[#0078D4]" />
                   <span className="text-xs font-bold text-slate-800 dark:text-slate-100 uppercase tracking-wider">
-                    Campaign Dispatch & Scheduling Parameters
+                    {t("Campaign Dispatch & Scheduling Parameters")}
                   </span>
                 </div>
 
                 {/* Delivery Option Selector (Outlook Style) */}
                 <div className="space-y-2">
                   <label className="text-[10px] uppercase font-bold text-slate-450 dark:text-slate-400 tracking-wider block">
-                    Campaign Delivery Timing (Outlook Style)
+                    {t("Campaign Delivery Timing (Outlook Style)")}
                   </label>
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                     <button
@@ -839,10 +844,10 @@ export default function SendingProgressView({
                         }`}>
                           {deliveryTiming === "now" && <span className="w-1.5 h-1.5 rounded-full bg-white" />}
                         </span>
-                        Send Now (Immediate Dispatch)
+                        {t("Send Now (Immediate Dispatch)")}
                       </span>
                       <span className="text-[10px] text-slate-500 dark:text-slate-400 font-normal mt-1 leading-tight">
-                        Perfect for physical, real-time broadcasts. Bypasses date holds and delivers files to all selected recipients instantly.
+{t("Perfect for physical, real-time broadcasts. Bypasses date holds and delivers files to all selected recipients instantly.")}
                       </span>
                     </button>
 
@@ -861,10 +866,10 @@ export default function SendingProgressView({
                         }`}>
                           {deliveryTiming === "scheduled" && <span className="w-1.5 h-1.5 rounded-full bg-white" />}
                         </span>
-                        Schedule Send (Date & Time)
+                        {t("Schedule Send (Date & Time)")}
                       </span>
                       <span className="text-[10px] text-slate-500 dark:text-slate-400 font-normal mt-1 leading-tight">
-                        Hold future sends. Validates recipient's Planned Date & Time, matching against your configured run date/time simulation.
+{t("Hold future sends. Validates recipient's Planned Date & Time, matching against your configured run date/time simulation.")}
                       </span>
                     </button>
                   </div>
@@ -875,7 +880,7 @@ export default function SendingProgressView({
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4 bg-white dark:bg-[#1b1a19] p-4 rounded-lg border border-[#EDEBE9] dark:border-[#323130] animate-fadeIn">
                     <div className="space-y-1">
                       <label className="text-[10px] font-bold text-indigo-600 dark:text-indigo-400 uppercase tracking-widest block">
-                        Simulation target Run Date & Time
+                        {t("Simulation target Run Date & Time")}
                       </label>
                       <input
                         type="datetime-local"
@@ -884,18 +889,18 @@ export default function SendingProgressView({
                         className="w-full text-xs p-2 rounded border border-[#EDEBE9] dark:border-[#323130] bg-[#f8fafc] dark:bg-[#252423] focus:ring-1 focus:ring-[#0078D4] font-semibold text-slate-800 dark:text-slate-200"
                       />
                       <p className="text-[10px] text-slate-400 mt-1 leading-tight">
-                        Adjust this calendar date/time to simulate execution on future dates/hours!
+{t("Adjust this calendar date/time to simulate execution on future dates/hours!")}
                       </p>
                     </div>
 
                     <div className="text-xs text-slate-500 dark:text-slate-400 flex flex-col justify-center space-y-1">
                       <p className="font-semibold text-slate-700 dark:text-slate-300">
-                        How Scheduling works:
+                        {t("How Scheduling works:")}
                       </p>
                       <ul className="list-disc pl-4 space-y-0.5 text-[11px] leading-tight">
-                        <li>Each contact has a "Scheduled Date" column (Date & Time).</li>
-                        <li>Emails dispatch only if the contact's Scheduled Date comes before or equals the Simulated Run Date & Time.</li>
-                        <li>Other contacts are kept in a pending wait state.</li>
+<li>{t('Each contact has a "Scheduled Date" column (Date & Time).')}</li>
+<li>{t("Emails dispatch only if the contact's Scheduled Date comes before or equals the Simulated Run Date & Time.")}</li>
+<li>{t("Other contacts are kept in a pending wait state.")}</li>
                       </ul>
                     </div>
                   </div>
@@ -905,7 +910,7 @@ export default function SendingProgressView({
                 {!session?.isSandbox && session?.isConnected && (
                   <div className="pt-3 border-t border-[#EDEBE9] dark:border-[#323130]/60 space-y-2">
                     <span className="text-[10px] uppercase font-bold text-slate-400 tracking-wide block">
-                      Outlook Exchange API Mode
+                      {t("Outlook Exchange API Mode")}
                     </span>
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                       <label className={`flex items-start gap-3 p-3 rounded-lg border cursor-pointer transition-all ${
@@ -921,8 +926,8 @@ export default function SendingProgressView({
                           className="mt-0.5 text-[#0078D4] focus:ring-[#0078D4] w-3.5 h-3.5"
                         />
                         <div>
-                          <span className="text-xs font-bold text-slate-800 dark:text-slate-100 block">Create Outlook Drafts (Recommended)</span>
-                          <span className="text-[10px] text-slate-500 dark:text-slate-400 block mt-0.5 font-normal">Saves directly to Outlook Drafts folder. Safest method, easy manual verification.</span>
+                          <span className="text-xs font-bold text-slate-800 dark:text-slate-100 block">{t("Create Outlook Drafts (Recommended)")}</span>
+<span className="text-[10px] text-slate-500 dark:text-slate-400 block mt-0.5 font-normal">{t("Saves directly to Outlook Drafts folder. Safest method, easy manual verification.")}</span>
                         </div>
                       </label>
 
@@ -939,8 +944,8 @@ export default function SendingProgressView({
                           className="mt-0.5 text-[#0078D4] focus:ring-[#0078D4] w-3.5 h-3.5"
                         />
                         <div>
-                          <span className="text-xs font-bold text-slate-800 dark:text-slate-100 block">Send Directly (Mail.Send Required)</span>
-                          <span className="text-[10px] text-slate-500 dark:text-slate-400 block mt-0.5 font-normal">Instantly dispatches from Exchange server directly to inbox lines.</span>
+                          <span className="text-xs font-bold text-slate-800 dark:text-slate-100 block">{t("Send Directly (Mail.Send Required)")}</span>
+<span className="text-[10px] text-slate-500 dark:text-slate-400 block mt-0.5 font-normal">{t("Instantly dispatches from Exchange server directly to inbox lines.")}</span>
                         </div>
                       </label>
                     </div>
@@ -953,12 +958,12 @@ export default function SendingProgressView({
                 <div className="mt-4 p-3 bg-rose-50 dark:bg-rose-955/20 text-rose-800 dark:text-rose-400 border border-rose-200/50 rounded text-xs flex gap-2">
                   <AlertCircle className="w-4 h-4 text-rose-500 mt-0.5 flex-shrink-0" />
                   <div>
-                    <span className="font-bold">Cannot Launch Campaign:</span>
+                    <span className="font-bold">{t("Cannot Launch Campaign:")}</span>
                     <ul className="list-disc pl-4 mt-1 space-y-0.5 text-[11px]">
-                      {(!subject || !subject.trim()) && <li>Subject Line is empty.</li>}
-                      {(!templateBody || !templateBody.trim()) && <li>Email rich HTML body is empty.</li>}
+                      {(!subject || !subject.trim()) && <li>{t("Subject Line is empty.")}</li>}
+                      {(!templateBody || !templateBody.trim()) && <li>{t("Email rich HTML body is empty.")}</li>}
                     </ul>
-                    <p className="mt-1.5 text-[10px] text-slate-500">Go back and edit the campaign content to populate these fields first.</p>
+<p className="mt-1.5 text-[10px] text-slate-500">{t("Go back and edit the campaign content to populate these fields first.")}</p>
                   </div>
                 </div>
               )}
@@ -969,7 +974,7 @@ export default function SendingProgressView({
                   onClick={onBackToDesigner}
                   className="text-xs font-bold text-slate-600 dark:text-slate-300 border border-[#EDEBE9] dark:border-[#323130] hover:bg-slate-100 dark:hover:bg-[#252423] px-4 py-2.5 rounded transition-all cursor-pointer"
                 >
-                  Edit Campaign
+                  {t("Edit Campaign")}
                 </button>
                 <button
                   id="btn-checklist-start"
@@ -982,7 +987,7 @@ export default function SendingProgressView({
                   }`}
                 >
                   <Play className="w-3.5 h-3.5 fill-white" />
-                  Start Mail Merge Campaign
+                  {t("Start Mail Merge Campaign")}
                 </button>
               </div>
             </div>
@@ -991,29 +996,29 @@ export default function SendingProgressView({
 
           <div className="md:col-span-4 bg-white dark:bg-[#1b1a19] border border-[#EDEBE9] dark:border-[#323130] rounded p-6 shadow-sm flex flex-col justify-between">
             <div className="space-y-4">
-              <h4 className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Pre-Merge Summary</h4>
+              <h4 className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">{t("Pre-Merge Summary")}</h4>
               
               <div className="space-y-3">
                 <div className="flex justify-between border-b border-[#EDEBE9] dark:border-[#323130] pb-2">
-                  <span className="text-xs text-slate-500">Recipients Count:</span>
+                  <span className="text-xs text-slate-500">{t("Recipients Count:")}</span>
                   <span className="text-xs font-bold text-slate-800 dark:text-slate-200">{recipients.length}</span>
                 </div>
                 <div className="flex justify-between border-b border-[#EDEBE9] dark:border-[#323130] pb-2">
-                  <span className="text-xs text-slate-500">Subject Lines:</span>
+                  <span className="text-xs text-slate-500">{t("Subject Lines:")}</span>
                   <span className="text-xs font-bold text-slate-800 dark:text-slate-200 truncate max-w-[160px]">{subject}</span>
                 </div>
                 <div className="flex justify-between border-b border-[#EDEBE9] dark:border-[#323130] pb-2">
-                  <span className="text-xs text-slate-500">Attachments:</span>
-                  <span className="text-xs font-bold text-slate-800 dark:text-slate-200">{attachments.length} files</span>
+                  <span className="text-xs text-slate-500">{t("Attachments:")}</span>
+                  <span className="text-xs font-bold text-slate-800 dark:text-slate-200">{t("{n} files").replace("{n}", String(attachments.length))}</span>
                 </div>
                 <div className="flex justify-between border-b border-[#EDEBE9] dark:border-[#323130] pb-2">
-                  <span className="text-xs text-slate-500">CC / BCC Headers:</span>
-                  <span className="text-[10px] font-bold text-emerald-600 bg-emerald-50 dark:bg-emerald-950/20 px-2 py-0.5 rounded border border-emerald-250/20">None (Individual)</span>
+                  <span className="text-xs text-slate-500">{t("CC / BCC Headers:")}</span>
+                  <span className="text-[10px] font-bold text-emerald-600 bg-emerald-50 dark:bg-emerald-950/20 px-2 py-0.5 rounded border border-emerald-250/20">{t("None (Individual)")}</span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-xs text-slate-500">Open Tracking:</span>
+                  <span className="text-xs text-slate-500">{t("Open Tracking:")}</span>
                   <span className={`text-[10px] font-bold px-2 py-0.5 rounded border ${trackingService !== "none" ? "text-[#0078D4] bg-[#f3f9fe] border-[#b8daf7] dark:bg-blue-950/20" : "text-amber-600 bg-amber-50 border-amber-250/10"}`}>
-                    {trackingService !== "none" ? trackingService.toUpperCase() : "Disabled"}
+                    {trackingService !== "none" ? trackingService.toUpperCase() : t("Disabled")}
                   </span>
                 </div>
               </div>
@@ -1023,7 +1028,7 @@ export default function SendingProgressView({
               <div className="mt-6 p-3 bg-rose-50 dark:bg-rose-950/20 text-xs text-rose-800 dark:text-rose-400 rounded flex gap-2 border border-rose-150">
                 <AlertCircle className="w-5 h-5 flex-shrink-0 text-rose-500" />
                 <p>
-                  <strong>Mailbox disconnected.</strong> Please connect M365 or utilize the Simulator Sandbox mode in the connection dashboard to launch this merge.
+<strong>{t("Mailbox disconnected.")}</strong> {t("Please connect M365 or utilize the Simulator Sandbox mode in the connection dashboard to launch this merge.")}
                 </p>
               </div>
             )}
@@ -1038,12 +1043,12 @@ export default function SendingProgressView({
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6 border-b border-[#EDEBE9] dark:border-[#323130] pb-5">
               <div>
                 <h3 className="text-sm font-bold text-slate-805 dark:text-slate-100">
-                  {campaignFinished ? "Mail Merge Campaign Finished" : "Live Mail Merge Execution Monitor"}
+                  {campaignFinished ? t("Mail Merge Campaign Finished") : t("Live Mail Merge Execution Monitor")}
                 </h3>
                 <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
                   {campaignFinished
-                    ? "Deliveries executed. Executive performance report generated."
-                    : `Currently sending row ${currentIndex + 1} of ${activeRecipients.length}`}
+                    ? t("Deliveries executed. Executive performance report generated.")
+: t("Currently sending row {current} of {total}").replace("{current}", String(currentIndex + 1)).replace("{total}", String(activeRecipients.length))}
                 </p>
               </div>
 
@@ -1063,12 +1068,12 @@ export default function SendingProgressView({
                       {isPlaying ? (
                         <>
                           <Pause className="w-4 h-4 fill-amber-750 text-amber-750" />
-                          Pause Sending
+                          {t("Pause Sending")}
                         </>
                       ) : (
                         <>
                           <Play className="w-4 h-4 fill-emerald-750 text-emerald-750" />
-                          Resume Sending
+                          {t("Resume Sending")}
                         </>
                       )}
                     </button>
@@ -1078,7 +1083,7 @@ export default function SendingProgressView({
                       className="text-xs font-bold bg-rose-50 border border-rose-200 text-rose-700 hover:bg-rose-100 px-4 py-2.5 rounded transition-all flex items-center gap-1.5 cursor-pointer"
                     >
                       <XOctagon className="w-4 h-4" />
-                      Abort Merge
+                      {t("Abort Merge")}
                     </button>
                   </>
                 ) : (
@@ -1091,7 +1096,7 @@ export default function SendingProgressView({
                         className="text-xs font-bold bg-white dark:bg-[#252423] border border-[#EDEBE9] dark:border-[#323130] hover:bg-slate-50 dark:hover:bg-slate-800 text-indigo-650 px-3 py-2 rounded transition-all flex items-center gap-1.5 cursor-pointer"
                       >
                         <RotateCw className="w-3.5 h-3.5" />
-                        Retry Failed ({failedCount})
+{t("Retry Failed ({count})").replace("{count}", String(failedCount))}
                       </button>
                     )}
                     <button
@@ -1100,7 +1105,7 @@ export default function SendingProgressView({
                       className="text-xs font-bold bg-[#0078D4] hover:bg-[#006cc0] text-white px-4 py-2.5 rounded shadow-sm flex items-center gap-1.5 transition-all cursor-pointer"
                     >
                       <Download className="w-3.5 h-3.5" />
-                      Download PDF Report
+                      {t("Download PDF Report")}
                     </button>
                   </div>
                 )}
@@ -1112,7 +1117,7 @@ export default function SendingProgressView({
               
               {/* Progress counter */}
               <div className="bg-[#F3F2F1] dark:bg-[#11100f] p-4 rounded border border-[#EDEBE9] dark:border-[#323130]">
-                <span className="text-[10px] font-bold text-slate-405 uppercase tracking-wider block">Completed Progress</span>
+                <span className="text-[10px] font-bold text-slate-405 uppercase tracking-wider block">{t("Completed Progress")}</span>
                 <div className="text-xl font-bold text-slate-800 dark:text-slate-100 mt-1">{progressPercent}%</div>
                 <div className="w-full bg-slate-200 dark:bg-slate-800 h-1.5 rounded overflow-hidden mt-2.5">
                   <div
@@ -1124,47 +1129,47 @@ export default function SendingProgressView({
 
               {/* Total Sent */}
               <div className="bg-[#F3F2F1] dark:bg-[#11100f] p-4 rounded border border-[#EDEBE9] dark:border-[#323130]">
-                <span className="text-[10px] font-bold text-slate-405 uppercase tracking-wider block">Sent Queue</span>
+                <span className="text-[10px] font-bold text-slate-405 uppercase tracking-wider block">{t("Sent Queue")}</span>
                 <div className="text-xl font-bold text-slate-800 dark:text-slate-100 mt-1">
                   {currentIndex} / {activeRecipients.length}
                 </div>
-                <p className="text-[9px] text-slate-400 mt-1.5 font-medium">{activeRecipients.length - currentIndex} remaining</p>
+                <p className="text-[9px] text-slate-400 mt-1.5 font-medium">{activeRecipients.length - currentIndex} {t("remaining")}</p>
               </div>
 
               {/* Successful Sends */}
               <div className="bg-[#F3F2F1] dark:bg-[#11100f] p-4 rounded border border-[#EDEBE9] dark:border-[#323130]">
-                <span className="text-[10px] font-bold text-slate-405 uppercase tracking-wider block">Successful Outgoing</span>
+                <span className="text-[10px] font-bold text-slate-405 uppercase tracking-wider block">{t("Successful Outgoing")}</span>
                 <div className="text-xl font-bold text-emerald-600 dark:text-emerald-400 mt-1">
                   {successCount}
                 </div>
-                <p className="text-[9px] text-slate-400 mt-1.5 font-medium">Outbound API success</p>
+                <p className="text-[9px] text-slate-400 mt-1.5 font-medium">{t("Outbound API success")}</p>
               </div>
 
               {/* Failed Sends */}
               <div className="bg-[#F3F2F1] dark:bg-[#11100f] p-4 rounded border border-[#EDEBE9] dark:border-[#323130]">
-                <span className="text-[10px] font-bold text-slate-420 uppercase tracking-wider block">Failed Handovers</span>
+                <span className="text-[10px] font-bold text-slate-420 uppercase tracking-wider block">{t("Failed Handovers")}</span>
                 <div className={`text-xl font-bold mt-1 ${failedCount > 0 ? "text-rose-600 font-extrabold" : "text-slate-400"}`}>
                   {failedCount}
                 </div>
-                <p className="text-[9px] text-slate-400 mt-1.5 font-medium">Exceptions or SMTP blocks</p>
+                <p className="text-[9px] text-slate-400 mt-1.5 font-medium">{t("Exceptions or SMTP blocks")}</p>
               </div>
 
               {/* Open tracking pixel count */}
               <div className="bg-[#F3F2F1] dark:bg-[#11100f] p-4 rounded border border-[#EDEBE9] dark:border-[#323130]">
-                <span className="text-[10px] font-bold text-indigo-500 uppercase tracking-wider block">Total Opens (Pixel)</span>
+                <span className="text-[10px] font-bold text-indigo-500 uppercase tracking-wider block">{t("Total Opens (Pixel)")}</span>
                 <div className={`text-xl font-bold mt-1 ${pixelOpensCount > 0 ? "text-indigo-600 dark:text-indigo-400 font-extrabold" : "text-slate-400"}`}>
                   {pixelOpensCount}
                 </div>
-                <p className="text-[9px] text-slate-400 mt-1.5 font-medium">{trackingService !== "none" ? "Method B Active" : "Tracking Off"}</p>
+                <p className="text-[9px] text-slate-400 mt-1.5 font-medium">{trackingService !== "none" ? t("Method B Active") : t("Tracking Off")}</p>
               </div>
 
               {/* Webhook Bounces NDR count */}
               <div className="bg-[#F3F2F1] dark:bg-[#11100f] p-4 rounded border border-[#EDEBE9] dark:border-[#323130]">
-                <span className="text-[10px] font-bold text-amber-600 uppercase tracking-wider block">NDR Bounces (Graph)</span>
+                <span className="text-[10px] font-bold text-amber-600 uppercase tracking-wider block">{t("NDR Bounces (Graph)")}</span>
                 <div className={`text-xl font-bold mt-1 ${bouncedEmailsCount > 0 ? "text-amber-600 dark:text-amber-400 font-extrabold" : "text-slate-400"}`}>
                   {bouncedEmailsCount}
                 </div>
-                <p className="text-[9px] text-slate-400 mt-1.5 font-medium">Method A Webhook hits</p>
+                <p className="text-[9px] text-slate-400 mt-1.5 font-medium">{t("Method A Webhook hits")}</p>
               </div>
 
             </div>
@@ -1179,13 +1184,13 @@ export default function SendingProgressView({
                   </span>
                   <div>
                     <h4 className="text-xs font-bold text-[#0078D4] dark:text-brand-300 uppercase tracking-wider flex items-center gap-1.5">
-                      <span>Method A: Microsoft Graph Subscription Router</span>
-                      <span className="bg-[#0078D4]/10 text-[#0078D4] text-[9px] px-1.5 py-0.5 rounded uppercase font-semibold">Production Node</span>
+<span>{t("Method A: Microsoft Graph Subscription Router")}</span>
+<span className="bg-[#0078D4]/10 text-[#0078D4] text-[9px] px-1.5 py-0.5 rounded uppercase font-semibold">{t("Production Node")}</span>
                     </h4>
                     <p className="text-[11px] text-slate-500 mt-1 font-medium">
                       {webhookSubscribed 
-                        ? "Active Webhook Tunnel established! Node.js subscription is listening directly to changeType:created notifications on Inbox resource."
-                        : `Sandbox Active. Real Webhook subscriptions require an HTTPS SSL endpoint (automatically generated on Google Cloud Run environments).`}
+                        ? t("Active Webhook Tunnel established! Node.js subscription is listening directly to changeType:created notifications on Inbox resource.")
+: t("Sandbox Active. Real Webhook subscriptions require an HTTPS SSL endpoint (automatically generated on Google Cloud Run environments).")}
                     </p>
                   </div>
                 </div>
@@ -1199,7 +1204,7 @@ export default function SendingProgressView({
                       try {
                         const tokenOfChoice = session?.accessToken || "";
                         if (!tokenOfChoice) {
-                          alert("A valid Microsoft account session is required to initiate real subscriptions.");
+                          alert(t("A valid Microsoft account session is required to initiate real subscriptions."));
                           setSubscriptionChecking(false);
                           return;
                         }
@@ -1211,9 +1216,9 @@ export default function SendingProgressView({
                         const data = await res.json();
                         if (!res.ok) throw new Error(data.error);
                         setWebhookSubscribed(true);
-                        alert("Successfully registered Microsoft Graph API subscription on Inbox messages!");
+                        alert(t("Successfully registered Microsoft Graph API subscription on Inbox messages!"));
                       } catch (err: any) {
-                        alert(`Webhook registration failed: ${err.message}. \n\nNote: For external Graph webhook validation, the backend requires a publicly routable HTTPS server address so that Microsoft registration handshake tokens are resolved. You can still test this flow perfectly using the simulator!`);
+                        alert(t("Webhook registration failed: {error}.\n\nNote: For external Graph webhook validation, the backend requires a publicly routable HTTPS server address so that Microsoft registration handshake tokens are resolved. You can still test this flow perfectly using the simulator!").replace("{error}", err.message));
                       } finally {
                         setSubscriptionChecking(false);
                       }
@@ -1225,7 +1230,7 @@ export default function SendingProgressView({
                     }`}
                   >
                     <Radio className="w-3.5 h-3.5 animate-pulse" />
-                    <span>{webhookSubscribed ? "Subscription Online" : "Subscribe to Real NDRs"}</span>
+                    <span>{webhookSubscribed ? t("Subscription Online") : t("Subscribe to Real NDRs")}</span>
                   </button>
                 </div>
               </div>
@@ -1235,21 +1240,21 @@ export default function SendingProgressView({
                 <div>
                   <h4 className="text-xs font-bold text-slate-705 dark:text-slate-200 flex items-center gap-1.5">
                     <Flame className="w-4 h-4 text-orange-500" />
-                    <span>Architect Telemetry Integration Test Bench</span>
+                    <span>{t("Architect Telemetry Integration Test Bench")}</span>
                   </h4>
                   <p className="text-[11px] text-slate-500 mt-1 leading-normal">
-                    This harness pushes mock delivery reports and pixel reads directly into our Node.js endpoint logic, letting you simulate and verify hard bounces (NDR failure codes), soft bounces, or recipient item opens immediately:
+{t("This harness pushes mock delivery reports and pixel reads directly into our Node.js endpoint logic, letting you simulate and verify hard bounces (NDR failure codes), soft bounces, or recipient item opens immediately:")}
                   </p>
                 </div>
 
                 <div className="flex flex-col sm:flex-row sm:items-center gap-3 text-xs">
                   <div className="flex items-center gap-1.5">
-                    <span className="font-bold text-slate-400 uppercase text-[9px] tracking-wide block">Recipient:</span>
+                    <span className="font-bold text-slate-400 uppercase text-[9px] tracking-wide block">{t("Recipient:")}</span>
                     <select
                       id="simulate-recipient-select"
                       className="p-1.5 text-[11px] bg-white dark:bg-[#11100f] border border-[#EDEBE9] dark:border-[#323130] rounded outline-none font-mono text-slate-700 dark:text-slate-200 pr-5"
                     >
-                      <option value="">-- Choose Campaign Recipient --</option>
+                      <option value="">{t("-- Choose Campaign Recipient --")}</option>
                       {activeRecipients.map(r => (
                         <option key={r.id} value={r.Email}>{r.Email}</option>
                       ))}
@@ -1263,7 +1268,7 @@ export default function SendingProgressView({
                         const select = document.getElementById("simulate-recipient-select") as HTMLSelectElement;
                         const email = select?.value;
                         if (!email) {
-                          alert("Please select a recipient email from the dropdown to test.");
+                          alert(t("Please select a recipient email from the dropdown to test."));
                           return;
                         }
                         try {
@@ -1278,15 +1283,15 @@ export default function SendingProgressView({
                               campaignId: "camp_active"
                             })
                           });
-                          if (!res.ok) throw new Error("Simulator route error");
-                          alert(`Success! Generated virtual Hard Bounce (5.1.1 User Unknown) webhook post. The background state-engine has updated the recipient queue.`);
+                          if (!res.ok) throw new Error(t("Simulator route error"));
+                          alert(t("Success! Generated virtual Hard Bounce (5.1.1 User Unknown) webhook post. The background state-engine has updated the recipient queue."));
                         } catch (err: any) {
-                          alert(err.message);
+                          alert(err.message ? t(err.message) !== err.message ? t(err.message) : err.message : t("Simulator operation failed. Please try again."));
                         }
                       }}
                       className="px-2.5 py-1.5 bg-rose-50 hover:bg-rose-100/80 text-rose-700 dark:bg-rose-950/20 dark:text-rose-400 border border-rose-200 dark:border-rose-900 rounded text-[11px] font-bold cursor-pointer transition-all"
                     >
-                      MOCK Hard Bounce (5.1.1)
+                      {t("MOCK Hard Bounce (5.1.1)")}
                     </button>
 
                     <button
@@ -1295,7 +1300,7 @@ export default function SendingProgressView({
                         const select = document.getElementById("simulate-recipient-select") as HTMLSelectElement;
                         const email = select?.value;
                         if (!email) {
-                          alert("Please choose a recipient email first.");
+                          alert(t("Please choose a recipient email first."));
                           return;
                         }
                         try {
@@ -1310,15 +1315,15 @@ export default function SendingProgressView({
                               campaignId: "camp_active"
                             })
                           });
-                          if (!res.ok) throw new Error("Simulator route error");
-                          alert(`Success! Generated virtual Soft Bounce (5.2.2 Mailbox Quota Exceeded) webhook post.`);
+                          if (!res.ok) throw new Error(t("Simulator route error"));
+                          alert(t("Success! Generated virtual Soft Bounce (5.2.2 Mailbox Quota Exceeded) webhook post."));
                         } catch (err: any) {
-                          alert(err.message);
+                          alert(err.message ? t(err.message) !== err.message ? t(err.message) : err.message : t("Simulator operation failed. Please try again."));
                         }
                       }}
                       className="px-2.5 py-1.5 bg-amber-50 hover:bg-amber-100/80 text-amber-700 dark:bg-amber-955/20 dark:text-amber-400 border border-amber-200 dark:border-amber-900 rounded text-[11px] font-bold cursor-pointer transition-all"
                     >
-                      MOCK Soft Bounce (5.2.2)
+                      {t("MOCK Soft Bounce (5.2.2)")}
                     </button>
 
                     <button
@@ -1327,21 +1332,21 @@ export default function SendingProgressView({
                         const select = document.getElementById("simulate-recipient-select") as HTMLSelectElement;
                         const email = select?.value;
                         if (!email) {
-                          alert("Please select a recipient email first.");
+                          alert(t("Please select a recipient email first."));
                           return;
                         }
                         try {
                           // Trigger tracking pixel open event directly at server
                           const trackerMeta = `${session?.mail ? encodeURIComponent(session.mail) : "user"}&rec=${encodeURIComponent(email)}&service=${trackingService}&nocache=${Date.now()}`;
                           await fetch(`/api/track?meta=${trackerMeta}`);
-                          alert(`Success! Serviced 1x1 tracking pixel payload GET request for: ${email}. The remarks status list will update with the [OPEN] state.`);
+                          alert(t("Success! Serviced 1x1 tracking pixel payload GET request for: {email}. The remarks status list will update with the [OPEN] state.").replace("{email}", email));
                         } catch (err: any) {
-                          alert(err.message);
+                          alert(err.message ? t(err.message) !== err.message ? t(err.message) : err.message : t("Simulator operation failed. Please try again."));
                         }
                       }}
                       className="px-2.5 py-1.5 bg-indigo-50 hover:bg-indigo-100/80 text-indigo-750 dark:bg-indigo-950/20 dark:text-indigo-400 border border-indigo-200 dark:border-indigo-900 rounded text-[11px] font-bold cursor-pointer transition-all"
                     >
-                      MOCK Open (Pixel)
+                      {t("MOCK Open (Pixel)")}
                     </button>
                     
                     <button
@@ -1351,14 +1356,14 @@ export default function SendingProgressView({
                           await fetch("/api/tracking/clear", { method: "POST" });
                           setPixelOpensCount(0);
                           setBouncedEmailsCount(0);
-                          alert("All simulated counts and logs have been flushed.");
+                          alert(t("All simulated counts and logs have been flushed."));
                         } catch (err: any) {
-                          alert(err.message);
+                          alert(err.message ? t(err.message) !== err.message ? t(err.message) : err.message : t("Simulator operation failed. Please try again."));
                         }
                       }}
                       className="p-1.5 bg-slate-100 dark:bg-[#11100f] hover:bg-slate-200 hover:dark:bg-slate-800 text-slate-500 rounded text-[11px] font-medium cursor-pointer transition-all border border-[#EDEBE9] dark:border-[#323130]"
                     >
-                      Clear Log Registry
+                      {t("Clear Log Registry")}
                     </button>
                   </div>
                 </div>
@@ -1371,10 +1376,10 @@ export default function SendingProgressView({
                   <AlertCircle className="w-5 h-5 text-rose-600 flex-shrink-0 mt-0.5" />
                   <div>
                     <h4 className="text-xs font-bold text-rose-700 dark:text-rose-400 uppercase tracking-wider flex items-center gap-1.5">
-                      Microsoft Graph API Access Problem Detected
+                      {t("Microsoft Graph API Access Problem Detected")}
                     </h4>
                     <p className="text-xs text-rose-600 dark:text-rose-400 font-semibold mt-1 leading-normal">
-                      Your connected Microsoft account does not currently have permission to send emails on your behalf (Access Denied / Forbidden). Please use one of the easy methods below to grant proper consent:
+{t("Your connected Microsoft account does not currently have permission to send emails on your behalf (Access Denied / Forbidden). Please use one of the easy methods below to grant proper consent:")}
                     </p>
                   </div>
                 </div>
@@ -1382,37 +1387,44 @@ export default function SendingProgressView({
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs font-medium text-slate-650 dark:text-slate-350">
                   <div className="p-3.5 bg-white dark:bg-[#11100f] border border-[#EDEBE9] dark:border-[#323130] rounded space-y-2">
                     <p className="font-bold text-[#0078D4] dark:text-brand-300 flex items-center gap-1.5">
-                      <span className="bg-[#0078D4]/10 text-[#0078D4] px-1.5 py-0.5 rounded text-[10px]">Method A</span>
-                      <span>If connected via Graph Explorer token</span>
+<span className="bg-[#0078D4]/10 text-[#0078D4] px-1.5 py-0.5 rounded text-[10px]">{t("Method A")}</span>
+<span>{t("If connected via Graph Explorer token")}</span>
                     </p>
                     <ol className="list-decimal pl-4.5 space-y-1.5 text-[11px] leading-relaxed">
-                      <li>Go back to your open <a href="https://developer.microsoft.com/en-us/graph/graph-explorer" target="_blank" rel="noreferrer" className="text-[#0078D4] dark:text-[#329bf0] underline font-bold hover:text-[#006cc0]">Microsoft Graph Explorer</a> tab.</li>
-                      <li>In the center pane (below the query URL address bar), click the <strong>Consent to permissions</strong> or <strong>Modify permissions</strong> tab.</li>
-                      <li>Search for the <strong>Mail.Send</strong> permission.</li>
-                      <li>Click the <strong>Consent</strong> button next to it. (A corporate login popup will ask you or your tenant administrator to accept).</li>
-                      <li>After consenting, click the <strong>Access token</strong> tab again, copy the brand new token string.</li>
-                      <li>Go back to the Outlook Connection section here, click "Disconnect Mailbox", then connect again paste the brand-new token.</li>
+                      <li>
+                        {t("Go back to your open")}{" "}
+                        <a href="https://developer.microsoft.com/en-us/graph/graph-explorer" target="_blank" rel="noreferrer" className="text-[#0078D4] dark:text-[#329bf0] underline font-bold hover:text-[#006cc0]">{t("Microsoft Graph Explorer")}</a>
+                        {t(" tab.")}
+                      </li>
+                      <li>{t("In the center pane (below the query URL address bar), click the Consent to permissions or Modify permissions tab.")}</li>
+                      <li>{t("Search for the Mail.Send permission.")}</li>
+                      <li>{t("Click the Consent button next to it. (A corporate login popup will ask you or your tenant administrator to accept).")}</li>
+                      <li>{t("After consenting, click the Access token tab again, copy the brand new token string.")}</li>
+                      <li>{t('Go back to the Outlook Connection section here, click "Disconnect Mailbox", then connect again and paste the brand-new token.')}</li>
                     </ol>
                   </div>
 
                   <div className="p-3.5 bg-white dark:bg-[#11100f] border border-[#EDEBE9] dark:border-[#323130] rounded space-y-2">
                     <p className="font-bold text-[#0078D4] dark:text-brand-300 flex items-center gap-1.5">
-                      <span className="bg-[#0078D4]/10 text-[#0078D4] px-1.5 py-0.5 rounded text-[10px]">Method B</span>
-                      <span>If using custom Entra App Registration</span>
+<span className="bg-[#0078D4]/10 text-[#0078D4] px-1.5 py-0.5 rounded text-[10px]">{t("Method B")}</span>
+<span>{t("If using custom Entra App Registration")}</span>
                     </p>
                     <ol className="list-decimal pl-4.5 space-y-1.5 text-[11px] leading-relaxed">
-                      <li>Log into the <a href="https://portal.azure.com" target="_blank" rel="noreferrer" className="text-[#0078D4] dark:text-[#329bf0] underline font-bold hover:text-[#006cc0]">Azure Portal</a>.</li>
-                      <li>Open your App Registration and navigate to the <strong>API permissions</strong> page.</li>
-                      <li>Verify that <strong>Mail.Send</strong> is listed under Delegated permissions.</li>
-                      <li><strong>CRITICAL step:</strong> Click the <strong>"Grant admin consent for Your Tenant Name"</strong> button right above the permission table. Enterprise directories require this administrative consent to enable outbound mailing.</li>
-                      <li>Wait 1 minute, return here, and retry your campaign!</li>
+                      <li>
+                        {t("Log into the")}{" "}
+                        <a href="https://portal.azure.com" target="_blank" rel="noreferrer" className="text-[#0078D4] dark:text-[#329bf0] underline font-bold hover:text-[#006cc0]">{t("Azure Portal")}</a>.
+                      </li>
+                      <li>{t("Open your App Registration and navigate to the API permissions page.")}</li>
+                      <li>{t("Verify that Mail.Send is listed under Delegated permissions.")}</li>
+                      <li>{t('CRITICAL step: Click the "Grant admin consent for Your Tenant Name" button right above the permission table. Enterprise directories require this administrative consent to enable outbound mailing.')}</li>
+                      <li>{t("Wait 1 minute, return here, and retry your campaign!")}</li>
                     </ol>
                   </div>
                 </div>
 
                 <div className="text-[10px] bg-white/40 dark:bg-black/10 p-2.5 rounded font-mono text-slate-500 flex items-baseline gap-2">
-                  <span className="font-semibold text-rose-600 uppercase border border-rose-200 bg-rose-50 px-1.5 py-0.5 rounded text-[9px]">DIAGNOSTICS</span>
-                  <span>Scope required: Mail.Send (delegated) — please grant consent to unlock outbound delivery features.</span>
+<span className="font-semibold text-rose-600 uppercase border border-rose-200 bg-rose-50 px-1.5 py-0.5 rounded text-[9px]">{t("DIAGNOSTICS")}</span>
+<span>{t("Scope required: Mail.Send (delegated) — please grant consent to unlock outbound delivery features.")}</span>
                 </div>
               </div>
             )}
@@ -1423,25 +1435,25 @@ export default function SendingProgressView({
                   <AlertCircle className="w-5 h-5 text-amber-600 flex-shrink-0 mt-0.5" />
                   <div>
                     <h4 className="text-xs font-bold text-amber-700 dark:text-amber-400 uppercase tracking-wider flex items-center gap-1.5">
-                      Microsoft Graph Session Token Expired
+                      {t("Microsoft Graph Session Token Expired")}
                     </h4>
                     <p className="text-xs text-amber-600 dark:text-amber-450 font-semibold mt-1 leading-normal">
-                      Your current session has expired ("Lifetime validation failed, the token is expired"). This is expected behavior enforcing security policies (default tokens expire after 60 minutes).
+{t('Your current session has expired ("Lifetime validation failed, the token is expired"). This is expected behavior enforcing security policies (default tokens expire after 60 minutes).')}
                     </p>
                     <p className="text-xs text-slate-650 dark:text-slate-350 mt-1">
-                      No worries! All of your campaign progress and imported data are fully preserved in-memory. Simply input a fresh token or re-authenticate below to immediately resume sending where you left off:
+{t("No worries! All of your campaign progress and imported data are fully preserved in-memory. Simply input a fresh token or re-authenticate below to immediately resume sending where you left off:")}
                     </p>
                   </div>
                 </div>
 
                 <div className="p-4 bg-white dark:bg-[#11100f] border border-[#EDEBE9] dark:border-[#323130] rounded space-y-3">
                   <div className="space-y-1">
-                    <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Paste Fresh Access Token</label>
+                    <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">{t("Paste Fresh Access Token")}</label>
                     <div className="flex flex-col sm:flex-row items-stretch gap-2">
                       <input
                         type="password"
                         id="input-fresh-token"
-                        placeholder="Paste fresh access token starting with eyJ..."
+                        placeholder={t("Paste fresh access token starting with eyJ...")}
                         className="flex-1 text-xs p-2.5 rounded border border-[#EDEBE9] dark:border-[#323130] bg-[#faf9f8] dark:bg-[#252423] font-mono outline-none focus:border-[#0078D4]"
                         onChange={async (e) => {
                           const val = e.target.value.trim();
@@ -1457,7 +1469,7 @@ export default function SendingProgressView({
                         type="button"
                         onClick={async () => {
                           if (!session?.accessToken) {
-                            alert("Please paste progress validation token first.");
+                            alert(t("Please paste progress validation token first."));
                             return;
                           }
                           try {
@@ -1486,20 +1498,20 @@ export default function SendingProgressView({
                             );
                             setFailedCount(0);
                             setIsPlaying(true);
-                            alert("Token Session Resumed! Re-marked expired rows to idle queue. Resume sending active.");
+                            alert(t("Token Session Resumed! Re-marked expired rows to idle queue. Resume sending active."));
                           } catch (err: any) {
-                            alert("Failed token validation: " + err.message);
+                            alert(t("Failed token validation: {error}").replace("{error}", err.message));
                           }
                         }}
                         className="bg-[#0078D4] hover:bg-[#005a9e] text-white text-xs font-bold px-4 py-2.5 rounded cursor-pointer transition-all flex items-center justify-center gap-1.5"
                       >
                         <RotateCw className="w-3.5 h-3.5" />
-                        <span>Validate & Resume</span>
+                        <span>{t("Validate & Resume")}</span>
                       </button>
                     </div>
                   </div>
                   <p className="text-[11px] text-slate-500">
-                    To get a new live token: Open your <a href="https://developer.microsoft.com/en-us/graph/graph-explorer" target="_blank" rel="noreferrer" className="text-[#0078D4] underline font-bold">Microsoft Graph Explorer</a>, select the <strong>Access token</strong> tab, copy the long string, and paste it here.
+{t("To get a new live token: Open your Microsoft Graph Explorer, select the Access token tab, copy the long string, and paste it here.")}
                   </p>
                 </div>
               </div>
@@ -1509,17 +1521,17 @@ export default function SendingProgressView({
             {campaignFinished && pdfBlobUrl && (
               <div className="mb-6 border border-[#EDEBE9] dark:border-[#323130] rounded p-4 bg-[#F3F2F1]/50 dark:bg-[#11100f]">
                 <h4 className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-2 flex items-center justify-between">
-                  <span>Executive Campaign Report (Embed Visualizer)</span>
+                  <span>{t("Executive Campaign Report (Embed Visualizer)")}</span>
                   <button
                     id="btn-embed-download-pdf"
                     onClick={handleDownloadPDF}
                     className="text-[10px] text-[#0078D4] hover:underline font-bold"
                   >
-                    Download PDF File
+                    {t("Download PDF File")}
                   </button>
                 </h4>
                 <div className="h-64 border border-[#EDEBE9] dark:border-[#323130] rounded bg-white dark:bg-[#1b1a19] overflow-hidden shadow-inner">
-                  <iframe src={`${pdfBlobUrl}#toolbar=0&navpanes=0`} className="w-full h-full" title="Campaign Report Performance Analyzer"></iframe>
+<iframe src={`${pdfBlobUrl}#toolbar=0&navpanes=0`} className="w-full h-full" title={t("Campaign Report Performance Analyzer")}></iframe>
                 </div>
               </div>
             )}
@@ -1527,16 +1539,16 @@ export default function SendingProgressView({
 
           {/* Recipient Processing Queue Logs */}
           <div className="bg-white dark:bg-[#1b1a19] border border-[#EDEBE9] dark:border-[#323130] rounded p-6 shadow-sm">
-            <h4 className="text-[10px] font-bold text-slate-405 uppercase tracking-wider mb-3 block">Recipient Transmissions Queue</h4>
+            <h4 className="text-[10px] font-bold text-slate-405 uppercase tracking-wider mb-3 block">{t("Recipient Transmissions Queue")}</h4>
             
             <div className="border border-[#EDEBE9] dark:border-[#323130] rounded overflow-hidden max-h-80 overflow-y-auto">
               <table className="w-full text-xs text-left border-collapse">
                 <thead className="bg-[#F3F2F1] dark:bg-[#11100f] text-slate-500 font-bold sticky top-0 border-b border-[#EDEBE9] dark:border-[#323130]">
                   <tr>
-                    <th className="p-3">Email Address</th>
-                    <th className="p-3">Subject Draft Preview</th>
-                    <th className="p-3">Delivery Status</th>
-                    <th className="p-3">Remarks / Error Diagnostics</th>
+                    <th className="p-3">{t("Email Address")}</th>
+                    <th className="p-3">{t("Subject Draft Preview")}</th>
+                    <th className="p-3">{t("Delivery Status")}</th>
+                    <th className="p-3">{t("Remarks / Error Diagnostics")}</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-[#EDEBE9] dark:divide-[#323130] text-slate-700 dark:text-slate-300">
@@ -1555,10 +1567,10 @@ export default function SendingProgressView({
                         <td className="p-3 text-slate-400 truncate max-w-[180px]">{mergedSub}</td>
                         <td className="p-3">
                           {rec.status === "idle" && (
-                            <span className="bg-slate-100 dark:bg-slate-800 text-slate-500 px-2 py-0.5 rounded text-[10px] font-medium uppercase font-mono border border-slate-200/40">Idle</span>
+                            <span className="bg-slate-100 dark:bg-slate-800 text-slate-500 px-2 py-0.5 rounded text-[10px] font-medium uppercase font-mono border border-slate-200/40">{t("Idle")}</span>
                           )}
                           {rec.status === "sending" && (
-                            <span className="bg-[#f3f9fe] text-[#0078D4] dark:bg-blue-950/20 dark:text-brand-300 px-2 py-0.5 rounded text-[10px] font-bold uppercase animate-pulse font-mono border border-blue-200/40">Sending</span>
+                            <span className="bg-[#f3f9fe] text-[#0078D4] dark:bg-blue-950/20 dark:text-brand-300 px-2 py-0.5 rounded text-[10px] font-bold uppercase animate-pulse font-mono border border-blue-200/40">{t("Sending")}</span>
                           )}
                           {rec.status === "success" && (
                             <span className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase font-mono flex items-center gap-1 w-fit border ${
@@ -1568,14 +1580,14 @@ export default function SendingProgressView({
                             }`}>
                               <CheckCircle2 className={`w-3 h-3 ${session?.isSandbox ? "text-amber-500" : "text-emerald-500"}`} />
                               {session?.isSandbox 
-                                ? (sendMode === "draft" ? "SIM DRAFTED" : "SIM SUCCESS") 
-                                : (sendMode === "draft" ? "Drafted" : "Success")}
+? (sendMode === "draft" ? t("SIM DRAFTED") : t("SIM SUCCESS")) 
+: (sendMode === "draft" ? t("Drafted") : t("Success"))}
                             </span>
                           )}
                           {rec.status === "failed" && (
                             <span className="bg-rose-50 text-rose-800 dark:bg-rose-950/20 dark:text-rose-400 px-2 py-0.5 rounded text-[10px] font-bold uppercase font-mono flex items-center gap-1 w-fit border border-rose-250/20">
                               <AlertCircle className="w-3 h-3 text-rose-500" />
-                              Failed
+{t("FAILED")}
                             </span>
                           )}
                         </td>
@@ -1583,16 +1595,16 @@ export default function SendingProgressView({
                           {rec.status === "success" && (
                             <span className="text-[11px] text-slate-400 flex items-center gap-1">
                               {session?.isSandbox ? (
-                                <span className="text-amber-600 dark:text-amber-400 font-semibold">[Demo Simulator] Simulated Row Complete</span>
+<span className="text-amber-600 dark:text-amber-400 font-semibold">{t("[Demo Simulator] Simulated Row Complete")}</span>
                               ) : sendMode === "draft" ? (
-                                "Saved to your Outlook Drafts folder"
+                                t("Saved to your Outlook Drafts folder")
                               ) : trackingService !== "none" ? (
                                 <>
                                   <Radio className="w-3 h-3 text-indigo-500 animate-ping" />
-                                  {rec.openCount > 0 ? `OPENED (${rec.openCount}x)` : "Delivered - Tracking Pixels loaded"}
+{rec.openCount > 0 ? t("OPENED ({count}x)").replace("{count}", String(rec.openCount)) : t("Delivered - Tracking Pixels loaded")}
                                 </>
                               ) : (
-                                "Delivered successfully"
+                                t("Delivered successfully")
                               )}
                             </span>
                           )}
