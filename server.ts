@@ -31,6 +31,17 @@ const hasMicrosoftConfig = () => {
   return !!(process.env.MICROSOFT_CLIENT_ID && process.env.MICROSOFT_CLIENT_SECRET);
 };
 
+// API: Public runtime env for client-side Supabase configuration
+app.get("/api/env", (_req, res) => {
+  res.setHeader("Cache-Control", "no-store");
+  res.json({
+    VITE_SUPABASE_URL: process.env.VITE_SUPABASE_URL || "",
+    VITE_SUPABASE_ANON_KEY:
+      process.env.VITE_SUPABASE_ANON_KEY || process.env.VITE_SUPABASE_PUBLISHABLE_KEY || "",
+    VITE_SUPABASE_PUBLISHABLE_KEY: process.env.VITE_SUPABASE_PUBLISHABLE_KEY || "",
+  });
+});
+
 // API: Health / Config Endpoint
 app.get("/api/config", (req, res) => {
   const appUrl = (process.env.APP_URL || "").replace(/\/$/, "");

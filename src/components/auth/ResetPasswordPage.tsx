@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import { Link, Navigate, useNavigate } from "react-router-dom";
 import { useAuth } from "../../lib/AuthContext";
 import { useLanguage } from "../../lib/LanguageContext";
-import { getSupabase } from "../../lib/supabaseClient";
+import { getSupabase, initSupabase } from "../../lib/supabaseClient";
 import AuthLayout, { AuthButton, AuthError, AuthField, AuthSuccess } from "./AuthLayout";
 
 export default function ResetPasswordPage() {
@@ -18,21 +18,30 @@ export default function ResetPasswordPage() {
   const [ready, setReady] = useState(false);
 
   useEffect(() => {
-    const client = getSupabase();
-    if (!client) {
-      setReady(true);
-      setError(
-        lang === "TR"
-          ? "Kimlik doğrulama yapılandırılmamış. Lütfen yönetici ile iletişime geçin."
-          : "Authentication is not configured. Please contact your administrator."
-      );
-      return;
-    }
+    let mounted = true;
 
-    client.auth
-      .getSession()
-      .then(({ data: { session: recoverySession } }) => {
+    const verifySession = async () => {
+      const client = await initSupabase();
+      if (!mounted) return;
+
+      if (!client) {
         setReady(true);
+        setError(
+          lang === "TR"
+            ? "Kimlik doğrulama yapılandırılmamış. Lütfen yönetici ile iletişime geçin."
+            : "Authentication is not configured. Please contact your administrator."
+        );
+        return;
+      }
+
+      try {
+        const {
+          data: { session: recoverySession },
+        } = await client.auth.getSession();
+
+        if (!mounted) return;
+        setReady(true);
+
         if (!recoverySession) {
           setError(
             lang === "TR"
@@ -40,15 +49,22 @@ export default function ResetPasswordPage() {
               : "Invalid or expired reset link. Please request a new one."
           );
         }
-      })
-      .catch(() => {
+      } catch {
+        if (!mounted) return;
         setReady(true);
         setError(
           lang === "TR"
             ? "Oturum doğrulanamadı. Lütfen yeni bir sıfırlama bağlantısı isteyin."
             : "Could not verify session. Please request a new reset link."
         );
-      });
+      }
+    };
+
+    void verifySession();
+
+    return () => {
+      mounted = false;
+    };
   }, [lang]);
 
   if (session && success) {

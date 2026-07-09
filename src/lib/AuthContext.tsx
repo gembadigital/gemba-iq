@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useEffect, useMemo, useState } from "react";
 import type { Session, User } from "@supabase/supabase-js";
-import { getSupabase, isSupabaseConfigured, supabaseConfigError } from "./supabaseClient";
+import { getSupabase, initSupabase } from "./supabaseClient";
 
 interface AuthContextValue {
   user: User | null;
@@ -16,6 +16,9 @@ interface AuthContextValue {
 }
 
 const AuthContext = createContext<AuthContextValue | undefined>(undefined);
+
+const CONFIG_ERROR =
+  "Supabase is not configured. Set VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY (or VITE_SUPABASE_PUBLISHABLE_KEY) in your environment.";
 
 function mapAuthError(message: string): string {
   const normalized = message.toLowerCase();
@@ -34,68 +37,72 @@ function mapAuthError(message: string): string {
   return message;
 }
 
-function notConfiguredError(): string {
-  return supabaseConfigError ?? "Authentication is not configured.";
-}
-
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
   const [initError, setInitError] = useState<string | null>(null);
+  const [isConfigured, setIsConfigured] = useState(false);
 
   useEffect(() => {
-    if (!isSupabaseConfigured) {
-      setInitError(supabaseConfigError);
-      setLoading(false);
-      return;
-    }
-
-    const client = getSupabase();
-    if (!client) {
-      setInitError("Failed to initialize Supabase client.");
-      setLoading(false);
-      return;
-    }
-
     let mounted = true;
+    let subscription: { unsubscribe: () => void } | null = null;
     const timeoutId = window.setTimeout(() => {
       if (!mounted) return;
       setInitError("Authentication initialization timed out. You can still try to sign in.");
       setLoading(false);
     }, 8000);
 
-    client.auth
-      .getSession()
-      .then(({ data: { session: initialSession } }) => {
+    const initialize = async () => {
+      const client = await initSupabase();
+      if (!mounted) return;
+
+      window.clearTimeout(timeoutId);
+
+      if (!client) {
+        setInitError(CONFIG_ERROR);
+        setIsConfigured(false);
+        setLoading(false);
+        return;
+      }
+
+      setInitError(null);
+      setIsConfigured(true);
+
+      try {
+        const {
+          data: { session: initialSession },
+        } = await client.auth.getSession();
+
         if (!mounted) return;
-        window.clearTimeout(timeoutId);
         setSession(initialSession);
         setUser(initialSession?.user ?? null);
         setLoading(false);
-      })
-      .catch((err: Error) => {
+      } catch (err) {
         if (!mounted) return;
-        window.clearTimeout(timeoutId);
         console.error("Auth session initialization failed:", err);
-        setInitError(err.message || "Failed to initialize authentication.");
+        setInitError(err instanceof Error ? err.message : "Failed to initialize authentication.");
+        setLoading(false);
+      }
+
+      const {
+        data: { subscription: authSubscription },
+      } = client.auth.onAuthStateChange((_event, nextSession) => {
+        if (!mounted) return;
+        setSession(nextSession);
+        setUser(nextSession?.user ?? null);
         setLoading(false);
       });
 
-    const {
-      data: { subscription },
-    } = client.auth.onAuthStateChange((_event, nextSession) => {
-      if (!mounted) return;
-      window.clearTimeout(timeoutId);
-      setSession(nextSession);
-      setUser(nextSession?.user ?? null);
-      setLoading(false);
-    });
+      subscription = authSubscription;
+    };
+
+    void initialize();
 
     return () => {
       mounted = false;
       window.clearTimeout(timeoutId);
-      subscription.unsubscribe();
+      subscription?.unsubscribe();
     };
   }, []);
 
@@ -105,10 +112,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       session,
       loading,
       initError,
-      isConfigured: isSupabaseConfigured,
+      isConfigured,
       signIn: async (email, password) => {
-        const client = getSupabase();
-        if (!client) return { error: notConfiguredError() };
+        const client = getSupabase() ?? (await initSupabase());
+        if (!client) return { error: CONFIG_ERROR };
 
         const { data, error } = await client.auth.signInWithPassword({ email, password });
         if (error) {
@@ -121,8 +128,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         return { error: null };
       },
       signUp: async (email, password, fullName) => {
-        const client = getSupabase();
-        if (!client) return { error: notConfiguredError(), needsEmailVerification: false };
+        const client = getSupabase() ?? (await initSupabase());
+        if (!client) return { error: CONFIG_ERROR, needsEmailVerification: false };
 
         const { data, error } = await client.auth.signUp({
           email,
@@ -147,8 +154,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         setUser(null);
       },
       resetPassword: async (email) => {
-        const client = getSupabase();
-        if (!client) return { error: notConfiguredError() };
+        const client = getSupabase() ?? (await initSupabase());
+        if (!client) return { error: CONFIG_ERROR };
 
         const { error } = await client.auth.resetPasswordForEmail(email, {
           redirectTo: `${window.location.origin}/reset-password`,
@@ -156,14 +163,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         return { error: error ? mapAuthError(error.message) : null };
       },
       updatePassword: async (password) => {
-        const client = getSupabase();
-        if (!client) return { error: notConfiguredError() };
+        const client = getSupabase() ?? (await initSupabase());
+        if (!client) return { error: CONFIG_ERROR };
 
         const { error } = await client.auth.updateUser({ password });
         return { error: error ? mapAuthError(error.message) : null };
       },
     }),
-    [user, session, loading, initError]
+    [user, session, loading, initError, isConfigured]
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
