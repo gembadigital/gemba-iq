@@ -59,17 +59,24 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
 
     let mounted = true;
+    const timeoutId = window.setTimeout(() => {
+      if (!mounted) return;
+      setInitError("Authentication initialization timed out. You can still try to sign in.");
+      setLoading(false);
+    }, 8000);
 
     client.auth
       .getSession()
       .then(({ data: { session: initialSession } }) => {
         if (!mounted) return;
+        window.clearTimeout(timeoutId);
         setSession(initialSession);
         setUser(initialSession?.user ?? null);
         setLoading(false);
       })
       .catch((err: Error) => {
         if (!mounted) return;
+        window.clearTimeout(timeoutId);
         console.error("Auth session initialization failed:", err);
         setInitError(err.message || "Failed to initialize authentication.");
         setLoading(false);
@@ -78,6 +85,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const {
       data: { subscription },
     } = client.auth.onAuthStateChange((_event, nextSession) => {
+      if (!mounted) return;
+      window.clearTimeout(timeoutId);
       setSession(nextSession);
       setUser(nextSession?.user ?? null);
       setLoading(false);
@@ -85,6 +94,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     return () => {
       mounted = false;
+      window.clearTimeout(timeoutId);
       subscription.unsubscribe();
     };
   }, []);

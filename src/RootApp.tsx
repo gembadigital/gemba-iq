@@ -1,12 +1,13 @@
-import React from "react";
+import React, { Suspense, lazy } from "react";
 import { BrowserRouter, Navigate, Route, Routes, useLocation } from "react-router-dom";
-import App from "./App";
 import { useAuth } from "./lib/AuthContext";
 import AuthLoadingScreen from "./components/auth/AuthLoadingScreen";
 import LoginPage from "./components/auth/LoginPage";
 import RegisterPage from "./components/auth/RegisterPage";
 import ForgotPasswordPage from "./components/auth/ForgotPasswordPage";
 import ResetPasswordPage from "./components/auth/ResetPasswordPage";
+
+const App = lazy(() => import("./App"));
 
 function ProtectedApp() {
   const { user } = useAuth();
@@ -16,7 +17,11 @@ function ProtectedApp() {
     return <Navigate to="/login" replace state={{ from: location }} />;
   }
 
-  return <App />;
+  return (
+    <Suspense fallback={<AuthLoadingScreen />}>
+      <App />
+    </Suspense>
+  );
 }
 
 function AppRoutes() {
