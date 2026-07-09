@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { Campaign, MailboxSession } from "../types";
 import { generateCampaignReport } from "../utils/pdfGenerator";
 import { useLanguage } from "../lib/LanguageContext";
+import { getCampaignTranslation } from "./campaignI18n";
 import {
   FileText,
   Calendar,
@@ -24,7 +25,8 @@ interface HistoryAndLogsViewProps {
 }
 
 export default function HistoryAndLogsView({ logs, onDeleteLog, session }: HistoryAndLogsViewProps) {
-  const { t } = useLanguage();
+  const { lang, t: globalT } = useLanguage();
+  const t = (key: string) => getCampaignTranslation(lang, key) ?? globalT(key) ?? key;
   const [selectedCampaignId, setSelectedCampaignId] = useState<string | null>(
     logs.length > 0 ? logs[0].id : null
   );
