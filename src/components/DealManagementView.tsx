@@ -132,6 +132,7 @@ export function getStageDescTranslation(stage: string, lang: string, defaultDesc
 // Expanded Deal CRM interface
 export interface Deal {
   id: string;
+  organization_id?: string;
   companyId?: string;
   dealName?: string; // added deal name
   companyName: string;
@@ -224,6 +225,7 @@ export interface Deal {
 
 export interface ProjectRecord {
   id: string;
+  organization_id?: string;
   dealId: string;
   companyName: string;
   contractValue: number;

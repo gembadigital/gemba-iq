@@ -21,7 +21,8 @@ import AdministrationCenter from "./components/AdministrationCenter";
 import GlobalSearchBar from "./components/GlobalSearchBar";
 import { useLanguage } from "./lib/LanguageContext";
 import { useAuth } from "./lib/AuthContext";
-import { getUserDisplayName, getUserEmail, getUserInitials } from "./lib/authHelpers";
+import { useOrganization } from "./lib/OrganizationContext";
+import { getDisplayInitials } from "./lib/authHelpers";
 import { useNavigate } from "react-router-dom";
 const logoImage = "https://lh3.googleusercontent.com/d/13bNnthJU4LIICB4iiF1a4GH1PEn05MBx";
 
@@ -77,10 +78,11 @@ import {
 export default function App() {
   const { lang, setLang, t } = useLanguage();
   const { user, signOut } = useAuth();
+  const { actorName, actorEmail, companyName } = useOrganization();
   const navigate = useNavigate();
-  const displayName = getUserDisplayName(user);
-  const userEmail = getUserEmail(user);
-  const userInitials = getUserInitials(user);
+  const displayName = actorName;
+  const userEmail = actorEmail;
+  const userInitials = getDisplayInitials(actorName, actorEmail);
   const [isLangDropdownOpen, setIsLangDropdownOpen] = useState(false);
 
   // New Dropdown and navigation sub-states for polished top bar
@@ -116,7 +118,7 @@ export default function App() {
         }
       } else {
         const defaultSettings = {
-          name: "Gemba Partner",
+          name: companyName || "Organization",
           website: "https://gembapartner.com",
           phone: "+90 216 444 04 62",
           address: "Kolektif House Ataşehir, İstanbul, Türkiye",
@@ -135,7 +137,7 @@ export default function App() {
     } catch (e) {
       console.error(e);
     }
-  }, []);
+  }, [companyName]);
 
   useEffect(() => {
     const interval = setInterval(() => {

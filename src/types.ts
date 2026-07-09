@@ -1,5 +1,6 @@
 export interface Recipient {
   id: string;
+  organization_id?: string;
   FirstName: string;
   LastName: string;
   Company: string;
@@ -26,6 +27,7 @@ export interface AttachmentFile {
 
 export interface Campaign {
   id: string;
+  organization_id?: string;
   date: string;
   subject: string;
   templateBody: string;
@@ -41,6 +43,7 @@ export interface Campaign {
 
 export interface AuditLog {
   id: string;
+  organization_id?: string;
   campaignDate: string;
   subject: string;
   recipientCount: number;
@@ -77,6 +80,7 @@ export interface ExchangeConfig {
 
 export interface LeadProfile {
   id: string;
+  organization_id?: string;
   no: number;
   firstName: string;
   lastName: string;
@@ -97,6 +101,7 @@ export interface LeadProfile {
 
 export interface TargetAccount {
   id: string;
+  organization_id?: string;
   companyName: string;
   websiteUrl: string;
   industryTag: string;

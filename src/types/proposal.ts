@@ -35,6 +35,7 @@ export interface ProposalVersion {
 
 export interface Proposal {
   id: string;
+  organization_id?: string;
   sequenceNo: number;
   proposalNumber: string;
   companyId: string;

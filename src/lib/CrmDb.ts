@@ -1,10 +1,12 @@
 import { Company } from "../components/CompaniesView";
 import { Deal, ProjectRecord } from "../components/DealManagementView";
 import { Proposal } from "../types/proposal";
+import { getTenantActorName, resolveOrganizationId, tenantStorageKey } from "./tenantStorage";
 
 // Unified CRM interfaces
 export interface Contact {
   id: string;
+  organization_id?: string;
   companyId: string;
   firstName: string;
   lastName: string;
@@ -18,6 +20,7 @@ export interface Contact {
 
 export interface CrmEmail {
   id: string;
+  organization_id?: string;
   companyId: string;
   dealId?: string;
   proposalId?: string;
@@ -33,6 +36,7 @@ export interface CrmEmail {
 
 export interface CrmDocument {
   id: string;
+  organization_id?: string;
   companyId: string;
   dealId?: string;
   proposalId?: string;
@@ -47,6 +51,7 @@ export interface CrmDocument {
 
 export interface CrmActivity {
   id: string;
+  organization_id?: string;
   companyId: string;
   dealId?: string;
   proposalId?: string;
@@ -119,7 +124,7 @@ export const CrmDb = {
   // COMPANIES CRUD
   // -------------------------------------------------------------
   getCompanies(): Company[] {
-    const saved = localStorage.getItem("crm_won_companies");
+    const saved = localStorage.getItem(tenantStorageKey("crm_won_companies"));
     if (saved) {
       try {
         const parsed = JSON.parse(saved);
@@ -132,12 +137,12 @@ export const CrmDb = {
       }
     }
     // Seed default if not found
-    localStorage.setItem("crm_won_companies", JSON.stringify(INITIAL_COMPANIES));
+    localStorage.setItem(tenantStorageKey("crm_won_companies"), JSON.stringify(INITIAL_COMPANIES));
     return INITIAL_COMPANIES;
   },
 
   saveCompanies(companies: Company[]) {
-    localStorage.setItem("crm_won_companies", JSON.stringify(companies));
+    localStorage.setItem(tenantStorageKey("crm_won_companies"), JSON.stringify(companies));
     // Propagate changes to all related modules (Deals, Proposals, Projects)
     this.propagateCompanyChanges(companies);
   },
@@ -157,7 +162,7 @@ export const CrmDb = {
 
     const newCompany: Company = {
       id: companyData.id || `company-${Date.now()}`,
-      accountOwner: companyData.accountOwner || "GP Admin",
+      accountOwner: companyData.accountOwner || getTenantActorName(),
       name: companyData.name || "Yeni Şirket",
       phone: companyData.phone || "",
       website: companyData.website || "",
@@ -215,7 +220,7 @@ export const CrmDb = {
   // CONTACTS CRUD
   // -------------------------------------------------------------
   getContacts(): Contact[] {
-    const saved = localStorage.getItem("crm_contacts");
+    const saved = localStorage.getItem(tenantStorageKey("crm_contacts"));
     if (saved) {
       try {
         return JSON.parse(saved);
@@ -259,12 +264,12 @@ export const CrmDb = {
         leadSegment: "Enterprise"
       }
     ];
-    localStorage.setItem("crm_contacts", JSON.stringify(initialContacts));
+    localStorage.setItem(tenantStorageKey("crm_contacts"), JSON.stringify(initialContacts));
     return initialContacts;
   },
 
   saveContacts(contacts: Contact[]) {
-    localStorage.setItem("crm_contacts", JSON.stringify(contacts));
+    localStorage.setItem(tenantStorageKey("crm_contacts"), JSON.stringify(contacts));
   },
 
   getContactsByCompany(companyId: string): Contact[] {
@@ -293,7 +298,7 @@ export const CrmDb = {
   // DEALS CRUD (Uses master companies relational model)
   // -------------------------------------------------------------
   getDeals(): Deal[] {
-    const saved = localStorage.getItem("smart_mailmerge_deals");
+    const saved = localStorage.getItem(tenantStorageKey("smart_mailmerge_deals"));
     if (saved) {
       try {
         const parsed = JSON.parse(saved);
@@ -348,7 +353,7 @@ export const CrmDb = {
       }
       return d;
     });
-    localStorage.setItem("smart_mailmerge_deals", JSON.stringify(processed));
+    localStorage.setItem(tenantStorageKey("smart_mailmerge_deals"), JSON.stringify(processed));
   },
 
   getDealsByCompany(companyId: string): Deal[] {
@@ -359,7 +364,7 @@ export const CrmDb = {
   // PROPOSALS CRUD
   // -------------------------------------------------------------
   getProposals(): Proposal[] {
-    const saved = localStorage.getItem("crm_proposals");
+    const saved = localStorage.getItem(tenantStorageKey("crm_proposals"));
     if (saved) {
       try {
         const parsed = JSON.parse(saved);
@@ -387,7 +392,7 @@ export const CrmDb = {
   },
 
   saveProposals(proposals: Proposal[]) {
-    localStorage.setItem("crm_proposals", JSON.stringify(proposals));
+    localStorage.setItem(tenantStorageKey("crm_proposals"), JSON.stringify(proposals));
   },
 
   getProposalsByCompany(companyId: string): Proposal[] {
@@ -398,7 +403,7 @@ export const CrmDb = {
   // PROJECTS CRUD
   // -------------------------------------------------------------
   getProjects(): ProjectRecord[] {
-    const saved = localStorage.getItem("smart_mailmerge_projects");
+    const saved = localStorage.getItem(tenantStorageKey("smart_mailmerge_projects"));
     if (saved) {
       try {
         const parsed = JSON.parse(saved);
@@ -421,7 +426,7 @@ export const CrmDb = {
   },
 
   saveProjects(projects: ProjectRecord[]) {
-    localStorage.setItem("smart_mailmerge_projects", JSON.stringify(projects));
+    localStorage.setItem(tenantStorageKey("smart_mailmerge_projects"), JSON.stringify(projects));
   },
 
   getProjectsByCompany(companyId: string): ProjectRecord[] {
@@ -432,7 +437,7 @@ export const CrmDb = {
   // EMAILS CRUD (Unifies deal emails & campaigns)
   // -------------------------------------------------------------
   getEmails(): CrmEmail[] {
-    const saved = localStorage.getItem("crm_emails");
+    const saved = localStorage.getItem(tenantStorageKey("crm_emails"));
     if (saved) {
       try {
         return JSON.parse(saved);
@@ -466,12 +471,12 @@ export const CrmDb = {
         isIncoming: false
       }
     ];
-    localStorage.setItem("crm_emails", JSON.stringify(initialEmails));
+    localStorage.setItem(tenantStorageKey("crm_emails"), JSON.stringify(initialEmails));
     return initialEmails;
   },
 
   saveEmails(emails: CrmEmail[]) {
-    localStorage.setItem("crm_emails", JSON.stringify(emails));
+    localStorage.setItem(tenantStorageKey("crm_emails"), JSON.stringify(emails));
   },
 
   getEmailsByCompany(companyId: string): CrmEmail[] {
@@ -511,7 +516,7 @@ export const CrmDb = {
   // DOCUMENTS CRUD (Proposal PDFs, contracts, attachments, reports)
   // -------------------------------------------------------------
   getDocuments(): CrmDocument[] {
-    const saved = localStorage.getItem("crm_documents");
+    const saved = localStorage.getItem(tenantStorageKey("crm_documents"));
     if (saved) {
       try {
         return JSON.parse(saved);
@@ -540,12 +545,12 @@ export const CrmDb = {
         date: "2026-06-18"
       }
     ];
-    localStorage.setItem("crm_documents", JSON.stringify(initialDocs));
+    localStorage.setItem(tenantStorageKey("crm_documents"), JSON.stringify(initialDocs));
     return initialDocs;
   },
 
   saveDocuments(docs: CrmDocument[]) {
-    localStorage.setItem("crm_documents", JSON.stringify(docs));
+    localStorage.setItem(tenantStorageKey("crm_documents"), JSON.stringify(docs));
   },
 
   getDocumentsByCompany(companyId: string): CrmDocument[] {
@@ -576,7 +581,7 @@ export const CrmDb = {
   // ACTIVITIES / TIMELINE CRUD
   // -------------------------------------------------------------
   getActivities(): CrmActivity[] {
-    const saved = localStorage.getItem("crm_activities");
+    const saved = localStorage.getItem(tenantStorageKey("crm_activities"));
     if (saved) {
       try {
         return JSON.parse(saved);
@@ -608,12 +613,12 @@ export const CrmDb = {
         user: "Atakan Zehir"
       }
     ];
-    localStorage.setItem("crm_activities", JSON.stringify(initialActivities));
+    localStorage.setItem(tenantStorageKey("crm_activities"), JSON.stringify(initialActivities));
     return initialActivities;
   },
 
   saveActivities(activities: CrmActivity[]) {
-    localStorage.setItem("crm_activities", JSON.stringify(activities));
+    localStorage.setItem(tenantStorageKey("crm_activities"), JSON.stringify(activities));
   },
 
   getActivitiesByCompany(companyId: string): CrmActivity[] {
@@ -636,7 +641,7 @@ export const CrmDb = {
       title: activityData.title || "Activity logged",
       description: activityData.description || "",
       date: activityData.date || new Date().toISOString(),
-      user: activityData.user || "Atakan Zehir",
+      user: activityData.user || getTenantActorName(),
       result: activityData.result
     };
     activities.unshift(newActivity);
@@ -649,7 +654,7 @@ export const CrmDb = {
   // -------------------------------------------------------------
   propagateCompanyChanges(companies: Company[]) {
     // 1. Update Deals
-    const savedDeals = localStorage.getItem("smart_mailmerge_deals");
+    const savedDeals = localStorage.getItem(tenantStorageKey("smart_mailmerge_deals"));
     if (savedDeals) {
       try {
         const deals = JSON.parse(savedDeals) as Deal[];
@@ -666,7 +671,7 @@ export const CrmDb = {
           return d;
         });
         if (updated) {
-          localStorage.setItem("smart_mailmerge_deals", JSON.stringify(nextDeals));
+          localStorage.setItem(tenantStorageKey("smart_mailmerge_deals"), JSON.stringify(nextDeals));
         }
       } catch (e) {
         console.error("Error cascading company changes to deals", e);
@@ -674,7 +679,7 @@ export const CrmDb = {
     }
 
     // 2. Update Proposals
-    const savedProps = localStorage.getItem("crm_proposals");
+    const savedProps = localStorage.getItem(tenantStorageKey("crm_proposals"));
     if (savedProps) {
       try {
         const props = JSON.parse(savedProps) as Proposal[];
@@ -690,7 +695,7 @@ export const CrmDb = {
           return p;
         });
         if (updated) {
-          localStorage.setItem("crm_proposals", JSON.stringify(nextProps));
+          localStorage.setItem(tenantStorageKey("crm_proposals"), JSON.stringify(nextProps));
         }
       } catch (e) {
         console.error("Error cascading company changes to proposals", e);
@@ -698,7 +703,7 @@ export const CrmDb = {
     }
 
     // 3. Update Projects
-    const savedProjects = localStorage.getItem("smart_mailmerge_projects");
+    const savedProjects = localStorage.getItem(tenantStorageKey("smart_mailmerge_projects"));
     if (savedProjects) {
       try {
         const projects = JSON.parse(savedProjects) as any[];
@@ -714,7 +719,7 @@ export const CrmDb = {
           return p;
         });
         if (updated) {
-          localStorage.setItem("smart_mailmerge_projects", JSON.stringify(nextProjects));
+          localStorage.setItem(tenantStorageKey("smart_mailmerge_projects"), JSON.stringify(nextProjects));
         }
       } catch (e) {
         console.error("Error cascading company changes to projects", e);

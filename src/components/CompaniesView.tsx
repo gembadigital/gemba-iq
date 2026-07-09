@@ -68,6 +68,7 @@ export interface CustomFieldDefinition {
 
 export interface Company {
   id: string;
+  organization_id?: string;
   name: string;
   phone?: string;
   website?: string;

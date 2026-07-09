@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useAuth } from "../lib/AuthContext";
-import { getUserDisplayName, getUserEmail, getUserInitials } from "../lib/authHelpers";
+import { useOrganization } from "../lib/OrganizationContext";
+import { getDisplayInitials } from "../lib/authHelpers";
 import {
   Building,
   Users,
@@ -108,9 +109,10 @@ interface AdministrationCenterProps {
 export default function AdministrationCenter({ onClose, initialSubTab }: AdministrationCenterProps) {
   const { lang: selectedLanguage, setLang: setSelectedLanguage, t } = useLanguage();
   const { user } = useAuth();
-  const adminDisplayName = getUserDisplayName(user);
-  const adminEmail = getUserEmail(user);
-  const adminInitials = getUserInitials(user);
+  const { actorName, actorEmail, companyName } = useOrganization();
+  const adminDisplayName = actorName;
+  const adminEmail = actorEmail;
+  const adminInitials = getDisplayInitials(actorName, actorEmail);
   const [activeSubTab, setActiveSubTab] = useState<string>(initialSubTab || "organization");
 
   React.useEffect(() => {
@@ -126,7 +128,7 @@ export default function AdministrationCenter({ onClose, initialSubTab }: Adminis
   const [orgSettings, setOrgSettings] = useState(() => {
     const saved = localStorage.getItem("admin_org_settings");
     const defaultSettings = {
-      name: "Gemba Partner",
+      name: companyName || "Organization",
       website: "https://gembapartner.com",
       phone: "+90 216 444 04 62",
       address: "Kolektif House Ataşehir, İstanbul, Türkiye",
@@ -261,7 +263,7 @@ export default function AdministrationCenter({ onClose, initialSubTab }: Adminis
     setUsers(users.map(u => u.id === updatedUser.id ? updatedUser : u));
     setEditingUserId(null);
     setEditingUserValues(null);
-    addAuditLog("Atakan Zehir", "Kullanıcı Güncellendi", `${updatedUser.email} bilgileri ve rolü güncellendi.`, "Kullanıcı Yönetimi");
+    addAuditLog(actorName, "Kullanıcı Güncellendi", `${updatedUser.email} bilgileri ve rolü güncellendi.`, "Kullanıcı Yönetimi");
     showToast(
       selectedLanguage === "TR"
         ? "Kullanıcı bilgileri başarıyla güncellendi!"
@@ -303,7 +305,7 @@ export default function AdministrationCenter({ onClose, initialSubTab }: Adminis
       });
 
       addAuditLog(
-        "Atakan Zehir",
+        actorName,
         "E-Posta Hatası",
         `Sistem davet e-postasını gönderemedi. Hata kodu: ERR_INV_EMAIL_TOKEN_MISMATCH_403. Alıcı: ${newUser.email}`,
         "Kullanıcı Yönetimi"
@@ -341,7 +343,7 @@ export default function AdministrationCenter({ onClose, initialSubTab }: Adminis
 
     if (matchingBox) {
       addAuditLog(
-        "Atakan Zehir",
+        actorName,
         "Kullanıcı Davet Edildi",
         `Yeni kullanıcı daveti ve linki, bağlı domain adresi (${matchingBox.email}) üzerinden gönderildi: ${item.email}`,
         "Kullanıcı Yönetimi"
@@ -353,7 +355,7 @@ export default function AdministrationCenter({ onClose, initialSubTab }: Adminis
         "success"
       );
     } else {
-      addAuditLog("Atakan Zehir", "Kullanıcı Davet Edildi", `Yeni kullanıcı daveti ve linki gönderildi: ${item.email}`, "Kullanıcı Yönetimi");
+      addAuditLog(actorName, "Kullanıcı Davet Edildi", `Yeni kullanıcı daveti ve linki gönderildi: ${item.email}`, "Kullanıcı Yönetimi");
       showToast(
         selectedLanguage === "TR"
           ? `📧 Davet e-postası başarıyla gönderilmiştir! Alıcı: ${item.email}`
@@ -377,7 +379,7 @@ export default function AdministrationCenter({ onClose, initialSubTab }: Adminis
     const userToDelete = users.find(u => u.id === userToDeleteId);
     if (userToDelete) {
       setUsers(users.filter(u => u.id !== userToDeleteId));
-      addAuditLog("Atakan Zehir", "Kullanıcı Silindi", `${userToDelete.email} kullanıcısı sistemden kalıcı olarak silindi.`, "Kullanıcı Yönetimi");
+      addAuditLog(actorName, "Kullanıcı Silindi", `${userToDelete.email} kullanıcısı sistemden kalıcı olarak silindi.`, "Kullanıcı Yönetimi");
       showToast(
         selectedLanguage === "TR" 
           ? `Kullanıcı (${lastDeletedUserName}) başarıyla silindi!` 
@@ -393,7 +395,7 @@ export default function AdministrationCenter({ onClose, initialSubTab }: Adminis
     setUsers(users.map(u => {
       if (u.id === id) {
         const nextStatus = u.status === "Active" ? "Deactivated" : "Active";
-        addAuditLog("Atakan Zehir", nextStatus === "Active" ? "Kullanıcı Etkinleşti" : "Kullanıcı Askıya Alındı", `${u.email} durumu değiştirildi`, "Kullanıcı Yönetimi");
+        addAuditLog(actorName, nextStatus === "Active" ? "Kullanıcı Etkinleşti" : "Kullanıcı Askıya Alındı", `${u.email} durumu değiştirildi`, "Kullanıcı Yönetimi");
         return { ...u, status: nextStatus };
       }
       return u;
@@ -402,7 +404,7 @@ export default function AdministrationCenter({ onClose, initialSubTab }: Adminis
 
   const handleResetPassword = (email: string) => {
     alert(`Şifre sıfırlama e-postası başarıyla gönderildi: ${email}`);
-    addAuditLog("Atakan Zehir", "Kullanıcı Şifre Sıfırlama", `${email} için şifre sıfırlama linki tetiklendi.`, "Kullanıcı Yönetimi");
+    addAuditLog(actorName, "Kullanıcı Şifre Sıfırlama", `${email} için şifre sıfırlama linki tetiklendi.`, "Kullanıcı Yönetimi");
   };
 
   // 2.2 Permissions Matrix state
@@ -465,7 +467,7 @@ export default function AdministrationCenter({ onClose, initialSubTab }: Adminis
         [menu]: updated
       }
     });
-    addAuditLog("Atakan Zehir", "Yetki Değişikliği", `${selectedRoleForMatrix} rolü için ${menu} yetkileri güncellendi.`, "Yetki Yönetimi");
+    addAuditLog(actorName, "Yetki Değişikliği", `${selectedRoleForMatrix} rolü için ${menu} yetkileri güncellendi.`, "Yetki Yönetimi");
   };
 
   // 3. Connected Mailboxes
@@ -515,14 +517,14 @@ export default function AdministrationCenter({ onClose, initialSubTab }: Adminis
       email: newMailbox.email,
       provider: newMailbox.provider || "Microsoft 365",
       status: "Connected",
-      owner: newMailbox.owner || "Atakan Zehir",
+      owner: newMailbox.owner || actorName,
       lastSync: "Şimdi bağlı (Canlı)"
     };
 
     setMailboxes([...mailboxes, item]);
     setIsConnectMailboxOpen(false);
     setNewMailbox({ name: "", email: "", provider: "Microsoft 365", owner: "" });
-    addAuditLog("Atakan Zehir", "Yeni E-posta Bağlandı", `Yeni posta kutusu entegre edildi: ${item.email} (${item.provider})`, "E-posta Yönetimi");
+    addAuditLog(actorName, "Yeni E-posta Bağlandı", `Yeni posta kutusu entegre edildi: ${item.email} (${item.provider})`, "E-posta Yönetimi");
     alert("Posta kutusu entegrasyonu ve Microsoft Graph API yetkilendirmesi başarıyla tamamlandı!");
   };
 
@@ -531,7 +533,7 @@ export default function AdministrationCenter({ onClose, initialSubTab }: Adminis
     if (!box) return;
     if (confirm(`${box.email} posta kutusu bağlantısını koparmak istediğinize emin misiniz?`)) {
       setMailboxes(mailboxes.filter(m => m.id !== id));
-      addAuditLog("Atakan Zehir", "E-posta Bağlantısı Kesildi", `${box.email} hesabı sistemden kaldırıldı.`, "E-posta Yönetimi");
+      addAuditLog(actorName, "E-posta Bağlantısı Kesildi", `${box.email} hesabı sistemden kaldırıldı.`, "E-posta Yönetimi");
     }
   };
 
@@ -609,14 +611,14 @@ export default function AdministrationCenter({ onClose, initialSubTab }: Adminis
     setTemplates([...templates, item]);
     setIsNewTemplateOpen(false);
     setNewTemplate({ name: "", category: "Proposal Templates", subject: "", content: "", status: "Active" });
-    addAuditLog("Atakan Zehir", "Şablon Oluşturuldu", `E-posta şablonu eklendi: ${item.name}`, "Şablon Yönetimi");
+    addAuditLog(actorName, "Şablon Oluşturuldu", `E-posta şablonu eklendi: ${item.name}`, "Şablon Yönetimi");
     alert("Yeni şablon başarıyla oluşturuldu!");
   };
 
   const deleteTemplate = (id: string, name: string) => {
     setTemplates(templates.filter(t => t.id !== id));
     if (selectedTemplateId === id) setSelectedTemplateId(null);
-    addAuditLog("Atakan Zehir", "Şablon Silindi", `Şablon kaldırıldı: ${name}`, "Şablon Yönetimi");
+    addAuditLog(actorName, "Şablon Silindi", `Şablon kaldırıldı: ${name}`, "Şablon Yönetimi");
   };
 
   // 5. Data Hub (Cloud Storage Connections)
@@ -727,7 +729,7 @@ export default function AdministrationCenter({ onClose, initialSubTab }: Adminis
     setDocTypes(DocumentService.getDocTypes());
     setNewTypeName("");
     setNewTypeDesc("");
-    addAuditLog("Atakan Zehir", "Belge Kategorisi Eklendi", `Yeni döküman türü eklendi: ${added.name}`, "Veri Yönetimi");
+    addAuditLog(actorName, "Belge Kategorisi Eklendi", `Yeni döküman türü eklendi: ${added.name}`, "Veri Yönetimi");
     alert(`'${added.name}' döküman kategorisi başarıyla oluşturuldu!`);
   };
 
@@ -735,7 +737,7 @@ export default function AdministrationCenter({ onClose, initialSubTab }: Adminis
     const success = DocumentService.deleteDocType(id);
     if (success) {
       setDocTypes(DocumentService.getDocTypes());
-      addAuditLog("Atakan Zehir", "Belge Kategorisi Silindi", `Döküman türü silindi: ${name}`, "Veri Yönetimi");
+      addAuditLog(actorName, "Belge Kategorisi Silindi", `Döküman türü silindi: ${name}`, "Veri Yönetimi");
       alert(`'${name}' döküman kategorisi başarıyla kaldırıldı!`);
     } else {
       alert("Sistem varsayılan kategorileri silinemez!");
@@ -795,7 +797,7 @@ export default function AdministrationCenter({ onClose, initialSubTab }: Adminis
     setDataHubConnections([...dataHubConnections, item]);
     setIsAddStorageOpen(false);
     setNewStorage({ name: "", provider: "Microsoft OneDrive", clientId: "", clientSecret: "", bucketName: "", regionHost: "", owner: "Sistem Yöneticisi", description: "", defaultRootFolder: "" });
-    addAuditLog("Atakan Zehir", "Depolama Bağlantısı Eklendi", `Bulut veri kaynağı entegre edildi: ${item.name}`, "Data Hub");
+    addAuditLog(actorName, "Depolama Bağlantısı Eklendi", `Bulut veri kaynağı entegre edildi: ${item.name}`, "Data Hub");
     alert("Bulut depolama kanalı başarıyla tanımlandı!");
   };
 
@@ -813,7 +815,7 @@ export default function AdministrationCenter({ onClose, initialSubTab }: Adminis
       setDataHubConnections(prev => prev.map(c => c.id === conn.id ? { ...c, defaultStorage: true, enabled: true, status: "Connected" } : { ...c, defaultStorage: false }));
     }
 
-    addAuditLog("Atakan Zehir", "Bağlantı Ayarları Güncellendi", `${conn.name} bağlantı parametreleri güncellendi.`, "Data Hub");
+    addAuditLog(actorName, "Bağlantı Ayarları Güncellendi", `${conn.name} bağlantı parametreleri güncellendi.`, "Data Hub");
     alert(`'${conn.name}' bağlantı ayarları başarıyla kaydedildi!`);
     setEditingConnId(null);
     setEditForm(null);
@@ -824,7 +826,7 @@ export default function AdministrationCenter({ onClose, initialSubTab }: Adminis
       if (c.id === id) {
         const status = enable ? "Connected" : "Disconnected";
         const health = enable ? "Healthy" : "Untested";
-        addAuditLog("Atakan Zehir", enable ? "Bulut Bağlantısı Aktifleştirildi" : "Bulut Bağlantısı Devre Dışı", `${c.name} kanalı ${enable ? "aktif" : "pasif"} edildi.`, "Data Hub");
+        addAuditLog(actorName, enable ? "Bulut Bağlantısı Aktifleştirildi" : "Bulut Bağlantısı Devre Dışı", `${c.name} kanalı ${enable ? "aktif" : "pasif"} edildi.`, "Data Hub");
         
         // If disabling the default storage, fall back to Local Storage as default
         let isDefault = c.defaultStorage;
@@ -853,7 +855,7 @@ export default function AdministrationCenter({ onClose, initialSubTab }: Adminis
         setDataHubConnections(prev => prev.map(p => p.id === "sh-local" ? { ...p, defaultStorage: true, enabled: true, status: "Connected" } : p));
       }
       setDataHubConnections(dataHubConnections.filter(c => c.id !== id));
-      addAuditLog("Atakan Zehir", "Depolama Bağlantısı Silindi", `${name} bağlantısı sistemden kaldırıldı.`, "Data Hub");
+      addAuditLog(actorName, "Depolama Bağlantısı Silindi", `${name} bağlantısı sistemden kaldırıldı.`, "Data Hub");
       setEditingConnId(null);
       setEditForm(null);
     }
@@ -862,7 +864,7 @@ export default function AdministrationCenter({ onClose, initialSubTab }: Adminis
   const handleSetDefaultStorage = (id: string) => {
     setDataHubConnections(dataHubConnections.map(c => {
       if (c.id === id) {
-        addAuditLog("Atakan Zehir", "Varsayılan Depolama Değiştirildi", `${c.name} varsayılan depolama kanalı yapıldı.`, "Data Hub");
+        addAuditLog(actorName, "Varsayılan Depolama Değiştirildi", `${c.name} varsayılan depolama kanalı yapıldı.`, "Data Hub");
         return { ...c, defaultStorage: true, enabled: true, status: "Connected", connectionHealth: "Healthy" as any };
       }
       return { ...c, defaultStorage: false };
@@ -886,7 +888,7 @@ export default function AdministrationCenter({ onClose, initialSubTab }: Adminis
         return c;
       }));
       alert(`✅ BAĞLANTI TESTİ BAŞARILI!\n\n${conn.name} (${conn.provider}) bulut sunucusu ile güvenli iletişim doğrulandı.\nBağlantı Durumu: SAĞLIKLI / AKTİF\nKök Klasör: ${conn.defaultRootFolder}`);
-      addAuditLog("Atakan Zehir", "Bağlantı Test Başarılı", `${conn.name} için yapılan iletişim testi başarıyla tamamlandı.`, "Data Hub", "Success");
+      addAuditLog(actorName, "Bağlantı Test Başarılı", `${conn.name} için yapılan iletişim testi başarıyla tamamlandı.`, "Data Hub", "Success");
     } else {
       setDataHubConnections(dataHubConnections.map(c => {
         if (c.id === id) {
@@ -895,13 +897,13 @@ export default function AdministrationCenter({ onClose, initialSubTab }: Adminis
         return c;
       }));
       alert(`❌ BAĞLANTI TESTİ BAŞARISIZ!\n\n${conn.name} (${conn.provider}) bulut sunucusuna erişim sağlanamadı!\nSebep: Kimlik doğrulama anahtarları (Client ID / Client Secret) veya Kök Klasör tanımlı değil. Lütfen bilgileri kontrol edin.`);
-      addAuditLog("Atakan Zehir", "Bağlantı Test Başarısız", `${conn.name} için erişim testi başarısız oldu.`, "Data Hub", "Warning");
+      addAuditLog(actorName, "Bağlantı Test Başarısız", `${conn.name} için erişim testi başarısız oldu.`, "Data Hub", "Warning");
     }
   };
 
   const handleSaveAndClose = () => {
     setShowSavedMsg(true);
-    addAuditLog("Atakan Zehir", "Ayarlar Kaydedildi", "Yönetim portalı ayarları değiştirildi ve kapatıldı.", "Sistem Ayarları");
+    addAuditLog(actorName, "Ayarlar Kaydedildi", "Yönetim portalı ayarları değiştirildi ve kapatıldı.", "Sistem Ayarları");
     setTimeout(() => {
       setShowSavedMsg(false);
       if (onClose) {
@@ -993,7 +995,7 @@ export default function AdministrationCenter({ onClose, initialSubTab }: Adminis
     const updated = [...promptTemplates];
     updated[idx].prompt = text;
     setPromptTemplates(updated);
-    addAuditLog("Atakan Zehir", "AI Prompt Düzenleme", `AI Prompt Şablonu güncellendi: ${updated[idx].name}`, "AI Ayarları");
+    addAuditLog(actorName, "AI Prompt Düzenleme", `AI Prompt Şablonu güncellendi: ${updated[idx].name}`, "AI Ayarları");
     alert("Üretken AI Talimatı (Prompt Template) başarıyla kaydedildi!");
   };
 
@@ -1011,7 +1013,7 @@ export default function AdministrationCenter({ onClose, initialSubTab }: Adminis
     setTimeout(() => {
       setIsRefreshingHealth(false);
       alert("Tüm entegrasyonlar ve API servisleri başarıyla doğrulandı. Sistem sağlığı: %100");
-      addAuditLog("Atakan Zehir", "Sistem Sağlığı Kontrolü", "Tüm sistem servisleri ve harici API'ler başarıyla test edildi.", "Sistem Sağlığı");
+      addAuditLog(actorName, "Sistem Sağlığı Kontrolü", "Tüm sistem servisleri ve harici API'ler başarıyla test edildi.", "Sistem Sağlığı");
     }, 800);
   };
 
@@ -1232,7 +1234,7 @@ export default function AdministrationCenter({ onClose, initialSubTab }: Adminis
                             reader.onload = (event) => {
                               const result = event.target?.result as string;
                               setOrgSettings({ ...orgSettings, logo: result });
-                              addAuditLog("Atakan Zehir", "Şirket Logosu Güncellendi", "Yeni şirket logosu sisteme yüklendi.", "Sistem Ayarları");
+                              addAuditLog(actorName, "Şirket Logosu Güncellendi", "Yeni şirket logosu sisteme yüklendi.", "Sistem Ayarları");
                             };
                             reader.readAsDataURL(file);
                           }
@@ -1384,7 +1386,7 @@ export default function AdministrationCenter({ onClose, initialSubTab }: Adminis
                   type="button"
                   onClick={() => {
                     setShowSavedMsg(true);
-                    addAuditLog("Atakan Zehir", "Organizasyon Güncellendi", "Şirket vergi, takvim ve saat ayarları yenilendi.", "Bulut Entegrasyonu");
+                    addAuditLog(actorName, "Organizasyon Güncellendi", "Şirket vergi, takvim ve saat ayarları yenilendi.", "Bulut Entegrasyonu");
                     setTimeout(() => {
                       setShowSavedMsg(false);
                     }, 1500);
@@ -1746,7 +1748,7 @@ export default function AdministrationCenter({ onClose, initialSubTab }: Adminis
                                     type="button"
                                     onClick={() => {
                                       setUsers(users.filter(usr => usr.id !== u.id));
-                                      addAuditLog("Atakan Zehir", "Kullanıcı Silindi", `${u.email} kullanıcısı sistemden kalıcı olarak silindi.`, "Kullanıcı Yönetimi");
+                                      addAuditLog(actorName, "Kullanıcı Silindi", `${u.email} kullanıcısı sistemden kalıcı olarak silindi.`, "Kullanıcı Yönetimi");
                                       showToast(
                                         selectedLanguage === "TR" 
                                           ? `Kullanıcı (${u.name} ${u.surname}) başarıyla silindi!` 
@@ -2604,7 +2606,7 @@ export default function AdministrationCenter({ onClose, initialSubTab }: Adminis
                   type="button"
                   onClick={() => {
                     alert("Tüm güvenlik günlükleri CSV olarak dışa aktarılmıştır!");
-                    addAuditLog("Atakan Zehir", "Günlük Arşiv Dışa Aktarım", "Audit logs verileri güvenlik raporu için dışa aktarıldı.", "Veri Güvenliği");
+                    addAuditLog(actorName, "Günlük Arşiv Dışa Aktarım", "Audit logs verileri güvenlik raporu için dışa aktarıldı.", "Veri Güvenliği");
                   }}
                   className="p-1.5 px-3 bg-white hover:bg-slate-50 border border-slate-200 dark:bg-[#1f1f1e] dark:border-zinc-800 rounded-lg text-[10px] font-bold text-slate-700 dark:text-zinc-300 font-mono transition-all flex items-center gap-1 cursor-pointer"
                 >
@@ -2711,7 +2713,7 @@ export default function AdministrationCenter({ onClose, initialSubTab }: Adminis
                           const updated = [...aiAgentSkills];
                           updated[index].active = !updated[index].active;
                           setAiAgentSkills(updated);
-                          addAuditLog("Atakan Zehir", "AI Yetenek Değişimi", `${skill.name} yeteneği ${updated[index].active ? "açıldı" : "kapatıldı"}.`, "AI Ayarları");
+                          addAuditLog(actorName, "AI Yetenek Değişimi", `${skill.name} yeteneği ${updated[index].active ? "açıldı" : "kapatıldı"}.`, "AI Ayarları");
                         }}
                         className="text-slate-550 transition-colors"
                       >
