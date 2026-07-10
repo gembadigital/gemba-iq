@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useEditor, EditorContent } from "@tiptap/react";
+import { useLanguage } from "../lib/LanguageContext";
 import StarterKit from "@tiptap/starter-kit";
 import Underline from "@tiptap/extension-underline";
 import { TextStyle } from "@tiptap/extension-text-style";
@@ -211,6 +212,7 @@ interface WysiwygEditorProps {
 }
 
 export const WysiwygEditor: React.FC<WysiwygEditorProps> = ({ value, onChange }) => {
+  const { t } = useLanguage();
   const [fontColor, setFontColor] = useState("#000000");
   const [highlightColor, setHighlightColor] = useState("#ffff00");
   const [showColorDropdown, setShowColorDropdown] = useState(false);
@@ -359,7 +361,7 @@ export const WysiwygEditor: React.FC<WysiwygEditorProps> = ({ value, onChange })
             onClick={() => editor.chain().focus().undo().run()}
             disabled={!editor.can().undo()}
             className="p-1.5 hover:bg-slate-200 dark:hover:bg-zinc-700 rounded text-slate-600 dark:text-zinc-350 disabled:opacity-30 cursor-pointer"
-            title="Geri Al (Ctrl+Z)"
+            title={t("Undo (Ctrl+Z)")}
           >
             <Undo className="w-3.5 h-3.5" />
           </button>
@@ -368,7 +370,7 @@ export const WysiwygEditor: React.FC<WysiwygEditorProps> = ({ value, onChange })
             onClick={() => editor.chain().focus().redo().run()}
             disabled={!editor.can().redo()}
             className="p-1.5 hover:bg-slate-200 dark:hover:bg-zinc-700 rounded text-slate-600 dark:text-zinc-350 disabled:opacity-30 cursor-pointer"
-            title="Yinele (Ctrl+Y)"
+            title={t("Redo (Ctrl+Y)")}
           >
             <Redo className="w-3.5 h-3.5" />
           </button>
@@ -417,7 +419,7 @@ export const WysiwygEditor: React.FC<WysiwygEditorProps> = ({ value, onChange })
               editor.chain().focus().setFontSize(e.target.value).run();
             }}
             className="p-1 bg-white dark:bg-zinc-800 border border-slate-200 dark:border-zinc-700 rounded text-xs font-mono text-[#0078D4] dark:text-blue-400 font-bold focus:outline-hidden"
-            title="Yazı Boyutu"
+            title={t("Font Size")}
           >
             {fontSizes.map((size) => (
               <option key={size.value} value={size.value}>
@@ -439,7 +441,7 @@ export const WysiwygEditor: React.FC<WysiwygEditorProps> = ({ value, onChange })
                 ? "bg-slate-200 dark:bg-zinc-750 text-slate-900 dark:text-white font-bold"
                 : "hover:bg-slate-100 dark:hover:bg-zinc-800 text-slate-600 dark:text-zinc-350"
             }`}
-            title="Kalın (Ctrl+B)"
+            title={t("Bold (Ctrl+B)")}
           >
             <BoldIcon className="w-3.5 h-3.5" />
           </button>
@@ -451,7 +453,7 @@ export const WysiwygEditor: React.FC<WysiwygEditorProps> = ({ value, onChange })
                 ? "bg-slate-200 dark:bg-zinc-750 text-slate-900 dark:text-white"
                 : "hover:bg-slate-100 dark:hover:bg-zinc-800 text-slate-600 dark:text-zinc-350"
             }`}
-            title="Eğik (Ctrl+I)"
+            title={t("Italic (Ctrl+I)")}
           >
             <ItalicIcon className="w-3.5 h-3.5" />
           </button>
@@ -463,7 +465,7 @@ export const WysiwygEditor: React.FC<WysiwygEditorProps> = ({ value, onChange })
                 ? "bg-slate-200 dark:bg-zinc-750 text-slate-900 dark:text-white"
                 : "hover:bg-slate-100 dark:hover:bg-zinc-800 text-slate-600 dark:text-zinc-350"
             }`}
-            title="Altı Çizili (Ctrl+U)"
+            title={t("Underline (Ctrl+U)")}
           >
             <UnderlineIcon className="w-3.5 h-3.5" />
           </button>
@@ -475,7 +477,7 @@ export const WysiwygEditor: React.FC<WysiwygEditorProps> = ({ value, onChange })
                 ? "bg-slate-200 dark:bg-zinc-750 text-slate-900 dark:text-white"
                 : "hover:bg-slate-100 dark:hover:bg-zinc-800 text-slate-600 dark:text-zinc-350"
             }`}
-            title="Üstü Çizili"
+            title={t("Strikethrough")}
           >
             <StrikethroughIcon className="w-3.5 h-3.5" />
           </button>
@@ -495,7 +497,7 @@ export const WysiwygEditor: React.FC<WysiwygEditorProps> = ({ value, onChange })
                 setShowHighlightDropdown(false);
               }}
               className="p-1.5 hover:bg-slate-200 dark:hover:bg-zinc-700 rounded flex items-center gap-0.5 text-slate-600 dark:text-zinc-350 cursor-pointer"
-              title="Yazı Rengi"
+              title={t("Text Color")}
             >
               <Palette className="w-3.5 h-3.5" />
               <div 
@@ -541,7 +543,7 @@ export const WysiwygEditor: React.FC<WysiwygEditorProps> = ({ value, onChange })
                 setShowColorDropdown(false);
               }}
               className="p-1.5 hover:bg-slate-200 dark:hover:bg-zinc-700 rounded flex items-center gap-0.5 text-slate-600 dark:text-zinc-350 cursor-pointer"
-              title="Metin Vurgu Rengi"
+              title={t("Text Highlight Color")}
             >
               <Highlighter className="w-3.5 h-3.5" />
               <div 
@@ -570,7 +572,7 @@ export const WysiwygEditor: React.FC<WysiwygEditorProps> = ({ value, onChange })
                     }}
                     className="w-5 h-5 rounded border border-slate-200 cursor-pointer transition-transform hover:scale-110"
                     style={{ backgroundColor: h === "transparent" ? "#f1f5f9" : h, position: "relative" }}
-                    title={h === "transparent" ? "Temizle" : h}
+                    title={h === "transparent" ? t("Clear") : h}
                   >
                     {h === "transparent" && <div className="absolute inset-0 flex items-center justify-center text-[10px] font-bold text-slate-400">X</div>}
                   </button>
@@ -593,7 +595,7 @@ export const WysiwygEditor: React.FC<WysiwygEditorProps> = ({ value, onChange })
                 ? "bg-slate-200 dark:bg-zinc-750 text-slate-900 dark:text-white"
                 : "hover:bg-slate-100 dark:hover:bg-zinc-800 text-slate-600 dark:text-zinc-350"
             }`}
-            title="Sola Hizala"
+            title={t("Align Left")}
           >
             <AlignLeft className="w-3.5 h-3.5" />
           </button>
@@ -605,7 +607,7 @@ export const WysiwygEditor: React.FC<WysiwygEditorProps> = ({ value, onChange })
                 ? "bg-slate-200 dark:bg-zinc-750 text-slate-900 dark:text-white"
                 : "hover:bg-slate-100 dark:hover:bg-zinc-800 text-slate-600 dark:text-zinc-350"
             }`}
-            title="Ortala"
+            title={t("Align Center")}
           >
             <AlignCenter className="w-3.5 h-3.5" />
           </button>
@@ -617,7 +619,7 @@ export const WysiwygEditor: React.FC<WysiwygEditorProps> = ({ value, onChange })
                 ? "bg-slate-200 dark:bg-zinc-750 text-slate-900 dark:text-white"
                 : "hover:bg-slate-100 dark:hover:bg-zinc-800 text-slate-600 dark:text-zinc-350"
             }`}
-            title="Sağa Hizala"
+            title={t("Align Right")}
           >
             <AlignRight className="w-3.5 h-3.5" />
           </button>
@@ -629,7 +631,7 @@ export const WysiwygEditor: React.FC<WysiwygEditorProps> = ({ value, onChange })
                 ? "bg-slate-200 dark:bg-zinc-750 text-slate-900 dark:text-white"
                 : "hover:bg-slate-100 dark:hover:bg-zinc-800 text-slate-600 dark:text-zinc-350"
             }`}
-            title="İki Yana Yasla"
+            title={t("Justify")}
           >
             <AlignJustify className="w-3.5 h-3.5" />
           </button>
@@ -647,7 +649,7 @@ export const WysiwygEditor: React.FC<WysiwygEditorProps> = ({ value, onChange })
                 ? "bg-slate-200 dark:bg-zinc-750 text-slate-900 dark:text-white"
                 : "hover:bg-slate-100 dark:hover:bg-zinc-800 text-slate-600 dark:text-zinc-350"
             }`}
-            title="Maddeli Liste"
+            title={t("Bulleted List")}
           >
             <List className="w-3.5 h-3.5" />
           </button>
@@ -659,7 +661,7 @@ export const WysiwygEditor: React.FC<WysiwygEditorProps> = ({ value, onChange })
                 ? "bg-slate-200 dark:bg-zinc-750 text-slate-900 dark:text-white"
                 : "hover:bg-slate-100 dark:hover:bg-zinc-800 text-slate-600 dark:text-zinc-350"
             }`}
-            title="Numaralı Liste"
+            title={t("Numbered List")}
           >
             <ListOrdered className="w-3.5 h-3.5" />
           </button>
@@ -673,7 +675,7 @@ export const WysiwygEditor: React.FC<WysiwygEditorProps> = ({ value, onChange })
             type="button"
             onClick={() => editor.chain().focus().outdent().run()}
             className="p-1.5 hover:bg-slate-200 dark:hover:bg-zinc-700 rounded text-slate-600 dark:text-zinc-350 cursor-pointer"
-            title="Girintiyi Azalt"
+            title={t("Decrease Indent")}
           >
             <OutdentIcon className="w-3.5 h-3.5" />
           </button>
@@ -681,7 +683,7 @@ export const WysiwygEditor: React.FC<WysiwygEditorProps> = ({ value, onChange })
             type="button"
             onClick={() => editor.chain().focus().indent().run()}
             className="p-1.5 hover:bg-slate-200 dark:hover:bg-zinc-700 rounded text-slate-600 dark:text-zinc-350 cursor-pointer"
-            title="Girintiyi Artır"
+            title={t("Increase Indent")}
           >
             <IndentIcon className="w-3.5 h-3.5" />
           </button>
@@ -699,7 +701,7 @@ export const WysiwygEditor: React.FC<WysiwygEditorProps> = ({ value, onChange })
                 ? "bg-slate-200 dark:bg-zinc-750 text-slate-900 dark:text-white"
                 : "hover:bg-slate-100 dark:hover:bg-zinc-800 text-slate-600 dark:text-zinc-350"
             }`}
-            title="Alıntı Blok"
+            title={t("Block Quote")}
           >
             <Quote className="w-3.5 h-3.5" />
           </button>
@@ -707,7 +709,7 @@ export const WysiwygEditor: React.FC<WysiwygEditorProps> = ({ value, onChange })
             type="button"
             onClick={() => editor.chain().focus().setHorizontalRule().run()}
             className="p-1.5 hover:bg-slate-200 dark:hover:bg-zinc-700 rounded text-slate-600 dark:text-zinc-350 cursor-pointer"
-            title="Yatay Çizgi Ekle"
+            title={t("Insert Horizontal Line")}
           >
             <Minus className="w-3.5 h-3.5" />
           </button>
@@ -715,7 +717,7 @@ export const WysiwygEditor: React.FC<WysiwygEditorProps> = ({ value, onChange })
             type="button"
             onClick={insertPageBreak}
             className="p-1.5 hover:bg-red-50 dark:hover:bg-red-950 hover:text-red-650 rounded text-rose-600 cursor-pointer font-bold flex items-center gap-1 text-[10px]"
-            title="Sayfa Sonu Ekle (PDF Çıktı Alırken Yeni Sayfaya Geçer)"
+            title={t("Insert Page Break (Starts New Page in PDF Export)")}
           >
             <Scissors className="w-3.5 h-3.5" />
             <span>Sayfa Sonu</span>
@@ -734,7 +736,7 @@ export const WysiwygEditor: React.FC<WysiwygEditorProps> = ({ value, onChange })
                 ? "bg-slate-200 dark:bg-zinc-750 text-slate-900 dark:text-white"
                 : "hover:bg-slate-100 dark:hover:bg-zinc-800 text-slate-600 dark:text-zinc-350"
             }`}
-            title="Bağlantı (Köprü) Ekle"
+            title={t("Insert Link")}
           >
             <LinkIcon className="w-3.5 h-3.5" />
           </button>
@@ -743,7 +745,7 @@ export const WysiwygEditor: React.FC<WysiwygEditorProps> = ({ value, onChange })
             onClick={() => editor.chain().focus().unsetLink().run()}
             disabled={!editor.isActive("link")}
             className="p-1.5 hover:bg-slate-200 dark:hover:bg-zinc-700 rounded text-slate-600 dark:text-zinc-350 disabled:opacity-30 cursor-pointer"
-            title="Bağlantıyı Kaldır"
+            title={t("Remove Link")}
           >
             <Unlink className="w-3.5 h-3.5" />
           </button>
@@ -763,7 +765,7 @@ export const WysiwygEditor: React.FC<WysiwygEditorProps> = ({ value, onChange })
                 .run()
             }
             className="p-1.5 hover:bg-slate-200 dark:hover:bg-zinc-700 rounded text-slate-600 dark:text-zinc-350 flex items-center gap-1 text-[10px] font-semibold cursor-pointer"
-            title="Tablo Ekle (3x3)"
+            title={t("Insert Table (3x3)")}
           >
             <TableIcon className="w-3.5 h-3.5" />
             <span>Tablo</span>
@@ -775,7 +777,7 @@ export const WysiwygEditor: React.FC<WysiwygEditorProps> = ({ value, onChange })
                 type="button"
                 onClick={() => editor.chain().focus().addColumnBefore().run()}
                 className="p-1 hover:bg-slate-200 dark:hover:bg-zinc-700 rounded text-[9px] font-bold text-slate-600 dark:text-zinc-300"
-                title="Sola Sütun Ekle"
+                title={t("Add Column Left")}
               >
                 +Sütun Sola
               </button>
@@ -783,7 +785,7 @@ export const WysiwygEditor: React.FC<WysiwygEditorProps> = ({ value, onChange })
                 type="button"
                 onClick={() => editor.chain().focus().addColumnAfter().run()}
                 className="p-1 hover:bg-slate-200 dark:hover:bg-zinc-700 rounded text-[9px] font-bold text-slate-600 dark:text-zinc-300"
-                title="Sağa Sütun Ekle"
+                title={t("Add Column Right")}
               >
                 +Sütun Sağa
               </button>
@@ -791,7 +793,7 @@ export const WysiwygEditor: React.FC<WysiwygEditorProps> = ({ value, onChange })
                 type="button"
                 onClick={() => editor.chain().focus().deleteColumn().run()}
                 className="p-1 hover:bg-red-100 dark:hover:bg-red-950 hover:text-red-650 rounded text-[9px] font-bold text-red-600"
-                title="Sütunu Sil"
+                title={t("Delete Column")}
               >
                 Sütun Sil
               </button>
@@ -800,7 +802,7 @@ export const WysiwygEditor: React.FC<WysiwygEditorProps> = ({ value, onChange })
                 type="button"
                 onClick={() => editor.chain().focus().addRowBefore().run()}
                 className="p-1 hover:bg-slate-200 dark:hover:bg-zinc-700 rounded text-[9px] font-bold text-slate-600 dark:text-zinc-300"
-                title="Üste Satır Ekle"
+                title={t("Add Row Above")}
               >
                 +Satır Üste
               </button>
@@ -808,7 +810,7 @@ export const WysiwygEditor: React.FC<WysiwygEditorProps> = ({ value, onChange })
                 type="button"
                 onClick={() => editor.chain().focus().addRowAfter().run()}
                 className="p-1 hover:bg-slate-200 dark:hover:bg-zinc-700 rounded text-[9px] font-bold text-slate-600 dark:text-zinc-300"
-                title="Alta Satır Ekle"
+                title={t("Add Row Below")}
               >
                 +Satır Alta
               </button>
@@ -816,7 +818,7 @@ export const WysiwygEditor: React.FC<WysiwygEditorProps> = ({ value, onChange })
                 type="button"
                 onClick={() => editor.chain().focus().deleteRow().run()}
                 className="p-1 hover:bg-red-100 dark:hover:bg-red-950 hover:text-red-650 rounded text-[9px] font-bold text-red-600"
-                title="Satırı Sil"
+                title={t("Delete Row")}
               >
                 Satır Sil
               </button>
@@ -825,7 +827,7 @@ export const WysiwygEditor: React.FC<WysiwygEditorProps> = ({ value, onChange })
                 type="button"
                 onClick={() => editor.chain().focus().deleteTable().run()}
                 className="p-1 hover:bg-red-600 hover:text-white rounded text-[9px] font-bold text-red-600"
-                title="Tabloyu Tamamen Kaldır"
+                title={t("Delete Table")}
               >
                 Tablo Sil
               </button>

@@ -18,7 +18,7 @@ import AuthLoadingScreen from "./AuthLoadingScreen";
 export default function JoinPage() {
   const { user, loading: authLoading } = useAuth();
   const { refreshOrganization, membership, loading: orgLoading } = useOrganization();
-  const { lang } = useLanguage();
+  const { lang, t } = useLanguage();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
 
@@ -34,7 +34,7 @@ export default function JoinPage() {
   useEffect(() => {
     if (!token) {
       setPreviewLoading(false);
-      setError(tr ? "Geçersiz davet bağlantısı." : "Invalid invitation link.");
+      setError(t("Invalid invitation link."));
       return;
     }
 
@@ -47,11 +47,11 @@ export default function JoinPage() {
         if (!mounted) return;
         setPreview(data);
         if (data.is_expired) {
-          setError(tr ? "Bu davetin süresi dolmuş." : "This invitation has expired.");
+          setError(t("This invitation has expired."));
         }
       } catch (err) {
         if (!mounted) return;
-        setError(err instanceof Error ? err.message : "Invitation not found.");
+        setError(err instanceof Error ? err.message : t("Invitation not found."));
       } finally {
         if (mounted) setPreviewLoading(false);
       }
@@ -60,7 +60,7 @@ export default function JoinPage() {
     return () => {
       mounted = false;
     };
-  }, [token, tr]);
+  }, [token, t]);
 
   useEffect(() => {
     if (!user || !token || previewLoading || preview?.is_expired || accepting) return;
@@ -85,7 +85,7 @@ export default function JoinPage() {
         navigate("/", { replace: true });
       } catch (err) {
         if (!mounted) return;
-        const message = err instanceof Error ? err.message : "Failed to accept invitation.";
+        const message = err instanceof Error ? err.message : t("Failed to accept invitation.");
         if (message.toLowerCase().includes("already belongs")) {
           clearPendingInvitationToken();
           navigate("/", { replace: true });

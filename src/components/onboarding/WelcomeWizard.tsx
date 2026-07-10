@@ -16,7 +16,7 @@ const COUNTRIES = [
 
 export default function WelcomeWizard() {
   const { completeOnboarding } = useOrganization();
-  const { lang, setLang } = useLanguage();
+  const { lang, setLang, t } = useLanguage();
 
   const [fullName, setFullName] = useState("");
   const [companyName, setCompanyName] = useState("");
@@ -113,7 +113,7 @@ export default function WelcomeWizard() {
           >
             {COUNTRIES.map((c) => (
               <option key={c} value={c}>
-                {c}
+                {t(c)}
               </option>
             ))}
           </select>
@@ -130,7 +130,7 @@ export default function WelcomeWizard() {
             className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-zinc-700 bg-white dark:bg-[#0c0c0e] text-sm text-slate-900 dark:text-zinc-100 focus:outline-none focus:ring-2 focus:ring-[#1E3A5F]/20 focus:border-[#1E3A5F]"
           >
             <option value="TR">Türkçe</option>
-            <option value="EN">English</option>
+            <option value="EN">{t("English")}</option>
           </select>
         </div>
 

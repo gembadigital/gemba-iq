@@ -372,7 +372,7 @@ export default function App() {
       );
 
       if (!authWindow) {
-        alert("The pop-up authorization window was blocked. Please enable browser popups to sign in with Microsoft 365.");
+        alert(t("The pop-up authorization window was blocked. Please enable browser popups to sign in with Microsoft 365."));
       }
     } catch (error: any) {
       console.error("Microsoft connection exception:", error);
@@ -1114,7 +1114,7 @@ export default function App() {
                     disabled={recipients.length === 0}
                     onClick={() => {
                       if (recipients.length === 0) {
-                        alert("Please load a recipient spreadsheet or add recipients manually first!");
+                        alert(t("Please load a recipient spreadsheet or add recipients manually first!"));
                         setActiveTab("designer");
                       } else {
                         setActiveTab("progress");
@@ -1151,7 +1151,7 @@ export default function App() {
                     ? "bg-[#eaeae9] dark:bg-[#252525] border-[#1f1f1f]/10 dark:border-white/10 hover:bg-[#DEDCDA] dark:hover:bg-slate-800 text-[#2D3748] dark:text-zinc-200"
                     : "bg-[#EDEBE9] dark:bg-[#252423] border border-[#DEDCDA] dark:border-[#323130] hover:bg-[#DEDCDA] dark:hover:bg-[#252423]/90 text-[#2D3748] dark:text-zinc-200 hover:text-slate-900"
                 }`}
-                title="Switch Themes"
+                title={t("Switch Themes")}
               >
                 {darkMode ? <Sun className="w-4.5 h-4.5 text-amber-500" /> : <Moon className="w-4.5 h-4.5" />}
               </button>
@@ -1648,7 +1648,7 @@ export default function App() {
                 attachments={attachments}
                 setAttachments={setAttachments}
                 onLaunchCampaign={() => {
-                  if (recipients.length === 0) return alert("Please import or add recipients first!");
+                  if (recipients.length === 0) return alert(t("Please import or add recipients first!"));
                   setActiveTab("progress");
                 }}
                 isConnected={!!session?.isConnected}

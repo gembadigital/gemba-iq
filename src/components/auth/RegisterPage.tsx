@@ -8,7 +8,7 @@ import AuthLayout, { AuthButton, AuthError, AuthField, AuthSuccess } from "./Aut
 
 export default function RegisterPage() {
   const { signUp, user, initError } = useAuth();
-  const { lang } = useLanguage();
+  const { lang, t } = useLanguage();
   const [searchParams] = useSearchParams();
   const inviteToken = searchParams.get("token") || "";
 
@@ -119,7 +119,7 @@ export default function RegisterPage() {
           type="email"
           value={email}
           onChange={setEmail}
-          placeholder="you@company.com"
+          placeholder={t("you@company.com")}
           autoComplete="email"
           disabled={inviteLockedEmail}
         />

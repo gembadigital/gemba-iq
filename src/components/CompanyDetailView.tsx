@@ -53,6 +53,7 @@ export default function CompanyDetailView({
   showCloseButtonOnly = false
 }: CompanyDetailViewProps) {
   const [detailTab, setDetailTab] = useState("overview");
+  const { t } = useLanguage();
 
   // Localization utilities for database fields
   const getTranslatedValue = (value: string | undefined, field: string) => {
@@ -302,11 +303,11 @@ export default function CompanyDetailView({
                 <table className="w-full text-left border-collapse text-xs">
                   <thead>
                     <tr className="bg-slate-50 dark:bg-zinc-900 border-b border-slate-100 dark:border-zinc-800 text-[10px] uppercase font-bold text-slate-400 font-mono tracking-wider">
-                      <th className="p-3 pl-4">Deal Name</th>
-                      <th className="p-3">Stage</th>
-                      <th className="p-3">Win Probability</th>
-                      <th className="p-3">Close Date</th>
-                      <th className="p-3 text-right pr-4">Opportunity Value</th>
+                      <th className="p-3 pl-4">{t("Deal Name")}</th>
+                      <th className="p-3">{t("Stage")}</th>
+                      <th className="p-3">{t("Win Probability")}</th>
+                      <th className="p-3">{t("Close Date")}</th>
+                      <th className="p-3 text-right pr-4">{t("Opportunity Value")}</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-slate-50 dark:divide-zinc-850">
@@ -351,11 +352,11 @@ export default function CompanyDetailView({
                 <table className="w-full text-left border-collapse text-xs">
                   <thead>
                     <tr className="bg-slate-50 dark:bg-zinc-900 border-b border-slate-100 dark:border-zinc-800 text-[10px] uppercase font-bold text-slate-400 font-mono tracking-wider">
-                      <th className="p-3 pl-4">Proposal Number</th>
-                      <th className="p-3">Title</th>
-                      <th className="p-3">Date</th>
-                      <th className="p-3">Status</th>
-                      <th className="p-3 text-right pr-4">Total Amount</th>
+                      <th className="p-3 pl-4">{t("Proposal Number")}</th>
+                      <th className="p-3">{t("Title")}</th>
+                      <th className="p-3">{t("Date")}</th>
+                      <th className="p-3">{t("Status")}</th>
+                      <th className="p-3 text-right pr-4">{t("Total Amount")}</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-slate-50 dark:divide-zinc-850">
@@ -452,11 +453,11 @@ export default function CompanyDetailView({
                   <table className="w-full text-left border-collapse text-xs font-sans">
                     <thead>
                       <tr className="bg-slate-50 dark:bg-zinc-900 border-b border-slate-150 dark:border-zinc-850 text-[10px] font-mono uppercase font-bold text-slate-400">
-                        <th className="p-3 pl-4">Field / Property</th>
-                        <th className="p-3">Old Value</th>
-                        <th className="p-3">New Value</th>
-                        <th className="p-3">User</th>
-                        <th className="p-3 text-right pr-4">Timestamp</th>
+                        <th className="p-3 pl-4">{t("Field / Property")}</th>
+                        <th className="p-3">{t("Old Value")}</th>
+                        <th className="p-3">{t("New Value")}</th>
+                        <th className="p-3">{t("User")}</th>
+                        <th className="p-3 text-right pr-4">{t("Timestamp")}</th>
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-slate-50 dark:divide-zinc-850 text-slate-700 dark:text-zinc-300">

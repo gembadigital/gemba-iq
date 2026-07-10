@@ -1,4 +1,5 @@
 import React, { createContext, useContext, useState, useEffect } from "react";
+import { uiDictionaryEN, uiDictionaryTR } from "./uiDictionaryExtensions";
 
 export type Language = "TR" | "EN";
 
@@ -169,7 +170,8 @@ const dictionary: Record<Language, Record<string, string>> = {
     "e.g. Purchase Manager, COO, General Manager": "Örn. Genel Müdür, COO, Satınalma Müdürü",
     "Customer Segment": "Müşteri Tipi",
     "No contacts registered for this company yet.": "Bu şirkete ait herhangi bir kişi kaydı bulunmamaktadır.",
-    "No Title Specified": "Belirtilmemiş Ünvan"
+    "No Title Specified": "Belirtilmemiş Ünvan",
+    ...uiDictionaryTR,
   },
   EN: {
     // Sidebar
@@ -459,7 +461,8 @@ const dictionary: Record<Language, Record<string, string>> = {
     "Kapatılan Kazanç": "Closed Won",
     "Aktif Fırsatlar": "Active Deals",
     "Kazanma Oranı": "Win Rate",
-    "Fırsat başarıyla eklendi!": "Deal added successfully!"
+    "Fırsat başarıyla eklendi!": "Deal added successfully!",
+    ...uiDictionaryEN,
   }
 };
 

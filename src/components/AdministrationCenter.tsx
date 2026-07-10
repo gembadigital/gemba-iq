@@ -1845,7 +1845,7 @@ export default function AdministrationCenter({ onClose, initialSubTab }: Adminis
                             <span className={`text-[9px] font-bold font-mono px-1.5 py-0.5 rounded ${
                               conn.connectionHealth === "Healthy" ? "text-emerald-700 bg-emerald-50" : "text-amber-700 bg-amber-50"
                             }`}>
-                              Sağlık: {conn.connectionHealth}
+                              {L("Sağlık", "Health")}: {t(conn.connectionHealth)}
                             </span>
                           </div>
                           <h4 className="text-xs font-bold text-slate-800 dark:text-zinc-150 mt-1.5 truncate" title={conn.name}>{conn.name}</h4>
@@ -2007,7 +2007,7 @@ export default function AdministrationCenter({ onClose, initialSubTab }: Adminis
                               log.action === "Download" ? "bg-emerald-50 text-emerald-700" :
                               log.action === "Preview" ? "bg-amber-50 text-amber-700" : "bg-slate-100 text-slate-700"
                             }`}>
-                              {log.action}
+                              {t(log.action)}
                             </span>
                           </div>
                           <div className="col-span-2 text-slate-700 dark:text-zinc-200 truncate pr-4 font-semibold" title={log.details}>

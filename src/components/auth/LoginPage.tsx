@@ -8,7 +8,7 @@ import AuthLayout, { AuthButton, AuthError, AuthField } from "./AuthLayout";
 
 export default function LoginPage() {
   const { signIn, user, initError } = useAuth();
-  const { lang } = useLanguage();
+  const { lang, t } = useLanguage();
   const navigate = useNavigate();
   const location = useLocation();
   const [searchParams] = useSearchParams();
@@ -89,7 +89,7 @@ export default function LoginPage() {
           type="email"
           value={email}
           onChange={setEmail}
-          placeholder="you@company.com"
+          placeholder={t("you@company.com")}
           autoComplete="email"
           disabled={inviteLockedEmail}
         />

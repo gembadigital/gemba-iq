@@ -14,6 +14,7 @@ import {
   Legend
 } from "recharts";
 import { DollarSign, TrendingUp, Receipt, Plus, Sparkles, CheckCircle, RefreshCw, FileText } from "lucide-react";
+import { useLanguage } from "../../lib/LanguageContext";
 
 interface CompanyRevenueTabProps {
   companyId: string;
@@ -36,6 +37,7 @@ export default function CompanyRevenueTab({
   companyName,
   onLogTimelineEvent
 }: CompanyRevenueTabProps) {
+  const { t } = useLanguage();
   // Fetch deals
   const deals = useMemo(() => {
     return CrmDb.getDealsByCompany(companyId);
@@ -278,15 +280,15 @@ export default function CompanyRevenueTab({
                   />
                 </div>
                 <div>
-                  <label className="block text-[8px] uppercase font-bold text-slate-400 mb-1">Status</label>
+                  <label className="block text-[8px] uppercase font-bold text-slate-400 mb-1">{t("Status")}</label>
                   <select
                     value={newMilestone.status}
                     onChange={(e: any) => setNewMilestone({ ...newMilestone, status: e.target.value })}
                     className="w-full bg-white dark:bg-zinc-800 border border-slate-200 dark:border-zinc-700 rounded p-1.5 text-xs text-slate-800 dark:text-zinc-200 focus:outline-none"
                   >
-                    <option value="Draft">Draft</option>
-                    <option value="Pending">Pending</option>
-                    <option value="Paid">Paid</option>
+                    <option value="Draft">{t("Draft")}</option>
+                    <option value="Pending">{t("Pending")}</option>
+                    <option value="Paid">{t("Paid")}</option>
                   </select>
                 </div>
               </div>

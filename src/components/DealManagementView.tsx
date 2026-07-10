@@ -745,7 +745,7 @@ export default function DealManagementView({ initialTab = "dashboard", onNavigat
     if (!newStageNameInput) return;
     const cleanStage = newStageNameInput.trim();
     if (activeStages.includes(cleanStage)) {
-      alert("Stage already exists!");
+      alert(t("Stage already exists!"));
       return;
     }
     // Insert before Won / Lost (near end)
@@ -1031,7 +1031,7 @@ export default function DealManagementView({ initialTab = "dashboard", onNavigat
 
         const lines = text.split(/\r?\n/);
         if (lines.length <= 1) {
-          alert("CSV file is empty or only contains headers!");
+          alert(t("CSV file is empty or only contains headers!"));
           return;
         }
 
@@ -1095,11 +1095,11 @@ export default function DealManagementView({ initialTab = "dashboard", onNavigat
           });
           alert(`${newDeals.length} deals successfully imported!`);
         } else {
-          alert("No valid rows containing a Company Name could be imported.");
+          alert(t("No valid rows containing a Company Name could be imported."));
         }
       } catch (err) {
         console.error("CSV import failed", err);
-        alert("An error occurred during CSV parsing.");
+        alert(t("An error occurred during CSV parsing."));
       }
     };
     reader.readAsText(file);
@@ -1149,7 +1149,7 @@ export default function DealManagementView({ initialTab = "dashboard", onNavigat
   const handleSaveOpportunityForm = (e: React.FormEvent) => {
     e.preventDefault();
     if (!dealFormState.companyName || !dealFormState.contactPerson) {
-      alert("Please fill out Company Name and Contact Person of this opportunity.");
+      alert(t("Please fill out Company Name and Contact Person of this opportunity."));
       return;
     }
 
@@ -2083,7 +2083,7 @@ export default function DealManagementView({ initialTab = "dashboard", onNavigat
                                   setActiveDrawerTab("Overview");
                                 }}
                                 className="p-1.5 text-slate-400 hover:text-green-600 rounded hover:bg-slate-50 dark:hover:bg-zinc-800 cursor-pointer"
-                                title="Open detailed drawer view"
+                                title={t("Open detailed drawer view")}
                               >
                                 <FileText className="w-3.5 h-3.5" />
                               </button>
@@ -2091,7 +2091,7 @@ export default function DealManagementView({ initialTab = "dashboard", onNavigat
                                 type="button"
                                 onClick={() => handleOpenEditDeal(deal)}
                                 className="p-1.5 text-slate-400 hover:text-green-650 rounded hover:bg-slate-50 dark:hover:bg-zinc-800 cursor-pointer"
-                                title="Edit Opportunity Details"
+                                title={t("Edit Opportunity Details")}
                               >
                                 <Edit2 className="w-3.5 h-3.5" />
                               </button>
@@ -2111,7 +2111,7 @@ export default function DealManagementView({ initialTab = "dashboard", onNavigat
                                   });
                                 }}
                                 className="p-1.5 text-slate-400 hover:text-rose-500 rounded hover:bg-slate-50 dark:hover:bg-zinc-800 cursor-pointer"
-                                title="Delete"
+                                title={t("Delete")}
                               >
                                 <Trash2 className="w-3.5 h-3.5" />
                               </button>
@@ -2143,7 +2143,7 @@ export default function DealManagementView({ initialTab = "dashboard", onNavigat
                           type="button"
                           onClick={() => toggleCollapseStage(stage)}
                           className="text-[10px] text-slate-450 hover:text-slate-600 dark:text-zinc-550 dark:hover:text-zinc-330 cursor-pointer font-bold p-1 bg-white dark:bg-zinc-800 rounded-full border shadow-sm"
-                          title="Expand milestone stage view"
+                          title={t("Expand milestone stage view")}
                         >
                           ↔️
                         </button>
@@ -2695,7 +2695,7 @@ export default function DealManagementView({ initialTab = "dashboard", onNavigat
                         </label>
                         <input
                           type="text"
-                          placeholder="Format: DD.MM.YYYY"
+                          placeholder={t("Format: DD.MM.YYYY")}
                           value={dealFormState.expectedCloseDate}
                           onChange={(e) => setDealFormState({ ...dealFormState, expectedCloseDate: e.target.value })}
                           className="w-full bg-[#fbfbfb] dark:bg-zinc-800 border border-slate-250 dark:border-zinc-700 rounded-lg p-2 text-xs focus:outline-none font-mono"
@@ -2726,7 +2726,7 @@ export default function DealManagementView({ initialTab = "dashboard", onNavigat
 
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       <div>
-                        <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wide mb-1 font-mono">Lead Source</label>
+                        <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wide mb-1 font-mono">{t("Lead Source")}</label>
                         <select
                           value={dealFormState.leadSource}
                           onChange={(e) => {
@@ -2740,7 +2740,7 @@ export default function DealManagementView({ initialTab = "dashboard", onNavigat
                           }}
                           className="w-full bg-[#fbfbfb] dark:bg-zinc-800 border border-slate-250 dark:border-zinc-700 rounded-lg p-2 text-xs focus:outline-none cursor-pointer"
                         >
-                          <option value="">-- Choose Lead Source --</option>
+                          <option value="">{t("-- Choose Lead Source --")}</option>
                           {leadSourcesList.map((src) => (
                             <option key={src} value={src}>{src}</option>
                           ))}
@@ -2748,17 +2748,17 @@ export default function DealManagementView({ initialTab = "dashboard", onNavigat
                             <option value={dealFormState.leadSource}>{dealFormState.leadSource}</option>
                           )}
                           <option value="__add_new__" className="text-indigo-600 font-bold dark:text-indigo-400">
-                            ➕ + Add new source...
+                            {t("➕ + Add new source...")}
                           </option>
                         </select>
 
                         {showAddCustomSource && (
                           <div className="mt-2 p-2.5 bg-slate-100 dark:bg-zinc-900 rounded-lg border border-slate-200 dark:border-zinc-800 space-y-2">
-                            <label className="block text-[8px] font-bold text-slate-500 dark:text-zinc-400 uppercase tracking-wide">New Source Name</label>
+                            <label className="block text-[8px] font-bold text-slate-500 dark:text-zinc-400 uppercase tracking-wide">{t("New Source Name")}</label>
                             <div className="flex gap-1.5">
                               <input
                                 type="text"
-                                placeholder="e.g. TikTok Ad, Meta Ads"
+                                placeholder={t("e.g. TikTok Ad, Meta Ads")}
                                 value={customSourceInput}
                                 onChange={(e) => setCustomSourceInput(e.target.value)}
                                 className="flex-1 bg-white dark:bg-zinc-800 border border-slate-200 dark:border-zinc-700 rounded p-1.5 text-xs outline-none"
@@ -2779,7 +2779,7 @@ export default function DealManagementView({ initialTab = "dashboard", onNavigat
                                 }}
                                 className="px-2.5 py-1 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs rounded transition-colors"
                               >
-                                Add
+                                {t("Add")}
                               </button>
                               <button
                                 type="button"
@@ -2792,7 +2792,7 @@ export default function DealManagementView({ initialTab = "dashboard", onNavigat
                                 }}
                                 className="px-2 py-1 bg-slate-250 hover:bg-slate-300 dark:bg-zinc-800 dark:hover:bg-zinc-700 text-slate-700 dark:text-zinc-300 font-semibold text-xs rounded transition-colors"
                               >
-                                Cancel
+                                {t("Cancel")}
                               </button>
                             </div>
                           </div>
@@ -2800,10 +2800,10 @@ export default function DealManagementView({ initialTab = "dashboard", onNavigat
                       </div>
 
                       <div>
-                        <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wide mb-1 font-mono">Proposal Number (Quotation No)</label>
+                        <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wide mb-1 font-mono">{t("Proposal Number (Quotation No)")}</label>
                         <input
                           type="text"
-                          placeholder="e.g. PRP-2026-X"
+                          placeholder={t("e.g. PRP-2026-X")}
                           value={dealFormState.proposalNumber}
                           onChange={(e) => setDealFormState({ ...dealFormState, proposalNumber: e.target.value })}
                           className="w-full bg-[#fbfbfb] dark:bg-zinc-800 border border-slate-250 dark:border-zinc-700 rounded-lg p-2 text-xs focus:outline-none"
@@ -2813,10 +2813,10 @@ export default function DealManagementView({ initialTab = "dashboard", onNavigat
 
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                       <div>
-                        <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wide mb-1 font-mono">Man-Day Estimate</label>
+                        <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wide mb-1 font-mono">{t("Man-Day Estimate")}</label>
                         <input
                           type="text"
-                          placeholder="e.g. 25"
+                          placeholder={t("e.g. 25")}
                           value={dealFormState.manDay}
                           onChange={(e) => setDealFormState({ ...dealFormState, manDay: e.target.value })}
                           className="w-full bg-[#fbfbfb] dark:bg-zinc-800 border border-slate-250 dark:border-zinc-700 rounded-lg p-2 text-xs focus:outline-none"
@@ -2824,10 +2824,10 @@ export default function DealManagementView({ initialTab = "dashboard", onNavigat
                       </div>
 
                       <div>
-                        <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wide mb-1 font-mono">Contact Subject</label>
+                        <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wide mb-1 font-mono">{t("Contact Subject")}</label>
                         <input
                           type="text"
-                          placeholder="e.g. SMED Audit Planning"
+                          placeholder={t("e.g. SMED Audit Planning")}
                           value={dealFormState.contactSubject}
                           onChange={(e) => setDealFormState({ ...dealFormState, contactSubject: e.target.value })}
                           className="w-full bg-[#fbfbfb] dark:bg-zinc-800 border border-slate-250 dark:border-zinc-700 rounded-lg p-2 text-xs focus:outline-none"
@@ -2835,10 +2835,10 @@ export default function DealManagementView({ initialTab = "dashboard", onNavigat
                       </div>
 
                       <div>
-                        <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wide mb-1 font-mono">Consulting Products</label>
+                        <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wide mb-1 font-mono">{t("Consulting Products")}</label>
                         <input
                           type="text"
-                          placeholder="e.g. TIMWOODS floor training"
+                          placeholder={t("e.g. TIMWOODS floor training")}
                           value={dealFormState.products}
                           onChange={(e) => setDealFormState({ ...dealFormState, products: e.target.value })}
                           className="w-full bg-[#fbfbfb] dark:bg-zinc-800 border border-slate-250 dark:border-zinc-700 rounded-lg p-2 text-xs focus:outline-none"
@@ -3179,64 +3179,64 @@ export default function DealManagementView({ initialTab = "dashboard", onNavigat
                     
                     <div className="grid grid-cols-2 gap-4 text-xs">
                       <div>
-                        <span className="block text-[10px] text-zinc-400 capitalize font-mono font-bold">Deal Name</span>
+                        <span className="block text-[10px] text-zinc-400 capitalize font-mono font-bold">{t("Deal Name")}</span>
                         <span className="font-semibold">{selectedDeal.dealName || `${selectedDeal.companyName} Project`}</span>
                       </div>
                       <div>
-                        <span className="block text-[10px] text-zinc-400 capitalize font-mono font-bold">Industry Sector</span>
+                        <span className="block text-[10px] text-zinc-400 capitalize font-mono font-bold">{t("Industry Sector")}</span>
                         <span className="font-semibold">{selectedDeal.industry || "General B2B"}</span>
                       </div>
                       <div>
-                        <span className="block text-[10px] text-zinc-400 capitalize font-mono font-bold">Contact Person</span>
+                        <span className="block text-[10px] text-zinc-400 capitalize font-mono font-bold">{t("Contact Person")}</span>
                         <span className="font-semibold">{selectedDeal.contactPerson}</span>
                       </div>
                       <div>
-                        <span className="block text-[10px] text-zinc-400 capitalize font-mono font-bold">Pipeline Stage</span>
+                        <span className="block text-[10px] text-zinc-400 capitalize font-mono font-bold">{t("Pipeline Stage")}</span>
                         <span className="font-semibold bg-green-50 dark:bg-green-950/20 px-1.5 py-0.5 rounded text-green-700">{selectedDeal.stage}</span>
                       </div>
                       <div>
-                        <span className="block text-[10px] text-zinc-400 capitalize font-mono font-bold">Contact Email</span>
-                        <span className="font-semibold underline select-all">{selectedDeal.contactEmail || "No official email logged"}</span>
+                        <span className="block text-[10px] text-zinc-400 capitalize font-mono font-bold">{t("Contact Email")}</span>
+                        <span className="font-semibold underline select-all">{selectedDeal.contactEmail || t("No official email logged")}</span>
                       </div>
                       <div>
-                        <span className="block text-[10px] text-zinc-400 capitalize font-mono font-bold">Contact Phone</span>
-                        <span className="font-semibold">{selectedDeal.contactPhone || "None"}</span>
+                        <span className="block text-[10px] text-zinc-400 capitalize font-mono font-bold">{t("Contact Phone")}</span>
+                        <span className="font-semibold">{selectedDeal.contactPhone || t("None")}</span>
                       </div>
                       <div className="col-span-2">
-                        <span className="block text-[10px] text-zinc-400 capitalize font-mono font-bold">Opportunity Description</span>
+                        <span className="block text-[10px] text-zinc-400 capitalize font-mono font-bold">{t("Opportunity Description")}</span>
                         <p className="text-xs text-slate-550 dark:text-zinc-400 italic mt-1 bg-white dark:bg-[#1a1a19] p-2 rounded border border-slate-100 dark:border-zinc-800/85">
-                          {selectedDeal.description || "A few words about this opportunity"}
+                          {selectedDeal.description || t("A few words about this opportunity")}
                         </p>
                       </div>
                     </div>
                   </div>
 
                   <div className="bg-slate-50 dark:bg-black/10 p-4 rounded-xl border border-slate-101 space-y-3 font-sans">
-                    <h4 className="text-xs font-bold text-slate-800 dark:text-zinc-150 uppercase tracking-wide font-mono">Opportunity Custom Metadata</h4>
+                    <h4 className="text-xs font-bold text-slate-800 dark:text-zinc-150 uppercase tracking-wide font-mono">{t("Opportunity Custom Metadata")}</h4>
                     <div className="grid grid-cols-2 md:grid-cols-4 gap-3 text-xs">
                       <div>
-                        <span className="block text-[8px] text-slate-400 font-mono">LEAD SOURCE</span>
-                        <span className="font-bold">{selectedDeal.leadSource || "N/A"}</span>
+                        <span className="block text-[8px] text-slate-400 font-mono">{t("LEAD SOURCE")}</span>
+                        <span className="font-bold">{selectedDeal.leadSource || t("N/A")}</span>
                       </div>
                       <div>
-                        <span className="block text-[8px] text-slate-400 font-mono">PROPOSAL NO</span>
-                        <span className="font-bold">{selectedDeal.proposalNumber || "N/A"}</span>
+                        <span className="block text-[8px] text-slate-400 font-mono">{t("PROPOSAL NO")}</span>
+                        <span className="font-bold">{selectedDeal.proposalNumber || t("N/A")}</span>
                       </div>
                       <div>
-                        <span className="block text-[8px] text-slate-400 font-mono">MAN-DAY UNITS</span>
-                        <span className="font-bold">{selectedDeal.manDay || "N/A"}</span>
+                        <span className="block text-[8px] text-slate-400 font-mono">{t("MAN-DAY UNITS")}</span>
+                        <span className="font-bold">{selectedDeal.manDay || t("N/A")}</span>
                       </div>
                       <div>
-                        <span className="block text-[8px] text-slate-400 font-mono">DATES CLOSED</span>
+                        <span className="block text-[8px] text-slate-400 font-mono">{t("DATES CLOSED")}</span>
                         <span className="font-bold font-mono">{selectedDeal.expectedCloseDate}</span>
                       </div>
                       <div className="col-span-2">
-                        <span className="block text-[8px] text-slate-400 font-mono">CONTACT SUBJECT</span>
-                        <span className="font-bold">{selectedDeal.contactSubject || "N/A"}</span>
+                        <span className="block text-[8px] text-slate-400 font-mono">{t("CONTACT SUBJECT")}</span>
+                        <span className="font-bold">{selectedDeal.contactSubject || t("N/A")}</span>
                       </div>
                       <div className="col-span-2">
-                        <span className="block text-[8px] text-slate-400 font-mono">SUGGESTED PRODUCTS</span>
-                        <span className="font-bold">{selectedDeal.products || "N/A"}</span>
+                        <span className="block text-[8px] text-slate-400 font-mono">{t("SUGGESTED PRODUCTS")}</span>
+                        <span className="font-bold">{selectedDeal.products || t("N/A")}</span>
                       </div>
                     </div>
                   </div>
@@ -3506,7 +3506,7 @@ export default function DealManagementView({ initialTab = "dashboard", onNavigat
                         <RefreshCw className={`w-4.5 h-4.5 ${isExchangeConnected ? "animate-spin" : ""}`} style={{ animationDuration: "14s" }} />
                       </div>
                       <div>
-                        <p className="text-xs font-bold text-slate-800 dark:text-zinc-100">Microsoft Exchange Mailbox Integration</p>
+                        <p className="text-xs font-bold text-slate-800 dark:text-zinc-100">{t("Microsoft Exchange Mailbox Integration")}</p>
                         <p className="text-[10px] text-slate-450 dark:text-zinc-400">
                           {isExchangeConnected
                             ? "Connected (Realtime Outlook B2B Mail Sync active)"
@@ -4004,11 +4004,11 @@ export default function DealManagementView({ initialTab = "dashboard", onNavigat
             </h3>
             
             <div>
-              <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1">Observation Description</label>
+              <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1">{t("Observation Description")}</label>
               <input
                 type="text"
                 required
-                placeholder="Brief summary guide text of this milestone..."
+                placeholder={t("Brief summary guide text of this milestone...")}
                 value={newStageDescInput}
                 onChange={(e) => setNewStageDescInput(e.target.value)}
                 className="w-full bg-[#fbfbfb] dark:bg-zinc-800 border border-slate-200 dark:border-zinc-700 rounded-lg p-2 text-xs outline-none"
@@ -4021,7 +4021,7 @@ export default function DealManagementView({ initialTab = "dashboard", onNavigat
                 onClick={() => setIsAddingDescPopup(null)}
                 className="px-3 py-1.5 bg-slate-100 text-slate-600 rounded font-bold cursor-pointer"
               >
-                Cancel
+                {t("Cancel")}
               </button>
               <button
                 type="submit"

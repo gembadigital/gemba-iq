@@ -1799,9 +1799,9 @@ export default function SalesDashboardView({ deals, onSelectDeal }: SalesDashboa
         <div className="bg-white dark:bg-[#1b1a19] border border-[#EDEBE9] dark:border-[#323130] rounded-2xl p-5 shadow-xs md:col-span-6 flex flex-col justify-between h-[320px]">
           <div>
             <h3 className="text-xs font-black uppercase tracking-widest text-[#0078D4] dark:text-blue-400 mb-1">
-              Top 10 Proposal Topics by Revenue
+              {t("Top 10 Proposal Topics by Revenue")}
             </h3>
-            <p className="text-[10px] text-slate-400 mb-4">Total revenue generated vs offer count per subject theme</p>
+            <p className="text-[10px] text-slate-400 mb-4">{t("Total revenue generated vs offer count per subject theme")}</p>
           </div>
 
           <div className="flex-1">
@@ -1811,7 +1811,7 @@ export default function SalesDashboardView({ deals, onSelectDeal }: SalesDashboa
                 <XAxis type="number" fontSize={8} tickLine={false} formatter={(v: any) => `$${v / 1000}k`} />
                 <YAxis dataKey="subject" type="category" fontSize={8} axisLine={false} tickLine={false} width={100} />
                 <Tooltip formatter={(value: any) => typeof value === "number" ? formatCur(value) : value} />
-                <Bar dataKey="revenue" name="Revenue Generated" fill="#0078D4" barSize={12} radius={[0, 4, 4, 0]} />
+                <Bar dataKey="revenue" name={t("Revenue Generated")} fill="#0078D4" barSize={12} radius={[0, 4, 4, 0]} />
               </BarChart>
             </ResponsiveContainer>
           </div>
@@ -1821,27 +1821,27 @@ export default function SalesDashboardView({ deals, onSelectDeal }: SalesDashboa
         <div className="bg-white dark:bg-[#1b1a19] border border-[#EDEBE9] dark:border-[#323130] rounded-2xl p-5 shadow-xs md:col-span-6 flex flex-col justify-between h-[320px]">
           <div>
             <h3 className="text-xs font-black uppercase tracking-widest text-[#0078D4] dark:text-blue-400 mb-1">
-              Monthly Meeting Stats & Trend
+              {t("Monthly Meeting Stats & Trend")}
             </h3>
-            <p className="text-[10px] text-slate-400 mb-3">Total outbound meetings, physical Gemba visits and online calls representation</p>
+            <p className="text-[10px] text-slate-400 mb-3">{t("Total outbound meetings, physical Gemba visits and online calls representation")}</p>
           </div>
 
           {/* Quick Stats Grid */}
           <div className="grid grid-cols-4 gap-2 mb-3">
             <div className="p-2 bg-slate-50 dark:bg-zinc-900 border border-slate-100 dark:border-zinc-800 rounded-lg text-center">
-              <span className="text-[8px] uppercase text-slate-400 font-extrabold block">Total Meet</span>
+              <span className="text-[8px] uppercase text-slate-400 font-extrabold block">{t("Total Meet")}</span>
               <span className="text-sm font-black font-mono text-[#0078D4] block">{stats.totalCount * 3}</span>
             </div>
             <div className="p-2 bg-slate-50 dark:bg-zinc-900 border border-slate-100 dark:border-zinc-800 rounded-lg text-center">
-              <span className="text-[8px] uppercase text-slate-400 font-extrabold block">Gemba Visit</span>
+              <span className="text-[8px] uppercase text-slate-400 font-extrabold block">{t("Gemba Visit")}</span>
               <span className="text-sm font-black font-mono text-emerald-500 block">{stats.totalCount * 1}</span>
             </div>
             <div className="p-2 bg-slate-50 dark:bg-zinc-900 border border-slate-100 dark:border-zinc-800 rounded-lg text-center">
-              <span className="text-[8px] uppercase text-slate-400 font-extrabold block">Online Calls</span>
+              <span className="text-[8px] uppercase text-slate-400 font-extrabold block">{t("Online Calls")}</span>
               <span className="text-sm font-black font-mono text-indigo-500 block">{stats.totalCount * 2}</span>
             </div>
             <div className="p-2 bg-[#FAF8F5] dark:bg-zinc-900 rounded-lg text-center">
-              <span className="text-[8px] uppercase text-slate-400 font-extrabold block">Avg / Person</span>
+              <span className="text-[8px] uppercase text-slate-400 font-extrabold block">{t("Avg / Person")}</span>
               <span className="text-sm font-black font-mono text-slate-805 block">{Math.max(1, Math.round(stats.totalCount * 3 / salespeople.length))}</span>
             </div>
           </div>
@@ -1861,8 +1861,8 @@ export default function SalesDashboardView({ deals, onSelectDeal }: SalesDashboa
                 <YAxis fontSize={8} tickLine={false} />
                 <Tooltip />
                 <Legend wrapperStyle={{ fontSize: 8 }} />
-                <Area type="monotone" dataKey="visits" name="Gemba Visits" stroke="#10b981" fill="#10b981" fillOpacity={0.15} />
-                <Area type="monotone" dataKey="online" name="Online Calls" stroke="#6366f1" fill="#6366f1" fillOpacity={0.15} />
+                <Area type="monotone" dataKey="visits" name={t("Gemba Visits")} stroke="#10b981" fill="#10b981" fillOpacity={0.15} />
+                <Area type="monotone" dataKey="online" name={t("Online Calls")} stroke="#6366f1" fill="#6366f1" fillOpacity={0.15} />
               </AreaChart>
             </ResponsiveContainer>
           </div>
@@ -1874,22 +1874,22 @@ export default function SalesDashboardView({ deals, onSelectDeal }: SalesDashboa
       <div className="bg-white dark:bg-[#1b1a19] border border-[#EDEBE9] dark:border-[#323130] rounded-2xl p-5 shadow-xs">
         <h3 className="text-xs font-black uppercase tracking-widest text-[#0078D4] dark:text-blue-400 mb-1 flex items-center gap-1.5">
           <Award className="w-4 h-4 text-amber-500 animate-bounce" />
-          Sales Account Executive Leaderboard (Performance Ranking)
+          {t("Sales Account Executive Leaderboard (Performance Ranking)")}
         </h3>
-        <p className="text-[10px] text-slate-450 mb-3">Ranking pipeline conversion efficiency, Sold Man-days and generated contract revenues</p>
+        <p className="text-[10px] text-slate-450 mb-3">{t("Ranking pipeline conversion efficiency, Sold Man-days and generated contract revenues")}</p>
 
         <div className="overflow-x-auto">
           <table className="w-full text-left text-xs">
             <thead>
               <tr className="border-b border-slate-100 dark:border-zinc-850 text-[9px] uppercase tracking-wider font-extrabold text-slate-400">
-                <th className="py-2.5">Sales Executive</th>
-                <th>Proposals Flagged</th>
-                <th>Proposal Target Gross</th>
-                <th>Won Realized Volume</th>
-                <th className="text-center">Win Rate Metric</th>
-                <th>Consulting Man-Days</th>
-                <th>Meetings Logged</th>
-                <th className="text-right">Acquisition Logos</th>
+                <th className="py-2.5">{t("Sales Executive")}</th>
+                <th>{t("Proposals Flagged")}</th>
+                <th>{t("Proposal Target Gross")}</th>
+                <th>{t("Won Realized Volume")}</th>
+                <th className="text-center">{t("Win Rate Metric")}</th>
+                <th>{t("Consulting Man-Days")}</th>
+                <th>{t("Meetings Logged")}</th>
+                <th className="text-right">{t("Acquisition Logos")}</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100 dark:divide-zinc-800/40">
@@ -1916,7 +1916,7 @@ export default function SalesDashboardView({ deals, onSelectDeal }: SalesDashboa
                     <td className="font-mono font-semibold">{rep.soldManDays} MD</td>
                     <td>{rep.meetings}</td>
                     <td className="text-right font-bold text-slate-600 dark:text-slate-300">
-                      {rep.newCustomers} New Logos
+                      {rep.newCustomers} {t("New Logos")}
                     </td>
                   </tr>
                 );
@@ -1933,9 +1933,9 @@ export default function SalesDashboardView({ deals, onSelectDeal }: SalesDashboa
         <div className="bg-white dark:bg-[#1b1a19] border border-[#EDEBE9] dark:border-[#323130] rounded-2xl p-5 shadow-xs md:col-span-8 flex flex-col justify-between h-[320px]">
           <div>
             <h3 className="text-xs font-black uppercase tracking-widest text-[#0078D4] dark:text-blue-400 mb-1">
-              Sales Forecast Projection Matrix
+              {t("Sales Forecast Projection Matrix")}
             </h3>
-            <p className="text-[10px] text-slate-400">Comparing Gross Pipeline Value against Weighted Revenue targets</p>
+            <p className="text-[10px] text-slate-400">{t("Comparing Gross Pipeline Value against Weighted Revenue targets")}</p>
           </div>
 
           <div className="flex-1">
@@ -1946,9 +1946,9 @@ export default function SalesDashboardView({ deals, onSelectDeal }: SalesDashboa
                 <YAxis fontSize={9} tickLine={false} formatter={(v: any) => `$${v / 1000}k`} />
                 <Tooltip formatter={(value: any) => formatCur(value)} />
                 <Legend wrapperStyle={{ fontSize: 9 }} />
-                <Bar dataKey="pipeline" name="Current Active Pipeline" fill="#3b82f6" opacity={0.8} barSize={25} />
-                <Line type="monotone" dataKey="weighted" name="Weighted Probability Revenue" stroke="#f59e0b" strokeWidth={2.5} />
-                <Area type="monotone" dataKey="forecast" name="Forecast Stretch Buffer" fill="#8b5cf6" fillOpacity={0.05} stroke="#8b5cf6" strokeWidth={1} />
+                <Bar dataKey="pipeline" name={t("Current Active Pipeline")} fill="#3b82f6" opacity={0.8} barSize={25} />
+                <Line type="monotone" dataKey="weighted" name={t("Weighted Probability Revenue")} stroke="#f59e0b" strokeWidth={2.5} />
+                <Area type="monotone" dataKey="forecast" name={t("Forecast Stretch Buffer")} fill="#8b5cf6" fillOpacity={0.05} stroke="#8b5cf6" strokeWidth={1} />
               </ComposedChart>
             </ResponsiveContainer>
           </div>
@@ -1958,9 +1958,9 @@ export default function SalesDashboardView({ deals, onSelectDeal }: SalesDashboa
         <div className="bg-white dark:bg-[#1b1a19] border border-[#EDEBE9] dark:border-[#323130] rounded-2xl p-5 shadow-xs md:col-span-4 flex flex-col justify-between h-[320px]">
           <div>
             <h3 className="text-xs font-black uppercase tracking-widest text-[#0078D4] dark:text-blue-400 mb-1">
-              Opportunity Aging Categories
+              {t("Opportunity Aging Categories")}
             </h3>
-            <p className="text-[10px] text-slate-400 mb-4">Pipeline duration health profiling</p>
+            <p className="text-[10px] text-slate-400 mb-4">{t("Pipeline duration health profiling")}</p>
           </div>
 
           <div className="flex-1 flex flex-col justify-around">
@@ -1972,9 +1972,9 @@ export default function SalesDashboardView({ deals, onSelectDeal }: SalesDashboa
                   <div className="flex justify-between items-center font-semibold">
                     <span className="flex items-center gap-1.5">
                       <span className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: item.color }} />
-                      {item.name}
+                      {t(item.name)}
                     </span>
-                    <span className="font-mono">{item.count} Deals ({formatCur(item.value)})</span>
+                    <span className="font-mono">{item.count} {t("Deals")} ({formatCur(item.value)})</span>
                   </div>
                   <div className="w-full bg-slate-100 dark:bg-zinc-800 h-2 rounded-full overflow-hidden">
                     <div className="h-full rounded-full" style={{ backgroundColor: item.color, width: `${ratio || 10}%` }} />

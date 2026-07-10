@@ -187,7 +187,7 @@ export default function ProposalManagementView() {
       setIsModalOpen(false);
     } catch (err) {
       console.error(err);
-      alert(err instanceof Error ? err.message : "Failed to save quotation.");
+      alert(err instanceof Error ? err.message : t("Failed to save quotation."));
     }
   };
 
@@ -224,10 +224,10 @@ export default function ProposalManagementView() {
       );
       setProposals((prev) => prev.map((p) => (p.id === revisingProposal.id ? updated : p)));
       setRevisingProposal(null);
-      alert(`Proposal cloned and bumped successfully to ${updated.currentVersion}!`);
+      alert(t("Proposal cloned and bumped successfully to {version}").replace("{version}", updated.currentVersion));
     } catch (err) {
       console.error(err);
-      alert(err instanceof Error ? err.message : "Failed to create revision.");
+      alert(err instanceof Error ? err.message : t("Failed to create revision."));
     }
   };
 
@@ -295,7 +295,7 @@ export default function ProposalManagementView() {
       }
     } catch (err: any) {
       console.error(err);
-      alert("Error call to Gemini API: " + err.message);
+      alert(t("Error call to Gemini API: {error}").replace("{error}", err.message));
     } finally {
       setIsEmailGenerating(false);
     }
@@ -327,10 +327,10 @@ export default function ProposalManagementView() {
       });
 
       setProposals((prev) => prev.map((p) => (p.id === updated.id ? updated : p)));
-      alert(`B2B Offer dispatch and CRM synchronization completed!`);
+      alert(t("B2B Offer dispatch and CRM synchronization completed!"));
       setSendingProposal(null);
     } catch (error: unknown) {
-      alert("Error dispatching Outlook message: " + (error instanceof Error ? error.message : "Unknown error"));
+      alert(t("Error dispatching Outlook message: {error}").replace("{error}", error instanceof Error ? error.message : t("Unknown error")));
     }
   };
 
@@ -362,7 +362,7 @@ export default function ProposalManagementView() {
       }
     } catch (err: any) {
       console.error(err);
-      alert("AI Analysis call failed: " + err.message);
+      alert(t("AI Analysis call failed: {error}").replace("{error}", err.message));
     } finally {
       setIsAiLoading(false);
     }
@@ -405,13 +405,13 @@ export default function ProposalManagementView() {
       }
     } catch (err) {
       console.error(err);
-      alert(err instanceof Error ? err.message : "Failed to update approval status.");
+      alert(err instanceof Error ? err.message : t("Failed to update approval status."));
     }
   };
 
   const handleSaveTemplate = async () => {
     if (!editingTemplate?.name?.trim()) {
-      alert("Template name is required.");
+      alert(t("Template name is required."));
       return;
     }
     try {
@@ -430,18 +430,18 @@ export default function ProposalManagementView() {
       setEditingTemplate(null);
     } catch (err) {
       console.error(err);
-      alert(err instanceof Error ? err.message : "Failed to save template.");
+      alert(err instanceof Error ? err.message : t("Failed to save template."));
     }
   };
 
   const handleDeleteTemplate = async (templateId: string) => {
-    if (!confirm("Delete this Word template?")) return;
+    if (!confirm(t("Delete this Word template?"))) return;
     try {
       await deleteProposalTemplate(templateId);
       setWordTemplates((prev) => prev.filter((t) => t.id !== templateId));
     } catch (err) {
       console.error(err);
-      alert(err instanceof Error ? err.message : "Failed to delete template.");
+      alert(err instanceof Error ? err.message : t("Failed to delete template."));
     }
   };
 
@@ -885,39 +885,39 @@ export default function ProposalManagementView() {
             <div className="flex items-center justify-between border-b border-zinc-800 pb-3">
               <div className="flex items-center gap-2">
                 <Sparkles className="w-5 h-5 text-amber-500" />
-                <span className="font-extrabold text-xs uppercase tracking-wider font-mono text-zinc-300">Gemba AI Proponent</span>
+                <span className="font-extrabold text-xs uppercase tracking-wider font-mono text-zinc-300">{t("Gemba AI Proponent")}</span>
               </div>
               <button
                 onClick={() => setAnalyzingProposal(null)}
                 className="text-zinc-500 hover:text-white font-mono text-[10px] cursor-pointer"
               >
-                CLOSE
+                {t("CLOSE")}
               </button>
             </div>
 
             <div>
-              <p className="text-[10px] text-zinc-550 font-bold uppercase font-mono">Evaluating Proposal:</p>
+              <p className="text-[10px] text-zinc-550 font-bold uppercase font-mono">{t("Evaluating Proposal:")}</p>
               <h4 className="text-sm font-bold text-zinc-200 truncate">{analyzingProposal.proposalSubject}</h4>
-              <p className="text-[9px] font-mono text-emerald-450 block mt-0.5">Ref ID: {analyzingProposal.proposalNumber}</p>
+              <p className="text-[9px] font-mono text-emerald-450 block mt-0.5">{t("Ref ID:")} {analyzingProposal.proposalNumber}</p>
             </div>
 
             {isAiLoading ? (
               <div className="py-20 flex flex-col items-center justify-center gap-3">
                 <RefreshCw className="w-8 h-8 text-amber-500 animate-spin" />
-                <p className="text-[10px] italic font-mono text-zinc-450">Gemini model crunching pricing &amp; scrap risk parameters...</p>
+                <p className="text-[10px] italic font-mono text-zinc-450">{t("Gemini model crunching pricing & scrap risk parameters...")}</p>
               </div>
             ) : aiAnalysisResult ? (
               <div className="space-y-4 text-xs">
                 
                 {/* Win Prop */}
                 <div className="bg-zinc-800/50 p-3 rounded-xl border border-zinc-700/50 text-center">
-                  <span className="text-[9px] text-zinc-450 uppercase block font-mono">Predictive B2B Win Probability</span>
+                  <span className="text-[9px] text-zinc-450 uppercase block font-mono">{t("Predictive B2B Win Probability")}</span>
                   <p className="text-3xl font-black text-amber-400 mt-1 font-mono">{aiAnalysisResult.winProbability || "75%"}</p>
                 </div>
 
                 {/* Risk Factors */}
                 <div className="space-y-1.5">
-                  <span className="text-[9px] text-zinc-450 uppercase font-mono tracking-wider font-bold block">🚨 Risk Indicators Detected</span>
+                  <span className="text-[9px] text-zinc-450 uppercase font-mono tracking-wider font-bold block">{t("🚨 Risk Indicators Detected")}</span>
                   <ul className="list-disc pl-4 space-y-1 text-[11px] text-zinc-300">
                     {(aiAnalysisResult.riskFactors || []).map((rk: string) => (
                       <li key={rk}>{rk}</li>
@@ -927,7 +927,7 @@ export default function ProposalManagementView() {
 
                 {/* Missing Info */}
                 <div className="space-y-1.5">
-                  <span className="text-[9px] text-zinc-450 uppercase font-mono tracking-wider font-bold block">💡 Gaps / Missing metrics</span>
+                  <span className="text-[9px] text-zinc-450 uppercase font-mono tracking-wider font-bold block">{t("💡 Gaps / Missing metrics")}</span>
                   <ul className="list-disc pl-4 space-y-1 text-[11px] text-zinc-300">
                     {(aiAnalysisResult.missingInformation || []).map((ms: string) => (
                       <li key={ms}>{ms}</li>
@@ -937,19 +937,19 @@ export default function ProposalManagementView() {
 
                 {/* Follow-up Strategy */}
                 <div className="p-3 bg-amber-500/10 border border-amber-500/25 rounded-xl space-y-1">
-                  <span className="text-[9px] text-amber-450 uppercase font-mono font-extrabold block">Recommended follow-up track</span>
+                  <span className="text-[9px] text-amber-450 uppercase font-mono font-extrabold block">{t("Recommended follow-up track")}</span>
                   <p className="text-[11px] text-zinc-200 leading-relaxed">{aiAnalysisResult.recommendedFollowUp}</p>
                 </div>
 
                 {/* Next Action */}
                 <div className="space-y-1">
-                  <span className="text-[9px] text-zinc-450 uppercase font-mono block">Suggested Immediate Next Action</span>
+                  <span className="text-[9px] text-zinc-450 uppercase font-mono block">{t("Suggested Immediate Next Action")}</span>
                   <p className="font-bold text-emerald-400 text-[11px]">{aiAnalysisResult.suggestedNextAction}</p>
                 </div>
 
                 {/* Upsells */}
                 <div className="pt-2 border-t border-zinc-800">
-                  <span className="text-[9px] text-zinc-450 uppercase font-mono tracking-wider font-bold block mb-1">Additional Upsell Proposals</span>
+                  <span className="text-[9px] text-zinc-450 uppercase font-mono tracking-wider font-bold block mb-1">{t("Additional Upsell Proposals")}</span>
                   <div className="flex flex-wrap gap-1">
                     {(aiAnalysisResult.potentialUpsell || []).map((up: string) => (
                       <span key={up} className="bg-zinc-800 text-zinc-300 text-[9px] px-2 py-0.5 rounded border border-zinc-700 font-mono">
@@ -963,9 +963,9 @@ export default function ProposalManagementView() {
             ) : (
               <div className="text-center py-10 space-y-2">
                 <AlertTriangle className="w-8 h-8 text-zinc-600 mx-auto" />
-                <p className="text-[10px] text-zinc-550 italic font-mono">Failed retrieving intelligence. Tap refresh below.</p>
+                <p className="text-[10px] text-zinc-550 italic font-mono">{t("Failed retrieving intelligence. Tap refresh below.")}</p>
                 <button onClick={() => handleRunAiAnalysis(analyzingProposal)} className="p-1 bg-zinc-800 hover:bg-zinc-700 text-zinc-200 text-[10px] rounded">
-                  Retry Call
+                  {t("Retry Call")}
                 </button>
               </div>
             )}
@@ -989,29 +989,29 @@ export default function ProposalManagementView() {
       {revisingProposal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4">
           <div className="bg-white dark:bg-[#1f1d1c] max-w-md w-full rounded-xl border border-slate-100 p-5 space-y-4 text-xs animate-in zoom-in-95 duration-100">
-            <h3 className="font-bold text-sm text-slate-800 dark:text-zinc-150">Create Proposal Revision Clone</h3>
+            <h3 className="font-bold text-sm text-slate-800 dark:text-zinc-150">{t("Create Proposal Revision Clone")}</h3>
             <p className="text-slate-500 leading-relaxed">
-              This action increments proposal count, logs the previous version inside history, and bumps state to <strong>Revision Requested</strong>.
+              {t("This action increments proposal count, logs the previous version inside history, and bumps state to Revision Requested.")}
             </p>
             
             <div className="space-y-3">
               <div>
-                <label className="block text-[9px] text-slate-400 font-bold font-mono uppercase">Reason for Revision (Mandatory) *</label>
+                <label className="block text-[9px] text-slate-400 font-bold font-mono uppercase">{t("Reason for Revision (Mandatory) *")}</label>
                 <input
                   type="text"
                   required
-                  placeholder="e.g., Client requested daily rate discount"
+                  placeholder={t("e.g., Client requested daily rate discount")}
                   value={revisionReasonText}
                   onChange={(e) => setRevisionReasonText(e.target.value)}
                   className="w-full p-2 border border-slate-205 bg-white dark:bg-zinc-800 rounded mt-1"
                 />
               </div>
               <div>
-                <label className="block text-[9px] text-slate-400 font-bold font-mono uppercase">Trace Changes / Modifying Actions</label>
+                <label className="block text-[9px] text-slate-400 font-bold font-mono uppercase">{t("Trace Changes / Modifying Actions")}</label>
                 <textarea
                   required
                   rows={3}
-                  placeholder="e.g., Option 1 daily rate cut from 1200 to 1000. Removed travel premium."
+                  placeholder={t("e.g., Option 1 daily rate cut from 1200 to 1000. Removed travel premium.")}
                   value={revisionNotes}
                   onChange={(e) => setRevisionNotes(e.target.value)}
                   className="w-full p-2 border border-slate-205 bg-white dark:bg-zinc-800 rounded mt-1 resize-none h-18"
@@ -1021,14 +1021,14 @@ export default function ProposalManagementView() {
 
             <div className="flex items-center justify-end gap-3 pt-2">
               <button onClick={() => setRevisingProposal(null)} className="px-4 py-1.5 bg-slate-100 hover:bg-slate-200 rounded font-bold cursor-pointer">
-                Cancel
+                {t("Cancel")}
               </button>
               <button
                 onClick={handleSaveRevision}
                 disabled={!revisionReasonText.trim()}
                 className="px-4 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded font-extrabold cursor-pointer transition-all disabled:opacity-50"
               >
-                Clone &amp; Increment Version
+                {t("Clone & Increment Version")}
               </button>
             </div>
           </div>
@@ -1238,10 +1238,10 @@ export default function ProposalManagementView() {
             <div className="flex items-center justify-between border-b pb-3">
               <div className="flex items-center gap-1.5 text-blue-600">
                 <Mail className="w-5 h-5 animate-bounce" />
-                <span className="font-extrabold text-sm text-slate-800 dark:text-zinc-150">Microsoft Exchange Mail Dispatch Center</span>
+                <span className="font-extrabold text-sm text-slate-800 dark:text-zinc-150">{t("Microsoft Exchange Mail Dispatch Center")}</span>
               </div>
               <button onClick={() => setSendingProposal(null)} className="text-slate-450 hover:text-red-500 font-bold">
-                CLOSE
+                {t("CLOSE")}
               </button>
             </div>
 
@@ -1249,7 +1249,7 @@ export default function ProposalManagementView() {
             <div className="space-y-3">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-[9px] text-slate-450 font-bold font-mono uppercase">RECIPIENT TO *</label>
+                  <label className="block text-[9px] text-slate-450 font-bold font-mono uppercase">{t("RECIPIENT TO *")}</label>
                   <input
                     type="email"
                     required
@@ -1260,7 +1260,7 @@ export default function ProposalManagementView() {
                   />
                 </div>
                 <div>
-                  <label className="block text-[9px] text-slate-450 font-bold font-mono uppercase">CC</label>
+                  <label className="block text-[9px] text-slate-450 font-bold font-mono uppercase">{t("CC")}</label>
                   <input
                     type="text"
                     value={emailCC}
@@ -1271,7 +1271,7 @@ export default function ProposalManagementView() {
               </div>
 
               <div>
-                <label className="block text-[9px] text-slate-450 font-bold font-mono uppercase">MESSAGE SUBJECT *</label>
+                <label className="block text-[9px] text-slate-450 font-bold font-mono uppercase">{t("MESSAGE SUBJECT *")}</label>
                 <input
                   type="text"
                   required
@@ -1285,7 +1285,7 @@ export default function ProposalManagementView() {
               <div className="flex justify-between items-center bg-amber-500/10 p-2.5 rounded-lg border border-amber-500/20">
                 <div className="flex items-center gap-1.5 text-amber-600">
                   <Sparkles className="w-4 h-4 animate-pulse" />
-                  <span className="font-bold text-[10px]">Gemini AI Email Architect (TR / EN)</span>
+                  <span className="font-bold text-[10px]">{t("Gemini AI Email Architect (TR / EN)")}</span>
                 </div>
                 <button
                   type="button"
@@ -1293,13 +1293,13 @@ export default function ProposalManagementView() {
                   disabled={isEmailGenerating}
                   className="bg-amber-652 hover:bg-amber-600 text-amber-950 font-black text-[10px] px-3 py-1 rounded cursor-pointer transition-all disabled:opacity-50"
                 >
-                  {isEmailGenerating ? "Expanding script with model..." : "Generate Professional Outlining Body"}
+                  {isEmailGenerating ? t("Expanding script with model...") : t("Generate Professional Outlining Body")}
                 </button>
               </div>
 
               {/* Message body */}
               <div>
-                <label className="block text-[9px] text-slate-455 font-bold font-mono uppercase">MESSAGE CONTENT BODY *</label>
+                <label className="block text-[9px] text-slate-455 font-bold font-mono uppercase">{t("MESSAGE CONTENT BODY *")}</label>
                 <textarea
                   value={emailBody}
                   onChange={(e) => setEmailBody(e.target.value)}
@@ -1310,7 +1310,7 @@ export default function ProposalManagementView() {
 
               {/* Attachment selector */}
               <div className="bg-slate-50 dark:bg-black/10 p-3 rounded-xl border border-slate-150 space-y-2">
-                <span className="block text-[9px] text-slate-400 font-bold font-mono uppercase">Attachment Bindings</span>
+                <span className="block text-[9px] text-slate-400 font-bold font-mono uppercase">{t("Attachment Bindings")}</span>
                 <div className="flex items-center gap-4">
                   <label className="flex items-center gap-1.5 font-medium cursor-pointer">
                     <input
@@ -1319,7 +1319,7 @@ export default function ProposalManagementView() {
                       onChange={(e) => setAttachPdf(e.target.checked)}
                       className="accent-blue-600"
                     />
-                    Generated Proposal PDF (PROP-{sendingProposal.proposalNumber})
+                    {t("Generated Proposal PDF (PROP-{number})").replace("{number}", sendingProposal.proposalNumber)}
                   </label>
                   <label className="flex items-center gap-1.5 font-medium cursor-pointer">
                     <input
@@ -1328,7 +1328,7 @@ export default function ProposalManagementView() {
                       onChange={(e) => setAttachWord(e.target.checked)}
                       className="accent-blue-600"
                     />
-                    Microsoft Word Original Document (.docx)
+                    {t("Microsoft Word Original Document (.docx)")}
                   </label>
                 </div>
 
@@ -1336,13 +1336,13 @@ export default function ProposalManagementView() {
                   <Paperclip className="w-3.5 h-3.5 text-slate-400" />
                   <input
                     type="text"
-                    placeholder="Attach custom additional filename..."
+                    placeholder={t("Attach custom additional filename...")}
                     value={customFileText}
                     onChange={(e) => setCustomFileText(e.target.value)}
                     className="p-1 px-2 border border-slate-200 bg-white dark:bg-zinc-800 rounded text-[10px] outline-none"
                   />
                   <button type="button" onClick={handleAddCustomFile} className="bg-slate-200 hover:bg-slate-300 p-1 px-2 rounded font-bold cursor-pointer text-[10px]">
-                    + Attach File
+                    {t("+ Attach File")}
                   </button>
                 </div>
 
@@ -1360,13 +1360,13 @@ export default function ProposalManagementView() {
 
             <div className="flex items-center justify-end gap-3 pt-3 border-t">
               <button onClick={() => setSendingProposal(null)} className="px-4 py-1.5 bg-slate-100 hover:bg-slate-200 rounded font-bold cursor-pointer">
-                Cancel
+                {t("Cancel")}
               </button>
               <button
                 onClick={handleDispatchEmail}
                 className="px-5 py-1.5 bg-blue-600 hover:bg-blue-700 text-white rounded font-extrabold flex items-center gap-1 cursor-pointer transition-all shadow"
               >
-                <Mail className="w-3.5 h-3.5" /> Dispatch Mail &amp; Sync B2B Pipeline
+                <Mail className="w-3.5 h-3.5" /> {t("Dispatch Mail & Sync B2B Pipeline")}
               </button>
             </div>
 

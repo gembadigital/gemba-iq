@@ -1094,7 +1094,7 @@ Tavily Search Engine successfully matched supplementary real-time operational da
             </div>
 
             <h3 className="text-lg font-extrabold text-slate-800 dark:text-slate-100 font-display tracking-tight mb-2">
-              Gemini Sales Assistant: B2B Business Developer
+              {t("Gemini Sales Assistant: B2B Business Developer")}
             </h3>
             <p className="text-xs text-slate-500 dark:text-slate-400 max-w-md leading-relaxed mb-8">
               Herhangi bir üreticinin veya fabrikanın adını girerek derin Google Search destekli satın alma potansiyeli çözümü, e-posta deseni çıkarımı ve karar verici analizini anında gerçekleştirin.
@@ -1103,21 +1103,21 @@ Tavily Search Engine successfully matched supplementary real-time operational da
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 max-w-2xl text-left">
               <div className="p-4 bg-white dark:bg-[#201f1e] border border-[#EDEBE9] dark:border-[#323130] rounded-xl shadow-sm">
                 <Building2 className="w-5 h-5 text-[#0078D4] mb-2.5" />
-                <h5 className="text-[11px] font-bold text-slate-800 dark:text-slate-200 mb-1">Company Summary</h5>
+                <h5 className="text-[11px] font-bold text-slate-800 dark:text-slate-200 mb-1">{t("Company Summary")}</h5>
                 <p className="text-[10px] text-slate-400 leading-relaxed font-sans">
                   Sektör, ana ürün grupları, tahmini çalışan sayısı ve fabrika lokasyonlarını net biçimde analiz eder.
                 </p>
               </div>
               <div className="p-4 bg-white dark:bg-[#201f1e] border border-[#EDEBE9] dark:border-[#323130] rounded-xl shadow-sm">
                 <Target className="w-5 h-5 text-indigo-500 mb-2.5" />
-                <h5 className="text-[11px] font-bold text-slate-800 dark:text-slate-200 mb-1">Buy Side & Decision Tiers</h5>
+                <h5 className="text-[11px] font-bold text-slate-800 dark:text-slate-200 mb-1">{t("Buy Side & Decision Tiers")}</h5>
                 <p className="text-[10px] text-slate-400 leading-relaxed font-sans">
                   Hedef unvanları Tier 1 (Alıcı), Tier 2 (Etkileyici), Tier 3 (Destekçi) olarak rütbelendirir.
                 </p>
               </div>
               <div className="p-4 bg-white dark:bg-[#201f1e] border border-[#EDEBE9] dark:border-[#323130] rounded-xl shadow-sm">
                 <Mail className="w-5 h-5 text-emerald-500 mb-2.5" />
-                <h5 className="text-[11px] font-bold text-slate-800 dark:text-slate-200 mb-1">Email Candidates</h5>
+                <h5 className="text-[11px] font-bold text-slate-800 dark:text-slate-200 mb-1">{t("Email Candidates")}</h5>
                 <p className="text-[10px] text-slate-400 leading-relaxed font-sans">
                   Uzantı desenini (pattern) çözerek kesinlik skoru yüksek adres adayları üretir.
                 </p>

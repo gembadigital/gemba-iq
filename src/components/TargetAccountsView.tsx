@@ -32,6 +32,7 @@ import {
   Briefcase
 } from "lucide-react";
 import { TargetAccount, Recipient } from "../types";
+import { useLanguage } from "../lib/LanguageContext";
 
 interface TargetAccountsViewProps {
   onPushToMailMerge: (newRecs: Recipient[]) => void;
@@ -44,6 +45,8 @@ export default function TargetAccountsView({
   currentMailMergeCount,
   onNavigateToTab
 }: TargetAccountsViewProps) {
+  const { t } = useLanguage();
+
   // Accounts Storage State
   const [accounts, setAccounts] = useState<TargetAccount[]>([]);
   
@@ -179,7 +182,7 @@ export default function TargetAccountsView({
   const handleManualAddSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!newAccount.companyName.trim()) {
-      triggerToast("Company name is strictly required.", "error");
+      triggerToast(t("Company name is strictly required."), "error");
       return;
     }
 
@@ -231,12 +234,12 @@ export default function TargetAccountsView({
       rawOutput: ""
     });
     setIsAddingAccount(false);
-    triggerToast(`Added ${added.companyName} to Target Accounts registry`, "success");
+    triggerToast(t("Added {name} to Target Accounts registry").replace("{name}", added.companyName), "success");
   };
 
   const handleManualSaveAll = () => {
     localStorage.setItem("smart_mailmerge_target_accounts", JSON.stringify(accounts));
-    triggerToast("Target accounts database committed & saved securely.", "success");
+    triggerToast(t("Target accounts database committed & saved securely."), "success");
   };
 
   // Inline action editing
@@ -248,7 +251,7 @@ export default function TargetAccountsView({
   const saveEditedAccount = () => {
     if (!editForm) return;
     if (!editForm.companyName.trim()) {
-      triggerToast("Company Name is a validation prerequisite.", "error");
+      triggerToast(t("Company Name is a validation prerequisite."), "error");
       return;
     }
 
@@ -256,7 +259,7 @@ export default function TargetAccountsView({
     updateAccountsAndPersist(updated);
     setEditingAccountId(null);
     setEditForm(null);
-    triggerToast("Target account details updated successfully.", "success");
+    triggerToast(t("Target account details updated successfully."), "success");
   };
 
   const deleteSingleAccount = (id: string) => {
@@ -264,18 +267,18 @@ export default function TargetAccountsView({
     // Standardize 'no' sequence values
     const standardized = remaining.map((a, idx) => ({ ...a, no: idx + 1 }));
     updateAccountsAndPersist(standardized);
-    triggerToast("Account removed from database.", "info");
+    triggerToast(t("Account removed from database."), "info");
   };
 
   const deleteSelectedAccounts = () => {
     const remaining = accounts.filter(a => !a.isSelected);
     if (accounts.length === remaining.length) {
-      triggerToast("No items selected to delete.", "info");
+      triggerToast(t("No items selected to delete."), "info");
       return;
     }
     const standardized = remaining.map((a, idx) => ({ ...a, no: idx + 1 }));
     updateAccountsAndPersist(standardized);
-    triggerToast(`Bulk deleted selected records successfully.`, "success");
+    triggerToast(t("Bulk deleted selected records successfully."), "success");
   };
 
   // Checkbox interactions
@@ -299,7 +302,7 @@ export default function TargetAccountsView({
   // EXPORT OUT TO EXCEL-FRIENDLY CSV
   const handleExportCSV = () => {
     if (accounts.length === 0) {
-      triggerToast("No accounts available in registry to export.", "error");
+      triggerToast(t("No accounts available in registry to export."), "error");
       return;
     }
 
@@ -346,7 +349,7 @@ export default function TargetAccountsView({
     link.download = `target_accounts_database_${new Date().toISOString().split("T")[0]}.csv`;
     link.click();
     URL.revokeObjectURL(link.href);
-    triggerToast("Target accounts exported successfully as semicolon-delimited CSV.", "success");
+    triggerToast(t("Target accounts exported successfully as semicolon-delimited CSV."), "success");
   };
 
   // PARSE IMPORT SPREADSHEEET
@@ -366,7 +369,7 @@ export default function TargetAccountsView({
           const rawRows = XLSX.utils.sheet_to_json(worksheet, { header: 1 }) as any[];
 
           if (rawRows.length < 2) {
-            throw new Error("Spreadsheet file is missing headers or record data rows.");
+            throw new Error(t("Spreadsheet file is missing headers or record data rows."));
           }
 
           const originalHeaders = rawRows[0].map((h: any) => String(h || "").trim());
@@ -442,15 +445,20 @@ export default function TargetAccountsView({
           });
 
           updateAccountsAndPersist(updated);
-          triggerToast(`Spreadsheet parsed! Updated ${records.length - addedCount} and added ${addedCount} brand new target accounts!`, "success");
+          triggerToast(
+            t("Spreadsheet parsed! Updated {updated} and added {added} brand new target accounts!")
+              .replace("{updated}", String(records.length - addedCount))
+              .replace("{added}", String(addedCount)),
+            "success"
+          );
         } catch (excelErr: any) {
           console.error(excelErr);
-          setImportError("Bad spreadsheet structure: " + excelErr.message);
+          setImportError(t("Bad spreadsheet structure: {error}").replace("{error}", excelErr.message));
         }
       };
       reader.readAsBinaryString(file);
     } catch (err: any) {
-      setImportError(err.message || "Failed loading selected dataset file.");
+      setImportError(err.message || t("Failed loading selected dataset file."));
     }
 
     if (e.target) e.target.value = "";
@@ -460,7 +468,7 @@ export default function TargetAccountsView({
   const handleTransferToRecipientList = () => {
     const selectedAccounts = accounts.filter(a => a.isSelected);
     if (selectedAccounts.length === 0) {
-      triggerToast("No target records are currently selected. Tick checkboxes on the left side first.", "error");
+      triggerToast(t("No target records are currently selected. Tick checkboxes on the left side first."), "error");
       return;
     }
 
@@ -495,7 +503,11 @@ export default function TargetAccountsView({
     const resetSelection = accounts.map(a => ({ ...a, isSelected: false }));
     setAccounts(resetSelection);
 
-    triggerToast(`Successfully transferred ${mappedRecipients.length} target contacts directly into Mail Merge queue! Heading there...`, "success");
+    triggerToast(
+      t("Successfully transferred {count} target contacts directly into Mail Merge queue! Heading there...")
+        .replace("{count}", String(mappedRecipients.length)),
+      "success"
+    );
   };
 
   // Compute stats counters
@@ -553,10 +565,10 @@ export default function TargetAccountsView({
         <div className="space-y-1">
           <div className="flex items-center gap-2">
             <Target className="w-5 h-5 text-[#0078D4] dark:text-brand-300" />
-            <h2 className="text-base font-bold text-slate-800 dark:text-slate-100">Target Accounts & Prospects Database</h2>
+            <h2 className="text-base font-bold text-slate-800 dark:text-slate-100">{t("Target Accounts & Prospects Database")}</h2>
           </div>
           <p className="text-xs text-slate-500 max-w-2xl">
-            Maintain high priority enterprise company research and siber profiles. Coordinate lead statuses, optimize continuous improvement channels, and bulk compile targeted recipients straight into the Mail Merge outgoing queue.
+            {t("Maintain high priority enterprise company research and siber profiles. Coordinate lead statuses, optimize continuous improvement channels, and bulk compile targeted recipients straight into the Mail Merge outgoing queue.")}
           </p>
         </div>
 
@@ -576,7 +588,7 @@ export default function TargetAccountsView({
             className="text-xs font-bold bg-[#FAF9F8] hover:bg-[#EDEBE9] dark:bg-[#252423] dark:hover:bg-[#323130] text-slate-700 dark:text-slate-200 px-3 py-2 border border-[#EDEBE9] dark:border-[#323130] rounded flex items-center gap-1.5 cursor-pointer transition-all shadow-sm"
           >
             <Upload className="w-4 h-4" />
-            <span>Import Sheet</span>
+            <span>{t("Import Sheet")}</span>
           </button>
 
           <button
@@ -585,7 +597,7 @@ export default function TargetAccountsView({
             className="text-xs font-bold bg-[#FAF9F8] hover:bg-[#EDEBE9] dark:bg-[#252423] dark:hover:bg-[#323130] text-slate-700 dark:text-slate-200 px-3 py-2 border border-[#EDEBE9] dark:border-[#323130] rounded flex items-center gap-1.5 cursor-pointer transition-all shadow-sm"
           >
             <Download className="w-4 h-4 text-slate-700 dark:text-slate-200" />
-            <span>Export CSV</span>
+            <span>{t("Export CSV")}</span>
           </button>
 
           <button
@@ -594,7 +606,7 @@ export default function TargetAccountsView({
             className="text-xs font-bold bg-[#FAF9F8] hover:bg-[#EDEBE9] dark:bg-[#252423] dark:hover:bg-[#323130] text-slate-700 dark:text-slate-200 px-3 py-2 border border-[#EDEBE9] dark:border-[#323130] rounded flex items-center gap-1.5 cursor-pointer transition-all shadow-sm"
           >
             <Save className="w-4 h-4 text-slate-700 dark:text-slate-200" />
-            <span>Save List</span>
+            <span>{t("Save List")}</span>
           </button>
 
           <button
@@ -603,7 +615,7 @@ export default function TargetAccountsView({
             className="text-xs font-bold bg-[#FAF9F8] hover:bg-[#EDEBE9] dark:bg-[#252423] dark:hover:bg-[#323130] text-slate-700 dark:text-slate-200 px-3 py-2 border border-[#EDEBE9] dark:border-[#323130] rounded flex items-center gap-1.5 cursor-pointer transition-all shadow-sm"
           >
             <Plus className="w-4 h-4 text-slate-700 dark:text-slate-200" />
-            <span>{isAddingAccount ? "Cancel New" : "Add Target Company"}</span>
+            <span>{isAddingAccount ? t("Cancel New") : t("Add Target Company")}</span>
           </button>
 
           {onNavigateToTab && (
@@ -613,7 +625,7 @@ export default function TargetAccountsView({
               className="text-xs font-bold bg-[#FAF9F8] hover:bg-[#EDEBE9] dark:bg-[#252423] dark:hover:bg-[#323130] text-slate-700 dark:text-slate-200 px-3 py-2 border border-[#EDEBE9] dark:border-[#323130] rounded flex items-center gap-1.5 cursor-pointer transition-all shadow-sm"
             >
               <Briefcase className="w-3.5 h-3.5 text-slate-700 dark:text-slate-200" />
-              <span>Deal Management</span>
+              <span>{t("Deal Management")}</span>
             </button>
           )}
         </div>
@@ -630,33 +642,33 @@ export default function TargetAccountsView({
       {/* Bento Stats Ribbons */}
       <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
         <div className="bg-white dark:bg-[#1b1a19] p-4 rounded border border-[#EDEBE9] dark:border-[#323130] shadow-sm">
-          <span className="text-[10px] font-bold text-slate-400 uppercase">Total Target Accounts</span>
-          <div className="text-xl font-bold text-[#0078D4] mt-1">{totalCount} companies</div>
-          <p className="text-[10px] text-slate-450 mt-1">In-Memory synced</p>
+          <span className="text-[10px] font-bold text-slate-400 uppercase">{t("Total Target Accounts")}</span>
+          <div className="text-xl font-bold text-[#0078D4] mt-1">{totalCount} {t("companies")}</div>
+          <p className="text-[10px] text-slate-450 mt-1">{t("In-Memory synced")}</p>
         </div>
 
         <div className="bg-white dark:bg-[#1b1a19] p-4 rounded border border-[#EDEBE9] dark:border-[#323130] shadow-sm">
-          <span className="text-[10px] font-bold text-slate-400 uppercase">High Priority / Hot</span>
-          <div className="text-xl font-bold text-orange-600 mt-1">{highRiskCount} active</div>
-          <p className="text-[10px] text-slate-450 mt-1">Opportunity Score &gt;= 85%</p>
+          <span className="text-[10px] font-bold text-slate-400 uppercase">{t("High Priority / Hot")}</span>
+          <div className="text-xl font-bold text-orange-600 mt-1">{highRiskCount} {t("active")}</div>
+          <p className="text-[10px] text-slate-450 mt-1">{t("Opportunity Score >= 85%")}</p>
         </div>
 
         <div className="bg-white dark:bg-[#1b1a19] p-4 rounded border border-[#EDEBE9] dark:border-[#323130] shadow-sm">
-          <span className="text-[10px] font-bold text-slate-400 uppercase">Already Contacted</span>
-          <div className="text-xl font-bold text-indigo-500 mt-1">{contactedCount} companies</div>
-          <p className="text-[10px] text-slate-450 mt-1">Active outreach initiated</p>
+          <span className="text-[10px] font-bold text-slate-400 uppercase">{t("Already Contacted")}</span>
+          <div className="text-xl font-bold text-indigo-500 mt-1">{contactedCount} {t("companies")}</div>
+          <p className="text-[10px] text-slate-450 mt-1">{t("Active outreach initiated")}</p>
         </div>
 
         <div className="bg-white dark:bg-[#1b1a19] p-4 rounded border border-[#EDEBE9] dark:border-[#323130] shadow-sm">
-          <span className="text-[10px] font-bold text-slate-450 uppercase">Current Selected Targets</span>
-          <div className="text-xl font-bold text-emerald-600 mt-1">{selectedCount} selected</div>
-          <p className="text-[10px] text-slate-450 mt-1">Ready for transfer queue</p>
+          <span className="text-[10px] font-bold text-slate-450 uppercase">{t("Current Selected Targets")}</span>
+          <div className="text-xl font-bold text-emerald-600 mt-1">{selectedCount} {t("selected")}</div>
+          <p className="text-[10px] text-slate-450 mt-1">{t("Ready for transfer queue")}</p>
         </div>
 
         <div className="bg-[#f0f8ff] dark:bg-blue-950/20 p-4 rounded border border-blue-200 dark:border-blue-900 shadow-sm col-span-2 md:col-span-1">
-          <span className="text-[10px] font-bold text-[#0078D4] dark:text-brand-300 uppercase">Mail Merge Outbox</span>
-          <div className="text-xl font-bold text-slate-800 dark:text-slate-100 mt-1">{currentMailMergeCount} active</div>
-          <p className="text-[10px] text-slate-505 mt-1">Ready to compile & dispatch</p>
+          <span className="text-[10px] font-bold text-[#0078D4] dark:text-brand-300 uppercase">{t("Mail Merge Outbox")}</span>
+          <div className="text-xl font-bold text-slate-800 dark:text-slate-100 mt-1">{currentMailMergeCount} {t("active")}</div>
+          <p className="text-[10px] text-slate-505 mt-1">{t("Ready to compile & dispatch")}</p>
         </div>
       </div>
 
@@ -671,7 +683,7 @@ export default function TargetAccountsView({
           <div className="flex items-center justify-between border-b border-[#EDEBE9] dark:border-[#323130] pb-3 flex-shrink-0">
             <div className="flex items-center gap-2">
               <Sparkles className="w-4 h-4 text-[#0078D4]" />
-              <h3 className="text-sm font-bold text-slate-800 dark:text-slate-100 uppercase tracking-wider">Target Accounts Studio (Expanded Mode)</h3>
+              <h3 className="text-sm font-bold text-slate-800 dark:text-slate-100 uppercase tracking-wider">{t("Target Accounts Studio (Expanded Mode)")}</h3>
             </div>
             <button 
               type="button" 
@@ -679,7 +691,7 @@ export default function TargetAccountsView({
               className="text-xs font-bold text-slate-550 hover:text-slate-755 dark:text-slate-300 dark:hover:text-slate-100 bg-white dark:bg-[#252423] border border-[#EDEBE9] dark:border-[#323130] px-3 py-1.5 rounded flex items-center gap-1.5 cursor-pointer shadow-sm transition-all hover:bg-slate-50"
             >
               <Minimize2 className="w-3.5 h-3.5" />
-              <span>Close Wide View</span>
+              <span>{t("Close Wide View")}</span>
             </button>
           </div>
         )}
@@ -690,7 +702,7 @@ export default function TargetAccountsView({
             <div className="border-b border-[#EDEBE9] dark:border-[#323130] pb-3 flex items-center justify-between">
               <h3 className="text-xs font-bold text-slate-705 uppercase tracking-wide flex items-center gap-1.5">
                 <Plus className="w-4 h-4 text-emerald-500" />
-                <span>Input Target Company Manual Record</span>
+                <span>{t("Input Target Company Manual Record")}</span>
               </h3>
               <button type="button" onClick={() => setIsAddingAccount(false)} className="text-slate-400 hover:text-slate-600">
                 <X className="w-4 h-4" />
@@ -699,10 +711,10 @@ export default function TargetAccountsView({
 
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4 text-xs">
               <div>
-                <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block mb-1">Company Name *</label>
+                <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block mb-1">{t("Company Name *")}</label>
                 <input
                   type="text"
-                  placeholder="e.g. Arçelik"
+                  placeholder={t("e.g. Arçelik")}
                   value={newAccount.companyName}
                   onChange={e => setNewAccount({ ...newAccount, companyName: e.target.value })}
                   className="w-full p-2 border border-[#EDEBE9] dark:border-[#323130] bg-[#faf9f8] dark:bg-[#252423] rounded outline-none focus:border-[#0078D4]"
@@ -711,10 +723,10 @@ export default function TargetAccountsView({
               </div>
 
               <div>
-                <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block mb-1">Website URL</label>
+                <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block mb-1">{t("Website URL")}</label>
                 <input
                   type="text"
-                  placeholder="https://www.arcelik.com.tr"
+                  placeholder={t("https://www.arcelik.com.tr")}
                   value={newAccount.websiteUrl}
                   onChange={e => setNewAccount({ ...newAccount, websiteUrl: e.target.value })}
                   className="w-full p-2 border border-[#EDEBE9] dark:border-[#323130] bg-[#faf9f8] dark:bg-[#252423] rounded outline-none focus:border-[#0078D4]"
@@ -722,10 +734,10 @@ export default function TargetAccountsView({
               </div>
 
               <div>
-                <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block mb-1">Industry Tag</label>
+                <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block mb-1">{t("Industry Tag")}</label>
                 <input
                   type="text"
-                  placeholder="e.g. Beyaz Eşya Üretimi"
+                  placeholder={t("e.g. Beyaz Eşya Üretimi")}
                   value={newAccount.industryTag}
                   onChange={e => setNewAccount({ ...newAccount, industryTag: e.target.value })}
                   className="w-full p-2 border border-[#EDEBE9] dark:border-[#323130] bg-[#faf9f8] dark:bg-[#252423] rounded outline-none focus:border-[#0078D4]"
@@ -733,10 +745,10 @@ export default function TargetAccountsView({
               </div>
 
               <div>
-                <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block mb-1">Company Size</label>
+                <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block mb-1">{t("Company Size")}</label>
                 <input
                   type="text"
-                  placeholder="e.g. 10000+ Çalışan"
+                  placeholder={t("e.g. 10000+ Çalışan")}
                   value={newAccount.companySize}
                   onChange={e => setNewAccount({ ...newAccount, companySize: e.target.value })}
                   className="w-full p-2 border border-[#EDEBE9] dark:border-[#323130] bg-[#faf9f8] dark:bg-[#252423] rounded outline-none focus:border-[#0078D4]"
@@ -744,10 +756,10 @@ export default function TargetAccountsView({
               </div>
 
               <div>
-                <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block mb-1">Contact First Name</label>
+                <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block mb-1">{t("Contact First Name")}</label>
                 <input
                   type="text"
-                  placeholder="Kürşad"
+                  placeholder={t("Kürşad")}
                   value={newAccount.contactName}
                   onChange={e => setNewAccount({ ...newAccount, contactName: e.target.value })}
                   className="w-full p-2 border border-[#EDEBE9] dark:border-[#323130] bg-[#faf9f8] dark:bg-[#252423] rounded outline-none focus:border-[#0078D4]"
@@ -755,10 +767,10 @@ export default function TargetAccountsView({
               </div>
 
               <div>
-                <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block mb-1">Contact Surname</label>
+                <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block mb-1">{t("Contact Surname")}</label>
                 <input
                   type="text"
-                  placeholder="Yıldırım"
+                  placeholder={t("Yıldırım")}
                   value={newAccount.contactSurname}
                   onChange={e => setNewAccount({ ...newAccount, contactSurname: e.target.value })}
                   className="w-full p-2 border border-[#EDEBE9] dark:border-[#323130] bg-[#faf9f8] dark:bg-[#252423] rounded outline-none focus:border-[#0078D4]"
@@ -766,10 +778,10 @@ export default function TargetAccountsView({
               </div>
 
               <div>
-                <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block mb-1">Contact Email</label>
+                <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block mb-1">{t("Contact Email")}</label>
                 <input
                   type="email"
-                  placeholder="kursad.yildirim@arcelik.com"
+                  placeholder={t("kursad.yildirim@arcelik.com")}
                   value={newAccount.contactEmail}
                   onChange={e => setNewAccount({ ...newAccount, contactEmail: e.target.value })}
                   className="w-full p-2 border border-[#EDEBE9] dark:border-[#323130] bg-[#faf9f8] dark:bg-[#252423] rounded outline-none focus:border-[#0078D4]"
@@ -777,10 +789,10 @@ export default function TargetAccountsView({
               </div>
 
               <div>
-                <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block mb-1">Department</label>
+                <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block mb-1">{t("Department")}</label>
                 <input
                   type="text"
-                  placeholder="Yalın İmalat / Kalite"
+                  placeholder={t("Yalın İmalat / Kalite")}
                   value={newAccount.department}
                   onChange={e => setNewAccount({ ...newAccount, department: e.target.value })}
                   className="w-full p-2 border border-[#EDEBE9] dark:border-[#323130] bg-[#faf9f8] dark:bg-[#252423] rounded outline-none focus:border-[#0078D4]"
@@ -788,10 +800,10 @@ export default function TargetAccountsView({
               </div>
 
               <div>
-                <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block mb-1">Address / Main Location</label>
+                <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block mb-1">{t("Address / Main Location")}</label>
                 <input
                   type="text"
-                  placeholder="Eskişehir, Türkiye"
+                  placeholder={t("Eskişehir, Türkiye")}
                   value={newAccount.locationMain}
                   onChange={e => setNewAccount({ ...newAccount, locationMain: e.target.value })}
                   className="w-full p-2 border border-[#EDEBE9] dark:border-[#323130] bg-[#faf9f8] dark:bg-[#252423] rounded outline-none focus:border-[#0078D4]"
@@ -799,10 +811,10 @@ export default function TargetAccountsView({
               </div>
 
               <div>
-                <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block mb-1">Opportunity Score (1-100) *</label>
+                <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block mb-1">{t("Opportunity Score (1-100) *")}</label>
                 <input
                   type="number"
-                  placeholder="85"
+                  placeholder={t("85")}
                   value={newAccount.riskScore}
                   onChange={e => setNewAccount({ ...newAccount, riskScore: Number(e.target.value) })}
                   className="w-full p-2 border border-[#EDEBE9] dark:border-[#323130] bg-[#faf9f8] dark:bg-[#252423] rounded outline-none focus:border-[#0078D4]"
@@ -813,36 +825,36 @@ export default function TargetAccountsView({
               </div>
 
               <div>
-                <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block mb-1">Lead Status</label>
+                <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block mb-1">{t("Lead Status")}</label>
                 <select
                   value={newAccount.leadStatus}
                   onChange={e => setNewAccount({ ...newAccount, leadStatus: e.target.value })}
                   className="w-full p-2 border border-[#EDEBE9] dark:border-[#323130] bg-[#faf9f8] dark:bg-[#252423] rounded outline-none"
                 >
-                  <option value="New">New</option>
-                  <option value="Contacted">Contacted</option>
-                  <option value="Nurturing">Nurturing</option>
-                  <option value="Disqualified">Disqualified</option>
+                  <option value="New">{t("New")}</option>
+                  <option value="Contacted">{t("Contacted")}</option>
+                  <option value="Nurturing">{t("Nurturing")}</option>
+                  <option value="Disqualified">{t("Disqualified")}</option>
                 </select>
               </div>
 
               <div>
-                <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block mb-1">Lead Segment</label>
+                <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block mb-1">{t("Lead Segment")}</label>
                 <select
                   value={newAccount.leadSegment}
                   onChange={e => setNewAccount({ ...newAccount, leadSegment: e.target.value })}
                   className="w-full p-2 border border-[#EDEBE9] dark:border-[#323130] bg-[#faf9f8] dark:bg-[#252423] rounded outline-none"
                 >
-                  <option value="Hot Lead">Hot Lead</option>
-                  <option value="Warm Lead">Warm Lead</option>
-                  <option value="Cold">Cold</option>
+                  <option value="Hot Lead">{t("Hot Lead")}</option>
+                  <option value="Warm Lead">{t("Warm Lead")}</option>
+                  <option value="Cold">{t("Cold")}</option>
                 </select>
               </div>
 
               <div className="sm:col-span-2">
-                <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block mb-1">AI Risks & Waste Opportunities Summary</label>
+                <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block mb-1">{t("AI Risks & Waste Opportunities Summary")}</label>
                 <textarea
-                  placeholder="Muda points and factory efficiency indicators..."
+                  placeholder={t("Muda points and factory efficiency indicators...")}
                   value={newAccount.aiAnalysisSummary}
                   onChange={e => setNewAccount({ ...newAccount, aiAnalysisSummary: e.target.value })}
                   className="w-full p-2 border border-[#EDEBE9] dark:border-[#323130] bg-[#faf9f8] dark:bg-[#252423] rounded outline-none h-16 focus:border-[#0078D4] resize-none"
@@ -850,9 +862,9 @@ export default function TargetAccountsView({
               </div>
 
               <div className="sm:col-span-2">
-                <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block mb-1">Outreach Templates / Drafts</label>
+                <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block mb-1">{t("Outreach Templates / Drafts")}</label>
                 <textarea
-                  placeholder="Subject: Outreach Template here..."
+                  placeholder={t("Subject: Outreach Template here...")}
                   value={newAccount.draftTemplates}
                   onChange={e => setNewAccount({ ...newAccount, draftTemplates: e.target.value })}
                   className="w-full p-2 border border-[#EDEBE9] dark:border-[#323130] bg-[#faf9f8] dark:bg-[#252423] rounded outline-none h-16 focus:border-[#0078D4] resize-none"
@@ -866,14 +878,14 @@ export default function TargetAccountsView({
                 onClick={() => setIsAddingAccount(false)}
                 className="text-xs font-bold text-slate-500 hover:text-slate-650 px-3 py-2 border border-[#EDEBE9] dark:border-[#323130] rounded cursor-pointer bg-[#faf9f8] dark:bg-[#252423]"
               >
-                Cancel
+                {t("Cancel")}
               </button>
               <button
                 type="submit"
                 className="text-xs font-bold bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2 rounded flex items-center gap-1 cursor-pointer"
               >
                 <Check className="w-4 h-4" />
-                <span>Append Target Company</span>
+                <span>{t("Append Target Company")}</span>
               </button>
             </div>
           </form>
@@ -886,7 +898,7 @@ export default function TargetAccountsView({
               <Search className="w-3.5 h-3.5 text-slate-400 absolute left-3 top-2.5" />
               <input
                 type="text"
-                placeholder="Search companies, sectors, or contacts..."
+                placeholder={t("Search companies, sectors, or contacts...")}
                 value={searchTerm}
                 onChange={e => setSearchTerm(e.target.value)}
                 className="bg-white dark:bg-[#252423] border border-[#EDEBE9] dark:border-[#323130] text-xs rounded pl-9 pr-4 py-2 w-64 outline-none focus:border-[#0078D4]"
@@ -901,7 +913,7 @@ export default function TargetAccountsView({
                   ? "bg-slate-200 dark:bg-[#323130] text-[#0078D4] border-[#0078D4]"
                   : "bg-[#FAF9F8] hover:bg-[#EDEBE9] dark:bg-[#252423] dark:hover:bg-[#323130] text-slate-700 dark:text-slate-200 border-[#EDEBE9] dark:border-[#323130]"
               }`}
-              title="Filtre Kriterleri"
+              title={t("Filter Criteria")}
             >
               <Filter className="w-4 h-4" />
               {(statusFilter || segmentFilter) ? (
@@ -916,11 +928,11 @@ export default function TargetAccountsView({
                   onChange={e => setStatusFilter(e.target.value)}
                   className="bg-[#FAF9F8] dark:bg-[#252423] border border-[#0078D4]/30 dark:border-[#323130] text-xs p-1.5 rounded outline-none text-slate-700 dark:text-slate-200"
                 >
-                  <option value="">-- Lead Status --</option>
-                  <option value="New">New</option>
-                  <option value="Contacted">Contacted</option>
-                  <option value="Nurturing">Nurturing</option>
-                  <option value="Disqualified">Disqualified</option>
+                  <option value="">{t("-- Lead Status --")}</option>
+                  <option value="New">{t("New")}</option>
+                  <option value="Contacted">{t("Contacted")}</option>
+                  <option value="Nurturing">{t("Nurturing")}</option>
+                  <option value="Disqualified">{t("Disqualified")}</option>
                 </select>
 
                 <select
@@ -928,10 +940,10 @@ export default function TargetAccountsView({
                   onChange={e => setSegmentFilter(e.target.value)}
                   className="bg-[#FAF9F8] dark:bg-[#252423] border border-[#0078D4]/30 dark:border-[#323130] text-xs p-1.5 rounded outline-none text-slate-700 dark:text-slate-200"
                 >
-                  <option value="">-- Segment --</option>
-                  <option value="Hot Lead">Hot Lead</option>
-                  <option value="Warm Lead">Warm Lead</option>
-                  <option value="Cold">Cold</option>
+                  <option value="">{t("-- Segment --")}</option>
+                  <option value="Hot Lead">{t("Hot Lead")}</option>
+                  <option value="Warm Lead">{t("Warm Lead")}</option>
+                  <option value="Cold">{t("Cold")}</option>
                 </select>
 
                 {(statusFilter || segmentFilter) && (
@@ -943,7 +955,7 @@ export default function TargetAccountsView({
                     }}
                     className="text-xs text-rose-600 hover:text-rose-700 font-bold hover:underline ml-1 cursor-pointer"
                   >
-                    Clear Filter
+                    {t("Clear Filter")}
                   </button>
                 )}
               </div>
@@ -962,7 +974,7 @@ export default function TargetAccountsView({
               }`}
             >
               <ArrowRightLeft className="w-3.5 h-3.5" />
-              <span>Transfer to Outbox List ({selectedCount})</span>
+              <span>{t("Transfer to Outbox List ({count})").replace("{count}", String(selectedCount))}</span>
             </button>
 
             <button
@@ -974,27 +986,27 @@ export default function TargetAccountsView({
                   ? "bg-rose-50 hover:bg-rose-100 text-rose-700 border-rose-200 dark:bg-rose-950/20 dark:text-rose-450 dark:border-rose-900"
                   : "bg-slate-50 dark:bg-[#252423] text-slate-400 border-[#EDEBE9] dark:border-[#323130] cursor-not-allowed opacity-60"
               }`}
-              title="Delete selected companies permanently"
+              title={t("Delete selected companies permanently")}
             >
               <Trash2 className="w-3.5 h-3.5" />
-              <span>Delete</span>
+              <span>{t("Delete")}</span>
             </button>
 
             <button
               type="button"
               onClick={() => setIsWide(!isWide)}
               className="text-xs font-bold bg-white hover:bg-slate-50 dark:bg-[#252423] dark:hover:bg-[#323130] text-[#0078D4] dark:text-brand-300 px-3.5 py-2 border border-[#EDEBE9] dark:border-[#323130] rounded flex items-center gap-1.5 cursor-pointer transition-all shadow-sm"
-              title={isWide ? "Exit Wide Screen View (Esc)" : "Expand Table to Wide Screen View"}
+              title={isWide ? t("Exit Wide Screen View (Esc)") : t("Expand Table to Wide Screen View")}
             >
               {isWide ? (
                 <>
                   <Minimize2 className="w-3.5 h-3.5" />
-                  <span>Close Wide View</span>
+                  <span>{t("Close Wide View")}</span>
                 </>
               ) : (
                 <>
                   <Maximize2 className="w-3.5 h-3.5" />
-                  <span>Wide View</span>
+                  <span>{t("Wide View")}</span>
                 </>
               )}
             </button>
@@ -1014,17 +1026,17 @@ export default function TargetAccountsView({
                     className="rounded text-[#0078D4] cursor-pointer"
                   />
                 </th>
-                <th className="p-3 w-14">No</th>
-                <th className="p-3">Company</th>
-                <th className="p-3">Industry</th>
-                <th className="p-3">Contact Name</th>
-                <th className="p-3">Contact Surname</th>
-                <th className="p-3">Department</th>
-                <th className="p-3">Address</th>
-                <th className="p-3">Lead Status</th>
-                <th className="p-3">Lead Segment</th>
-                <th className="p-3">Status</th>
-                <th className="p-3 text-center w-20">Actions</th>
+                <th className="p-3 w-14">{t("No")}</th>
+                <th className="p-3">{t("Company")}</th>
+                <th className="p-3">{t("Industry")}</th>
+                <th className="p-3">{t("Contact Name")}</th>
+                <th className="p-3">{t("Contact Surname")}</th>
+                <th className="p-3">{t("Department")}</th>
+                <th className="p-3">{t("Address")}</th>
+                <th className="p-3">{t("Lead Status")}</th>
+                <th className="p-3">{t("Lead Segment")}</th>
+                <th className="p-3">{t("Status")}</th>
+                <th className="p-3 text-center w-20">{t("Actions")}</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-[#EDEBE9] dark:divide-[#323130] text-xs">
@@ -1177,10 +1189,10 @@ export default function TargetAccountsView({
                             onChange={(e) => setEditForm({ ...editForm, leadStatus: e.target.value })}
                             className="p-1 text-xs border border-slate-300 rounded bg-white dark:bg-[#252423]"
                           >
-                            <option value="New">New</option>
-                            <option value="Contacted">Contacted</option>
-                            <option value="Nurturing">Nurturing</option>
-                            <option value="Disqualified">Disqualified</option>
+                            <option value="New">{t("New")}</option>
+                            <option value="Contacted">{t("Contacted")}</option>
+                            <option value="Nurturing">{t("Nurturing")}</option>
+                            <option value="Disqualified">{t("Disqualified")}</option>
                           </select>
                         ) : (
                           <span className={`px-2 py-0.5 text-[10px] font-bold rounded-full border ${
@@ -1192,7 +1204,7 @@ export default function TargetAccountsView({
                               ? "bg-rose-50 dark:bg-rose-950/20 border-rose-200 dark:border-rose-900 text-rose-700"
                               : "bg-slate-50 dark:bg-[#252423] border-slate-200 dark:border-slate-800 text-slate-500"
                           }`}>
-                            {statusVal}
+                            {t(statusVal)}
                           </span>
                         )}
                       </td>
@@ -1205,9 +1217,9 @@ export default function TargetAccountsView({
                             onChange={(e) => setEditForm({ ...editForm, leadSegment: e.target.value })}
                             className="p-1 text-xs border border-slate-300 rounded bg-white dark:bg-[#252423]"
                           >
-                            <option value="Hot Lead">Hot Lead</option>
-                            <option value="Warm Lead">Warm Lead</option>
-                            <option value="Cold">Cold</option>
+                            <option value="Hot Lead">{t("Hot Lead")}</option>
+                            <option value="Warm Lead">{t("Warm Lead")}</option>
+                            <option value="Cold">{t("Cold")}</option>
                           </select>
                         ) : (
                           <span className={`px-2 py-0.5 text-[10px] font-bold rounded-full ${
@@ -1217,7 +1229,7 @@ export default function TargetAccountsView({
                               ? "bg-amber-100 text-amber-800 dark:bg-amber-950/30 dark:text-amber-300"
                               : "bg-slate-100 text-slate-600 dark:bg-black/30 dark:text-slate-400"
                           }`}>
-                            {segmentVal}
+                            {t(segmentVal)}
                           </span>
                         )}
                       </td>
@@ -1252,7 +1264,7 @@ export default function TargetAccountsView({
                               type="button"
                               onClick={saveEditedAccount}
                               className="p-1 hover:bg-emerald-50 dark:hover:bg-emerald-950 text-emerald-600 dark:text-emerald-450 border border-emerald-250 dark:border-emerald-800 rounded shadow-sm cursor-pointer"
-                              title="Confirm Changes"
+                              title={t("Confirm Changes")}
                             >
                               <Check className="w-3.5 h-3.5" />
                             </button>
@@ -1263,7 +1275,7 @@ export default function TargetAccountsView({
                                 setEditForm(null);
                               }}
                               className="p-1 hover:bg-slate-100 dark:hover:bg-[#252423] text-slate-500 rounded border border-slate-200 dark:border-[#323130] cursor-pointer"
-                              title="Discard Edit"
+                              title={t("Discard Edit")}
                             >
                               <X className="w-3.5 h-3.5" />
                             </button>
@@ -1291,10 +1303,13 @@ export default function TargetAccountsView({
                                   openCount: 0
                                 };
                                 onPushToMailMerge([mapped]);
-                                triggerToast(`${a.companyName} compiled mapped in outgoing campaign!`, "success");
+                                triggerToast(
+                                  t("{name} compiled mapped in outgoing campaign!").replace("{name}", a.companyName),
+                                  "success"
+                                );
                               }}
                               className="p-1 bg-[#FAF9F8] text-slate-500 border border-[#EDEBE9] dark:bg-[#201f1e] dark:border-[#323130] hover:bg-blue-50 hover:text-[#0078D4] dark:hover:bg-blue-950/20 dark:hover:text-[#85c1f5] rounded cursor-pointer shrink-0 transition-colors"
-                              title="Push Target Email to Mail Merge outbox"
+                              title={t("Push Target Email to Mail Merge outbox")}
                             >
                               <Mail className="w-3.5 h-3.5" />
                             </button>
@@ -1303,7 +1318,7 @@ export default function TargetAccountsView({
                               type="button"
                               onClick={() => startEditingAccount(a)}
                               className="p-1 bg-[#FAF9F8] text-slate-505 border border-[#EDEBE9] dark:bg-[#201f1e] dark:border-[#323130] hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-[#0078D4] rounded cursor-pointer transition-colors"
-                              title="Quick Edit properties inline"
+                              title={t("Quick Edit properties inline")}
                             >
                               <Edit className="w-3.5 h-3.5" />
                             </button>
@@ -1312,7 +1327,7 @@ export default function TargetAccountsView({
                               type="button"
                               onClick={() => deleteSingleAccount(a.id)}
                               className="p-1 bg-[#FAF9F8] text-rose-500 border border-[#EDEBE9] dark:bg-[#201f1e] dark:border-[#323130] hover:bg-rose-50 dark:hover:bg-rose-950/20 rounded cursor-pointer transition-colors"
-                              title="Remove Target"
+                              title={t("Remove Target")}
                             >
                               <Trash2 className="w-3.5 h-3.5" />
                             </button>
@@ -1326,7 +1341,7 @@ export default function TargetAccountsView({
                 <tr>
                   <td colSpan={12} className="p-10 text-center text-slate-400 dark:text-slate-500">
                     <Database className="w-8 h-8 mx-auto opacity-30 mb-2 animate-pulse-subtle" />
-                    <span className="text-xs">No matching target company matches selected filters.</span>
+                    <span className="text-xs">{t("No matching target company matches selected filters.")}</span>
                   </td>
                 </tr>
               )}
@@ -1337,9 +1352,9 @@ export default function TargetAccountsView({
         {/* Dynamic Pagination Footer bar */}
         <div className="p-4 border-t border-[#EDEBE9] dark:border-[#323130] bg-[#FAF9F8] dark:bg-[#1b1a19] flex items-center justify-between text-xs select-none">
           <span className="text-slate-550 dark:text-slate-400 font-medium">
-            Showing <strong className="text-slate-700 dark:text-slate-200">{filteredAccounts.length > 0 ? (currentPage - 1) * pageSize + 1 : 0}</strong> to{" "}
-            <strong className="text-slate-700 dark:text-slate-200">{Math.min(currentPage * pageSize, filteredAccounts.length)}</strong> of{" "}
-            <strong className="text-slate-705 dark:text-slate-200">{filteredAccounts.length}</strong> records
+            {t("Showing")} <strong className="text-slate-700 dark:text-slate-200">{filteredAccounts.length > 0 ? (currentPage - 1) * pageSize + 1 : 0}</strong> {t("to")}{" "}
+            <strong className="text-slate-700 dark:text-slate-200">{Math.min(currentPage * pageSize, filteredAccounts.length)}</strong> {t("of")}{" "}
+            <strong className="text-slate-705 dark:text-slate-200">{filteredAccounts.length}</strong> {t("records")}
           </span>
 
           <div className="flex items-center gap-1.5 shadow-none pb-0">
@@ -1353,13 +1368,13 @@ export default function TargetAccountsView({
                   : "bg-white dark:bg-[#252423] text-slate-700 dark:text-slate-200 border-[#EDEBE9] dark:border-[#323130] hover:bg-slate-50"
               }`}
             >
-              Previous
+              {t("Previous")}
             </button>
             
             <div className="flex items-center gap-1 font-semibold block">
-              <span className="dark:text-slate-300">Page</span>
+              <span className="dark:text-slate-300">{t("Page")}</span>
               <strong className="text-[#0078D4] dark:text-brand-3 w-5 text-center block">{currentPage}</strong>
-              <span className="dark:text-slate-300">of</span>
+              <span className="dark:text-slate-300">{t("of")}</span>
               <strong className="dark:text-slate-200">{totalPages}</strong>
             </div>
 
@@ -1373,7 +1388,7 @@ export default function TargetAccountsView({
                   : "bg-white dark:bg-[#252423] text-slate-700 dark:text-slate-200 border-[#EDEBE9] dark:border-[#323130] hover:bg-slate-50"
               }`}
             >
-              Next
+              {t("Next")}
             </button>
           </div>
         </div>
@@ -1395,12 +1410,12 @@ export default function TargetAccountsView({
                 </div>
                 <div>
                   <h3 className="text-sm font-extrabold text-slate-800 dark:text-slate-100 font-display">
-                    {selectedAccount.companyName.toUpperCase()} - DEEP RESEARCH & DOSSIER
+                    {selectedAccount.companyName.toUpperCase()} - {t("DEEP RESEARCH & DOSSIER")}
                   </h3>
                   <p className="text-[10px] text-slate-400 font-sans mt-0.5 flex items-center gap-3">
-                    <span>Source: <b className="text-[#0078D4] dark:text-brand-400">{selectedAccount.analysisSource || "AI Integration"}</b></span>
+                    <span>{t("Source:")} <b className="text-[#0078D4] dark:text-brand-400">{selectedAccount.analysisSource || t("AI Integration")}</b></span>
                     <span>•</span>
-                    <span>Date: <b>{selectedAccount.analysisDate || "Stored timestamp"}</b></span>
+                    <span>{t("Date:")} <b>{selectedAccount.analysisDate || t("Stored timestamp")}</b></span>
                   </p>
                 </div>
               </div>
@@ -1419,15 +1434,15 @@ export default function TargetAccountsView({
               {/* Stats highlights banner */}
               <div className="grid grid-cols-3 gap-2.5 bg-[#FAF9F8] dark:bg-[#201f1e] p-3 rounded-xl border border-[#EDEBE9] dark:border-[#323130]">
                 <div className="text-center p-1.5 border-r border-slate-200 dark:border-[#323130]">
-                  <span className="text-[9px] uppercase font-bold text-slate-400 font-mono block">Opportunity Score</span>
+                  <span className="text-[9px] uppercase font-bold text-slate-400 font-mono block">{t("Opportunity Score")}</span>
                   <span className="text-sm font-extrabold text-[#0078D4] dark:text-brand-400 block mt-0.5">% {selectedAccount.riskScore || 75}</span>
                 </div>
                 <div className="text-center p-1.5 border-r border-slate-200 dark:border-[#323130]">
-                  <span className="text-[9px] uppercase font-bold text-slate-400 font-mono block">Company Size</span>
-                  <span className="text-xs font-semibold text-slate-700 dark:text-slate-200 block mt-0.5 truncate">{selectedAccount.companySize || "750+ Employees"}</span>
+                  <span className="text-[9px] uppercase font-bold text-slate-400 font-mono block">{t("Company Size")}</span>
+                  <span className="text-xs font-semibold text-slate-700 dark:text-slate-200 block mt-0.5 truncate">{selectedAccount.companySize || t("750+ Employees")}</span>
                 </div>
                 <div className="text-center p-1.5">
-                  <span className="text-[9px] uppercase font-bold text-slate-400 font-mono block">Main Location</span>
+                  <span className="text-[9px] uppercase font-bold text-slate-400 font-mono block">{t("Main Location")}</span>
                   <span className="text-xs font-semibold text-slate-700 dark:text-slate-200 block mt-0.5 truncate">{selectedAccount.locationMain || "Belirtilmemiş"}</span>
                 </div>
               </div>
@@ -1436,7 +1451,7 @@ export default function TargetAccountsView({
               <div className="p-3 bg-blue-500/5 rounded-xl border border-blue-500/10 text-xs flex items-center justify-between">
                 <div className="flex items-center gap-2">
                   <Building className="w-4 h-4 text-[#0078D4] shrink-0" />
-                  <span className="font-bold text-slate-700 dark:text-slate-300">Website URL:</span>
+                  <span className="font-bold text-slate-700 dark:text-slate-300">{t("Website URL:")}</span>
                   <a 
                     href={selectedAccount.websiteUrl} 
                     target="_blank" 
@@ -1447,7 +1462,7 @@ export default function TargetAccountsView({
                   </a>
                 </div>
                 <span className="font-mono text-[9px] text-slate-400 bg-white dark:bg-black/10 px-2 py-0.5 border border-[#EDEBE9] dark:border-[#323130] rounded-full">
-                  Corporate Portal
+                  {t("Corporate Portal")}
                 </span>
               </div>
 
@@ -1455,24 +1470,24 @@ export default function TargetAccountsView({
               <div className="space-y-2">
                 <h4 className="text-xs font-bold text-slate-800 dark:text-slate-200 uppercase tracking-wider font-mono flex items-center gap-2 border-b border-slate-100 dark:border-slate-800 pb-1.5">
                   <Users className="w-4 h-4 text-emerald-500" />
-                  Target Stakeholder Contact Details
+                  {t("Target Stakeholder Contact Details")}
                 </h4>
                 <div className="bg-[#FAF9F8] dark:bg-black/10 p-4 rounded-xl border border-[#EDEBE9] dark:border-[#323130] text-xs space-y-2 font-sans">
                   <div className="grid grid-cols-2 gap-4">
                     <div>
-                      <span className="text-[10px] uppercase font-bold tracking-brand text-slate-400 block">First Name</span>
+                      <span className="text-[10px] uppercase font-bold tracking-brand text-slate-400 block">{t("First Name")}</span>
                       <span className="font-semibold text-slate-700 dark:text-slate-200">{selectedAccount.contactName || "Kalite / Operasyon"}</span>
                     </div>
                     <div>
-                      <span className="text-[10px] uppercase font-bold tracking-brand text-slate-400 block">Surname</span>
+                      <span className="text-[10px] uppercase font-bold tracking-brand text-slate-400 block">{t("Surname")}</span>
                       <span className="font-semibold text-slate-700 dark:text-slate-200">{selectedAccount.contactSurname || "Direktörü"}</span>
                     </div>
                     <div>
-                      <span className="text-[10px] uppercase font-bold tracking-brand text-slate-400 block">Designated Email</span>
-                      <span className="font-mono text-[#0078D4] dark:text-brand-400 font-bold">{selectedAccount.contactEmail || "N/A"}</span>
+                      <span className="text-[10px] uppercase font-bold tracking-brand text-slate-400 block">{t("Designated Email")}</span>
+                      <span className="font-mono text-[#0078D4] dark:text-brand-400 font-bold">{selectedAccount.contactEmail || t("N/A")}</span>
                     </div>
                     <div>
-                      <span className="text-[10px] uppercase font-bold tracking-brand text-slate-400 block">Department / Role</span>
+                      <span className="text-[10px] uppercase font-bold tracking-brand text-slate-400 block">{t("Department / Role")}</span>
                       <span className="font-medium text-slate-750 dark:text-slate-300">{selectedAccount.department || "Operational Excellence"}</span>
                     </div>
                   </div>
@@ -1483,7 +1498,7 @@ export default function TargetAccountsView({
               <div className="space-y-2">
                 <h4 className="text-xs font-bold text-slate-800 dark:text-slate-200 uppercase tracking-wider font-mono flex items-center gap-2 border-b border-slate-100 dark:border-slate-800 pb-1.5">
                   <Layers className="w-4 h-4 text-amber-500" />
-                  Quality Risks & Lean Opportunities (AI Analysis)
+                  {t("Quality Risks & Lean Opportunities (AI Analysis)")}
                 </h4>
                 <div className="bg-[#FAF9F8] dark:bg-black/10 p-4 rounded-xl border border-[#EDEBE9] dark:border-[#323130] text-xs leading-relaxed text-slate-700 dark:text-slate-300 whitespace-pre-wrap font-sans">
                   {selectedAccount.aiAnalysisSummary}
@@ -1494,11 +1509,11 @@ export default function TargetAccountsView({
               <div className="space-y-2">
                 <h4 className="text-xs font-bold text-slate-800 dark:text-slate-200 uppercase tracking-wider font-mono flex items-center gap-2 border-b border-slate-100 dark:border-slate-800 pb-1.5">
                   <Mail className="w-4 h-4 text-blue-500" />
-                  Pre-compiled Outreach Template (Outbox Copy)
+                  {t("Pre-compiled Outreach Template (Outbox Copy)")}
                 </h4>
                 <div className="bg-[#FAF9F8] dark:bg-black/10 p-4 rounded-xl border border-[#EDEBE9] dark:border-[#323130] text-xs leading-relaxed text-slate-700 dark:text-slate-300 whitespace-pre-wrap font-mono select-all relative">
                   <p className="font-medium text-slate-400 text-[10px] uppercase tracking-wider select-none mb-2 pb-1 border-b border-dashed border-slate-200 dark:border-slate-800">
-                    📧 Outreach Campaign Template
+                    {t("Outreach Campaign Template")}
                   </p>
                   {selectedAccount.draftTemplates}
                 </div>
@@ -1509,7 +1524,7 @@ export default function TargetAccountsView({
                 <div className="space-y-2">
                   <h4 className="text-xs font-bold text-slate-800 dark:text-slate-200 uppercase tracking-wider font-mono flex items-center gap-2 border-b border-slate-100 dark:border-slate-800 pb-1.5">
                     <FileText className="w-4 h-4 text-emerald-500" />
-                    Cyber Search Grounding & Raw Output
+                    {t("Cyber Search Grounding & Raw Output")}
                   </h4>
                   <div className="bg-slate-50 dark:bg-black/30 p-4 rounded-xl border border-slate-200 dark:border-slate-800 text-[11px] leading-relaxed text-slate-500 dark:text-slate-400 whitespace-pre-line font-mono max-h-[300px] overflow-y-auto">
                     {selectedAccount.rawOutput}
@@ -1524,7 +1539,7 @@ export default function TargetAccountsView({
                 onClick={() => setSelectedAccount(null)}
                 className="px-4 py-2 hover:bg-slate-200 dark:hover:bg-slate-800 rounded-lg text-xs font-bold text-slate-600 dark:text-slate-300 transition-colors border border-slate-200 dark:border-[#323130] cursor-pointer"
               >
-                Kapat
+                {t("Close")}
               </button>
 
               <button
@@ -1554,12 +1569,15 @@ export default function TargetAccountsView({
 
                   onPushToMailMerge([mapped]);
                   setSelectedAccount(null);
-                  triggerToast(`${selectedAccount.companyName} contact pushed directly to outbox campaign!`, "success");
+                  triggerToast(
+                    t("{name} contact pushed directly to outbox campaign!").replace("{name}", selectedAccount.companyName),
+                    "success"
+                  );
                 }}
                 className="px-4 py-2 bg-[#0078D4] hover:bg-[#106ebe] text-white text-xs font-bold rounded-lg shadow-sm flex items-center gap-1.5 transition-all cursor-pointer"
               >
                 <Mail className="w-3.5 h-3.5" />
-                Alıcı Listesine Gönder ve Kampanya Tasarla
+                {t("Send to Recipient List and Design Campaign")}
               </button>
             </div>
           </div>

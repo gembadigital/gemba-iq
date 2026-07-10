@@ -6,7 +6,7 @@ import AuthLayout, { AuthButton, AuthError, AuthField, AuthSuccess } from "./Aut
 
 export default function ForgotPasswordPage() {
   const { resetPassword, user, initError } = useAuth();
-  const { lang } = useLanguage();
+  const { lang, t } = useLanguage();
 
   const [email, setEmail] = useState("");
   const [error, setError] = useState<string | null>(null);
@@ -63,7 +63,7 @@ export default function ForgotPasswordPage() {
           type="email"
           value={email}
           onChange={setEmail}
-          placeholder="you@company.com"
+          placeholder={t("you@company.com")}
           autoComplete="email"
         />
         <AuthButton loading={loading}>{tr ? "Sıfırlama Bağlantısı Gönder" : "Send Reset Link"}</AuthButton>

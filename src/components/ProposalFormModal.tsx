@@ -25,7 +25,7 @@ export default function ProposalFormModal({
   onAddCompany,
   wordTemplates = [],
 }: ProposalFormModalProps) {
-  const { lang } = useLanguage();
+  const { lang, t } = useLanguage();
   const [selectedCompanyId, setSelectedCompanyId] = useState("");
   const [selectedDealId, setSelectedDealId] = useState("");
   const [selectedContactId, setSelectedContactId] = useState("");
@@ -359,7 +359,7 @@ export default function ProposalFormModal({
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!selectedCompanyId) {
-      alert("Please select a target Company.");
+      alert(t("Please select a target Company."));
       return;
     }
     const company = companies.find((c) => c.id === selectedCompanyId);
