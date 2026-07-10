@@ -6,14 +6,15 @@ interface AuthLayoutProps {
   subtitle: string;
   children: React.ReactNode;
   footer?: React.ReactNode;
+  logoSrc?: string;
 }
 
-export default function AuthLayout({ title, subtitle, children, footer }: AuthLayoutProps) {
+export default function AuthLayout({ title, subtitle, children, footer, logoSrc = "/logos/GIQ.png" }: AuthLayoutProps) {
   return (
     <div className="min-h-screen flex items-center justify-center bg-[#FAFAFA] dark:bg-[#09090b] px-4 py-10">
       <div className="w-full max-w-md">
         <div className="flex flex-col items-center mb-8">
-          <img src="/logos/GIQ.png" alt="Gemba IQ" className="h-12 w-auto object-contain mb-4" />
+          <img src={logoSrc} alt="Gemba IQ" className="h-12 w-auto object-contain mb-4" />
           <h1 className="text-2xl font-bold text-slate-900 dark:text-zinc-100 tracking-tight">{title}</h1>
           <p className="text-sm text-slate-500 dark:text-zinc-400 mt-1 text-center">{subtitle}</p>
         </div>

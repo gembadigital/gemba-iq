@@ -58,6 +58,7 @@ export default function LoginPage() {
 
   return (
     <AuthLayout
+      logoSrc="/logos/applogo.png"
       title={tr ? "Giriş Yap" : "Sign In"}
       subtitle={
         inviteToken
