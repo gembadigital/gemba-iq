@@ -1666,6 +1666,16 @@ export const uiDictionaryTR: Record<string, string> = {
   "Or enter a different focus topic...": "Ya da farklı bir odak konusu yazın...",
   "Facility size reference, shared connection, or waste point to highlight...": "Tesis büyüklüğü referansı, ortak bağlantı veya vurgulamak istediğiniz özel israf noktası...",
 
+  // User Account Settings
+  "Manage your personal account preferences.": "Kişisel hesap tercihlerinizi yönetin.",
+  "Profile Information": "Profil Bilgileri",
+  "Change Password": "Şifre Değiştir",
+  "Language": "Dil",
+  "Theme": "Tema",
+  "Notification Preferences": "Bildirim Tercihleri",
+  "Security": "Güvenlik",
+  "Coming soon": "Yakında",
+
 };
 
 export const uiDictionaryEN: Record<string, string> = Object.fromEntries(

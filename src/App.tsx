@@ -19,6 +19,7 @@ import ServicesView from "./components/ServicesView";
 import RevenueManagementView from "./components/RevenueManagementView";
 import CompanyDiscoveryView from "./components/CompanyDiscoveryView";
 import AdministrationCenter from "./components/AdministrationCenter";
+import UserAccountSettings from "./components/UserAccountSettings";
 import GlobalSearchBar from "./components/GlobalSearchBar";
 import { useLanguage } from "./lib/LanguageContext";
 import { useAuth } from "./lib/AuthContext";
@@ -179,6 +180,7 @@ export default function App() {
   
   // Settings Panel Model and Tavily Key States
   const [isSettingsOpen, setIsSettingsOpen] = useState<boolean>(false);
+  const [isUserAccountSettingsOpen, setIsUserAccountSettingsOpen] = useState<boolean>(false);
   const [settingsActiveTab, setSettingsActiveTab] = useState<"admin-center" | "system-config">("admin-center");
   const [tavilyKey, setTavilyKey] = useState<string>(() => {
     return localStorage.getItem("tavily_api_key") || "";
@@ -1585,9 +1587,7 @@ export default function App() {
                       <button
                         type="button"
                         onClick={() => {
-                          setInitialAdminSubTab("organization");
-                          setSettingsActiveTab("admin-center");
-                          setIsSettingsOpen(true);
+                          setIsUserAccountSettingsOpen(true);
                           setIsUserDropdownOpen(false);
                         }}
                         className="w-full text-left px-3.5 py-2 text-xs text-slate-700 dark:text-zinc-300 hover:bg-slate-50 dark:hover:bg-zinc-800/60 transition-colors flex items-center gap-2 cursor-pointer"
@@ -1931,6 +1931,36 @@ export default function App() {
 
 
 
+            </div>
+          </div>
+        )}
+
+        {isUserAccountSettingsOpen && (
+          <div className="fixed inset-0 z-[200] flex justify-end">
+            <div
+              className="absolute inset-0 bg-black/40 backdrop-blur-sm"
+              onClick={() => setIsUserAccountSettingsOpen(false)}
+            />
+            <div className="relative h-full w-full max-w-[92vw] lg:max-w-[520px] bg-white dark:bg-[#0c0b0a] shadow-2xl flex flex-col animate-in slide-in-from-right duration-300">
+              <div className="flex items-center justify-between px-6 py-5 border-b border-slate-200 dark:border-slate-800">
+                <div>
+                  <h2 className="text-lg font-bold text-slate-900 dark:text-white">
+                    {t("Account Settings")}
+                  </h2>
+                  <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+                    {t("Manage your personal account preferences.")}
+                  </p>
+                </div>
+                <button
+                  onClick={() => setIsUserAccountSettingsOpen(false)}
+                  className="p-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-500 transition-colors"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+              <div className="flex-1 overflow-y-auto pt-6 pb-6 pl-6 pr-6 md:pt-8 md:pb-8 md:pl-8 md:pr-8">
+                <UserAccountSettings onClose={() => setIsUserAccountSettingsOpen(false)} />
+              </div>
             </div>
           </div>
         )}
