@@ -1668,7 +1668,12 @@ export default function App() {
             )}
 
             {activeTab === "ai-sales-assistant" && (
-              <AISalesAssistant />
+              <AISalesAssistant
+                onOpenSettings={() => {
+                  setSettingsActiveTab("system-config");
+                  setIsSettingsOpen(true);
+                }}
+              />
             )}
 
             {activeTab === "target-accounts" && (

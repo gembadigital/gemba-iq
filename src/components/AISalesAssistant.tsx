@@ -35,218 +35,50 @@ import {
 } from "lucide-react";
 import { LeadProfile, TargetAccount } from "../types";
 
+interface ResearchSource {
+  title: string;
+  url: string;
+  domain?: string;
+  publishedDate?: string;
+}
+
 interface SavedAnalysis {
   id: string;
   timestamp: string;
   companyInput: string;
   rawOutput: string;
-  sources: { title: string; url: string }[];
+  sources: ResearchSource[];
   parsed: {
     companySummary: string;
-    suggestedDecisionMakers: string;
-    companyFinancialAnalysis: string;
-    emailPatternAnalysis: string;
-    estimatedEmailCandidates: string;
-    recommendedOutreachStrategy: string;
+    financialData: string;
+    emailDiscovery: string;
+    decisionMakers: string;
+    opportunityAnalysis: string;
   };
 }
 
-const generateDemoAnalysis = (company: string): SavedAnalysis => {
-  const normCompany = company.toUpperCase();
-  const domain = company.toLowerCase().includes(".") ? company.toLowerCase() : `${company.toLowerCase().replace(/[^a-z0-9]/g, "")}.com`;
-  
-  // Deterministic name-based score to make mock profiles realistic and dynamic
-  let hash = 0;
-  for (let i = 0; i < company.length; i++) {
-    hash = company.charCodeAt(i) + ((hash << 5) - hash);
-  }
-  const dynamicScore = 72 + (Math.abs(hash) % 23); // realistic score between 72 and 94
-  const priorityText = dynamicScore >= 85 ? "Critical Strategic Opportunity" : "High Priority Opportunity";
+interface AISalesAssistantProps {
+  onOpenSettings?: () => void;
+}
 
-  const rawOutput = `# Company Summary
-Industry:
-Operational Excellence & Industrial Manufacturing for ${normCompany}
+const NOT_FOUND_SUMMARY = "Bilgi bulunamadı";
+const NOT_FOUND_FINANCIAL = "Finansal bilgi bulunamadı";
+const NOT_FOUND_EMAIL = "Doğrulanmış e-posta bulunamadı";
+const NOT_FOUND_DECISION_MAKERS = "Karar verici bilgisi bulunamadı";
+const NOT_FOUND_OPPORTUNITY =
+  "Yeterli veri bulunamadığı için fırsat analizi oluşturulamadı.";
 
-Employees:
-Estimated 750+ globally across modern production departments.
+function getTavilyApiKey(): string {
+  return localStorage.getItem("tavily_api_key")?.trim() || "";
+}
 
-Locations:
-Primary high-capacity manufacturing facilities in Bursa, Turkey.
-
-# Suggested Decision Makers
-Tier 1:
-- Quality Excellence Director / OpEx Leader (Primary Buyer)
-- Operations and Plant Director (Decision Maker)
-
-Tier 2:
-- Plant Manager
-- Continuous Improvement Manager (Key Influencer)
-
-# Company Financial Analysis
-## Financial Snapshot
-
-Revenue Trend:
-↑ +18% (Son 3 Yılda Kararlı Büyüme)
-
-EBITDA Trend:
-↑ +4% (Gelir büyümesine kıyasla zayıf EBITDA gelişimi)
-
-Net Profit Trend:
-↓ -9% (Kârlılıkta düşüş ve marj erimesi baskısı)
-
-Inventory Trend:
-↑ +31% (Stok birikimi ve operasyonel verimsizliği sinyali)
-
-## Key Observation
-
-Inventory growth significantly exceeds revenue growth.
-
-This may indicate:
-- Forecasting issues (Talep tahminleme hataları)
-- Production planning inefficiencies (Üretim planlama verimsizlikleri)
-- excess safety stock (Aşırı emniyet stoğu birikimi)
-- Slow-moving inventory (Yavaş hareket eden stok kalemleri)
-
-## Potential Consulting Opportunities
-
-- Inventory Optimization (Stok ve Malzeme Yönetimi Optimizasyonu)
-- Lean Manufacturing & Kanban (Yalın Üretim ve Değer Akış Haritalama)
-- OEE Improvement (Hat ve Ekipman Etkinliği Verimlilik Dağılımları)
-- Cost of Poor Quality Reduction (Kötü Kalite Maliyetlerinin - COPQ Minimize Edilmesi)
-
-## Executive Commentary
-
-The first area I would investigate is inventory management and production planning because inventory growth (31%) is outpacing both revenue (18%) and profitability trends. This suggests potential operational inefficiencies in factory throughput and slow-moving safety stocks.
-
-## Sales Opportunity Summary
-
-- Recommended Service Areas: Yalın Envanter Yönetimi, Hücresel Üretim Standardizasyonu
-- Recommended Stakeholders: Genel Müdür Yardımcısı (COO), Fabrika Müdürü, OpEx Lideri
-- Suggested Sales Approach: COPQ (Kötü Kalite Maliyeti) temelli risk paylaşımlı danışmanlık modeli
-- Suggested First Conversation Topics: "Stok devir hızlarının OEE ve nakit akışına etkileri"
-
-## Estimated Cost of Poor Quality (COPQ) Exposure (COP Q Tahminleri)
-
-- Possible Scrap Cost Range:
-  - Low Estimate: $150,000 / yıl
-  - Medium Estimate: $350,055 / yıl
-  - High Estimate: $600,000 / yıl
-- Possible Rework Cost Range:
-  - Low Estimate: $100,000 / yıl
-  - Medium Estimate: $250,055 / yıl
-  - High Estimate: $450,000 / yıl
-- Possible Hidden Quality Cost Range:
-  - Low Estimate: $200,000 / yıl
-  - Medium Estimate: $500,055 / yıl
-  - High Estimate: $900,000 / yıl
-
-Assumptions used: General B2B manufacturing coefficient assuming €30M-€50M revenue baseline with typical scrap rates (2-3.5%) and rework workloads.
-*Please note:* These are estimates only for strategic sales scoping and are not audited actuals.
-
-# Email Pattern Analysis
-Evidence Found:
-Public B2B registry records suggest professional naming structure.
-
-Likely Pattern:
-firstname.lastname@${domain}
-
-Confidence:
-92%
-
-# Estimated Email Candidates
-ESTIMATED EMAIL CANDIDATE:
-mehmet.kaya@${domain} | Confidence: 90%
-Reason: Matches standard Turkish executive format found on public professional networks.
-
-ESTIMATED EMAIL CANDIDATE:
-opex@${domain} | Confidence: 85%
-Reason: Operational excellence group inbox for continuous improvement inquiries.
-
-# Recommended Outreach Strategy
-Focus on:
-- Scrap and COPQ (Cost of Poor Quality) reduction by 18-24%
-- OEE (Overall Equipment Effectiveness) improvement via digital standardization
-- Elimination of classic manufacturing wastes (Muda)
-- Supplier Quality assurance frameworks
-
-# Personalized Email
-Subject: ${normCompany} Üretim Verimliliği & Yalın Standardizasyon Raporu
-
-Sayın Operasyon Lideri,
-
-Teknolojik alt yapıda ve üretim süreçlerinde hata ve israfları (Muda) en aza indirme noktasındaki çalışmalarınızı ilgiyle inceliyoruz.
-
-Özellikle Bursa fabrikalarındaki süreç verimliliği, duruş sürelerinin azaltılması, OEE optimizasyonu ve COPQ maliyetleri alanındaki tecrübelerimizle ${normCompany} ekibine katkı sunabileceğimizi değerlendirmekteyiz.
-
-Süreçlerdeki potansiyel israf noktalarını ve ekiplerinizin verimliliğini birlikte istişare etmek adına haftaya 10 dakikalık kısa bir tanışma toplantısı planlayabilir miyiz?
-
-Saygılarımızla,
-Gemba IQ AI Danışmanlık Ekibi`;
-
-  return {
-    id: "demo_" + Date.now() + "_" + Math.floor(Math.random() * 1000000),
-    timestamp: new Date().toLocaleString("tr-TR"),
-    companyInput: company,
-    rawOutput: rawOutput,
-    sources: [
-      { title: `${normCompany} Official Webpage`, url: `https://${domain}` },
-      { title: "B2B Manufacturer Registry Profiles", url: "https://turkey-industry.gov.tr" }
-    ],
-    parsed: {
-      companySummary: `Operational Excellence & Industrial Manufacturing for ${normCompany}\n\nEstimated 750+ employees globally across modern production departments.\n\nPrimary high-capacity manufacturing/plant facilities in Bursa, Turkey.`,
-      suggestedDecisionMakers: `• Tier 1: Quality Excellence Director / OpEx Leader (Primary Buyer)\n• Tier 2: Continuous Improvement Manager (Key Influencer)\n• Tier 3: Purchasing Coordinator`,
-      companyFinancialAnalysis: `## Financial Snapshot\n\nRevenue Trend:\n↑ +18%\n\nEBITDA Trend:\n↑ +4%\n\nNet Profit Trend:\n↓ -9%\n\nInventory Trend:\n↑ +31%\n\n## Key Observation\n\nInventory growth significantly exceeds revenue growth.\n\nThis may indicate:\n- Forecasting issues\n- Production planning inefficiencies\n- Excess safety stock\n- Slow-moving inventory\n\n## Potential Consulting Opportunities\n\n- Inventory Optimization\n- Lean Manufacturing\n- OEE Improvement\n- Cost of Poor Quality Reduction\n\n## Executive Commentary\n\nThe first area I would investigate is inventory management and production planning because inventory growth is outpacing both revenue and profitability trends, suggesting potential operational inefficiencies.`,
-      emailPatternAnalysis: `Likely Pattern: firstname.lastname@${domain} (${normCompany} - %92 Confidence)`,
-      estimatedEmailCandidates: `ESTIMATED EMAIL CANDIDATE: mehmet.kaya@${domain} | Güven: %90\nESTIMATED EMAIL CANDIDATE: opex@${domain} | Güven: %85`,
-      recommendedOutreachStrategy: `Focus on:\n- Scrap and COPQ (Cost of Poor Quality) reduction by 18-24%\n- OEE improvement via digital standardization\n- Elimination of manufacturing wastes (Muda)\n- Supplier Quality assurance`
-    }
-  };
-};
-
-const generateLocalFallbackPitch = (companyName: string, mailType: "cold" | "warm", topic: string, tone: string, extraContext: string) => {
-  const normCompany = companyName.toUpperCase();
-  const focusTopic = topic || "Operasyonel İsrafları Azaltma";
-  
-  if (mailType === "cold") {
-    return `Konu: ${normCompany} Tesisleri İçin ${focusTopic} ve Verimlilik Fırsatları
-
-Sayın Operasyon Lideri,
-
-Üretim sektöründeki güncel rekabet koşullarında standart üstü süreçlerin kurulması ve israfların en aza indirilmesi hepimizin ortak önceliğidir.
-
-Gemba IQ olarak, ${normCompany} süreçlerini yakından incelediğimizde "${focusTopic}" alanında geliştirebileceğimiz operasyonel mükemmellik fırsatlarına odaklandık. Benzer üretim segmentlerinde yürüttüğümüz projelerde OEE artışları, hata oranlarında düşüş ve yalın hat kurulumları ile ciddi finansal geri dönüşler sağladık.
-
-Bu çerçevede, ${normCompany} tesislerine özel kurgulayabileceğimiz yalın analiz ve iyileştirme yol haritasını değerlendirmek üzere haftaya 10 dakikalık bir çevrimiçi görüşme gerçekleştirebilir miyiz?
-
-Saygılarımızla,
-[Adınız] [Soyadınız] [Unvanınız]
-Gemba IQ AI İş Geliştirme`;
-  } else {
-    return `Konu: Akıllı Yalın Ortaklığı: ${normCompany} & ${focusTopic} Çalışmaları
-
-Sayın İlgili,
-
-${normCompany} ekibiyle gerçekleştirmek istediğimiz verimlilik yolculuğunun temel taşı olarak "${focusTopic}" konusunu ele aldık.
-
-Ulaşabildiğimiz sektörel kıyaslamalar ve sahadaki en iyi uygulamalar ışığında, üretim hattınızdaki potansiyeli maksimum düzeye taşımak amacıyla geliştirdiğimiz sıcak temas modelimize dair ana başlıkları paylaşmak istiyoruz. Ekstra saha analizlerine ek olarak ${extraContext ? `göz önünde bulundurmamızı istediğiniz hususlar (${extraContext})` : "üretimdeki darboğazlar"} göz önüne alınarak bir metodoloji tasarlandı.
-
-Kataloglarımızı ve daha önce hayata geçirdiğimiz metodolojik başarı hikayelerini kısaca aktarmak, süreç standartlaştırma adımlarını planlamak için bir araya gelmeyi arzu ederiz.
-
-Geri bildiriminizi sabırsızlıkla bekliyoruz.
-
-Saygılarımızla,
-[Adınız] [Soyadınız] [Unvanınız]
-Gemba IQ AI Danışmanlık Grubu`;
-  }
-};
-
-export default function AISalesAssistant() {
+export default function AISalesAssistant({ onOpenSettings }: AISalesAssistantProps) {
   const { lang, t } = useLanguage();
   const [companyInput, setCompanyInput] = useState("");
   const [loading, setLoading] = useState(false);
-  const [deepLoading, setDeepLoading] = useState(false);
   const [loadingStep, setLoadingStep] = useState(0);
   const [error, setError] = useState<string | null>(null);
+  const [hasTavilyKey, setHasTavilyKey] = useState(() => !!getTavilyApiKey());
   
   // Storage of past analyses
   const [savedAnalyses, setSavedAnalyses] = useState<SavedAnalysis[]>([]);
@@ -281,8 +113,9 @@ export default function AISalesAssistant() {
           mailType: generatorMailType,
           topic: generatorTopic,
           tone: generatorTone,
-          extraContext: generatorExtraContext
-        })
+          extraContext: generatorExtraContext,
+          researchContext: activeAnalysis.rawOutput,
+        }),
       });
 
       if (!resp.ok) {
@@ -297,41 +130,43 @@ export default function AISalesAssistant() {
         throw new Error(data.error || "Boş çıktı döndü.");
       }
     } catch (err: any) {
-      console.warn("Custom pitch generator failed, using local builder fallback:", err);
-      const local = generateLocalFallbackPitch(
-        activeAnalysis.companyInput,
-        generatorMailType,
-        generatorTopic,
-        generatorTone,
-        generatorExtraContext
-      );
-      setGeneratedEmailResult(local);
-      showToast("⚠️ API kotaları aşıldığından akıllı yerel şablon üretildi.", "success");
+      console.error("Custom pitch generator failed:", err);
+      showToast(err.message || "E-posta taslağı oluşturulamadı.", "error");
     } finally {
       setGeneratorLoading(false);
     }
   };
 
   const loadingMessages = [
-    "Gemini Sales Assistant analiz motoru başlatılıyor...",
-    "Google Search Grounding üzerinden şirketin web sitesi ve resmî kayıtları taranıyor...",
-    "Sektör, ana ürün grupları, tahmini çalışan sayısı ve fabrika lokasyonları tespit ediliyor...",
-    "Yalın Üretim, Kalite İyileştirme ve Maliyet Düşürme kriterlerine göre kilit unvanlar belirleniyor...",
-    "Kurumsal e-posta desenleri (email pattern) taranıyor ve çözümleme yapılıyor...",
-    "Doğrulanmamış e-posta adayları ve güven skoru rasyonelleri hesaplanıyor...",
-    "Eşsiz ve yapay zeka kokusundan arındırılmış ilk temas e-postası tasarlanıyor..."
+    "Tavily arama motoru başlatılıyor...",
+    "Şirket adı ve OpEx anahtar kelimeleri ile web taraması yapılıyor...",
+    "Lean manufacturing, kaizen ve sürdürülebilirlik kaynakları taranıyor...",
+    "Finansal raporlar, yatırımcı bilgileri ve ESG verileri toplanıyor...",
+    "E-posta, iletişim ve yönetim kadrosu kaynakları analiz ediliyor...",
+    "Gemini yalnızca Tavily sonuçlarını analiz ediyor...",
   ];
+
+  useEffect(() => {
+    const syncTavilyKey = () => setHasTavilyKey(!!getTavilyApiKey());
+    syncTavilyKey();
+    window.addEventListener("storage", syncTavilyKey);
+    window.addEventListener("focus", syncTavilyKey);
+    return () => {
+      window.removeEventListener("storage", syncTavilyKey);
+      window.removeEventListener("focus", syncTavilyKey);
+    };
+  }, []);
 
   // Rotate loading messages
   useEffect(() => {
     let interval: NodeJS.Timeout;
-    if (loading || deepLoading) {
+    if (loading) {
       interval = setInterval(() => {
         setLoadingStep((prev) => (prev + 1) % loadingMessages.length);
       }, 3000);
     }
     return () => clearInterval(interval);
-  }, [loading, deepLoading]);
+  }, [loading]);
 
   // Load saved analyses from localStorage
   useEffect(() => {
@@ -347,7 +182,22 @@ export default function AISalesAssistant() {
             uniqueId = (uniqueId || "analysis_").split("_")[0] + "_" + Date.now() + "_" + Math.floor(Math.random() * 1000000);
           }
           seenIds.add(uniqueId);
-          return { ...item, id: uniqueId };
+          const legacyParsed = item.parsed || {};
+          const parsed = legacyParsed.financialData
+            ? legacyParsed
+            : {
+                companySummary: legacyParsed.companySummary || NOT_FOUND_SUMMARY,
+                financialData: legacyParsed.companyFinancialAnalysis || NOT_FOUND_FINANCIAL,
+                emailDiscovery:
+                  legacyParsed.estimatedEmailCandidates ||
+                  legacyParsed.emailPatternAnalysis ||
+                  NOT_FOUND_EMAIL,
+                decisionMakers:
+                  legacyParsed.suggestedDecisionMakers || NOT_FOUND_DECISION_MAKERS,
+                opportunityAnalysis:
+                  legacyParsed.recommendedOutreachStrategy || NOT_FOUND_OPPORTUNITY,
+              };
+          return { ...item, id: uniqueId, parsed };
         });
         setSavedAnalyses(sanitizedList);
         if (sanitizedList.length > 0) {
@@ -384,14 +234,6 @@ export default function AISalesAssistant() {
         } catch (e) {
           console.error(e);
         }
-      } else {
-        // Pre-populate with high quality samples to prevent blank startup and rate limit crashes
-        const sample1 = generateDemoAnalysis("Vestel");
-        const sample2 = generateDemoAnalysis("Kordsa");
-        const list = [sample1, sample2];
-        setSavedAnalyses(list);
-        setActiveAnalysis(sample1);
-        localStorage.setItem("smart_mailmerge_company_analyses_v3", JSON.stringify(list));
       }
     }
   }, []);
@@ -401,85 +243,15 @@ export default function AISalesAssistant() {
     localStorage.setItem("smart_mailmerge_company_analyses_v3", JSON.stringify(list));
   };
 
-  const handleDeepSearchTavily = async () => {
-    if (!activeAnalysis) return;
-    const company = activeAnalysis.companyInput;
-    setDeepLoading(true);
-    setLoadingStep(0);
-    setError(null);
-    try {
-      const savedTavilyKey = localStorage.getItem("tavily_api_key") || "";
-      const resp = await fetch("/api/gemini/analyze-company", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ 
-          companyInput: company,
-          deepResearchMode: true,
-          tavilyApiKey: savedTavilyKey
-        })
-      });
-
-      if (!resp.ok) {
-        const errData = await resp.json();
-        throw new Error(errData.error || "Tavily derin araştırması tamamlanamadı.");
-      }
-
-      const data = await resp.json();
-      const parsedData = parseScreenerOutput(data.rawOutput);
-
-      const updatedAnalysis: SavedAnalysis = {
-        ...activeAnalysis,
-        timestamp: new Date().toLocaleString("tr-TR"),
-        rawOutput: data.rawOutput,
-        sources: data.sources || [],
-        parsed: parsedData
-      };
-
-      const updatedList = savedAnalyses.map(a => a.id === activeAnalysis.id ? updatedAnalysis : a);
-      saveAnalysesList(updatedList);
-      setActiveAnalysis(updatedAnalysis);
-      showToast("Tavily Derin Araştırma verileri başarıyla rapora entegre edildi!", "success");
-    } catch (err: any) {
-      console.warn("Deep search failed, using high-quality deep search simulation:", err);
-      // Simulate/Generate high quality deep search results so that the user never has a broken experience but has beautiful data
-      const normCompany = company.toUpperCase();
-      const domain = company.toLowerCase().includes(".") ? company.toLowerCase() : `${company.toLowerCase().replace(/[^a-z0-9]/g, "")}.com`;
-      
-      const simulatedRaw = activeAnalysis.rawOutput + `\n\n# Tavily Deep Search Update (Real-Time Insight)
-Tavily Search Engine successfully matched supplementary real-time operational datasets:
-- Plant status is active with recent optimizations in manufacturing lines.
-- Recent continuous improvement focuses include zero waste initiative, emission logs reduction, and advanced machinery integration.
-- Suggested executive updates: Added potential contact points to the list.`;
-
-      const simulatedParsed = {
-        ...activeAnalysis.parsed,
-        companySummary: activeAnalysis.parsed.companySummary + `\n\n[Tavily Deep Search Güncellemesi]: Bu şirkete ait son dönem haberlerinde dijital otomasyon, akıllı hat duruş sürelerini azaltma projeleri ön plana çıkmaktadır. Tesisleri aktif durumdadır.`,
-        suggestedDecisionMakers: activeAnalysis.parsed.suggestedDecisionMakers + `\n\n[Tavily Deep Search Önerisi]:\n- Tier 1: Kalite Güvence ve Fabrika Direktörü (Yüksek Öncelikli Satın Alıcı)`
-      };
-
-      const updatedAnalysis: SavedAnalysis = {
-        ...activeAnalysis,
-        rawOutput: simulatedRaw,
-        parsed: simulatedParsed,
-        timestamp: new Date().toLocaleString("tr-TR"),
-        sources: [
-          ...activeAnalysis.sources,
-          { title: "🎯 Tavily Search Engine (Active Simulation Route)", url: "https://tavily.com" }
-        ]
-      };
-
-      const updatedList = savedAnalyses.map(a => a.id === activeAnalysis.id ? updatedAnalysis : a);
-      saveAnalysesList(updatedList);
-      setActiveAnalysis(updatedAnalysis);
-      showToast("⚠️ Çevrimdışı Tavily Derin Araştırması simüle edilerek rapora eklendi!", "success");
-    } finally {
-      setDeepLoading(false);
-    }
-  };
-
   const handleSearchCompany = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!companyInput.trim()) return;
+
+    const tavilyKey = getTavilyApiKey();
+    if (!tavilyKey) {
+      setHasTavilyKey(false);
+      return;
+    }
 
     setLoading(true);
     setLoadingStep(0);
@@ -487,26 +259,39 @@ Tavily Search Engine successfully matched supplementary real-time operational da
     setActiveTab("visual");
 
     try {
-      const savedTavilyKey = localStorage.getItem("tavily_api_key") || "";
       const resp = await fetch("/api/gemini/analyze-company", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ 
+        body: JSON.stringify({
           companyInput: companyInput.trim(),
-          tavilyApiKey: savedTavilyKey
-        })
+          tavilyApiKey: tavilyKey,
+        }),
       });
 
+      const data = await resp.json();
+
       if (!resp.ok) {
-        const errData = await resp.json();
-        if (resp.status === 429 || errData.isQuotaExhausted) {
-          throw new Error("QUOTA_EXHAUSTED:" + (errData.error || "Gemini API kullanım kotası aşıldı."));
+        if (data.code === "TAVILY_API_KEY_MISSING") {
+          setHasTavilyKey(false);
+          return;
         }
-        throw new Error(errData.error || "Sunucu analizi tamamlayamadı.");
+        if (resp.status === 429 || data.isQuotaExhausted) {
+          throw new Error(
+            data.error || "Gemini API kullanım kotası aşıldı."
+          );
+        }
+        throw new Error(
+          data.error ||
+            (data.code === "TAVILY_SEARCH_FAILED"
+              ? "Tavily arama servisi yanıt vermedi. Lütfen API anahtarınızı kontrol edin."
+              : "Analiz tamamlanamadı.")
+        );
       }
 
-      const data = await resp.json();
-      
+      if (!data.success || !data.rawOutput) {
+        throw new Error(data.error || "Analiz tamamlanamadı.");
+      }
+
       const parsedData = parseScreenerOutput(data.rawOutput);
 
       const newAnalysis: SavedAnalysis = {
@@ -515,30 +300,17 @@ Tavily Search Engine successfully matched supplementary real-time operational da
         companyInput: companyInput.trim(),
         rawOutput: data.rawOutput,
         sources: data.sources || [],
-        parsed: parsedData
+        parsed: parsedData,
       };
 
       const updatedList = [newAnalysis, ...savedAnalyses];
       saveAnalysesList(updatedList);
       setActiveAnalysis(newAnalysis);
       setCompanyInput("");
-      showToast("Fırsat analizi başarıyla tamamlandı!", "success");
-
+      showToast("Şirket araştırması başarıyla tamamlandı!", "success");
     } catch (err: any) {
-      console.warn("Search company failed, falling back to simulated analysis:", err);
-      const fallbackCompany = companyInput.trim();
-      const demoAnalysis = generateDemoAnalysis(fallbackCompany);
-      
-      // Inject fallback marker
-      demoAnalysis.rawOutput = `⚠️ NOT: API kotası veya bağlantı limiti aşıldığı için bu rapor çevrimdışı yerel B2B analiz motoru ile simüle edilmiştir.\n\n` + demoAnalysis.rawOutput;
-      demoAnalysis.parsed.companySummary = `⚠️ (Simüle Edilmiş Detaylar)\n` + demoAnalysis.parsed.companySummary;
-
-      const updatedList = [demoAnalysis, ...savedAnalyses];
-      saveAnalysesList(updatedList);
-      setActiveAnalysis(demoAnalysis);
-      setCompanyInput("");
-      setError(null); // Clear errors to prevent blocking views!
-      showToast("⚠️ API Kotasız Çevrimdışı Demo Raporu başarıyla yüklendi!", "success");
+      console.error("Search company failed:", err);
+      setError(err.message || "Analiz tamamlanamadı.");
     } finally {
       setLoading(false);
     }
@@ -557,14 +329,12 @@ Tavily Search Engine successfully matched supplementary real-time operational da
   const parseScreenerOutput = (text: string) => {
     const parsed = {
       companySummary: "",
-      suggestedDecisionMakers: "",
-      companyFinancialAnalysis: "",
-      emailPatternAnalysis: "",
-      estimatedEmailCandidates: "",
-      recommendedOutreachStrategy: ""
+      financialData: "",
+      emailDiscovery: "",
+      decisionMakers: "",
+      opportunityAnalysis: "",
     };
 
-    // Split text by markdown level 1 headers (#)
     const sections = text.split(/(?=^#\s+)/m);
     sections.forEach((sec) => {
       const trimmed = sec.trim();
@@ -573,53 +343,49 @@ Tavily Search Engine successfully matched supplementary real-time operational da
       const titleLine = lines[0].toLowerCase();
       const content = lines.slice(1).join("\n").trim();
 
-      if (titleLine.includes("company summary")) {
+      if (
+        titleLine.includes("şirket özeti") ||
+        titleLine.includes("company summary")
+      ) {
         parsed.companySummary = content;
-      } else if (titleLine.includes("suggested decision makers")) {
-        parsed.suggestedDecisionMakers = content;
-      } else if (titleLine.includes("company financial analysis")) {
-        parsed.companyFinancialAnalysis = content;
-      } else if (titleLine.includes("email pattern analysis")) {
-        parsed.emailPatternAnalysis = content;
-      } else if (titleLine.includes("estimated email candidates")) {
-        parsed.estimatedEmailCandidates = content;
-      } else if (titleLine.includes("recommended outreach strategy") || titleLine.includes("personalized email") || titleLine.includes("e-posta") || titleLine.includes("outreach")) {
-        parsed.recommendedOutreachStrategy = parsed.recommendedOutreachStrategy
-          ? parsed.recommendedOutreachStrategy + "\n\n" + trimmed
-          : trimmed;
+      } else if (
+        titleLine.includes("finansal veriler") ||
+        titleLine.includes("financial data") ||
+        titleLine.includes("company financial")
+      ) {
+        parsed.financialData = content;
+      } else if (
+        titleLine.includes("e-posta keşfi") ||
+        titleLine.includes("email discovery") ||
+        titleLine.includes("email pattern") ||
+        titleLine.includes("estimated email")
+      ) {
+        parsed.emailDiscovery = content;
+      } else if (
+        titleLine.includes("karar vericiler") ||
+        titleLine.includes("decision makers") ||
+        titleLine.includes("suggested decision")
+      ) {
+        parsed.decisionMakers = content;
+      } else if (
+        titleLine.includes("fırsat analizi") ||
+        titleLine.includes("opportunity analysis") ||
+        titleLine.includes("outreach strategy") ||
+        titleLine.includes("recommended outreach")
+      ) {
+        parsed.opportunityAnalysis = parsed.opportunityAnalysis
+          ? parsed.opportunityAnalysis + "\n\n" + content
+          : content;
       }
     });
 
-    // Fallback parsing if level 1 headers are not exact
-    if (!parsed.companySummary) {
-      let partIdx = 0;
-      sections.forEach((sec) => {
-        const trimmed = sec.trim();
-        if (trimmed.startsWith("#")) {
-          const lines = trimmed.split("\n");
-          const content = lines.slice(1).join("\n").trim();
-          if (partIdx === 0) parsed.companySummary = content;
-          else if (partIdx === 1) parsed.suggestedDecisionMakers = content;
-          else if (partIdx === 2) parsed.companyFinancialAnalysis = content;
-          else if (partIdx === 3) parsed.emailPatternAnalysis = content;
-          else if (partIdx === 4) parsed.estimatedEmailCandidates = content;
-          else if (partIdx >= 5) {
-            parsed.recommendedOutreachStrategy = parsed.recommendedOutreachStrategy
-              ? parsed.recommendedOutreachStrategy + "\n\n" + trimmed
-              : trimmed;
-          }
-          partIdx++;
-        }
-      });
-    }
-
-    // Default fallbacks to prevent errors
-    if (!parsed.companySummary) parsed.companySummary = text || "Şirket özeti alınamadı.";
-    if (!parsed.suggestedDecisionMakers) parsed.suggestedDecisionMakers = "• Tier 1: Fabrika Müdürü (Primary Buyer)\n• Tier 2: Yalın Üretim Lideri (Influencer)\n• Tier 3: Satınalma Müdürü (Secondary Stakeholder)";
-    if (!parsed.companyFinancialAnalysis) parsed.companyFinancialAnalysis = "## Financial Snapshot\n\nRevenue Trend: ↑ +18%\nEBITDA Trend: ↑ +4%\nNet Profit Trend: ↓ -9%\nInventory Trend: ↑ +31%\n\n## Key Observation\nInventory growth significantly exceeds revenue growth.\n\n## Potential Consulting Opportunities\n- Inventory Optimization\n- Lean Manufacturing\n- OEE Improvement\n- Cost of Poor Quality Reduction\n\n## Executive Commentary\nThe first area I would investigate is inventory management and production planning because inventory growth is outpacing both revenue and profitability trends, suggesting potential operational inefficiencies.";
-    if (!parsed.emailPatternAnalysis) parsed.emailPatternAnalysis = "E-posta desen yapısı algılanamadı. Genellikle ad.soyad@firma.com kalıbı kullanılır.";
-    if (!parsed.estimatedEmailCandidates) parsed.estimatedEmailCandidates = "ESTIMATED EMAIL CANDIDATE: info@firma.com | Güven: %70\nESTIMATED EMAIL CANDIDATE: opex@firma.com | Güven: %60";
-    if (!parsed.recommendedOutreachStrategy) parsed.recommendedOutreachStrategy = "Olası operasyonel israfları (muda) vurgulayan ilk temas e-posta taslağı.";
+    if (!parsed.companySummary) parsed.companySummary = NOT_FOUND_SUMMARY;
+    if (!parsed.financialData) parsed.financialData = NOT_FOUND_FINANCIAL;
+    if (!parsed.emailDiscovery) parsed.emailDiscovery = NOT_FOUND_EMAIL;
+    if (!parsed.decisionMakers)
+      parsed.decisionMakers = NOT_FOUND_DECISION_MAKERS;
+    if (!parsed.opportunityAnalysis)
+      parsed.opportunityAnalysis = NOT_FOUND_OPPORTUNITY;
 
     return parsed;
   };
@@ -674,8 +440,46 @@ Tavily Search Engine successfully matched supplementary real-time operational da
     setTimeout(() => setToastMessage(null), 3000);
   };
 
+  const extractVerifiedEmails = (emailSection: string): string[] => {
+    if (
+      !emailSection ||
+      emailSection.includes(NOT_FOUND_EMAIL) ||
+      emailSection.toLowerCase().includes("estimated email")
+    ) {
+      return [];
+    }
+    const matches = emailSection.match(
+      /[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}/g
+    );
+    return matches ? [...new Set(matches)] : [];
+  };
+
+  const extractDecisionMakerName = (dmSection: string): { firstName: string; lastName: string; title: string } | null => {
+    if (!dmSection || dmSection.includes(NOT_FOUND_DECISION_MAKERS)) return null;
+    const line = dmSection.split("\n").find((l) => l.includes("|") && !l.toLowerCase().includes("tier"));
+    if (!line) return null;
+    const parts = line.split("|").map((p) => p.trim());
+    const namePart = parts[0]?.replace(/^[-*•\s]+/, "") || "";
+    const titlePart = parts[1] || "";
+    const nameTokens = namePart.split(/\s+/).filter(Boolean);
+    if (nameTokens.length < 2) return null;
+    return {
+      firstName: nameTokens[0],
+      lastName: nameTokens.slice(1).join(" "),
+      title: titlePart,
+    };
+  };
+
   const handlePushToLeadProfiles = () => {
     if (!activeAnalysis) return;
+
+    const verifiedEmails = extractVerifiedEmails(activeAnalysis.parsed.emailDiscovery);
+    if (!verifiedEmails.length) {
+      showToast("Doğrulanmış e-posta bulunamadı. Lead eklenemedi.", "error");
+      return;
+    }
+
+    const dm = extractDecisionMakerName(activeAnalysis.parsed.decisionMakers);
 
     try {
       const savedProfilesRaw = localStorage.getItem("smart_mailmerge_lead_profiles");
@@ -684,41 +488,33 @@ Tavily Search Engine successfully matched supplementary real-time operational da
         currentProfiles = JSON.parse(savedProfilesRaw);
       }
 
-      const companyCapitalized = activeAnalysis.companyInput.charAt(0).toUpperCase() + activeAnalysis.companyInput.slice(1);
-
-      // Guessing details based on parsed structure
-      const dmLines = activeAnalysis.parsed.suggestedDecisionMakers.split("\n");
-      const firstDmLine = dmLines.find(line => line.includes("Tier 1") || line.includes("Buyer") || line.trim().startsWith("-") || line.trim().startsWith("•")) || "";
-      const suggestedContactRaw = firstDmLine.replace(/^[-*•\s]*/, "").substring(0, 50) || "Yalın Üretim Lideri";
-      
-      const emailLines = activeAnalysis.parsed.estimatedEmailCandidates.split("\n");
-      const firstEmailLine = emailLines.find(line => line.toLowerCase().includes("estimated email candidate")) || "";
-      const emailMatch = firstEmailLine.match(/([a-zA-Z0-9._-]+@[a-zA-Z0-9._-]+\.[a-zA-Z0-9_-]+)/);
-      const extractedEmail = emailMatch ? emailMatch[1] : `opex@${activeAnalysis.companyInput.toLowerCase().replace(/[^a-z0-9]/g, "") || "firma"}.com`;
+      const companyCapitalized =
+        activeAnalysis.companyInput.charAt(0).toUpperCase() +
+        activeAnalysis.companyInput.slice(1);
 
       const newLead: LeadProfile = {
         id: "lead_ai_" + Date.now() + "_" + Math.floor(Math.random() * 1000000),
         no: currentProfiles.length + 1,
-        firstName: "Fabrika / OpEx",
-        lastName: "Yetkilisi",
-        email: extractedEmail,
+        firstName: dm?.firstName || "—",
+        lastName: dm?.lastName || "—",
+        email: verifiedEmails[0],
         company: companyCapitalized,
-        department: suggestedContactRaw,
-        address: "Türkiye",
-        industry: "Üretim Sektörü",
-        leadDemand: "Lean Consulting & Cost Reduction",
+        department: dm?.title || "Bilgi bulunamadı",
+        address: "Bilgi bulunamadı",
+        industry: "Bilgi bulunamadı",
+        leadDemand: "Tavily Araştırması",
         leadStatus: "New",
         leadSegment: "Warm Lead",
         customField1: `AI Analiz Tarihi: ${activeAnalysis.timestamp}`,
-        customField2: `E-posta Kalıbı: ${activeAnalysis.parsed.emailPatternAnalysis.substring(0, 90)}`,
+        customField2: `Kaynak: Tavily Search API`,
         deliveryStatus: "idle",
-        openCount: 0
+        openCount: 0,
       };
 
       const updated = [newLead, ...currentProfiles];
       localStorage.setItem("smart_mailmerge_lead_profiles", JSON.stringify(updated));
-      
-      showToast(`${companyCapitalized} başarıyla Lead Profiles listesine eklendi!`, "success");
+
+      showToast(`${companyCapitalized} Lead Profiles listesine eklendi!`, "success");
     } catch (err) {
       console.error(err);
       showToast("Müşteri listesine eklenirken hata oluştu.", "error");
@@ -728,6 +524,9 @@ Tavily Search Engine successfully matched supplementary real-time operational da
   const handlePushToTargetAccounts = () => {
     if (!activeAnalysis) return;
 
+    const verifiedEmails = extractVerifiedEmails(activeAnalysis.parsed.emailDiscovery);
+    const dm = extractDecisionMakerName(activeAnalysis.parsed.decisionMakers);
+
     try {
       const savedAccountsRaw = localStorage.getItem("smart_mailmerge_target_accounts");
       let currentAccounts: TargetAccount[] = [];
@@ -735,109 +534,95 @@ Tavily Search Engine successfully matched supplementary real-time operational da
         currentAccounts = JSON.parse(savedAccountsRaw);
       }
 
-      // 1. Get formatted Website URL
       const inputStr = activeAnalysis.companyInput.trim().toLowerCase();
-      let websiteUrl = inputStr;
+      let websiteUrl = "";
       if (inputStr.includes(".")) {
         websiteUrl = inputStr.startsWith("http") ? inputStr : `https://${inputStr}`;
       } else {
-        websiteUrl = `https://www.${inputStr.replace(/[^a-z0-9]/g, "") || "firma"}.com`;
+        const sourceUrl = activeAnalysis.sources[0]?.url;
+        websiteUrl = sourceUrl || "";
       }
 
-      // 2. Duplicate Check via Website URL
-      const normalizedUrl = websiteUrl.toLowerCase().replace(/^(https?:\/\/)?(www\.)?/, "");
-      const isDuplicate = currentAccounts.some(acc => {
-        const existingNorm = acc.websiteUrl.toLowerCase().replace(/^(https?:\/\/)?(www\.)?/, "");
-        return existingNorm === normalizedUrl;
-      });
-
-      if (isDuplicate) {
-        showToast("Bu şirket zaten hedef listenizde mevcut!", "error");
-        return;
+      if (websiteUrl) {
+        const normalizedUrl = websiteUrl.toLowerCase().replace(/^(https?:\/\/)?(www\.)?/, "");
+        const isDuplicate = currentAccounts.some((acc) => {
+          const existingNorm = acc.websiteUrl
+            .toLowerCase()
+            .replace(/^(https?:\/\/)?(www\.)?/, "");
+          return existingNorm === normalizedUrl;
+        });
+        if (isDuplicate) {
+          showToast("Bu şirket zaten hedef listenizde mevcut!", "error");
+          return;
+        }
       }
 
-      // 3. Extract and Map details
-      const companyCapitalized = activeAnalysis.companyInput.charAt(0).toUpperCase() + activeAnalysis.companyInput.slice(1);
-      const summaryText = activeAnalysis.parsed.companySummary;
-      const summaryTextLower = summaryText.toLowerCase();
-
-      // Guessing Industry
-      let industryTag = "Endüstriyel Üretim";
-      if (summaryTextLower.includes("otomotiv") || summaryTextLower.includes("automotive") || summaryTextLower.includes("araba")) {
-        industryTag = "Otomotiv & Yan Sanayi";
-      } else if (summaryTextLower.includes("gıda") || summaryTextLower.includes("food") || summaryTextLower.includes("içecek")) {
-        industryTag = "Gıda ve İçecek Üretimi";
-      } else if (summaryTextLower.includes("tekstil") || summaryTextLower.includes("textile") || summaryTextLower.includes("iplik")) {
-        industryTag = "Tekstil & Dokuma";
-      } else if (summaryTextLower.includes("kimya") || summaryTextLower.includes("chemical") || summaryTextLower.includes("petrol")) {
-        industryTag = "Kimya Sanayii";
-      } else if (summaryTextLower.includes("metal") || summaryTextLower.includes("çelik") || summaryTextLower.includes("steel")) {
-        industryTag = "Metalurji ve Metal İşleme";
-      } else if (summaryTextLower.includes("teknoloji") || summaryTextLower.includes("yazılım") || summaryTextLower.includes("software") || summaryTextLower.includes("electronics")) {
-        industryTag = "Elektronik & Teknoloji";
-      }
-
-      // Guessing Company Size
-      const matchEmployees = summaryText.match(/(\d+[,.]?\d*\+?\s*(?:çalışan|employee|kişi))/i);
-      const companySize = matchEmployees ? matchEmployees[1] : "750+ Çalışan";
-
-      // Guessing Location
-      let locationMain = "Türkiye Fabrikaları";
-      if (summaryTextLower.includes("bursa")) locationMain = "Bursa, Türkiye";
-      else if (summaryTextLower.includes("kocaeli") || summaryTextLower.includes("gebze") || summaryTextLower.includes("dilovası")) locationMain = "Kocaeli/Gebze, Türkiye";
-      else if (summaryTextLower.includes("izmir") || summaryTextLower.includes("aliağa")) locationMain = "İzmir, Türkiye";
-      else if (summaryTextLower.includes("manisa")) locationMain = "Manisa, Türkiye";
-      else if (summaryTextLower.includes("istanbul") || summaryTextLower.includes("tuzla")) locationMain = "İstanbul/Tuzla, Türkiye";
-
-      // Guessing Risk Score (operational excellence risk / lean opportunities, 1-100)
-      let riskScore = 75;
-      if (summaryTextLower.includes("hurda") || summaryTextLower.includes("scrap")) riskScore += 7;
-      if (summaryTextLower.includes("israf") || summaryTextLower.includes("waste") || summaryTextLower.includes("muda")) riskScore += 8;
-      if (summaryTextLower.includes("copq") || summaryTextLower.includes("maliyet")) riskScore += 6;
-      if (summaryTextLower.includes("oee") || summaryTextLower.includes("verimsiz")) riskScore += 4;
-      riskScore = Math.min(riskScore, 98);
-
-      // Guessing contact details based on parsed structure
-      const dmLines = activeAnalysis.parsed.suggestedDecisionMakers.split("\n");
-      const firstDmLine = dmLines.find(line => line.includes("Tier 1") || line.includes("Buyer") || line.trim().startsWith("-") || line.trim().startsWith("•")) || "";
-      const suggestedContactRaw = firstDmLine.replace(/^[-*•\s]*/, "").substring(0, 50) || "Yalın Üretim Lideri";
-      
-      const emailLines = activeAnalysis.parsed.estimatedEmailCandidates.split("\n");
-      const firstEmailLine = emailLines.find(line => line.toLowerCase().includes("estimated") || line.toLowerCase().includes("email") || line.toLowerCase().includes("@")) || "";
-      const emailMatch = firstEmailLine.match(/([a-zA-Z0-9._-]+@[a-zA-Z0-9._-]+\.[a-zA-Z0-9_-]+)/);
-      const extractedEmail = emailMatch ? emailMatch[1] : `opex@${activeAnalysis.companyInput.toLowerCase().replace(/[^a-z0-9]/g, "") || "firma"}.com`;
+      const companyCapitalized =
+        activeAnalysis.companyInput.charAt(0).toUpperCase() +
+        activeAnalysis.companyInput.slice(1);
 
       const newAccount: TargetAccount = {
         id: "target_" + Date.now() + "_" + Math.floor(Math.random() * 1000000),
         no: currentAccounts.length + 1,
         companyName: companyCapitalized,
-        websiteUrl: websiteUrl,
-        industryTag: industryTag,
-        companySize: companySize,
-        locationMain: locationMain,
-        contactName: "Fabrika / OpEx",
-        contactSurname: "Yetkilisi",
-        contactEmail: extractedEmail,
-        department: suggestedContactRaw,
+        websiteUrl: websiteUrl || "Bilgi bulunamadı",
+        industryTag: activeAnalysis.parsed.companySummary.includes(NOT_FOUND_SUMMARY)
+          ? "Bilgi bulunamadı"
+          : activeAnalysis.parsed.companySummary.split("\n")[0]?.substring(0, 80) || "Bilgi bulunamadı",
+        companySize: activeAnalysis.parsed.financialData.includes(NOT_FOUND_FINANCIAL)
+          ? "Bilgi bulunamadı"
+          : activeAnalysis.parsed.financialData.split("\n").find((l) => /çalışan|employee/i.test(l))?.substring(0, 60) || "Bilgi bulunamadı",
+        locationMain: activeAnalysis.parsed.companySummary.includes(NOT_FOUND_SUMMARY)
+          ? "Bilgi bulunamadı"
+          : activeAnalysis.parsed.companySummary.split("\n").find((l) => /lokasyon|konum|location|fabrika/i.test(l))?.substring(0, 80) || "Bilgi bulunamadı",
+        contactName: dm?.firstName || "—",
+        contactSurname: dm?.lastName || "—",
+        contactEmail: verifiedEmails[0] || "Doğrulanmış e-posta bulunamadı",
+        department: dm?.title || "Bilgi bulunamadı",
         leadStatus: "New",
         leadSegment: "Warm Lead",
-        aiAnalysisSummary: activeAnalysis.parsed.companySummary + "\n\n" + activeAnalysis.parsed.suggestedDecisionMakers,
-        draftTemplates: activeAnalysis.parsed.recommendedOutreachStrategy,
-        analysisSource: "Deep Research (Gemini + Tavily)",
+        aiAnalysisSummary:
+          activeAnalysis.parsed.companySummary +
+          "\n\n" +
+          activeAnalysis.parsed.opportunityAnalysis,
+        draftTemplates: activeAnalysis.parsed.opportunityAnalysis,
+        analysisSource: "Tavily Search API + Gemini",
         analysisDate: activeAnalysis.timestamp,
-        riskScore: riskScore,
-        rawOutput: activeAnalysis.rawOutput
+        riskScore: 0,
+        rawOutput: activeAnalysis.rawOutput,
       };
 
       const updatedList = [newAccount, ...currentAccounts];
       localStorage.setItem("smart_mailmerge_target_accounts", JSON.stringify(updatedList));
 
-      showToast("🎯 Şirket HEDEF LİSTESİNE başarıyla kaydedildi!", "success");
+      showToast("Şirket hedef listesine kaydedildi!", "success");
     } catch (err) {
       console.error(err);
       showToast("Hedef listesine eklenirken bir hata oluştu.", "error");
     }
   };
+
+  const TavilyMissingScreen = () => (
+    <div className="flex-1 flex flex-col items-center justify-center p-8 max-w-lg mx-auto text-center">
+      <div className="w-14 h-14 rounded-full bg-amber-500/10 text-amber-500 flex items-center justify-center mb-4">
+        <ShieldAlert className="w-7 h-7" />
+      </div>
+      <h4 className="text-base font-bold text-slate-800 dark:text-slate-100 mb-3">
+        Tavily API bağlantısı bulunamadı
+      </h4>
+      <p className="text-xs text-slate-500 dark:text-slate-400 leading-relaxed mb-6">
+        Gerçek şirket araştırması yapabilmek için Tavily API anahtarınızı Sistem Ayarları &gt; API Bağlantıları bölümüne giriniz.
+      </p>
+      {onOpenSettings && (
+        <button
+          onClick={onOpenSettings}
+          className="px-5 py-2.5 bg-[#0078D4] hover:bg-[#106ebe] text-white text-xs font-bold rounded-lg shadow transition-all cursor-pointer"
+        >
+          Ayarlara Git
+        </button>
+      )}
+    </div>
+  );
 
   return (
     <div className="bg-white dark:bg-[#1b1a19] rounded-xl border border-[#EDEBE9] dark:border-[#323130] shadow-sm overflow-hidden flex flex-col md:flex-row h-[760px] relative">
@@ -872,8 +657,14 @@ Tavily Search Engine successfully matched supplementary real-time operational da
           </div>
 
           <p className="text-[11px] text-[#0078D4] dark:text-brand-405 leading-relaxed bg-blue-50/50 dark:bg-black/10 p-2.5 rounded-lg border border-blue-100 dark:border-[#323130] mb-5">
-            Önce Gemini hızlı B2B şirket analizini tamamlar. Ardından dilediğiniz şirkette <b>⚡ Tavily ile Derin Araştırma Yap (Deep Search)</b> tuşuna tıklayarak canlı web taraması ve siber istihbarat verilerini rapora ekleyebilirsiniz.
+            Tavily Search API ile gerçek web kaynakları taranır. Gemini yalnızca bulunan verileri analiz eder; tahmin veya uydurma yapılmaz.
           </p>
+
+          {!hasTavilyKey && (
+            <div className="mb-4 p-3 rounded-lg border border-amber-200 dark:border-amber-900/40 bg-amber-50/50 dark:bg-amber-950/10 text-[10px] text-amber-700 dark:text-amber-400">
+              Tavily API anahtarı gerekli. Araştırma başlatılamaz.
+            </div>
+          )}
 
           <form onSubmit={handleSearchCompany} className="space-y-3 mb-6">
             <div>
@@ -887,7 +678,7 @@ Tavily Search Engine successfully matched supplementary real-time operational da
                   value={companyInput}
                   onChange={(e) => setCompanyInput(e.target.value)}
                   placeholder={t("e.g. Vestel, Kordsa, siseçam.com")}
-                  disabled={loading}
+                  disabled={loading || !hasTavilyKey}
                   className="w-full pl-9 pr-3 py-2.5 text-xs bg-white dark:bg-[#11100f] border border-[#D2D0CE] dark:border-[#323130] rounded-lg focus:outline-none focus:border-[#0078D4] dark:focus:border-brand-500 text-slate-800 dark:text-slate-100 placeholder-slate-400"
                 />
                 <Building2 className="w-3.5 h-3.5 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
@@ -896,41 +687,21 @@ Tavily Search Engine successfully matched supplementary real-time operational da
 
             <button
               type="submit"
-              disabled={loading || !companyInput.trim()}
+              disabled={loading || !companyInput.trim() || !hasTavilyKey}
               className="w-full py-2.5 px-4 bg-gradient-to-r from-[#0078D4] to-[#106ebe] text-white rounded-lg text-xs font-bold shadow hover:from-[#106ebe] hover:to-[#005a9e] focus:outline-none transition-all flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer mb-2.5"
             >
               {loading ? (
                 <>
                   <Loader2 className="w-3.5 h-3.5 animate-spin" />
-                  Derin Araştırma Yapılıyor...
+                  Tavily Araştırması Yapılıyor...
                 </>
               ) : (
                 <>
                   <Search className="w-3.5 h-3.5" />
-                  Fırsat & Email Çözümlemesi
+                  Şirket Araştırması Başlat
                 </>
               )}
             </button>
-
-            <div className="text-center">
-              <button
-                type="button"
-                onClick={() => {
-                  const company = companyInput.trim() || "Vestel";
-                  const demoAnalysis = generateDemoAnalysis(company);
-                  const updatedList = [demoAnalysis, ...savedAnalyses];
-                  saveAnalysesList(updatedList);
-                  setActiveAnalysis(demoAnalysis);
-                  setError(null);
-                  setCompanyInput("");
-                  showToast("Kotasız Çevrimdışı Demo Raporu yüklendi!", "success");
-                }}
-                className="text-[10px] text-amber-600 hover:text-amber-700 dark:text-amber-500 dark:hover:text-amber-400 font-semibold hover:underline cursor-pointer flex items-center justify-center gap-1 mx-auto transition-all bg-amber-500/5 hover:bg-amber-500/10 border border-amber-500/10 py-1.5 px-3 rounded-md w-full"
-              >
-                <Sliders className="w-3 h-3 text-amber-500" />
-                Kota Sınırı Olmadan Demo Raporu Üret
-              </button>
-            </div>
           </form>
         </div>
 
@@ -989,7 +760,7 @@ Tavily Search Engine successfully matched supplementary real-time operational da
       <div className="flex-1 bg-white dark:bg-[#1b1a19] flex flex-col overflow-hidden h-full">
         
         {/* State 1: Active Loading Grounding Tracker */}
-        {(loading || deepLoading) ? (
+        {loading ? (
           <div className="flex-1 flex flex-col items-center justify-center p-8 bg-slate-50/50 dark:bg-black/10">
             <div className="relative mb-6">
               <div className="w-16 h-16 rounded-full border-4 border-[#106ebe]/10 border-t-[#106ebe] animate-spin flex items-center justify-center"></div>
@@ -1004,87 +775,33 @@ Tavily Search Engine successfully matched supplementary real-time operational da
               className="text-center max-w-sm"
             >
               <h4 className="text-[10px] font-bold text-[#106ebe] dark:text-brand-400 mb-2 font-display uppercase tracking-widest font-mono">
-                {deepLoading ? "⚡ TAVILY DEEP SEARCH" : "✨ GEMINI ANALİZİ"}
+                TAVILY + GEMINI ARAŞTIRMASI
               </h4>
               <h4 className="text-xs font-bold text-slate-700 dark:text-slate-200 mb-2 font-display leading-relaxed">
-                {deepLoading
-                  ? "Tavily arama motoru üzerinden şirketin gerçek zamanlı haberleri, fabrika verileri ve derin dökümanları taranıyor..."
-                  : loadingMessages[loadingStep]}
+                {loadingMessages[loadingStep]}
               </h4>
               <p className="text-[10px] text-slate-500 dark:text-slate-400 leading-relaxed font-sans">
-                {deepLoading
-                  ? "Tavily B2B siber araştırma API hattı aktif. Şirket özeti ve karar verici rütbeleri bu canlı verilerle yeniden zenginleştirilip rapora entegre edilecek."
-                  : "Gemini, sahadaki gerçek israf noktalarını (Muda), kalite kaçaklarını, ISO standartlarını ve e-posta uzantı deseni kanıtlarını sorguluyor."}
+                Yalnızca Tavily tarafından dönen gerçek kaynaklar analiz edilir. Tahmin veya uydurma yapılmaz.
               </p>
             </motion.div>
           </div>
+        ) : !hasTavilyKey ? (
+          <TavilyMissingScreen />
         ) : error ? (
           <div className="flex-1 flex flex-col items-center justify-center p-8 max-w-xl mx-auto">
-            {error.startsWith("QUOTA_EXHAUSTED:") ? (
-              <div className="bg-white dark:bg-[#201f1e] p-6 rounded-2xl border border-amber-200 dark:border-amber-950/20 shadow-lg text-center space-y-4">
-                <div className="w-12 h-12 rounded-full bg-amber-500/10 text-amber-500 flex items-center justify-center mx-auto mb-2">
-                  <ShieldAlert className="w-6 h-6" />
-                </div>
-                
-                <h4 className="text-sm font-bold text-slate-800 dark:text-slate-200 uppercase tracking-wider font-mono">
-                  🚨 Gemini API Kota Sınırı Aşıldı
-                </h4>
-                
-                <p className="text-xs text-slate-500 dark:text-slate-400 leading-relaxed font-sans">
-                  AI Studio platformundaki ortak kullanım kotanız (Rate Limit / Quota) geçici olarak dolmuş veya faturalandırma limitine takılmış durumda.
-                </p>
-
-                <div className="p-3 bg-amber-500/5 text-amber-600 dark:text-amber-400 text-[10px] rounded-lg border border-amber-500/10 font-mono text-left space-y-1">
-                  <p>• Hata Kodu: 429 RESOURCE_EXHAUSTED</p>
-                  <p>• Sebep: Ücretsiz dakikalık istek kotasının aşılması</p>
-                  <p>• Çözüm: Google AI Studio panelinden API kullanım limitlerini artırabilir veya faturalı hesaba geçebilirsiniz.</p>
-                </div>
-
-                <div className="text-xs text-slate-600 dark:text-slate-400 font-sans pt-2">
-                  Uygulamanın tüm B2B e-posta entegrasyonu, akıllı rütbelendirme ve raporlama işlevlerini test etmek için <strong className="text-slate-800 dark:text-slate-200">Kotasız Çevrimdışı Demo Modu</strong> ile anında dilediğiniz şirketin analiz simülasyonunu başlatabilirsiniz.
-                </div>
-
-                <div className="flex flex-col sm:flex-row gap-2 justify-center pt-2">
-                  <button
-                    onClick={() => {
-                      const company = companyInput.trim() || "Vestel";
-                      const demoAnalysis = generateDemoAnalysis(company);
-                      const updatedList = [demoAnalysis, ...savedAnalyses];
-                      saveAnalysesList(updatedList);
-                      setActiveAnalysis(demoAnalysis);
-                      setError(null);
-                      setCompanyInput("");
-                      showToast("Kotasız Çevrimdışı Demo Raporu yüklendi!", "success");
-                    }}
-                    className="px-4 py-2.5 bg-gradient-to-r from-amber-500 to-amber-600 text-white text-xs font-bold rounded-lg shadow hover:from-amber-600 hover:to-amber-700 transition-all flex items-center justify-center gap-1.5 cursor-pointer"
-                  >
-                    <Sliders className="w-3.5 h-3.5 animate-pulse" />
-                    Demo Modu ile Analiz Üret ({companyInput.trim() || "Vestel"})
-                  </button>
-                  
-                  <button
-                    onClick={() => setError(null)}
-                    className="px-4 py-2.5 bg-slate-100 dark:bg-[#323130] hover:bg-slate-200 dark:hover:bg-[#3d3c3b] text-slate-700 dark:text-slate-200 text-xs font-bold rounded-lg transition-colors cursor-pointer"
-                  >
-                    Vazgeç / Yeniden Dene
-                  </button>
-                </div>
+            <div className="bg-white dark:bg-[#201f1e] p-6 rounded-2xl border border-red-200 dark:border-red-950/20 shadow-lg text-center space-y-4">
+              <div className="w-12 h-12 rounded-full bg-red-100 dark:bg-red-950/30 text-red-600 dark:text-red-400 flex items-center justify-center mx-auto mb-2">
+                <ShieldAlert className="w-6 h-6" />
               </div>
-            ) : (
-              <div className="bg-white dark:bg-[#201f1e] p-6 rounded-2xl border border-red-200 dark:border-red-950/20 shadow-lg text-center space-y-4">
-                <div className="w-12 h-12 rounded-full bg-red-100 dark:bg-red-950/30 text-red-600 dark:text-red-400 flex items-center justify-center mx-auto mb-2">
-                  <ShieldAlert className="w-6 h-6" />
-                </div>
-                <h4 className="text-sm font-bold text-slate-800 dark:text-slate-200">Çözümleme Başarısız</h4>
-                <p className="text-xs text-red-500 dark:text-red-400 text-center max-w-md mb-6">{error}</p>
-                <button
-                  onClick={() => setError(null)}
-                  className="px-4 py-2 bg-slate-100 dark:bg-[#252423] hover:bg-slate-200 text-xs font-bold rounded-lg transition-colors cursor-pointer"
-                >
-                  Yeniden Dene
-                </button>
-              </div>
-            )}
+              <h4 className="text-sm font-bold text-slate-800 dark:text-slate-200">Araştırma Tamamlanamadı</h4>
+              <p className="text-xs text-red-500 dark:text-red-400 text-center max-w-md mb-6">{error}</p>
+              <button
+                onClick={() => setError(null)}
+                className="px-4 py-2 bg-slate-100 dark:bg-[#252423] hover:bg-slate-200 text-xs font-bold rounded-lg transition-colors cursor-pointer"
+              >
+                Yeniden Dene
+              </button>
+            </div>
           </div>
         ) : !activeAnalysis ? (
           /* Empty Workspace Welcome Greeting */
@@ -1097,29 +814,29 @@ Tavily Search Engine successfully matched supplementary real-time operational da
               {t("Gemini Sales Assistant: B2B Business Developer")}
             </h3>
             <p className="text-xs text-slate-500 dark:text-slate-400 max-w-md leading-relaxed mb-8">
-              Herhangi bir üreticinin veya fabrikanın adını girerek derin Google Search destekli satın alma potansiyeli çözümü, e-posta deseni çıkarımı ve karar verici analizini anında gerçekleştirin.
+              Şirket adını girerek Tavily Search API ile gerçek web kaynaklarını tarayın. Gemini yalnızca bulunan verileri analiz eder.
             </p>
 
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 max-w-2xl text-left">
               <div className="p-4 bg-white dark:bg-[#201f1e] border border-[#EDEBE9] dark:border-[#323130] rounded-xl shadow-sm">
                 <Building2 className="w-5 h-5 text-[#0078D4] mb-2.5" />
-                <h5 className="text-[11px] font-bold text-slate-800 dark:text-slate-200 mb-1">{t("Company Summary")}</h5>
+                <h5 className="text-[11px] font-bold text-slate-800 dark:text-slate-200 mb-1">Şirket Özeti</h5>
                 <p className="text-[10px] text-slate-400 leading-relaxed font-sans">
-                  Sektör, ana ürün grupları, tahmini çalışan sayısı ve fabrika lokasyonlarını net biçimde analiz eder.
+                  Kaynaklarda bulunan sektör, ürün ve lokasyon bilgileri özetlenir.
                 </p>
               </div>
               <div className="p-4 bg-white dark:bg-[#201f1e] border border-[#EDEBE9] dark:border-[#323130] rounded-xl shadow-sm">
                 <Target className="w-5 h-5 text-indigo-500 mb-2.5" />
-                <h5 className="text-[11px] font-bold text-slate-800 dark:text-slate-200 mb-1">{t("Buy Side & Decision Tiers")}</h5>
+                <h5 className="text-[11px] font-bold text-slate-800 dark:text-slate-200 mb-1">Karar Vericiler</h5>
                 <p className="text-[10px] text-slate-400 leading-relaxed font-sans">
-                  Hedef unvanları Tier 1 (Alıcı), Tier 2 (Etkileyici), Tier 3 (Destekçi) olarak rütbelendirir.
+                  Yalnızca doğrulanabilir isim ve ünvanlar listelenir.
                 </p>
               </div>
               <div className="p-4 bg-white dark:bg-[#201f1e] border border-[#EDEBE9] dark:border-[#323130] rounded-xl shadow-sm">
                 <Mail className="w-5 h-5 text-emerald-500 mb-2.5" />
-                <h5 className="text-[11px] font-bold text-slate-800 dark:text-slate-200 mb-1">{t("Email Candidates")}</h5>
+                <h5 className="text-[11px] font-bold text-slate-800 dark:text-slate-200 mb-1">E-posta Keşfi</h5>
                 <p className="text-[10px] text-slate-400 leading-relaxed font-sans">
-                  Uzantı desenini (pattern) çözerek kesinlik skoru yüksek adres adayları üretir.
+                  İnternette gerçekten bulunan e-posta adresleri listelenir.
                 </p>
               </div>
             </div>
@@ -1140,7 +857,7 @@ Tavily Search Engine successfully matched supplementary real-time operational da
                   </span>
                 </div>
                 <div className="text-[10px] mt-1 text-slate-400 flex items-center gap-1 font-sans">
-                  <span>Yalın Danışmanlık ve Operasyonel Mükemmellik (OpEx) rasyonellerine göre hazırlanmıştır.</span>
+                  <span>Tavily Search API kaynaklarına dayalı gerçek veri analizi.</span>
                   {activeAnalysis.sources.length > 0 && (
                     <span className="font-semibold text-[#0078D4] dark:text-brand-400 hover:underline cursor-pointer">
                       ({activeAnalysis.sources.length} kaynak taranmıştır)
@@ -1158,16 +875,6 @@ Tavily Search Engine successfully matched supplementary real-time operational da
                 >
                   <Plus className="w-3.5 h-3.5" />
                   Müşteri Listesine Ekle
-                </button>
-
-                <button
-                  onClick={handleDeepSearchTavily}
-                  disabled={deepLoading}
-                  className="px-3 py-1.5 bg-gradient-to-r from-amber-500 to-orange-600 text-white hover:from-amber-600 hover:to-orange-700 text-xs font-bold rounded-lg shadow-sm flex items-center gap-1.5 transition-all cursor-pointer disabled:opacity-50"
-                  title="Tavily Deep Search üzerinden canlı internet verileriyle zenginleştir"
-                >
-                  <Sparkles className="w-3.5 h-3.5 animate-pulse" />
-                  ⚡ Tavily ile Derin Araştırma Yap (Deep Search)
                 </button>
 
                 <div className="flex bg-slate-100 dark:bg-black/20 p-1 rounded-lg border border-[#EDEBE9] dark:border-[#323130]">
@@ -1202,7 +909,7 @@ Tavily Search Engine successfully matched supplementary real-time operational da
                 /* Raw Markdown Text tab */
                 <div className="space-y-4">
                   <div className="flex items-center justify-between">
-                    <span className="text-[9px] font-bold text-slate-400 uppercase tracking-widest block font-mono">HAM GROUNDING RAPORU</span>
+                    <span className="text-[9px] font-bold text-slate-400 uppercase tracking-widest block font-mono">HAM ANALİZ RAPORU (TAVILY)</span>
                     <button
                       onClick={() => copyToClipboard(activeAnalysis.rawOutput, "raw")}
                       className="text-slate-400 hover:text-[#0078D4] p-1.5 bg-white dark:bg-[#201f1e] hover:bg-slate-100 dark:hover:bg-[#252423] rounded-lg border border-[#EDEBE9] dark:border-[#323130] text-xs font-semibold flex items-center gap-1.5 transition-all cursor-pointer"
@@ -1228,12 +935,12 @@ Tavily Search Engine successfully matched supplementary real-time operational da
                 /* Dynamic visual panel cards */
                 <div className="space-y-6">
                   
-                  {/* Company Summary Option Card */}
+                  {/* Company Summary */}
                   <div className="bg-white dark:bg-[#201f1e] rounded-xl border border-[#EDEBE9] dark:border-[#323130] shadow-sm overflow-hidden p-5">
                     <div className="flex items-center gap-2 mb-3 pb-2 border-b border-slate-100 dark:border-[#323130]">
                       <Building2 className="w-4 h-4 text-[#0078D4]" />
                       <h5 className="text-xs font-bold text-slate-800 dark:text-slate-200 uppercase tracking-wider font-mono">
-                        # Company Summary (Şirket Özeti)
+                        # Şirket Özeti
                       </h5>
                     </div>
                     <div className="text-xs text-slate-700 dark:text-slate-200 whitespace-pre-line leading-relaxed font-sans">
@@ -1241,40 +948,13 @@ Tavily Search Engine successfully matched supplementary real-time operational da
                     </div>
                   </div>
 
-                  {/* Decision Maker Tier card */}
-                  <div className="bg-white dark:bg-[#201f1e] rounded-xl border border-[#EDEBE9] dark:border-[#323130] shadow-sm overflow-hidden p-5">
-                    <div className="flex items-center gap-2 mb-3 pb-2 border-b border-indigo-100 dark:border-[#323130]">
-                      <Target className="w-4 h-4 text-indigo-500" />
-                      <h5 className="text-xs font-bold text-slate-800 dark:text-slate-200 uppercase tracking-wider font-mono">
-                        # Suggested Decision Makers (Alıcı Kriterleri & Tiers)
-                      </h5>
-                    </div>
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-3 mb-3">
-                      <div className="p-3 rounded-lg border border-emerald-200 dark:border-emerald-950/40 bg-emerald-50/20 dark:bg-emerald-950/10">
-                        <span className="text-[10px] font-bold text-emerald-600 block mb-1">Tier 1: Primary Buyer</span>
-                        <p className="text-[11px] text-slate-600 dark:text-slate-300">Yalın Dönüşüm, OpEx Karar Alıcıları,</p>
-                      </div>
-                      <div className="p-3 rounded-lg border border-amber-200 dark:border-amber-950/40 bg-amber-50/20 dark:bg-amber-950/10">
-                        <span className="text-[10px] font-bold text-amber-600 block mb-1">Tier 2: Influencer</span>
-                        <p className="text-[11px] text-slate-600 dark:text-slate-300 font-sans">Mühendisler, Metot Liderleri ve Standardizasyon Ekipleri</p>
-                      </div>
-                      <div className="p-3 rounded-lg border border-slate-200 dark:border-slate-800 bg-slate-50/20 dark:bg-slate-900/40">
-                        <span className="text-[10px] font-bold text-slate-500 block mb-1">Tier 3: Secondary Stakeholder</span>
-                        <p className="text-[11px] text-slate-600 dark:text-slate-300 font-sans">Satınalma, Tesis Koordinatörleri</p>
-                      </div>
-                    </div>
-                    <div className="text-xs text-slate-700 dark:text-slate-200 whitespace-pre-line leading-relaxed font-sans bg-slate-50/50 dark:bg-black/10 p-3 rounded-lg border border-slate-100 dark:border-[#323130]">
-                      {activeAnalysis.parsed.suggestedDecisionMakers}
-                    </div>
-                  </div>
-
-                  {/* Company Financial Analysis & OPEX Opportunity Card */}
+                  {/* Financial Data */}
                   <div className="bg-white dark:bg-[#201f1e] rounded-xl border border-rose-500/10 dark:border-rose-500/20 shadow-sm overflow-hidden p-5">
                     <div className="flex items-center justify-between mb-3 pb-2 border-b border-rose-100 dark:border-[#323130]">
                       <div className="flex items-center gap-2">
                         <TrendingUp className="w-4 h-4 text-rose-500" />
-                        <h5 className="text-xs font-bold text-slate-800 dark:text-slate-200 uppercase tracking-wider font-mono select-all">
-                          # Company Financial Analysis & OPEX Opportunity (Finansal & Operasyonel Analiz)
+                        <h5 className="text-xs font-bold text-slate-800 dark:text-slate-200 uppercase tracking-wider font-mono">
+                          # Finansal Veriler
                         </h5>
                       </div>
                       <div className="flex items-center gap-2">
@@ -1287,7 +967,7 @@ Tavily Search Engine successfully matched supplementary real-time operational da
                           Genişlet
                         </button>
                         <button
-                          onClick={() => copyToClipboard(activeAnalysis.parsed.companyFinancialAnalysis, "financial")}
+                          onClick={() => copyToClipboard(activeAnalysis.parsed.financialData, "financial")}
                           className="text-[10px] text-slate-500 hover:text-[#0078D4] dark:hover:text-brand-400 font-bold px-2 py-1 bg-white dark:bg-[#11100f] border border-[#D2D0CE] dark:border-[#323130] rounded cursor-pointer flex items-center gap-1 transition-all"
                         >
                           {copiedSection === "financial" ? <Check className="w-3 h-3 text-emerald-500" /> : <Copy className="w-3 h-3" />}
@@ -1295,64 +975,51 @@ Tavily Search Engine successfully matched supplementary real-time operational da
                         </button>
                       </div>
                     </div>
-
                     <div className="text-xs text-slate-700 dark:text-slate-200 whitespace-pre-line leading-relaxed font-sans bg-slate-50/50 dark:bg-black/10 p-4 rounded-lg border border-slate-100 dark:border-[#323130]">
-                      {activeAnalysis.parsed.companyFinancialAnalysis}
+                      {activeAnalysis.parsed.financialData}
                     </div>
                   </div>
 
-                  {/* Email Pattern card */}
-                  <div className="bg-white dark:bg-[#201f1e] rounded-xl border border-[#EDEBE9] dark:border-[#323130] shadow-sm overflow-hidden p-5">
-                    <div className="flex items-center gap-2 mb-3 pb-2 border-b border-indigo-100 dark:border-[#323130]">
-                      <Sliders className="w-4 h-4 text-amber-500" />
-                      <h5 className="text-xs font-bold text-slate-800 dark:text-slate-200 uppercase tracking-wider font-mono">
-                        # Email Pattern Analysis (E-posta Desen Analizi)
-                      </h5>
-                    </div>
-                    <div className="text-xs text-slate-700 dark:text-slate-200 whitespace-pre-line leading-relaxed font-sans bg-slate-50/30 dark:bg-black/5 p-3.5 rounded-lg">
-                      {activeAnalysis.parsed.emailPatternAnalysis}
-                    </div>
-                  </div>
-
-                  {/* Estimated Email Candidates Card with Strict Label check */}
+                  {/* Email Discovery */}
                   <div className="bg-white dark:bg-[#201f1e] rounded-xl border border-[#EDEBE9] dark:border-[#323130] shadow-sm overflow-hidden p-5">
                     <div className="flex items-center justify-between mb-3 pb-2 border-b border-[#EDEBE9] dark:border-[#323130]">
                       <div className="flex items-center gap-2">
                         <Mail className="w-4 h-4 text-rose-500" />
                         <h5 className="text-xs font-bold text-slate-800 dark:text-slate-200 uppercase tracking-wider font-mono">
-                          # Estimated Email Candidates (Tahmini Adresler)
+                          # E-posta Keşfi
                         </h5>
                       </div>
-                      <span className="text-[9px] font-bold text-rose-500 bg-rose-500/10 px-2 py-0.5 rounded uppercase font-mono">Doğrulanmamış Adaylar</span>
+                      <span className="text-[9px] font-bold text-emerald-600 bg-emerald-500/10 px-2 py-0.5 rounded uppercase font-mono">Doğrulanmış Adresler</span>
                     </div>
-
-                    <div className="flex items-center gap-2 bg-amber-500/10 p-3 rounded-lg border border-amber-500/20 text-amber-600 dark:text-amber-400 text-[10px] mb-4 gap-2 font-mono">
-                      <AlertCircle className="w-4 h-4 shrink-0" />
-                      <span>DİKKAT: Aşağıda listelenen e-postalar tamamen Google Grounding rasyonellerine dayalı tahminidir. Kesinliği teyit edilmemiştir.</span>
-                    </div>
-
-                    <div className="text-xs text-slate-700 dark:text-slate-200 font-mono whitespace-pre-wrap leading-relaxed bg-slate-50 dark:bg-black/30 p-4 rounded-xl border border-dashed border-[#EDEBE9] dark:border-[#323130] relative group">
-                      <button
-                        onClick={() => copyToClipboard(activeAnalysis.parsed.estimatedEmailCandidates, "candidates")}
-                        className="absolute top-3 right-3 opacity-0 group-hover:opacity-100 transition-opacity bg-white dark:bg-[#201f1e] hover:bg-slate-50 border border-slate-200 px-2 py-1 text-[10px] font-bold rounded flex items-center gap-1 cursor-pointer"
-                      >
-                        <Copy className="w-3 h-3" /> Kopyala
-                      </button>
-                      {activeAnalysis.parsed.estimatedEmailCandidates}
+                    <div className="text-xs text-slate-700 dark:text-slate-200 font-mono whitespace-pre-wrap leading-relaxed bg-slate-50 dark:bg-black/30 p-4 rounded-xl border border-dashed border-[#EDEBE9] dark:border-[#323130]">
+                      {activeAnalysis.parsed.emailDiscovery}
                     </div>
                   </div>
 
-                  {/* Recommended Outreach Strategy */}
+                  {/* Decision Makers */}
+                  <div className="bg-white dark:bg-[#201f1e] rounded-xl border border-[#EDEBE9] dark:border-[#323130] shadow-sm overflow-hidden p-5">
+                    <div className="flex items-center gap-2 mb-3 pb-2 border-b border-indigo-100 dark:border-[#323130]">
+                      <Target className="w-4 h-4 text-indigo-500" />
+                      <h5 className="text-xs font-bold text-slate-800 dark:text-slate-200 uppercase tracking-wider font-mono">
+                        # Karar Vericiler
+                      </h5>
+                    </div>
+                    <div className="text-xs text-slate-700 dark:text-slate-200 whitespace-pre-line leading-relaxed font-sans bg-slate-50/50 dark:bg-black/10 p-3 rounded-lg border border-slate-100 dark:border-[#323130]">
+                      {activeAnalysis.parsed.decisionMakers}
+                    </div>
+                  </div>
+
+                  {/* Opportunity Analysis */}
                   <div className="bg-[#FAF9F8] dark:bg-[#201f1e] rounded-xl border border-[#0078D4]/20 dark:border-brand-500/20 shadow-sm overflow-hidden">
                     <div className="px-5 py-4 bg-gradient-to-r from-slate-100 to-slate-50 dark:from-[#252423] dark:to-[#201f1e] border-b border-[#EDEBE9] dark:border-[#323130] flex items-center justify-between gap-3">
                       <div className="flex items-center gap-2">
                         <Send className="w-4 h-4 text-emerald-500" />
                         <h5 className="text-xs font-bold text-slate-800 dark:text-slate-200 uppercase tracking-wider font-mono">
-                          # Recommended Outreach Strategy (Kişiselleştirilmiş İletişim Stratejisi)
+                          # Fırsat Analizi
                         </h5>
                       </div>
                       <button
-                        onClick={() => copyToClipboard(activeAnalysis.parsed.recommendedOutreachStrategy, "outreach")}
+                        onClick={() => copyToClipboard(activeAnalysis.parsed.opportunityAnalysis, "outreach")}
                         className="text-slate-500 hover:text-[#0078D4] dark:hover:text-brand-400 px-2.5 py-1 bg-white dark:bg-[#11100f] hover:bg-slate-50 border border-[#D2D0CE] dark:border-[#323130] rounded-md text-[9px] font-bold uppercase transition-all flex items-center gap-1 cursor-pointer"
                       >
                         {copiedSection === "outreach" ? (
@@ -1363,20 +1030,19 @@ Tavily Search Engine successfully matched supplementary real-time operational da
                         ) : (
                           <>
                             <Copy className="w-3 h-3" />
-                            Outreach Kopyala
+                            Kopyala
                           </>
                         )}
                       </button>
                     </div>
-
-                    <div className="p-5 space-y-4">
+                    <div className="p-5">
                       <div className="text-xs text-slate-700 dark:text-slate-200 whitespace-pre-wrap leading-relaxed font-sans bg-white dark:bg-black/20 p-4 rounded-lg border border-slate-100 dark:border-[#323130]">
-                        {activeAnalysis.parsed.recommendedOutreachStrategy}
+                        {activeAnalysis.parsed.opportunityAnalysis}
                       </div>
                     </div>
                   </div>
 
-                  {/* On-Demand B2B E-Posta Oluşturucu ve Şablon Sihirbazı */}
+                  {/* B2B E-Posta Oluşturucu */}
                   <div className="bg-white dark:bg-[#201f1e] rounded-xl border border-indigo-200 dark:border-indigo-950/40 shadow-sm overflow-hidden p-5">
                     <div className="flex items-center justify-between mb-4 pb-2 border-b border-indigo-100 dark:border-[#323130]">
                       <div className="flex items-center gap-2">
@@ -1567,19 +1233,26 @@ Tavily Search Engine successfully matched supplementary real-time operational da
                   {/* Sources Grounding Citation details footer panel */}
                   {activeAnalysis.sources.length > 0 && (
                     <div className="p-4 bg-slate-100/50 dark:bg-black/10 rounded-xl border border-[#EDEBE9] dark:border-[#323130]">
-                      <span className="text-[9px] font-bold text-slate-400 uppercase tracking-wider block mb-2 font-mono">Taranan Kaynak Linkler (Google Grounding)</span>
-                      <div className="flex flex-wrap gap-2">
-                        {activeAnalysis.sources.slice(0, 4).map((src, index) => (
+                      <span className="text-[9px] font-bold text-slate-400 uppercase tracking-wider block mb-3 font-mono">
+                        Kaynaklar (Tavily Search API)
+                      </span>
+                      <div className="space-y-2">
+                        {activeAnalysis.sources.map((src, index) => (
                           <a
                             key={index}
                             href={src.url}
                             target="_blank"
                             rel="noreferrer"
-                            className="bg-white dark:bg-[#201f1e] hover:bg-slate-50 dark:hover:bg-[#252423] text-[10px] text-[#0078D4] dark:text-brand-400 hover:underline px-3 py-1.5 rounded-md border border-[#EDEBE9] dark:border-[#323130] max-w-[240px] truncate flex items-center gap-1.5"
-                            title={src.title}
+                            className="block bg-white dark:bg-[#201f1e] hover:bg-slate-50 dark:hover:bg-[#252423] text-[10px] text-slate-700 dark:text-slate-300 px-3 py-2 rounded-md border border-[#EDEBE9] dark:border-[#323130] transition-colors"
                           >
-                            <ChevronRight className="w-3 h-3 shrink-0 text-slate-400" />
-                            <span className="truncate">{src.title}</span>
+                            <div className="flex items-center gap-1.5 text-[#0078D4] dark:text-brand-400 font-semibold truncate">
+                              <ExternalLink className="w-3 h-3 shrink-0" />
+                              <span className="truncate">{src.title}</span>
+                            </div>
+                            <div className="text-[9px] text-slate-400 mt-0.5 truncate">
+                              {src.domain || src.url}
+                              {src.publishedDate ? ` · ${src.publishedDate}` : ""}
+                            </div>
                           </a>
                         ))}
                       </div>
@@ -1603,12 +1276,12 @@ Tavily Search Engine successfully matched supplementary real-time operational da
                 <div className="flex items-center gap-2">
                   <TrendingUp className="w-5 h-5 text-rose-500" />
                   <h5 className="text-sm font-bold text-slate-800 dark:text-slate-200 uppercase tracking-wider font-mono">
-                    # Company Financial Analysis & OPEX Opportunity (Genişletilmiş Detaylı Rapor)
+                    # Finansal Veriler (Genişletilmiş Rapor)
                   </h5>
                 </div>
                 <div className="flex items-center gap-2">
                   <button
-                    onClick={() => copyToClipboard(activeAnalysis.parsed.companyFinancialAnalysis, "financial")}
+                    onClick={() => copyToClipboard(activeAnalysis.parsed.financialData, "financial")}
                     className="text-xs text-slate-600 dark:text-slate-300 hover:text-[#0078D4] dark:hover:text-brand-400 font-bold px-3 py-1.5 bg-white dark:bg-[#11100f] border border-[#D2D0CE] dark:border-[#323130] rounded-lg cursor-pointer flex items-center gap-1.5 transition-all"
                   >
                     {copiedSection === "financial" ? <Check className="w-3.5 h-3.5 text-emerald-500" /> : <Copy className="w-0.5 h-3.5" />}
@@ -1629,7 +1302,7 @@ Tavily Search Engine successfully matched supplementary real-time operational da
                 
                 {/* Main analysis text */}
                 <div className="text-xs md:text-sm text-slate-700 dark:text-slate-200 whitespace-pre-line leading-relaxed font-sans bg-slate-50/50 dark:bg-black/20 p-6 rounded-xl border border-slate-100 dark:border-[#323130] shadow-inner select-text">
-                  {activeAnalysis.parsed.companyFinancialAnalysis}
+                  {activeAnalysis.parsed.financialData}
                 </div>
               </div>
             </div>

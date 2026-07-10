@@ -10,6 +10,10 @@ const projectRoot = process.cwd();
 dotenv.config({ path: path.join(projectRoot, ".env") });
 
 import { GoogleGenAI } from "@google/genai";
+import {
+  fetchCompanyResearch,
+  formatTavilyContext,
+} from "./tavilyCompanyResearch";
 const ai = new GoogleGenAI({
   apiKey: process.env.GEMINI_API_KEY,
   httpOptions: {
@@ -878,210 +882,153 @@ Target Channel Context: "${targetChannel || 'Lean Consulting Page'}"`;
   }
 });
 
-// API: Gemini AI Sales Assistant Company Screener
+// API: Gemini AI Sales Assistant Company Screener (Tavily-only data source)
 app.post("/api/gemini/analyze-company", async (req, res) => {
-  const { companyInput, deepResearchMode } = req.body;
+  const { companyInput } = req.body;
 
   if (!companyInput || !companyInput.trim()) {
-    return res.status(400).json({ error: "Firma adı veya web sitesi boş olamaz." });
+    return res.status(400).json({ error: "Firma adı boş olamaz." });
+  }
+
+  const tavilyApiKey =
+    req.body.tavilyApiKey ||
+    req.headers["x-tavily-api-key"] ||
+    process.env.TAVILY_API_KEY;
+
+  if (!tavilyApiKey || !String(tavilyApiKey).trim()) {
+    return res.status(400).json({
+      success: false,
+      code: "TAVILY_API_KEY_MISSING",
+      error:
+        "Tavily API anahtarı tanımlı değil. Gerçek şirket araştırması yapabilmek için Tavily API anahtarınızı Sistem Ayarları > API Bağlantıları bölümüne giriniz.",
+    });
   }
 
   if (!process.env.GEMINI_API_KEY) {
-    return res.status(400).json({ error: "GEMINI_API_KEY is not configured in environment variables. Please supply it under Settings > Secrets." });
+    return res.status(400).json({
+      success: false,
+      error:
+        "GEMINI_API_KEY ortam değişkeni tanımlı değil. Lütfen sunucu ayarlarından ekleyin.",
+    });
   }
 
+  const company = companyInput.trim();
+
   try {
-    const sources: { title: string; url: string }[] = [];
-    let tavilyContextText = "";
-
-    // 1. If Tavily Deep Research Mode is enabled, attempt real Tavily API or Simulated fallback
-    if (deepResearchMode) {
-      const tavilyApiKey = req.body.tavilyApiKey || req.headers["x-tavily-api-key"] || process.env.TAVILY_API_KEY;
-      if (tavilyApiKey) {
-        try {
-          console.log(`Performing real Tavily API call for: ${companyInput}`);
-          const tavilyResp = await fetch("https://api.tavily.com/search", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-              api_key: tavilyApiKey,
-              query: `${companyInput} operational excellence continuous improvement lean manufacturing factory locations employees`,
-              search_depth: "advanced",
-              include_answer: true,
-              max_results: 5
-            })
-          });
-          if (tavilyResp.ok) {
-            const tavilyData: any = await tavilyResp.json();
-            if (tavilyData.results && Array.isArray(tavilyData.results)) {
-              tavilyData.results.forEach((resItem: any) => {
-                sources.push({
-                  title: `[Tavily Deep Search] ${resItem.title || resItem.url}`,
-                  url: resItem.url
-                });
-              });
-              tavilyContextText = `Here is real-time search context retrieved from Tavily for ${companyInput}:\n` + 
-                tavilyData.results.map((r: any) => `- Source: ${r.url}\n  Title: ${r.title}\n  Content Summary: ${r.content}`).join("\n\n") +
-                (tavilyData.answer ? `\n\nDirect Answer Summary: ${tavilyData.answer}` : "");
-            }
-          }
-        } catch (tavilyErr) {
-          console.error("Tavily API call failed:", tavilyErr);
-        }
-      }
-
-      if (!tavilyContextText) {
-        // Safe simulation representing Google search grounding + Tavily hybrid pipeline
-        sources.push({
-          title: "🎯 Tavily Search Engine (Active Simulation Route)",
-          url: "https://tavily.com/?ref=smart-mailmerge"
-        });
-      }
+    let research;
+    try {
+      console.log(`Tavily company research started for: ${company}`);
+      research = await fetchCompanyResearch(String(tavilyApiKey).trim(), company);
+    } catch (tavilyErr: any) {
+      console.error("Tavily research failed:", tavilyErr);
+      return res.status(502).json({
+        success: false,
+        code: "TAVILY_SEARCH_FAILED",
+        error:
+          "Tavily arama servisi şu anda yanıt vermiyor. Lütfen API anahtarınızı kontrol edip birkaç dakika sonra tekrar deneyin.",
+      });
     }
 
-    const userPromptText = `You are a manufacturing business development consultant and an expert B2B Sales Assistant specializing in Operational Excellence (OpEx), Lean Manufacturing, Continuous Improvement, ISO Standards, and Industrial Digitalization. Your communication style is direct, professional, field-oriented, and strictly avoids buzzwords (avoid "synergy", "revolutionary", "critical point", etc.).
+    const tavilyContextText = formatTavilyContext(company, research.results);
 
-Your goal is to identify who is most likely to buy:
-- Lean Consulting
-- Quality Improvement Services
-- Operational Excellence Projects
-- ISO Consulting
-- Cost Reduction Programs
+    const userPromptText = `Sen bir B2B Satış İstihbaratı analisti ve Operasyonel Mükemmellik (OpEx) danışmanısın.
 
-${tavilyContextText ? `--- REAL-TIME SIBER RESEARCH CONTEXT (TAVILY API) ---
+KRİTİK KURAL: Yalnızca aşağıda sunulan Tavily arama sonuçlarını analiz edeceksin. Kendi genel bilgini, tahminini veya çıkarımını KULLANMA.
+
+YASAKLAR (kesinlikle yapma):
+- Dummy data, örnek veri, placeholder, lorem ipsum
+- Tahmini çalışan sayısı, tahmini ciro, tahmini e-posta formatı
+- Uydurulmuş kişi isimleri, sahte adresler, sahte telefon numaraları
+- Kaynağı olmayan hiçbir bilgi
+- Eksik alanları tahmin etme veya doldurma
+- Google Search veya başka kaynak kullanma — sadece aşağıdaki Tavily içeriği
+
+Şirket: "${company}"
+
+--- TAVILY ARAMA SONUÇLARI (TEK VERİ KAYNAĞI) ---
 ${tavilyContextText}
-------------------------------------------------------` : ""}
+--- SON ---
 
-Using Google Search grounding, analyze the following company: "${companyInput}".
+Aşağıdaki bölümleri Türkçe olarak, tam olarak bu markdown başlıklarıyla yaz:
 
-### ⚠️ SON DERECE KRİTİK DOĞRULUK VE VERİ SINIRLAMALARI (MANDATORY INSTRUCTIONS):
-1. **ASLA TAHMİN VEYA ÇIKARIM YAPMAYIN (DO NOT PREDICT OR INFER BASIC FACTS):** Şirketin web sitesi URL'si, fiziksel adresi, çalışan sayısı, üretim tesisi konumları, cirosu ve finansal verileri gibi temel bilgileri "tahmin etmeyin", "varsaymayın" veya "uydurmayın".
-2. **KAYNAKLARDA GEÇMİYORSA DOĞRUDAN 'NOT FOUND' YAZIN:** Eğer internet araması veya sunulan gerçek zamanlı verilerde bu bilgiler kesin, açık ve doğrulanmış olarak YOKSA, ilgili alan değerine yalnızca "NOT FOUND" (veya Türkçe karşılığı "Bilgi bulunamadı") yazın.
-3. **OPEX DANIŞMANLIK BAKIŞ AÇISIYLA YALNIZCA YORUMLAR EKLEYİN:** Eğer yukarıdaki firma gerçek verilerine ulaşılamıyorsa, israf analizi veya darboğaz uydurmayın. Bunun yerine, bir Operasyonel Mükemmellik (OpEx) uzmanı bakış açısıyla nesnel, teknik ve metot odaklı yorumlar ekleyin. Örneğin: "Firma hakkında net operasyonel veri sağlanamadığından, sahada yapılabilecek bir Gemba yürüyüşü (gözlem), Değer Akış Haritalama (VSM) ve 8 Büyük İsraf (TIMWOODS) analiziyle gizli darboğazların ortaya çıkarılması gerekmektedir."
-4. **MOCK VEYA TAKLİT SAYILAR OLUŞTURMAZ:** Doğrulanmamış veriler için uydurma veri tabloları yapmayın.
+# Şirket Özeti
+Sadece kaynaklarda bulunan bilgileri özetle: sektör, ana ürün/hizmetler, web sitesi, lokasyonlar, üretim tesisleri.
+Bulunamayan her alan için: "Bilgi bulunamadı"
+Her bilgi satırının sonuna kaynak referansı ekle: [Kaynak: domain]
 
-Perform the following tasks:
-STEP 1: Determine Industry, Main products, Estimated employee count, and Manufacturing locations.
-  - KRİTİK SINIRLAMA: Şirket hakkındaki detayları (Adres, Web sitesi, Lokasyonlar, Çalışan sayısı vb.) SADECE internetteki gerçek arama sonuçlarına dayandırın. Eğer bu bilgileri doğrulanmış olarak bulamıyorsanız asla uydurmayın, doğrudan "NOT FOUND" yazın.
-STEP 2: Identify the most relevant decision maker roles for Lean, OpEx, Quality, Cost, and ISO. Rank them by buying propensity:
-  - Tier 1: Primary Buyer
-  - Tier 2: Influencer
-  - Tier 3: Secondary Stakeholder
+# Finansal Veriler
+Kaynaklarda bulunan finansal bilgileri özetle: ciro, çalışan sayısı, ülkeler, yatırım, üretim tesisleri, ihracat.
+Hiçbir finansal veri yoksa yalnızca şunu yaz: "Finansal bilgi bulunamadı"
+Tahmin yapma. Her bulunan veri için [Kaynak: domain] ekle.
 
-STEP 2.5: Company Financial & Operational Excellence Opportunity Analysis:
-Research or estimate the company's financial profile from public sources, and perform:
-  - Financial Summary (Ciro, EBITDA, Net kâr vb. trendleri): Kesin ve gerçek finansal tablolara ulaşılamıyorsa asla uydurma tablolar oluşturmayın; doğrudan "NOT FOUND" yazın.
-  - Warning Signals: Gerçek verilerde stok birikimi, verimsizlik vb. sinyal yoksa "NOT FOUND" yazın.
-  - Operational Excellence Assessment: Süreç verimliliği, OpEx olgunluğu, yalın dönüşüm potansiyeli değerlendirmesi yapın. Veri yetersiz ise doğrudan OpEx metodolojik yorumunu ekleyin.
-  - Operational Pain Points: İlgili operasyonel darboğazlar. Veri yetersiz ise "NOT FOUND - Yerinde analiz gereklidir" yazın.
-  - Executive Commentary: Operasyonel mükemmellik danışmanı gözünden ilk olarak neyin incelenmesi gerektiği ve OpEx metodolojisi tavsiyeleri.
-  - Sales Opportunity Summary: Hizmet alanları, paydaşlar, satış yaklaşımı ve konu başlıkları.
-  - COPQ (Cost of Poor Quality) Exposure: Sadece gerçek ciro/finansal verilere ulaşılabildiyse standart katsayılarla Hurda, Yeniden İşlem ve Gizli Kalite Maliyetleri tahminlerinde bulunun. Eğer finansal veriler yoksa doğrudan "NOT FOUND" yazın.
+# E-posta Keşfi
+Yalnızca kaynak metinlerinde açıkça geçen (yazılı olarak bulunan) e-posta adreslerini listele.
+Format: e-posta | Kaynak: URL veya domain
+E-posta bulunamazsa yalnızca şunu yaz: "Doğrulanmış e-posta bulunamadı"
+E-posta formatı tahmin etme.
 
-STEP 3: Look for evidence of employee names, press releases, management team members, or publicly visible emails to infer the company's likely corporate email pattern (e.g. john.smith@company.com, jsmith@company.com).
-STEP 4: Generate estimated email address formats for future contacts. Calculate a confidence score (0-100) and reasoning for each.
-  - CRITICAL: Never state that an email is verified. Always label all generated emails exactly as: "ESTIMATED EMAIL CANDIDATE"
-STEP 5: Generate a personalized outreach strategy and a personalized first-contact email.
+# Karar Vericiler
+Yalnızca kaynaklarda ismi ve ünvanı açıkça geçen, doğrulanabilir kişileri listele.
+Her kişi için: İsim | Ünvan | Kaynak: URL/domain | LinkedIn (varsa) | Şirket web sitesi (varsa)
+Bulunamazsa yalnızca şunu yaz: "Karar verici bilgisi bulunamadı"
 
-Provide your final response exactly in Turkish, structured under the following main markdown headers:
-
-# Company Summary
-[Sektörel bilgiler, ana ürün grupları, çalışan ölçeği ve üretim tesislerinin konumları. Gerçek verilere kesin olarak ulaşılamayan her başlık veya bilgi için "NOT FOUND" yazılmalıdır.]
-
-# Suggested Decision Makers
-[Satın alma eğilimlerine göre karar vericiler ve her birinin satın alma rolü / rütbesi:
-- Tier 1 = Primary Buyer
-- Tier 2 = Influencer
-- Tier 3 = Secondary Stakeholder]
-
-# Company Financial Analysis
-[Burada yukarıda belirtilen finansal ve operasyonel analizi adım adım uygulayın. Gerçek verilere ulaşılamayan tüm finansal kalemler ve COPQ kısımları için "NOT FOUND" ibaresini kullanın.
-Mutlaka şu alt başlıkları veya bölümleri içersin:
-## Financial Snapshot
-[Revenue Trend, EBITDA Trend, Net Profit Trend, Inventory Trend vb. Veya NOT FOUND]
-## Key Observation
-[Stok artış hızı trendleri, verimsizlik tespiti vb. Veya NOT FOUND]
-## Potential Consulting Opportunities
-## Executive Commentary
-[Bir rasyonel ve profesyonel OpEx Danışmanı bakış açısıyla ekleyeceğiniz derinlemesine yorumlar. Veri eksikse, metodolojik yalın danışmanlık yaklaşımını ("Yerinde gözlem, VSM, 8 büyük israf, TIMWOODS" vb.) tavsiye edin.]
-## Sales Opportunity Summary
-## Estimated Cost of Poor Quality (COPQ) Exposure (COP Q Tahminleri)
-[Low, Medium, High tahminleri, hurda/rework/gizli maliyet aralıkları ya da NOT FOUND]]
-
-# Email Pattern Analysis
-[Yazışma/e-posta kalıbı çözümlemesi ve bulunan kanıtlar / web sitesi uzantısı detayları]
-
-# Estimated Email Candidates
-[- ESTIMATED EMAIL CANDIDATE: [ornek@firma.com] | Güven Skoru: %XX | Gerekçe: ...
-- ESTIMATED EMAIL CANDIDATE: [isim.soyisim@firma.com] | Güven Skoru: %XX | Gerekçe: ...]
-
-# Recommended Outreach Strategy
-[Önerilen kişiselleştirilmiş sıcak & soğuk temas stratejisi]
-
-# Personalized Email
-[İlk temas soğuk/sıcak e-posta taslağı]`;
+# Fırsat Analizi
+Yalnızca kaynaklarda bulunan somut verileri yorumla (ör: Lean yatırımı, ISO sertifikası, sürdürülebilirlik raporu, yeni fabrika, otomasyon yatırımı, OpEx ekibi, kalite direktörü).
+Bu verilerden satış fırsatı çıkar. Her fırsat için dayandığı kaynağı belirt: [Kaynak: domain]
+Yeterli veri yoksa yalnızca şunu yaz: "Yeterli veri bulunamadığı için fırsat analizi oluşturulamadı."`;
 
     let aiRes;
     try {
       aiRes = await ai.models.generateContent({
         model: "gemini-3.5-flash",
         contents: userPromptText,
-        config: {
-          tools: [{ googleSearch: {} }],
-        }
       });
-    } catch (groundingError: any) {
-      console.warn("Grounding failed, retrying without google search tools:", groundingError.message || groundingError);
-      // Fallback: Generate without Google Search tools (which avoids search rate limits)
-      aiRes = await ai.models.generateContent({
-        model: "gemini-3.5-flash",
-        contents: userPromptText + "\n(Duyuru: İnternet grounding kısıtlı olduğu için genel B2B veri bilginizle analiz yapın. Ancak doğrulanamayan/eksik verileri 'Bilgi bulunamadı' olarak etiketleyin.)"
+    } catch (geminiErr: any) {
+      console.error("Gemini analysis failed:", geminiErr);
+      return res.status(500).json({
+        success: false,
+        code: "GEMINI_ANALYSIS_FAILED",
+        error: "Analiz tamamlanamadı.",
+        sources: research.sources,
       });
     }
 
     const resultText = aiRes.text;
     if (!resultText) {
-      throw new Error("Empty response received from AI model.");
-    }
-
-    // Extract grounding search URLs
-    const chunks = aiRes.candidates?.[0]?.groundingMetadata?.groundingChunks;
-    if (chunks) {
-      chunks.forEach((chunk: any) => {
-        if (chunk.web?.uri) {
-          sources.push({
-            title: chunk.web.title || chunk.web.uri,
-            url: chunk.web.uri
-          });
-        }
+      return res.status(500).json({
+        success: false,
+        code: "GEMINI_ANALYSIS_FAILED",
+        error: "Analiz tamamlanamadı.",
+        sources: research.sources,
       });
     }
 
     res.json({
       success: true,
       rawOutput: resultText,
-      sources: sources
+      sources: research.sources,
     });
-
   } catch (error: any) {
-    console.error("Gemini Analyze Company error:", error);
+    console.error("Analyze company error:", error);
     const errStr = String(error.message || error);
-    const isQuota = errStr.includes("429") || errStr.toLowerCase().includes("quota") || errStr.includes("RESOURCE_EXHAUSTED");
-    
+    const isQuota =
+      errStr.includes("429") ||
+      errStr.toLowerCase().includes("quota") ||
+      errStr.includes("RESOURCE_EXHAUSTED");
+
     res.status(isQuota ? 429 : 500).json({
       success: false,
       isQuotaExhausted: isQuota,
-      originalError: errStr,
-      error: isQuota 
-        ? "Gemini API kullanım kotanız (Rate Limit / Quota) aşıldı. Lütfen Google AI Studio faturalandırma ayarlarınızı veya API kotalarınızı kontrol edin."
-        : (error.message || "Could not complete text generation with Gemini.")
+      error: isQuota
+        ? "Gemini API kullanım kotanız aşıldı. Lütfen API kotalarınızı kontrol edin."
+        : "Analiz tamamlanamadı.",
     });
   }
 });
 
 // API: Core dynamic email writer tool for Cold/Warm pitches
 app.post("/api/gemini/generate-custom-pitch", async (req, res) => {
-  const { companyName, mailType, topic, tone, extraContext } = req.body;
+  const { companyName, mailType, topic, tone, extraContext, researchContext } = req.body;
 
   if (!companyName || !companyName.trim()) {
     return res.status(400).json({ error: "Firma adı parametresi gereklidir." });
@@ -1093,20 +1040,24 @@ app.post("/api/gemini/generate-custom-pitch", async (req, res) => {
 
   try {
     const userPromptText = `You are an expert manufacturing consultant and B2B growth marketer specializing in Lean Management and Operational Excellence.
-Generate a professional, compelling sales outreach email template in Turkish (Türkçe) for the following company details:
+Generate a professional sales outreach email template in Turkish (Türkçe).
 
-- Company Name: ${companyName}
-- Outreach Style: ${mailType === "cold" ? "Cold Email (Soğuk e-posta - İlk kez temasa geçilen, kanca içeren)" : "Warm Pitch (Sıcak/İlgi Çekici e-posta - Bir fırsata veya taranan bir veriye atıfta bulunan)"}
-- Main Strategy/Opportunity Focus: ${topic}
-- Communication Tone: ${tone || "Profesyonel & Danışmanlık yaklaşımı"}
-- Additional Instructions/Context: ${extraContext || "Yok."}
+STRICT RULES:
+- Use ONLY facts from the research context below. Do NOT invent company details, names, locations, or financial figures.
+- If research context lacks specific facts, write generically without fabricating specifics.
+- Do not guess email addresses or contact names.
 
-Follow these strict rules:
-1. Come up with a clear, engaging, clickable Subject line starting with "Konu:" or "E-posta Konusu:".
-2. Keep the style mature, respectful, and authoritative. Frame your services as a "çözüm ortağı" (solution partner) targeting inefficiencies, scrap rates, stock turnovers, or equipment breakdowns (OEE).
-3. Do not sound generic, robotic, or overly promotional. Use Turkish executive terms naturally (e.g. Sayın Operasyon Yetkilisi, Sayın Kalite Yöneticisi, vb.).
-4. Add placeholders like [Adınız], [Unvanınız] or [Smart MailMerge] appropriately at the closing footer.
-5. Provide ONLY the subject line and email body. No surrounding chats.`;
+Company Name: ${companyName}
+Outreach Style: ${mailType === "cold" ? "Cold Email" : "Warm Pitch"}
+Focus Topic: ${topic}
+Tone: ${tone || "Profesyonel & Danışmanlık yaklaşımı"}
+Extra Notes: ${extraContext || "Yok."}
+
+--- RESEARCH CONTEXT (Tavily-sourced analysis) ---
+${researchContext || "Araştırma bağlamı sağlanmadı. Genel danışmanlık dili kullan, şirket hakkında uydurma bilgi yazma."}
+--- END ---
+
+Provide ONLY the subject line (Konu:) and email body. Use [Adınız], [Unvanınız] placeholders in the closing.`;
 
     const aiRes = await ai.models.generateContent({
       model: "gemini-3.5-flash",
