@@ -1524,9 +1524,7 @@ export default function App() {
                       <button
                         type="button"
                         onClick={() => {
-                          setInitialAdminSubTab("users");
-                          setSettingsActiveTab("admin-center");
-                          setIsSettingsOpen(true);
+                          setIsUserAccountSettingsOpen(true);
                           setIsUserDropdownOpen(false);
                         }}
                         className="w-full text-left px-3.5 py-2 text-xs text-slate-700 dark:text-zinc-300 hover:bg-slate-50 dark:hover:bg-zinc-800/60 transition-colors flex items-center gap-2 cursor-pointer"
