@@ -1775,7 +1775,7 @@ export default function App() {
                   </div>
                   <div>
                     <h3 className="font-bold text-slate-905 dark:text-zinc-150 text-sm tracking-tight font-sans">
-                      {t("Yönetim Portalı & Sistem Entegrasyonları")}
+                      {t("Yönetim Merkezi")}
                     </h3>
                     <p className="text-[10px] text-slate-500 dark:text-slate-450 font-sans mt-0.5">
                       {t("Organizasyon yapısını, yetkileri, mail şablonlarını ve Microsoft 365 bağlantı durumunu yapılandırın")}
