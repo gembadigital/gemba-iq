@@ -490,12 +490,18 @@ export default function RevenueManagementView() {
       if (cp.allocatedDays > 20) {
         list.push({
           type: "danger",
-          msg: `${cp.name} is severely overloaded in ${selectedMonth} (${cp.allocatedDays} planned days). Shift assignments to balance resource stress.`
+          msg: t("{name} is severely overloaded in {month} ({days} planned days). Shift assignments to balance resource stress.")
+            .replace("{name}", cp.name)
+            .replace("{month}", selectedMonth)
+            .replace("{days}", String(cp.allocatedDays))
         });
       } else if (cp.allocatedDays < 5 && cp.status === "Active") {
         list.push({
           type: "warning",
-          msg: `${cp.name} has low assignment volume (${cp.allocatedDays} days) in ${selectedMonth}. Direct active sales pipelines to optimize utilization.`
+          msg: t("{name} has low assignment volume ({days} days) in {month}. Direct active sales pipelines to optimize utilization.")
+            .replace("{name}", cp.name)
+            .replace("{days}", String(cp.allocatedDays))
+            .replace("{month}", selectedMonth)
         });
       }
     });
@@ -505,7 +511,10 @@ export default function RevenueManagementView() {
     if (bestService) {
       list.push({
         type: "success",
-        msg: `${bestService.name} is the highest revenue driver in ${selectedMonth}, generating ${bestService.revenue.toLocaleString()} TL sales.`
+        msg: t("{name} is the highest revenue driver in {month}, generating {revenue} TL sales.")
+          .replace("{name}", bestService.name)
+          .replace("{month}", selectedMonth)
+          .replace("{revenue}", bestService.revenue.toLocaleString())
       });
     }
 
@@ -516,7 +525,9 @@ export default function RevenueManagementView() {
       if (share > 30) {
         list.push({
           type: "warning",
-          msg: `High Concentration Risk: ${topCustomer.name} contributes ${share.toFixed(0)}% of total monthly billing. Diversify service projects.`
+          msg: t("High Concentration Risk: {name} contributes {share}% of total monthly billing. Diversify service projects.")
+            .replace("{name}", topCustomer.name)
+            .replace("{share}", share.toFixed(0))
         });
       }
     }
@@ -524,12 +535,14 @@ export default function RevenueManagementView() {
     if (metrics.utilizationPercent < 75) {
       list.push({
         type: "danger",
-        msg: `Utilization Rate (${metrics.utilizationPercent.toFixed(0)}%) is below target standard. Unsold capacity represents ${metrics.lostOpportunityValue.toLocaleString()} TL lost revenue.`
+        msg: t("Utilization Rate ({percent}%) is below target standard. Unsold capacity represents {revenue} TL lost revenue.")
+          .replace("{percent}", metrics.utilizationPercent.toFixed(0))
+          .replace("{revenue}", metrics.lostOpportunityValue.toLocaleString())
       });
     }
 
     return list;
-  }, [consultantProfitability, serviceProfitability, customerProfitability, metrics, selectedMonth]);
+  }, [consultantProfitability, serviceProfitability, customerProfitability, metrics, selectedMonth, lang, t]);
 
   // AI-Assisted Assessment Trigger via Gemini
    const triggerAiManagementReview = async () => {
@@ -570,7 +583,7 @@ CRITICAL FORMATTING INSTRUCTIONS: Your response MUST be output as beautiful, pro
     } catch (e: any) {
       console.error(e);
       setAiCoachingOutput(`<div class="bg-rose-50 dark:bg-rose-950/25 border-l-4 border-rose-500 p-3 rounded text-rose-700 text-xs font-mono">
-        <strong>Denetim Hatası:</strong> ${e.message || "Gemini bağlantısı kurulamadı."}. Lütfen Secrets veya API yapılandırmasını kontrol edin.
+        <strong>${t("Audit Error:")}</strong> ${e.message || t("Could not connect to Gemini.")}. ${t("Please check Secrets or API configuration.")}
       </div>`);
     } finally {
       setIsAiLoading(false);
@@ -688,9 +701,9 @@ CRITICAL FORMATTING INSTRUCTIONS: Your response MUST be output as beautiful, pro
   };
 
   const handleDeleteInvoice = (id: string) => {
-    if (confirm("Bu faturayı silmek istediğinizden emin misiniz?")) {
+    if (confirm(t("Are you sure you want to delete this invoice?"))) {
       setInvoices(prev => prev.filter(inv => inv.id !== id));
-      const logMsg = `${new Date().toLocaleTimeString()} - Fatura silindi (ID: ${id}).`;
+      const logMsg = `${new Date().toLocaleTimeString()} - ${t("Invoice deleted (ID: {id}).").replace("{id}", id)}`;
       setImportLogs(prev => [logMsg, ...prev]);
     }
   };
@@ -725,13 +738,13 @@ CRITICAL FORMATTING INSTRUCTIONS: Your response MUST be output as beautiful, pro
     reader.onload = (event) => {
       const text = event.target?.result as string;
       if (!text) {
-        setImportError("Seçilen dosya boş veya okunamadı.");
+        setImportError(t("Selected file is empty or unreadable."));
         return;
       }
       parseAndSetCsvData(text, file.name);
     };
     reader.onerror = () => {
-      setImportError("Dosya okuma hatası oluştu.");
+      setImportError(t("File read error occurred."));
     };
     reader.readAsText(file, "UTF-8");
   };
@@ -740,7 +753,7 @@ CRITICAL FORMATTING INSTRUCTIONS: Your response MUST be output as beautiful, pro
     try {
       const lines = text.split(/\r?\n/).map(l => l.trim()).filter(l => l.length > 0);
       if (lines.length === 0) {
-        setImportError("Yüklenen dosyada veri bulunamadı.");
+        setImportError(t("No data found in uploaded file."));
         return;
       }
 
@@ -819,14 +832,14 @@ CRITICAL FORMATTING INSTRUCTIONS: Your response MUST be output as beautiful, pro
 
       if (parsedInvoices.length > 0) {
         setInvoices(prev => [...parsedInvoices, ...prev]);
-        const logMsg = `${new Date().toLocaleTimeString()} - CSV File [${filename}] loaded: ${addedCount} records parsed.`;
+        const logMsg = `${new Date().toLocaleTimeString()} - ${t("CSV File [{filename}] loaded: {count} records parsed.").replace("{filename}", filename).replace("{count}", String(addedCount))}`;
         setImportLogs(prev => [logMsg, ...prev]);
-        setImportSuccess(`Fatura listesi başarıyla yüklendi! (${addedCount} fatura eklendi, ${duplicateCount} olası kopya tespit edildi).`);
+        setImportSuccess(t("Invoice list loaded successfully! ({count} invoices added, {duplicates} possible duplicates detected).").replace("{count}", String(addedCount)).replace("{duplicates}", String(duplicateCount)));
       } else {
-        setImportError("CSV dosyasından geçerli bir fatura kaydı okunamadı. Lütfen şablon yapısını kontrol edin.");
+        setImportError(t("No valid invoice records could be read from CSV file. Please check template structure."));
       }
     } catch (err: any) {
-      setImportError(`Hata oluştu: ${err.message || "CSV okunamadı"}`);
+      setImportError(t("Error occurred: {error}").replace("{error}", err.message || t("CSV could not be read")));
     }
   };
 
@@ -1053,21 +1066,11 @@ CRITICAL FORMATTING INSTRUCTIONS: Your response MUST be output as beautiful, pro
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-white dark:bg-[#151515] p-5 rounded-2xl border border-slate-200/60 dark:border-zinc-800 shadow-sm print:shadow-none relative overflow-hidden">
         <div className="absolute top-0 left-0 right-0 h-1.5 bg-gradient-to-r from-emerald-500 via-[#0078D4] to-blue-500" />
         <div className="space-y-1.5">
-          <div className="flex items-center gap-2">
-            <span className="bg-emerald-100 dark:bg-emerald-950/40 text-emerald-600 dark:text-emerald-400 text-[10px] font-bold px-2 py-0.5 rounded font-mono uppercase tracking-wider">
-              {lang === "TR" ? "Ticari Mükemmellik" : "Commercial Excellence"}
-            </span>
-            <span className="text-[10px] bg-sky-100 dark:bg-sky-950/40 text-[#0078D4] font-mono px-2 py-0.5 rounded font-bold">
-              {lang === "TR" ? "Power BI Motoru v4.2" : "Power BI Engine v4.2"}
-            </span>
-          </div>
           <h1 className="text-xl font-bold tracking-tight text-slate-900 dark:text-slate-100">
-            {lang === "TR" ? "Gelir & Danışman Kapasitesi Yönetimi" : "Revenue & Consultant Capacity Management"}
+            {t("Revenue & Consultant Capacity Management")}
           </h1>
           <p className="text-xs text-slate-550 max-w-2xl leading-relaxed">
-            {lang === "TR" 
-              ? "Brüt marjları, faturalandırılabilir danışman adam-günlerini, kaybedilen fırsat yedek kulübesi değerlerini izleyin ve gelişmiş yapay zeka tahminlerinden yararlanın."
-              : "Monitor gross margins, billable consultant man-days, lost opportunity bench values, and leverage advanced AI forecasts."}
+            {t("Monitor gross margins, billable consultant man-days, lost opportunity bench values, and leverage advanced AI forecasts.")}
           </p>
         </div>
 
@@ -1082,13 +1085,13 @@ CRITICAL FORMATTING INSTRUCTIONS: Your response MUST be output as beautiful, pro
                   onChange={(e) => setIsRangeMode(e.target.checked)}
                   className="w-3.5 h-3.5 rounded border-slate-300 text-[#0078D4] focus:ring-[#0078D4] pointer-events-auto cursor-pointer"
                 />
-                <span>{lang === "TR" ? "Aralık Seçimi" : "Range Selection"}</span>
+                <span>{t("Range Selection")}</span>
               </label>
             </div>
 
             {isRangeMode ? (
               <div className="flex items-center gap-2">
-                <span className="text-[10px] text-slate-400 font-mono">{lang === "TR" ? "Başlangıç:" : "From:"}</span>
+                <span className="text-[10px] text-slate-400 font-mono">{t("From:")}</span>
                 <select
                   value={rangeStart}
                   onChange={(e) => setRangeStart(e.target.value)}
@@ -1098,7 +1101,7 @@ CRITICAL FORMATTING INSTRUCTIONS: Your response MUST be output as beautiful, pro
                     <option key={m} value={m} className="bg-white dark:bg-zinc-900 text-slate-850 dark:text-zinc-200">{m}</option>
                   ))}
                 </select>
-                <span className="text-[10px] text-slate-400 font-mono">{lang === "TR" ? "Bitiş:" : "To:"}</span>
+                <span className="text-[10px] text-slate-400 font-mono">{t("To:")}</span>
                 <select
                   value={rangeEnd}
                   onChange={(e) => {
@@ -1115,7 +1118,7 @@ CRITICAL FORMATTING INSTRUCTIONS: Your response MUST be output as beautiful, pro
               </div>
             ) : (
               <div className="flex items-center gap-1.5">
-                <span className="text-xs text-slate-500 font-mono font-bold">{lang === "TR" ? "Hedef Ay:" : "Target Month:"}</span>
+                <span className="text-xs text-slate-500 font-mono font-bold">{t("Target Month:")}</span>
                 <select
                   value={selectedMonth}
                   onChange={(e) => setSelectedMonth(e.target.value)}
@@ -1138,7 +1141,7 @@ CRITICAL FORMATTING INSTRUCTIONS: Your response MUST be output as beautiful, pro
                   : "text-slate-500 hover:text-slate-700 dark:text-zinc-400"
               }`}
             >
-              {lang === "TR" ? "📊 Yönetici Paneli" : "📊 Executive Dashboard"}
+              {t("📊 Executive Dashboard")}
             </button>
             <button
               onClick={() => setActiveTab("data")}
@@ -1148,7 +1151,7 @@ CRITICAL FORMATTING INSTRUCTIONS: Your response MUST be output as beautiful, pro
                   : "text-slate-500 hover:text-slate-700 dark:text-zinc-400"
               }`}
             >
-              {lang === "TR" ? "🗄️ Operasyonlar & Veri Girişi" : "🗄️ Operations & Data Input"}
+              {t("🗄️ Operations & Data Input")}
             </button>
           </div>
         </div>
@@ -1164,65 +1167,65 @@ CRITICAL FORMATTING INSTRUCTIONS: Your response MUST be output as beautiful, pro
             {/* CARD 1: Total Revenue */}
             <div className="bg-white dark:bg-[#151515] p-5 rounded-xl border border-slate-205/65 dark:border-zinc-800/80 shadow-xs relative overflow-hidden">
               <span className="text-[10px] font-black uppercase text-slate-400 tracking-wider font-mono">
-                {lang === "TR" ? "Aylık Gelirler" : "Monthly Revenues"}
+                {t("Monthly Revenues")}
               </span>
               <div className="flex items-baseline gap-1.5 mt-2.5">
                 <span className="text-xl md:text-2xl font-black text-slate-900 dark:text-slate-100">{metrics.totalRevenue.toLocaleString()} TL</span>
                 <span className="text-xs text-emerald-500 font-mono flex items-center gap-0.5"><TrendingUp className="w-3 h-3" />+12%</span>
               </div>
               <div className="text-[10px] text-slate-500 mt-2 font-mono flex items-center justify-between">
-                <span>{lang === "TR" ? "Doğrudan proje faturalandırması" : "Direct project invoicing"}</span>
-                <span>{lang === "TR" ? "Aktif Ay" : "Active Month"}: {selectedMonth}</span>
+                <span>{t("Direct project invoicing")}</span>
+                <span>{t("Active Month")}: {selectedMonth}</span>
               </div>
             </div>
 
             {/* CARD 2: Man-Days and Utilization */}
             <div className="bg-white dark:bg-[#151515] p-5 rounded-xl border border-slate-205/65 dark:border-zinc-800/80 shadow-xs relative overflow-hidden">
               <span className="text-[10px] font-black uppercase text-slate-400 tracking-wider font-mono">
-                {lang === "TR" ? "Danışman Doluluk Oranı" : "Consultant Utilization"}
+                {t("Consultant Utilization")}
               </span>
               <div className="flex items-baseline gap-1.5 mt-2.5">
                 <span className="text-xl md:text-2xl font-black text-slate-900 dark:text-slate-100">{metrics.utilizationPercent.toFixed(1)}%</span>
                 <span className={`text-xs font-mono flex items-center gap-0.5 ${metrics.utilizationPercent >= 75 ? "text-emerald-500" : "text-rose-500 animate-pulse font-extrabold"}`}>
                   {metrics.utilizationPercent >= 75 ? <TrendingUp className="w-3 h-3" /> : <TrendingDown className="w-3 h-3" />}
-                  {metrics.utilizationPercent.toFixed(0)}% {lang === "TR" ? "Doluluk" : "Util"}
+                  {metrics.utilizationPercent.toFixed(0)}% {t("Util")}
                 </span>
               </div>
               <div className="text-[10px] text-slate-500 mt-2 font-mono flex items-center justify-between">
-                <span>{lang === "TR" ? "Satılan" : "Sold"}: {metrics.soldDays}d / {lang === "TR" ? "Net Kapasite" : "Net"}: {metrics.totalNetCapacityDays}d</span>
-                <span className="text-amber-500 font-bold">{lang === "TR" ? "Hedef" : "Target"}: 80%</span>
+                <span>{t("Sold")}: {metrics.soldDays}d / {t("Net")}: {metrics.totalNetCapacityDays}d</span>
+                <span className="text-amber-500 font-bold">{t("Target")}: 80%</span>
               </div>
             </div>
 
             {/* CARD 3: Average Daily Sales Rate & Gross Margin */}
             <div className="bg-white dark:bg-[#151515] p-5 rounded-xl border border-slate-205/65 dark:border-zinc-800/80 shadow-xs relative overflow-hidden">
               <span className="text-[10px] font-black uppercase text-slate-400 tracking-wider font-mono">
-                {lang === "TR" ? "Brüt Kâr Marjı Tutarı" : "Gross Margin Rate"}
+                {t("Gross Margin Rate")}
               </span>
               <div className="flex items-baseline gap-1.5 mt-2.5">
                 <span className="text-xl md:text-2xl font-black text-emerald-600 dark:text-emerald-400">{metrics.grossMargin.toLocaleString()} TL</span>
-                <span className="text-xs text-sky-500 font-mono font-bold">({metrics.marginPercent.toFixed(0)}% {lang === "TR" ? "Marj" : "Margin"})</span>
+                <span className="text-xs text-sky-500 font-mono font-bold">({metrics.marginPercent.toFixed(0)}% {t("Margin")})</span>
               </div>
               <div className="text-[10px] text-slate-500 mt-2 font-mono flex items-center justify-between">
-                <span>{lang === "TR" ? "Ortalama Günlük Ücret" : "Average Daily Rate"}:</span>
-                <span className="font-bold">{metrics.averageDailyRate.toLocaleString("tr-TR", { maximumFractionDigits: 0 })} TL/{lang === "TR" ? "gün" : "day"}</span>
+                <span>{t("Average Daily Rate")}:</span>
+                <span className="font-bold">{metrics.averageDailyRate.toLocaleString("tr-TR", { maximumFractionDigits: 0 })} TL/{t("day")}</span>
               </div>
             </div>
 
             {/* CARD 4: Lost Opportunity Value - HIGHLIGHT IN RED (Section 6) */}
             <div className="bg-rose-50/50 dark:bg-rose-950/20 p-5 rounded-xl border border-rose-150 dark:border-rose-900/60 shadow-xs relative overflow-hidden">
               <span className="text-[10px] font-black uppercase text-rose-500 tracking-wider font-mono">
-                {lang === "TR" ? "Kayıp Fırsat Maliyeti / Atıl Maliyet" : "Lost Opportunity Cost / Bench Cost"}
+                {t("Lost Opportunity Cost / Bench Cost")}
               </span>
               <div className="flex items-baseline gap-1.5 mt-2.5">
                 <span className="text-xl md:text-2xl font-black text-rose-600 dark:text-rose-400">-{metrics.lostOpportunityValue.toLocaleString()} TL</span>
                 <span className="text-xs text-rose-500 font-mono font-black animate-pulse">
-                  {lang === "TR" ? "KRİTİK RİSK" : "CRITICAL RISK"}
+                  {t("CRITICAL RISK")}
                 </span>
               </div>
               <div className="text-[10px] text-slate-500 mt-2 font-mono flex items-center justify-between">
-                <span>{lang === "TR" ? "Kalan" : "Remaining"}: {metrics.remainingDays} {lang === "TR" ? "satılmamış gün" : "unsold days"}</span>
-                <span className="text-rose-600 font-bold tracking-tight">{lang === "TR" ? "Ort. Günlük" : "Avg rate"}: 18,000 TL</span>
+                <span>{t("Remaining")}: {metrics.remainingDays} {t("unsold days")}</span>
+                <span className="text-rose-600 font-bold tracking-tight">{t("Avg rate")}: 18,000 TL</span>
               </div>
             </div>
 
@@ -1237,9 +1240,9 @@ CRITICAL FORMATTING INSTRUCTIONS: Your response MUST be output as beautiful, pro
                 <div>
                   <h3 className="text-sm font-extrabold text-slate-850 dark:text-zinc-100 flex items-center gap-1.5">
                     <Calendar className="w-4.5 h-4.5 text-[#0078D4]" />
-                    <span>Resource Workload & Capacity Utilization Chart</span>
+                    <span>{t("Resource Workload & Capacity Utilization Chart")}</span>
                   </h3>
-                  <p className="text-[11px] text-slate-500 mt-0.5">Visualize consultant capacity days vs allocated working days for the chosen period.</p>
+                  <p className="text-[11px] text-slate-500 mt-0.5">{t("Visualize consultant capacity days vs allocated working days for the chosen period.")}</p>
                 </div>
               </div>
 
@@ -1248,12 +1251,12 @@ CRITICAL FORMATTING INSTRUCTIONS: Your response MUST be output as beautiful, pro
                   <BarChart data={workloadBarData} margin={{ top: 10, right: 10, left: 0, bottom: 5 }}>
                     <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#E4E4E7" />
                     <XAxis dataKey="name" tick={{ fill: '#71717A', fontSize: 10 }} axisLine={false} tickLine={false} />
-                    <YAxis label={{ value: 'Days', angle: -90, position: 'insideLeft', offset: 10, style: { textAnchor: 'middle', fill: '#71717A', fontSize: 10 } }} tick={{ fill: '#71717A', fontSize: 10 }} axisLine={false} tickLine={false} />
-                    <Tooltip cursor={{ fill: 'rgba(0,120,212,0.03)' }} contentStyle={{ borderRadius: '8px', border: '1px solid #ECEEEF' }} formatter={(val, name) => [val, name === "utilization" ? "Utilization %" : name]} />
+                    <YAxis label={{ value: t('Days'), angle: -90, position: 'insideLeft', offset: 10, style: { textAnchor: 'middle', fill: '#71717A', fontSize: 10 } }} tick={{ fill: '#71717A', fontSize: 10 }} axisLine={false} tickLine={false} />
+                    <Tooltip cursor={{ fill: 'rgba(0,120,212,0.03)' }} contentStyle={{ borderRadius: '8px', border: '1px solid #ECEEEF' }} formatter={(val, name) => [val, name === "utilization" ? t("Utilization %") : name]} />
                     <Legend iconSize={8} iconType="circle" wrapperStyle={{ fontSize: 11, marginTop: 10 }} />
-                    <Bar dataKey="capacityDays" name="Capacity (Days)" fill="#0078D4" radius={[4, 4, 0, 0]} maxBarSize={40} />
-                    <Bar dataKey="allocatedDays" name="Allocated (Days)" fill="#10B981" radius={[4, 4, 0, 0]} maxBarSize={40} />
-                    <Bar dataKey="utilization" name="Utilization Rate (%)" fill="#F59E0B" radius={[4, 4, 0, 0]} maxBarSize={40} />
+                    <Bar dataKey="capacityDays" name={t("Capacity (Days)")} fill="#0078D4" radius={[4, 4, 0, 0]} maxBarSize={40} />
+                    <Bar dataKey="allocatedDays" name={t("Allocated (Days)")} fill="#10B981" radius={[4, 4, 0, 0]} maxBarSize={40} />
+                    <Bar dataKey="utilization" name={t("Utilization Rate (%)")} fill="#F59E0B" radius={[4, 4, 0, 0]} maxBarSize={40} />
                   </BarChart>
                 </ResponsiveContainer>
               </div>
@@ -1265,9 +1268,9 @@ CRITICAL FORMATTING INSTRUCTIONS: Your response MUST be output as beautiful, pro
                 <div className="flex items-center justify-between mb-4">
                   <h3 className="text-sm font-extrabold text-slate-800 dark:text-zinc-100 flex items-center gap-1.5">
                     <TrendingUp className="w-4.5 h-4.5 text-rose-500" />
-                    <span>6-Month Capacity & Sales Forecast</span>
+                    <span>{t("6-Month Capacity & Sales Forecast")}</span>
                   </h3>
-                  <span className="text-[11px] font-mono bg-sky-50 dark:bg-sky-950/20 text-sky-600 px-2 py-0.5 rounded font-extrabold">Statistical Projection</span>
+                  <span className="text-[11px] font-mono bg-sky-50 dark:bg-sky-950/20 text-sky-600 px-2 py-0.5 rounded font-extrabold">{t("Statistical Projection")}</span>
                 </div>
 
                 <div className="h-64 font-sans text-xs">
@@ -1277,23 +1280,23 @@ CRITICAL FORMATTING INSTRUCTIONS: Your response MUST be output as beautiful, pro
                       <XAxis dataKey="month" tick={{ fill: '#71717A', fontSize: 9 }} tickLine={false} axisLine={false} />
                       <YAxis yAxisId="left" tickFormatter={(val) => `${(val / 1000)}k`} tick={{ fill: '#0078D4', fontSize: 9 }} tickLine={false} axisLine={false} />
                       <YAxis yAxisId="right" orientation="right" tick={{ fill: '#EF4444', fontSize: 9 }} tickLine={false} axisLine={false} />
-                      <Tooltip contentStyle={{ borderRadius: '8px', border: '1px solid #ECEEEF' }} formatter={(val, name) => [name === "revenue" ? `${val.toLocaleString()} TL` : `${val} Days`, name === "revenue" ? "Revenue" : name === "plannedDays" ? "Allocated Days" : "Capacity Days"]} />
+                      <Tooltip contentStyle={{ borderRadius: '8px', border: '1px solid #ECEEEF' }} formatter={(val, name) => [name === "revenue" ? `${val.toLocaleString()} TL` : `${val} ${t("Days")}`, name === "revenue" ? t("Revenue") : name === "plannedDays" ? t("Allocated Days") : t("Capacity Days")]} />
                       <Legend iconSize={8} iconType="circle" wrapperStyle={{ fontSize: 10, marginTop: 10 }} />
-                      <Bar yAxisId="left" dataKey="revenue" name="Revenue Forecast (TL)" fill="#0078D4" radius={[3, 3, 0, 0]} opacity={0.85} maxBarSize={30} />
-                      <Line yAxisId="right" type="monotone" dataKey="capacityDays" name="Capacity (Days)" stroke="#EF4444" strokeWidth={2} dot={{ r: 3 }} />
-                      <Line yAxisId="right" type="monotone" dataKey="plannedDays" name="Planned (Days)" stroke="#10B981" strokeWidth={2} dot={{ r: 3 }} />
+                      <Bar yAxisId="left" dataKey="revenue" name={t("Revenue Forecast (TL)")} fill="#0078D4" radius={[3, 3, 0, 0]} opacity={0.85} maxBarSize={30} />
+                      <Line yAxisId="right" type="monotone" dataKey="capacityDays" name={t("Capacity (Days)")} stroke="#EF4444" strokeWidth={2} dot={{ r: 3 }} />
+                      <Line yAxisId="right" type="monotone" dataKey="plannedDays" name={t("Planned (Days)")} stroke="#10B981" strokeWidth={2} dot={{ r: 3 }} />
                     </ComposedChart>
                   </ResponsiveContainer>
                 </div>
 
                 <div className="mt-4 space-y-2">
-                  <span className="text-[10px] font-black uppercase text-slate-400 tracking-wider font-mono">Forecast Breakdowns:</span>
+                  <span className="text-[10px] font-black uppercase text-slate-400 tracking-wider font-mono">{t("Forecast Breakdowns:")}</span>
                   <div className="grid grid-cols-3 gap-2">
                     {forecasts.slice(0, 3).map(f => (
                       <div key={f.month} className="p-2 bg-slate-50 dark:bg-zinc-900 border border-slate-100 rounded-md text-center">
                         <span className="block text-[10px] font-bold text-[#0078D4] font-mono">{f.month}</span>
                         <span className="block text-xs font-bold font-mono mt-0.5 text-slate-900 dark:text-zinc-50">{Math.round(f.revenue / 1000)}k TL</span>
-                        <span className="text-[9px] text-slate-400 font-mono">Util: {f.utilization}%</span>
+                        <span className="text-[9px] text-slate-400 font-mono">{t("Util: {percent}%").replace("{percent}", String(f.utilization))}</span>
                       </div>
                     ))}
                   </div>
@@ -1302,7 +1305,7 @@ CRITICAL FORMATTING INSTRUCTIONS: Your response MUST be output as beautiful, pro
 
               <div className="pt-3 border-t border-slate-100 dark:border-zinc-800 mt-4 text-[10px] text-slate-500 flex items-center gap-1.5">
                 <Info className="w-3.5 h-3.5 text-sky-500 animate-pulse" />
-                <span>Forecast details dual-axis representation. Left: sales value. Right: resource benchmarks.</span>
+                <span>{t("Forecast details dual-axis representation. Left: sales value. Right: resource benchmarks.")}</span>
               </div>
             </div>
 
@@ -1317,9 +1320,9 @@ CRITICAL FORMATTING INSTRUCTIONS: Your response MUST be output as beautiful, pro
                 <div>
                   <h3 className="text-sm font-extrabold text-slate-850 dark:text-zinc-100 flex items-center gap-1.5">
                     <Building className="w-4.5 h-4.5 text-emerald-500" />
-                    <span>Customer Sales & Gross Profitability Rank</span>
+                    <span>{t("Customer Sales & Gross Profitability Rank")}</span>
                   </h3>
-                  <span className="text-[10px] text-slate-400 font-sans">Profitability targets = total billed labor receipts minus direct labor allocation cost.</span>
+                  <span className="text-[10px] text-slate-400 font-sans">{t("Profitability targets = total billed labor receipts minus direct labor allocation cost.")}</span>
                 </div>
               </div>
 
@@ -1327,11 +1330,11 @@ CRITICAL FORMATTING INSTRUCTIONS: Your response MUST be output as beautiful, pro
                 <table className="w-full text-left text-xs font-sans">
                   <thead>
                     <tr className="border-b border-slate-100 dark:border-zinc-800 font-bold text-slate-405 text-[10px] uppercase tracking-wider">
-                      <th className="py-2.5 px-1">Customer Client</th>
-                      <th className="py-2.5 text-center">Billed Days</th>
-                      <th className="py-2.5 text-right">Revenue</th>
-                      <th className="py-2.5 text-right">Margin %</th>
-                      <th className="py-2.5 text-center font-mono">Avg Rate</th>
+                      <th className="py-2.5 px-1">{t("Customer Client")}</th>
+                      <th className="py-2.5 text-center">{t("Billed Days")}</th>
+                      <th className="py-2.5 text-right">{t("Revenue")}</th>
+                      <th className="py-2.5 text-right">{t("Margin %")}</th>
+                      <th className="py-2.5 text-center font-mono">{t("Avg Rate")}</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-slate-100 dark:divide-zinc-850">
@@ -1341,7 +1344,7 @@ CRITICAL FORMATTING INSTRUCTIONS: Your response MUST be output as beautiful, pro
                           <span className="text-[11px] bg-slate-100 dark:bg-zinc-800 px-1.5 py-0.5 rounded mr-1 font-mono">{idx + 1}</span>
                           <span className="text-slate-800 dark:text-zinc-100">{cp.name}</span>
                         </td>
-                        <td className="py-3 text-center font-mono text-slate-700">{cp.days} Days</td>
+                        <td className="py-3 text-center font-mono text-slate-700">{cp.days} {t("Days")}</td>
                         <td className="py-3 text-right font-bold text-slate-800 font-mono">{cp.revenue.toLocaleString()} TL</td>
                         <td className="py-3 text-right">
                           <span className="text-xs font-mono font-extrabold text-emerald-600 dark:text-emerald-400">
@@ -1355,7 +1358,7 @@ CRITICAL FORMATTING INSTRUCTIONS: Your response MUST be output as beautiful, pro
                     ))}
                     {customerProfitability.length === 0 && (
                       <tr>
-                        <td colSpan={5} className="p-8 text-center text-slate-400 font-mono">No active customer assignments are registered for {selectedMonth}.</td>
+                        <td colSpan={5} className="p-8 text-center text-slate-400 font-mono">{t("No active customer assignments are registered for {month}.").replace("{month}", selectedMonth)}</td>
                       </tr>
                     )}
                   </tbody>
@@ -1369,9 +1372,9 @@ CRITICAL FORMATTING INSTRUCTIONS: Your response MUST be output as beautiful, pro
                 <div>
                   <h3 className="text-sm font-extrabold text-slate-850 dark:text-zinc-100 flex items-center gap-1.5">
                     <Layers className="w-4.5 h-4.5 text-sky-500" />
-                    <span>Methodology / Service Line Margins Share</span>
+                    <span>{t("Methodology / Service Line Margins Share")}</span>
                   </h3>
-                  <span className="text-[10px] text-slate-400 font-sans">Revenue distribution and gross margins mapped across active consulting tracks.</span>
+                  <span className="text-[10px] text-slate-400 font-sans">{t("Revenue distribution and gross margins mapped across active consulting tracks.")}</span>
                 </div>
               </div>
 
@@ -1411,8 +1414,8 @@ CRITICAL FORMATTING INSTRUCTIONS: Your response MUST be output as beautiful, pro
                               <span className="font-mono">{sp.revenue.toLocaleString()} TL</span>
                             </div>
                             <div className="flex justify-between text-[10px] text-zinc-400 font-mono mt-0.5">
-                              <span>Delivered: {sp.days} days</span>
-                              <span className="text-emerald-500 font-bold">Margin: {sp.margin.toLocaleString()} TL</span>
+                              <span>{t("Delivered: {days} days").replace("{days}", String(sp.days))}</span>
+                              <span className="text-emerald-500 font-bold">{t("Margin: {amount} TL").replace("{amount}", sp.margin.toLocaleString())}</span>
                             </div>
                           </div>
                         </div>
@@ -1422,12 +1425,12 @@ CRITICAL FORMATTING INSTRUCTIONS: Your response MUST be output as beautiful, pro
                 </div>
               ) : (
                 <div className="h-52 flex items-center justify-center text-slate-400 font-mono text-xs">
-                  No active service deliverables to map for the selected period.
+                  {t("No active service deliverables to map for the selected period.")}
                 </div>
               )}
 
               <div className="mt-4 pt-3 border-t border-slate-100 dark:border-zinc-800 text-[10px] text-slate-500 leading-relaxed">
-                <strong>Analysis Explanation:</strong> This proportional pie diagram displays the exact billing volume across strategic consulting disciplines. Strong service lines with high delivery margins are critical to off-setting resource benchmark costs.
+                <strong>{t("Analysis Explanation:")}</strong> {t("This proportional pie diagram displays the exact billing volume across strategic consulting disciplines. Strong service lines with high delivery margins are critical to off-setting resource benchmark costs.")}
               </div>
             </div>
 
@@ -1437,20 +1440,20 @@ CRITICAL FORMATTING INSTRUCTIONS: Your response MUST be output as beautiful, pro
           <div className="bg-white dark:bg-[#151515] p-6 rounded-xl border border-slate-205/65 dark:border-zinc-800/80 shadow-sm">
             <h3 className="text-sm font-extrabold text-slate-850 dark:text-zinc-100 mb-4 flex items-center gap-1.5">
               <Users className="w-4.5 h-4.5 text-[#0078D4]" />
-              <span>Consultant Financial Performance & Direct Profit Margin</span>
+              <span>{t("Consultant Financial Performance & Direct Profit Margin")}</span>
             </h3>
             
             <div className="overflow-x-auto">
               <table className="w-full text-left text-xs font-sans">
                 <thead>
                   <tr className="border-b border-slate-150 dark:border-zinc-800 font-bold text-slate-400 text-[10px] uppercase tracking-wider">
-                    <th className="py-3 px-3">Consultant</th>
-                    <th className="py-3 text-center">Allocated Working Days</th>
-                    <th className="py-3 text-right">Gross Sales Invoiced</th>
-                    <th className="py-3 text-right">Direct Employee Cost</th>
-                    <th className="py-3 text-right">Net Project Margin</th>
-                    <th className="py-3 text-right">Margin / Rate Value</th>
-                    <th className="py-3 text-center">Billing Efficiency</th>
+                    <th className="py-3 px-3">{t("Consultant")}</th>
+                    <th className="py-3 text-center">{t("Allocated Working Days")}</th>
+                    <th className="py-3 text-right">{t("Gross Sales Invoiced")}</th>
+                    <th className="py-3 text-right">{t("Direct Employee Cost")}</th>
+                    <th className="py-3 text-right">{t("Net Project Margin")}</th>
+                    <th className="py-3 text-right">{t("Margin / Rate Value")}</th>
+                    <th className="py-3 text-center">{t("Billing Efficiency")}</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-100 dark:divide-zinc-850">
@@ -1468,7 +1471,7 @@ CRITICAL FORMATTING INSTRUCTIONS: Your response MUST be output as beautiful, pro
                         </div>
                       </td>
                       <td className="py-3.5 text-center font-mono text-slate-700 font-black">
-                        {cp.allocatedDays} Days
+                        {cp.allocatedDays} {t("Days")}
                       </td>
                       <td className="py-3.5 text-right font-mono font-bold">{cp.revenue.toLocaleString()} TL</td>
                       <td className="py-3.5 text-right font-mono text-slate-500">{cp.cost.toLocaleString()} TL</td>
@@ -1483,7 +1486,7 @@ CRITICAL FORMATTING INSTRUCTIONS: Your response MUST be output as beautiful, pro
                             ? "bg-blue-50 text-blue-600 dark:bg-blue-950/20"
                             : "bg-amber-50 text-amber-600 dark:bg-amber-950/20"
                         }`}>
-                          {cp.margin.toFixed(0)}% Margin
+                          {t("{percent}% Margin").replace("{percent}", cp.margin.toFixed(0))}
                         </span>
                       </td>
                       <td className="py-3.5 text-center">
@@ -1505,10 +1508,10 @@ CRITICAL FORMATTING INSTRUCTIONS: Your response MUST be output as beautiful, pro
               <div className="space-y-1">
                 <h3 className="text-base font-black text-slate-900 dark:text-slate-100 flex items-center gap-1.5">
                   <Sparkles className="w-5 h-5 text-amber-500 animate-pulse" />
-                  <span>Gemini Revenue and Resource Optimization Assessment</span>
+                  <span>{t("Gemini Revenue and Resource Optimization Assessment")}</span>
                 </h3>
                 <p className="text-xs text-slate-500">
-                  Generate instant, metrics-driven executive sales summaries and prescriptive action recommendations directly utilizing Gemini LLM.
+                  {t("Generate instant, metrics-driven executive sales summaries and prescriptive action recommendations directly utilizing Gemini LLM.")}
                 </p>
               </div>
 
@@ -1520,7 +1523,7 @@ CRITICAL FORMATTING INSTRUCTIONS: Your response MUST be output as beautiful, pro
                   className="px-4 py-2.5 text-xs font-bold leading-none select-none rounded-lg bg-gradient-to-r from-rose-500 to-amber-500 hover:from-rose-600 hover:to-amber-600 text-white shadow-md hover:shadow-lg transition-all flex items-center gap-2 cursor-pointer disabled:opacity-50"
                 >
                   <RefreshCw className={`w-4 h-4 ${isAiLoading ? "animate-spin" : ""}`} />
-                  <span>{isAiLoading ? "Genel Müdüre Rapor Hazırlanıyor..." : "AI Gelir Analizini Çalıştır"}</span>
+                  <span>{isAiLoading ? t("Preparing report for General Manager...") : t("Run AI Revenue Analysis")}</span>
                 </button>
               </div>
             </div>
@@ -1529,7 +1532,7 @@ CRITICAL FORMATTING INSTRUCTIONS: Your response MUST be output as beautiful, pro
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
               
               <div className="lg:col-span-4 space-y-3.5">
-                <span className="text-[10px] uppercase font-bold text-slate-400 font-mono tracking-widest block">System Diagnostics Logs:</span>
+                <span className="text-[10px] uppercase font-bold text-slate-400 font-mono tracking-widest block">{t("System Diagnostics Logs:")}</span>
                 
                 {localInsights.map((li, idx) => (
                   <div key={idx} className={`p-4 rounded-xl border flex items-start gap-2.5 text-xs leading-relaxed ${
@@ -1546,7 +1549,7 @@ CRITICAL FORMATTING INSTRUCTIONS: Your response MUST be output as beautiful, pro
               </div>
 
               <div className="lg:col-span-8 bg-white dark:bg-[#151515] p-5 rounded-xl border border-slate-200 dark:border-zinc-800 shadow-xs min-h-[220px] max-h-[480px] overflow-y-auto">
-                <span className="text-[10px] font-black uppercase text-[#0078D4] tracking-wider font-mono block mb-3.5">AI Director Executive Performance Review:</span>
+                <span className="text-[10px] font-black uppercase text-[#0078D4] tracking-wider font-mono block mb-3.5">{t("AI Director Executive Performance Review:")}</span>
                 
                 {aiCoachingOutput ? (
                   <div 
@@ -1557,8 +1560,7 @@ CRITICAL FORMATTING INSTRUCTIONS: Your response MUST be output as beautiful, pro
                   <div className="flex flex-col items-center justify-center p-12 text-center text-slate-400 space-y-3">
                     <Info className="w-10 h-10 text-[#0078D4] animate-bounce" />
                     <p className="text-xs font-medium font-sans">
-                      Gemini Commercial Excellence algorithm is loaded with sales logs. 
-                      Click the button above to fetch executive strategy, loss assessments, and management plan owners.
+                      {t("Gemini Commercial Excellence algorithm is loaded with sales logs. Click the button above to fetch executive strategy, loss assessments, and management plan owners.")}
                     </p>
                   </div>
                 )}
@@ -1613,7 +1615,7 @@ CRITICAL FORMATTING INSTRUCTIONS: Your response MUST be output as beautiful, pro
           {/* Sub-menu panel in data management */}
           <div className="lg:col-span-3 bg-white dark:bg-[#151515] p-5 rounded-xl border border-slate-200/55 dark:border-zinc-800/80 shadow-xs h-fit space-y-4">
             <h3 className="text-[13px] font-black uppercase text-slate-400 dark:text-zinc-500 tracking-wider font-mono">
-              {lang === "TR" ? "VERİ DEPOLARI" : "DATA REPOSITORIES"}
+              {t("DATA REPOSITORIES")}
             </h3>
             
             <nav className="space-y-1.5">
@@ -1627,7 +1629,7 @@ CRITICAL FORMATTING INSTRUCTIONS: Your response MUST be output as beautiful, pro
               >
                 <div className="flex items-center gap-2">
                   <Users className="w-4 h-4" />
-                  <span>{lang === "TR" ? "Danışman Tanımları" : "Consultant Master Setup"}</span>
+                  <span>{t("Consultant Master Setup")}</span>
                 </div>
                 <span className="text-[10px] font-mono bg-slate-200 dark:bg-zinc-900 px-1.5 py-0.5 rounded text-slate-550">
                   {consultants.length}
@@ -1644,10 +1646,10 @@ CRITICAL FORMATTING INSTRUCTIONS: Your response MUST be output as beautiful, pro
               >
                 <div className="flex items-center gap-2">
                   <Calendar className="w-4 h-4" />
-                  <span>{lang === "TR" ? "Kapasite Planlama" : "Allocated Capacity Days"}</span>
+                  <span>{t("Allocated Capacity Days")}</span>
                 </div>
                 <span className="text-[10px] font-mono bg-[#0078D4]/10 text-[#0078D4] px-1.5 py-0.5 rounded font-extrabold">
-                  {lang === "TR" ? "Aktif" : "Active"}
+                  {t("Active")}
                 </span>
               </button>
 
@@ -1661,7 +1663,7 @@ CRITICAL FORMATTING INSTRUCTIONS: Your response MUST be output as beautiful, pro
               >
                 <div className="flex items-center gap-2">
                   <Briefcase className="w-4 h-4" />
-                  <span>{lang === "TR" ? "Danışman Atamaları" : "Consultant Assignments"}</span>
+                  <span>{t("Consultant Assignments")}</span>
                 </div>
                 <span className="text-[10px] font-mono bg-slate-200 dark:bg-zinc-900 px-1.5 py-0.5 rounded text-slate-550">
                   {assignments.length}
@@ -1678,7 +1680,7 @@ CRITICAL FORMATTING INSTRUCTIONS: Your response MUST be output as beautiful, pro
               >
                 <div className="flex items-center gap-2">
                   <FileSpreadsheet className="w-4 h-4" />
-                  <span>{lang === "TR" ? "Faturalar & Yükleme" : "Invoices & Quick Uploads"}</span>
+                  <span>{t("Invoices & Quick Uploads")}</span>
                 </div>
                 <span className="text-[10px] font-mono bg-emerald-50 dark:bg-emerald-950/20 text-emerald-600 px-1.5 py-0.5 rounded font-bold">
                   {invoices.length}
@@ -1688,12 +1690,10 @@ CRITICAL FORMATTING INSTRUCTIONS: Your response MUST be output as beautiful, pro
             
             <div className="p-3.5 bg-slate-50 dark:bg-zinc-900/40 rounded-lg space-y-1 border border-slate-100 dark:border-zinc-800 text-[11px] leading-snug">
               <span className="text-[10px] uppercase font-bold text-slate-450 dark:text-zinc-500 font-mono block">
-                {lang === "TR" ? "VERİ BÜTÜNLÜĞÜ KONTROLÜ:" : "DATA INTEGRITY CHECK:"}
+                {t("DATA INTEGRITY CHECK:")}
               </span>
               <p className="text-slate-500">
-                {lang === "TR" 
-                  ? "Değiştirilen oranlar veya atamalar doğrudan panel sonuçlarını etkiler. Panel ekranındaki Excel/CSV butonlarını kullanarak aktif verilerinizi her zaman yedekleyebilirsiniz."
-                  : "Altered rates or assignments directly ripple calculate dashboard results. Click Excel/CSV in dashboard to back up active rows."}
+                {t("Altered rates or assignments directly ripple calculate dashboard results. Click Excel/CSV in dashboard to back up active rows.")}
               </p>
             </div>
           </div>
@@ -1707,10 +1707,10 @@ CRITICAL FORMATTING INSTRUCTIONS: Your response MUST be output as beautiful, pro
                 <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 border-b border-slate-100 dark:border-zinc-800/80 pb-4">
                   <div>
                     <h2 className="text-sm font-extrabold text-slate-900 dark:text-slate-100">
-                      {lang === "TR" ? "Danışman Ana Kayıt Defteri" : "Consultant Master Registry"}
+                      {t("Consultant Master Registry")}
                     </h2>
                     <p className="text-xs text-slate-500 mt-0.5">
-                      {lang === "TR" ? "Kurumsal günlük iç maliyet parametrelerini ve standart satış bedellerini tanımlayın." : "Define corporate daily cost parameters and commercial billing rates."}
+                      {t("Define corporate daily cost parameters and commercial billing rates.")}
                     </p>
                   </div>
                   <button
@@ -1730,7 +1730,7 @@ CRITICAL FORMATTING INSTRUCTIONS: Your response MUST be output as beautiful, pro
                     className="px-3.5 py-2 text-xs font-bold text-white bg-slate-900 hover:bg-black dark:bg-[#2d2d2d] rounded-lg flex items-center gap-1.5 cursor-pointer"
                   >
                     <PlusCircle className="w-4 h-4" />
-                    <span>{lang === "TR" ? "Danışman Uzmanı Ekle" : "Add Consultant Specialist"}</span>
+                    <span>{t("Add Consultant Specialist")}</span>
                   </button>
                 </div>
 
@@ -1741,51 +1741,51 @@ CRITICAL FORMATTING INSTRUCTIONS: Your response MUST be output as beautiful, pro
                       
                       <div className="space-y-1">
                         <label className="text-[10px] uppercase font-bold text-slate-400 tracking-wider">
-                          {lang === "TR" ? "Ad Soyad" : "Full Name"}
+                          {t("Full Name")}
                         </label>
                         <input
                           type="text"
                           required
                           value={consultantForm.name}
                           onChange={(e) => setConsultantForm({ ...consultantForm, name: e.target.value })}
-                          placeholder={lang === "TR" ? "Örn. Ahmet Yılmaz" : "e.g. Ahmet Yılmaz"}
+                          placeholder={t("e.g. Ahmet Yılmaz")}
                           className="w-full px-3 py-2 text-xs rounded bg-white dark:bg-zinc-850 border border-slate-200 dark:border-zinc-800 focus:outline-[#0078D4]"
                         />
                       </div>
 
                       <div className="space-y-1">
                         <label className="text-[10px] uppercase font-bold text-slate-400 tracking-wider">
-                          {lang === "TR" ? "Unvan/Pozisyon" : "Title/Position"}
+                          {t("Title/Position")}
                         </label>
                         <input
                           type="text"
                           required
                           value={consultantForm.title}
                           onChange={(e) => setConsultantForm({ ...consultantForm, title: e.target.value })}
-                          placeholder={lang === "TR" ? "Örn. Yalın Proje Yöneticisi" : "e.g. Lean Project Manager"}
+                          placeholder={t("e.g. Lean Project Manager")}
                           className="w-full px-3 py-2 text-xs rounded bg-white dark:bg-zinc-850 border border-slate-200 dark:border-zinc-800 focus:outline-[#0078D4]"
                         />
                       </div>
 
                       <div className="space-y-1">
                         <label className="text-[10px] uppercase font-bold text-slate-400 tracking-wider">
-                          {lang === "TR" ? "İş Birimi" : "Business Unit"}
+                          {t("Business Unit")}
                         </label>
                         <select
                           value={consultantForm.department}
                           onChange={(e) => setConsultantForm({ ...consultantForm, department: e.target.value })}
                           className="w-full px-3 py-2 text-xs rounded bg-white dark:bg-zinc-850 border border-slate-200 dark:border-zinc-800 focus:outline-[#0078D4]"
                         >
-                          <option value="Operational Excellence">{lang === "TR" ? "Operasyonel Mükemmellik" : "Operational Excellence"}</option>
-                          <option value="Industrial Engineering">{lang === "TR" ? "Endüstri Mühendisliği" : "Industrial Engineering"}</option>
-                          <option value="Sales Strategy">{lang === "TR" ? "Satış Stratejisi" : "Sales Strategy"}</option>
-                          <option value="Management Consulting">{lang === "TR" ? "Yönetim Danışmanlığı" : "Management Consulting"}</option>
+                          <option value="Operational Excellence">{t("Operational Excellence")}</option>
+                          <option value="Industrial Engineering">{t("Industrial Engineering")}</option>
+                          <option value="Sales Strategy">{t("Sales Strategy")}</option>
+                          <option value="Management Consulting">{t("Management Consulting")}</option>
                         </select>
                       </div>
 
                       <div className="space-y-1 font-sans">
                         <label className="text-[10px] uppercase font-bold text-slate-400 tracking-wider">
-                          {lang === "TR" ? "Günlük İç Maliyet (TL)" : "Daily Internal Cost (TL)"}
+                          {t("Daily Internal Cost (TL)")}
                         </label>
                         <input
                           type="number"
@@ -1800,14 +1800,14 @@ CRITICAL FORMATTING INSTRUCTIONS: Your response MUST be output as beautiful, pro
                               internalCostRatio: ratio
                             });
                           }}
-                          placeholder={lang === "TR" ? "örn: 6000" : "e.g. 6000"}
+                          placeholder={t("e.g. 6000")}
                           className="w-full px-3 py-2 text-xs rounded bg-white dark:bg-zinc-850 border border-slate-200 dark:border-zinc-800 focus:outline-[#0078D4]"
                         />
                       </div>
 
                       <div className="space-y-1 font-sans">
                         <label className="text-[10px] uppercase font-bold text-slate-400 tracking-wider">
-                          {lang === "TR" ? "Günlük Satış Bedeli (TL)" : "Daily Standard Sales Rate (TL)"}
+                          {t("Daily Standard Sales Rate (TL)")}
                         </label>
                         <input
                           type="number"
@@ -1835,14 +1835,14 @@ CRITICAL FORMATTING INSTRUCTIONS: Your response MUST be output as beautiful, pro
                               });
                             }
                           }}
-                          placeholder={lang === "TR" ? "örn: 15000" : "e.g. 15000"}
+                          placeholder={t("e.g. 15000")}
                           className="w-full px-3 py-2 text-xs rounded bg-white dark:bg-zinc-850 border border-slate-200 dark:border-zinc-800 focus:outline-[#0078D4]"
                         />
                       </div>
 
                       <div className="space-y-1 font-sans">
                         <label className="text-[10px] uppercase font-bold text-slate-400 tracking-wider">
-                          {lang === "TR" ? "Maliyet Oranı (%)" : "Cost Ratio (%)"}
+                          {t("Cost Ratio (%)")}
                         </label>
                         <input
                           type="number"
@@ -1864,16 +1864,16 @@ CRITICAL FORMATTING INSTRUCTIONS: Your response MUST be output as beautiful, pro
 
                       <div className="space-y-1">
                         <label className="text-[10px] uppercase font-bold text-slate-400 tracking-wider">
-                          {lang === "TR" ? "İstihdam Yapısı" : "Employment Typology"}
+                          {t("Employment Typology")}
                         </label>
                         <select
                           value={consultantForm.employmentType}
                           onChange={(e) => setConsultantForm({ ...consultantForm, employmentType: e.target.value as any })}
                           className="w-full px-3 py-2 text-xs rounded bg-white dark:bg-zinc-850 border border-slate-200 dark:border-zinc-800 focus:outline-[#0078D4]"
                         >
-                          <option value="Full-Time">{lang === "TR" ? "Tam Zamanlı (Bordrolu)" : "Full-Time (Employee)"}</option>
-                          <option value="Part-Time">{lang === "TR" ? "Yarı Zamanlı (Kısmi Kaynak)" : "Part-Time (Resource)"}</option>
-                          <option value="Contractor">{lang === "TR" ? "Sözleşmeli (Dış Danışman)" : "Contractor (External)"}</option>
+                          <option value="Full-Time">{t("Full-Time (Employee)")}</option>
+                          <option value="Part-Time">{t("Part-Time (Resource)")}</option>
+                          <option value="Contractor">{t("Contractor (External)")}</option>
                         </select>
                       </div>
 
@@ -1885,13 +1885,13 @@ CRITICAL FORMATTING INSTRUCTIONS: Your response MUST be output as beautiful, pro
                         onClick={() => setShowConsultantForm(false)}
                         className="px-3.5 py-1.5 border border-slate-200 text-slate-500 rounded text-xs"
                       >
-                        {lang === "TR" ? "İptal" : "Cancel"}
+                        {t("Cancel")}
                       </button>
                       <button
                         type="submit"
                         className="px-4 py-1.5 bg-[#0078D4] hover:bg-[#005a9e] text-white rounded text-xs font-bold"
                       >
-                        {lang === "TR" ? "Danışmanı Kaydet" : "Register Consultant"}
+                        {t("Register Consultant")}
                       </button>
                     </div>
 
@@ -1902,13 +1902,13 @@ CRITICAL FORMATTING INSTRUCTIONS: Your response MUST be output as beautiful, pro
                   <table className="w-full text-left text-xs font-sans min-w-[700px]">
                     <thead>
                       <tr className="bg-slate-50 dark:bg-zinc-900 border-b border-slate-150 dark:border-zinc-800 font-bold text-slate-400 text-[10px] uppercase tracking-wider">
-                        <th className="py-2.5 px-3">{lang === "TR" ? "Danışman İsim" : "Name"}</th>
-                        <th className="py-2.5">{lang === "TR" ? "Pozisyon / İş Birimi" : "Position"}</th>
-                        <th className="py-2.5 text-right">{lang === "TR" ? "Günlük Maliyet" : "Daily Cost"}</th>
-                        <th className="py-2.5 text-right">{lang === "TR" ? "Günlük Satış Bedeli" : "Daily Sales Rate"}</th>
-                        <th className="py-2.5 text-center">{lang === "TR" ? "Tür" : "Type"}</th>
-                        <th className="py-2.5 text-center">{lang === "TR" ? "Durum" : "Status"}</th>
-                        <th className="py-2.5 text-right px-3">{lang === "TR" ? "İşlemler" : "Actions"}</th>
+                        <th className="py-2.5 px-3">{t("Name")}</th>
+                        <th className="py-2.5">{t("Position")}</th>
+                        <th className="py-2.5 text-right">{t("Daily Cost")}</th>
+                        <th className="py-2.5 text-right">{t("Daily Sales Rate")}</th>
+                        <th className="py-2.5 text-center">{t("Type")}</th>
+                        <th className="py-2.5 text-center">{t("Status")}</th>
+                        <th className="py-2.5 text-right px-3">{t("Actions")}</th>
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-slate-100 dark:divide-zinc-850">
@@ -1916,28 +1916,20 @@ CRITICAL FORMATTING INSTRUCTIONS: Your response MUST be output as beautiful, pro
                         <tr key={c.id} className="hover:bg-slate-50/50">
                           <td className="py-3 px-3 font-extrabold">{c.name}</td>
                           <td className="py-3 text-slate-550">
-                            {c.title} • {lang === "TR" ? (
-                              c.department === "Operational Excellence" ? "Operasyonel Mükemmellik" :
-                              c.department === "Industrial Engineering" ? "Endüstri Mühendisliği" :
-                              c.department === "Sales Strategy" ? "Satış Stratejisi" :
-                              c.department === "Management Consulting" ? "Yönetim Danışmanlığı" : c.department
-                            ) : c.department}
+                            {c.title} • {t(c.department)}
                           </td>
                           <td className="py-3 text-right font-mono">{c.dailyCost.toLocaleString()} TL</td>
                           <td className="py-3 text-right font-mono font-bold text-emerald-600">{c.dailySalesRate.toLocaleString()} TL</td>
                           <td className="py-3 text-center">
                             <span className="text-[10px] bg-slate-100 dark:bg-zinc-800 font-mono px-2 py-0.5 rounded">
-                              {lang === "TR" ? (
-                                c.employmentType === "Full-Time" ? "Tam Zamanlı" :
-                                c.employmentType === "Part-Time" ? "Yarı Zamanlı" : "Dış Kaynak"
-                              ) : c.employmentType}
+                              {t(c.employmentType)}
                             </span>
                           </td>
                           <td className="py-3 text-center">
                             <span className={`px-2 py-0.5 rounded text-[10px] font-bold ${
                               c.status === "Active" ? "bg-emerald-50 text-emerald-600" : "bg-slate-100 text-slate-400"
                             }`}>
-                              {lang === "TR" ? (c.status === "Active" ? "Aktif" : "Pasif") : c.status}
+                              {t(c.status)}
                             </span>
                           </td>
                           <td className="py-3 text-right space-x-1 px-3">
@@ -1951,7 +1943,7 @@ CRITICAL FORMATTING INSTRUCTIONS: Your response MUST be output as beautiful, pro
                               onClick={() => toggleConsultantActive(c.id)}
                               className="p-1 px-2 text-[10px] font-bold bg-slate-100 hover:bg-slate-200 dark:bg-zinc-800 dark:hover:bg-zinc-700 rounded border border-slate-200 dark:border-zinc-700 cursor-pointer inline-block"
                             >
-                              {c.status === "Active" ? (lang === "TR" ? "Pasife Al" : "Deactivate") : (lang === "TR" ? "Aktife Al" : "Activate")}
+                              {c.status === "Active" ? t("Deactivate") : t("Activate")}
                             </button>
                           </td>
                         </tr>
@@ -1967,12 +1959,10 @@ CRITICAL FORMATTING INSTRUCTIONS: Your response MUST be output as beautiful, pro
               <div className="space-y-4">
                 <div className="border-b border-slate-100 dark:border-zinc-800 pb-3">
                   <h2 className="text-sm font-extrabold text-slate-900 dark:text-slate-100">
-                    {lang === "TR" ? `Danışman Kapasite Kalibrasyonları (${selectedMonth})` : `Consultant Capacity Calibrations (${selectedMonth})`}
+                    {t("Consultant Capacity Calibrations ({month})").replace("{month}", selectedMonth)}
                   </h2>
                   <p className="text-xs text-slate-500 mt-0.5">
-                    {lang === "TR" 
-                      ? "Danışmanların haftalık çalışabileceği gün sayısını (man-day/week) girerek aylık kapasitelerini otomatik hesaplayın (haftalık gün x 4.4 standardı)." 
-                      : "Define the number of weekly working days (man-days/week) for consultants to calculate their monthly capacity (weekly days x 4.4 standard)."}
+                    {t("Define the number of weekly working days (man-days/week) for consultants to calculate their monthly capacity (weekly days x 4.4 standard).")}
                   </p>
                 </div>
 
@@ -1980,9 +1970,9 @@ CRITICAL FORMATTING INSTRUCTIONS: Your response MUST be output as beautiful, pro
                   <table className="w-full text-left text-xs font-sans min-w-[600px]">
                     <thead>
                       <tr className="bg-slate-50 dark:bg-zinc-900 border-b border-slate-150 dark:border-zinc-800 font-bold text-slate-400 text-[10px] uppercase">
-                        <th className="py-2.5 px-3">{lang === "TR" ? "Danışman Adı" : "Consultant Name"}</th>
-                        <th className="py-2.5 text-center">{lang === "TR" ? "Haftalık Çalışma Günü Sayısı (Man-Days / Week)" : "Weekly Working Days (Man-Days / Week)"}</th>
-                        <th className="py-2.5 text-center font-bold font-mono">{lang === "TR" ? "Hesaplanan Aylık Kapasite Günü (Gün)" : "Calculated Monthly Capacity (Days)"}</th>
+                        <th className="py-2.5 px-3">{t("Consultant Name")}</th>
+                        <th className="py-2.5 text-center">{t("Weekly Working Days (Man-Days / Week)")}</th>
+                        <th className="py-2.5 text-center font-bold font-mono">{t("Calculated Monthly Capacity (Days)")}</th>
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-slate-100 dark:divide-zinc-850">
@@ -2036,7 +2026,7 @@ CRITICAL FORMATTING INSTRUCTIONS: Your response MUST be output as beautiful, pro
                             </td>
                             <td className="py-3 text-center">
                               <span className="text-xs font-mono font-black text-emerald-600 bg-emerald-50 dark:bg-emerald-950/20 px-2.5 py-1.5 rounded-lg">
-                                {calculatedMonthly} {lang === "TR" ? "Gün (Aylık Net Kapasite)" : "Days (Monthly Net Capacity)"}
+                                {calculatedMonthly} {t("Days (Monthly Net Capacity)")}
                               </span>
                             </td>
                           </tr>
@@ -2054,10 +2044,10 @@ CRITICAL FORMATTING INSTRUCTIONS: Your response MUST be output as beautiful, pro
                 <div className="flex justify-between items-center border-b border-slate-100 dark:border-zinc-800 pb-3">
                   <div>
                     <h2 className="text-sm font-extrabold text-slate-900 dark:text-slate-100">
-                      {lang === "TR" ? "Danışman Proje Tahsis Kayıt Defteri" : "Consultant Project Allocation Registry"}
+                      {t("Consultant Project Allocation Registry")}
                     </h2>
                     <p className="text-xs text-slate-500 mt-0.5">
-                      {lang === "TR" ? "Uzmanları sözleşmelere ve projelere atayın, gelir oranlarını takip edin." : "Assign specialists to pipeline contracts and track revenue rates."}
+                      {t("Assign specialists to pipeline contracts and track revenue rates.")}
                     </p>
                   </div>
                   <button
@@ -2081,7 +2071,7 @@ CRITICAL FORMATTING INSTRUCTIONS: Your response MUST be output as beautiful, pro
                     className="px-3 py-2 text-xs font-bold text-white bg-slate-900 hover:bg-black dark:bg-[#2d2d2d] rounded-lg flex items-center gap-1 cursor-pointer"
                   >
                     <PlusCircle className="w-4 h-4" />
-                    <span>{lang === "TR" ? "Atama Oluştur" : "Create Assignment"}</span>
+                    <span>{t("Create Assignment")}</span>
                   </button>
                 </div>
 
@@ -2090,7 +2080,7 @@ CRITICAL FORMATTING INSTRUCTIONS: Your response MUST be output as beautiful, pro
                     <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
                       
                       <div className="space-y-1">
-                        <label className="text-[10px] uppercase font-bold text-slate-400">{lang === "TR" ? "Müşteri / Firma" : "Customer Client"}</label>
+                        <label className="text-[10px] uppercase font-bold text-slate-400">{t("Customer Client")}</label>
                         <input
                           type="text"
                           required
@@ -2102,7 +2092,7 @@ CRITICAL FORMATTING INSTRUCTIONS: Your response MUST be output as beautiful, pro
                       </div>
 
                       <div className="space-y-1">
-                        <label className="text-[10px] uppercase font-bold text-slate-400">{lang === "TR" ? "Proje / Kapsam" : "Project / Engagement Scope"}</label>
+                        <label className="text-[10px] uppercase font-bold text-slate-400">{t("Project / Engagement Scope")}</label>
                         <input
                           type="text"
                           required
@@ -2114,7 +2104,7 @@ CRITICAL FORMATTING INSTRUCTIONS: Your response MUST be output as beautiful, pro
                       </div>
 
                       <div className="space-y-1">
-                        <label className="text-[10px] uppercase font-bold text-slate-400">{lang === "TR" ? "Danışmanlık Disiplini" : "Consulting Discipline"}</label>
+                        <label className="text-[10px] uppercase font-bold text-slate-400">{t("Consulting Discipline")}</label>
                         <select
                           value={assignmentForm.serviceType}
                           onChange={(e) => setAssignmentForm({ ...assignmentForm, serviceType: e.target.value as any })}
@@ -2127,7 +2117,7 @@ CRITICAL FORMATTING INSTRUCTIONS: Your response MUST be output as beautiful, pro
                       </div>
 
                       <div className="space-y-1">
-                        <label className="text-[10px] uppercase font-bold text-slate-400">{lang === "TR" ? "Danışman Uzmanı" : "Consultant Speciality"}</label>
+                        <label className="text-[10px] uppercase font-bold text-slate-400">{t("Consultant Speciality")}</label>
                         <select
                           value={assignmentForm.consultantId}
                           onChange={(e) => setAssignmentForm({ ...assignmentForm, consultantId: e.target.value })}
@@ -2140,7 +2130,7 @@ CRITICAL FORMATTING INSTRUCTIONS: Your response MUST be output as beautiful, pro
                       </div>
 
                       <div className="space-y-1">
-                        <label className="text-[10px] uppercase font-bold text-slate-400 font-mono">{lang === "TR" ? "Tahsis Edilen Gün" : "Allocated billable days"}</label>
+                        <label className="text-[10px] uppercase font-bold text-slate-400 font-mono">{t("Allocated billable days")}</label>
                         <input
                           type="number"
                           value={assignmentForm.allocatedDays}
@@ -2150,7 +2140,7 @@ CRITICAL FORMATTING INSTRUCTIONS: Your response MUST be output as beautiful, pro
                       </div>
 
                       <div className="space-y-1">
-                        <label className="text-[10px] uppercase font-bold text-slate-400 font-mono">{lang === "TR" ? "Müşteri Günlük Ücreti (TL)" : "Customer daily rate (TL)"}</label>
+                        <label className="text-[10px] uppercase font-bold text-slate-400 font-mono">{t("Customer daily rate (TL)")}</label>
                         <input
                           type="number"
                           value={assignmentForm.customerDailyRate}
@@ -2160,7 +2150,7 @@ CRITICAL FORMATTING INSTRUCTIONS: Your response MUST be output as beautiful, pro
                       </div>
 
                       <div className="space-y-1">
-                        <label className="text-[10px] uppercase font-bold text-slate-400 font-mono">{lang === "TR" ? "Başlangıç Tarihi" : "Start Date"}</label>
+                        <label className="text-[10px] uppercase font-bold text-slate-400 font-mono">{t("Start Date")}</label>
                         <input
                           type="date"
                           required
@@ -2171,7 +2161,7 @@ CRITICAL FORMATTING INSTRUCTIONS: Your response MUST be output as beautiful, pro
                       </div>
 
                       <div className="space-y-1">
-                        <label className="text-[10px] uppercase font-bold text-slate-400 font-mono">{lang === "TR" ? "Bitiş Tarihi" : "End Date"}</label>
+                        <label className="text-[10px] uppercase font-bold text-slate-400 font-mono">{t("End Date")}</label>
                         <input
                           type="date"
                           required={!assignmentForm.isOngoing}
@@ -2191,7 +2181,7 @@ CRITICAL FORMATTING INSTRUCTIONS: Your response MUST be output as beautiful, pro
                           className="w-4 h-4 rounded text-[#0078D4] focus:ring-[#0078D4] cursor-pointer"
                         />
                         <label htmlFor="isOngoingCheckbox" className="text-xs font-bold text-slate-700 dark:text-zinc-300 cursor-pointer select-none">
-                          {lang === "TR" ? "Sürekli / Devam Eden Proje (Bitiş Yok)" : "Ongoing Project (No End Date)"}
+                          {t("Ongoing Project (No End Date)")}
                         </label>
                       </div>
 
@@ -2203,13 +2193,13 @@ CRITICAL FORMATTING INSTRUCTIONS: Your response MUST be output as beautiful, pro
                         onClick={() => setShowAssignmentForm(false)}
                         className="px-3.5 py-1.5 border border-slate-200 text-slate-500 rounded text-xs"
                       >
-                        {lang === "TR" ? "İptal" : "Cancel"}
+                        {t("Cancel")}
                       </button>
                       <button
                         type="submit"
                         className="px-4 py-1.5 bg-[#0078D4] hover:bg-[#005a9e] text-white rounded text-xs font-bold"
                       >
-                        {editingAssignment ? (lang === "TR" ? "Atamayı Güncelle" : "Update Allocation") : (lang === "TR" ? "Atamayı Kaydet" : "Submit Allocation")}
+                        {editingAssignment ? t("Update Allocation") : t("Submit Allocation")}
                       </button>
                     </div>
 
@@ -2220,13 +2210,13 @@ CRITICAL FORMATTING INSTRUCTIONS: Your response MUST be output as beautiful, pro
                   <table className="w-full text-left text-xs font-sans min-w-[850px]">
                     <thead>
                       <tr className="bg-slate-50 dark:bg-zinc-900 border-b border-slate-150 dark:border-zinc-800 font-bold text-slate-450 text-[10px] uppercase">
-                        <th className="py-2.5 px-3">{lang === "TR" ? "Müşteri & Kapsam" : "Customer & Scope"}</th>
-                        <th className="py-2.5">{lang === "TR" ? "Metodoloji & Süre" : "Methodology & Duration"}</th>
-                        <th className="py-2.5 text-center">{lang === "TR" ? "Danışman Uzmanı" : "Consultant Specialist"}</th>
-                        <th className="py-2.5 text-center">{lang === "TR" ? "Tahsis Edilen Gün" : "Allocated Days"}</th>
-                        <th className="py-2.5 text-right">{lang === "TR" ? "Müşteri Günlük Ücreti" : "Customer Daily Rate"}</th>
-                        <th className="py-2.5 text-right font-mono">{lang === "TR" ? "Beklenen Toplam Fatura" : "Total Expected Billing"}</th>
-                        <th className="py-2.5 text-right px-3">{lang === "TR" ? "İşlemler" : "Actions"}</th>
+                        <th className="py-2.5 px-3">{t("Customer & Scope")}</th>
+                        <th className="py-2.5">{t("Methodology & Duration")}</th>
+                        <th className="py-2.5 text-center">{t("Consultant Specialist")}</th>
+                        <th className="py-2.5 text-center">{t("Allocated Days")}</th>
+                        <th className="py-2.5 text-right">{t("Customer Daily Rate")}</th>
+                        <th className="py-2.5 text-right font-mono">{t("Total Expected Billing")}</th>
+                        <th className="py-2.5 text-right px-3">{t("Actions")}</th>
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-slate-100 dark:divide-zinc-850">
@@ -2243,11 +2233,11 @@ CRITICAL FORMATTING INSTRUCTIONS: Your response MUST be output as beautiful, pro
                                 {ass.serviceType}
                               </span>
                               <span className="text-[10px] text-slate-500 font-mono block">
-                                {ass.startDate} {ass.isOngoing ? (lang === "TR" ? "→ Sürekli / Devam Eden" : "→ Ongoing") : `→ ${ass.endDate}`}
+                                {ass.startDate} {ass.isOngoing ? t("→ Ongoing") : `→ ${ass.endDate}`}
                               </span>
                             </td>
-                            <td className="py-3 text-center font-bold text-slate-700 dark:text-zinc-300">{cons?.name || "Unassigned"}</td>
-                            <td className="py-3 text-center font-mono font-bold text-amber-600">{ass.allocatedDays} {lang === "TR" ? "Gün" : "Days"}</td>
+                            <td className="py-3 text-center font-bold text-slate-700 dark:text-zinc-300">{cons?.name || t("Unassigned")}</td>
+                            <td className="py-3 text-center font-mono font-bold text-amber-600">{ass.allocatedDays} {t("Days")}</td>
                             <td className="py-3 text-right font-mono">{ass.customerDailyRate.toLocaleString()} TL</td>
                             <td className="py-3 text-right font-mono font-extrabold text-emerald-600">
                               {(ass.allocatedDays * ass.customerDailyRate).toLocaleString()} TL
@@ -2274,7 +2264,7 @@ CRITICAL FORMATTING INSTRUCTIONS: Your response MUST be output as beautiful, pro
                                   setShowAssignmentForm(true);
                                 }}
                                 className="p-1 hover:bg-sky-50 dark:hover:bg-zinc-850 text-slate-400 hover:text-[#0078D4] rounded cursor-pointer inline-block"
-                                title={lang === "TR" ? "Atamayı Düzenle" : "Edit Assignment"}
+                                title={t("Edit Assignment")}
                               >
                                 <Edit className="w-3.5 h-3.5" />
                               </button>
@@ -2282,7 +2272,7 @@ CRITICAL FORMATTING INSTRUCTIONS: Your response MUST be output as beautiful, pro
                                 type="button"
                                 onClick={() => handleDeleteAssignment(ass.id)}
                                 className="p-1 hover:bg-rose-50 dark:hover:bg-rose-950/30 text-slate-400 hover:text-rose-500 rounded cursor-pointer inline-block"
-                                title={lang === "TR" ? "Atamayı Sil" : "Delete Assignment"}
+                                title={t("Delete Assignment")}
                               >
                                 <Trash className="w-3.5 h-3.5" />
                               </button>
@@ -2302,12 +2292,10 @@ CRITICAL FORMATTING INSTRUCTIONS: Your response MUST be output as beautiful, pro
                 <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center border-b pb-3 border-slate-100 dark:border-zinc-800 gap-2">
                   <div>
                     <h2 className="text-sm font-extrabold text-slate-900 dark:text-slate-100">
-                      {lang === "TR" ? "Aylık Fatura & Gelir Dosyası Yükleme Paneli" : "Monthly Billing Invoice Importer Panel"}
+                      {t("Monthly Billing Invoice Importer Panel")}
                     </h2>
                     <p className="text-xs text-slate-500 mt-0.5">
-                      {lang === "TR" 
-                        ? "Muhasebe programından aldığınız aylık gelir - fatura tablosunu toplu olarak yükleyin." 
-                        : "Upload the monthly revenue and invoice table from your accounting program in bulk."}
+                      {t("Upload the monthly revenue and invoice table from your accounting program in bulk.")}
                     </p>
                   </div>
                   <button
@@ -2316,14 +2304,14 @@ CRITICAL FORMATTING INSTRUCTIONS: Your response MUST be output as beautiful, pro
                     className="px-3 py-1.5 text-xs font-bold text-[#0078D4] bg-sky-50 dark:bg-sky-950/20 hover:bg-sky-100 dark:hover:bg-sky-900/35 rounded-lg flex items-center gap-1.5 cursor-pointer border border-sky-100 dark:border-sky-950"
                   >
                     <Download className="w-4 h-4" />
-                    <span>{lang === "TR" ? "Örnek Şablon (.csv) İndir" : "Download Sample Template (.csv)"}</span>
+                    <span>{t("Download Sample Template (.csv)")}</span>
                   </button>
                 </div>
 
                 {/* CSV Importer Drag & Drop Zone */}
                 <div className="space-y-4">
                   <div className="text-[11px] text-slate-500 leading-relaxed bg-slate-50 dark:bg-zinc-900 p-3 rounded-lg border border-slate-100 dark:border-zinc-800">
-                    <strong className="text-slate-800 dark:text-zinc-200">{lang === "TR" ? "Gerekli Sütun İsimleri:" : "Required Column Names:"}</strong> {lang === "TR" ? "Müşteri Adı, Satılan Adam Gün, Birim Fiyat, Toplam Fatura Bedeli, KDV Bilgisi (veya benzeri Türkçe/İngilizce terimler). Sistem otomatik eşleştirir." : "Customer Name, Sold Man-Days, Unit Price, Total Invoice Amount, VAT Info (or similar English/Turkish terms). The system matches them automatically."}
+                    <strong className="text-slate-800 dark:text-zinc-200">{t("Required Column Names:")}</strong> {t("Customer Name, Sold Man-Days, Unit Price, Total Invoice Amount, VAT Info (or similar English/Turkish terms). The system matches them automatically.")}
                   </div>
 
                   <div 
@@ -2350,10 +2338,10 @@ CRITICAL FORMATTING INSTRUCTIONS: Your response MUST be output as beautiful, pro
                       </div>
                       <div>
                         <p className="text-xs font-black text-slate-800 dark:text-zinc-100">
-                          {lang === "TR" ? "Fatura CSV Dosyasını Sürükleyip Bırakın veya Dosya Seçmek İçin Tıklayın" : "Drag and Drop Invoice CSV File or Click to Browse"}
+                          {t("Drag and Drop Invoice CSV File or Click to Browse")}
                         </p>
                         <p className="text-[10px] text-slate-400 mt-1">
-                          {lang === "TR" ? `Sadece .csv uzantılı belgeler kabul edilir. Hedef Dönem: ${selectedMonth}` : `Only .csv files are accepted. Target Period: ${selectedMonth}`}
+                          {t("Only .csv files are accepted. Target Period: {month}").replace("{month}", selectedMonth)}
                         </p>
                       </div>
                     </div>
@@ -2375,7 +2363,7 @@ CRITICAL FORMATTING INSTRUCTIONS: Your response MUST be output as beautiful, pro
                 {/* Import logs auditing */}
                 <div className="space-y-2">
                   <span className="text-[10px] uppercase font-bold text-slate-400 font-mono tracking-widest block">
-                    {lang === "TR" ? "Aktivite Kayıtları ve Aktarım Geçmişi İzleri:" : "Activity logs & import history traces:"}
+                    {t("Activity logs & import history traces:")}
                   </span>
                   <div className="bg-slate-50 dark:bg-zinc-900 border border-slate-100 dark:border-zinc-800 p-3 rounded-lg max-h-[120px] overflow-y-auto space-y-1">
                     {importLogs.map((log, idx) => (
@@ -2387,22 +2375,22 @@ CRITICAL FORMATTING INSTRUCTIONS: Your response MUST be output as beautiful, pro
                 {/* Invoices tabular layout */}
                 <div className="space-y-2 pt-4">
                   <span className="text-[10px] uppercase font-bold text-slate-400 font-mono tracking-widest block">
-                    {lang === "TR" ? "Faturalandırılmış Müşteri Hesapları Veritabanı:" : "Invoiced accounts database registry:"}
+                    {t("Invoiced accounts database registry:")}
                   </span>
                   <div className="overflow-x-auto w-full border border-slate-150 dark:border-zinc-800 rounded-xl">
                     <table className="w-full text-left text-xs font-sans min-w-[950px]">
                       <thead>
                         <tr className="bg-slate-50 dark:bg-zinc-900 border-b border-slate-150 dark:border-zinc-800 font-bold text-slate-450 text-[10px] uppercase">
-                          <th className="py-2.5 px-3">{lang === "TR" ? "Fatura Kodu" : "Invoice Code"}</th>
-                          <th className="py-2.5 text-left">{lang === "TR" ? "Müşteri İsmi (Firma)" : "Customer Name"}</th>
-                          <th className="py-2.5 text-center">{lang === "TR" ? "İlgili Ay" : "Month"}</th>
-                          <th className="py-2.5 text-center">{lang === "TR" ? "Satılan Adam Gün" : "Delivered Days"}</th>
-                          <th className="py-2.5 text-right">{lang === "TR" ? "Birim Fiyat" : "Unit Price"}</th>
-                          <th className="py-2.5 text-right">{lang === "TR" ? "Toplam Fatura Bedeli" : "Invoice Total"}</th>
-                          <th className="py-2.5 text-center">{lang === "TR" ? "KDV Oranı" : "VAT Rate"}</th>
-                          <th className="py-2.5 text-right">{lang === "TR" ? "KDV Tutarı" : "VAT Amount"}</th>
-                          <th className="py-2.5 text-right">{lang === "TR" ? "KDV Dahil Toplam" : "Total with VAT"}</th>
-                          <th className="py-2.5 text-right px-3">{lang === "TR" ? "Aksiyonlar" : "Actions"}</th>
+                          <th className="py-2.5 px-3">{t("Invoice Code")}</th>
+                          <th className="py-2.5 text-left">{t("Customer Name")}</th>
+                          <th className="py-2.5 text-center">{t("Month")}</th>
+                          <th className="py-2.5 text-center">{t("Delivered Days")}</th>
+                          <th className="py-2.5 text-right">{t("Unit Price")}</th>
+                          <th className="py-2.5 text-right">{t("Invoice Total")}</th>
+                          <th className="py-2.5 text-center">{t("VAT Rate")}</th>
+                          <th className="py-2.5 text-right">{t("VAT Amount")}</th>
+                          <th className="py-2.5 text-right">{t("Total with VAT")}</th>
+                          <th className="py-2.5 text-right px-3">{t("Actions")}</th>
                         </tr>
                       </thead>
                       <tbody className="divide-y divide-slate-100 dark:divide-zinc-850">
@@ -2418,7 +2406,7 @@ CRITICAL FORMATTING INSTRUCTIONS: Your response MUST be output as beautiful, pro
                               <td className="py-2.5 px-3 font-mono font-bold text-slate-700">{inv.invoiceNumber}</td>
                               <td className="py-2.5 font-extrabold text-slate-800 dark:text-zinc-150">{inv.customerName}</td>
                               <td className="py-2.5 text-center font-mono font-semibold text-slate-600 dark:text-zinc-400">{inv.month}</td>
-                              <td className="py-2.5 text-center font-mono font-bold text-slate-700 dark:text-zinc-300">{days} {lang === "TR" ? "Gün" : "Days"}</td>
+                              <td className="py-2.5 text-center font-mono font-bold text-slate-700 dark:text-zinc-300">{days} {t("Days")}</td>
                               <td className="py-2.5 text-right font-mono text-slate-600 dark:text-zinc-400">{unitPrice.toLocaleString()} TL</td>
                               <td className="py-2.5 text-right font-mono font-bold text-slate-800 dark:text-zinc-200">{inv.amount.toLocaleString()} TL</td>
                               <td className="py-2.5 text-center font-mono text-amber-600">%{vatRate}</td>
@@ -2429,7 +2417,7 @@ CRITICAL FORMATTING INSTRUCTIONS: Your response MUST be output as beautiful, pro
                                   type="button"
                                   onClick={() => handleDeleteInvoice(inv.id)}
                                   className="p-1 text-rose-650 hover:bg-rose-50 dark:hover:bg-rose-950/35 rounded transition-all cursor-pointer inline-flex items-center"
-                                  title={lang === "TR" ? "Faturayı Sil" : "Delete Invoice"}
+                                  title={t("Delete Invoice")}
                                 >
                                   <Trash className="w-3.5 h-3.5" />
                                 </button>
@@ -2447,7 +2435,7 @@ CRITICAL FORMATTING INSTRUCTIONS: Your response MUST be output as beautiful, pro
 
             {/* Bottom info banner */}
             <div className="pt-4 border-t border-slate-100 dark:border-zinc-800/80 text-[10px] text-slate-450 font-mono text-center">
-              Active Environment Database Connection: LocalStorage Sandbox Encrypted. Last sync: {selectedMonth}-20
+              {t("Active Environment Database Connection: LocalStorage Sandbox Encrypted. Last sync: {month}-20").replace("{month}", selectedMonth)}
             </div>
 
           </div>
