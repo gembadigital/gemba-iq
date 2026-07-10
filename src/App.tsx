@@ -1824,7 +1824,7 @@ export default function App() {
               </div>
 
               {/* Drawer Body */}
-              <div className="p-6 md:p-8 overflow-y-auto flex-1">
+              <div className="pt-6 pb-6 pl-6 pr-6 md:pt-8 md:pb-8 md:pl-8 md:pr-8 overflow-y-auto flex-1">
                 {settingsActiveTab === "admin-center" ? (
                   <div className="animate-in fade-in duration-200">
                     <AdministrationCenter onClose={() => setIsSettingsOpen(false)} initialSubTab={initialAdminSubTab} />

@@ -825,7 +825,7 @@ export default function AdministrationCenter({ onClose, initialSubTab }: Adminis
   };
 
   return (
-    <div className="space-y-6">
+    <div className="w-full text-left space-y-6">
       {/* HEADER ROW WITH USER METRICS */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-white dark:bg-[#18181b] p-6 rounded-2xl border border-slate-150 dark:border-zinc-800/80 shadow-xs">
         <div className="space-y-1 text-left">
@@ -889,7 +889,7 @@ export default function AdministrationCenter({ onClose, initialSubTab }: Adminis
           <button
             type="button"
             onClick={() => setActiveSubTab("organization")}
-            className={`w-full flex items-center justify-start gap-3 px-3.5 py-2.5 rounded-xl text-xs font-bold transition-all text-left ${
+            className={`w-full flex items-center justify-start gap-3 pl-3.5 pr-3.5 py-2.5 rounded-xl text-xs font-bold transition-all text-left ${
               activeSubTab === "organization"
                 ? "bg-indigo-50/70 border-l-4 border-l-indigo-650 text-indigo-750 dark:bg-zinc-800/70 dark:text-white dark:border-l-indigo-400"
                 : "text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-zinc-800/40"
@@ -902,7 +902,7 @@ export default function AdministrationCenter({ onClose, initialSubTab }: Adminis
           <button
             type="button"
             onClick={() => setActiveSubTab("users")}
-            className={`w-full flex items-center justify-start gap-3 px-3.5 py-2.5 rounded-xl text-xs font-bold transition-all text-left ${
+            className={`w-full flex items-center justify-start gap-3 pl-3.5 pr-3.5 py-2.5 rounded-xl text-xs font-bold transition-all text-left ${
               activeSubTab === "users"
                 ? "bg-indigo-50/70 border-l-4 border-l-indigo-650 text-indigo-750 dark:bg-zinc-800/70 dark:text-white dark:border-l-indigo-400"
                 : "text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-zinc-800/40"
@@ -915,7 +915,7 @@ export default function AdministrationCenter({ onClose, initialSubTab }: Adminis
           <button
             type="button"
             onClick={() => setActiveSubTab("email")}
-            className={`w-full flex items-center justify-start gap-3 px-3.5 py-2.5 rounded-xl text-xs font-bold transition-all text-left ${
+            className={`w-full flex items-center justify-start gap-3 pl-3.5 pr-3.5 py-2.5 rounded-xl text-xs font-bold transition-all text-left ${
               activeSubTab === "email"
                 ? "bg-indigo-50/70 border-l-4 border-l-indigo-650 text-indigo-750 dark:bg-zinc-800/70 dark:text-white dark:border-l-indigo-400"
                 : "text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-zinc-800/40"
@@ -928,7 +928,7 @@ export default function AdministrationCenter({ onClose, initialSubTab }: Adminis
           <button
             type="button"
             onClick={() => setActiveSubTab("templates")}
-            className={`w-full flex items-center justify-start gap-3 px-3.5 py-2.5 rounded-xl text-xs font-bold transition-all text-left ${
+            className={`w-full flex items-center justify-start gap-3 pl-3.5 pr-3.5 py-2.5 rounded-xl text-xs font-bold transition-all text-left ${
               activeSubTab === "templates"
                 ? "bg-indigo-50/70 border-l-4 border-l-indigo-650 text-indigo-750 dark:bg-zinc-800/70 dark:text-white dark:border-l-indigo-400"
                 : "text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-zinc-800/40"
@@ -941,7 +941,7 @@ export default function AdministrationCenter({ onClose, initialSubTab }: Adminis
           <button
             type="button"
             onClick={() => setActiveSubTab("datahub")}
-            className={`w-full flex items-center justify-start gap-3 px-3.5 py-2.5 rounded-xl text-xs font-bold transition-all text-left ${
+            className={`w-full flex items-center justify-start gap-3 pl-3.5 pr-3.5 py-2.5 rounded-xl text-xs font-bold transition-all text-left ${
               activeSubTab === "datahub"
                 ? "bg-indigo-50/70 border-l-4 border-l-indigo-650 text-indigo-750 dark:bg-zinc-800/70 dark:text-white dark:border-l-indigo-400"
                 : "text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-zinc-800/40"
@@ -954,7 +954,7 @@ export default function AdministrationCenter({ onClose, initialSubTab }: Adminis
           <button
             type="button"
             onClick={() => setActiveSubTab("auditlogs")}
-            className={`w-full flex items-center justify-start gap-3 px-3.5 py-2.5 rounded-xl text-xs font-bold transition-all text-left ${
+            className={`w-full flex items-center justify-start gap-3 pl-3.5 pr-3.5 py-2.5 rounded-xl text-xs font-bold transition-all text-left ${
               activeSubTab === "auditlogs"
                 ? "bg-indigo-50/70 border-l-4 border-l-indigo-650 text-indigo-750 dark:bg-zinc-800/70 dark:text-white dark:border-l-indigo-400"
                 : "text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-zinc-800/40"
@@ -967,7 +967,7 @@ export default function AdministrationCenter({ onClose, initialSubTab }: Adminis
           <button
             type="button"
             onClick={() => setActiveSubTab("aisettings")}
-            className={`w-full flex items-center justify-start gap-3 px-3.5 py-2.5 rounded-xl text-xs font-bold transition-all text-left ${
+            className={`w-full flex items-center justify-start gap-3 pl-3.5 pr-3.5 py-2.5 rounded-xl text-xs font-bold transition-all text-left ${
               activeSubTab === "aisettings"
                 ? "bg-indigo-50/70 border-l-4 border-l-indigo-650 text-indigo-750 dark:bg-zinc-800/70 dark:text-white dark:border-l-indigo-400"
                 : "text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-zinc-800/40"
@@ -980,7 +980,7 @@ export default function AdministrationCenter({ onClose, initialSubTab }: Adminis
           <button
             type="button"
             onClick={() => setActiveSubTab("systemhealth")}
-            className={`w-full flex items-center justify-start gap-3 px-3.5 py-2.5 rounded-xl text-xs font-bold transition-all text-left ${
+            className={`w-full flex items-center justify-start gap-3 pl-3.5 pr-3.5 py-2.5 rounded-xl text-xs font-bold transition-all text-left ${
               activeSubTab === "systemhealth"
                 ? "bg-indigo-50/70 border-l-4 border-l-indigo-650 text-indigo-750 dark:bg-zinc-800/70 dark:text-white dark:border-l-indigo-400"
                 : "text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-zinc-800/40"
