@@ -523,6 +523,50 @@ export default function App() {
 
   const currentStats = computeStats();
 
+  const sidebarInset = sidebarCollapsed ? "px-1.5" : "px-2";
+
+  const SidebarTooltip = ({ label }: { label: string }) => (
+    <span className="pointer-events-none absolute left-[calc(100%+10px)] top-1/2 z-[60] -translate-y-1/2 whitespace-nowrap rounded-md border border-slate-200/80 bg-white px-2.5 py-1.5 text-[11px] font-medium text-slate-700 opacity-0 shadow-lg transition-all duration-150 group-hover:opacity-100 group-hover:translate-x-0 translate-x-0.5 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-200">
+      {t(label)}
+    </span>
+  );
+
+  interface SidebarGroupToggleProps {
+    icon: React.ReactNode;
+    label: string;
+    expanded: boolean;
+    onToggle: () => void;
+  }
+
+  const SidebarGroupToggle = ({ icon, label, expanded, onToggle }: SidebarGroupToggleProps) => (
+    <div className={sidebarInset}>
+      <button
+        type="button"
+        onClick={onToggle}
+        className={`group relative flex w-full cursor-pointer items-center rounded-lg text-slate-600 transition-colors duration-150 hover:bg-slate-100/80 dark:text-zinc-400 dark:hover:bg-white/[0.06] ${
+          sidebarCollapsed ? "mx-auto h-9 w-9 justify-center" : "gap-2.5 px-3 py-2"
+        }`}
+      >
+        <div className="flex h-5 w-5 shrink-0 items-center justify-center text-slate-400 dark:text-zinc-500 [&_svg]:h-[18px] [&_svg]:w-[18px]">
+          {icon}
+        </div>
+        {!sidebarCollapsed && (
+          <>
+            <span className="flex-1 truncate text-left text-[13px] font-semibold leading-tight tracking-[-0.01em] text-slate-700 dark:text-zinc-200">
+              {t(label)}
+            </span>
+            <ChevronDown
+              className={`h-3.5 w-3.5 shrink-0 text-slate-400 transition-transform duration-200 dark:text-zinc-500 ${
+                expanded ? "" : "-rotate-90"
+              }`}
+            />
+          </>
+        )}
+        {sidebarCollapsed && <SidebarTooltip label={label} />}
+      </button>
+    </div>
+  );
+
   // Clean, reusable Collapsible Navigation Button helper
   interface SidebarButtonProps {
     id: string;
@@ -530,8 +574,6 @@ export default function App() {
     label: string;
     onClick?: () => void;
     activeBorderClass?: string;
-    activeTextClass?: string;
-    idleTextClass?: string;
     extraClass?: string;
     disabled?: boolean;
     isSubmenu?: boolean;
@@ -543,14 +585,12 @@ export default function App() {
     label,
     onClick,
     activeBorderClass = "border-l-[#1E3A5F]",
-    activeTextClass = "text-[#1E3A5F] dark:text-blue-300 font-semibold bg-[#EAF2FF] dark:bg-[#1E3A5F]/15",
-    idleTextClass = "text-slate-500 dark:text-slate-400 hover:bg-slate-100/60 dark:hover:bg-zinc-800/40 hover:text-slate-800 dark:hover:text-zinc-100",
     extraClass = "",
     disabled = false,
     isSubmenu = false
   }: SidebarButtonProps) => {
     const isActive = activeTab === id;
-    
+
     const handleButtonClick = () => {
       if (disabled) return;
       if (onClick) {
@@ -560,116 +600,67 @@ export default function App() {
       }
     };
 
-    // Height requirements:
-    // Parent Menu: 48px
-    // Submenu: 42px
-    // Active Submenu: 46px
-    const heightClass = sidebarCollapsed
-      ? "h-[48px] min-h-[48px] py-1"
-      : isSubmenu
-      ? isActive
-        ? "h-[46px] min-h-[46px] py-1"
-        : "h-[42px] min-h-[42px] py-1"
-      : "h-[48px] min-h-[48px] py-1";
+    const accentBar =
+      activeBorderClass.includes("emerald")
+        ? "from-emerald-500 to-emerald-600"
+        : activeBorderClass.includes("amber")
+          ? "from-amber-500 to-amber-600"
+          : activeBorderClass.includes("#16a34a")
+            ? "from-green-600 to-green-500"
+            : "from-[#1E3A5F] to-[#0078D4]";
 
-    // Typography requirements:
-    // Parent Menu: 15px 600 (semibold)
-    // Submenu: 14px 500 (medium)
     const typographyClass = isSubmenu
-      ? "text-[14px] font-medium"
-      : "text-[15px] font-semibold";
+      ? "text-[13px] font-medium tracking-[-0.01em]"
+      : "text-[13px] font-semibold tracking-[-0.01em]";
 
-    // Active visual state
-    let activeStyle = "";
-    let idleStyle = "";
+    const layoutClass = sidebarCollapsed
+      ? "relative mx-auto flex h-9 w-9 items-center justify-center rounded-lg"
+      : isSubmenu
+        ? "relative flex w-full items-center gap-2.5 rounded-lg py-1.5 pl-9 pr-3"
+        : "relative flex w-full items-center gap-2.5 rounded-lg px-3 py-2";
 
-    if (isNotionMode) {
-      activeStyle = isActive
-        ? "bg-[#eaeae9] dark:bg-[#2c2c2c] text-[#37352f] dark:text-[#dfdfde] font-bold"
-        : "";
-      idleStyle = "text-slate-650 dark:text-slate-400 hover:bg-[#eaeae9]/50 dark:hover:bg-[#2c2c2c]/50";
-    } else {
-      if (isSubmenu) {
-        if (isActive) {
-          // Rounded pill for active submenu, with height 46px, border radius 10px, left indicator 4px, internal horizontal padding 16px
-          const borderClass = activeBorderClass.includes("emerald") ? "border-l-emerald-500" :
-                              activeBorderClass.includes("amber") ? "border-l-amber-500" :
-                              activeBorderClass.includes("#0078D4") ? "border-l-[#1E3A5F]" :
-                              activeBorderClass.includes("#1E3A5F") ? "border-l-[#1E3A5F]" :
-                              activeBorderClass.includes("#16a34a") ? "border-l-[#16a34a]" :
-                              "border-l-[#1E3A5F] dark:border-l-blue-300";
-          activeStyle = `${activeTextClass} rounded-[10px] border-l-[4px] ${borderClass} shadow-xs ml-[32px] mr-[12px]`;
-        } else {
-          idleStyle = `${idleTextClass}`;
-        }
-      } else {
-        if (isActive) {
-          activeStyle = `border-l-[4px] ${activeBorderClass} ${activeTextClass} shadow-sm`;
-        } else {
-          idleStyle = `border-l-[4px] border-l-transparent ${idleTextClass}`;
-        }
-      }
-    }
-
-    const stateClasses = isActive ? activeStyle : idleStyle;
-
-    // Left alignment and indentation:
-    // Parent Menu: 24px left padding
-    // Submenu: 48px left padding
-    // Every submenu should begin on the same vertical line
-    let paddingClass = "";
-    if (sidebarCollapsed) {
-      paddingClass = "px-0 justify-center";
-    } else {
-      if (isSubmenu) {
-        if (isActive && !isNotionMode) {
-          // Internal horizontal padding 16px (pl-[16px] pr-[16px])
-          // Combined with ml-[32px] on the container, the icon is at 32 + 16 = 48px from the left edge of the sidebar!
-          paddingClass = "pl-[16px] pr-[16px]";
-        } else {
-          // For inactive submenu (no left margin or pill background), pl-[48px] puts the icon at exactly 48px from the left!
-          paddingClass = "pl-[48px] pr-[16px]";
-        }
-      } else {
-        if (isActive && !isNotionMode) {
-          // Active parent button has border-l-[4px], so pl-[20px] puts the icon at exactly 24px from the left!
-          paddingClass = "pl-[20px] pr-[24px]";
-        } else {
-          // Inactive parent button has border-l-transparent, pl-[24px] puts the icon at exactly 24px from the left!
-          paddingClass = "pl-[24px] pr-[24px]";
-        }
-      }
-    }
+    const stateClass = disabled
+      ? "cursor-not-allowed text-slate-400 opacity-50 dark:text-zinc-600"
+      : isActive
+        ? sidebarCollapsed
+          ? "bg-[#EAF2FF]/90 text-[#1E3A5F] dark:bg-[#1E3A5F]/20 dark:text-blue-300"
+          : "bg-[#EAF2FF]/75 text-[#1E3A5F] dark:bg-[#1E3A5F]/12 dark:text-blue-300"
+        : "text-slate-500 hover:bg-slate-100/70 hover:text-slate-800 dark:text-zinc-400 dark:hover:bg-white/[0.05] dark:hover:text-zinc-100";
 
     return (
-      <button
-        id={`sidebar-nav-${id}`}
-        disabled={disabled}
-        onClick={handleButtonClick}
-        className={`w-full flex items-center transition-all group relative cursor-pointer gap-[12px] ${heightClass} ${paddingClass} ${
-          disabled 
-            ? "text-slate-400 dark:text-slate-600 cursor-not-allowed opacity-50"
-            : stateClasses
-        } ${extraClass}`}
-      >
-        <div className={`w-[20px] h-[20px] flex items-center justify-center flex-shrink-0 [&_svg]:!w-[20px] [&_svg]:!h-[20px] ${
-          isActive 
-            ? "text-[#1E3A5F] dark:text-blue-300 [&_svg]:!text-[#1E3A5F] dark:[&_svg]:!text-blue-300" 
-            : "text-slate-400 dark:text-zinc-500 [&_svg]:!text-slate-450 dark:[&_svg]:!text-zinc-500"
-        }`}>
-          {icon}
-        </div>
-        {!sidebarCollapsed && (
-          <span className={`${typographyClass} leading-[1.4] text-left flex-1 min-w-0 truncate`}>
-            {t(label)}
-          </span>
-        )}
-        {sidebarCollapsed && (
-          <span className="absolute left-full ml-3 px-2.5 py-1.5 bg-slate-900 text-white dark:bg-zinc-800 dark:text-zinc-100 text-xs font-semibold rounded-md opacity-0 group-hover:opacity-100 transition-all duration-200 pointer-events-none z-50 shadow-lg translate-x-1 group-hover:translate-x-0 whitespace-nowrap">
-            {t(label)}
-          </span>
-        )}
-      </button>
+      <div className={sidebarInset}>
+        <button
+          id={`sidebar-nav-${id}`}
+          disabled={disabled}
+          onClick={handleButtonClick}
+          className={`group ${layoutClass} ${stateClass} cursor-pointer transition-colors duration-150 ${extraClass}`}
+        >
+          {isActive && (
+            <span
+              className={`absolute rounded-full bg-gradient-to-b ${accentBar} ${
+                sidebarCollapsed
+                  ? "left-0.5 top-1/2 h-4 w-[2px] -translate-y-1/2"
+                  : "left-2 top-1/2 h-[18px] w-[2px] -translate-y-1/2"
+              }`}
+            />
+          )}
+          <div
+            className={`flex h-5 w-5 shrink-0 items-center justify-center [&_svg]:h-[18px] [&_svg]:w-[18px] ${
+              isActive
+                ? "text-[#1E3A5F] dark:text-blue-300 [&_svg]:!text-[#1E3A5F] dark:[&_svg]:!text-blue-300"
+                : "text-slate-400 dark:text-zinc-500 [&_svg]:!text-slate-400 dark:[&_svg]:!text-zinc-500"
+            }`}
+          >
+            {icon}
+          </div>
+          {!sidebarCollapsed && (
+            <span className={`${typographyClass} min-w-0 flex-1 truncate text-left leading-tight`}>
+              {t(label)}
+            </span>
+          )}
+          {sidebarCollapsed && <SidebarTooltip label={label} />}
+        </button>
+      </div>
     );
   };
 
@@ -710,478 +701,309 @@ export default function App() {
     <div className={`min-h-screen flex transition-colors duration-300 ${isNotionMode ? "bg-white dark:bg-[#191919] font-sans text-[#37352f] dark:text-[#dfdfde]" : "bg-[#F3F2F1] dark:bg-[#11100f]"}`}>
       
       {/* Dynamic Left Sidebar UI Navigation */}
-      <aside 
-        className={`flex flex-col justify-between flex-shrink-0 z-30 transition-all duration-300 ${
+      <div
+        className={`gemba-sidebar-shell z-30 flex-shrink-0 p-[1px] transition-all duration-300 ${
           sidebarCollapsed ? "w-[80px]" : "w-[300px]"
-        } ${
-          isNotionMode 
-            ? "border-r border-[#1f1f1f]/10 dark:border-white/10 text-[#37352f] dark:text-[#dfdfde]" 
-            : "border-r border-[#EDEBE9] dark:border-[#323130] text-slate-700 dark:text-slate-300"
-        }`}
-        style={{ backgroundColor: darkMode ? (isNotionMode ? '#191919' : '#201f1e') : '#f3f2f1' }}
+        } bg-gradient-to-b from-emerald-500/30 via-[#0078D4]/35 to-blue-500/25 dark:from-emerald-500/20 dark:via-[#0078D4]/25 dark:to-blue-500/15`}
       >
-        <div className={`flex flex-col h-full ${sidebarCollapsed ? "py-2 px-0" : "py-[12px] px-0"}`}>
-          {/* Main Launcher App Branding Header */}
-          <div className={`flex pb-[12px] mb-[12px] select-none border-b ${isNotionMode ? "border-[#1f1f1f]/10 dark:border-white/10" : "border-[#EDEBE9] dark:border-[#323130]"} ${sidebarCollapsed ? "justify-center items-center px-2" : "items-center justify-start gap-3 px-6"}`}>
-            {isNotionMode ? (
-              <span className="text-2xl" role="img" aria-label="Notion icon">🧠</span>
-            ) : (
-              <img
-                src="/logos/GIQ.png"
-                alt="Gemba IQ"
-                className="h-[40px] w-auto object-contain shrink-0"
+        <aside
+          className={`gemba-sidebar flex min-h-screen flex-col transition-all duration-300 ${
+            sidebarCollapsed ? "w-[78px]" : "w-[298px]"
+          } bg-[#FAFAFA] text-slate-700 dark:bg-[#0c0c0e] dark:text-zinc-300`}
+        >
+          <div className="flex min-h-0 flex-1 flex-col py-3">
+            {/* Main Launcher App Branding Header */}
+            <div
+              className={`mb-3 flex shrink-0 select-none border-b border-slate-200/70 pb-3 dark:border-zinc-800/80 ${
+                sidebarCollapsed ? "mx-2 items-center justify-center px-0" : "mx-3 items-center justify-start gap-3 px-1"
+              }`}
+            >
+              {isNotionMode ? (
+                <span className="text-2xl" role="img" aria-label="Notion icon">
+                  🧠
+                </span>
+              ) : (
+                <img
+                  src="/logos/GIQ.png"
+                  alt="Gemba IQ"
+                  className="h-9 w-auto shrink-0 object-contain"
+                />
+              )}
+              {!sidebarCollapsed && (
+                <h2 className="font-display text-[22px] font-semibold uppercase leading-none tracking-tight text-slate-800 dark:text-zinc-100">
+                  GEMBA IQ
+                </h2>
+              )}
+            </div>
+
+            {/* Navigation Action Buttons list */}
+            <nav className="flex min-h-0 flex-1 flex-col gap-4 overflow-y-auto px-1 pb-2">
+              {/* Collapsible Activity Report sub-menu */}
+              <div className="flex flex-col gap-0.5">
+                <SidebarGroupToggle
+                  icon={<BarChart2 className="h-[18px] w-[18px] shrink-0" />}
+                  label="Activity Report"
+                  expanded={activityReportMenuExpanded}
+                  onToggle={() => setActivityReportMenuExpanded(!activityReportMenuExpanded)}
+                />
+
+                {activityReportMenuExpanded && (
+                  <div className="flex flex-col gap-0.5 pt-0.5">
+                    <SidebarButton
+                      id="revenue-management"
+                      icon={<BarChart2 className="h-[18px] w-[18px] shrink-0 text-[#0078D4]" />}
+                      label="Revenue Management"
+                      activeBorderClass="border-l-[#0078D4]"
+                      isSubmenu={true}
+                    />
+                  </div>
+                )}
+              </div>
+
+              {/* Collapsible Leads sub-menu */}
+              <div className="flex flex-col gap-0.5">
+                <SidebarGroupToggle
+                  icon={<Users className="h-[18px] w-[18px] shrink-0" />}
+                  label="Lead Discovery"
+                  expanded={leadsMenuExpanded}
+                  onToggle={() => setLeadsMenuExpanded(!leadsMenuExpanded)}
+                />
+
+                {leadsMenuExpanded && (
+                  <div className="flex flex-col gap-0.5 pt-0.5">
+                    <SidebarButton
+                      id="lead-profiles"
+                      icon={<Users className="h-[18px] w-[18px] shrink-0 text-indigo-500" />}
+                      label="Lead Profiles"
+                      isSubmenu={true}
+                    />
+                    <SidebarButton
+                      id="lead-generator"
+                      icon={<Sparkles className="h-[18px] w-[18px] shrink-0 text-amber-500" />}
+                      label="Lead Mail Generator"
+                      isSubmenu={true}
+                    />
+                    <SidebarButton
+                      id="ai-sales-assistant"
+                      icon={<Sparkles className="h-[18px] w-[18px] shrink-0 animate-pulse text-amber-500" />}
+                      label="AI Sales Assistant"
+                      extraClass="animate-pulse-subtle"
+                      isSubmenu={true}
+                    />
+                  </div>
+                )}
+              </div>
+
+              {/* Collapsible Companies sub-menu */}
+              <div className="flex flex-col gap-0.5">
+                <SidebarGroupToggle
+                  icon={<Building className="h-[18px] w-[18px] shrink-0" />}
+                  label="Companies & Targets"
+                  expanded={companiesMenuExpanded}
+                  onToggle={() => setCompaniesMenuExpanded(!companiesMenuExpanded)}
+                />
+
+                {companiesMenuExpanded && (
+                  <div className="flex flex-col gap-0.5 pt-0.5">
+                    <SidebarButton
+                      id="companies-registry"
+                      icon={<Building className="h-[18px] w-[18px] shrink-0 text-emerald-650" />}
+                      label="Customers"
+                      activeBorderClass="border-l-emerald-500"
+                      isSubmenu={true}
+                    />
+                    <SidebarButton
+                      id="company-discovery"
+                      icon={<Search className="h-[18px] w-[18px] shrink-0 text-amber-500" />}
+                      label="Company Search"
+                      activeBorderClass="border-l-amber-500"
+                      isSubmenu={true}
+                    />
+                    <SidebarButton
+                      id="target-accounts"
+                      icon={<Target className="h-[18px] w-[18px] shrink-0 text-blue-500" />}
+                      label="Target Accounts"
+                      isSubmenu={true}
+                    />
+                  </div>
+                )}
+              </div>
+
+              {/* Collapsible Deals sub-menu */}
+              <div className="flex flex-col gap-0.5">
+                <SidebarGroupToggle
+                  icon={<Briefcase className="h-[18px] w-[18px] shrink-0" />}
+                  label="Deal Management"
+                  expanded={dealsMenuExpanded}
+                  onToggle={() => setDealsMenuExpanded(!dealsMenuExpanded)}
+                />
+
+                {dealsMenuExpanded && (
+                  <div className="flex flex-col gap-0.5 pt-0.5">
+                    <SidebarButton
+                      id="services"
+                      icon={<Layers className="h-[18px] w-[18px] shrink-0 text-blue-600" />}
+                      label="Services"
+                      activeBorderClass="border-l-[#0078D4]"
+                      isSubmenu={true}
+                    />
+                    <SidebarButton
+                      id="sales-dashboard"
+                      icon={<BarChart2 className="h-[18px] w-[18px] shrink-0 text-[#0078D4]" />}
+                      label="Sales Dashboard"
+                      activeBorderClass="border-l-[#0078D4]"
+                      isSubmenu={true}
+                    />
+                    <SidebarButton
+                      id="deal-management"
+                      icon={<Briefcase className="h-[18px] w-[18px] shrink-0 text-green-600" />}
+                      label="Deal Management"
+                      activeBorderClass="border-l-[#16a34a]"
+                      isSubmenu={true}
+                    />
+                    <SidebarButton
+                      id="proposal-management"
+                      icon={<FileText className="h-[18px] w-[18px] shrink-0 text-amber-500" />}
+                      label="Proposal Management"
+                      activeBorderClass="border-l-amber-500"
+                      isSubmenu={true}
+                    />
+                    <SidebarButton
+                      id="create-proposal"
+                      icon={<Sparkles className="h-[18px] w-[18px] shrink-0 text-amber-500" />}
+                      label="Create Proposal"
+                      activeBorderClass="border-l-amber-500"
+                      isSubmenu={true}
+                    />
+                  </div>
+                )}
+              </div>
+
+              <SidebarButton
+                id="todo-list"
+                icon={<CheckSquare className="h-[18px] w-[18px] shrink-0 text-blue-500" />}
+                label="Tasks"
+                activeBorderClass="border-l-[#0078D4]"
+                isSubmenu={false}
               />
-            )}
-            {!sidebarCollapsed && (
-              <h2 className="text-[24px] font-semibold text-slate-800 dark:text-slate-100 font-display tracking-tight uppercase leading-none">
-                GEMBA IQ
-              </h2>
-            )}
-          </div>
 
-          {/* Navigation Action Buttons list */}
-          <nav className="flex flex-col gap-[20px]">
-            {/* Collapsible Activity Report sub-menu */}
-            <div className="flex flex-col gap-[4px]">
-              <button
-                type="button"
-                onClick={() => setActivityReportMenuExpanded(!activityReportMenuExpanded)}
-                className={`w-full flex items-center justify-between transition-all group relative cursor-pointer gap-[12px] ${
-                  sidebarCollapsed ? "px-0 justify-center h-[48px] min-h-[48px] py-1" : "pl-[24px] pr-[16px] h-[48px] min-h-[48px] py-1"
-                } ${
-                  isNotionMode
-                    ? "text-slate-650 dark:text-slate-400 hover:bg-[#eaeae9]/50 dark:hover:bg-[#2c2c2c]/50"
-                    : "border-l-[4px] border-l-transparent text-slate-500 dark:text-slate-400 hover:bg-slate-100/60 dark:hover:bg-zinc-800/40 hover:text-slate-800 dark:hover:text-zinc-100"
-                }`}
-              >
-                <div className="flex items-center gap-[12px] truncate flex-1 min-w-0">
-                  <div className="w-[20px] h-[20px] flex items-center justify-center flex-shrink-0 [&_svg]:!w-[20px] [&_svg]:!h-[20px] text-slate-400 dark:text-zinc-500 [&_svg]:!text-slate-400 dark:[&_svg]:!text-zinc-500">
-                    {isNotionMode ? (
-                      <span className="text-base">📈</span>
-                    ) : (
-                      <BarChart2 className="w-[20px] h-[20px] flex-shrink-0" />
-                    )}
-                  </div>
-                  {!sidebarCollapsed && <span className="text-[15px] font-semibold leading-[1.4] cursor-pointer text-left flex-1 truncate">{t("Activity Report")}</span>}
-                </div>
-                {!sidebarCollapsed && (
-                  <ChevronDown
-                     className={`w-4 h-4 text-slate-450 dark:text-zinc-500 transition-transform duration-200 flex-shrink-0 ${
-                      activityReportMenuExpanded ? "" : "-rotate-90"
-                    }`}
-                  />
-                )}
-                {sidebarCollapsed && (
-                  <span className="absolute left-full ml-3 px-2.5 py-1.5 bg-slate-900 text-white dark:bg-zinc-800 dark:text-zinc-100 text-xs font-semibold rounded-md opacity-0 group-hover:opacity-100 transition-all duration-200 pointer-events-none z-50 shadow-lg translate-x-1 group-hover:translate-x-0 whitespace-nowrap">
-                    {t("Activity Report")}
-                  </span>
-                )}
-              </button>
+              <SidebarButton
+                id="documents"
+                icon={<FileText className="h-[18px] w-[18px] shrink-0 text-indigo-500" />}
+                label="Documents"
+                activeBorderClass="border-l-[#0078D4]"
+                isSubmenu={false}
+              />
 
-              {activityReportMenuExpanded && (
-                <div className="relative flex flex-col gap-[4px] w-full pl-0 ml-0">
-                  {!sidebarCollapsed && (
-                    <div className="absolute left-[34px] top-0 bottom-0 w-[1px] bg-[#EDEBE9] dark:bg-[#323130] z-10" />
-                  )}
-                  <SidebarButton
-                    id="revenue-management"
-                    icon={isNotionMode ? <span className="text-base">💸</span> : <BarChart2 className="w-[20px] h-[20px] flex-shrink-0 text-[#0078D4]" />}
-                    label="Revenue Management"
-                    activeBorderClass="border-l-[#0078D4]"
-                    isSubmenu={true}
-                  />
-                </div>
-              )}
-            </div>
+              <SidebarButton
+                id="contract-manager"
+                icon={<Scroll className="h-[18px] w-[18px] shrink-0 text-amber-600" />}
+                label="Contract Manager"
+                activeBorderClass="border-l-[#0078D4]"
+                isSubmenu={false}
+              />
 
-            {/* Collapsible Leads sub-menu */}
-            <div className="flex flex-col gap-[4px]">
-              <button
-                type="button"
-                onClick={() => setLeadsMenuExpanded(!leadsMenuExpanded)}
-                className={`w-full flex items-center justify-between transition-all group relative cursor-pointer gap-[12px] ${
-                  sidebarCollapsed ? "px-0 justify-center h-[48px] min-h-[48px] py-1" : "pl-[24px] pr-[16px] h-[48px] min-h-[48px] py-1"
-                } ${
-                  isNotionMode
-                    ? "text-slate-650 dark:text-slate-400 hover:bg-[#eaeae9]/50 dark:hover:bg-[#2c2c2c]/50"
-                    : "border-l-[4px] border-l-transparent text-slate-500 dark:text-slate-400 hover:bg-slate-100/60 dark:hover:bg-zinc-800/40 hover:text-slate-800 dark:hover:text-zinc-100"
-                }`}
-              >
-                <div className="flex items-center gap-[12px] truncate flex-1 min-w-0">
-                  <div className="w-[20px] h-[20px] flex items-center justify-center flex-shrink-0 [&_svg]:!w-[20px] [&_svg]:!h-[20px] text-slate-400 dark:text-zinc-500 [&_svg]:!text-slate-400 dark:[&_svg]:!text-zinc-500">
-                    {isNotionMode ? (
-                      <span className="text-base">👥</span>
-                    ) : (
-                      <Users className="w-[20px] h-[20px] flex-shrink-0" />
-                    )}
-                  </div>
-                  {!sidebarCollapsed && <span className="text-[15px] font-semibold leading-[1.4] cursor-pointer text-left flex-1 truncate">{t("Lead Discovery")}</span>}
-                </div>
-                {!sidebarCollapsed && (
-                  <ChevronDown
-                     className={`w-4 h-4 text-slate-450 dark:text-zinc-500 transition-transform duration-200 flex-shrink-0 ${
-                      leadsMenuExpanded ? "" : "-rotate-90"
-                    }`}
-                  />
-                )}
-                {sidebarCollapsed && (
-                  <span className="absolute left-full ml-3 px-2.5 py-1.5 bg-slate-900 text-white dark:bg-zinc-800 dark:text-zinc-100 text-xs font-semibold rounded-md opacity-0 group-hover:opacity-100 transition-all duration-200 pointer-events-none z-50 shadow-lg translate-x-1 group-hover:translate-x-0 whitespace-nowrap">
-                    {t("Lead Discovery")}
-                  </span>
-                )}
-              </button>
+              {/* Collapsible Campaign sub-menu */}
+              <div className="flex flex-col gap-0.5">
+                <SidebarGroupToggle
+                  icon={<Megaphone className="h-[18px] w-[18px] shrink-0" />}
+                  label="Campaign"
+                  expanded={campaignMenuExpanded}
+                  onToggle={() => setCampaignMenuExpanded(!campaignMenuExpanded)}
+                />
 
-              {leadsMenuExpanded && (
-                <div className="relative flex flex-col gap-[4px] w-full pl-0 ml-0">
-                  {!sidebarCollapsed && (
-                    <div className="absolute left-[34px] top-0 bottom-0 w-[1px] bg-[#EDEBE9] dark:bg-[#323130] z-10" />
-                  )}
-                  <SidebarButton
-                    id="lead-profiles"
-                    icon={isNotionMode ? <span className="text-base">👥</span> : <Users className="w-[20px] h-[20px] flex-shrink-0 text-indigo-500" />}
-                    label="Lead Profiles"
-                    isSubmenu={true}
-                  />
-
-                  <SidebarButton
-                    id="lead-generator"
-                    icon={isNotionMode ? <span className="text-base">✍️</span> : <Sparkles className="w-[20px] h-[20px] flex-shrink-0 text-amber-500" />}
-                    label="Lead Mail Generator"
-                    isSubmenu={true}
-                  />
-
-                  <SidebarButton
-                    id="ai-sales-assistant"
-                    icon={isNotionMode ? <span className="text-base">🤖</span> : <Sparkles className="w-[20px] h-[20px] flex-shrink-0 text-amber-500 animate-pulse" />}
-                    label="AI Sales Assistant"
-                    extraClass="animate-pulse-subtle"
-                    isSubmenu={true}
-                  />
-                </div>
-              )}
-            </div>
-
-            {/* Collapsible Companies sub-menu */}
-            <div className="flex flex-col gap-[4px]">
-              <button
-                type="button"
-                onClick={() => setCompaniesMenuExpanded(!companiesMenuExpanded)}
-                className={`w-full flex items-center justify-between transition-all group relative cursor-pointer gap-[12px] ${
-                  sidebarCollapsed ? "px-0 justify-center h-[48px] min-h-[48px] py-1" : "pl-[24px] pr-[16px] h-[48px] min-h-[48px] py-1"
-                } ${
-                  isNotionMode
-                    ? "text-slate-650 dark:text-slate-400 hover:bg-[#eaeae9]/50 dark:hover:bg-[#2c2c2c]/50"
-                    : "border-l-[4px] border-l-transparent text-slate-500 dark:text-slate-400 hover:bg-slate-100/60 dark:hover:bg-zinc-800/40 hover:text-slate-800 dark:hover:text-zinc-100"
-                }`}
-              >
-                <div className="flex items-center gap-[12px] truncate flex-1 min-w-0">
-                  <div className="w-[20px] h-[20px] flex items-center justify-center flex-shrink-0 [&_svg]:!w-[20px] [&_svg]:!h-[20px] text-slate-400 dark:text-zinc-500 [&_svg]:!text-slate-400 dark:[&_svg]:!text-zinc-500">
-                    {isNotionMode ? (
-                      <span className="text-base">🏢</span>
-                    ) : (
-                      <Building className="w-[20px] h-[20px] flex-shrink-0" />
-                    )}
-                  </div>
-                  {!sidebarCollapsed && <span className="text-[15px] font-semibold leading-[1.4] cursor-pointer text-left flex-1 truncate">{t("Companies & Targets")}</span>}
-                </div>
-                {!sidebarCollapsed && (
-                  <ChevronDown
-                     className={`w-4 h-4 text-slate-450 dark:text-zinc-500 transition-transform duration-200 flex-shrink-0 ${
-                      companiesMenuExpanded ? "" : "-rotate-90"
-                    }`}
-                  />
-                )}
-                {sidebarCollapsed && (
-                  <span className="absolute left-full ml-3 px-2.5 py-1.5 bg-slate-900 text-white dark:bg-zinc-800 dark:text-zinc-100 text-xs font-semibold rounded-md opacity-0 group-hover:opacity-100 transition-all duration-200 pointer-events-none z-50 shadow-lg translate-x-1 group-hover:translate-x-0 whitespace-nowrap">
-                    {t("Companies & Targets")}
-                  </span>
-                )}
-              </button>
-
-              {companiesMenuExpanded && (
-                <div className="relative flex flex-col gap-[4px] w-full pl-0 ml-0">
-                  {!sidebarCollapsed && (
-                    <div className="absolute left-[34px] top-0 bottom-0 w-[1px] bg-[#EDEBE9] dark:bg-[#323130] z-10" />
-                  )}
-                  <SidebarButton
-                    id="companies-registry"
-                    icon={isNotionMode ? <span className="text-base">🏢</span> : <Building className="w-[20px] h-[20px] flex-shrink-0 text-emerald-650" />}
-                    label="Customers"
-                    activeBorderClass="border-l-emerald-500"
-                    isSubmenu={true}
-                  />
-
-                  <SidebarButton
-                    id="company-discovery"
-                    icon={isNotionMode ? <span className="text-base">🔍</span> : <Search className="w-[20px] h-[20px] flex-shrink-0 text-amber-500" />}
-                    label="Company Search"
-                    activeBorderClass="border-l-amber-500"
-                    isSubmenu={true}
-                  />
-
-                  <SidebarButton
-                    id="target-accounts"
-                    icon={isNotionMode ? <span className="text-base">🎯</span> : <Target className="w-[20px] h-[20px] flex-shrink-0 text-blue-500" />}
-                    label="Target Accounts"
-                    isSubmenu={true}
-                  />
-                </div>
-              )}
-            </div>
-
-            {/* Collapsible Deals sub-menu */}
-            <div className="flex flex-col gap-[4px]">
-              <button
-                type="button"
-                onClick={() => setDealsMenuExpanded(!dealsMenuExpanded)}
-                className={`w-full flex items-center justify-between transition-all group relative cursor-pointer gap-[12px] ${
-                  sidebarCollapsed ? "px-0 justify-center h-[48px] min-h-[48px] py-1" : "pl-[24px] pr-[16px] h-[48px] min-h-[48px] py-1"
-                } ${
-                  isNotionMode
-                    ? "text-slate-650 dark:text-slate-400 hover:bg-[#eaeae9]/50 dark:hover:bg-[#2c2c2c]/50"
-                    : "border-l-[4px] border-l-transparent text-slate-500 dark:text-slate-400 hover:bg-slate-100/60 dark:hover:bg-zinc-800/40 hover:text-slate-800 dark:hover:text-zinc-100"
-                }`}
-              >
-                <div className="flex items-center gap-[12px] truncate flex-1 min-w-0">
-                  <div className="w-[20px] h-[20px] flex items-center justify-center flex-shrink-0 [&_svg]:!w-[20px] [&_svg]:!h-[20px] text-slate-400 dark:text-zinc-500 [&_svg]:!text-slate-400 dark:[&_svg]:!text-zinc-500">
-                    {isNotionMode ? (
-                      <span className="text-base">💼</span>
-                    ) : (
-                      <Briefcase className="w-[20px] h-[20px] flex-shrink-0" />
-                    )}
-                  </div>
-                  {!sidebarCollapsed && <span className="text-[15px] font-semibold leading-[1.4] cursor-pointer text-left flex-1 truncate">{t("Deal Management")}</span>}
-                </div>
-                {!sidebarCollapsed && (
-                  <ChevronDown
-                     className={`w-4 h-4 text-slate-450 dark:text-zinc-500 transition-transform duration-200 flex-shrink-0 ${
-                      dealsMenuExpanded ? "" : "-rotate-90"
-                    }`}
-                  />
-                )}
-                {sidebarCollapsed && (
-                  <span className="absolute left-full ml-3 px-2.5 py-1.5 bg-slate-900 text-white dark:bg-zinc-800 dark:text-zinc-100 text-xs font-semibold rounded-md opacity-0 group-hover:opacity-100 transition-all duration-200 pointer-events-none z-50 shadow-lg translate-x-1 group-hover:translate-x-0 whitespace-nowrap">
-                    {t("Deal Management")}
-                  </span>
-                )}
-              </button>
-
-              {dealsMenuExpanded && (
-                <div className="relative flex flex-col gap-[4px] w-full pl-0 ml-0">
-                  {!sidebarCollapsed && (
-                    <div className="absolute left-[34px] top-0 bottom-0 w-[1px] bg-[#EDEBE9] dark:bg-[#323130] z-10" />
-                  )}
-                  <SidebarButton
-                    id="services"
-                    icon={isNotionMode ? <span className="text-base">🛠️</span> : <Layers className="w-[20px] h-[20px] flex-shrink-0 text-blue-600" />}
-                    label="Services"
-                    activeBorderClass="border-l-[#0078D4]"
-                    isSubmenu={true}
-                  />
-
-                  <SidebarButton
-                    id="sales-dashboard"
-                    icon={isNotionMode ? <span className="text-base">📊</span> : <BarChart2 className="w-[20px] h-[20px] flex-shrink-0 text-[#0078D4]" />}
-                    label="Sales Dashboard"
-                    activeBorderClass="border-l-[#0078D4]"
-                    isSubmenu={true}
-                  />
-
-                  <SidebarButton
-                    id="deal-management"
-                    icon={isNotionMode ? <span className="text-base">💼</span> : <Briefcase className="w-[20px] h-[20px] flex-shrink-0 text-green-600" />}
-                    label="Deal Management"
-                    activeBorderClass="border-l-[#16a34a]"
-                    isSubmenu={true}
-                  />
-
-                  <SidebarButton
-                    id="proposal-management"
-                    icon={isNotionMode ? <span className="text-base">📄</span> : <FileText className="w-[20px] h-[20px] flex-shrink-0 text-amber-500" />}
-                    label="Proposal Management"
-                    activeBorderClass="border-l-amber-500"
-                    isSubmenu={true}
-                  />
-
-                  <SidebarButton
-                    id="create-proposal"
-                    icon={isNotionMode ? <span className="text-base">✨</span> : <Sparkles className="w-[20px] h-[20px] flex-shrink-0 text-amber-500" />}
-                    label="Create Proposal"
-                    activeBorderClass="border-l-amber-500"
-                    isSubmenu={true}
-                  />
-                </div>
-              )}
-            </div>
-
-            <SidebarButton
-              id="todo-list"
-              icon={isNotionMode ? <span className="text-base">☑️</span> : <CheckSquare className="w-[20px] h-[20px] flex-shrink-0 text-blue-500" />}
-              label="Tasks"
-              activeBorderClass="border-l-[#0078D4]"
-              isSubmenu={false}
-            />
-
-            <SidebarButton
-              id="documents"
-              icon={isNotionMode ? <span className="text-base">📁</span> : <FileText className="w-[20px] h-[20px] flex-shrink-0 text-indigo-500" />}
-              label="Documents"
-              activeBorderClass="border-l-[#0078D4]"
-              isSubmenu={false}
-            />
-
-            <SidebarButton
-              id="contract-manager"
-              icon={isNotionMode ? <span className="text-base">📜</span> : <Scroll className="w-[20px] h-[20px] flex-shrink-0 text-amber-600" />}
-              label="Contract Manager"
-              activeBorderClass="border-l-[#0078D4]"
-              isSubmenu={false}
-            />
-
-            {/* Collapsible Campaign sub-menu */}
-            <div className="flex flex-col gap-[4px]">
-              <button
-                type="button"
-                onClick={() => setCampaignMenuExpanded(!campaignMenuExpanded)}
-                className={`w-full flex items-center justify-between transition-all group relative cursor-pointer gap-[12px] ${
-                  sidebarCollapsed ? "px-0 justify-center h-[48px] min-h-[48px] py-1" : "pl-[24px] pr-[16px] h-[48px] min-h-[48px] py-1"
-                } ${
-                  isNotionMode
-                    ? "text-slate-650 dark:text-slate-400 hover:bg-[#eaeae9]/50 dark:hover:bg-[#2c2c2c]/50"
-                    : "border-l-[4px] border-l-transparent text-slate-500 dark:text-slate-400 hover:bg-slate-100/60 dark:hover:bg-zinc-800/40 hover:text-slate-800 dark:hover:text-zinc-100"
-                }`}
-              >
-                <div className="flex items-center gap-[12px] truncate flex-1 min-w-0">
-                  <div className="w-[20px] h-[20px] flex items-center justify-center flex-shrink-0 [&_svg]:!w-[20px] [&_svg]:!h-[20px] text-slate-400 dark:text-zinc-500 [&_svg]:!text-slate-400 dark:[&_svg]:!text-zinc-500">
-                    {isNotionMode ? (
-                      <span className="text-base">📢</span>
-                    ) : (
-                      <Megaphone className="w-[20px] h-[20px] flex-shrink-0" />
-                    )}
-                  </div>
-                  {!sidebarCollapsed && <span className="text-[15px] font-semibold leading-[1.4] cursor-pointer text-left flex-1 truncate">{t("Campaign")}</span>}
-                </div>
-                {!sidebarCollapsed && (
-                  <ChevronDown
-                     className={`w-4 h-4 text-slate-450 dark:text-zinc-500 transition-transform duration-200 flex-shrink-0 ${
-                      campaignMenuExpanded ? "" : "-rotate-90"
-                    }`}
-                  />
-                )}
-                {sidebarCollapsed && (
-                  <span className="absolute left-full ml-3 px-2.5 py-1.5 bg-slate-900 text-white dark:bg-zinc-800 dark:text-zinc-100 text-xs font-semibold rounded-md opacity-0 group-hover:opacity-100 transition-all duration-200 pointer-events-none z-50 shadow-lg translate-x-1 group-hover:translate-x-0 whitespace-nowrap">
-                    {t("Campaign")}
-                  </span>
-                )}
-              </button>
-
-              {campaignMenuExpanded && (
-                <div className="relative flex flex-col gap-[4px] w-full pl-0 ml-0">
-                  {!sidebarCollapsed && (
-                    <div className="absolute left-[34px] top-0 bottom-0 w-[1px] bg-[#EDEBE9] dark:bg-[#323130] z-10" />
-                  )}
-                  <SidebarButton
-                    id="campaign-manager"
-                    icon={isNotionMode ? <span className="text-base">📅</span> : <Calendar className="w-[20px] h-[20px] flex-shrink-0 text-blue-550" />}
-                    label="Campaign Manager"
-                    isSubmenu={true}
-                  />
-
-                  <SidebarButton
-                    id="dashboard"
-                    icon={isNotionMode ? <span className="text-base">📊</span> : <LayoutDashboard className="w-[20px] h-[20px] flex-shrink-0" />}
-                    label="Campaign Dashboard"
-                    isSubmenu={true}
-                  />
-
-                  <SidebarButton
-                    id="designer"
-                    icon={isNotionMode ? <span className="text-base">📨</span> : <Mail className="w-[20px] h-[20px] flex-shrink-0" />}
-                    label="Mail Merge Builder"
-                    isSubmenu={true}
-                  />
-
-                  <SidebarButton
-                    id="progress"
-                    icon={isNotionMode ? (
-                      <span className="text-base animate-spin" style={{ animationDuration: "12s" }}>⚙️</span>
-                    ) : (
-                      <Cpu className="w-[20px] h-[20px] flex-shrink-0 animate-spin" style={{ animationDuration: "12s" }} />
-                    )}
-                    label="Merge Sending Queue"
-                    disabled={recipients.length === 0}
-                    onClick={() => {
-                      if (recipients.length === 0) {
-                        alert("Please load a recipient spreadsheet or add recipients manually first!");
-                        setActiveTab("designer");
-                      } else {
-                        setActiveTab("progress");
+                {campaignMenuExpanded && (
+                  <div className="flex flex-col gap-0.5 pt-0.5">
+                    <SidebarButton
+                      id="campaign-manager"
+                      icon={<Calendar className="h-[18px] w-[18px] shrink-0 text-blue-550" />}
+                      label="Campaign Manager"
+                      isSubmenu={true}
+                    />
+                    <SidebarButton
+                      id="dashboard"
+                      icon={<LayoutDashboard className="h-[18px] w-[18px] shrink-0" />}
+                      label="Campaign Dashboard"
+                      isSubmenu={true}
+                    />
+                    <SidebarButton
+                      id="designer"
+                      icon={<Mail className="h-[18px] w-[18px] shrink-0" />}
+                      label="Mail Merge Builder"
+                      isSubmenu={true}
+                    />
+                    <SidebarButton
+                      id="progress"
+                      icon={
+                        <Cpu className="h-[18px] w-[18px] shrink-0 animate-spin" style={{ animationDuration: "12s" }} />
                       }
-                    }}
-                    isSubmenu={true}
-                  />
+                      label="Merge Sending Queue"
+                      disabled={recipients.length === 0}
+                      onClick={() => {
+                        if (recipients.length === 0) {
+                          alert("Please load a recipient spreadsheet or add recipients manually first!");
+                          setActiveTab("designer");
+                        } else {
+                          setActiveTab("progress");
+                        }
+                      }}
+                      isSubmenu={true}
+                    />
+                    <SidebarButton
+                      id="history"
+                      icon={<History className="h-[18px] w-[18px] shrink-0" />}
+                      label="Audit Logs History"
+                      isSubmenu={true}
+                    />
+                  </div>
+                )}
+              </div>
+            </nav>
+          </div>
 
-                  <SidebarButton
-                    id="history"
-                    icon={isNotionMode ? <span className="text-base">📜</span> : <History className="w-[20px] h-[20px] flex-shrink-0" />}
-                    label="Audit Logs History"
-                    isSubmenu={true}
-                  />
-                </div>
+          {/* Workspace info & mode footer */}
+          <div className="shrink-0 space-y-3 border-t border-slate-200/70 p-3 text-xs dark:border-zinc-800/80">
+            <div className={`flex ${sidebarCollapsed ? "flex-col items-center gap-2" : "items-center justify-between"}`}>
+              {!sidebarCollapsed && (
+                <span className="text-[10px] font-medium uppercase tracking-wide text-slate-400 dark:text-zinc-500">
+                  Dark mode toggle
+                </span>
               )}
+              <div className={`flex items-center ${sidebarCollapsed ? "flex-col gap-1.5" : "gap-1.5"}`}>
+                <button
+                  id="btn-theme-toggle"
+                  onClick={() => setDarkMode(!darkMode)}
+                  className="cursor-pointer rounded-md border border-slate-200/80 bg-white p-1.5 text-slate-600 transition-colors duration-150 hover:bg-slate-50 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-300 dark:hover:bg-zinc-800"
+                  title="Switch Themes"
+                >
+                  {darkMode ? <Sun className="h-4 w-4 text-amber-500" /> : <Moon className="h-4 w-4" />}
+                </button>
+
+                <button
+                  id="btn-collapse-sidebar"
+                  onClick={() => {
+                    const val = !sidebarCollapsed;
+                    setSidebarCollapsed(val);
+                    localStorage.setItem("sidebar-collapsed", String(val));
+                  }}
+                  className="cursor-pointer rounded-md border border-slate-200/80 bg-white p-1.5 text-slate-600 transition-colors duration-150 hover:bg-slate-50 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-300 dark:hover:bg-zinc-800"
+                  title={sidebarCollapsed ? "Genişlet" : "Daralt"}
+                >
+                  {sidebarCollapsed ? <ChevronRight className="h-4 w-4" /> : <ChevronLeft className="h-4 w-4" />}
+                </button>
+              </div>
             </div>
-          </nav>
-        </div>
 
-        {/* Workspace info & mode footer */}
-        <div className={`p-4 border-t space-y-3.5 text-xs ${isNotionMode ? "border-[#1f1f1f]/10 dark:border-white/10" : "border-[#EDEBE9] dark:border-[#323130]"}`}>
-          {/* Theme switcher & Collapse toggler */}
-          <div className={`flex ${sidebarCollapsed ? "flex-col items-center gap-3" : "items-center justify-between"}`}>
-            {!sidebarCollapsed && (
-              <span className="text-[10px] font-semibold text-slate-400 dark:text-slate-500 uppercase">Dark mode toggle</span>
-            )}
-            <div className={`flex items-center ${sidebarCollapsed ? "flex-col gap-2" : "gap-2"}`}>
-              <button
-                id="btn-theme-toggle"
-                onClick={() => setDarkMode(!darkMode)}
-                className={`p-1.5 rounded border transition-colors cursor-pointer ${
-                  isNotionMode
-                    ? "bg-[#eaeae9] dark:bg-[#252525] border-[#1f1f1f]/10 dark:border-white/10 hover:bg-[#DEDCDA] dark:hover:bg-slate-800 text-[#2D3748] dark:text-zinc-200"
-                    : "bg-[#EDEBE9] dark:bg-[#252423] border border-[#DEDCDA] dark:border-[#323130] hover:bg-[#DEDCDA] dark:hover:bg-[#252423]/90 text-[#2D3748] dark:text-zinc-200 hover:text-slate-900"
-                }`}
-                title="Switch Themes"
-              >
-                {darkMode ? <Sun className="w-4.5 h-4.5 text-amber-500" /> : <Moon className="w-4.5 h-4.5" />}
-              </button>
-
-              <button
-                id="btn-collapse-sidebar"
-                onClick={() => {
-                  const val = !sidebarCollapsed;
-                  setSidebarCollapsed(val);
-                  localStorage.setItem("sidebar-collapsed", String(val));
-                }}
-                className={`p-1.5 rounded border transition-colors cursor-pointer ${
-                  isNotionMode
-                    ? "bg-[#eaeae9] dark:bg-[#252525] border-[#1f1f1f]/10 dark:border-white/10 hover:bg-[#DEDCDA] dark:hover:bg-slate-800 text-[#2D3748] dark:text-zinc-200"
-                    : "bg-[#EDEBE9] dark:bg-[#252423] border border-[#DEDCDA] dark:border-[#323130] hover:bg-[#DEDCDA] dark:hover:bg-[#252423]/90 text-[#2D3748] dark:text-zinc-200 hover:text-slate-900"
-                }`}
-                title={sidebarCollapsed ? "Genişlet" : "Daralt"}
-              >
-                {sidebarCollapsed ? <ChevronRight className="w-4.5 h-4.5" /> : <ChevronLeft className="w-4.5 h-4.5" />}
-              </button>
+            <div className="flex justify-center border-t border-slate-200/60 pt-3 dark:border-zinc-800/70">
+              <img
+                src="/logos/Gdogo5.png"
+                alt="Gemba Partner"
+                className={`h-auto max-w-full object-contain ${sidebarCollapsed ? "w-10" : "w-[130px]"}`}
+              />
             </div>
           </div>
-
-          <div className="pt-4 pb-5 border-t border-[#e5e7eb] flex justify-center">
-            <img
-              src="/logos/Gdogo5.png"
-              alt="Gemba Partner"
-              className={`h-auto object-contain max-w-full ${sidebarCollapsed ? "w-12" : "w-[140px]"}`}
-            />
-          </div>
-        </div>
-      </aside>
+        </aside>
+      </div>
 
       {/* Main Panel Content Stage */}
       <main className={`flex-1 flex flex-col min-w-0 transition-colors ${

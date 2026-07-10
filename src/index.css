@@ -314,6 +314,51 @@
 }
 
 /* Sidebar Styling: Premium Linear Left rail */
+.saas-layout .gemba-sidebar-shell,
+.saas-layout aside.gemba-sidebar {
+  padding: 0 !important;
+  border-right: none !important;
+  box-shadow: none !important;
+}
+
+.saas-layout aside.gemba-sidebar {
+  background-color: #fafafa !important;
+}
+
+.saas-layout.dark aside.gemba-sidebar {
+  background-color: #0c0c0e !important;
+}
+
+.saas-layout aside.gemba-sidebar [id^="sidebar-nav-"],
+.saas-layout .gemba-sidebar-shell .group.relative.flex.w-full {
+  height: auto !important;
+  min-height: 0 !important;
+  border-radius: 8px !important;
+  font-size: inherit !important;
+  font-weight: inherit !important;
+  border: none !important;
+  box-shadow: none !important;
+}
+
+.saas-layout aside.gemba-sidebar #btn-theme-toggle,
+.saas-layout aside.gemba-sidebar #btn-collapse-sidebar {
+  height: auto !important;
+  min-height: 0 !important;
+  padding: 6px !important;
+  border-radius: 6px !important;
+  font-size: inherit !important;
+  font-weight: inherit !important;
+  background-color: #ffffff !important;
+  border: 1px solid rgba(0, 0, 0, 0.06) !important;
+  color: inherit !important;
+}
+
+.saas-layout.dark aside.gemba-sidebar #btn-theme-toggle,
+.saas-layout.dark aside.gemba-sidebar #btn-collapse-sidebar {
+  background-color: #18181b !important;
+  border: 1px solid rgba(255, 255, 255, 0.08) !important;
+}
+
 .saas-layout aside,
 .saas-layout .bg-[#201f1e] {
   background-color: #ffffff !important;
