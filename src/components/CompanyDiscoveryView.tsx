@@ -1330,7 +1330,7 @@ Return ONLY a raw valid JSON ARRAY strictly matching this structure without any 
                   <span className="text-[#FBBC05]">m</span>
                   <span className="text-[#4285F4]">b</span>
                   <span className="text-[#34A853]">a</span>
-                  <span className="text-slate-400 dark:text-zinc-505 font-light ml-2">Search</span>
+                  <span className="text-slate-400 dark:text-zinc-505 font-light ml-2">{t("Search")}</span>
                 </div>
                 <p className="text-xs font-semibold text-slate-400 dark:text-zinc-500 tracking-wider uppercase font-mono">
                   Türkiye Sanayi Siteleri, Fabrika & B2B Arama Portalı
@@ -1445,7 +1445,7 @@ Return ONLY a raw valid JSON ARRAY strictly matching this structure without any 
                     <span className="text-[#FBBC05]">m</span>
                     <span className="text-[#4285F4]">b</span>
                     <span className="text-[#34A853]">a</span>
-                    <span className="text-slate-400 dark:text-zinc-500 font-light text-base ml-1">Search</span>
+                    <span className="text-slate-400 dark:text-zinc-500 font-light text-base ml-1">{t("Search")}</span>
                   </div>
 
                   {/* Search input in result view */}

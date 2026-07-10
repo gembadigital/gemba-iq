@@ -17,7 +17,7 @@ export default function CompanyAutocomplete({
   placeholder = "Type company name...",
   className = ""
 }: CompanyAutocompleteProps) {
-  const { lang } = useLanguage();
+  const { t } = useLanguage();
   const [inputValue, setInputValue] = useState("");
   const [suggestions, setSuggestions] = useState<Company[]>([]);
   const [isOpen, setIsOpen] = useState(false);
@@ -150,7 +150,7 @@ export default function CompanyAutocomplete({
             }
           }}
           onFocus={() => setIsOpen(true)}
-          placeholder={placeholder}
+          placeholder={placeholder || t("Type company name...")}
           className="w-full p-2 pl-3 border border-slate-200 dark:border-zinc-800 bg-white dark:bg-zinc-800 rounded outline-none text-xs text-slate-800 dark:text-zinc-100 transition-all focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500"
         />
         <Search className="absolute right-2.5 top-2.5 w-3.5 h-3.5 text-slate-400 pointer-events-none" />
@@ -175,21 +175,21 @@ export default function CompanyAutocomplete({
                     </div>
                   </div>
                   <span className="text-[9px] font-bold text-indigo-500 bg-indigo-50 dark:bg-indigo-950/40 px-1.5 py-0.5 rounded uppercase font-mono">
-                    Select
+                    {t("Select")}
                   </span>
                 </button>
               ))}
             </div>
           ) : (
             <div className="p-3 text-center">
-              <p className="text-xs text-slate-400 mb-2">{lang === "TR" ? "Şirket bulunamadı" : "No company found"}</p>
+              <p className="text-xs text-slate-400 mb-2">{t("No company found")}</p>
               <button
                 type="button"
                 onClick={openCreationModal}
                 className="w-full flex items-center justify-center gap-1.5 px-3 py-1.5 bg-indigo-50 dark:bg-zinc-800 hover:bg-indigo-100 dark:hover:bg-zinc-700 text-indigo-650 dark:text-zinc-200 text-[11px] font-bold rounded-lg transition-all cursor-pointer"
               >
                 <Plus className="w-3.5 h-3.5" />
-                {lang === "TR" ? "Yeni Şirket Oluştur" : "Create New Company"}
+                {t("Create New Company")}
               </button>
             </div>
           )}
@@ -204,7 +204,7 @@ export default function CompanyAutocomplete({
               <div className="flex items-center gap-2">
                 <Building className="w-4 h-4 text-indigo-500" />
                 <h3 className="text-sm font-bold text-slate-800 dark:text-zinc-100">
-                  {lang === "TR" ? "Yeni Şirket Oluştur" : "Create New Company"}
+                  {t("Create New Company")}
                 </h3>
               </div>
               <button
@@ -219,52 +219,52 @@ export default function CompanyAutocomplete({
             <form onSubmit={handleCreateCompanySubmit} className="p-4 space-y-4">
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wide font-mono">Company Name *</label>
+                  <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wide font-mono">{t("Company Name *")}</label>
                   <input
                     type="text"
                     required
                     value={newCompanyForm.name}
                     onChange={(e) => setNewCompanyForm({ ...newCompanyForm, name: e.target.value })}
                     className="w-full p-2 border border-slate-200 dark:border-zinc-800 bg-slate-50 dark:bg-zinc-900 rounded outline-none text-xs mt-1 text-slate-800 dark:text-zinc-100 focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500"
-                    placeholder="e.g. Acme Corporation"
+                    placeholder={t("e.g. Acme Corporation")}
                   />
                 </div>
 
                 <div>
-                  <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wide font-mono">Website</label>
+                  <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wide font-mono">{t("Website")}</label>
                   <input
                     type="text"
                     value={newCompanyForm.website}
                     onChange={(e) => setNewCompanyForm({ ...newCompanyForm, website: e.target.value })}
                     className="w-full p-2 border border-slate-200 dark:border-zinc-800 bg-slate-50 dark:bg-zinc-900 rounded outline-none text-xs mt-1 text-slate-800 dark:text-zinc-100 focus:ring-1 focus:ring-indigo-500"
-                    placeholder="e.g. acme.com"
+                    placeholder={t("e.g. acme.com")}
                   />
                 </div>
 
                 <div>
-                  <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wide font-mono">Phone</label>
+                  <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wide font-mono">{t("Phone")}</label>
                   <input
                     type="text"
                     value={newCompanyForm.phone}
                     onChange={(e) => setNewCompanyForm({ ...newCompanyForm, phone: e.target.value })}
                     className="w-full p-2 border border-slate-200 dark:border-zinc-800 bg-slate-50 dark:bg-zinc-900 rounded outline-none text-xs mt-1 text-slate-800 dark:text-zinc-100 focus:ring-1 focus:ring-indigo-500"
-                    placeholder="e.g. +90 (212) 555 4433"
+                    placeholder={t("e.g. +90 (212) 555 4433")}
                   />
                 </div>
 
                 <div>
-                  <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wide font-mono">Industry</label>
+                  <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wide font-mono">{t("Industry")}</label>
                   <input
                     type="text"
                     value={newCompanyForm.industry}
                     onChange={(e) => setNewCompanyForm({ ...newCompanyForm, industry: e.target.value })}
                     className="w-full p-2 border border-slate-200 dark:border-zinc-800 bg-slate-50 dark:bg-zinc-900 rounded outline-none text-xs mt-1 text-slate-800 dark:text-zinc-100 focus:ring-1 focus:ring-indigo-500"
-                    placeholder="e.g. Automotive, Textiles"
+                    placeholder={t("e.g. Automotive, Textiles")}
                   />
                 </div>
 
                 <div>
-                  <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wide font-mono">Employee Count</label>
+                  <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wide font-mono">{t("Employee Count")}</label>
                   <input
                     type="number"
                     value={newCompanyForm.employeeCount}
@@ -274,7 +274,7 @@ export default function CompanyAutocomplete({
                 </div>
 
                 <div>
-                  <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wide font-mono">Annual Revenue</label>
+                  <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wide font-mono">{t("Annual Revenue")}</label>
                   <div className="flex gap-2 mt-1">
                     <input
                       type="text"
@@ -295,51 +295,51 @@ export default function CompanyAutocomplete({
                 </div>
 
                 <div>
-                  <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wide font-mono">Customer Status</label>
+                  <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wide font-mono">{t("Customer Status")}</label>
                   <select
                     value={newCompanyForm.customerStatus}
                     onChange={(e) => setNewCompanyForm({ ...newCompanyForm, customerStatus: e.target.value })}
                     className="w-full p-2 border border-slate-200 dark:border-zinc-800 bg-slate-50 dark:bg-zinc-900 rounded outline-none text-xs mt-1 text-slate-850 dark:text-zinc-200 focus:ring-1 focus:ring-indigo-500"
                   >
-                    <option value="Lead">Lead</option>
-                    <option value="Contacted">Contacted</option>
-                    <option value="Proposal Phase">Proposal Phase</option>
-                    <option value="Implementation">Implementation</option>
-                    <option value="Active Customer">Active Customer</option>
+                    <option value="Lead">{t("Lead")}</option>
+                    <option value="Contacted">{t("Contacted")}</option>
+                    <option value="Proposal Phase">{t("Proposal Phase")}</option>
+                    <option value="Implementation">{t("Implementation")}</option>
+                    <option value="Active Customer">{t("Active Customer")}</option>
                   </select>
                 </div>
 
                 <div>
-                  <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wide font-mono">Billing City</label>
+                  <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wide font-mono">{t("Billing City")}</label>
                   <input
                     type="text"
                     value={newCompanyForm.billingCity}
                     onChange={(e) => setNewCompanyForm({ ...newCompanyForm, billingCity: e.target.value })}
                     className="w-full p-2 border border-slate-200 dark:border-zinc-800 bg-slate-50 dark:bg-zinc-900 rounded outline-none text-xs mt-1 text-slate-850 dark:text-zinc-100 focus:ring-1 focus:ring-indigo-500"
-                    placeholder="e.g. Bursa, İstanbul"
+                    placeholder={t("e.g. Bursa, İstanbul")}
                   />
                 </div>
               </div>
 
               <div>
-                <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wide font-mono">Billing Address</label>
+                <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wide font-mono">{t("Billing Address")}</label>
                 <textarea
                   value={newCompanyForm.billingAddress}
                   onChange={(e) => setNewCompanyForm({ ...newCompanyForm, billingAddress: e.target.value })}
                   rows={2}
                   className="w-full p-2 border border-slate-200 dark:border-zinc-800 bg-slate-50 dark:bg-zinc-900 rounded outline-none text-xs mt-1 text-slate-850 dark:text-zinc-100 focus:ring-1 focus:ring-indigo-500"
-                  placeholder="Full billing address..."
+                  placeholder={t("Full billing address...")}
                 />
               </div>
 
               <div>
-                <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wide font-mono">Management Team (Comma Separated)</label>
+                <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wide font-mono">{t("Management Team (Comma Separated)")}</label>
                 <input
                   type="text"
                   value={newCompanyForm.managementTeam}
                   onChange={(e) => setNewCompanyForm({ ...newCompanyForm, managementTeam: e.target.value })}
                   className="w-full p-2 border border-slate-200 dark:border-zinc-800 bg-slate-50 dark:bg-zinc-900 rounded outline-none text-xs mt-1 text-slate-800 dark:text-zinc-100 focus:ring-1 focus:ring-indigo-500"
-                  placeholder="e.g. John Doe (CEO), Jane Smith (COO)"
+                  placeholder={t("e.g. John Doe (CEO), Jane Smith (COO)")}
                 />
               </div>
 
@@ -349,13 +349,13 @@ export default function CompanyAutocomplete({
                   onClick={() => setIsModalOpen(false)}
                   className="px-4 py-2 border border-slate-200 dark:border-zinc-800 hover:bg-slate-50 dark:hover:bg-zinc-800/60 text-xs text-slate-600 dark:text-zinc-350 rounded-xl transition-all cursor-pointer"
                 >
-                  {lang === "TR" ? "İptal" : "Cancel"}
+                  {t("Cancel")}
                 </button>
                 <button
                   type="submit"
                   className="px-4 py-2 bg-indigo-650 hover:bg-indigo-700 text-white text-xs font-bold rounded-xl shadow-md transition-all cursor-pointer"
                 >
-                  {lang === "TR" ? "Şirket Oluştur ve Seç" : "Create & Select Company"}
+                  {t("Create & Select Company")}
                 </button>
               </div>
             </form>

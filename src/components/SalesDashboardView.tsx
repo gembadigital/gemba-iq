@@ -1990,16 +1990,16 @@ export default function SalesDashboardView({ deals, onSelectDeal }: SalesDashboa
       {/* SECTION 11 - ACTIVITY DASHBOARD */}
       <div className="bg-white dark:bg-[#1b1a19] border border-[#EDEBE9] dark:border-[#323130] rounded-2xl p-5 shadow-xs">
         <h3 className="text-xs font-black uppercase tracking-widest text-[#0078D4] dark:text-blue-400 mb-1">
-          Activity Health & Warning Dashboard
+          {t("Activity Health & Warning Dashboard")}
         </h3>
-        <p className="text-[10px] text-slate-400 mb-4">Administrative checklists and action blockages tracker</p>
+        <p className="text-[10px] text-slate-400 mb-4">{t("Administrative checklists and action blockages tracker")}</p>
 
         <div className="grid grid-cols-1 sm:grid-cols-4 gap-4">
           {/* Card 1: Open Tasks */}
           <div className="p-4 bg-slate-50 dark:bg-zinc-900 border border-slate-150 dark:border-zinc-800 rounded-xl relative">
-            <span className="text-[9px] uppercase tracking-widest font-black text-slate-400 block mb-1">Open Action Tasks</span>
-            <span className="text-2xl font-black font-mono block mb-1">4 Pending</span>
-            <span className="text-[10px] text-slate-500 block">SLA activities on-course</span>
+            <span className="text-[9px] uppercase tracking-widest font-black text-slate-400 block mb-1">{t("Open Action Tasks")}</span>
+            <span className="text-2xl font-black font-mono block mb-1">{t("{count} Pending").replace("{count}", "4")}</span>
+            <span className="text-[10px] text-slate-500 block">{t("SLA activities on-course")}</span>
           </div>
 
           {/* Card 2: Overdue Tasks */}
@@ -2010,23 +2010,23 @@ export default function SalesDashboardView({ deals, onSelectDeal }: SalesDashboa
                 <span className="relative inline-flex rounded-full h-2 w-2 bg-rose-500"></span>
               </span>
             </div>
-            <span className="text-[9px] uppercase tracking-widest font-black text-rose-500 block mb-1">Overdue Tasks</span>
-            <span className="text-2xl font-black font-mono block text-rose-600 dark:text-rose-400 mb-1">2 Overdue</span>
-            <span className="text-[10px] text-rose-400 block">Requires immediate intervention</span>
+            <span className="text-[9px] uppercase tracking-widest font-black text-rose-500 block mb-1">{t("Overdue Tasks")}</span>
+            <span className="text-2xl font-black font-mono block text-rose-600 dark:text-rose-400 mb-1">{t("{count} Overdue").replace("{count}", "2")}</span>
+            <span className="text-[10px] text-rose-400 block">{t("Requires immediate intervention")}</span>
           </div>
 
           {/* Card 3: Follow-Ups Due */}
           <div className="p-4 bg-amber-50/40 dark:bg-amber-950/10 border border-amber-200 dark:border-amber-950/30 rounded-xl relative">
-            <span className="text-[9px] uppercase tracking-widest font-black text-amber-500 block mb-1">Follow-Ups Due</span>
-            <span className="text-2xl font-black font-mono text-amber-500 block mb-1">3 Accounts</span>
-            <span className="text-[10px] text-slate-500 block">Nearing critical SLA limit</span>
+            <span className="text-[9px] uppercase tracking-widest font-black text-amber-500 block mb-1">{t("Follow-Ups Due")}</span>
+            <span className="text-2xl font-black font-mono text-amber-500 block mb-1">{t("{count} Accounts").replace("{count}", "3")}</span>
+            <span className="text-[10px] text-slate-500 block">{t("Nearing critical SLA limit")}</span>
           </div>
 
           {/* Card 4: Upcoming Meetings */}
           <div className="p-4 bg-emerald-50/40 dark:bg-emerald-950/10 border border-emerald-250 dark:border-emerald-950/30 rounded-xl relative">
-            <span className="text-[9px] uppercase tracking-widest font-black text-emerald-500 block mb-1">Upcoming Meetings</span>
-            <span className="text-2xl font-black font-mono text-emerald-500 block mb-1">5 Confirmed</span>
-            <span className="text-[10px] text-slate-500 block">Next meeting scheduled: tomorrow</span>
+            <span className="text-[9px] uppercase tracking-widest font-black text-emerald-500 block mb-1">{t("Upcoming Meetings")}</span>
+            <span className="text-2xl font-black font-mono text-emerald-500 block mb-1">{t("{count} Confirmed").replace("{count}", "5")}</span>
+            <span className="text-[10px] text-slate-500 block">{t("Next meeting scheduled: tomorrow")}</span>
           </div>
         </div>
       </div>
@@ -2036,7 +2036,7 @@ export default function SalesDashboardView({ deals, onSelectDeal }: SalesDashboa
         <div className="fixed inset-0 bg-black/70 backdrop-blur-xs flex items-center justify-center z-50 p-4 animate-in fade-in duration-200">
           <div className="bg-white dark:bg-[#1f1e1d] rounded-2xl border border-slate-200 dark:border-[#323130] w-full max-w-sm overflow-hidden shadow-2xl flex flex-col">
             <div className="px-5 py-4 border-b border-slate-100 dark:border-[#323130] bg-[#FAF9F8] dark:bg-[#201f1e] flex items-center justify-between">
-              <span className="text-sm font-extrabold uppercase tracking-widest text-[#0078D4]">Adjust Sales targets</span>
+              <span className="text-sm font-extrabold uppercase tracking-widest text-[#0078D4]">{t("Adjust Sales targets")}</span>
               <button onClick={() => setIsTargetModalOpen(false)} className="p-1 hover:bg-slate-200 rounded cursor-pointer">
                 <X className="w-4 h-4" />
               </button>
@@ -2044,7 +2044,7 @@ export default function SalesDashboardView({ deals, onSelectDeal }: SalesDashboa
 
             <div className="p-5 space-y-4">
               <div className="space-y-1.5">
-                <label className="text-[10px] uppercase font-bold text-slate-400">Monthly Man-Day Target</label>
+                <label className="text-[10px] uppercase font-bold text-slate-400">{t("Monthly Man-Day Target")}</label>
                 <input
                   type="number"
                   value={tempTargets.monthly}
@@ -2054,7 +2054,7 @@ export default function SalesDashboardView({ deals, onSelectDeal }: SalesDashboa
               </div>
 
               <div className="space-y-1.5">
-                <label className="text-[10px] uppercase font-bold text-slate-400">Quarterly Man-Day Target</label>
+                <label className="text-[10px] uppercase font-bold text-slate-400">{t("Quarterly Man-Day Target")}</label>
                 <input
                   type="number"
                   value={tempTargets.quarterly}
@@ -2064,7 +2064,7 @@ export default function SalesDashboardView({ deals, onSelectDeal }: SalesDashboa
               </div>
 
               <div className="space-y-1.5">
-                <label className="text-[10px] uppercase font-bold text-slate-400">Annual Man-Day Target</label>
+                <label className="text-[10px] uppercase font-bold text-slate-400">{t("Annual Man-Day Target")}</label>
                 <input
                   type="number"
                   value={tempTargets.annual}
@@ -2079,13 +2079,13 @@ export default function SalesDashboardView({ deals, onSelectDeal }: SalesDashboa
                 onClick={() => setIsTargetModalOpen(false)}
                 className="px-3 py-2 text-xs font-bold border border-slate-200 dark:border-zinc-800 text-slate-700 dark:text-slate-300 rounded hover:bg-slate-50 cursor-pointer"
               >
-                Cancel
+                {t("Cancel")}
               </button>
               <button
                 onClick={handleSaveTargets}
                 className="px-4 py-2 text-xs font-bold bg-[#0078D4] hover:bg-[#005a9e] text-white rounded cursor-pointer"
               >
-                Save administrative Targets
+                {t("Save administrative Targets")}
               </button>
             </div>
           </div>

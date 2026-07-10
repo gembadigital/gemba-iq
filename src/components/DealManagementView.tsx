@@ -1666,7 +1666,7 @@ export default function DealManagementView({ initialTab = "dashboard", onNavigat
               }`}
             >
               <BarChart2 className="w-4 h-4 text-[#0078D4]" />
-              <span>{lang === "TR" ? "Satış Gösterge Paneli" : "Sales Dashboard"}</span>
+              <span>{t("Sales Dashboard")}</span>
             </button>
 
             <button
@@ -1679,7 +1679,7 @@ export default function DealManagementView({ initialTab = "dashboard", onNavigat
               }`}
             >
               <Columns className="w-4 h-4 text-green-500" />
-              <span>{lang === "TR" ? "Operasyonel Kanban Panosu" : "Operational Kanban Board"}</span>
+              <span>{t("Operational Kanban Board")}</span>
             </button>
 
             <button
@@ -1694,14 +1694,14 @@ export default function DealManagementView({ initialTab = "dashboard", onNavigat
               className="px-4 py-2 text-xs font-bold rounded-lg transition-all flex items-center gap-2 cursor-pointer text-slate-500 hover:text-slate-700 dark:text-zinc-400"
             >
               <Building className="w-4 h-4 text-green-500" />
-              <span>{lang === "TR" ? "Şirket Kayıt Defteri" : "Companies Registry"}</span>
+              <span>{t("Companies Registry")}</span>
             </button>
           </div>
 
           {(activeModuleTab === "board" || activeModuleTab === "dashboard") && (
             <div className="mr-2 hidden md:block">
               <span className="text-[10px] bg-green-100 dark:bg-green-950/40 text-green-700 dark:text-green-400 font-mono font-bold px-2 py-1 rounded">
-                {lang === "TR" ? "Aktif CRM Hattı: Standart Satış Hunisi" : "Active CRM pipeline: Sales Pipeline Standard"}
+                {t("Active CRM pipeline: Sales Pipeline Standard")}
               </span>
             </div>
           )}
@@ -1726,45 +1726,45 @@ export default function DealManagementView({ initialTab = "dashboard", onNavigat
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 select-none">
             <div className="bg-white dark:bg-[#151515] p-3.5 rounded-xl border border-slate-100 dark:border-zinc-800/80 shadow-[0_1px_2px_rgba(0,0,0,0.01)] flex flex-col justify-between">
               <span className="text-[10px] font-bold text-slate-400 tracking-wider font-mono">
-                {lang === "TR" ? "AKTİF FIRSAT DEĞERİ" : "ACTIVE PIPELINE VALUE"}
+                {t("ACTIVE PIPELINE VALUE")}
               </span>
               <div className="text-xl font-bold text-slate-800 dark:text-zinc-100 mt-1">{getSystemCurrency().symbol}{stats.pipelineValue.toLocaleString()}</div>
               <span className="text-[9px] text-zinc-400 font-mono mt-0.5">
-                {lang === "TR" ? `${stats.activeCount} açık fırsatın toplamı` : `Sum of ${stats.activeCount} open deals`}
+                {t("Sum of {count} open deals").replace("{count}", String(stats.activeCount))}
               </span>
             </div>
 
             <div className="bg-white dark:bg-[#151515] p-3.5 rounded-xl border border-slate-100 dark:border-zinc-800/80 shadow-[0_1px_2px_rgba(0,0,0,0.01)] flex flex-col justify-between">
               <span className="text-[10px] font-bold text-slate-400 tracking-wider font-mono">
-                {lang === "TR" ? "AĞIRLIKLANDIRILMIŞ CİRO TAHMİNİ" : "WEIGHTED REVENUE FORECAST"}
+                {t("WEIGHTED REVENUE FORECAST")}
               </span>
               <div className="text-xl font-bold text-green-600 dark:text-green-400 mt-1">{getSystemCurrency().symbol}{Math.floor(stats.forecastValue).toLocaleString()}</div>
               <span className="text-[9px] text-zinc-400 font-mono mt-0.5">
-                {lang === "TR" ? "Kazanma olasılıklarına göre düzeltilmiş" : "Adjusted by win probabilities"}
+                {t("Adjusted by win probabilities")}
               </span>
             </div>
 
             <div className="bg-white dark:bg-[#151515] p-3.5 rounded-xl border border-slate-100 dark:border-zinc-800/80 shadow-[0_1px_2px_rgba(0,0,0,0.01)] flex flex-col justify-between">
               <span className="text-[10px] font-bold text-slate-400 tracking-wider font-mono">
-                {lang === "TR" ? "KAZANILAN ANLAŞMALAR (YTD)" : "CLOSED WON TO DATE"}
+                {t("CLOSED WON TO DATE")}
               </span>
               <div className="text-xl font-bold text-green-655 dark:text-green-500 mt-1">
-                {lang === "TR" ? `${stats.wonCount} kazanılan sözleşme` : `${stats.wonCount} won contracts`}
+                {t("{count} won contracts").replace("{count}", String(stats.wonCount))}
               </div>
               <span className="text-[9px] text-zinc-400 font-mono mt-0.5">
-                {lang === "TR" ? "Şirket kayıt defteri ile otomatik senkronize" : "Synced automatically to registry"}
+                {t("Synced automatically to registry")}
               </span>
             </div>
 
             <div className="bg-white dark:bg-[#151515] p-3.5 rounded-xl border border-slate-100 dark:border-zinc-800/80 shadow-[0_1px_2px_rgba(0,0,0,0.01)] flex flex-col justify-between">
               <span className="text-[10px] font-bold text-slate-400 tracking-wider font-mono">
-                {lang === "TR" ? "CRM AŞAMA ADIMLARI" : "CRM STAGE MILESTONES"}
+                {t("CRM STAGE MILESTONES")}
               </span>
               <div className="text-xl font-bold text-indigo-500 mt-1">
-                {lang === "TR" ? `${activeStages.length} aşama` : `${activeStages.length} phases`}
+                {t("{count} phases").replace("{count}", String(activeStages.length))}
               </div>
               <span className="text-[9px] text-zinc-400 font-mono mt-0.5">
-                {lang === "TR" ? "Sütunları sıralamak için sürükleyin" : "Drag & drop to reorder columns"}
+                {t("Drag & drop to reorder columns")}
               </span>
             </div>
           </div>
@@ -1776,7 +1776,7 @@ export default function DealManagementView({ initialTab = "dashboard", onNavigat
                 <Search className="w-3.5 h-3.5 text-slate-400 absolute left-3 top-3" />
                 <input
                   type="text"
-                  placeholder={lang === "TR" ? "Fırsatları, şirket adlarını, ilgili kişileri ara..." : "Search deals, company names, contacts..."}
+                  placeholder={t("Search deals, company names, contacts...")}
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
                   className="bg-slate-50 dark:bg-zinc-800/50 border border-slate-200 dark:border-zinc-700/80 rounded-lg pl-9 pr-4 py-1.5 text-xs text-slate-700 dark:text-zinc-200 focus:outline-none focus:border-green-655 focus:ring-1 focus:ring-green-650 w-64 font-sans"
@@ -1790,10 +1790,10 @@ export default function DealManagementView({ initialTab = "dashboard", onNavigat
                   onChange={(e) => setPriorityFilter(e.target.value)}
                   className="bg-transparent border-none text-[11px] font-semibold focus:outline-none cursor-pointer"
                 >
-                  <option value="All">{lang === "TR" ? "Tüm Öncelikler" : "All Priorities"}</option>
-                  <option value="High">🔴 {lang === "TR" ? "Yüksek" : "High"}</option>
-                  <option value="Medium">🟡 {lang === "TR" ? "Orta" : "Medium"}</option>
-                  <option value="Low">⚪ {lang === "TR" ? "Düşük" : "Low"}</option>
+                  <option value="All">{t("All Priorities")}</option>
+                  <option value="High">🔴 {t("High")}</option>
+                  <option value="Medium">🟡 {t("Medium")}</option>
+                  <option value="Low">⚪ {t("Low")}</option>
                 </select>
               </div>
 
@@ -1804,10 +1804,10 @@ export default function DealManagementView({ initialTab = "dashboard", onNavigat
                   onChange={(e) => setDelayFilter(e.target.value as any)}
                   className="bg-transparent border-none text-[11px] font-extrabold text-amber-800 dark:text-amber-450 focus:outline-none cursor-pointer"
                 >
-                  <option value="All">{lang === "TR" ? "⏱️ Gecikme Takibi: Tümü" : "⏱️ Delay Track: All"}</option>
-                  <option value="7_plus">{lang === "TR" ? "⚠️ Hatırlatma Bekleyen (7+ Gün)" : "⚠️ Pending Reminder (7+ Days)"}</option>
-                  <option value="20_plus">{lang === "TR" ? "🚨 Kritik Hatırlatma (20+ Gün)" : "🚨 Critical Reminder (20+ Days)"}</option>
-                  <option value="delayed">{lang === "TR" ? "⏳ Tüm Geciken Teklifler (7+ Gün)" : "⏳ All Delayed Proposals (7+ Days)"}</option>
+                  <option value="All">{t("⏱️ Delay Track: All")}</option>
+                  <option value="7_plus">{t("⚠️ Pending Reminder (7+ Days)")}</option>
+                  <option value="20_plus">{t("🚨 Critical Reminder (20+ Days)")}</option>
+                  <option value="delayed">{t("⏳ All Delayed Proposals (7+ Days)")}</option>
                 </select>
               </div>
 
@@ -1818,11 +1818,11 @@ export default function DealManagementView({ initialTab = "dashboard", onNavigat
                   onChange={(e) => setSortBy(e.target.value as any)}
                   className="bg-transparent border-none text-[11px] font-semibold focus:outline-none cursor-pointer"
                 >
-                  <option value="value">{lang === "TR" ? "Sıralama: Tutar" : "Sort: Amount"}</option>
-                  <option value="closeDate">{lang === "TR" ? "Sıralama: Kapanış Tarihi" : "Sort: Close Date"}</option>
-                  <option value="score">{lang === "TR" ? "Sıralama: Skor" : "Sort: Score"}</option>
-                  <option value="probability">{lang === "TR" ? "Sıralama: Olasılık" : "Sort: Probability"}</option>
-                  <option value="proposalNumber">{lang === "TR" ? "Sıralama: Teklif No" : "Sort: Quotation No"}</option>
+                  <option value="value">{t("Sort: Amount")}</option>
+                  <option value="closeDate">{t("Sort: Close Date")}</option>
+                  <option value="score">{t("Sort: Score")}</option>
+                  <option value="probability">{t("Sort: Probability")}</option>
+                  <option value="proposalNumber">{t("Sort: Quotation No")}</option>
                 </select>
               </div>
 
@@ -1836,10 +1836,10 @@ export default function DealManagementView({ initialTab = "dashboard", onNavigat
                       ? "bg-white dark:bg-zinc-700 text-green-655 dark:text-green-400 shadow-xs"
                       : "text-slate-500 hover:text-slate-700 dark:text-zinc-400"
                   }`}
-                  title={lang === "TR" ? "Kanban Kolon Görünümünü Göster" : "Show Kanban Column Board"}
+                  title={t("Show Kanban Column Board")}
                 >
                   <Kanban className="w-3.5 h-3.5" />
-                  <span className="hidden sm:inline">{lang === "TR" ? "Pano" : "Board"}</span>
+                  <span className="hidden sm:inline">{t("Board")}</span>
                 </button>
                 <button
                   type="button"
@@ -1849,10 +1849,10 @@ export default function DealManagementView({ initialTab = "dashboard", onNavigat
                       ? "bg-white dark:bg-zinc-700 text-green-655 dark:text-green-400 shadow-xs"
                       : "text-slate-500 hover:text-slate-700 dark:text-zinc-400"
                   }`}
-                  title={lang === "TR" ? "Tablo Liste Görünümünü Göster" : "Show Table List"}
+                  title={t("Show Table List")}
                 >
                   <List className="w-3.5 h-3.5" />
-                  <span className="hidden sm:inline">{lang === "TR" ? "Liste" : "List"}</span>
+                  <span className="hidden sm:inline">{t("List")}</span>
                 </button>
               </div>
             </div>
@@ -1860,7 +1860,7 @@ export default function DealManagementView({ initialTab = "dashboard", onNavigat
             <div className="flex items-center gap-2 w-full md:w-auto justify-end">
               {/* Import / Export Deal list */}
               <div className="flex items-center gap-1.5 border-r border-slate-200 dark:border-zinc-800 pr-2 mr-1">
-                <label className="p-1.5 px-2.5 bg-white dark:bg-[#202020] border border-slate-200 dark:border-zinc-800 hover:bg-slate-50 dark:hover:bg-zinc-700/60 text-slate-700 dark:text-zinc-300 rounded-lg text-xs font-bold flex items-center gap-1.5 cursor-pointer transition-all shadow-xs" title="Excel/CSV Fırsat Listesi İçe Aktar (.csv)">
+                <label className="p-1.5 px-2.5 bg-white dark:bg-[#202020] border border-slate-200 dark:border-zinc-800 hover:bg-slate-50 dark:hover:bg-zinc-700/60 text-slate-700 dark:text-zinc-300 rounded-lg text-xs font-bold flex items-center gap-1.5 cursor-pointer transition-all shadow-xs" title={t("Import deal list from Excel/CSV (.csv)")}>
                   <Upload className="w-3.5 h-3.5 text-blue-500 dark:text-blue-400" />
                   <span className="hidden sm:inline">İçe Aktar</span>
                   <input type="file" accept=".csv" onChange={handleImportCSV} className="hidden" />
@@ -1870,7 +1870,7 @@ export default function DealManagementView({ initialTab = "dashboard", onNavigat
                   type="button"
                   onClick={handleExportCSV}
                   className="p-1.5 px-2.5 bg-[#14b15b] hover:bg-[#129a4f] border border-[#14b15b] text-white rounded-lg text-xs font-bold flex items-center gap-1.5 cursor-pointer transition-all shadow-xs"
-                  title="Fırsat Listesini CSV Olarak Dışa Aktar"
+                  title={t("Export deal list as CSV")}
                 >
                   <Download className="w-3.5 h-3.5 text-white" />
                   <span className="hidden sm:inline">Dışa Aktar</span>
@@ -1884,7 +1884,7 @@ export default function DealManagementView({ initialTab = "dashboard", onNavigat
                 className="px-3.5 py-1.5 border border-slate-205 dark:border-zinc-850 rounded-lg text-xs font-bold text-slate-655 hover:bg-slate-50 dark:hover:bg-zinc-800 flex items-center gap-1 cursor-pointer transition-all shadow-sm"
               >
                 <PlusCircle className="w-4 h-4 text-green-600" />
-                <span>{lang === "TR" ? "+ Yeni Aşama" : "+ Custom Stage"}</span>
+                <span>{t("+ Custom Stage")}</span>
               </button>
 
               <button
@@ -1893,7 +1893,7 @@ export default function DealManagementView({ initialTab = "dashboard", onNavigat
                 className="px-4 py-1.5 bg-green-600 hover:bg-green-700 text-white font-bold rounded-lg text-xs flex items-center gap-1.5 cursor-pointer shadow-sm transition-all animate-none"
               >
                 <Plus className="w-4 h-4" />
-                <span>{lang === "TR" ? "+ Yeni Fırsat" : "+ Deal"}</span>
+                <span>{t("+ Deal")}</span>
               </button>
             </div>
           </div>
@@ -1931,21 +1931,21 @@ export default function DealManagementView({ initialTab = "dashboard", onNavigat
                 <table className="w-full text-left border-collapse">
                   <thead>
                     <tr className="bg-slate-50 dark:bg-zinc-900 border-b border-slate-100 dark:border-zinc-800 text-[10px] uppercase tracking-wider font-mono font-bold text-slate-400 select-none">
-                      <th className="p-4">{lang === "TR" ? "Anlaşma / Şirket" : "Deal / Company"}</th>
-                      <th className="p-4">{lang === "TR" ? "Teklif No" : "Quotation No"}</th>
-                      <th className="p-4">{lang === "TR" ? "Tutar" : "Amount"}</th>
-                      <th className="p-4">{lang === "TR" ? "Durum & Skor" : "Status & Score"}</th>
-                      <th className="p-4">{lang === "TR" ? "CRM Aşaması" : "Milestone Stage"}</th>
-                      <th className="p-4">{lang === "TR" ? "Öncelik" : "Priority"}</th>
-                      <th className="p-4">{lang === "TR" ? "Kapanış Tarihi" : "Close Date"}</th>
-                      <th className="p-4 text-right">{lang === "TR" ? "İşlemler" : "Actions"}</th>
+                      <th className="p-4">{t("Deal / Company")}</th>
+                      <th className="p-4">{t("Quotation No")}</th>
+                      <th className="p-4">{t("Amount")}</th>
+                      <th className="p-4">{t("Status & Score")}</th>
+                      <th className="p-4">{t("Milestone Stage")}</th>
+                      <th className="p-4">{t("Priority")}</th>
+                      <th className="p-4">{t("Close Date")}</th>
+                      <th className="p-4 text-right">{t("Actions")}</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-slate-100 dark:divide-zinc-800/50">
                     {filteredDeals.length === 0 ? (
                       <tr>
                         <td colSpan={8} className="p-12 text-center text-slate-400 dark:text-zinc-500 font-sans">
-                          {lang === "TR" ? "Filtrelerle eşleşen fırsat bulunamadı." : "No deals found matching current filters."}
+                          {t("No deals found matching current filters.")}
                         </td>
                       </tr>
                     ) : (
@@ -1966,7 +1966,7 @@ export default function DealManagementView({ initialTab = "dashboard", onNavigat
                               <span 
                                 onClick={(e) => handleCompanyClick(e, deal.companyName, deal.companyId)}
                                 className="font-bold text-slate-600 dark:text-zinc-400 hover:text-indigo-600 dark:hover:text-indigo-400 hover:underline cursor-pointer flex items-center gap-1 shrink-0"
-                                title={lang === "TR" ? "Şirket Detayına Git" : "Go to Company Detail"}
+                                title={t("Go to Company Detail")}
                               >
                                 🏢 {deal.companyName}
                               </span>
@@ -1986,7 +1986,7 @@ export default function DealManagementView({ initialTab = "dashboard", onNavigat
                               )}
                             </div>
                             <div className="text-[10px] text-slate-400 font-mono mt-0.5">
-                              {lang === "TR" ? "Süre" : "Duration"}: <span className="text-blue-500 font-bold">{deal.manDay || "—"} {lang === "TR" ? "Gün" : "Days"}</span>
+                              {t("Duration")}: <span className="text-blue-500 font-bold">{deal.manDay || "—"} {t("Days")}</span>
                             </div>
                           </td>
                           <td className="p-4">
@@ -1999,7 +1999,7 @@ export default function DealManagementView({ initialTab = "dashboard", onNavigat
                           </td>
                           <td className="p-4">
                             <div className="flex items-center gap-2">
-                              <span className="text-xs font-bold text-slate-700 dark:text-zinc-205">{deal.winProbability}% {lang === "TR" ? "Kazanma" : "Win"}</span>
+                              <span className="text-xs font-bold text-slate-700 dark:text-zinc-205">{deal.winProbability}% {t("Win")}</span>
                               <div className="w-16 h-1.5 bg-slate-100 dark:bg-zinc-800 rounded-full overflow-hidden">
                                 <div
                                   className="h-full bg-green-500"
@@ -2008,7 +2008,7 @@ export default function DealManagementView({ initialTab = "dashboard", onNavigat
                               </div>
                             </div>
                             <div className="text-[10px] text-slate-400 dark:text-zinc-500 font-sans mt-1">
-                              {lang === "TR" ? "Fırsat Skoru" : "Opportunity Score"}: <span className="text-green-600 font-bold">#{deal.opportunityScore}</span>
+                              {t("Opportunity Score")}: <span className="text-green-600 font-bold">#{deal.opportunityScore}</span>
                             </div>
                           </td>
                           <td className="p-4" onClick={(e) => e.stopPropagation()}>
@@ -2068,7 +2068,7 @@ export default function DealManagementView({ initialTab = "dashboard", onNavigat
                                 ? "bg-amber-100 text-amber-850 dark:bg-amber-955/40 dark:text-amber-405"
                                 : "bg-slate-105 text-slate-600 dark:bg-zinc-800 dark:text-zinc-400"
                             }`}>
-                              {deal.priority === "High" ? (lang === "TR" ? "YÜKSEK" : "HIGH") : deal.priority === "Medium" ? (lang === "TR" ? "ORTA" : "MEDIUM") : (lang === "TR" ? "DÜŞÜK" : "LOW")}
+                              {deal.priority === "High" ? (t("HIGH")) : deal.priority === "Medium" ? (t("MEDIUM")) : (t("LOW"))}
                             </span>
                           </td>
                           <td className="p-4 font-mono text-[11px] text-slate-500 dark:text-zinc-400">
@@ -2224,7 +2224,7 @@ export default function DealManagementView({ initialTab = "dashboard", onNavigat
                                     }}
                                     className="w-full text-left px-3 py-1.5 text-xs text-slate-700 dark:text-zinc-300 hover:bg-slate-50 dark:hover:bg-zinc-800 flex items-center gap-1.5 cursor-pointer"
                                   >
-                                    <span>{lang === "TR" ? "Sütunu Daralt" : "Collapse Stage"}</span>
+                                    <span>{t("Collapse Stage")}</span>
                                   </button>
                                   <button
                                     type="button"
@@ -2235,12 +2235,12 @@ export default function DealManagementView({ initialTab = "dashboard", onNavigat
                                     }}
                                     className="w-full text-left px-3 py-1.5 text-xs text-slate-700 dark:text-zinc-300 hover:bg-slate-50 dark:hover:bg-zinc-800 flex items-center gap-1.5 cursor-pointer"
                                   >
-                                    <span>{lang === "TR" ? "Açıklama Ekle/Düzenle" : "Add/Edit Description"}</span>
+                                    <span>{t("Add/Edit Description")}</span>
                                   </button>
                                   <button
                                     type="button"
                                     onClick={() => {
-                                      const stName = prompt(lang === "TR" ? "Bu sütunun yanına eklenecek yeni aşama ismi:" : "Add new stage name adjacent to this:");
+                                      const stName = prompt(t("Add new stage name adjacent to this:"));
                                       if (stName) {
                                         const updated = [...activeStages];
                                         updated.splice(idx + 1, 0, stName);
@@ -2251,7 +2251,7 @@ export default function DealManagementView({ initialTab = "dashboard", onNavigat
                                     }}
                                     className="w-full text-left px-3 py-1.5 text-xs text-slate-700 dark:text-zinc-300 hover:bg-slate-50 dark:hover:bg-zinc-800 flex items-center gap-1.5 cursor-pointer"
                                   >
-                                    <span>{lang === "TR" ? "Yanına Aşama Ekle" : "Add Adjacent Stage"}</span>
+                                    <span>{t("Add Adjacent Stage")}</span>
                                   </button>
                                   <button
                                     type="button"
@@ -2262,7 +2262,7 @@ export default function DealManagementView({ initialTab = "dashboard", onNavigat
                                     }}
                                     className="w-full text-left px-3 py-1.5 text-xs text-[#0078D4] dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-950/20 flex items-center gap-1.5 cursor-pointer font-bold"
                                   >
-                                    <span>✏️ {lang === "TR" ? "Aşamayı Yeniden Adlandır" : "Rename Stage"}</span>
+                                    <span>✏️ {t("Rename Stage")}</span>
                                   </button>
                                   <div className="border-t my-1 dark:border-zinc-800"></div>
                                   <button
@@ -2273,7 +2273,7 @@ export default function DealManagementView({ initialTab = "dashboard", onNavigat
                                     }}
                                     className="w-full text-left px-3 py-1.5 text-xs text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-955/20 flex items-center gap-1.5 cursor-pointer"
                                   >
-                                    <span>{lang === "TR" ? "Aşamayı Sil" : "Delete Stage"}</span>
+                                    <span>{t("Delete Stage")}</span>
                                   </button>
                                 </div>
                               </>
@@ -2296,10 +2296,10 @@ export default function DealManagementView({ initialTab = "dashboard", onNavigat
                             type="button"
                             onClick={() => handleOpenCreateDealWithStage(stage)}
                             className="w-full py-2 bg-green-600 hover:bg-green-700 text-white font-sans font-bold text-xs rounded-xl shadow-sm transition-all flex items-center justify-center gap-1.5 cursor-pointer border border-green-700/10 active:scale-95 animate-fade-in"
-                            title={lang === "TR" ? `Yeni Fırsat Ekle (${getStageTranslation(stage, lang)})` : `Yeni Fırsat Ekle (${stage})`}
+                            title={t("Add Opportunity ({stage})").replace("{stage}", getStageTranslation(stage, lang))}
                           >
                             <Plus className="w-3.5 h-3.5" />
-                            <span>{lang === "TR" ? "Yeni Fırsat Ekle" : "Add Opportunity"}</span>
+                            <span>{t("Add Opportunity")}</span>
                           </button>
                         </div>
 
@@ -2308,7 +2308,7 @@ export default function DealManagementView({ initialTab = "dashboard", onNavigat
                           {stageDeals.length === 0 ? (
                             <div className="h-28 border border-dashed border-slate-200 dark:border-zinc-800/40 rounded-xl flex items-center justify-center text-center p-4">
                               <span className="text-[9px] text-slate-350 font-mono">
-                                {lang === "TR" ? "Fırsatları buraya sürükleyin" : "Move deals here"}
+                                {t("Move deals here")}
                               </span>
                             </div>
                           ) : (
@@ -2338,7 +2338,7 @@ export default function DealManagementView({ initialTab = "dashboard", onNavigat
                                         ? "bg-amber-100 text-amber-850 dark:bg-amber-955/40 dark:text-amber-400"
                                         : "bg-slate-105 text-slate-600 dark:bg-zinc-800 dark:text-zinc-400"
                                     }`}>
-                                      {deal.priority === "High" ? (lang === "TR" ? "YÜKSEK" : "HIGH") : deal.priority === "Medium" ? (lang === "TR" ? "ORTA" : "MEDIUM") : (lang === "TR" ? "DÜŞÜK" : "LOW")}
+                                      {deal.priority === "High" ? (t("HIGH")) : deal.priority === "Medium" ? (t("MEDIUM")) : (t("LOW"))}
                                     </span>
                                   </div>
 
@@ -2346,7 +2346,7 @@ export default function DealManagementView({ initialTab = "dashboard", onNavigat
                                     <span 
                                       onClick={(e) => handleCompanyClick(e, deal.companyName, deal.companyId)}
                                       className="font-bold text-slate-600 dark:text-zinc-400 hover:text-indigo-600 dark:hover:text-indigo-400 hover:underline cursor-pointer"
-                                      title={lang === "TR" ? "Şirket Detayına Git" : "Go to Company Detail"}
+                                      title={t("Go to Company Detail")}
                                     >
                                       🏢 {deal.companyName}
                                     </span>
@@ -2357,7 +2357,7 @@ export default function DealManagementView({ initialTab = "dashboard", onNavigat
                                   {/* Aşamada Geçen Gün Süresi Göstergesi */}
                                   <div className="flex items-center gap-2 px-2.5 py-1 mt-2.5 bg-slate-100/60 dark:bg-zinc-800/40 text-xs text-slate-600 dark:text-zinc-400 rounded-md w-fit font-mono select-none">
                                     <Clock className="w-3.5 h-3.5 text-slate-400 shrink-0" />
-                                    <span>{lang === "TR" ? "Aşamada" : "In Stage"}: <b className="text-[#0078D4] dark:text-blue-400">{deal.currentStageDuration || 0} {lang === "TR" ? "Gün" : "Days"}</b></span>
+                                    <span>{t("In Stage")}: <b className="text-[#0078D4] dark:text-blue-400">{deal.currentStageDuration || 0} {t("Days")}</b></span>
                                   </div>
 
                                   {/* 7+ ve 20+ Gün Teklif Bekleme Uyarı ve Hatırlatma Sistemi */}
@@ -2371,10 +2371,10 @@ export default function DealManagementView({ initialTab = "dashboard", onNavigat
                                         <AlertTriangle className="w-4 h-4 shrink-0 text-amber-500" />
                                         <div className="min-w-0">
                                           <p className="text-[10px] font-extrabold tracking-tight leading-none uppercase">
-                                            {(deal.currentStageDuration || 0) >= 20 ? (lang === "TR" ? "🚨 20+ Gün Hatırlatması!" : "🚨 20+ Day Reminder!") : (lang === "TR" ? "⚠️ 7+ Gün Gecikme!" : "⚠️ 7+ Day Delay!")}
+                                            {(deal.currentStageDuration || 0) >= 20 ? (t("🚨 20+ Day Reminder!")) : (t("⚠️ 7+ Day Delay!"))}
                                           </p>
                                           <p className="text-[9px] opacity-80 truncate">
-                                            {lang === "TR" ? `Teklif ${deal.currentStageDuration} gündür beklemede.` : `Proposal has been pending for ${deal.currentStageDuration} days.`}
+                                            {t("Proposal has been pending for {days} days.").replace("{days}", String(deal.currentStageDuration))}
                                           </p>
                                         </div>
                                       </div>
@@ -2391,7 +2391,7 @@ export default function DealManagementView({ initialTab = "dashboard", onNavigat
                                         }`}
                                       >
                                         <Mail className="w-2.5 h-2.5" />
-                                        <span>{lang === "TR" ? "Hatırlat" : "Remind"}</span>
+                                        <span>{t("Remind")}</span>
                                       </button>
                                     </div>
                                   )}
@@ -2399,13 +2399,13 @@ export default function DealManagementView({ initialTab = "dashboard", onNavigat
                                   <div className="grid grid-cols-2 gap-4 mt-4 pt-3 border-t border-slate-100 dark:border-zinc-800/50">
                                     <div>
                                       <span className="block text-[9px] text-slate-400 uppercase font-mono font-bold">
-                                        {lang === "TR" ? "FIRSAT DEĞERİ" : "OPPORTUNITY VALUE"}
+                                        {t("OPPORTUNITY VALUE")}
                                       </span>
                                       <span className="text-sm font-extrabold text-slate-755 dark:text-zinc-150">{getSystemCurrency().symbol}{(deal.opportunityValue || 0).toLocaleString()}</span>
                                     </div>
                                     <div className="text-right">
                                       <span className="block text-[9px] text-slate-400 uppercase font-mono font-bold">
-                                        {lang === "TR" ? "KAZANMA OLASILIĞI" : "PROBABILITY"}
+                                        {t("PROBABILITY")}
                                       </span>
                                       <span className="text-sm font-extrabold text-slate-755 dark:text-zinc-200">{deal.winProbability}%</span>
                                     </div>
@@ -2415,7 +2415,7 @@ export default function DealManagementView({ initialTab = "dashboard", onNavigat
                                   <div className="grid grid-cols-3 gap-1.5 mt-2.5 bg-slate-50 dark:bg-black/20 p-2 rounded text-xs font-sans">
                                     <div className="text-center border-r dark:border-zinc-800">
                                       <span className="block text-[8px] text-slate-400 uppercase">
-                                        {lang === "TR" ? "KAPANIŞ" : "CLOSED"}
+                                        {t("CLOSED")}
                                       </span>
                                       <span className="font-bold font-mono text-[11px]">{deal.expectedCloseDate}</span>
                                     </div>
@@ -2425,7 +2425,7 @@ export default function DealManagementView({ initialTab = "dashboard", onNavigat
                                     </div>
                                     <div className="text-center">
                                       <span className="block text-[8px] text-green-500 uppercase">
-                                        {lang === "TR" ? "SKOR" : "SCORE"}
+                                        {t("SCORE")}
                                       </span>
                                       <span className="font-bold text-green-655 font-mono text-[11px]">#{deal.opportunityScore}</span>
                                     </div>
@@ -2433,7 +2433,7 @@ export default function DealManagementView({ initialTab = "dashboard", onNavigat
 
                                   <div className="flex items-center justify-between mt-3.5 pt-2.5 border-t border-slate-50 dark:border-zinc-850/40 text-xs text-slate-400">
                                     <span className="font-mono text-slate-455">
-                                      {lang === "TR" ? "Sorumlu" : "Owner"}: {deal.owner || "GP"}
+                                      {t("Owner")}: {deal.owner || "GP"}
                                     </span>
                                     
                                     <div className="flex items-center gap-2">
@@ -2444,7 +2444,7 @@ export default function DealManagementView({ initialTab = "dashboard", onNavigat
                                           handleOpenEditDeal(deal);
                                         }}
                                         className="p-1.5 text-slate-400 hover:text-green-655 rounded hover:bg-slate-50 dark:hover:bg-zinc-800 cursor-pointer"
-                                        title={lang === "TR" ? "Fırsat Detaylarını Düzenle" : "Edit Opportunity Details"}
+                                        title={t("Edit Opportunity Details")}
                                       >
                                         <Edit2 className="w-3.5 h-3.5" />
                                       </button>
@@ -2465,7 +2465,7 @@ export default function DealManagementView({ initialTab = "dashboard", onNavigat
                                           });
                                         }}
                                         className="p-1.5 text-slate-400 hover:text-rose-500 rounded hover:bg-slate-50 dark:hover:bg-zinc-800 cursor-pointer"
-                                        title={lang === "TR" ? "Sil" : "Delete"}
+                                        title={t("Delete")}
                                       >
                                         <Trash2 className="w-3.5 h-3.5" />
                                       </button>
@@ -2479,7 +2479,7 @@ export default function DealManagementView({ initialTab = "dashboard", onNavigat
                       </div>
 
                       <div className="mt-4 pt-3 border-t border-slate-205 dark:border-zinc-800 flex justify-between text-[11px] font-bold text-slate-500">
-                        <span>{lang === "TR" ? "Toplam Değer:" : "Total Value:"}</span>
+                        <span>{t("Total Value:")}</span>
                         <span className="text-slate-850 dark:text-zinc-200">{getSystemCurrency().symbol}{stageValueSum.toLocaleString()}</span>
                       </div>
                     </div>
@@ -2521,11 +2521,11 @@ export default function DealManagementView({ initialTab = "dashboard", onNavigat
                 {/* Form Tabs Button Strip */}
                 <div className="flex border-b border-slate-100 dark:border-zinc-800 select-none pb-1 mb-2 gap-1 overflow-x-auto">
                   {[
-                    { id: "general", label: lang === "TR" ? "📋 Genel Özet & Temel" : "📋 General Summary & Core" },
-                    { id: "metadata", label: lang === "TR" ? "🏷️ Ekstra Metadatalar" : "🏷️ Extra Metadata" },
-                    { id: "opex", label: lang === "TR" ? "⚙️ OPEX Değerlendirme" : "⚙️ OPEX Assessment" },
-                    { id: "contract", label: lang === "TR" ? "📝 Teklif / Sözleşme" : "📝 Proposal / Contract" },
-                    { id: "sla", label: lang === "TR" ? "⏱️ SLA Adımları" : "⏱️ SLA Steps Timeline" }
+                    { id: "general", label: t("📋 General Summary & Core") },
+                    { id: "metadata", label: t("🏷️ Extra Metadata") },
+                    { id: "opex", label: t("⚙️ OPEX Assessment") },
+                    { id: "contract", label: t("📝 Proposal / Contract") },
+                    { id: "sla", label: t("⏱️ SLA Steps Timeline") }
                   ].map((tab) => (
                     <button
                       key={tab.id}
@@ -2547,19 +2547,19 @@ export default function DealManagementView({ initialTab = "dashboard", onNavigat
                   <div className="space-y-4 animate-in fade-in duration-100">
                     <div className="border-b border-dashed border-slate-200 dark:border-zinc-803 pb-1">
                       <h4 className="text-xs font-bold text-green-600 uppercase font-mono tracking-wider">
-                        {lang === "TR" ? "Fırsat Genel Bilgileri" : "Opportunity General Information"}
+                        {t("Opportunity General Information")}
                       </h4>
                     </div>
 
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       <div>
                         <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wide mb-1 font-mono">
-                          {lang === "TR" ? "Sorumlu Danışman *" : "Owner / Advisor *"}
+                          {t("Owner / Advisor *")}
                         </label>
                         <input
                           type="text"
                           required
-                          placeholder={lang === "TR" ? "Örn: GP / Gemba Partner" : "e.g. GP / Gemba Partner"}
+                          placeholder={t("e.g. GP / Gemba Partner")}
                           value={dealFormState.owner}
                           onChange={(e) => setDealFormState({ ...dealFormState, owner: e.target.value })}
                           className="w-full bg-[#fbfbfb] dark:bg-zinc-800 border border-slate-250 dark:border-zinc-700 rounded-lg p-2 text-xs focus:ring-1 focus:ring-green-500 outline-none font-semibold text-slate-600 dark:text-zinc-300"
@@ -2568,12 +2568,12 @@ export default function DealManagementView({ initialTab = "dashboard", onNavigat
 
                       <div>
                         <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wide mb-1 font-mono">
-                          {lang === "TR" ? "Fırsat Adı / Proje Adı *" : "Deal / Project Name *"}
+                          {t("Deal / Project Name *")}
                         </label>
                         <input
                           type="text"
                           required
-                          placeholder={lang === "TR" ? "Örn: ABC Hat Optimizasyonu" : "e.g. ABC Glass Line Optimization"}
+                          placeholder={t("e.g. ABC Glass Line Optimization")}
                           value={dealFormState.dealName}
                           onChange={(e) => setDealFormState({ ...dealFormState, dealName: e.target.value })}
                           className="w-full bg-[#fbfbfb] dark:bg-zinc-800 border border-slate-250 dark:border-zinc-700 rounded-lg p-2 text-xs focus:ring-1 focus:ring-green-500 outline-none font-semibold text-slate-700 dark:text-zinc-350"
@@ -2584,7 +2584,7 @@ export default function DealManagementView({ initialTab = "dashboard", onNavigat
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       <div>
                         <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wide mb-1 font-mono">
-                          {lang === "TR" ? "Firma / Müşteri Adı *" : "Company Name *"}
+                          {t("Company Name *")}
                         </label>
                         <CompanyAutocomplete
                           value={dealFormState.companyId || dealFormState.companyName}
@@ -2605,12 +2605,12 @@ export default function DealManagementView({ initialTab = "dashboard", onNavigat
 
                       <div>
                         <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wide mb-1 font-mono">
-                          {lang === "TR" ? "İlgili Kişi Adı Soyadı *" : "Contact Name *"}
+                          {t("Contact Name *")}
                         </label>
                         <input
                           type="text"
                           required
-                          placeholder={lang === "TR" ? "Örn: Ahmet Yılmaz" : "e.g. John Smith"}
+                          placeholder={t("e.g. John Smith")}
                           value={dealFormState.contactPerson}
                           onChange={(e) => setDealFormState({ ...dealFormState, contactPerson: e.target.value })}
                           className="w-full bg-[#fbfbfb] dark:bg-zinc-800 border border-slate-250 dark:border-zinc-700 rounded-lg p-2 text-xs focus:ring-1 focus:ring-green-500 outline-none text-slate-700 dark:text-zinc-300"
@@ -2621,11 +2621,11 @@ export default function DealManagementView({ initialTab = "dashboard", onNavigat
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       <div>
                         <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wide mb-1 font-mono">
-                          {lang === "TR" ? "İlgili Kişi E-postası" : "Contact Email"}
+                          {t("Contact Email")}
                         </label>
                         <input
                           type="email"
-                          placeholder={lang === "TR" ? "Örn: ahmet@firma.com" : "e.g. john@abcauto.com"}
+                          placeholder={t("e.g. john@abcauto.com")}
                           value={dealFormState.contactEmail}
                           onChange={(e) => setDealFormState({ ...dealFormState, contactEmail: e.target.value })}
                           className="w-full bg-[#fbfbfb] dark:bg-zinc-800 border border-slate-250 dark:border-zinc-700 rounded-lg p-2 text-xs focus:outline-none"
@@ -2634,11 +2634,11 @@ export default function DealManagementView({ initialTab = "dashboard", onNavigat
 
                       <div>
                         <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wide mb-1 font-mono">
-                          {lang === "TR" ? "İlgili Kişi Telefonu" : "Contact Phone"}
+                          {t("Contact Phone")}
                         </label>
                         <input
                           type="text"
-                          placeholder="+90 (532) ..."
+                          placeholder={t("+90 (532) ...")}
                           value={dealFormState.contactPhone}
                           onChange={(e) => setDealFormState({ ...dealFormState, contactPhone: e.target.value })}
                           className="w-full bg-[#fbfbfb] dark:bg-zinc-800 border border-slate-250 dark:border-zinc-700 rounded-lg p-2 text-xs focus:outline-none"
@@ -2649,7 +2649,7 @@ export default function DealManagementView({ initialTab = "dashboard", onNavigat
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                       <div>
                         <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wide mb-1 font-mono">
-                          {lang === "TR" ? "Süreç Havuzu (Pipeline)" : "Pipeline Name"}
+                          {t("Pipeline Name")}
                         </label>
                         <input
                           type="text"
@@ -2661,7 +2661,7 @@ export default function DealManagementView({ initialTab = "dashboard", onNavigat
 
                       <div>
                         <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wide mb-1 font-mono">
-                          {lang === "TR" ? "Fırsat Aşaması" : "Opportunity Stage"}
+                          {t("Opportunity Stage")}
                         </label>
                         <select
                           value={dealFormState.stage}
@@ -2676,7 +2676,7 @@ export default function DealManagementView({ initialTab = "dashboard", onNavigat
 
                       <div>
                         <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wide mb-1 font-mono">
-                          {lang === "TR" ? `Fırsat Değeri (${getSystemCurrency().symbol}) *` : `Amount (${getSystemCurrency().symbol}) *`}
+                          {t("Amount ({symbol}) *").replace("{symbol}", getSystemCurrency().symbol)}
                         </label>
                         <input
                           type="number"
@@ -2691,7 +2691,7 @@ export default function DealManagementView({ initialTab = "dashboard", onNavigat
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       <div>
                         <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wide mb-1 font-mono">
-                          {lang === "TR" ? "Beklenen Kapanış Tarihi" : "Expected Close Date"}
+                          {t("Expected Close Date")}
                         </label>
                         <input
                           type="text"
@@ -2705,10 +2705,10 @@ export default function DealManagementView({ initialTab = "dashboard", onNavigat
 
                     <div>
                       <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wide mb-1 font-mono">
-                        {lang === "TR" ? "Kısa Açıklama & Kapsam" : "Description"}
+                        {t("Description")}
                       </label>
                       <textarea
-                        placeholder={lang === "TR" ? "Bu fırsat ve çalışma kapsamı hakkında kısa notlar girin..." : "A few words about this opportunity"}
+                        placeholder={t("A few words about this opportunity")}
                         value={dealFormState.description}
                         onChange={(e) => setDealFormState({ ...dealFormState, description: e.target.value })}
                         className="w-full bg-[#fbfbfb] dark:bg-zinc-800 border border-slate-250 dark:border-zinc-700 rounded-lg p-2 outline-none h-16 resize-none text-slate-700 dark:text-zinc-300"
@@ -2721,7 +2721,7 @@ export default function DealManagementView({ initialTab = "dashboard", onNavigat
                 {activeFormTab === "metadata" && (
                   <div className="space-y-4 animate-in fade-in duration-100">
                     <div className="border-b border-dashed border-slate-200 dark:border-zinc-803 pb-1">
-                      <h4 className="text-xs font-bold text-indigo-600 uppercase font-mono tracking-wider">Ekstra Metadatalar</h4>
+                      <h4 className="text-xs font-bold text-indigo-600 uppercase font-mono tracking-wider">{t("Extra Metadata")}</h4>
                     </div>
 
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -2857,10 +2857,10 @@ export default function DealManagementView({ initialTab = "dashboard", onNavigat
 
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       <div>
-                        <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wide mb-1 font-mono">Yalın Olgunluk Seviyesi (Lean Maturity Level)</label>
+                        <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wide mb-1 font-mono">{t("Lean Maturity Level")}</label>
                         <input
                           type="text"
-                          placeholder="Örn: Seviye 2: Standardizasyon Başlangıcı"
+                          placeholder={t("e.g. Level 2: Standardization Start")}
                           value={dealFormState.leanMaturityLevel}
                           onChange={(e) => setDealFormState({ ...dealFormState, leanMaturityLevel: e.target.value })}
                           className="w-full bg-[#fbfbfb] dark:bg-zinc-800 border border-slate-250 dark:border-zinc-700 rounded-lg p-2 text-xs focus:outline-none font-bold"
@@ -2868,10 +2868,10 @@ export default function DealManagementView({ initialTab = "dashboard", onNavigat
                       </div>
 
                       <div>
-                        <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wide mb-1 font-mono">Kalite Risk Seviyesi (Quality Risk Level)</label>
+                        <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wide mb-1 font-mono">{t("Quality Risk Level")}</label>
                         <input
                           type="text"
-                          placeholder="Örn: Orta-Yüksek Seviye Risk"
+                          placeholder={t("e.g. Medium-High Risk Level")}
                           value={dealFormState.qualityRiskLevel}
                           onChange={(e) => setDealFormState({ ...dealFormState, qualityRiskLevel: e.target.value })}
                           className="w-full bg-[#fbfbfb] dark:bg-zinc-800 border border-slate-250 dark:border-zinc-700 rounded-lg p-2 text-xs focus:outline-none font-bold"
@@ -2880,9 +2880,9 @@ export default function DealManagementView({ initialTab = "dashboard", onNavigat
                     </div>
 
                     <div>
-                      <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wide mb-1 font-mono">Yalın Olgunluk Detay Açıklaması</label>
+                      <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wide mb-1 font-mono">{t("Lean maturity detail description")}</label>
                       <textarea
-                        placeholder="Yalın tahlil detayları (İsraflar, 5S durumu, vb.)"
+                        placeholder={t("Lean analysis details (wastes, 5S status, etc.)")}
                         value={dealFormState.leanMaturityDesc}
                         onChange={(e) => setDealFormState({ ...dealFormState, leanMaturityDesc: e.target.value })}
                         className="w-full bg-[#fbfbfb] dark:bg-zinc-800 border border-slate-250 dark:border-zinc-700 rounded-lg p-2 outline-none h-18 resize-none text-slate-700 dark:text-zinc-350"
@@ -2890,9 +2890,9 @@ export default function DealManagementView({ initialTab = "dashboard", onNavigat
                     </div>
 
                     <div>
-                      <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wide mb-1 font-mono">Kalite Hata Depremi Tahlil Açıklaması</label>
+                      <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wide mb-1 font-mono">{t("Quality failure analysis description")}</label>
                       <textarea
-                        placeholder="Kalite kaybı oranları, maliyet tahlilleri vb."
+                        placeholder={t("Quality loss rates, cost analysis, etc.)")}
                         value={dealFormState.qualityRiskDesc}
                         onChange={(e) => setDealFormState({ ...dealFormState, qualityRiskDesc: e.target.value })}
                         className="w-full bg-[#fbfbfb] dark:bg-zinc-800 border border-slate-250 dark:border-zinc-700 rounded-lg p-2 outline-none h-18 resize-none text-slate-700 dark:text-zinc-350"
@@ -2910,10 +2910,10 @@ export default function DealManagementView({ initialTab = "dashboard", onNavigat
 
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       <div>
-                        <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wide mb-1 font-mono">Proje Sorumlusu (Overseer PM)</label>
+                        <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wide mb-1 font-mono">{t("Project Overseer (PM)")}</label>
                         <input
                           type="text"
-                          placeholder="Ahmet Yılmaz"
+                          placeholder={t("e.g. John Smith")}
                           value={dealFormState.contractPm}
                           onChange={(e) => setDealFormState({ ...dealFormState, contractPm: e.target.value })}
                           className="w-full bg-[#fbfbfb] dark:bg-zinc-800 border border-slate-250 dark:border-zinc-700 rounded-lg p-2 text-xs focus:outline-none"
@@ -2921,10 +2921,10 @@ export default function DealManagementView({ initialTab = "dashboard", onNavigat
                       </div>
 
                       <div>
-                        <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wide mb-1 font-mono">Sorumlu T.C. Kimlik No</label>
+                        <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wide mb-1 font-mono">{t("Responsible ID Number")}</label>
                         <input
                           type="text"
-                          placeholder="11 Haneli TC Kimlik"
+                          placeholder={t("11-digit ID Number")}
                           maxLength={11}
                           value={dealFormState.contractPmTc}
                           onChange={(e) => setDealFormState({ ...dealFormState, contractPmTc: e.target.value })}
@@ -2935,7 +2935,7 @@ export default function DealManagementView({ initialTab = "dashboard", onNavigat
 
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       <div>
-                        <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wide mb-1 font-mono">Sözleşme Tanzim Tarihi</label>
+                        <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wide mb-1 font-mono">{t("Contract Issue Date")}</label>
                         <input
                           type="date"
                           value={dealFormState.contractDate}
@@ -2945,10 +2945,10 @@ export default function DealManagementView({ initialTab = "dashboard", onNavigat
                       </div>
 
                       <div>
-                        <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wide mb-1 font-mono">Sözleşme Konusu</label>
+                        <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wide mb-1 font-mono">{t("Contract Subject")}</label>
                         <input
                           type="text"
-                          placeholder="Danışmanlık Hizmetleri Sözleşmesi"
+                          placeholder={t("Consulting Services Agreement")}
                           value={dealFormState.contractSubject}
                           onChange={(e) => setDealFormState({ ...dealFormState, contractSubject: e.target.value })}
                           className="w-full bg-[#fbfbfb] dark:bg-zinc-800 border border-slate-250 dark:border-zinc-700 rounded-lg p-2 text-xs focus:outline-none text-slate-700 dark:text-zinc-300"
@@ -2963,14 +2963,12 @@ export default function DealManagementView({ initialTab = "dashboard", onNavigat
                   <div className="space-y-4 animate-in fade-in duration-100">
                     <div className="border-b border-dashed border-slate-200 dark:border-zinc-803 pb-1">
                       <h4 className="text-xs font-bold text-amber-600 uppercase font-mono tracking-wider">
-                        {lang === "TR" ? "Süreç SLA Adımları Kayıt Geçmişi" : "Process SLA Milestones Log History"}
+                        {t("Process SLA Milestones Log History")}
                       </h4>
                     </div>
 
                     <p className="text-[11px] text-slate-400 dark:text-zinc-500 mb-2 leading-relaxed font-sans">
-                      {lang === "TR" 
-                        ? "Fırsat aşama zaman çizelgesindeki tarihleri ve özel notları buradan manuel olarak düzenleyebilirsiniz. İşaretli aşamalar aktif SLA adımları olarak gösterilir."
-                        : "You can manually adjust the dates and stage notes of each sales stage here. Checked stages will be populated as completed/active SLA steps."}
+                      {t("You can manually adjust the dates and stage notes of each sales stage here. Checked stages will be populated as completed/active SLA steps.")}
                     </p>
 
                     <div className="space-y-3 max-h-[40vh] overflow-y-auto pr-2">
@@ -3010,7 +3008,7 @@ export default function DealManagementView({ initialTab = "dashboard", onNavigat
                                   className="rounded text-amber-600 focus:ring-amber-500 w-3.5 h-3.5 cursor-pointer"
                                 />
                                 <span className="text-[10px] text-slate-500 dark:text-zinc-400 font-bold uppercase tracking-wider">
-                                  {lang === "TR" ? "Etkin / Tarih Ekle" : "Active / Set Date"}
+                                  {t("Active / Set Date")}
                                 </span>
                               </label>
                             </div>
@@ -3019,7 +3017,7 @@ export default function DealManagementView({ initialTab = "dashboard", onNavigat
                               <div className="grid grid-cols-1 md:grid-cols-3 gap-3 animate-in slide-in-from-top-1 duration-100">
                                 <div>
                                   <label className="block text-[9px] font-bold text-slate-400 dark:text-zinc-500 uppercase mb-1">
-                                    {lang === "TR" ? "Tarih" : "Date"}
+                                    {t("Date")}
                                   </label>
                                   <input
                                     type="text"
@@ -3031,13 +3029,13 @@ export default function DealManagementView({ initialTab = "dashboard", onNavigat
                                       );
                                       setDealFormState({ ...dealFormState, stageHistory: updatedHistory });
                                     }}
-                                    placeholder={lang === "TR" ? "Örn: 24.06.2026" : "e.g. 24.06.2026"}
+                                    placeholder={t("e.g. 24.06.2026")}
                                     className="w-full bg-white dark:bg-zinc-800 border border-slate-200 dark:border-zinc-700 rounded p-1.5 text-xs outline-none"
                                   />
                                 </div>
                                 <div className="md:col-span-2">
                                   <label className="block text-[9px] font-bold text-slate-400 dark:text-zinc-500 uppercase mb-1">
-                                    {lang === "TR" ? "Aşama Notu / Gelişme" : "Stage Notes / Progress"}
+                                    {t("Stage Notes / Progress")}
                                   </label>
                                   <input
                                     type="text"
@@ -3049,7 +3047,7 @@ export default function DealManagementView({ initialTab = "dashboard", onNavigat
                                       );
                                       setDealFormState({ ...dealFormState, stageHistory: updatedHistory });
                                     }}
-                                    placeholder={lang === "TR" ? "Örn: İlk temas sağlandı, bütçe onayı istendi." : "e.g. First contact established, budget requested."}
+                                    placeholder={t("e.g. First contact established, budget requested.")}
                                     className="w-full bg-white dark:bg-zinc-800 border border-slate-200 dark:border-zinc-700 rounded p-1.5 text-xs outline-none"
                                   />
                                 </div>
@@ -3106,7 +3104,7 @@ export default function DealManagementView({ initialTab = "dashboard", onNavigat
                   <h3 
                     onClick={(e) => handleCompanyClick(e, selectedDeal.companyName, selectedDeal.companyId)}
                     className="font-extrabold text-slate-800 dark:text-zinc-100 text-sm leading-tight font-sans hover:text-indigo-600 dark:hover:text-indigo-400 cursor-pointer hover:underline transition-all flex items-center gap-1"
-                    title={lang === "TR" ? "Şirket Detayına Git" : "Go to Company Detail"}
+                    title={t("Go to Company Detail")}
                   >
                     🏢 {selectedDeal.companyName}
                   </h3>
@@ -3124,10 +3122,10 @@ export default function DealManagementView({ initialTab = "dashboard", onNavigat
                     handleOpenEditDeal(selectedDeal);
                   }}
                   className="p-1.5 px-3 bg-gradient-to-r from-emerald-600 to-green-600 hover:from-emerald-700 hover:to-green-700 text-white text-xs font-bold rounded-lg flex items-center gap-1.5 cursor-pointer transition-all shadow-sm transform active:scale-95 animate-in fade-in"
-                  title="Kartvizitteki tüm tab alanlarını (Genel, Ekstra, OPEX ve Sözleşme) tek seferde editleyin"
+                  title={t("Edit all tabs at once (General, Extra, OPEX, Contract)")}
                 >
                   <Edit2 className="w-3.5 h-3.5" />
-                  <span>✍️ Tüm Tabları Düzenle (Edit All)</span>
+                  <span>{t("✍️ Edit All Tabs")}</span>
                 </button>
 
                 <button
@@ -3160,7 +3158,7 @@ export default function DealManagementView({ initialTab = "dashboard", onNavigat
                   }`}
                 >
                   {tab === "Overview" && "Genel Özet"}
-                  {tab === "Emails" && "✉️ Emails Communication"}
+                  {tab === "Emails" && t("✉️ Emails Communication")}
                   {tab === "OPEX Assessment" && "OPEX Değerlendirme"}
                   {tab === "Proposal & Won" && "Teklif / Sözleşme"}
                   {tab === "History & Logs" && "Aktiviteler & Evraklar"}
@@ -3246,10 +3244,10 @@ export default function DealManagementView({ initialTab = "dashboard", onNavigat
                     <div className="flex items-center justify-between border-b border-slate-150 dark:border-zinc-800 pb-2.5">
                       <h4 className="text-xs font-black text-slate-800 dark:text-zinc-150 uppercase tracking-wide font-mono flex items-center gap-1.5">
                         <Clock className="w-4 h-4 text-emerald-600 dark:text-emerald-400 shrink-0" />
-                        {lang === "TR" ? "Süreç Zaman Çizelgesi (SLA Adımları)" : "Process SLA Timeline Tracker"}
+                        {t("Process SLA Timeline Tracker")}
                       </h4>
                       <span className="text-[9px] font-mono font-black text-emerald-600 bg-emerald-500/10 dark:text-emerald-400 px-1.5 py-0.5 rounded uppercase">
-                        {lang === "TR" ? "SLA Adımları" : "SLA Steps"}
+                        {t("SLA Steps")}
                       </span>
                     </div>
 
@@ -3262,25 +3260,25 @@ export default function DealManagementView({ initialTab = "dashboard", onNavigat
                           const hasHistory = !!historyEntry;
 
                           let status: "completed" | "current" | "pending" = "pending";
-                          let statusLabel = lang === "TR" ? "Beklemede" : "Awaiting";
+                          let statusLabel = t("Awaiting");
                           let dateStr = "";
 
                           if (idx < currentStageIndex) {
                             status = "completed";
-                            statusLabel = lang === "TR" ? "Tamamlandı" : "Completed";
-                            dateStr = hasHistory ? historyEntry.date : (lang === "TR" ? "Tarih Girilmedi" : "No Date Listed");
+                            statusLabel = t("Completed");
+                            dateStr = hasHistory ? historyEntry.date : (t("No Date Listed"));
                           } else if (idx === currentStageIndex) {
                             status = "current";
-                            statusLabel = lang === "TR" ? "Mevcut Aşama" : "Active Stage";
-                            dateStr = hasHistory ? historyEntry.date : `${selectedDeal.currentStageDuration || 0} ${lang === "TR" ? "Gündür Burada" : "Days Here"}`;
+                            statusLabel = t("Active Stage");
+                            dateStr = hasHistory ? historyEntry.date : `${selectedDeal.currentStageDuration || 0} ${t("Days Here")}`;
                           } else {
                             status = "pending";
-                            statusLabel = lang === "TR" ? "Planlanan Adım" : "Planned Step";
-                            dateStr = hasHistory ? historyEntry.date : (lang === "TR" ? "Bekleniyor" : "Awaiting");
+                            statusLabel = t("Planned Step");
+                            dateStr = hasHistory ? historyEntry.date : (t("Awaiting"));
                           }
 
                           const trName = getStageTranslation(st, lang);
-                          const defaultDesc = stageMetadata[st]?.description || (lang === "TR" ? "Süreç Akış Fazı" : "Process Flow Phase");
+                          const defaultDesc = stageMetadata[st]?.description || (t("Process Flow Phase"));
                           const stageNotesText = hasHistory && historyEntry.notes ? historyEntry.notes : defaultDesc;
 
                           const isEditingSla = editingSlaStage === st;
@@ -3336,7 +3334,7 @@ export default function DealManagementView({ initialTab = "dashboard", onNavigat
                                         setSlaEditDate(historyEntry?.date || new Date().toLocaleDateString("tr-TR"));
                                         setSlaEditNotes(historyEntry?.notes || "");
                                       }}
-                                      title={lang === "TR" ? "Adımı Düzenle" : "Edit SLA Step"}
+                                      title={t("Edit SLA Step")}
                                       className="text-slate-400 hover:text-slate-600 dark:hover:text-zinc-300 p-0.5 transition-colors cursor-pointer"
                                     >
                                       <span className="text-[10px]">✏</span>
@@ -3349,25 +3347,25 @@ export default function DealManagementView({ initialTab = "dashboard", onNavigat
                                     <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
                                       <div>
                                         <label className="block text-[8px] font-bold text-slate-400 uppercase mb-0.5">
-                                          {lang === "TR" ? "Tarih" : "Date"}
+                                          {t("Date")}
                                         </label>
                                         <input
                                           type="text"
                                           value={slaEditDate}
                                           onChange={(e) => setSlaEditDate(e.target.value)}
-                                          placeholder="DD.MM.YYYY"
+                                          placeholder={t("DD.MM.YYYY")}
                                           className="w-full bg-slate-50 dark:bg-zinc-900 border border-slate-200 dark:border-zinc-700 rounded px-1.5 py-1 text-[11px] outline-none"
                                         />
                                       </div>
                                       <div className="sm:col-span-2">
                                         <label className="block text-[8px] font-bold text-slate-400 uppercase mb-0.5">
-                                          {lang === "TR" ? "Görüşme / SLA Notu" : "Meeting / SLA Note"}
+                                          {t("Meeting / SLA Note")}
                                         </label>
                                         <input
                                           type="text"
                                           value={slaEditNotes}
                                           onChange={(e) => setSlaEditNotes(e.target.value)}
-                                          placeholder={lang === "TR" ? "Ör: Toplantı verimli geçti." : "e.g. Call was positive."}
+                                          placeholder={t("e.g. Call was positive.")}
                                           className="w-full bg-slate-50 dark:bg-zinc-900 border border-slate-200 dark:border-zinc-700 rounded px-1.5 py-1 text-[11px] outline-none"
                                         />
                                       </div>
@@ -3377,7 +3375,7 @@ export default function DealManagementView({ initialTab = "dashboard", onNavigat
                                         onClick={() => setEditingSlaStage(null)}
                                         className="px-2 py-1 text-[10px] bg-slate-100 hover:bg-slate-200 text-slate-600 dark:bg-zinc-700 dark:text-zinc-300 rounded font-bold cursor-pointer"
                                       >
-                                        {lang === "TR" ? "İptal" : "Cancel"}
+                                        {t("Cancel")}
                                       </button>
                                       <button
                                         onClick={() => {
@@ -3394,7 +3392,7 @@ export default function DealManagementView({ initialTab = "dashboard", onNavigat
                                         }}
                                         className="px-2.5 py-1 text-[10px] bg-amber-600 hover:bg-amber-700 text-white rounded font-bold cursor-pointer animate-pulse"
                                       >
-                                        {lang === "TR" ? "Kaydet" : "Save"}
+                                        {t("Save")}
                                       </button>
                                     </div>
                                   </div>
@@ -3450,7 +3448,7 @@ export default function DealManagementView({ initialTab = "dashboard", onNavigat
                                 updateDealAndSelected(updatedDeal);
                               }}
                               className="absolute top-2 right-2 text-slate-300 hover:text-rose-500 opacity-0 group-hover:opacity-100 transition-opacity p-0.5 cursor-pointer rounded"
-                              title="Notu sil"
+                              title={t("Delete note")}
                             >
                               <X className="w-3.5 h-3.5" />
                             </button>
@@ -3465,7 +3463,7 @@ export default function DealManagementView({ initialTab = "dashboard", onNavigat
                         rows={2}
                         value={newNoteInput}
                         onChange={(e) => setNewNoteInput(e.target.value)}
-                        placeholder="Müşteri ile yapılan görüşme veya takiple ilgili görüşme notunuzu yazın..."
+                        placeholder={t("Write your meeting or follow-up notes here...")}
                         className="w-full text-xs p-2.5 rounded-lg border border-slate-250 dark:border-zinc-850 bg-white dark:bg-[#111110] text-slate-800 dark:text-zinc-100 focus:outline-none focus:ring-1 focus:ring-emerald-500 dark:focus:ring-emerald-400 resize-none font-sans"
                       />
                       <div className="flex justify-end">
@@ -3487,7 +3485,7 @@ export default function DealManagementView({ initialTab = "dashboard", onNavigat
                           className="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold text-xs rounded-lg flex items-center gap-1 cursor-pointer transition-all shadow-2xs disabled:opacity-50 disabled:cursor-not-allowed"
                         >
                           <Plus className="w-3 h-3" />
-                          <span>Notu Kaydet</span>
+                          <span>{t("Save Note")}</span>
                         </button>
                       </div>
                     </div>
@@ -3580,13 +3578,13 @@ export default function DealManagementView({ initialTab = "dashboard", onNavigat
                     {/* Compose Email form box */}
                     <div className="bg-slate-50/50 dark:bg-black/10 p-4 rounded-xl border border-slate-150 dark:border-zinc-800/80 space-y-4 text-xs">
                       <p className="text-[10px] font-black text-green-700 dark:text-green-450 uppercase font-mono tracking-wider">
-                        📬 E-POSTA GÖNDERME PANELİ (OUTLOOK & GMAIL ENTEGRASYONU)
+                        📬 {t("Email dispatch panel (Outlook & Gmail integration)")}
                       </p>
 
                       {/* Recipient registration list */}
                       <div className="space-y-1.5 p-2.5 bg-white dark:bg-zinc-900 border border-slate-150 dark:border-zinc-800 rounded-lg">
                         <label className="block text-[9px] text-slate-400 dark:text-zinc-500 font-bold uppercase font-mono">
-                          Alıcı Listesi / Registered Contact Recipients
+                          {t("Registered Contact Recipients")}
                         </label>
                         <div className="flex flex-wrap gap-1.5 py-1">
                           {/* Primary */}
@@ -3599,7 +3597,7 @@ export default function DealManagementView({ initialTab = "dashboard", onNavigat
                                 : "bg-slate-50 dark:bg-zinc-800 border-slate-200 dark:border-zinc-700 text-slate-600 dark:text-zinc-350 hover:bg-slate-100"
                             }`}
                           >
-                            👤 {selectedDeal.contactEmail || "Ana Alıcı (Belirtilmemiş)"}
+                            👤 {selectedDeal.contactEmail || t("Primary recipient (not specified)")}
                           </button>
 
                           {/* Alternatives */}
@@ -3623,7 +3621,7 @@ export default function DealManagementView({ initialTab = "dashboard", onNavigat
                         <div className="flex gap-1.5 items-center bg-slate-100 dark:bg-zinc-800 p-1 border border-slate-200 dark:border-zinc-700 rounded-lg mt-1">
                           <input
                             type="email"
-                            placeholder="Yeni bir alternatif e-posta adresi kaydedin..."
+                            placeholder={t("Register a new alternative email address...")}
                             value={newOtherEmailInput}
                             onChange={(e) => setNewOtherEmailInput(e.target.value)}
                             className="bg-transparent border-none outline-none w-full text-[10px] text-slate-700 dark:text-zinc-200 px-1.5 py-0.5"
@@ -3634,7 +3632,7 @@ export default function DealManagementView({ initialTab = "dashboard", onNavigat
                               const cleanEmail = newOtherEmailInput.trim();
                               if (!cleanEmail) return;
                               if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(cleanEmail)) {
-                                alert("Geçerli bir e-posta adresi yazınız!");
+                                alert(t("Please enter a valid email address!"));
                                 return;
                               }
 
@@ -3644,7 +3642,7 @@ export default function DealManagementView({ initialTab = "dashboard", onNavigat
                                   if (d.id === selectedDeal.id) {
                                     const currentOther = d.otherEmails || [];
                                     if (currentOther.includes(cleanEmail) || d.contactEmail === cleanEmail) {
-                                      alert("Bu e-posta zaten listede kayıtlı!");
+                                      alert(t("This email is already in the list!"));
                                       return d;
                                     }
                                     return {
@@ -3671,7 +3669,7 @@ export default function DealManagementView({ initialTab = "dashboard", onNavigat
                             }}
                             className="px-2.5 py-1 bg-indigo-600 hover:bg-indigo-700 text-white rounded text-[9px] font-bold cursor-pointer select-none whitespace-nowrap active:scale-95 transition-transform"
                           >
-                            + Kaydet ve Alıcı Yap
+                            {t("Save and set as recipient")}
                           </button>
                         </div>
                       </div>
@@ -3682,7 +3680,7 @@ export default function DealManagementView({ initialTab = "dashboard", onNavigat
                             <div className="flex items-center gap-2 text-rose-700 dark:text-rose-400 font-sans">
                               <AlertTriangle className="w-4 h-4 shrink-0 stroke-[2.5]" />
                               <h4 className="text-xs font-black uppercase tracking-wider font-mono">
-                                E-POSTA BAĞLANTI &amp; API AUTH HATASI (CONNECTION ERROR)
+                                {t("Email connection & API auth error")} (CONNECTION ERROR)
                               </h4>
                             </div>
                             <button
@@ -3690,7 +3688,7 @@ export default function DealManagementView({ initialTab = "dashboard", onNavigat
                               onClick={() => setEmailSendError(null)}
                               className="text-[10px] font-bold text-rose-700 hover:text-rose-900 dark:text-rose-400 dark:hover:text-rose-200 font-mono cursor-pointer"
                             >
-                              [Temizle]
+                              {t("[Clear]")}
                             </button>
                           </div>
                           <div className="text-xs text-slate-700 dark:text-zinc-300 space-y-2 bg-white/70 dark:bg-black/30 p-3 rounded-lg border border-rose-100 dark:border-rose-950/20">
@@ -3698,11 +3696,11 @@ export default function DealManagementView({ initialTab = "dashboard", onNavigat
                               {emailSendError.message}
                             </p>
                             <div className="text-[10px] font-mono bg-rose-50/50 dark:bg-black/40 p-2.5 rounded border border-rose-100 dark:border-rose-950/40 whitespace-pre-wrap leading-relaxed text-slate-600 dark:text-zinc-400 select-all font-sans">
-                              <strong>System Diagnostics:</strong>{"\n"}
+                              <strong>{t("System Diagnostics:")}</strong>{"\n"}
                               CODE: {emailSendError.code}{"\n"}{emailSendError.diagnostics}
                             </div>
                             <p className="text-[10px] text-slate-500 italic">
-                              💡 Çözüm: Yönetim Paneli (Administration Center) &gt; Çoklu E-Postalar sekmesinden &quot;E-Posta API Entegrasyon Hata Simülatörü&quot; anahtarını kapatın veya bağlantıları tazeleyin.
+                              💡 {t("Solution: Disable the email API error simulator in Administration Center > Multi-Email tab or refresh connections.")}
                             </p>
                           </div>
                         </div>
@@ -3711,32 +3709,32 @@ export default function DealManagementView({ initialTab = "dashboard", onNavigat
                       <form onSubmit={handleSendComposeEmail} className="space-y-3">
                         <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
                           <div>
-                            <label className="block text-[9px] text-slate-400 dark:text-zinc-400 font-bold uppercase font-mono">Recipient To *</label>
+                            <label className="block text-[9px] text-slate-400 dark:text-zinc-400 font-bold uppercase font-mono">{t("Recipient To *")}</label>
                             <input
                               type="text"
                               required
-                              placeholder="client@company.com"
+                              placeholder={t("client@company.com")}
                               value={emailComposeTo}
                               onChange={(e) => setEmailComposeTo(e.target.value)}
                               className="w-full p-2 border border-slate-205 dark:border-zinc-700 bg-white dark:bg-zinc-850 rounded outline-none text-slate-800 dark:text-zinc-100"
                             />
                           </div>
                           <div>
-                            <label className="block text-[9px] text-slate-400 dark:text-zinc-400 font-bold uppercase font-mono">BCC (Gizli Kopya)</label>
+                            <label className="block text-[9px] text-slate-400 dark:text-zinc-400 font-bold uppercase font-mono">{t("BCC (Blind Copy)")}</label>
                             <input
                               type="text"
-                              placeholder="bcc@company.com"
+                              placeholder={t("bcc@company.com")}
                               value={emailComposeBcc}
                               onChange={(e) => setEmailComposeBcc(e.target.value)}
                               className="w-full p-2 border border-slate-205 dark:border-zinc-700 bg-white dark:bg-zinc-850 rounded outline-none text-slate-800 dark:text-zinc-100"
                             />
                           </div>
                           <div>
-                            <label className="block text-[9px] text-slate-400 dark:text-zinc-400 font-bold uppercase font-mono">Email Subject *</label>
+                            <label className="block text-[9px] text-slate-400 dark:text-zinc-400 font-bold uppercase font-mono">{t("Email Subject *")}</label>
                             <input
                               type="text"
                               required
-                              placeholder="Konu Başlığı"
+                              placeholder={t("Subject line")}
                               value={emailComposeSubject}
                               onChange={(e) => setEmailComposeSubject(e.target.value)}
                               className="w-full p-2 border border-slate-205 dark:border-zinc-700 bg-white dark:bg-zinc-850 rounded outline-none text-slate-800 dark:text-zinc-100"
@@ -3745,9 +3743,9 @@ export default function DealManagementView({ initialTab = "dashboard", onNavigat
                         </div>
 
                         <div>
-                          <label className="block text-[9px] text-slate-400 dark:text-zinc-400 font-bold uppercase font-mono">Message body *</label>
+                          <label className="block text-[9px] text-slate-400 dark:text-zinc-400 font-bold uppercase font-mono">{t("Message body *")}</label>
                           <textarea
-                            placeholder="E-posta gövdesi..."
+                            placeholder={t("Email body...")}
                             required
                             value={emailComposeBody}
                             onChange={(e) => setEmailComposeBody(e.target.value)}
@@ -3757,24 +3755,24 @@ export default function DealManagementView({ initialTab = "dashboard", onNavigat
 
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pb-1 border-b border-dashed border-slate-150 dark:border-zinc-800">
                           <div>
-                            <label className="block text-[9px] text-slate-400 dark:text-zinc-400 font-bold uppercase font-mono mb-1">Gönderim Modu / Mail Client</label>
+                            <label className="block text-[9px] text-slate-400 dark:text-zinc-400 font-bold uppercase font-mono mb-1">{t("Send Mode / Mail Client")}</label>
                             <select
                               value={emailClientMode}
                               onChange={(e) => setEmailClientMode(e.target.value as any)}
                               className="w-full p-1.5 border border-slate-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 rounded text-[11px] font-bold outline-none text-slate-700 dark:text-zinc-200 cursor-pointer"
                             >
-                              <option value="mailto">📪 Sistem Varsayılan İstemci (mailto)</option>
-                              <option value="gmail">🌐 Google Gmail Webmail</option>
-                              <option value="outlook">📧 Microsoft Outlook Webmail</option>
+                              <option value="mailto">📪 {t("Default system client (mailto)")}</option>
+                              <option value="gmail">🌐 {t("Google Gmail Webmail")}</option>
+                              <option value="outlook">📧 {t("Microsoft Outlook Webmail")}</option>
                             </select>
                           </div>
                           <div>
-                            <label className="block text-[9px] text-slate-400 dark:text-zinc-400 font-bold uppercase font-mono mb-1">Dosya Eki / Attachment File</label>
+                            <label className="block text-[9px] text-slate-400 dark:text-zinc-400 font-bold uppercase font-mono mb-1">{t("Dosya Eki / Attachment File")}</label>
                             <div className="flex items-center gap-1.5 bg-white dark:bg-zinc-800 border border-slate-200 dark:border-zinc-700 p-1.5 rounded">
                               <Paperclip className="w-3.5 h-3.5 text-slate-400 hover:text-slate-200" />
                               <input
                                 type="text"
-                                placeholder="Dosya adı (Örn: opex_assessment_GP.pdf)"
+                                placeholder={t("Filename (e.g. opex_assessment_GP.pdf)")}
                                 value={emailComposeFile}
                                 onChange={(e) => setEmailComposeFile(e.target.value)}
                                 className="bg-transparent border-none outline-none w-full text-[10px] text-slate-700 dark:text-zinc-200"
@@ -3785,14 +3783,14 @@ export default function DealManagementView({ initialTab = "dashboard", onNavigat
 
                         <div className="flex items-center justify-between gap-4 pt-1">
                           <span className="text-[9px] text-slate-400 dark:text-zinc-500 italic">
-                            * Gönderdikten sonra {selectedDeal.contactPerson} tarafına bir simülasyon yanıtı düşecektir.
+                            {t("After sending, a simulated reply will appear from {name}.").replace("{name}", selectedDeal.contactPerson)}
                           </span>
                           <button
                             type="submit"
                             className="px-5 py-2.5 bg-green-600 hover:bg-green-700 text-white rounded-lg font-black shrink-0 cursor-pointer shadow-sm active:scale-95 transition-all flex items-center gap-1.5 uppercase font-mono text-[10px]"
                           >
                             <Send className="w-3.5 h-3.5" />
-                            <span>E-Posta Gönder</span>
+                            <span>{t("Send Email")}</span>
                           </button>
                         </div>
                       </form>
@@ -3830,8 +3828,8 @@ export default function DealManagementView({ initialTab = "dashboard", onNavigat
               {activeDrawerTab === "History & Logs" && (
                 <div className="space-y-6 animate-in fade-in duration-100">
                   <div className="flex items-center justify-between border-b pb-2">
-                    <h4 className="text-xs font-bold text-slate-800 dark:text-zinc-150 uppercase tracking-wider font-mono">Yapılan Aktiviteler &amp; Evraklar</h4>
-                    <span className="text-[10px] text-zinc-400 font-mono">Kronoloji &amp; Belgeler</span>
+                    <h4 className="text-xs font-bold text-slate-800 dark:text-zinc-150 uppercase tracking-wider font-mono">{t("Activities & Attachments")}</h4>
+                    <span className="text-[10px] text-zinc-400 font-mono">{t("Chronology & Documents")}</span>
                   </div>
 
                   <TimelineActivitiesSection 
@@ -3845,7 +3843,7 @@ export default function DealManagementView({ initialTab = "dashboard", onNavigat
                   <div className="bg-slate-50 dark:bg-black/15 p-4 rounded-xl border border-slate-200 dark:border-zinc-800 space-y-4">
                     <span className="text-xs font-extrabold text-slate-800 dark:text-zinc-150 flex items-center gap-1.5">
                       <Paperclip className="w-4 h-4 text-indigo-600" />
-                      📎 Müşteri Evrakları &amp; Sözleşme Belgeleri
+                      {t("Customer Documents & Contract Files")}
                     </span>
 
                     {/* Document List */}
@@ -3863,7 +3861,7 @@ export default function DealManagementView({ initialTab = "dashboard", onNavigat
                                   {doc.name}
                                 </span>
                                 <span className="text-[9px] font-mono text-slate-400 capitalize block">
-                                  Boyut: {doc.size}
+                                  {t("Size:")} {doc.size}
                                 </span>
                               </div>
                             </div>
@@ -3871,10 +3869,10 @@ export default function DealManagementView({ initialTab = "dashboard", onNavigat
                             <button
                               type="button"
                               onClick={() => {
-                                alert(`💾 '${doc.name}' dosyası yerel CRM arşivinden güvenle çekildi. İndirme/görüntüleme simüle ediliyor.`);
+                                alert(t("Document '{name}' retrieved from local CRM archive. Download/view simulated.").replace("{name}", doc.name));
                               }}
                               className="p-1 cursor-pointer text-slate-400 hover:text-emerald-600 hover:bg-slate-50 dark:hover:bg-zinc-800 rounded transition-colors"
-                              title="Belgeyi İndir / Görüntüle"
+                              title={t("Download / View Document")}
                             >
                               <Download className="w-3.5 h-3.5" />
                             </button>
@@ -3882,7 +3880,7 @@ export default function DealManagementView({ initialTab = "dashboard", onNavigat
                         ))}
                       </div>
                     ) : (
-                      <p className="text-[11px] text-slate-450 italic text-center">Bu karta yüklenmiş dosya bulunamadı.</p>
+                      <p className="text-[11px] text-slate-450 italic text-center">{t("No files uploaded to this card.")}</p>
                     )}
 
                     {/* Add Document Inline Form */}
@@ -3890,7 +3888,7 @@ export default function DealManagementView({ initialTab = "dashboard", onNavigat
                       <div className="flex-1">
                         <input 
                           type="text" 
-                          placeholder="Dosya Adı (Örn: Yalın_Hat_Audit.pdf)"
+                          placeholder={t("File name (e.g. Lean_Line_Audit.pdf)")}
                           value={newDocName}
                           onChange={(e) => setNewDocName(e.target.value)}
                           className="w-full p-1.5 bg-white dark:bg-zinc-850 border border-slate-250 dark:border-zinc-750 text-slate-800 dark:text-zinc-150 rounded text-xs outline-none focus:ring-1 focus:ring-indigo-500"
@@ -3899,7 +3897,7 @@ export default function DealManagementView({ initialTab = "dashboard", onNavigat
                       <div className="w-24">
                         <input 
                           type="text" 
-                          placeholder="Örn: 2 MB"
+                          placeholder={t("e.g. 2 MB")}
                           value={newDocSize}
                           onChange={(e) => setNewDocSize(e.target.value)}
                           className="w-full p-1.5 bg-white dark:bg-zinc-850 border border-slate-250 dark:border-zinc-750 text-slate-800 dark:text-zinc-150 rounded text-xs outline-none focus:ring-1 focus:ring-indigo-500 font-mono"
@@ -3929,7 +3927,7 @@ export default function DealManagementView({ initialTab = "dashboard", onNavigat
                         className="p-1 px-3 bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs rounded-lg cursor-pointer transition-all disabled:opacity-50 inline-flex items-center gap-1"
                       >
                         <Plus className="w-3.5 h-3.5 text-white" />
-                        <span>Kayıt</span>
+                        <span>{t("Save")}</span>
                       </button>
                     </div>
 
@@ -3965,11 +3963,11 @@ export default function DealManagementView({ initialTab = "dashboard", onNavigat
             </h3>
             
             <div>
-              <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1">Stage Milestone Name *</label>
+              <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1">{t("Stage Milestone Name *")}</label>
               <input
                 type="text"
                 required
-                placeholder="e.g. Executive Board Pitch"
+                placeholder={t("e.g. Executive Board Pitch")}
                 value={newStageNameInput}
                 onChange={(e) => setNewStageNameInput(e.target.value)}
                 className="w-full bg-[#fbfbfb] dark:bg-zinc-800 border border-slate-200 dark:border-zinc-700 rounded-lg p-2 text-xs outline-none"
@@ -4000,7 +3998,7 @@ export default function DealManagementView({ initialTab = "dashboard", onNavigat
         <div className="fixed inset-0 bg-[#0c0c0c]/50 dark:bg-[#000000]/70 backdrop-blur-xs flex items-center justify-center z-50 p-4">
           <form onSubmit={handleSaveStageDescription} className="bg-white dark:bg-[#151515] w-full max-w-sm rounded-xl border border-slate-205 dark:border-zinc-800 p-5 space-y-4 animate-in fade-in zoom-in-95">
             <h3 className="font-bold text-slate-800 dark:text-zinc-100 text-xs uppercase tracking-wide font-mono">
-              Add Description: &quot;{isAddingDescPopup.stage}&quot;
+              {t('Add Description: "{stage}"').replace("{stage}", isAddingDescPopup.stage)}
             </h3>
             
             <div>
@@ -4039,18 +4037,18 @@ export default function DealManagementView({ initialTab = "dashboard", onNavigat
         <div className="fixed inset-0 bg-[#0c0c0c]/50 dark:bg-[#000000]/70 backdrop-blur-xs flex items-center justify-center z-50 p-4">
           <form onSubmit={handleRenameStage} className="bg-white dark:bg-[#151515] w-full max-w-sm rounded-xl border border-slate-205 dark:border-zinc-800 p-5 space-y-4 animate-in fade-in zoom-in-95">
             <h3 className="font-bold text-slate-800 dark:text-zinc-100 text-xs uppercase tracking-wide font-mono">
-              Aşama Adını Değiştir / Rename Stage
+              {t("Rename Stage")}
             </h3>
             
             <div>
               <p className="text-[11px] text-slate-500 mb-2">
-                &quot;{isRenamingStagePopup}&quot; aşaması için yeni bir başlık belirtin. Bu aşama altındaki tüm fırsatlar otomatik olarak güncellenecektir.
+                {t('Specify a new title for the "{stage}" stage. All opportunities under this stage will be updated automatically.').replace("{stage}", isRenamingStagePopup)}
               </p>
-              <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1 uppercase text-slate-650">Yeni Aşama Adı / New Stage Name *</label>
+              <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1 uppercase text-slate-650">{t("New Stage Name *")}</label>
               <input
                 type="text"
                 required
-                placeholder="Örn: Sunum / Pitch Done"
+                placeholder={t("e.g. Presentation / Pitch Done")}
                 value={renameStageInput}
                 onChange={(e) => setRenameStageInput(e.target.value)}
                 className="w-full bg-[#fbfbfb] dark:bg-zinc-800 border border-slate-200 dark:border-zinc-700 rounded-lg p-2 text-xs outline-none text-slate-900 dark:text-white font-semibold"
@@ -4066,13 +4064,13 @@ export default function DealManagementView({ initialTab = "dashboard", onNavigat
                 }}
                 className="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 dark:bg-zinc-800 dark:hover:bg-zinc-700 text-slate-600 dark:text-zinc-300 rounded font-bold cursor-pointer"
               >
-                İptal / Cancel
+                {t("Cancel")}
               </button>
               <button
                 type="submit"
                 className="px-4 py-1.5 bg-[#0078D4] hover:bg-blue-600 text-white rounded font-bold cursor-pointer"
               >
-                Uygula / Rename
+                {t("Apply Rename")}
               </button>
             </div>
           </form>
@@ -4084,23 +4082,23 @@ export default function DealManagementView({ initialTab = "dashboard", onNavigat
         <div className="fixed inset-0 bg-[#0c0c0c]/50 dark:bg-[#000000]/70 backdrop-blur-xs flex items-center justify-center z-50 p-4">
           <form onSubmit={handleConfirmDeleteStage} className="bg-white dark:bg-[#151515] w-full max-w-sm rounded-xl border border-slate-205 dark:border-zinc-800 p-5 space-y-4 animate-in fade-in zoom-in-95">
             <h3 className="font-bold text-slate-850 dark:text-zinc-100 text-xs uppercase tracking-wide font-mono text-rose-600 dark:text-rose-450">
-              Aşamayı Sil / Delete Stage
+              {t("Delete Stage")}
             </h3>
             
             <div className="space-y-3">
               <p className="text-[11px] text-slate-600 dark:text-zinc-300 font-semibold">
-                &quot;<span className="text-rose-600 dark:text-rose-400 font-bold">{isDeletingStagePopup}</span>&quot; aşamasını silmek istediğinizden emin misiniz?
+                {t('Are you sure you want to delete the "{stage}" stage?').replace("{stage}", isDeletingStagePopup)}
               </p>
               
               {deals.filter(d => d.stage === isDeletingStagePopup).length > 0 ? (
                 <div className="p-3 bg-amber-500/10 dark:bg-amber-955/20 border border-amber-500/20 text-amber-800 dark:text-amber-400 rounded-lg space-y-2 text-xs">
-                  <p className="font-bold text-[10px]">⚠️ DİKKAT: AKTARILACAK FIRSATLAR VAR</p>
+                  <p className="font-bold text-[10px]">{t("⚠️ WARNING: OPPORTUNITIES TO MIGRATE")}</p>
                   <p className="text-[10px]">
-                    Bu aşamada şu an <b>{deals.filter(d => d.stage === isDeletingStagePopup).length} adet</b> fırsat bulunuyor. Bu fırsatları hangi aşamaya taşımak istersiniz?
+                    {t("There are currently {count} opportunities in this stage. Which stage should they be moved to?").replace("{count}", String(deals.filter(d => d.stage === isDeletingStagePopup).length))}
                   </p>
                   
                   <div>
-                    <label className="block text-[9px] font-black uppercase text-slate-500 mb-1">Hedef Aşama / Target Stage</label>
+                    <label className="block text-[9px] font-black uppercase text-slate-500 mb-1">{t("Target Stage")}</label>
                     <select
                       value={deleteStageTargetMigration}
                       onChange={(e) => setDeleteStageTargetMigration(e.target.value)}
@@ -4117,7 +4115,7 @@ export default function DealManagementView({ initialTab = "dashboard", onNavigat
                 </div>
               ) : (
                 <p className="text-[10px] text-slate-500 dark:text-zinc-400">
-                  Bu aşamada aktif bir fırsat yok. Güvenle silebilirsiniz.
+                  {t("There are no active opportunities in this stage. You can safely delete it.")}
                 </p>
               )}
             </div>
@@ -4128,13 +4126,13 @@ export default function DealManagementView({ initialTab = "dashboard", onNavigat
                 onClick={() => setIsDeletingStagePopup(null)}
                 className="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 dark:bg-zinc-800 dark:hover:bg-zinc-700 text-slate-600 dark:text-zinc-300 rounded font-bold cursor-pointer"
               >
-                Vazgeç / Cancel
+                {t("Cancel")}
               </button>
               <button
                 type="submit"
                 className="px-4 py-1.5 bg-rose-600 hover:bg-rose-700 text-white rounded font-bold cursor-pointer font-black"
               >
-                Evet, Aşamayı Sil / Understood, Delete
+                {t("Understood, Delete")}
               </button>
             </div>
           </form>
@@ -4156,7 +4154,7 @@ export default function DealManagementView({ initialTab = "dashboard", onNavigat
                 </div>
                 <div>
                   <h3 className="font-extrabold text-slate-800 dark:text-zinc-100 text-sm leading-tight font-sans">
-                    Teklif Hatırlatma ve Takip Mailbox
+                    {t("Proposal Reminder & Follow-up Mailbox")}
                   </h3>
                   <p className="text-[10px] text-slate-450 dark:text-zinc-500 font-medium">
                     {reminderSelectedDeal.companyName} • {reminderSelectedDeal.contactPerson}
@@ -4197,11 +4195,11 @@ export default function DealManagementView({ initialTab = "dashboard", onNavigat
                       {emailSendError.message}
                     </p>
                     <div className="text-[10px] font-mono bg-rose-50/50 dark:bg-black/40 p-2.5 rounded border border-rose-100 dark:border-rose-950/40 whitespace-pre-wrap leading-relaxed text-slate-600 dark:text-zinc-400 select-all font-sans">
-                      <strong>System Diagnostics:</strong>{"\n"}
+                      <strong>{t("System Diagnostics:")}</strong>{"\n"}
                       CODE: {emailSendError.code}{"\n"}{emailSendError.diagnostics}
                     </div>
                     <p className="text-[10px] text-slate-500 italic">
-                      💡 Çözüm: Yönetim Paneli (Administration Center) &gt; Çoklu E-Postalar sekmesinden &quot;E-Posta API Entegrasyon Hata Simülatörü&quot; anahtarını kapatın veya bağlantıları tazeleyin.
+                      💡 {t("Solution: Disable the email API error simulator in Administration Center > Multi-Email tab or refresh connections.")}
                     </p>
                   </div>
                 </div>
@@ -4369,7 +4367,7 @@ export default function DealManagementView({ initialTab = "dashboard", onNavigat
                   className="px-4 py-2 bg-slate-100 hover:bg-slate-200 dark:bg-zinc-800 dark:hover:bg-zinc-700 text-slate-600 dark:text-zinc-300 font-bold rounded-lg text-xs cursor-pointer"
                   onClick={() => setIsReminderMailboxOpen(false)}
                 >
-                  Vazgeç / Cancel
+                  {t("Cancel")}
                 </button>
                 <button
                   type="button"

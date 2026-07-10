@@ -1398,13 +1398,9 @@ export default function AdministrationCenter({ onClose, initialSubTab }: Adminis
                       onChange={(e) => setNewMailbox({ ...newMailbox, provider: e.target.value as any })}
                       className="text-xs bg-white dark:bg-black p-3 rounded-xl border border-slate-200 dark:border-zinc-800"
                     >
-                      <option>Microsoft 365</option>
-                      <option>Outlook</option>
-                      <option>Exchange Online</option>
-                      <option>Gmail</option>
-                      <option>Google Workspace</option>
-                      <option>IMAP</option>
-                      <option>SMTP</option>
+                      {(["Microsoft 365", "Outlook", "Exchange Online", "Gmail", "Google Workspace", "IMAP", "SMTP"] as const).map((provider) => (
+                        <option key={provider} value={provider}>{t(provider)}</option>
+                      ))}
                     </select>
                     <input
                       type="text"
@@ -1428,7 +1424,7 @@ export default function AdministrationCenter({ onClose, initialSubTab }: Adminis
                     <div className="flex justify-between items-start">
                       <div className="space-y-1">
                         <span className="p-1 px-2 rounded bg-indigo-50 dark:bg-zinc-900 text-indigo-700 text-[9px] font-bold font-mono tracking-wide uppercase">
-                          {box.provider}
+                          {t(box.provider)}
                         </span>
                         <h4 className="text-xs font-bold text-slate-800 dark:text-zinc-200 pt-1">{box.name}</h4>
                         <span className="text-[10px] text-slate-400 font-mono block">{box.email}</span>
@@ -1623,12 +1619,9 @@ export default function AdministrationCenter({ onClose, initialSubTab }: Adminis
                         onChange={(e) => setNewStorage({ ...newStorage, provider: e.target.value })}
                         className="w-full bg-white dark:bg-black p-2.5 rounded-xl border border-slate-205 dark:border-zinc-805 text-xs"
                       >
-                        <option>Microsoft OneDrive</option>
-                        <option>Microsoft SharePoint</option>
-                        <option>Azure Blob</option>
-                        <option>Google Drive</option>
-                        <option>AWS S3</option>
-                        <option>Local Storage</option>
+                        {(["Microsoft OneDrive", "Microsoft SharePoint", "Azure Blob", "Google Drive", "AWS S3", "Local Storage"] as const).map((provider) => (
+                          <option key={provider} value={provider}>{t(provider)}</option>
+                        ))}
                       </select>
                     </div>
                     <div className="space-y-1">
@@ -1835,7 +1828,7 @@ export default function AdministrationCenter({ onClose, initialSubTab }: Adminis
                         <div className="min-w-0">
                           <div className="flex items-center gap-1.5 flex-wrap">
                             <span className="text-[9px] font-bold font-mono text-indigo-700 bg-indigo-50 dark:bg-zinc-900 px-2 py-0.5 rounded uppercase">
-                              {conn.provider}
+                              {t(conn.provider)}
                             </span>
                             {conn.defaultStorage && (
                               <span className="text-[9px] font-bold font-mono text-emerald-700 bg-emerald-50 dark:bg-zinc-900 px-2 py-0.5 rounded uppercase">

@@ -54,9 +54,8 @@ function formatDate(value: string | null | undefined, lang: "TR" | "EN"): string
 }
 
 export default function OrganizationUsersPanel({ onAuditLog }: OrganizationUsersPanelProps) {
-  const { lang } = useLanguage();
+  const { lang, t } = useLanguage();
   const { membership, actorName, companyName, refreshOrganization } = useOrganization();
-  const tr = lang === "TR";
 
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -82,7 +81,7 @@ export default function OrganizationUsersPanel({ onAuditLog }: OrganizationUsers
       setMembers(directory.members || []);
       setInvitations(directory.invitations || []);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to load users.");
+      setError(err instanceof Error ? err.message : t("Failed to load users."));
     } finally {
       setLoading(false);
     }
@@ -117,13 +116,8 @@ export default function OrganizationUsersPanel({ onAuditLog }: OrganizationUsers
       setInviteMessage({
         type: "success",
         text: result.emailSent
-          ? tr
-            ? `Davet e-postası ${result.invitation.invited_email} adresine gönderildi.`
-            : `Invitation email sent to ${result.invitation.invited_email}.`
-          : result.message ||
-            (tr
-              ? "Davet oluşturuldu. Bağlantıyı paylaşarak kullanıcıyı davet edebilirsiniz."
-              : "Invitation created. Share the link to invite the user."),
+          ? t("Invitation email sent to {email}.").replace("{email}", result.invitation.invited_email)
+          : result.message || t("Invitation created. Share the link to invite the user."),
         link: result.inviteLink,
       });
       onAuditLog?.(
@@ -135,7 +129,7 @@ export default function OrganizationUsersPanel({ onAuditLog }: OrganizationUsers
     } catch (err) {
       setInviteMessage({
         type: "error",
-        text: err instanceof Error ? err.message : "Failed to send invitation.",
+        text: err instanceof Error ? err.message : t("Failed to send invitation."),
       });
     } finally {
       setInviteLoading(false);
@@ -151,7 +145,7 @@ export default function OrganizationUsersPanel({ onAuditLog }: OrganizationUsers
     } catch (err) {
       setInviteMessage({
         type: "error",
-        text: err instanceof Error ? err.message : "Failed to cancel invitation.",
+        text: err instanceof Error ? err.message : t("Failed to cancel invitation."),
       });
     }
   };
@@ -166,12 +160,10 @@ export default function OrganizationUsersPanel({ onAuditLog }: OrganizationUsers
             </div>
             <div>
               <h3 className="text-lg font-bold text-slate-900 dark:text-zinc-100">
-                {tr ? "Kullanıcılar ve İzinler" : "Users & Permissions"}
+                {t("Users & Permissions")}
               </h3>
               <p className="text-sm text-slate-500 dark:text-zinc-400">
-                {tr
-                  ? `${companyName} organizasyonundaki aktif kullanıcıları ve bekleyen davetleri yönetin.`
-                  : `Manage active users and pending invitations for ${companyName}.`}
+                {t("Manage active users and pending invitations for {company}.").replace("{company}", companyName)}
               </p>
             </div>
           </div>
@@ -183,7 +175,7 @@ export default function OrganizationUsersPanel({ onAuditLog }: OrganizationUsers
               className="inline-flex items-center gap-2 px-3 py-2 rounded-xl text-xs font-semibold border border-slate-200 dark:border-zinc-700 text-slate-600 dark:text-zinc-300 hover:bg-slate-50 dark:hover:bg-zinc-900"
             >
               <RefreshCw className={`w-3.5 h-3.5 ${loading ? "animate-spin" : ""}`} />
-              {tr ? "Yenile" : "Refresh"}
+              {t("Refresh")}
             </button>
             {canManage && (
               <button
@@ -192,7 +184,7 @@ export default function OrganizationUsersPanel({ onAuditLog }: OrganizationUsers
                 className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-bold text-white bg-[#1E3A5F] hover:bg-[#162d4a] transition-colors"
               >
                 <UserPlus className="w-4 h-4" />
-                {tr ? "Kullanıcı Davet Et" : "Invite User"}
+                {t("Invite User")}
               </button>
             )}
           </div>
@@ -202,9 +194,7 @@ export default function OrganizationUsersPanel({ onAuditLog }: OrganizationUsers
           <div className="mx-6 mt-4 flex items-start gap-3 rounded-xl border border-amber-200 bg-amber-50/70 dark:border-amber-900/40 dark:bg-amber-950/20 px-4 py-3 text-sm text-amber-800 dark:text-amber-300">
             <Shield className="w-4 h-4 mt-0.5 shrink-0" />
             <span>
-              {tr
-                ? "Davet gönderme yetkisi yalnızca Sahip ve Yönetici rollerinde bulunur."
-                : "Only Owner and Admin roles can send invitations."}
+              {t("Only Owner and Admin roles can send invitations.")}
             </span>
           </div>
         )}
@@ -237,7 +227,7 @@ export default function OrganizationUsersPanel({ onAuditLog }: OrganizationUsers
                         className="inline-flex items-center gap-1 px-2 py-1 rounded-lg text-[11px] font-bold bg-[#1E3A5F] text-white"
                       >
                         <Copy className="w-3 h-3" />
-                        {tr ? "Kopyala" : "Copy"}
+                        {t("Copy to Clipboard")}
                       </button>
                     </div>
                   )}
@@ -254,25 +244,25 @@ export default function OrganizationUsersPanel({ onAuditLog }: OrganizationUsers
           <form onSubmit={handleInvite} className="mx-6 mt-4 rounded-2xl border border-slate-200 dark:border-zinc-800 bg-slate-50/60 dark:bg-zinc-900/30 p-5 space-y-4">
             <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-slate-500">
               <Plus className="w-3.5 h-3.5" />
-              {tr ? "Yeni Davet" : "New Invitation"}
+              {t("New Invitation")}
             </div>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
               <label className="space-y-1.5 md:col-span-2">
                 <span className="text-xs font-semibold text-slate-600 dark:text-zinc-300">
-                  {tr ? "E-posta" : "Email"}
+                  {t("Email")}
                 </span>
                 <input
                   type="email"
                   required
                   value={inviteEmail}
                   onChange={(e) => setInviteEmail(e.target.value)}
-                  placeholder="user@company.com"
+                  placeholder={t("you@company.com")}
                   className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-zinc-700 bg-white dark:bg-[#0c0c0e] text-sm"
                 />
               </label>
               <label className="space-y-1.5">
                 <span className="text-xs font-semibold text-slate-600 dark:text-zinc-300">
-                  {tr ? "Rol" : "Role"}
+                  {t("Role")}
                 </span>
                 <select
                   value={inviteRole}
@@ -293,14 +283,14 @@ export default function OrganizationUsersPanel({ onAuditLog }: OrganizationUsers
                 onClick={() => setInviteOpen(false)}
                 className="px-4 py-2 rounded-xl text-xs font-semibold border border-slate-200 dark:border-zinc-700"
               >
-                {tr ? "İptal" : "Cancel"}
+                {t("Cancel")}
               </button>
               <button
                 type="submit"
                 disabled={inviteLoading}
                 className="px-4 py-2 rounded-xl text-xs font-bold text-white bg-[#1E3A5F] hover:bg-[#162d4a] disabled:opacity-60"
               >
-                {inviteLoading ? (tr ? "Gönderiliyor..." : "Sending...") : tr ? "Davet Gönder" : "Send Invitation"}
+                {inviteLoading ? t("Sending...") : t("Send Invitation")}
               </button>
             </div>
           </form>
@@ -317,25 +307,25 @@ export default function OrganizationUsersPanel({ onAuditLog }: OrganizationUsers
             <table className="min-w-full text-left">
               <thead className="bg-slate-50 dark:bg-zinc-900/60 text-[11px] uppercase tracking-wider font-bold text-slate-500">
                 <tr>
-                  <th className="px-4 py-3">{tr ? "Kullanıcı" : "User"}</th>
-                  <th className="px-4 py-3">{tr ? "Durum" : "Status"}</th>
-                  <th className="px-4 py-3">{tr ? "Rol" : "Role"}</th>
-                  <th className="px-4 py-3">{tr ? "Son Giriş" : "Last Login"}</th>
-                  <th className="px-4 py-3">{tr ? "Davet / Katılım" : "Invite / Joined"}</th>
-                  <th className="px-4 py-3 text-right">{tr ? "İşlem" : "Action"}</th>
+                  <th className="px-4 py-3">{t("User")}</th>
+                  <th className="px-4 py-3">{t("Status")}</th>
+                  <th className="px-4 py-3">{t("Role")}</th>
+                  <th className="px-4 py-3">{t("Last Login")}</th>
+                  <th className="px-4 py-3">{t("Invite / Joined")}</th>
+                  <th className="px-4 py-3 text-right">{t("Actions")}</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100 dark:divide-zinc-800 text-sm">
                 {loading ? (
                   <tr>
                     <td colSpan={6} className="px-4 py-10 text-center text-slate-500">
-                      {tr ? "Kullanıcılar yükleniyor..." : "Loading users..."}
+                      {t("Loading users...")}
                     </td>
                   </tr>
                 ) : rows.length === 0 ? (
                   <tr>
                     <td colSpan={6} className="px-4 py-10 text-center text-slate-500">
-                      {tr ? "Henüz kullanıcı bulunmuyor." : "No users found yet."}
+                      {t("No users found yet.")}
                     </td>
                   </tr>
                 ) : (
@@ -347,13 +337,13 @@ export default function OrganizationUsersPanel({ onAuditLog }: OrganizationUsers
                             <div className="font-semibold text-slate-900 dark:text-zinc-100">{row.invited_email}</div>
                             <div className="text-xs text-slate-500 flex items-center gap-1 mt-1">
                               <Mail className="w-3 h-3" />
-                              {tr ? "Davet bekliyor" : "Awaiting acceptance"}
+                              {t("Awaiting acceptance")}
                             </div>
                           </td>
                           <td className="px-4 py-4">
                             <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-bold bg-amber-100 text-amber-700 dark:bg-amber-950/30 dark:text-amber-300">
                               <Clock3 className="w-3 h-3" />
-                              {tr ? "Beklemede" : "Pending"}
+                              {t("Pending")}
                             </span>
                           </td>
                           <td className="px-4 py-4">
@@ -372,7 +362,7 @@ export default function OrganizationUsersPanel({ onAuditLog }: OrganizationUsers
                                 onClick={() => void handleCancelInvite(row.id, row.invited_email)}
                                 className="text-xs font-bold text-rose-600 hover:text-rose-700 dark:text-rose-400"
                               >
-                                {tr ? "İptal Et" : "Cancel"}
+                                {t("Cancel")}
                               </button>
                             )}
                           </td>
@@ -394,7 +384,7 @@ export default function OrganizationUsersPanel({ onAuditLog }: OrganizationUsers
                         <td className="px-4 py-4">
                           <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-bold bg-emerald-100 text-emerald-700 dark:bg-emerald-950/30 dark:text-emerald-300">
                             <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
-                            {tr ? "Aktif" : "Active"}
+                            {t("Active")}
                           </span>
                         </td>
                         <td className="px-4 py-4">
@@ -409,7 +399,7 @@ export default function OrganizationUsersPanel({ onAuditLog }: OrganizationUsers
                           {formatDate(row.joined_at, lang)}
                         </td>
                         <td className="px-4 py-4 text-right text-xs text-slate-400">
-                          {row.user_id === membership?.user_id ? (tr ? "Siz" : "You") : "—"}
+                          {row.user_id === membership?.user_id ? t("You") : "—"}
                         </td>
                       </tr>
                     );
@@ -420,9 +410,7 @@ export default function OrganizationUsersPanel({ onAuditLog }: OrganizationUsers
           </div>
 
           <p className="mt-4 text-xs text-slate-500">
-            {tr
-              ? `Yönetici: ${actorName}. Davetler 7 gün geçerlidir ve yalnızca davet edilen e-posta ile kabul edilebilir.`
-              : `Managed by ${actorName}. Invitations expire after 7 days and must be accepted with the invited email.`}
+            {t("Managed by {name}. Invitations expire after 7 days and must be accepted with the invited email.").replace("{name}", actorName)}
           </p>
         </div>
       </div>

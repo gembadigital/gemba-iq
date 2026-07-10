@@ -41,7 +41,7 @@ export default function LeadMailGenerator({
   onPushToMailMerge,
   currentMailMergeCount
 }: LeadMailGeneratorProps) {
-  const { lang, t } = useLanguage();
+  const { t } = useLanguage();
   // List records state
   const [records, setRecords] = useState<LeadRecord[]>([]);
   const [currentPage, setCurrentPage] = useState(1);
@@ -101,7 +101,7 @@ export default function LeadMailGenerator({
 
   const saveEditedRecord = (uid: string) => {
     if (!editCompany.trim() || !editFirstName.trim() || !editLastName.trim() || !editEmail.trim()) {
-      showToast("Company, First Name, Last Name, and Email are required.", "error");
+      showToast(t("Company, First Name, Last Name, and Email are required."), "error");
       return;
     }
 
@@ -125,7 +125,7 @@ export default function LeadMailGenerator({
     setRecords(updated);
     setHasUnsaved(true);
     setEditingLeadUid(null);
-    showToast("Lead record updated successfully.", "success");
+    showToast(t("Lead record updated successfully."), "success");
   };
 
   const showToast = (msg: string, type: "success" | "info" | "error" = "success") => {
@@ -220,15 +220,15 @@ export default function LeadMailGenerator({
     e.preventDefault();
 
     if (!firstName.trim()) {
-      showToast("Please fill in the First Name field.", "error");
+      showToast(t("Please fill in the First Name field."), "error");
       return;
     }
     if (!lastName.trim()) {
-      showToast("Please fill in the Last Name field.", "error");
+      showToast(t("Please fill in the Last Name field."), "error");
       return;
     }
     if (!company.trim()) {
-      showToast("Please fill in the Company Name field.", "error");
+      showToast(t("Please fill in the Company Name field."), "error");
       return;
     }
 
@@ -264,7 +264,7 @@ export default function LeadMailGenerator({
     const totalPages = Math.ceil(updated.length / pageSize);
     setCurrentPage(totalPages || 1);
 
-    showToast(`New record added: ${newRec.firstName} ${newRec.lastName}`, "success");
+    showToast(t("New record added: {name}").replace("{name}", `${newRec.firstName} ${newRec.lastName}`), "success");
   };
 
   /* Delete Record operation */
@@ -289,7 +289,7 @@ export default function LeadMailGenerator({
       setCurrentPage(totalPages);
     }
 
-    showToast(`Record deleted: ${targetName}`, "info");
+    showToast(t("Record deleted: {name}").replace("{name}", targetName), "info");
   };
 
   /* Save entire record sequence array locally */
@@ -298,13 +298,13 @@ export default function LeadMailGenerator({
     setRecords(mapped);
     localStorage.setItem("lead_mail_records", JSON.stringify(mapped));
     setHasUnsaved(false);
-    showToast("Data list successfully saved to local storage.", "success");
+    showToast(t("Data list successfully saved to local storage."), "success");
   };
 
   /* Push generated records into active Mail Merge queue */
   const handleTransferToMailMerge = () => {
     if (records.length === 0) {
-      showToast("There are no lead records to transfer.", "error");
+      showToast(t("There are no lead records to transfer."), "error");
       return;
     }
 
@@ -328,24 +328,24 @@ export default function LeadMailGenerator({
     }));
 
     onPushToMailMerge(newItems);
-    showToast(`${records.length} lead records successfully pushed to Gemba IQ Recipient List!`, "success");
+    showToast(t("{count} lead records successfully pushed to Gemba IQ Recipient List!").replace("{count}", String(records.length)), "success");
   };
 
   /* Clear all parameters entirely */
   const handleClearAll = () => {
-    if (window.confirm("Are you sure you want to clear all lead records and local storage cache?")) {
+    if (window.confirm(t("Are you sure you want to clear all lead records and local storage cache?"))) {
       setRecords([]);
       localStorage.removeItem("lead_mail_records");
       setHasUnsaved(false);
       setCurrentPage(1);
-      showToast("Lead records have been successfully reset.", "info");
+      showToast(t("Lead records have been successfully reset."), "info");
     }
   };
 
   /* XLSX / CSV download capability */
   const exportDataFile = (type: "xlsx" | "csv") => {
     if (records.length === 0) {
-      showToast("No data to export.", "error");
+      showToast(t("No data to export."), "error");
       return;
     }
 
@@ -374,7 +374,7 @@ export default function LeadMailGenerator({
       link.download = `lead_list_${new Date().toISOString().split("T")[0]}.csv`;
       link.click();
       URL.revokeObjectURL(link.href);
-      showToast("CSV file exported successfully.", "success");
+      showToast(t("CSV file exported successfully."), "success");
     } else {
       const wb = XLSX.utils.book_new();
       const ws = XLSX.utils.aoa_to_sheet(finalRaw);
@@ -390,7 +390,7 @@ export default function LeadMailGenerator({
       ];
       XLSX.utils.book_append_sheet(wb, ws, "Leads");
       XLSX.writeFile(wb, `lead_list_${new Date().toISOString().split("T")[0]}.xlsx`);
-      showToast("Excel workbook (XLSX) exported successfully.", "success");
+      showToast(t("Excel workbook (XLSX) exported successfully."), "success");
     }
   };
 
@@ -437,14 +437,14 @@ export default function LeadMailGenerator({
           <div className="flex items-center gap-2">
             <Sparkles className="w-5 h-5 text-[#0078D4]" />
             <span className="text-xs font-bold text-[#0078D4] tracking-widest uppercase">
-              {lang === "TR" ? "Premium Jeneratör Seti" : "Premium Generator Suite"}
+              {t("Premium Generator Suite")}
             </span>
           </div>
           <h2 className="text-xl font-bold text-slate-900 dark:text-slate-50 mt-1 font-display">
-            {lang === "TR" ? "Aday E-posta Oluşturucu — E-posta Şablon Yapıcı" : "Lead Mail Generator — Email Pattern Builder"}
+            {t("Lead Mail Generator — Email Pattern Builder")}
           </h2>
           <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
-            {lang === "TR" ? "Ad ve şablon kurallarına göre e-posta adreslerini tahmin eden ve doğrudan kampanyanıza aktaran akıllı, otomatik e-posta tahmincisi." : "Intelligent, automated email predictor guessing address paths by name pattern rules and transferring directly to your campaign."}
+            {t("Intelligent, automated email predictor guessing address paths by name pattern rules and transferring directly to your campaign.")}
           </p>
         </div>
         <div className="flex flex-wrap gap-2">
@@ -454,7 +454,7 @@ export default function LeadMailGenerator({
               className="flex items-center gap-1.5 px-3 py-2 border border-rose-200 dark:border-rose-950/40 text-rose-600 dark:text-rose-450 hover:bg-rose-50 dark:hover:bg-rose-950/25 rounded-lg text-xs font-bold transition-all cursor-pointer"
             >
               <Trash2 className="w-3.5 h-3.5" />
-              {lang === "TR" ? "Tüm Adayları Temizle" : "Clear All Leads"}
+              {t("Clear All Leads")}
             </button>
           )}
         </div>
@@ -466,12 +466,12 @@ export default function LeadMailGenerator({
         <div className="lg:col-span-1 bg-white dark:bg-[#1b1a19] border border-[#EDEBE9] dark:border-[#323130] rounded-xl shadow-sm p-6 self-start">
           <div className="flex items-center justify-between border-b border-[#EDEBE9] dark:border-[#323130] pb-3 mb-4">
             <span className="text-xs font-bold text-slate-705 dark:text-slate-200 uppercase tracking-widest block">
-              Lead Creation Form
+              {t("Lead Creation Form")}
             </span>
             <div className="flex gap-1.5">
               {hasUnsaved && (
                 <span className="text-[9px] font-bold text-amber-600 dark:text-amber-400 bg-amber-50 dark:bg-amber-950/30 px-2 py-0.5 rounded border border-amber-200/40 dark:border-amber-900/30 animate-pulse">
-                  Unsaved Changes
+                  {t("Unsaved Changes")}
                 </span>
               )}
             </div>
@@ -482,10 +482,10 @@ export default function LeadMailGenerator({
             {/* Şirket Adı & Otomatik Domain */}
             <div className="grid grid-cols-1 gap-3.5">
               <div className="space-y-1">
-                <label className="text-[10px] font-bold uppercase tracking-wider text-slate-500 block">Company Name</label>
+                <label className="text-[10px] font-bold uppercase tracking-wider text-slate-500 block">{t("Company Name")}</label>
                 <input
                   type="text"
-                  placeholder="e.g. Gemba Partner"
+                  placeholder={t("e.g. Gemba Partner")}
                   value={company}
                   onChange={(e) => handleCompanyChange(e.target.value)}
                   className="w-full text-xs p-2 rounded border border-[#EDEBE9] dark:border-[#323130] bg-[#fdfdfd] dark:bg-[#252423] font-semibold text-slate-800 dark:text-slate-100 placeholder-slate-400 focus:ring-1 focus:ring-[#0078D4] focus:border-[#0078D4] outline-none"
@@ -494,10 +494,10 @@ export default function LeadMailGenerator({
               </div>
 
               <div className="space-y-1">
-                <label className="text-[10px] font-bold uppercase tracking-wider text-slate-500 block">Domain (Estimated)</label>
+                <label className="text-[10px] font-bold uppercase tracking-wider text-slate-500 block">{t("Domain (Estimated)")}</label>
                 <input
                   type="text"
-                  placeholder="e.g. gembapartner.com"
+                  placeholder={t("e.g. gembapartner.com")}
                   value={domain}
                   onChange={(e) => setDomain(e.target.value)}
                   className="w-full text-xs p-2 rounded border border-[#EDEBE9] dark:border-[#323130] bg-[#fdfdfd] dark:bg-[#252423] font-semibold text-slate-800 dark:text-slate-100 placeholder-slate-400 focus:ring-1 focus:ring-[#0078D4] focus:border-[#0078D4] outline-none"
@@ -508,24 +508,24 @@ export default function LeadMailGenerator({
             {/* Email Pattern structure */}
             <div className="space-y-1 pt-1.5 border-t border-[#EDEBE9] dark:border-[#323130]/60">
               <div className="flex items-center justify-between">
-                <label className="text-[10px] font-bold uppercase tracking-wider text-[#0078D4] block">E-Mail Format Pattern</label>
+                <label className="text-[10px] font-bold uppercase tracking-wider text-[#0078D4] block">{t("E-Mail Format Pattern")}</label>
                 <button
                   type="button"
                   onClick={() => setEmailFormat("")}
                   className="text-[10px] text-rose-600 dark:text-rose-450 font-semibold hover:underline"
                 >
-                  Clear Pattern
+                  {t("Clear Pattern")}
                 </button>
               </div>
               <input
                 type="text"
                 value={emailFormat}
                 onChange={(e) => setEmailFormat(e.target.value)}
-                placeholder="e.g. ad.soyad  or  adsoyad  or  a.soyad"
+                placeholder={t("e.g. ad.soyad  or  adsoyad  or  a.soyad")}
                 className="w-full text-xs p-2 rounded border border-[#EDEBE9] dark:border-[#323130] bg-[#fdfdfd] dark:bg-[#252423] font-mono font-semibold text-indigo-600 dark:text-indigo-400 placeholder-indigo-300 focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500 outline-none"
               />
               <div className="p-2.5 rounded bg-amber-500/5 border border-amber-500/10 text-[10px] text-amber-800 dark:text-amber-400 leading-tight block">
-                <strong>Variables:</strong> <code>ad</code> / <code>first name</code> (full name), <code>soyad</code> / <code>last name</code> (last name), <code>a</code> (first letter of first name), <code>s</code> (first letter of last name). <br />
+                <strong>{t("Variables:")}</strong> <code>ad</code> / <code>first name</code> (full name), <code>soyad</code> / <code>last name</code> (last name), <code>a</code> (first letter of first name), <code>s</code> (first letter of last name). <br />
                 <em>e.g. <code>a.soyad</code>, <code>ad_soyad</code>, <code>first name_last name</code>, <code>adsoyad</code></em>
               </div>
             </div>
@@ -533,10 +533,10 @@ export default function LeadMailGenerator({
             {/* Personal credentials */}
             <div className="grid grid-cols-2 gap-3 pt-1.5 border-t border-[#EDEBE9] dark:border-[#323130]/60">
               <div className="space-y-1">
-                <label className="text-[10px] font-bold uppercase tracking-wider text-slate-500 block">First Name</label>
+                <label className="text-[10px] font-bold uppercase tracking-wider text-slate-500 block">{t("First Name")}</label>
                 <input
                   type="text"
-                  placeholder="e.g. John"
+                  placeholder={t("e.g. John")}
                   value={firstName}
                   onChange={(e) => setFirstName(e.target.value)}
                   className="w-full text-xs p-2 rounded border border-[#EDEBE9] dark:border-[#323130] bg-[#fdfdfd] dark:bg-[#252423] font-semibold text-slate-800 dark:text-slate-100 focus:ring-1 focus:ring-[#0078D4]"
@@ -545,10 +545,10 @@ export default function LeadMailGenerator({
               </div>
 
               <div className="space-y-1">
-                <label className="text-[10px] font-bold uppercase tracking-wider text-slate-500 block">Last Name</label>
+                <label className="text-[10px] font-bold uppercase tracking-wider text-slate-500 block">{t("Last Name")}</label>
                 <input
                   type="text"
-                  placeholder="e.g. Doe"
+                  placeholder={t("e.g. Doe")}
                   value={lastName}
                   onChange={(e) => setLastName(e.target.value)}
                   className="w-full text-xs p-2 rounded border border-[#EDEBE9] dark:border-[#323130] bg-[#fdfdfd] dark:bg-[#252423] font-semibold text-slate-800 dark:text-slate-100 focus:ring-1 focus:ring-[#0078D4]"
@@ -560,10 +560,10 @@ export default function LeadMailGenerator({
             {/* Form standard fields: Department, Address & Sector */}
             <div className="space-y-3 pt-1 border-t border-[#EDEBE9] dark:border-[#323130]/60">
               <div className="space-y-1">
-                <label className="text-[10px] font-bold uppercase tracking-wider text-slate-500 block">Department</label>
+                <label className="text-[10px] font-bold uppercase tracking-wider text-slate-500 block">{t("Department")}</label>
                 <input
                   type="text"
-                  placeholder="e.g. Sales, HR, Engineering"
+                  placeholder={t("e.g. Sales, HR, Engineering")}
                   value={department}
                   onChange={(e) => setDepartment(e.target.value)}
                   className="w-full text-xs p-2 rounded border border-[#EDEBE9] dark:border-[#323130] bg-[#fdfdfd] dark:bg-[#252423] font-semibold text-slate-800 dark:text-slate-100"
@@ -571,10 +571,10 @@ export default function LeadMailGenerator({
               </div>
 
               <div className="space-y-1">
-                <label className="text-[10px] font-bold uppercase tracking-wider text-slate-500 block">Sector / Industry</label>
+                <label className="text-[10px] font-bold uppercase tracking-wider text-slate-500 block">{t("Sector / Industry")}</label>
                 <input
                   type="text"
-                  placeholder="e.g. Automotive, IT, Retail"
+                  placeholder={t("e.g. Automotive, IT, Retail")}
                   value={sector}
                   onChange={(e) => setSector(e.target.value)}
                   className="w-full text-xs p-2 rounded border border-[#EDEBE9] dark:border-[#323130] bg-[#fdfdfd] dark:bg-[#252423] font-semibold text-slate-800 dark:text-slate-100"
@@ -582,10 +582,10 @@ export default function LeadMailGenerator({
               </div>
 
               <div className="space-y-1">
-                <label className="text-[10px] font-bold uppercase tracking-wider text-slate-500 block">Address</label>
+                <label className="text-[10px] font-bold uppercase tracking-wider text-slate-500 block">{t("Address")}</label>
                 <input
                   type="text"
-                  placeholder="e.g. London, UK"
+                  placeholder={t("e.g. London, UK")}
                   value={address}
                   onChange={(e) => setAddress(e.target.value)}
                   className="w-full text-xs p-2 rounded border border-[#EDEBE9] dark:border-[#323130] bg-[#fdfdfd] dark:bg-[#252423] font-semibold text-slate-800 dark:text-slate-100"
@@ -595,7 +595,7 @@ export default function LeadMailGenerator({
 
             {/* Dynamic Formula Output Preview banner */}
             <div className="p-3 bg-blue-500/5 dark:bg-blue-500/10 border border-blue-150 dark:border-blue-900/40 rounded-lg">
-              <span className="text-[9px] uppercase font-bold tracking-widest text-[#0078D4] block">Estimated E-Mail Address Preview</span>
+              <span className="text-[9px] uppercase font-bold tracking-widest text-[#0078D4] block">{t("Estimated E-Mail Address Preview")}</span>
               <div className="text-xs font-mono font-semibold text-[#0078D4] uppercase truncate mt-1">
                 {getPreviewEmail()}
               </div>
@@ -607,16 +607,16 @@ export default function LeadMailGenerator({
                 className="flex-1 flex items-center justify-center gap-1 bg-[#0078D4] hover:bg-[#005a9e] text-white py-2 rounded-lg text-xs font-bold transition-all shadow-sm cursor-pointer"
               >
                 <Plus className="w-3.5 h-3.5" />
-                Add Record
+                {t("Add Record")}
               </button>
 
               <button
                 type="button"
                 onClick={handleSaveAll}
                 className="flex items-center justify-center border border-[#EDEBE9] dark:border-[#323130] hover:bg-slate-50 dark:hover:bg-[#252423]/40 text-slate-750 dark:text-slate-205 px-3 rounded-lg text-xs font-bold transition-all cursor-pointer"
-                title="Save List Domestically"
+                title={t("Save List Domestically")}
               >
-                Save Draft
+                {t("Save Draft")}
               </button>
             </div>
 
@@ -631,10 +631,10 @@ export default function LeadMailGenerator({
             <div className="p-5 border-b border-[#EDEBE9] dark:border-[#323130] flex flex-col sm:flex-row items-start sm:items-center sm:justify-between gap-3">
               <div>
                 <h3 className="text-sm font-bold text-slate-800 dark:text-slate-100 uppercase tracking-widest">
-                  Lead Table List ({records.length} Records)
+                  {t("Lead Table List ({count} Records)").replace("{count}", String(records.length))}
                 </h3>
                 <p className="text-[11px] text-slate-500 mt-1">
-                  Mail Merge builder list currently has <strong>{currentMailMergeCount}</strong> active recipients.
+                  {t("Mail Merge builder list currently has {count} active recipients.").replace("{count}", String(currentMailMergeCount))}
                 </p>
               </div>
 
@@ -648,14 +648,14 @@ export default function LeadMailGenerator({
                       ? "bg-slate-100 text-slate-400 dark:bg-slate-800/40 dark:text-slate-600 cursor-not-allowed"
                       : "bg-[#0078D4] text-white hover:bg-[#005a9e] cursor-pointer"
                   }`}
-                  title="Forward all generated lead list records to Mail Merge recipients list"
+                  title={t("Forward all generated lead list records to Mail Merge recipients list")}
                 >
                   <ArrowRightLeft className="w-3.5 h-3.5" />
-                  Transfer to Recipient List ({records.length})
+                  {t("Transfer to Recipient List ({count})").replace("{count}", String(records.length))}
                 </button>
 
                 <div className="flex items-center gap-1.5 bg-slate-50 dark:bg-[#252423] p-1 rounded-lg border border-[#EDEBE9] dark:border-[#323130]">
-                  <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider px-1">Page:</span>
+                  <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider px-1">{t("Page")}:</span>
                   <select
                     value={pageSize}
                     onChange={(e) => {
@@ -678,7 +678,7 @@ export default function LeadMailGenerator({
                     className="flex items-center gap-1 px-2.5 py-1 text-[11px] font-bold text-slate-600 dark:text-slate-300 hover:text-[#0078D4] disabled:opacity-40 disabled:pointer-events-none"
                   >
                     <FileSpreadsheet className="w-3.5 h-3.5 text-emerald-600" />
-                    Excel (XLSX)
+                    {t("Excel (XLSX)")}
                   </button>
                   <button
                     onClick={() => exportDataFile("csv")}
@@ -701,9 +701,9 @@ export default function LeadMailGenerator({
                     <ListPlus className="w-6 h-6" />
                   </div>
                   <div className="max-w-md mx-auto">
-                    <h4 className="text-sm font-bold text-slate-800 dark:text-slate-100">No Lead Records Yet</h4>
+                    <h4 className="text-sm font-bold text-slate-800 dark:text-slate-100">{t("No Lead Records Yet")}</h4>
                     <p className="text-xs text-slate-500 mt-1">
-                      You can add custom company personnel targets from the creation form on the left.
+                      {t("You can add custom company personnel targets from the creation form on the left.")}
                     </p>
                   </div>
                 </div>
@@ -712,13 +712,13 @@ export default function LeadMailGenerator({
                   <thead>
                     <tr className="bg-slate-50/50 dark:bg-[#11100f] border-b border-[#EDEBE9] dark:border-[#323130] text-[10px] font-bold uppercase text-slate-400">
                       <th className="p-3 pl-4 w-[50px] text-center">#</th>
-                      <th className="p-3">Company</th>
-                      <th className="p-3">Full Name</th>
-                      <th className="p-3">E-Mail Address</th>
-                      <th className="p-3">Department</th>
-                      <th className="p-3">Sector</th>
-                      <th className="p-3">Address</th>
-                      <th className="p-3 text-center">Action</th>
+                      <th className="p-3">{t("Company")}</th>
+                      <th className="p-3">{t("Full Name")}</th>
+                      <th className="p-3">{t("E-Mail Address")}</th>
+                      <th className="p-3">{t("Department")}</th>
+                      <th className="p-3">{t("Sector")}</th>
+                      <th className="p-3">{t("Address")}</th>
+                      <th className="p-3 text-center">{t("Action")}</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-slate-100 dark:divide-[#323130]/40 text-xs">
@@ -745,7 +745,7 @@ export default function LeadMailGenerator({
                                 {!r.saved && (
                                   <span
                                     className="w-1.5 h-1.5 rounded-full bg-amber-500 flex-shrink-0"
-                                    title="Unsaved draft changes"
+                                    title={t("Unsaved draft changes")}
                                   />
                                 )}
                                 <span className="truncate max-w-[120px]" title={r.company}>{r.company}</span>
@@ -760,14 +760,14 @@ export default function LeadMailGenerator({
                                   className="w-1/2 text-xs bg-white dark:bg-[#11100f] border border-[#EDEBE9] dark:border-[#323130] rounded px-1.5 py-1 focus:outline-none focus:ring-1 focus:ring-[#0078D4]"
                                   value={editFirstName}
                                   onChange={(e) => setEditFirstName(e.target.value)}
-                                  placeholder="First"
+                                  placeholder={t("First")}
                                 />
                                 <input
                                   type="text"
                                   className="w-1/2 text-xs bg-white dark:bg-[#11100f] border border-[#EDEBE9] dark:border-[#323130] rounded px-1.5 py-1 focus:outline-none focus:ring-1 focus:ring-[#0078D4]"
                                   value={editLastName}
                                   onChange={(e) => setEditLastName(e.target.value)}
-                                  placeholder="Last"
+                                  placeholder={t("Last")}
                                 />
                               </div>
                             ) : (
@@ -819,7 +819,7 @@ export default function LeadMailGenerator({
                                 onChange={(e) => setEditAddress(e.target.value)}
                               />
                             ) : (
-                              <div className="truncate max-w-[140px]" title={r.address || "No address entered"}>
+                              <div className="truncate max-w-[140px]" title={r.address || t("No address entered")}>
                                 {r.address || <span className="text-slate-300">—</span>}
                               </div>
                             )}
@@ -831,7 +831,7 @@ export default function LeadMailGenerator({
                                   type="button"
                                   onClick={() => saveEditedRecord(r.uid)}
                                   className="p-1 text-emerald-600 hover:text-emerald-700 hover:bg-emerald-50 dark:hover:bg-emerald-950/20 rounded transition-all cursor-pointer inline-flex items-center justify-center"
-                                  title="Save Changes"
+                                  title={t("Save Changes")}
                                 >
                                   <Check className="w-3.5 h-3.5" />
                                 </button>
@@ -839,7 +839,7 @@ export default function LeadMailGenerator({
                                   type="button"
                                   onClick={cancelEditing}
                                   className="p-1 text-slate-400 hover:text-slate-600 hover:bg-slate-100 dark:hover:bg-slate-800/60 rounded transition-all cursor-pointer inline-flex items-center justify-center"
-                                  title="Cancel Editing"
+                                  title={t("Cancel Editing")}
                                 >
                                   <X className="w-3.5 h-3.5" />
                                 </button>
@@ -850,7 +850,7 @@ export default function LeadMailGenerator({
                                   type="button"
                                   onClick={() => startEditing(r)}
                                   className="p-1 text-[#0078D4] hover:text-[#005a9e] hover:bg-blue-50 dark:hover:bg-blue-950/20 rounded transition-all cursor-pointer inline-flex items-center justify-center"
-                                  title="Edit Lead Record"
+                                  title={t("Edit Lead Record")}
                                 >
                                   <Edit className="w-3.5 h-3.5" />
                                 </button>
@@ -858,7 +858,7 @@ export default function LeadMailGenerator({
                                   type="button"
                                   onClick={() => handleDeleteRecord(r.uid)}
                                   className="p-1 text-slate-400 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/20 rounded transition-all cursor-pointer inline-flex items-center justify-center"
-                                  title="Delete Lead Record"
+                                  title={t("Delete Lead Record")}
                                 >
                                   <Trash2 className="w-3.5 h-3.5" />
                                 </button>
@@ -878,7 +878,7 @@ export default function LeadMailGenerator({
           {totalRecords > 0 && (
             <div className="p-4 border-t border-[#EDEBE9] dark:border-[#323130] flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-slate-500">
               <div>
-                Showing: <strong className="text-slate-700 dark:text-slate-300">{pageStartIdx + 1}-{pageEndIdx}</strong> / <strong className="text-slate-700 dark:text-slate-300">{totalRecords}</strong> records.
+                {t("Showing: {start}-{end} / {total} records.").replace("{start}", String(pageStartIdx + 1)).replace("{end}", String(pageEndIdx)).replace("{total}", String(totalRecords))}
               </div>
               
               <div className="flex items-center gap-1.5">

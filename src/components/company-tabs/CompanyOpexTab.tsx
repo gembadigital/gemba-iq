@@ -14,6 +14,7 @@ import {
   Tooltip
 } from "recharts";
 import { Sparkles, Star, ShieldCheck, ChevronRight, RefreshCw, Layers, Award } from "lucide-react";
+import { useLanguage } from "../../lib/LanguageContext";
 
 interface CompanyOpexTabProps {
   companyId: string;
@@ -33,10 +34,11 @@ interface OpexScores {
 
 export default function CompanyOpexTab({
   companyId,
-  lang,
+  lang: _langProp,
   companyName,
   onLogTimelineEvent
 }: CompanyOpexTabProps) {
+  const { t } = useLanguage();
   const scoreKey = `crm_company_opex_${companyId}`;
 
   // State
@@ -58,17 +60,17 @@ export default function CompanyOpexTab({
     setScores(updated);
 
     const pillarNames: Record<keyof OpexScores, string> = {
-      s5: "5S System",
-      vsm: "Value Stream Mapping",
-      muda: "Muda Minimization",
-      oee: "OEE Monitoring",
-      visual: "Visual Management",
-      standard: "Standard Work"
+      s5: t("5S System"),
+      vsm: t("Value Stream Mapping"),
+      muda: t("Muda Minimization"),
+      oee: t("OEE Monitoring"),
+      visual: t("Visual Management"),
+      standard: t("Standard Work")
     };
 
     if (onLogTimelineEvent) {
       onLogTimelineEvent(
-        lang === "TR" ? "OPEX Skoru Güncellendi" : "OPEX Diagnostic Updated",
+        t("OPEX Diagnostic Updated"),
         `${pillarNames[pillar]} puanı ${oldScore}/5 seviyesinden ${val}/5 seviyesine güncellendi.`,
         "opex"
       );
@@ -83,43 +85,43 @@ export default function CompanyOpexTab({
 
   const maturityLevel = useMemo(() => {
     if (overallScore >= 81) return {
-      name: lang === "TR" ? "Dünya Sınıfı Üretici" : "World-Class Lean",
+      name: t("World-Class Lean"),
       color: "text-emerald-500 bg-emerald-50 dark:bg-emerald-950/20",
-      description: lang === "TR" ? "Tesisiniz tam entegre, hatasız üretim yapabilen ve kayıpları anında izole eden mükemmel bir yapıdadır." : "Fully synchronized flow, zero-loss operational discipline, and highly flexible production."
+      description: t("Fully synchronized flow, zero-loss operational discipline, and highly flexible production.")
     };
     if (overallScore >= 61) return {
-      name: lang === "TR" ? "Optimize & Yalın" : "Optimized / Lean",
+      name: t("Optimized / Lean"),
       color: "text-indigo-500 bg-indigo-50 dark:bg-indigo-950/20",
-      description: lang === "TR" ? "Süreçleriniz standartlaştırılmış olup kayıplar sürekli iyileştirme döngüleriyle optimize edilmektedir." : "Standardized operational control points, low waste generation, and structured Kaizen teams."
+      description: t("Standardized operational control points, low waste generation, and structured Kaizen teams.")
     };
     if (overallScore >= 41) return {
-      name: lang === "TR" ? "Kararlı & Standart" : "Standardized & Stable",
+      name: t("Standardized & Stable"),
       color: "text-blue-500 bg-blue-50 dark:bg-blue-950/20",
-      description: lang === "TR" ? "Süreçlerde temel standartlar mevcuttur ancak verimlilik kayıpları ve ara stok birikimleri sürmektedir." : "Foundational SOPs are documented. However, bottleneck buffers and speed losses remain."
+      description: t("Foundational SOPs are documented. However, bottleneck buffers and speed losses remain.")
     };
     if (overallScore >= 21) return {
-      name: lang === "TR" ? "Gelişmekte Olan" : "Developing / Defined",
+      name: t("Developing / Defined"),
       color: "text-amber-500 bg-amber-50 dark:bg-amber-950/20",
-      description: lang === "TR" ? "Yalın metotlar yeni tanımlanmaktadır. Reaktif iyileştirmeler mevcuttur." : "Reactive problem solving is active. Systematic lean guidelines are newly introduced."
+      description: t("Reactive problem solving is active. Systematic lean guidelines are newly introduced.")
     };
     return {
-      name: lang === "TR" ? "Reaktif / Kaotik" : "Reactive / Ad-hoc",
+      name: t("Reactive / Ad-hoc"),
       color: "text-rose-500 bg-rose-50 dark:bg-rose-950/20",
-      description: lang === "TR" ? "Herhangi bir standart bulunmuyor. Üretim, günlük krizlere göre yönetilmektedir." : "No stable standards. Output is dictated by daily firefighting, high setups, and scrap."
+      description: t("No stable standards. Output is dictated by daily firefighting, high setups, and scrap.")
     };
-  }, [overallScore, lang]);
+  }, [overallScore, t]);
 
   // Recharts Data Mapping
   const chartData = useMemo(() => {
     return [
-      { name: "5S System", A: scores.s5, fullMark: 5 },
-      { name: "Value Stream", A: scores.vsm, fullMark: 5 },
-      { name: "Muda Min.", A: scores.muda, fullMark: 5 },
-      { name: "OEE Tracking", A: scores.oee, fullMark: 5 },
-      { name: "Visual Mgmt", A: scores.visual, fullMark: 5 },
-      { name: "Standard Work", A: scores.standard, fullMark: 5 }
+      { name: t("5S System"), A: scores.s5, fullMark: 5 },
+      { name: t("Value Stream"), A: scores.vsm, fullMark: 5 },
+      { name: t("Muda Min."), A: scores.muda, fullMark: 5 },
+      { name: t("OEE Tracking"), A: scores.oee, fullMark: 5 },
+      { name: t("Visual Mgmt"), A: scores.visual, fullMark: 5 },
+      { name: t("Standard Work"), A: scores.standard, fullMark: 5 }
     ];
-  }, [scores]);
+  }, [scores, t]);
 
   // AI Diagnostic Advisor
   const aiAdvice = useMemo(() => {
@@ -174,7 +176,7 @@ export default function CompanyOpexTab({
           <div className="flex items-center gap-2 border-b border-slate-100 dark:border-zinc-800/80 pb-2.5">
             <Award className="w-4 h-4 text-violet-500" />
             <h4 className="text-xs font-bold uppercase text-slate-800 dark:text-zinc-200 tracking-wider">
-              {lang === "TR" ? "Yalın Olgunluk Seviyesi Teşhis Matrisi" : "Lean Maturity Assessment Matrix"}
+              {t("Lean Maturity Assessment Matrix")}
             </h4>
           </div>
 
@@ -183,66 +185,66 @@ export default function CompanyOpexTab({
             {/* 5S */}
             <div className="p-3 bg-slate-50/50 dark:bg-zinc-900/40 border border-slate-100 dark:border-zinc-800/50 rounded-lg space-y-1">
               <div className="flex justify-between items-center">
-                <span className="font-extrabold text-slate-850 dark:text-zinc-200">1. 5S System & Housekeeping</span>
+                <span className="font-extrabold text-slate-850 dark:text-zinc-200">{t("1. 5S System & Housekeeping")}</span>
                 {renderStarsSelector("s5", scores.s5)}
               </div>
               <p className="text-[10px] text-slate-400 dark:text-zinc-500">
-                {lang === "TR" ? "Sıralama, düzenleme, temizleme, standartlaştırma ve sürdürme disiplini." : "Sorting, straightening, shining, standardizing, and sustaining. Floor organization."}
+                {t("Sorting, straightening, shining, standardizing, and sustaining. Floor organization.")}
               </p>
             </div>
 
             {/* VSM */}
             <div className="p-3 bg-slate-50/50 dark:bg-zinc-900/40 border border-slate-100 dark:border-zinc-800/50 rounded-lg space-y-1">
               <div className="flex justify-between items-center">
-                <span className="font-extrabold text-slate-850 dark:text-zinc-200">2. Value Stream Mapping (VSM)</span>
+                <span className="font-extrabold text-slate-850 dark:text-zinc-200">{t("2. Value Stream Mapping (VSM)")}</span>
                 {renderStarsSelector("vsm", scores.vsm)}
               </div>
               <p className="text-[10px] text-slate-400 dark:text-zinc-500">
-                {lang === "TR" ? "Süreçteki ham malzemeden mamül ürüne giden akış ve bekleme noktalarının tespiti." : "Mapping material and information flow across cycle buffers to isolate stagnation spots."}
+                {t("Mapping material and information flow across cycle buffers to isolate stagnation spots.")}
               </p>
             </div>
 
             {/* Muda */}
             <div className="p-3 bg-slate-50/50 dark:bg-zinc-900/40 border border-slate-100 dark:border-zinc-800/50 rounded-lg space-y-1">
               <div className="flex justify-between items-center">
-                <span className="font-extrabold text-slate-850 dark:text-zinc-200">3. Muda Minimization (Waste Elimination)</span>
+                <span className="font-extrabold text-slate-850 dark:text-zinc-200">{t("3. Muda Minimization (Waste Elimination)")}</span>
                 {renderStarsSelector("muda", scores.muda)}
               </div>
               <p className="text-[10px] text-slate-400 dark:text-zinc-500">
-                {lang === "TR" ? "Aşırı üretim, bekleme, taşıma, gereksiz işlem, stok, hareket ve hata kayıplarının azaltılması." : "Elimination of transport, inventory, excess motion, waiting, overproduction, defects."}
+                {t("Elimination of transport, inventory, excess motion, waiting, overproduction, defects.")}
               </p>
             </div>
 
             {/* OEE */}
             <div className="p-3 bg-slate-50/50 dark:bg-zinc-900/40 border border-slate-100 dark:border-zinc-800/50 rounded-lg space-y-1">
               <div className="flex justify-between items-center">
-                <span className="font-extrabold text-slate-850 dark:text-zinc-200">4. Overall Equipment Effectiveness (OEE)</span>
+                <span className="font-extrabold text-slate-850 dark:text-zinc-200">{t("4. Overall Equipment Effectiveness (OEE)")}</span>
                 {renderStarsSelector("oee", scores.oee)}
               </div>
               <p className="text-[10px] text-slate-400 dark:text-zinc-500">
-                {lang === "TR" ? "Kritik makinelerin kullanılabilirlik, performans ve kalite çarpanlarının takibi." : "Availability, performance, quality ratios calculated on automated critical bottlenecks."}
+                {t("Availability, performance, quality ratios calculated on automated critical bottlenecks.")}
               </p>
             </div>
 
             {/* Visual Mgmt */}
             <div className="p-3 bg-slate-50/50 dark:bg-zinc-900/40 border border-slate-100 dark:border-zinc-800/50 rounded-lg space-y-1">
               <div className="flex justify-between items-center">
-                <span className="font-extrabold text-slate-850 dark:text-zinc-200">5. Visual Management & Andon</span>
+                <span className="font-extrabold text-slate-850 dark:text-zinc-200">{t("5. Visual Management & Andon")}</span>
                 {renderStarsSelector("visual", scores.visual)}
               </div>
               <p className="text-[10px] text-slate-400 dark:text-zinc-500">
-                {lang === "TR" ? "Saha görsel kılavuzları, Andon uyarı sistemleri ve anlık şeffaf takip panoları." : "Direct shopfloor floor indicators, target boards, and automated sound-light alerts."}
+                {t("Direct shopfloor floor indicators, target boards, and automated sound-light alerts.")}
               </p>
             </div>
 
             {/* Standard Work */}
             <div className="p-3 bg-slate-50/50 dark:bg-zinc-900/40 border border-slate-100 dark:border-zinc-800/50 rounded-lg space-y-1">
               <div className="flex justify-between items-center">
-                <span className="font-extrabold text-slate-850 dark:text-zinc-200">6. Standard Work (SOP)</span>
+                <span className="font-extrabold text-slate-850 dark:text-zinc-200">{t("6. Standard Work (SOP)")}</span>
                 {renderStarsSelector("standard", scores.standard)}
               </div>
               <p className="text-[10px] text-slate-400 dark:text-zinc-500">
-                {lang === "TR" ? "Döngü sürelerinin takibi, dengelenmiş operatör çevrimleri ve standart talimatlar." : "Cycle-time stabilization, standard operating procedures, and balanced work loads."}
+                {t("Cycle-time stabilization, standard operating procedures, and balanced work loads.")}
               </p>
             </div>
 
@@ -257,7 +259,7 @@ export default function CompanyOpexTab({
         {/* Maturity Index Circle / Banner */}
         <div className="bg-white dark:bg-[#151515] p-5 rounded-xl border border-slate-100 dark:border-zinc-800/80 shadow-[0_1px_3px_rgba(0,0,0,0.02)] space-y-4 text-center">
           <span className="text-[10px] font-mono font-bold text-slate-400 uppercase tracking-widest block">
-            {lang === "TR" ? "TOPLAM OPERASYONEL PUAN" : "OVERALL OPERATIONAL RATING"}
+            {t("OVERALL OPERATIONAL RATING")}
           </span>
           
           <div className="relative inline-flex items-center justify-center">
@@ -305,10 +307,10 @@ export default function CompanyOpexTab({
             </div>
             <div>
               <span className="text-[9px] font-mono font-bold text-emerald-600 dark:text-emerald-400 uppercase block tracking-wider">
-                AI LEAN CONSULTANT
+                {t("AI LEAN CONSULTANT")}
               </span>
               <h5 className="text-xs font-extrabold uppercase text-slate-800 dark:text-zinc-200 mt-0.5 font-display">
-                {lang === "TR" ? "Tespit Edilen Darboğaz Yol Haritası" : "Tailored Waste Action Plan"}
+                {t("Tailored Waste Action Plan")}
               </h5>
             </div>
           </div>
@@ -320,7 +322,7 @@ export default function CompanyOpexTab({
                   {index + 1}
                 </span>
                 <div className="space-y-0.5 min-w-0">
-                  <span className="font-extrabold text-slate-800 dark:text-zinc-200 block text-[11px]">{adv.name} Improvement</span>
+                  <span className="font-extrabold text-slate-800 dark:text-zinc-200 block text-[11px]">{t("{name} Improvement").replace("{name}", adv.name)}</span>
                   <p className="text-slate-600 dark:text-zinc-400 text-[11px] leading-relaxed">
                     {lang === "TR" ? adv.adviseTR : adv.adviseEN}
                   </p>

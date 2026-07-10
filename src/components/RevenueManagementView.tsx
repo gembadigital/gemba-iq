@@ -1042,7 +1042,7 @@ CRITICAL FORMATTING INSTRUCTIONS: Your response MUST be output as beautiful, pro
 
     } catch (error: any) {
       console.error("PDF generation failure:", error);
-      alert("PDF generation failed: " + error.message);
+      alert(t("PDF generation failed: {error}").replace("{error}", error.message));
     }
   };
 
@@ -1571,8 +1571,8 @@ CRITICAL FORMATTING INSTRUCTIONS: Your response MUST be output as beautiful, pro
           {/* SECTION 13 - EXPORTS CONTROLS BAR */}
           <div className="bg-white dark:bg-[#151515] hover:bg-slate-50/50 p-5 rounded-2xl border border-slate-200/50 dark:border-zinc-805/85 shadow-xs flex flex-wrap items-center justify-between gap-4">
             <div>
-              <h4 className="text-xs font-black text-slate-850 dark:text-slate-150 uppercase tracking-widest font-mono">Preserve Filters & Export Options</h4>
-              <p className="text-[11px] text-slate-400 mt-0.5">Extract raw tabular comma-delimited logs or produce a printable executive review layout.</p>
+              <h4 className="text-xs font-black text-slate-850 dark:text-slate-150 uppercase tracking-widest font-mono">{t("Preserve Filters & Export Options")}</h4>
+              <p className="text-[11px] text-slate-400 mt-0.5">{t("Extract raw tabular comma-delimited logs or produce a printable executive review layout.")}</p>
             </div>
 
             <div className="flex items-center gap-2.5">
@@ -1582,7 +1582,7 @@ CRITICAL FORMATTING INSTRUCTIONS: Your response MUST be output as beautiful, pro
                 className="px-4 py-2 text-xs font-bold bg-[#EDEBE9] hover:bg-[#DEDCDA] dark:bg-zinc-800 text-slate-800 dark:text-zinc-200 rounded-lg flex items-center gap-1.5 transition-all cursor-pointer"
               >
                 <Download className="w-4 h-4 text-emerald-500" />
-                <span>Export Revenue Sheet (.CSV)</span>
+                <span>{t("Export Revenue Sheet (.CSV)")}</span>
               </button>
 
               <button
@@ -1591,7 +1591,7 @@ CRITICAL FORMATTING INSTRUCTIONS: Your response MUST be output as beautiful, pro
                 className="px-4 py-2 text-xs font-bold bg-[#EDEBE9] hover:bg-[#DEDCDA] dark:bg-zinc-800 text-slate-800 dark:text-zinc-200 rounded-lg flex items-center gap-1.5 transition-all cursor-pointer"
               >
                 <Download className="w-4 h-4 text-blue-500" />
-                <span>Export Capacity Report (.CSV)</span>
+                <span>{t("Export Capacity Report (.CSV)")}</span>
               </button>
 
               <button
@@ -1600,7 +1600,7 @@ CRITICAL FORMATTING INSTRUCTIONS: Your response MUST be output as beautiful, pro
                 className="px-4 py-2 text-xs font-bold bg-slate-900 hover:bg-black dark:bg-[#2d2c2b] text-white rounded-lg flex items-center gap-1.5 transition-all cursor-pointer"
               >
                 <Printer className="w-4 h-4 text-sky-450" />
-                <span>Print Management PDF</span>
+                <span>{t("Print Management PDF")}</span>
               </button>
             </div>
           </div>
@@ -1857,7 +1857,7 @@ CRITICAL FORMATTING INSTRUCTIONS: Your response MUST be output as beautiful, pro
                               dailyCost: cost
                             });
                           }}
-                          placeholder="örn: 40"
+                          placeholder={t("e.g. 40")}
                           className="w-full px-3 py-2 text-xs rounded bg-white dark:bg-zinc-850 border border-slate-200 dark:border-zinc-800 focus:outline-[#0078D4]"
                         />
                       </div>
@@ -2096,7 +2096,7 @@ CRITICAL FORMATTING INSTRUCTIONS: Your response MUST be output as beautiful, pro
                           required
                           value={assignmentForm.customerName}
                           onChange={(e) => setAssignmentForm({ ...assignmentForm, customerName: e.target.value })}
-                          placeholder="e.g. Vestel Beyaz Eşya"
+                          placeholder={t("e.g. Vestel Beyaz Eşya")}
                           className="w-full px-3 py-2 text-xs rounded bg-white dark:bg-zinc-850 border border-slate-200 dark:border-zinc-800 focus:outline-[#0078D4]"
                         />
                       </div>
@@ -2108,7 +2108,7 @@ CRITICAL FORMATTING INSTRUCTIONS: Your response MUST be output as beautiful, pro
                           required
                           value={assignmentForm.projectName}
                           onChange={(e) => setAssignmentForm({ ...assignmentForm, projectName: e.target.value })}
-                          placeholder="e.g. Kaizen VSM Phase I"
+                          placeholder={t("e.g. Kaizen VSM Phase I")}
                           className="w-full px-3 py-2 text-xs rounded bg-white dark:bg-zinc-850 border border-slate-200 dark:border-zinc-800 focus:outline-[#0078D4]"
                         />
                       </div>

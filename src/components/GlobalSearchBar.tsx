@@ -13,7 +13,7 @@ interface SearchResult {
 }
 
 export default function GlobalSearchBar() {
-  const { lang } = useLanguage();
+  const { t } = useLanguage();
   const [query, setQuery] = useState("");
   const [results, setResults] = useState<SearchResult[]>([]);
   const [isOpen, setIsOpen] = useState(false);
@@ -51,7 +51,7 @@ export default function GlobalSearchBar() {
         matches.push({
           id: `comp-${c.id}`,
           title: c.name,
-          subtitle: `${c.industry || "General"} • ${c.billingCity || ""}`,
+          subtitle: `${c.industry ? t(c.industry) : t("General")} • ${c.billingCity || ""}`,
           type: "company",
           tab: "companies-registry",
           targetId: c.id
@@ -69,8 +69,8 @@ export default function GlobalSearchBar() {
       ) {
         matches.push({
           id: `deal-${d.id}`,
-          title: d.dealName || `${d.companyName} Deal`,
-          subtitle: `Deal • ${d.companyName} • ${(d.opportunityValue || 0).toLocaleString()} TL • ${d.stage}`,
+          title: d.dealName || `${d.companyName} ${t("Deal")}`,
+          subtitle: `${t("Deal")} • ${d.companyName} • ${(d.opportunityValue || 0).toLocaleString()} TL • ${d.stage}`,
           type: "deal",
           tab: "deal-management",
           targetId: d.id
@@ -88,7 +88,7 @@ export default function GlobalSearchBar() {
       ) {
         matches.push({
           id: `prop-${p.id}`,
-          title: `Proposal ${p.proposalNumber}`,
+          title: `${t("Proposal")} ${p.proposalNumber}`,
           subtitle: `${p.companyName} • ${p.proposalSubject} • ${p.status}`,
           type: "proposal",
           tab: "proposal-management",
@@ -109,7 +109,7 @@ export default function GlobalSearchBar() {
         matches.push({
           id: `cnt-${cnt.id}`,
           title: `${cnt.firstName} ${cnt.lastName}`,
-          subtitle: `Contact • ${company?.name || "Independent"} • ${cnt.email}`,
+          subtitle: `${t("Contact")} • ${company?.name || t("Independent")} • ${cnt.email}`,
           type: "contact",
           tab: "lead-profiles", // Falls back to Lead Profiles view
           targetId: cnt.id
@@ -126,8 +126,8 @@ export default function GlobalSearchBar() {
       ) {
         matches.push({
           id: `proj-${p.id}`,
-          title: `${p.companyName} Project`,
-          subtitle: `Project • PO: ${p.poNumber} • ${p.status}`,
+          title: `${p.companyName} ${t("Project")}`,
+          subtitle: `${t("Project")} • ${t("PO:")} ${p.poNumber} • ${p.status}`,
           type: "project",
           tab: "deal-management", // Projects tab is inside deal-management
           targetId: p.id
@@ -146,7 +146,7 @@ export default function GlobalSearchBar() {
         matches.push({
           id: `mail-${e.id}`,
           title: e.subject,
-          subtitle: `Email • From: ${e.sender} • ${new Date(e.date).toLocaleDateString()}`,
+          subtitle: `${t("Email")} • ${t("From:")} ${e.sender} • ${new Date(e.date).toLocaleDateString()}`,
           type: "email",
           tab: "companies-registry", // Opens Company history tab where Emails exist
           targetId: e.companyId
@@ -164,7 +164,7 @@ export default function GlobalSearchBar() {
         matches.push({
           id: `doc-${doc.id}`,
           title: doc.name,
-          subtitle: `Document • ${doc.type} • ${doc.size}`,
+          subtitle: `${t("Document")} • ${doc.type} • ${doc.size}`,
           type: "document",
           tab: "companies-registry", // Available via central doc lists in companies
           targetId: doc.companyId
@@ -217,19 +217,16 @@ export default function GlobalSearchBar() {
   };
 
   const getLabel = (type: string) => {
-    if (lang === "TR") {
-      switch (type) {
-        case "company": return "Şirket";
-        case "deal": return "Fırsat";
-        case "proposal": return "Teklif";
-        case "contact": return "Müşteri Temsilcisi";
-        case "project": return "Proje";
-        case "email": return "E-posta";
-        case "document": return "Döküman";
-        default: return type;
-      }
+    switch (type) {
+      case "company": return t("Company");
+      case "deal": return t("Deal");
+      case "proposal": return t("Proposal");
+      case "contact": return t("Contact");
+      case "project": return t("Project");
+      case "email": return t("Email");
+      case "document": return t("Document");
+      default: return type;
     }
-    return type.toUpperCase();
   };
 
   return (
@@ -238,7 +235,7 @@ export default function GlobalSearchBar() {
         <Search className="absolute left-3 w-4 h-4 text-slate-400 pointer-events-none" />
         <input
           type="text"
-          placeholder={lang === "TR" ? "Global arama (Şirket, Fırsat, Teklif, Kontak...)" : "Global search (Company, Deal, Proposal, Contact...)"}
+          placeholder={t("Global search (Company, Deal, Proposal, Contact...)")}
           value={query}
           onChange={(e) => {
             setQuery(e.target.value);
@@ -260,7 +257,7 @@ export default function GlobalSearchBar() {
       {isOpen && results.length > 0 && (
         <div className="absolute left-0 right-0 mt-2 bg-white dark:bg-[#141414] border border-slate-200 dark:border-zinc-800 rounded-xl shadow-lg max-h-96 overflow-y-auto z-50 animate-in fade-in slide-in-from-top-1 duration-150 p-1.5">
           <div className="px-2 py-1.5 text-[9px] font-bold text-slate-400 dark:text-zinc-500 uppercase tracking-widest border-b border-slate-100 dark:border-zinc-800/60 mb-1">
-            {lang === "TR" ? "Arama Sonuçları" : "Search Results"}
+            {t("Search Results")}
           </div>
           <div className="space-y-0.5">
             {results.map((r) => (
@@ -290,7 +287,7 @@ export default function GlobalSearchBar() {
       {isOpen && query.trim() && results.length === 0 && (
         <div className="absolute left-0 right-0 mt-2 bg-white dark:bg-[#141414] border border-slate-200 dark:border-zinc-800 rounded-xl shadow-lg p-4 text-center z-50 animate-in fade-in slide-in-from-top-1 duration-150">
           <span className="text-xs text-slate-400 dark:text-zinc-500">
-            {lang === "TR" ? "Eşleşen kayıt bulunamadı." : "No matching records found."}
+            {t("No matching records found.")}
           </span>
         </div>
       )}

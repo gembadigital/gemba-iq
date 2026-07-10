@@ -217,7 +217,7 @@ export default function ProposalFormModal({
     if (!file) return;
 
     if (!file.type.includes("png")) {
-      alert(lang === "TR" ? "Lütfen sadece PNG formatında bir dosya yükleyin." : "Please upload a PNG file only.");
+      alert(t("Please upload a PNG file only."));
       return;
     }
 
@@ -235,7 +235,7 @@ export default function ProposalFormModal({
 
   const handleAiTableConvert = async () => {
     if (!rawPastedHtml.trim()) {
-      alert(lang === "TR" ? "Lütfen önce dönüştürülecek içeriği kutuya yapıştırın." : "Please paste the content to convert in the box.");
+      alert(t("Please paste the content to convert in the box."));
       return;
     }
     setIsAiConverting(true);
@@ -256,15 +256,13 @@ export default function ProposalFormModal({
         else if (targetFieldForAi === "terms") setTerms(data.htmlTable);
         
         setRawPastedHtml("");
-        alert(lang === "TR" 
-          ? "Yapay zeka içeriği başarıyla şık bir HTML tabloya dönüştürdü ve seçili alana aktardı!" 
-          : "AI successfully converted the pasted content into a gorgeous HTML table and populated the selected field!");
+        alert(t("AI successfully converted the pasted content into a gorgeous HTML table and populated the selected field!"));
       } else {
         throw new Error("Yapay zekadan geçerli bir tablo alınamadı.");
       }
     } catch (err: any) {
       console.error(err);
-      alert((lang === "TR" ? "Dönüştürme hatası: " : "Conversion error: ") + (err.message || "Unknown error"));
+      alert((t("Conversion error: ")) + (err.message || "Unknown error"));
     } finally {
       setIsAiConverting(false);
     }
@@ -471,14 +469,10 @@ export default function ProposalFormModal({
             <Sparkles className="w-5 h-5" />
             <div>
               <h3 className="text-sm font-bold tracking-tight">
-                {lang === "TR" 
-                  ? (initialProposal ? "Teklif Düzenle" : "Teklif Oluştur") 
-                  : (initialProposal ? "Edit Opportunity / Proposal" : "Create Opportunity / Proposal")}
+                {initialProposal ? t("Edit Opportunity / Proposal") : t("Create Opportunity / Proposal")}
               </h3>
               <p className="text-[10px] text-emerald-100">
-                {lang === "TR" 
-                  ? "Özelleştirilmiş seçenekler ve şablonlar ile kurumsal teklifler oluşturun" 
-                  : "Establish corporate bids with custom options and templates"}
+                {t("Establish corporate bids with custom options and templates")}
               </p>
             </div>
           </div>
@@ -493,7 +487,7 @@ export default function ProposalFormModal({
           {/* Section 1: Company Lookup */}
           <div className="bg-slate-50 dark:bg-black/15 p-4 rounded-xl border border-slate-150 dark:border-zinc-850 space-y-4">
             <div className="flex items-center justify-between">
-              <span className="font-extrabold text-slate-700 dark:text-zinc-200 uppercase tracking-widest font-mono text-[10px]">1. Client Registry Association</span>
+              <span className="font-extrabold text-slate-700 dark:text-zinc-200 uppercase tracking-widest font-mono text-[10px]">{t("1. Client Registry Association")}</span>
               <button
                 type="button"
                 onClick={() => setShowAddCompanyInline(!showAddCompanyInline)}
@@ -505,36 +499,36 @@ export default function ProposalFormModal({
 
             {showAddCompanyInline && (
               <div className="bg-white dark:bg-zinc-900 p-4 rounded-lg border border-emerald-100 dark:border-green-950 space-y-3">
-                <p className="font-bold text-[10px] text-emerald-800 dark:text-emerald-400">Quick Company Registration</p>
+                <p className="font-bold text-[10px] text-emerald-800 dark:text-emerald-400">{t("Quick Company Registration")}</p>
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
                   <div>
-                    <label className="block text-[9px] text-slate-400 font-bold">COMPANY NAME *</label>
+                    <label className="block text-[9px] text-slate-400 font-bold">{t("COMPANY NAME *")}</label>
                     <input
                       type="text"
                       value={newCompanyName}
                       onChange={(e) => setNewCompanyName(e.target.value)}
                       className="w-full p-2 border border-slate-200 bg-white dark:bg-zinc-800 rounded outline-none"
-                      placeholder="e.g. ABC Textiles Ltd."
+                      placeholder={t("e.g. ABC Textiles Ltd.")}
                     />
                   </div>
                   <div>
-                    <label className="block text-[9px] text-slate-400 font-bold">CONTACT PERSON</label>
+                    <label className="block text-[9px] text-slate-400 font-bold">{t("CONTACT PERSON")}</label>
                     <input
                       type="text"
                       value={newCompanyContact}
                       onChange={(e) => setNewCompanyContact(e.target.value)}
                       className="w-full p-2 border border-slate-200 bg-white dark:bg-zinc-800 rounded outline-none"
-                      placeholder="John Doe"
+                      placeholder={t("John Doe")}
                     />
                   </div>
                   <div>
-                    <label className="block text-[9px] text-slate-400 font-bold">CONTACT EMAIL</label>
+                    <label className="block text-[9px] text-slate-400 font-bold">{t("CONTACT EMAIL")}</label>
                     <input
                       type="email"
                       value={newCompanyEmail}
                       onChange={(e) => setNewCompanyEmail(e.target.value)}
                       className="w-full p-2 border border-slate-200 bg-white dark:bg-zinc-800 rounded outline-none"
-                      placeholder="john@abctextiles.com"
+                      placeholder={t("john@abctextiles.com")}
                     />
                   </div>
                 </div>
@@ -559,7 +553,7 @@ export default function ProposalFormModal({
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <div>
-                <label className="block text-[9px] text-slate-400 font-bold uppercase font-mono">Select Target Company *</label>
+                <label className="block text-[9px] text-slate-400 font-bold uppercase font-mono">{t("Select Target Company *")}</label>
                 <div className="mt-1">
                   <CompanyAutocomplete
                     value={selectedCompanyId}
@@ -574,38 +568,38 @@ export default function ProposalFormModal({
               </div>
 
               <div>
-                <label className="block text-[9px] text-slate-400 font-bold uppercase font-mono mt-1 md:mt-0">Contact Person</label>
+                <label className="block text-[9px] text-slate-400 font-bold uppercase font-mono mt-1 md:mt-0">{t("Contact Person")}</label>
                 <input
                   type="text"
                   value={contactPerson}
                   onChange={(e) => setContactPerson(e.target.value)}
                   className="w-full p-2 border border-slate-205 bg-white dark:bg-zinc-800 rounded outline-none mt-1"
-                  placeholder="Contact Name"
+                  placeholder={t("Contact Name")}
                 />
               </div>
 
               <div>
-                <label className="block text-[9px] text-slate-400 font-bold uppercase font-mono mt-1 md:mt-0">Contact Email</label>
+                <label className="block text-[9px] text-slate-400 font-bold uppercase font-mono mt-1 md:mt-0">{t("Contact Email")}</label>
                 <input
                   type="email"
                   value={contactEmail}
                   onChange={(e) => setContactEmail(e.target.value)}
                   className="w-full p-2 border border-slate-205 bg-white dark:bg-zinc-800 rounded outline-none mt-1"
-                  placeholder="contact@company.com"
+                  placeholder={t("contact@company.com")}
                 />
               </div>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <div>
-                <label className="block text-[9px] text-slate-400 font-bold uppercase font-mono">Linked Deal</label>
+                <label className="block text-[9px] text-slate-400 font-bold uppercase font-mono">{t("Linked Deal")}</label>
                 <select
                   value={selectedDealId}
                   onChange={(e) => setSelectedDealId(e.target.value)}
                   className="w-full p-2 border border-slate-205 bg-white dark:bg-zinc-800 rounded outline-none mt-1"
                   disabled={!selectedCompanyId}
                 >
-                  <option value="">-- No deal --</option>
+                  <option value="">{t("-- No deal --")}</option>
                   {companyDeals.map((d) => (
                     <option key={d.id} value={d.id}>
                       {d.dealName || d.companyName}
@@ -614,14 +608,14 @@ export default function ProposalFormModal({
                 </select>
               </div>
               <div>
-                <label className="block text-[9px] text-slate-400 font-bold uppercase font-mono">CRM Contact</label>
+                <label className="block text-[9px] text-slate-400 font-bold uppercase font-mono">{t("CRM Contact")}</label>
                 <select
                   value={selectedContactId}
                   onChange={(e) => setSelectedContactId(e.target.value)}
                   className="w-full p-2 border border-slate-205 bg-white dark:bg-zinc-800 rounded outline-none mt-1"
                   disabled={!selectedCompanyId}
                 >
-                  <option value="">-- Manual contact --</option>
+                  <option value="">{t("-- Manual contact --")}</option>
                   {companyContacts.map((c) => (
                     <option key={c.id} value={c.id}>
                       {c.firstName} {c.lastName} {c.email ? `(${c.email})` : ""}
@@ -630,13 +624,13 @@ export default function ProposalFormModal({
                 </select>
               </div>
               <div>
-                <label className="block text-[9px] text-slate-400 font-bold uppercase font-mono">Word Template</label>
+                <label className="block text-[9px] text-slate-400 font-bold uppercase font-mono">{t("Word Template")}</label>
                 <select
                   value={selectedWordTemplateId}
                   onChange={(e) => setSelectedWordTemplateId(e.target.value)}
                   className="w-full p-2 border border-slate-205 bg-white dark:bg-zinc-800 rounded outline-none mt-1"
                 >
-                  <option value="">-- Default template --</option>
+                  <option value="">{t("-- Default template --")}</option>
                   {wordTemplates.map((t) => (
                     <option key={t.id} value={t.id}>
                       {t.name}
@@ -649,32 +643,32 @@ export default function ProposalFormModal({
 
           {/* Section 2: Header Info */}
           <div className="bg-slate-50 dark:bg-black/15 p-4 rounded-xl border border-slate-150 dark:border-zinc-850 space-y-4">
-            <span className="font-extrabold text-slate-700 dark:text-zinc-200 uppercase tracking-widest font-mono text-[10px]">2. Commercial Cover &amp; Scope Details</span>
+            <span className="font-extrabold text-slate-700 dark:text-zinc-200 uppercase tracking-widest font-mono text-[10px]">{t("2. Commercial Cover & Scope Details")}</span>
             <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
               <div className="md:col-span-2">
-                <label className="block text-[9px] text-slate-400 font-bold uppercase font-mono">Proposal Subject *</label>
+                <label className="block text-[9px] text-slate-400 font-bold uppercase font-mono">{t("Proposal Subject *")}</label>
                 <input
                   required
                   type="text"
                   value={proposalSubject}
                   onChange={(e) => setProposalSubject(e.target.value)}
                   className="w-full p-2 border border-slate-205 bg-white dark:bg-zinc-800 rounded outline-none mt-1"
-                  placeholder="Subject of consulting / training proposal..."
+                  placeholder={t("Subject of consulting / training proposal...")}
                 />
               </div>
               <div>
-                <label className="block text-[9px] text-slate-400 font-bold uppercase font-mono">Proposal date *</label>
+                <label className="block text-[9px] text-slate-400 font-bold uppercase font-mono">{t("Proposal date *")}</label>
                 <input
                   required
                   type="text"
                   value={date}
                   onChange={(e) => setDate(e.target.value)}
                   className="w-full p-2 border border-slate-205 bg-white dark:bg-zinc-800 rounded outline-none mt-1"
-                  placeholder="DD.MM.YYYY"
+                  placeholder={t("DD.MM.YYYY")}
                 />
               </div>
               <div>
-                <label className="block text-[9px] text-slate-400 font-bold uppercase font-mono">Proposal Currency</label>
+                <label className="block text-[9px] text-slate-400 font-bold uppercase font-mono">{t("Proposal Currency")}</label>
                 <select
                   value={currency}
                   onChange={(e) => setCurrency(e.target.value as any)}
@@ -689,7 +683,7 @@ export default function ProposalFormModal({
 
             <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
               <div>
-                <label className="block text-[9px] text-slate-400 font-bold uppercase font-mono">Sales Owner</label>
+                <label className="block text-[9px] text-slate-400 font-bold uppercase font-mono">{t("Sales Owner")}</label>
                 <input
                   type="text"
                   value={owner}
@@ -698,13 +692,13 @@ export default function ProposalFormModal({
                 />
               </div>
               <div className="md:col-span-3">
-                <label className="block text-[9px] text-slate-400 font-bold uppercase font-mono">Short Description / Focus Opportunities</label>
+                <label className="block text-[9px] text-slate-400 font-bold uppercase font-mono">{t("Short Description / Focus Opportunities")}</label>
                 <input
                   type="text"
                   value={description}
                   onChange={(e) => setDescription(e.target.value)}
                   className="w-full p-2 border border-slate-205 bg-white dark:bg-zinc-800 rounded outline-none mt-1"
-                  placeholder="A few words about continuous improvement and wastes targeted."
+                  placeholder={t("A few words about continuous improvement and wastes targeted.")}
                 />
               </div>
             </div>
@@ -712,7 +706,7 @@ export default function ProposalFormModal({
 
           {/* Section 3: Selected Services */}
           <div className="bg-slate-50 dark:bg-black/15 p-4 rounded-xl border border-slate-150 dark:border-zinc-850 space-y-3">
-            <span className="font-extrabold text-slate-700 dark:text-zinc-200 uppercase tracking-widest font-mono text-[10px]">3. Operational Excellence Services Enveloped</span>
+            <span className="font-extrabold text-slate-700 dark:text-zinc-200 uppercase tracking-widest font-mono text-[10px]">{t("3. Operational Excellence Services Enveloped")}</span>
             <div className="grid grid-cols-2 md:grid-cols-4 gap-2 pt-1">
               {servicesList.map((srv) => {
                 const active = selectedServices.includes(srv);
@@ -738,18 +732,18 @@ export default function ProposalFormModal({
           {/* Section 4: Document Merging Templates */}
           <div className="bg-slate-50 dark:bg-black/15 p-4 rounded-xl border border-slate-150 dark:border-zinc-850 space-y-4">
             <div className="flex justify-between items-center">
-              <span className="font-extrabold text-slate-700 dark:text-zinc-200 uppercase tracking-widest font-mono text-[10px]">4. Document Content Builder Templates</span>
-              <span className="text-[10px] text-green-600 font-bold bg-green-55/15 px-2 py-0.5 rounded-full">✨ AI Enabled</span>
+              <span className="font-extrabold text-slate-700 dark:text-zinc-200 uppercase tracking-widest font-mono text-[10px]">{t("4. Document Content Builder Templates")}</span>
+              <span className="text-[10px] text-green-600 font-bold bg-green-55/15 px-2 py-0.5 rounded-full">{t("✨ AI Enabled")}</span>
             </div>
 
             <div className="space-y-4 pt-1">
               {/* Custom PNG Letterhead Background Template Uploaders */}
               <div className="bg-white dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 p-3 rounded-lg space-y-2.5">
-                <span className="font-bold text-[10px] text-slate-500 uppercase font-mono block">🖼️ Custom Document Letterhead Backgrounds (PNG)</span>
+                <span className="font-bold text-[10px] text-slate-500 uppercase font-mono block">{t("🖼️ Custom Document Letterhead Backgrounds (PNG)")}</span>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-3.5">
                   {/* Cover.png upload */}
                   <div className="border border-dashed border-slate-250 dark:border-zinc-700 rounded-lg p-2.5 space-y-2 bg-[#fafafa] dark:bg-zinc-850">
-                    <label className="block text-[9px] text-slate-450 font-bold uppercase font-mono">First Page Letterhead (cover.png)</label>
+                    <label className="block text-[9px] text-slate-450 font-bold uppercase font-mono">{t("First Page Letterhead (cover.png)")}</label>
                     {coverImage ? (
                       <div className="space-y-1.5">
                         <div className="relative h-14 bg-white dark:bg-zinc-900 rounded border border-slate-200 dark:border-zinc-800 overflow-hidden flex items-center justify-center">
@@ -759,10 +753,10 @@ export default function ProposalFormModal({
                             onClick={() => setCoverImage("")}
                             className="absolute top-1 right-1 bg-rose-600 text-white p-0.5 rounded hover:bg-rose-750 transition-colors cursor-pointer text-[9px] font-bold px-1"
                           >
-                            × Remove
+                            {t("× Remove")}
                           </button>
                         </div>
-                        <p className="text-[8px] text-emerald-600 font-bold">✓ Custom cover.png uploaded successfully</p>
+                        <p className="text-[8px] text-emerald-600 font-bold">{t("✓ Custom cover.png uploaded successfully")}</p>
                       </div>
                     ) : (
                       <div className="flex items-center gap-2">
@@ -777,7 +771,7 @@ export default function ProposalFormModal({
                           htmlFor="cover-img-input"
                           className="flex-1 text-center py-2 px-3 bg-white dark:bg-zinc-800 border border-slate-200 dark:border-zinc-750 hover:bg-slate-100 rounded text-[10px] font-bold text-slate-600 dark:text-zinc-350 cursor-pointer transition-all"
                         >
-                          📁 Choose cover.png
+                          {t("📁 Choose cover.png")}
                         </label>
                       </div>
                     )}
@@ -785,7 +779,7 @@ export default function ProposalFormModal({
 
                   {/* Page.png upload */}
                   <div className="border border-dashed border-slate-250 dark:border-zinc-700 rounded-lg p-2.5 space-y-2 bg-[#fafafa] dark:bg-zinc-850">
-                    <label className="block text-[9px] text-slate-450 font-bold uppercase font-mono">Inner Pages Letterhead (page.png)</label>
+                    <label className="block text-[9px] text-slate-450 font-bold uppercase font-mono">{t("Inner Pages Letterhead (page.png)")}</label>
                     {pageImage ? (
                       <div className="space-y-1.5">
                         <div className="relative h-14 bg-white dark:bg-zinc-900 rounded border border-slate-200 dark:border-zinc-800 overflow-hidden flex items-center justify-center">
@@ -795,10 +789,10 @@ export default function ProposalFormModal({
                             onClick={() => setPageImage("")}
                             className="absolute top-1 right-1 bg-rose-600 text-white p-0.5 rounded hover:bg-rose-750 transition-colors cursor-pointer text-[9px] font-bold px-1"
                           >
-                            × Remove
+                            {t("× Remove")}
                           </button>
                         </div>
-                        <p className="text-[8px] text-emerald-600 font-bold">✓ Custom page.png uploaded successfully</p>
+                        <p className="text-[8px] text-emerald-600 font-bold">{t("✓ Custom page.png uploaded successfully")}</p>
                       </div>
                     ) : (
                       <div className="flex items-center gap-2">
@@ -813,7 +807,7 @@ export default function ProposalFormModal({
                           htmlFor="page-img-input"
                           className="flex-1 text-center py-2 px-3 bg-white dark:bg-zinc-800 border border-slate-200 dark:border-zinc-750 hover:bg-slate-100 rounded text-[10px] font-bold text-slate-600 dark:text-zinc-350 cursor-pointer transition-all"
                         >
-                          📁 Choose page.png
+                          {t("📁 Choose page.png")}
                         </label>
                       </div>
                     )}
@@ -824,7 +818,7 @@ export default function ProposalFormModal({
               {/* Base Document Text Areas */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-[9px] text-slate-400 font-bold uppercase font-mono">Lean Methodology Description</label>
+                  <label className="block text-[9px] text-slate-400 font-bold uppercase font-mono">{t("Lean Methodology Description")}</label>
                   <textarea
                     value={methodology}
                     onChange={(e) => setMethodology(e.target.value)}
@@ -832,7 +826,7 @@ export default function ProposalFormModal({
                   />
                 </div>
                 <div>
-                  <label className="block text-[9px] text-slate-400 font-bold uppercase font-mono">Project Plan Phases</label>
+                  <label className="block text-[9px] text-slate-400 font-bold uppercase font-mono">{t("Project Plan Phases")}</label>
                   <textarea
                     value={projectPlan}
                     onChange={(e) => setProjectPlan(e.target.value)}
@@ -842,7 +836,7 @@ export default function ProposalFormModal({
               </div>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-[9px] text-slate-400 font-bold uppercase font-mono">Timeline &amp; Sprints Milestone</label>
+                  <label className="block text-[9px] text-slate-400 font-bold uppercase font-mono">{t("Timeline & Sprints Milestone")}</label>
                   <textarea
                     value={timeline}
                     onChange={(e) => setTimeline(e.target.value)}
@@ -850,7 +844,7 @@ export default function ProposalFormModal({
                   />
                 </div>
                 <div>
-                  <label className="block text-[9px] text-slate-400 font-bold uppercase font-mono">Financial Terms &amp; Scope Protections</label>
+                  <label className="block text-[9px] text-slate-400 font-bold uppercase font-mono">{t("Financial Terms & Scope Protections")}</label>
                   <textarea
                     value={terms}
                     onChange={(e) => setTerms(e.target.value)}
@@ -864,7 +858,7 @@ export default function ProposalFormModal({
           {/* Section 5: Option Budgets (Option 1 - 4) */}
           <div className="bg-slate-50 dark:bg-black/15 p-4 rounded-xl border border-slate-150 dark:border-zinc-850 space-y-4">
             <div className="flex items-center justify-between">
-              <span className="font-extrabold text-slate-700 dark:text-zinc-200 uppercase tracking-widest font-mono text-[10px]">5. Flexible Package Configurator (Option 1 - 4)</span>
+              <span className="font-extrabold text-slate-700 dark:text-zinc-200 uppercase tracking-widest font-mono text-[10px]">{t("5. Flexible Package Configurator (Option 1 - 4)")}</span>
               <div className="flex items-center gap-2">
                 {["Option 2", "Option 3", "Option 4"].map((key) => (
                   <button
@@ -877,7 +871,7 @@ export default function ProposalFormModal({
                         : "bg-emerald-50 dark:bg-green-955/20 text-emerald-700 hover:bg-emerald-100"
                     }`}
                   >
-                    {activeOptions[key] ? `Deactivate ${key}` : `+ Activate ${key}`}
+                    {activeOptions[key] ? t("Deactivate {key}").replace("{key}", key) : t("+ Activate {key}").replace("{key}", key)}
                   </button>
                 ))}
               </div>
@@ -893,7 +887,7 @@ export default function ProposalFormModal({
                   return (
                     <div key={key} className="bg-white dark:bg-zinc-900 border border-slate-150 dark:border-zinc-800 p-4 rounded-xl space-y-3 shadow-xs">
                       <div className="flex items-center justify-between border-b pb-1.5 dark:border-zinc-800">
-                        <span className="font-extrabold text-slate-700 dark:text-zinc-300">{key} Package</span>
+                        <span className="font-extrabold text-slate-700 dark:text-zinc-300">{key} {t("Package")}</span>
                         <div className="flex items-center gap-3">
                           <label className="flex items-center gap-1 font-medium cursor-pointer">
                             <input
@@ -927,7 +921,7 @@ export default function ProposalFormModal({
 
                       <div className="grid grid-cols-3 gap-2">
                         <div>
-                          <label className="block text-[8px] text-slate-400 font-mono">MAN-DAYS</label>
+                          <label className="block text-[8px] text-slate-400 font-mono">{t("MAN-DAYS")}</label>
                           <input
                             type="number"
                             min="0"
@@ -937,7 +931,7 @@ export default function ProposalFormModal({
                           />
                         </div>
                         <div>
-                          <label className="block text-[8px] text-slate-400 font-mono">DAILY RATE</label>
+                          <label className="block text-[8px] text-slate-400 font-mono">{t("DAILY RATE")}</label>
                           <input
                             type="number"
                             min="0"
@@ -947,7 +941,7 @@ export default function ProposalFormModal({
                           />
                         </div>
                         <div>
-                          <label className="block text-[8px] text-slate-400 font-mono">EXPENSES ({currency})</label>
+                          <label className="block text-[8px] text-slate-400 font-mono">{t("EXPENSES")} ({currency})</label>
                           <input
                             type="number"
                             min="0"
@@ -959,7 +953,7 @@ export default function ProposalFormModal({
                       </div>
 
                       <div className="flex items-center justify-between pt-1 border-t border-dashed dark:border-zinc-800">
-                        <span className="text-[10px] text-slate-400">Option Estimator Sum:</span>
+                        <span className="text-[10px] text-slate-400">{t("Option Estimator Sum:")}</span>
                         <span className="font-extrabold text-xs text-slate-800 dark:text-zinc-100">
                           {currency} {budgetTotal.toLocaleString()}
                         </span>
@@ -975,17 +969,17 @@ export default function ProposalFormModal({
             <div className="flex items-center gap-2">
               <Calculator className="w-5 h-5 text-emerald-600" />
               <div>
-                <span className="blog text-[9px] text-emerald-700 font-bold uppercase">Dynamic Financial Rollup Summary</span>
+                <span className="blog text-[9px] text-emerald-700 font-bold uppercase">{t("Dynamic Financial Rollup Summary")}</span>
                 <div className="flex flex-wrap gap-4 text-xs font-bold text-slate-700 dark:text-zinc-200 mt-0.5">
-                  <span>Subtotal: {currency} {calculateOverallTotal().toLocaleString()}</span>
+                  <span>{t("Subtotal:")} {currency} {calculateOverallTotal().toLocaleString()}</span>
                   <span className="text-slate-400">|</span>
-                  <span>VAT (20%): {currency} {(calculateOverallTotal() * 0.2).toLocaleString()}</span>
+                  <span>{t("VAT (20%):")} {currency} {(calculateOverallTotal() * 0.2).toLocaleString()}</span>
                 </div>
               </div>
             </div>
 
             <div className="bg-emerald-600/10 px-4 py-2 rounded-lg text-right border border-emerald-500/20 shadow-xs shrink-0">
-              <span className="block text-[9px] text-emerald-700 font-bold">GRAND TOTAL OFFER</span>
+              <span className="block text-[9px] text-emerald-700 font-bold">{t("GRAND TOTAL OFFER")}</span>
               <span className="text-lg font-bold text-emerald-600 dark:text-emerald-400">
                 {currency} {(calculateOverallTotal() * 1.2).toLocaleString()}
               </span>
@@ -999,13 +993,13 @@ export default function ProposalFormModal({
               onClick={onClose}
               className="px-5 py-2 hover:bg-slate-100 dark:hover:bg-zinc-800 text-slate-650 dark:text-zinc-400 border border-slate-200 rounded-lg font-bold cursor-pointer transition-all"
             >
-              Cancel
+              {t("Cancel")}
             </button>
             <button
               type="submit"
               className="px-6 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg font-extrabold shadow-sm hover:shadow flex items-center gap-1.5 cursor-pointer transition-all"
             >
-              <Check className="w-4 h-4" /> Save Opportunity &amp; Proposal
+              <Check className="w-4 h-4" /> {t("Save Opportunity & Proposal")}
             </button>
           </div>
 

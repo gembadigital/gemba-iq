@@ -131,20 +131,24 @@ export default function ConnectionStatus({
             </button>
           </div>
           <p className="text-[11px] text-slate-600 dark:text-slate-355 leading-relaxed">
-            If corporate firewalls, proxy locks, or Azure portal restrictions prevent App Registrations, you can bypass them completely. Simply sign into the official Microsoft tool to get a secure access token dynamically and paste it below:
+            {t("If corporate firewalls, proxy locks, or Azure portal restrictions prevent App Registrations, you can bypass them completely. Simply sign into the official Microsoft tool to get a secure access token dynamically and paste it below:")}
           </p>
           
           <div className="p-3 bg-white dark:bg-[#11100f] rounded border border-[#EDEBE9] dark:border-[#323130] text-[11px] text-slate-600 dark:text-slate-300 space-y-2">
             <div className="font-bold text-slate-800 dark:text-slate-100 flex items-center gap-1.5">
-              <span>🚀 40-Second Token Grab Walkthrough (Crucial: Mail.Send & Mail.ReadWrite Consent):</span>
+              <span>{t("🚀 40-Second Token Grab Walkthrough (Crucial: Mail.Send & Mail.ReadWrite Consent):")}</span>
             </div>
             <ol className="list-decimal pl-4.5 space-y-1">
-              <li>Open the official <a href="https://developer.microsoft.com/en-us/graph/graph-explorer" target="_blank" rel="noreferrer" className="text-[#0078D4] dark:text-[#329bf0] underline font-bold hover:text-[#006cc0]">Microsoft Graph Explorer</a> tab.</li>
-              <li>Sign in using your corporate, educational, or personal M365 account (top right).</li>
-              <li>Underneath the central query address bar, locate and click the <strong>Consent to permissions</strong> adjacent tab.</li>
-              <li>Search for <strong><code>Mail.Send</code></strong> and <strong><code>Mail.ReadWrite</code></strong>, then click <strong>Consent</strong> next to both (accept the Microsoft authorization popup prompts).</li>
-              <li>Once completed, click the <strong>Access token</strong> tab.</li>
-              <li>Copy the full token string, return here, and paste it. That's it! (No azure setup required).</li>
+              <li>
+                {t("Open the official Microsoft Graph Explorer tab.").split("Microsoft Graph Explorer")[0]}
+                <a href="https://developer.microsoft.com/en-us/graph/graph-explorer" target="_blank" rel="noreferrer" className="text-[#0078D4] dark:text-[#329bf0] underline font-bold hover:text-[#006cc0]">Microsoft Graph Explorer</a>
+                {t("Open the official Microsoft Graph Explorer tab.").split("Microsoft Graph Explorer")[1]}
+              </li>
+              <li>{t("Sign in using your corporate, educational, or personal M365 account (top right).")}</li>
+              <li>{t("Underneath the central query address bar, locate and click the Consent to permissions adjacent tab.")}</li>
+              <li>{t("Search for Mail.Send and Mail.ReadWrite, then click Consent next to both (accept the Microsoft authorization popup prompts).")}</li>
+              <li>{t("Once completed, click the Access token tab.")}</li>
+              <li>{t("Copy the full token string, return here, and paste it. That's it! (No azure setup required).")}</li>
             </ol>
           </div>
 
@@ -156,13 +160,13 @@ export default function ConnectionStatus({
                 setManualToken(e.target.value);
                 setTokenError("");
               }}
-              placeholder="Paste your Microsoft Access Token starting with eyJ0eXAi..."
+              placeholder={t("Paste your Microsoft Access Token starting with eyJ0eXAi...")}
               className="w-full h-24 p-3 text-[11px] font-mono bg-white dark:bg-[#11100f] border border-[#EDEBE9] dark:border-[#323130] rounded focus:outline-none focus:ring-1 focus:ring-[#0078D4] resize-none"
             />
             {tokenError && (
               <p className="text-xs text-rose-600 dark:text-rose-400 font-semibold flex items-center gap-1">
                 <AlertCircle className="w-3.5 h-3.5" />
-                Error: {tokenError}
+                {t("Error:")} {tokenError}
               </p>
             )}
             <div className="flex justify-end gap-2.5">
@@ -172,7 +176,7 @@ export default function ConnectionStatus({
                 onClick={async () => {
                   const cleanedToken = manualToken.trim();
                   if (!cleanedToken) {
-                    setTokenError("Please paste an access token first.");
+                    setTokenError(t("Please paste an access token first."));
                     return;
                   }
                   setIsConnectingToken(true);
@@ -182,7 +186,7 @@ export default function ConnectionStatus({
                     setShowManualInput(false);
                     setManualToken("");
                   } catch (err: any) {
-                    setTokenError(err.message || "Failed validating this access token. Ensure it is copied in full.");
+                    setTokenError(err.message || t("Failed validating this access token. Ensure it is copied in full."));
                   } finally {
                     setIsConnectingToken(false);
                   }
@@ -191,7 +195,7 @@ export default function ConnectionStatus({
                   isConnectingToken ? "bg-slate-350 cursor-not-allowed" : "bg-[#0078D4] hover:bg-[#006cc0] text-white"
                 }`}
               >
-                {isConnectingToken ? ("Validating Session...") : ("Verify & Connect Exchange")}
+                {isConnectingToken ? t("Validating Session...") : t("Verify & Connect Exchange")}
               </button>
             </div>
           </div>
@@ -232,7 +236,7 @@ export default function ConnectionStatus({
                     value={editDisplayName}
                     onChange={(e) => setEditDisplayName(e.target.value)}
                     className="w-full text-xs p-2 rounded border border-[#EDEBE9] dark:border-[#323130] bg-white dark:bg-[#11100f] text-slate-800 dark:text-slate-100 focus:outline-none focus:ring-1 focus:ring-[#0078D4]"
-                    placeholder="e.g. Gemba Partner Info"
+                    placeholder={t("e.g. Gemba Partner Info")}
                   />
                 </div>
                 <div>
@@ -242,7 +246,7 @@ export default function ConnectionStatus({
                     value={editMail}
                     onChange={(e) => setEditMail(e.target.value)}
                     className="w-full text-xs p-2 rounded border border-[#EDEBE9] dark:border-[#323130] bg-white dark:bg-[#11100f] text-slate-800 dark:text-slate-100 focus:outline-none focus:ring-1 focus:ring-[#0078D4]"
-                    placeholder="e.g. info@gembapartner.com"
+                    placeholder={t("e.g. info@gembapartner.com")}
                   />
                 </div>
               </div>
@@ -323,27 +327,27 @@ export default function ConnectionStatus({
             className="text-xs text-[#0078D4] dark:text-brand-300 hover:underline flex items-center gap-1.5 font-bold"
           >
             <HelpCircle className="w-4 h-4" />
-            {!config?.hasClientKeys ? "Azure credentials missing? Show app registration guide" : "How is my mail session credentials handled?"}
+            {!config?.hasClientKeys ? t("Azure credentials missing? Show app registration guide") : t("How is my mail session credentials handled?")}
           </button>
 
           {(showGuide || !config?.hasClientKeys) && (
             <div className="mt-4 p-5 rounded bg-[#F3F2F1] dark:bg-[#252423] text-slate-705 dark:text-slate-300 border border-[#EDEBE9] dark:border-[#323130] text-xs leading-relaxed space-y-3">
               <div>
-                <span className="font-bold text-slate-800 dark:text-slate-100 block mb-1">Azure App Registration Guide:</span>
-                Configure Microsoft Entra ID (Azure AD) Client ID and Secret in your workspace secrets.
+                <span className="font-bold text-slate-800 dark:text-slate-100 block mb-1">{t("Azure App Registration Guide:")}</span>
+                {t("Configure Microsoft Entra ID (Azure AD) Client ID and Secret in your workspace secrets.")}
               </div>
               <ol className="list-decimal pl-4 space-y-1.5 text-slate-600 dark:text-slate-400">
-                <li>Go to the <a href="https://portal.azure.com" target="_blank" rel="noreferrer" className="text-[#0078D4] underline font-bold">Azure Portal</a> and select <strong>Microsoft Entra ID</strong> (App registrations).</li>
-                <li>Create a <strong>New registration</strong>. Select <em>"Accounts in any organizational directory (Any Microsoft Entra ID tenant - Multitenant)"</em>.</li>
+                <li>{t("Go to the Azure Portal and select Microsoft Entra ID (App registrations).").split("Azure Portal")[0]}<a href="https://portal.azure.com" target="_blank" rel="noreferrer" className="text-[#0078D4] underline font-bold">Azure Portal</a>{t("Go to the Azure Portal and select Microsoft Entra ID (App registrations).").split("Azure Portal")[1]}</li>
+                <li>{t("Create a New registration. Select \"Accounts in any organizational directory (Any Microsoft Entra ID tenant - Multitenant)\".")}</li>
                 <li>
-                  Add an <strong>Web Redirect URI</strong> matching your exact callback:
+                  {t("Add a Web Redirect URI matching your exact callback:")}
                   <code className="block bg-white dark:bg-[#11100f] p-2 rounded text-[10px] font-mono text-brand-600 dark:text-brand-400 mt-1 select-all break-all border border-[#EDEBE9] dark:border-[#323130]">
                     {config?.redirectUri || "https://your-app.run.app/auth/callback"}
                   </code>
                 </li>
-                <li>Go to <strong>Certificates & secrets</strong>, create a new client secret, and copy it.</li>
-                <li>Go to <strong>API permissions</strong>, add <code>Mail.Send</code>, <code>Mail.ReadWrite</code>, and <code>User.Read</code> delegated permissions, and grant admin consent (if corporate policy requires).</li>
-                <li>Place your Client ID and client secret in the secure **Secrets panel in AI Studio** as:
+                <li>{t("Go to Certificates & secrets, create a new client secret, and copy it.")}</li>
+                <li>{t("Go to API permissions, add Mail.Send, Mail.ReadWrite, and User.Read delegated permissions, and grant admin consent (if corporate policy requires).")}</li>
+                <li>{t("Place your Client ID and client secret in the secure Secrets panel in AI Studio as:")}
                   <div className="font-mono text-[10px] mt-1 space-y-0.5">
                     <p className="font-semibold text-[#0078D4] dark:text-brand-300">MICROSOFT_CLIENT_ID</p>
                     <p className="font-semibold text-[#0078D4] dark:text-brand-300">MICROSOFT_CLIENT_SECRET</p>
@@ -353,7 +357,7 @@ export default function ConnectionStatus({
               <div className="bg-amber-50 dark:bg-amber-950/20 text-amber-800 dark:text-amber-400 p-3 rounded flex gap-2 border border-amber-200/60 dark:border-amber-900/60">
                 <AlertCircle className="w-5 h-5 flex-shrink-0 text-amber-500" />
                 <p>
-                  <strong>No Azure account ready?</strong> Click "Enable Sandbox Mode" above. It hosts a full sandbox simulator with responsive open-rate simulations, recipient progress tracking, and executive PDF reporting instantly, requiring no cloud configurations!
+                  <strong>{t("No Azure account ready?")}</strong> {t("Click \"Enable Sandbox Mode\" above. It hosts a full sandbox simulator with responsive open-rate simulations, recipient progress tracking, and executive PDF reporting instantly, requiring no cloud configurations!")}
                 </p>
               </div>
             </div>

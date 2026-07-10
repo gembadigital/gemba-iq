@@ -180,7 +180,7 @@ export default function LeadProfilesView({
   const handleManualAddSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!newProfile.email.trim() || !newProfile.firstName.trim() || !newProfile.lastName.trim()) {
-      triggerToast("First Name, Last Name and Email Address are strictly required.", "error");
+      triggerToast(t("First Name, Last Name and Email Address are strictly required."), "error");
       return;
     }
 
@@ -224,12 +224,12 @@ export default function LeadProfilesView({
       openCount: 0
     });
     setIsAddingLead(false);
-    triggerToast(`Added ${added.firstName} ${added.lastName} to Lead profiles registry`, "success");
+    triggerToast(t("Added {name} to Lead profiles registry").replace("{name}", `${added.firstName} ${added.lastName}`), "success");
   };
 
   const handleManualSaveAll = () => {
     localStorage.setItem("smart_mailmerge_lead_profiles", JSON.stringify(profiles));
-    triggerToast("Lead profile database committed & saved securely.", "success");
+    triggerToast(t("Lead profile database committed & saved securely."), "success");
   };
 
   // Inline action editing
@@ -241,7 +241,7 @@ export default function LeadProfilesView({
   const saveEditedProfile = () => {
     if (!editForm) return;
     if (!editForm.firstName.trim() || !editForm.lastName.trim() || !editForm.email.trim()) {
-      triggerToast("First Name, Last Name, and Email are validation prerequisites.", "error");
+      triggerToast(t("First Name, Last Name, and Email are validation prerequisites."), "error");
       return;
     }
 
@@ -249,7 +249,7 @@ export default function LeadProfilesView({
     updateProfilesAndPersist(updated);
     setEditingProfileId(null);
     setEditForm(null);
-    triggerToast("Lead details updated successfully.", "success");
+    triggerToast(t("Lead details updated successfully."), "success");
   };
 
   const deleteSingleProfile = (id: string) => {
@@ -257,18 +257,18 @@ export default function LeadProfilesView({
     // Standardize 'no' sequence values
     const standardized = remaining.map((p, idx) => ({ ...p, no: idx + 1 }));
     updateProfilesAndPersist(standardized);
-    triggerToast("Profile removed from database.", "info");
+    triggerToast(t("Profile removed from database."), "info");
   };
 
   const deleteSelectedProfiles = () => {
     const remaining = profiles.filter(p => !p.isSelected);
     if (profiles.length === remaining.length) {
-      triggerToast("No items selected to delete.", "info");
+      triggerToast(t("No items selected to delete."), "info");
       return;
     }
     const standardized = remaining.map((p, idx) => ({ ...p, no: idx + 1 }));
     updateProfilesAndPersist(standardized);
-    triggerToast(`Bulk deleted selected records successfully.`, "success");
+    triggerToast(t("Bulk deleted selected records successfully."), "success");
   };
 
   // Checkbox interactions
@@ -292,7 +292,7 @@ export default function LeadProfilesView({
   // EXPORT OUT TO EXCEL-FRIENDLY CSV
   const handleExportCSV = () => {
     if (profiles.length === 0) {
-      triggerToast("No leads available in registry to export.", "error");
+      triggerToast(t("No leads available in registry to export."), "error");
       return;
     }
 
@@ -342,13 +342,13 @@ export default function LeadProfilesView({
     link.download = `lead_profiles_database_${new Date().toISOString().split("T")[0]}.csv`;
     link.click();
     URL.revokeObjectURL(link.href);
-    triggerToast("Profiles database exported successfully as semicolon-delimited CSV.", "success");
+    triggerToast(t("Profiles database exported successfully as semicolon-delimited CSV."), "success");
   };
 
   // EXPORT TO EXCEL XLS
   const handleExportXLS = () => {
     if (profiles.length === 0) {
-      triggerToast("No leads available in registry to export.", "error");
+      triggerToast(t("No leads available in registry to export."), "error");
       return;
     }
 
@@ -404,10 +404,10 @@ export default function LeadProfilesView({
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
-      triggerToast("Lead profiles database exported successfully in .xls format.", "success");
+      triggerToast(t("Lead profiles database exported successfully in .xls format."), "success");
     } catch (err) {
       console.error("XLS Export failed", err);
-      triggerToast("Export to .xls failed.", "error");
+      triggerToast(t("Export to .xls failed."), "error");
     }
   };
 
@@ -428,7 +428,7 @@ export default function LeadProfilesView({
           const rawRows = XLSX.utils.sheet_to_json(worksheet, { header: 1 }) as any[];
 
           if (rawRows.length < 2) {
-            throw new Error("Spreadsheet file is missing headers or record data rows.");
+            throw new Error(t("Spreadsheet file is missing headers or record data rows."));
           }
 
           // Read headers case-insensitively to map properly
@@ -513,15 +513,15 @@ export default function LeadProfilesView({
           });
 
           updateProfilesAndPersist(updated);
-          triggerToast(`Successfully parsed. Updated ${records.length - addedCount} and added ${addedCount} brand new Lead profiles!`, "success");
+          triggerToast(t("Successfully parsed. Updated {updated} and added {added} brand new Lead profiles!").replace("{updated}", String(records.length - addedCount)).replace("{added}", String(addedCount)), "success");
         } catch (excelErr: any) {
           console.error(excelErr);
-          setImportError("Bad spreadsheet structure: " + excelErr.message);
+          setImportError(t("Bad spreadsheet structure: {error}").replace("{error}", excelErr.message));
         }
       };
       reader.readAsBinaryString(file);
     } catch (err: any) {
-      setImportError(err.message || "Failed loading selected dataset file.");
+      setImportError(err.message || t("Failed loading selected dataset file."));
     }
 
     // Reset input target
@@ -532,7 +532,7 @@ export default function LeadProfilesView({
   const handleTransferToRecipientList = () => {
     const selectedLeads = profiles.filter(p => p.isSelected);
     if (selectedLeads.length === 0) {
-      triggerToast("No lead profiles are currently selected. Tick checkboxes on the left side first.", "error");
+      triggerToast(t("No lead profiles are currently selected. Tick checkboxes on the left side first."), "error");
       return;
     }
 
@@ -561,7 +561,7 @@ export default function LeadProfilesView({
     const resetSelection = profiles.map(p => ({ ...p, isSelected: false }));
     setProfiles(resetSelection);
 
-    triggerToast(`Successfully transferred ${mappedRecipients.length} profiles directly into Mail Merge queue! Heading there...`, "success");
+    triggerToast(t("Successfully transferred {count} profiles directly into Mail Merge queue! Heading there...").replace("{count}", String(mappedRecipients.length)), "success");
   };
 
   // Compute stats counters
@@ -625,7 +625,7 @@ export default function LeadProfilesView({
           }`}
         >
           <Database className="w-4 h-4 text-emerald-500" />
-          <span>{lang === "TR" ? "Aday Müşteri Ana Veritabanı" : "Master Lead Database"}</span>
+          <span>{t("Master Lead Database")}</span>
         </button>
         <button
           type="button"
@@ -637,9 +637,9 @@ export default function LeadProfilesView({
           }`}
         >
           <Mail className="w-4 h-4 text-indigo-500" />
-          <span>{lang === "TR" ? "İletişime Geçilenler (E-posta Aday Keşfi)" : "Contacted List (Email Lead Discovery)"}</span>
+          <span>{t("Contacted List (Email Lead Discovery)")}</span>
           <span className="inline-flex items-center rounded bg-indigo-50 px-1.5 py-0.5 text-[9px] font-bold text-indigo-700 dark:bg-indigo-950 dark:text-indigo-400">
-            {lang === "TR" ? "Yeni" : "New"}
+            {t("New")}
           </span>
         </button>
       </div>
@@ -655,7 +655,7 @@ export default function LeadProfilesView({
               }
             });
             updateProfilesAndPersist(updated);
-            triggerToast(`Mükerrer kontrolü tamamlandı, ${newLeads.length} aday ana veritabanına aktarıldı!`);
+            triggerToast(t("Duplicate check completed, {count} leads transferred to master database!").replace("{count}", String(newLeads.length)));
           }}
           onAddCompaniesToMaster={(companyName, domain, industry) => {
             try {
@@ -698,10 +698,10 @@ export default function LeadProfilesView({
         <div className="space-y-1">
           <div className="flex items-center gap-2">
             <Users className="w-5 h-5 text-[#0078D4] dark:text-brand-300" />
-            <h2 className="text-base font-bold text-slate-800 dark:text-slate-100">Lead Database & Profile Manager</h2>
+            <h2 className="text-base font-bold text-slate-800 dark:text-slate-100">{t("Lead Database & Profile Manager")}</h2>
           </div>
           <p className="text-xs text-slate-500 max-w-2xl">
-            Maintain your master prospecting database with full fields matching Excel structures. Update segments, analyze open engagement metrics, and batch transfer qualified leads directly into your Mail Merge Builder campaign in real-time.
+            {t("Maintain your master prospecting database with full fields matching Excel structures. Update segments, analyze open engagement metrics, and batch transfer qualified leads directly into your Mail Merge Builder campaign in real-time.")}
           </p>
         </div>
 
@@ -722,7 +722,7 @@ export default function LeadProfilesView({
             className="text-xs font-bold bg-[#FAF9F8] hover:bg-[#EDEBE9] dark:bg-[#252423] dark:hover:bg-[#323130] text-slate-700 dark:text-slate-200 px-3 py-2 border border-[#EDEBE9] dark:border-[#323130] rounded flex items-center gap-1.5 cursor-pointer transition-all shadow-sm"
           >
             <Upload className="w-4 h-4" />
-            <span>Import Sheet</span>
+            <span>{t("Import Sheet")}</span>
           </button>
 
           <button
@@ -731,7 +731,7 @@ export default function LeadProfilesView({
             className="text-xs font-bold bg-[#FAF9F8] hover:bg-[#EDEBE9] dark:bg-[#252423] dark:hover:bg-[#323130] text-slate-700 dark:text-slate-200 px-3 py-2 border border-[#EDEBE9] dark:border-[#323130] rounded flex items-center gap-1.5 cursor-pointer transition-all shadow-sm"
           >
             <Download className="w-4 h-4" />
-            <span>Export CSV</span>
+            <span>{t("Export CSV")}</span>
           </button>
 
           <button
@@ -740,7 +740,7 @@ export default function LeadProfilesView({
             className="text-xs font-bold bg-white hover:bg-slate-50 dark:bg-[#1b1a19] dark:hover:bg-[#252423] text-[#0078D4] dark:text-brand-300 px-3 py-2 border border-[#0078D4]/30 rounded flex items-center gap-1.5 cursor-pointer transition-all shadow-sm"
           >
             <Save className="w-4 h-4" />
-            <span>Save List</span>
+            <span>{t("Save List")}</span>
           </button>
 
           <button
@@ -749,7 +749,7 @@ export default function LeadProfilesView({
             className="text-xs font-bold bg-[#0078D4] hover:bg-[#005a9e] text-white px-3.5 py-2.5 rounded flex items-center gap-1.5 cursor-pointer transition-all shadow-sm"
           >
             <Plus className="w-4 h-4" />
-            <span>{isAddingLead ? "Cancel New" : "Add Lead Record"}</span>
+            <span>{isAddingLead ? t("Cancel New") : t("Add Lead Record")}</span>
           </button>
         </div>
       </div>
@@ -765,33 +765,33 @@ export default function LeadProfilesView({
       {/* Bento Stats Ribbons */}
       <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
         <div className="bg-white dark:bg-[#1b1a19] p-4 rounded border border-[#EDEBE9] dark:border-[#323130] shadow-sm">
-          <span className="text-[10px] font-bold text-slate-400 uppercase">Grand Total Database</span>
-          <div className="text-xl font-bold text-[#0078D4] mt-1">{totalCount} leads</div>
-          <p className="text-[10px] text-slate-450 mt-1">In-Memory synced</p>
+          <span className="text-[10px] font-bold text-slate-400 uppercase">{t("Grand Total Database")}</span>
+          <div className="text-xl font-bold text-[#0078D4] mt-1">{t("{count} leads").replace("{count}", String(totalCount))}</div>
+          <p className="text-[10px] text-slate-450 mt-1">{t("In-Memory synced")}</p>
         </div>
 
         <div className="bg-white dark:bg-[#1b1a19] p-4 rounded border border-[#EDEBE9] dark:border-[#323130] shadow-sm">
-          <span className="text-[10px] font-bold text-slate-400 uppercase">Hot Leads</span>
-          <div className="text-xl font-bold text-orange-600 mt-1">{hotLeadsCount} prospects</div>
-          <p className="text-[10px] text-slate-450 mt-1">Highest priority engagement</p>
+          <span className="text-[10px] font-bold text-slate-400 uppercase">{t("Hot Leads")}</span>
+          <div className="text-xl font-bold text-orange-600 mt-1">{t("{count} prospects").replace("{count}", String(hotLeadsCount))}</div>
+          <p className="text-[10px] text-slate-450 mt-1">{t("Highest priority engagement")}</p>
         </div>
 
         <div className="bg-white dark:bg-[#1b1a19] p-4 rounded border border-[#EDEBE9] dark:border-[#323130] shadow-sm">
-          <span className="text-[10px] font-bold text-slate-400 uppercase">Uncontacted / New</span>
-          <div className="text-xl font-bold text-indigo-500 mt-1">{newLeadsCount} items</div>
-          <p className="text-[10px] text-slate-450 mt-1">Awaiting outbox dispatch</p>
+          <span className="text-[10px] font-bold text-slate-400 uppercase">{t("Uncontacted / New")}</span>
+          <div className="text-xl font-bold text-indigo-500 mt-1">{t("{count} items").replace("{count}", String(newLeadsCount))}</div>
+          <p className="text-[10px] text-slate-450 mt-1">{t("Awaiting outbox dispatch")}</p>
         </div>
 
         <div className="bg-white dark:bg-[#1b1a19] p-4 rounded border border-[#EDEBE9] dark:border-[#323130] shadow-sm">
-          <span className="text-[10px] font-bold text-slate-450 uppercase">Current Selected leads</span>
-          <div className="text-xl font-bold text-emerald-600 mt-1">{selectedCount} leads</div>
-          <p className="text-[10px] text-slate-450 mt-1">Ready for sending list</p>
+          <span className="text-[10px] font-bold text-slate-450 uppercase">{t("Current Selected leads")}</span>
+          <div className="text-xl font-bold text-emerald-600 mt-1">{t("{count} leads").replace("{count}", String(selectedCount))}</div>
+          <p className="text-[10px] text-slate-450 mt-1">{t("Ready for sending list")}</p>
         </div>
 
         <div className="bg-[#f0f8ff] dark:bg-blue-950/20 p-4 rounded border border-blue-200 dark:border-blue-900 shadow-sm col-span-2 md:col-span-1">
-          <span className="text-[10px] font-bold text-[#0078D4] dark:text-brand-300 uppercase">Mail Merge Outbox</span>
-          <div className="text-xl font-bold text-slate-800 dark:text-slate-100 mt-1">{currentMailMergeCount} active</div>
-          <p className="text-[10px] text-slate-500 mt-1">Active compiler state</p>
+          <span className="text-[10px] font-bold text-[#0078D4] dark:text-brand-300 uppercase">{t("Mail Merge Outbox")}</span>
+          <div className="text-xl font-bold text-slate-800 dark:text-slate-100 mt-1">{t("{count} active").replace("{count}", String(currentMailMergeCount))}</div>
+          <p className="text-[10px] text-slate-500 mt-1">{t("Active compiler state")}</p>
         </div>
       </div>
 
@@ -815,10 +815,10 @@ export default function LeadProfilesView({
               type="button"
               onClick={() => setIsWide(!isWide)}
               className="text-xs font-bold bg-white hover:bg-slate-50 dark:bg-[#252423] dark:hover:bg-[#323130] text-[#0078D4] dark:text-brand-300 px-3 py-1.5 border border-[#EDEBE9] dark:border-[#323130] rounded flex items-center gap-1.5 cursor-pointer transition-all shadow-sm hover:scale-[1.02]"
-              title={isWide ? "Ekranı Daralt" : "Ekranı Genişlet"}
+              title={isWide ? t("Shrink Screen") : t("Expand Screen")}
             >
               {isWide ? <Minimize2 className="w-4 h-4 text-rose-500" /> : <Maximize2 className="w-4 h-4 text-indigo-500" />}
-              <span>{isWide ? "Ekranı Daralt" : "Ekranı Genişlet"}</span>
+              <span>{isWide ? t("Shrink Screen") : t("Expand Screen")}</span>
             </button>
 
             {/* 2. Export İndirme oku (.xls biçiminde) */}
@@ -826,10 +826,10 @@ export default function LeadProfilesView({
               type="button"
               onClick={handleExportXLS}
               className="text-xs font-bold bg-[#107c41] hover:bg-[#0b592e] text-white px-3 py-1.5 rounded flex items-center gap-1.5 cursor-pointer transition-all shadow-sm hover:scale-[1.02]"
-              title="Listeyi Excel (.xls) formatında indir"
+              title={t("Download list in Excel (.xls) format")}
             >
               <Download className="w-4 h-4 text-white animate-bounce" style={{ animationDuration: "2.5s" }} />
-              <span>XLS İndir (Excel)</span>
+              <span>{t("Download XLS (Excel)")}</span>
             </button>
           </div>
         </div>
@@ -839,7 +839,7 @@ export default function LeadProfilesView({
           <div className="flex items-center justify-between border-b border-[#EDEBE9] dark:border-[#323130] pb-3 flex-shrink-0 px-4 pt-1">
             <div className="flex items-center gap-2">
               <Sparkles className="w-4 h-4 text-[#0078D4]" />
-              <h3 className="text-sm font-bold text-slate-800 dark:text-slate-100 uppercase tracking-wider">Lead Database Studio (Expanded Mode)</h3>
+              <h3 className="text-sm font-bold text-slate-800 dark:text-slate-100 uppercase tracking-wider">{t("Lead Database Studio (Expanded Mode)")}</h3>
             </div>
           </div>
         )}
@@ -850,7 +850,7 @@ export default function LeadProfilesView({
             <div className="border-b border-[#EDEBE9] dark:border-[#323130] pb-3 flex items-center justify-between">
               <h3 className="text-xs font-bold text-slate-705 uppercase tracking-wide flex items-center gap-1.5">
                 <Plus className="w-4 h-4 text-emerald-500" />
-                <span>Input Manual Profile Candidate</span>
+                <span>{t("Input Manual Profile Candidate")}</span>
               </h3>
               <button type="button" onClick={() => setIsAddingLead(false)} className="text-slate-400 hover:text-slate-600">
                 <X className="w-4 h-4" />
@@ -859,7 +859,7 @@ export default function LeadProfilesView({
 
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4 text-xs">
               <div>
-                <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block mb-1">First Name *</label>
+                <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block mb-1">{t("First Name *")}</label>
                 <input
                   type="text"
                   placeholder="Sofia"
@@ -871,7 +871,7 @@ export default function LeadProfilesView({
               </div>
 
               <div>
-                <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block mb-1">Last Name *</label>
+                <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block mb-1">{t("Last Name *")}</label>
                 <input
                   type="text"
                   placeholder="Vargas"
@@ -883,7 +883,7 @@ export default function LeadProfilesView({
               </div>
 
               <div>
-                <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block mb-1">Email Address *</label>
+                <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block mb-1">{t("Email Address *")}</label>
                 <input
                   type="email"
                   placeholder="s.vargas@corporate.com"
@@ -895,7 +895,7 @@ export default function LeadProfilesView({
               </div>
 
               <div>
-                <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block mb-1">Company</label>
+                <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block mb-1">{t("Company")}</label>
                 <CompanyAutocomplete
                   value={newProfile.company}
                   onChange={company => setNewProfile({ ...newProfile, company: company.name })}
@@ -903,7 +903,7 @@ export default function LeadProfilesView({
               </div>
 
               <div>
-                <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block mb-1">Department</label>
+                <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block mb-1">{t("Department")}</label>
                 <input
                   type="text"
                   placeholder="Enterprise DevOps"
@@ -914,7 +914,7 @@ export default function LeadProfilesView({
               </div>
 
               <div>
-                <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block mb-1">Address</label>
+                <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block mb-1">{t("Address")}</label>
                 <input
                   type="text"
                   placeholder="Bermuda Way, Austin"
@@ -925,7 +925,7 @@ export default function LeadProfilesView({
               </div>
 
               <div>
-                <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block mb-1">Industry</label>
+                <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block mb-1">{t("Industry")}</label>
                 <input
                   type="text"
                   placeholder="Cybersecurity Solutions"
@@ -936,10 +936,10 @@ export default function LeadProfilesView({
               </div>
 
               <div>
-                <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block mb-1">Requested Service Type</label>
+                <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block mb-1">{t("Requested Service Type")}</label>
                 <input
                   type="text"
-                  placeholder="e.g. Standard Audit, Enterprise..."
+                  placeholder={t("e.g. Standard Audit, Enterprise...")}
                   value={newProfile.leadDemand}
                   onChange={e => setNewProfile({ ...newProfile, leadDemand: e.target.value })}
                   className="w-full p-2 border border-[#EDEBE9] dark:border-[#323130] bg-[#faf9f8] dark:bg-[#252423] rounded outline-none focus:border-[#0078D4]"
@@ -947,34 +947,34 @@ export default function LeadProfilesView({
               </div>
 
               <div>
-                <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block mb-1">Lead Status</label>
+                <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block mb-1">{t("Lead Status")}</label>
                 <select
                   value={newProfile.leadStatus}
                   onChange={e => setNewProfile({ ...newProfile, leadStatus: e.target.value })}
                   className="w-full p-2 border border-[#EDEBE9] dark:border-[#323130] bg-[#faf9f8] dark:bg-[#252423] rounded outline-none"
                 >
-                  <option value="New">New</option>
-                  <option value="Contacted">Contacted</option>
-                  <option value="Nurturing">Nurturing</option>
-                  <option value="Disqualified">Disqualified</option>
+                  <option value="New">{t("New")}</option>
+                  <option value="Contacted">{t("Contacted")}</option>
+                  <option value="Nurturing">{t("Nurturing")}</option>
+                  <option value="Disqualified">{t("Disqualified")}</option>
                 </select>
               </div>
 
               <div>
-                <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block mb-1">Lead Segment</label>
+                <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block mb-1">{t("Lead Segment")}</label>
                 <select
                   value={newProfile.leadSegment}
                   onChange={e => setNewProfile({ ...newProfile, leadSegment: e.target.value })}
                   className="w-full p-2 border border-[#EDEBE9] dark:border-[#323130] bg-[#faf9f8] dark:bg-[#252423] rounded outline-none"
                 >
-                  <option value="Hot Lead">Hot Lead</option>
-                  <option value="Warm Lead">Warm Lead</option>
-                  <option value="Cold">Cold</option>
+                  <option value="Hot Lead">{t("Hot Lead")}</option>
+                  <option value="Warm Lead">{t("Warm Lead")}</option>
+                  <option value="Cold">{t("Cold")}</option>
                 </select>
               </div>
 
               <div>
-                <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block mb-1">Custom Field 1</label>
+                <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block mb-1">{t("Custom Field 1")}</label>
                 <input
                   type="text"
                   placeholder="Partner priority log"
@@ -985,7 +985,7 @@ export default function LeadProfilesView({
               </div>
 
               <div>
-                <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block mb-1">Custom Field 2</label>
+                <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block mb-1">{t("Custom Field 2")}</label>
                 <input
                   type="text"
                   placeholder="Optional tag key"
@@ -1002,14 +1002,14 @@ export default function LeadProfilesView({
                 onClick={() => setIsAddingLead(false)}
                 className="text-xs font-bold text-slate-500 hover:text-slate-650 px-3 py-2 border border-[#EDEBE9] dark:border-[#323130] rounded cursor-pointer bg-[#faf9f8] dark:bg-[#252423]"
               >
-                Cancel
+                {t("Cancel")}
               </button>
               <button
                 type="submit"
                 className="text-xs font-bold bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2 rounded flex items-center gap-1 cursor-pointer"
               >
                 <Check className="w-4 h-4" />
-                <span>Confirm & Append</span>
+                <span>{t("Confirm & Append")}</span>
               </button>
             </div>
           </form>
@@ -1022,7 +1022,7 @@ export default function LeadProfilesView({
               <Search className="w-3.5 h-3.5 text-slate-400 absolute left-3 top-2.5" />
               <input
                 type="text"
-                placeholder="Search leads, sectors, or segments..."
+                placeholder={t("Search leads, sectors, or segments...")}
                 value={searchTerm}
                 onChange={e => setSearchTerm(e.target.value)}
                 className="bg-white dark:bg-[#252423] border border-[#EDEBE9] dark:border-[#323130] text-xs rounded pl-9 pr-4 py-2 w-64 outline-none focus:border-[#0078D4]"
@@ -1036,11 +1036,11 @@ export default function LeadProfilesView({
                 onChange={e => setStatusFilter(e.target.value)}
                 className="bg-white dark:bg-[#252423] border border-[#EDEBE9] dark:border-[#323130] text-xs p-1.5 rounded outline-none text-slate-600 dark:text-slate-200"
               >
-                <option value="">-- Lead Status --</option>
-                <option value="New">New</option>
-                <option value="Contacted">Contacted</option>
-                <option value="Nurturing">Nurturing</option>
-                <option value="Disqualified">Disqualified</option>
+                <option value="">{t("-- Lead Status --")}</option>
+                <option value="New">{t("New")}</option>
+                <option value="Contacted">{t("Contacted")}</option>
+                <option value="Nurturing">{t("Nurturing")}</option>
+                <option value="Disqualified">{t("Disqualified")}</option>
               </select>
             </div>
 
@@ -1049,10 +1049,10 @@ export default function LeadProfilesView({
               onChange={e => setSegmentFilter(e.target.value)}
               className="bg-white dark:bg-[#252423] border border-[#EDEBE9] dark:border-[#323130] text-xs p-1.5 rounded outline-none text-slate-600 dark:text-slate-200"
             >
-              <option value="">-- Segment --</option>
-              <option value="Hot Lead">Hot Lead</option>
-              <option value="Warm Lead">Warm Lead</option>
-              <option value="Cold">Cold</option>
+              <option value="">{t("-- Segment --")}</option>
+              <option value="Hot Lead">{t("Hot Lead")}</option>
+              <option value="Warm Lead">{t("Warm Lead")}</option>
+              <option value="Cold">{t("Cold")}</option>
             </select>
           </div>
 
@@ -1068,7 +1068,7 @@ export default function LeadProfilesView({
               }`}
             >
               <ArrowRightLeft className="w-3.5 h-3.5" />
-              <span>Transfer to Recipient List ({selectedCount})</span>
+              <span>{t("Transfer to Recipient List ({count})").replace("{count}", String(selectedCount))}</span>
             </button>
 
             <button
@@ -1080,27 +1080,27 @@ export default function LeadProfilesView({
                   ? "bg-rose-50 hover:bg-rose-100 text-rose-700 border-rose-200 dark:bg-rose-950/20 dark:text-rose-450 dark:border-rose-900"
                   : "bg-slate-50 dark:bg-[#252423] text-slate-400 border-[#EDEBE9] dark:border-[#323130] cursor-not-allowed opacity-60"
               }`}
-              title="Delete selected leads permanently"
+              title={t("Delete selected leads permanently")}
             >
               <Trash2 className="w-3.5 h-3.5" />
-              <span>Delete</span>
+              <span>{t("Delete")}</span>
             </button>
 
             <button
               type="button"
               onClick={() => setIsWide(!isWide)}
               className="text-xs font-bold bg-white hover:bg-slate-50 dark:bg-[#252423] dark:hover:bg-[#323130] text-[#0078D4] dark:text-brand-300 px-3.5 py-2 border border-[#EDEBE9] dark:border-[#323130] rounded flex items-center gap-1.5 cursor-pointer transition-all shadow-sm"
-              title={isWide ? "Exit Wide Screen View (Esc)" : "Expand Table to Wide Screen View"}
+              title={isWide ? t("Exit Wide Screen View (Esc)") : t("Expand Table to Wide Screen View")}
             >
               {isWide ? (
                 <>
                   <Minimize2 className="w-3.5 h-3.5" />
-                  <span>Close Wide View</span>
+                  <span>{t("Close Wide View")}</span>
                 </>
               ) : (
                 <>
                   <Maximize2 className="w-3.5 h-3.5" />
-                  <span>Wide View</span>
+                  <span>{t("Wide View")}</span>
                 </>
               )}
             </button>
@@ -1121,21 +1121,21 @@ export default function LeadProfilesView({
                   />
                 </th>
                 <th className="p-3 w-14">No</th>
-                <th className="p-3">First Name</th>
-                <th className="p-3">Last Name</th>
-                <th className="p-3">Email Address</th>
-                <th className="p-3">Company</th>
-                <th className="p-3">Department</th>
-                <th className="p-3">Address</th>
-                <th className="p-3">Industry</th>
-                <th className="p-3">Requested Service Type</th>
-                <th className="p-3">Lead Status</th>
-                <th className="p-3">Lead Segment</th>
-                <th className="p-3">Custom Field 1</th>
-                <th className="p-3">Custom Field 2</th>
-                <th className="p-3 text-center">Delivery</th>
-                <th className="p-3 text-center">Opens</th>
-                <th className="p-3 text-center w-20">Actions</th>
+                <th className="p-3">{t("First Name")}</th>
+                <th className="p-3">{t("Last Name")}</th>
+                <th className="p-3">{t("Email Address")}</th>
+                <th className="p-3">{t("Company")}</th>
+                <th className="p-3">{t("Department")}</th>
+                <th className="p-3">{t("Address")}</th>
+                <th className="p-3">{t("Industry")}</th>
+                <th className="p-3">{t("Requested Service Type")}</th>
+                <th className="p-3">{t("Lead Status")}</th>
+                <th className="p-3">{t("Lead Segment")}</th>
+                <th className="p-3">{t("Custom Field 1")}</th>
+                <th className="p-3">{t("Custom Field 2")}</th>
+                <th className="p-3 text-center">{t("Delivery")}</th>
+                <th className="p-3 text-center">{t("Opens")}</th>
+                <th className="p-3 text-center w-20">{t("Actions")}</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-[#EDEBE9] dark:divide-[#323130] text-xs">
@@ -1265,7 +1265,7 @@ export default function LeadProfilesView({
                         {isEditing && editForm ? (
                           <input
                             type="text"
-                            placeholder="Service Type..."
+                            placeholder={t("Service Type...")}
                             value={editForm.leadDemand || ""}
                             onChange={e => setEditForm({ ...editForm, leadDemand: e.target.value })}
                             className="bg-white dark:bg-[#252423] p-1 border border-slate-300 dark:border-[#323130] rounded w-32 outline-none"
@@ -1295,13 +1295,13 @@ export default function LeadProfilesView({
                             onChange={e => setEditForm({ ...editForm, leadStatus: e.target.value })}
                             className="bg-white dark:bg-[#252423] p-1 border rounded"
                           >
-                            <option value="New">New</option>
-                            <option value="Contacted">Contacted</option>
-                            <option value="Nurturing">Nurturing</option>
-                            <option value="Disqualified">Disqualified</option>
+                            <option value="New">{t("New")}</option>
+                            <option value="Contacted">{t("Contacted")}</option>
+                            <option value="Nurturing">{t("Nurturing")}</option>
+                            <option value="Disqualified">{t("Disqualified")}</option>
                           </select>
                         ) : (
-                          <span className="font-semibold text-slate-600 dark:text-slate-300">{p.leadStatus}</span>
+                          <span className="font-semibold text-slate-600 dark:text-slate-300">{t(p.leadStatus)}</span>
                         )}
                       </td>
 
@@ -1313,9 +1313,9 @@ export default function LeadProfilesView({
                             onChange={e => setEditForm({ ...editForm, leadSegment: e.target.value })}
                             className="bg-white dark:bg-[#252423] p-1 border rounded text-[11px]"
                           >
-                            <option value="Hot Lead">Hot Lead</option>
-                            <option value="Warm Lead">Warm Lead</option>
-                            <option value="Cold">Cold</option>
+                            <option value="Hot Lead">{t("Hot Lead")}</option>
+                            <option value="Warm Lead">{t("Warm Lead")}</option>
+                            <option value="Cold">{t("Cold")}</option>
                           </select>
                         ) : (
                           <span className={`px-2 py-0.5 rounded text-[10px] font-bold ${
@@ -1325,7 +1325,7 @@ export default function LeadProfilesView({
                               ? "bg-blue-50 text-blue-700 dark:bg-blue-950/20"
                               : "bg-[#F3F2F1] text-slate-600 dark:bg-[#2c2b2a]"
                           }`}>
-                            {p.leadSegment}
+                            {t(p.leadSegment)}
                           </span>
                         )}
                       </td>
@@ -1366,9 +1366,9 @@ export default function LeadProfilesView({
                             onChange={e => setEditForm({ ...editForm, deliveryStatus: e.target.value })}
                             className="bg-white dark:bg-[#252423] p-1 border rounded text-[11px]"
                           >
-                            <option value="idle">idle</option>
-                            <option value="success">success</option>
-                            <option value="failed">failed</option>
+                            <option value="idle">{t("idle")}</option>
+                            <option value="success">{t("success")}</option>
+                            <option value="failed">{t("failed")}</option>
                           </select>
                         ) : (
                           <span className={`inline-flex items-center gap-1 text-[10px] uppercase font-bold ${
@@ -1385,7 +1385,7 @@ export default function LeadProfilesView({
                                 ? "bg-rose-500"
                                 : "bg-slate-300"
                             }`} />
-                            <span>{p.deliveryStatus || "idle"}</span>
+                            <span>{t(p.deliveryStatus || "idle")}</span>
                           </span>
                         )}
                       </td>
@@ -1413,7 +1413,7 @@ export default function LeadProfilesView({
                                 type="button"
                                 onClick={saveEditedProfile}
                                 className="p-1 text-emerald-600 hover:text-emerald-700 rounded hover:bg-emerald-50 dark:hover:bg-emerald-950/20"
-                                title="Save Profile details"
+                                title={t("Save Profile details")}
                               >
                                 <Check className="w-3.5 h-3.5" />
                               </button>
@@ -1424,7 +1424,7 @@ export default function LeadProfilesView({
                                   setEditForm(null);
                                 }}
                                 className="p-1 text-slate-405 hover:text-slate-600"
-                                title="Exit edit mode"
+                                title={t("Exit edit mode")}
                               >
                                 <X className="w-3.5 h-3.5" />
                               </button>
@@ -1435,7 +1435,7 @@ export default function LeadProfilesView({
                                 type="button"
                                 onClick={() => startEditingProfile(p)}
                                 className="p-1 text-[#0078D4] hover:text-[#005a9e] rounded hover:bg-blue-50 dark:hover:bg-blue-950/20"
-                                title="Edit inline fields"
+                                title={t("Edit inline fields")}
                               >
                                 <Edit className="w-3.5 h-3.5" />
                               </button>
@@ -1443,7 +1443,7 @@ export default function LeadProfilesView({
                                 type="button"
                                 onClick={() => deleteSingleProfile(p.id)}
                                 className="p-1 text-rose-500 hover:text-rose-600 rounded hover:bg-rose-50 dark:hover:bg-rose-950/25"
-                                title="Delete Lead"
+                                title={t("Delete Lead")}
                               >
                                 <Trash2 className="w-3.5 h-3.5" />
                               </button>
@@ -1458,8 +1458,8 @@ export default function LeadProfilesView({
                 <tr>
                   <td colSpan={17} className="p-10 text-center text-slate-400">
                     <Database className="w-12 h-12 text-slate-300 mx-auto mb-2.5 animate-pulse" />
-                    <p className="font-semibold text-xs text-slate-500">No lead profiles match your current search constraints.</p>
-                    <p className="text-[10px] text-slate-405 mt-1">Import an excel file or click "Add Lead" to build your database stack</p>
+                    <p className="font-semibold text-xs text-slate-500">{t("No lead profiles match your current search constraints.")}</p>
+                    <p className="text-[10px] text-slate-405 mt-1">{t("Import an excel file or click \"Add Lead\" to build your database stack")}</p>
                   </td>
                 </tr>
               )}
@@ -1471,7 +1471,7 @@ export default function LeadProfilesView({
         {totalPages > 1 && (
           <div className="p-4 border-t border-[#EDEBE9] dark:border-[#323130] flex items-center justify-between gap-4 text-xs select-none">
             <span className="text-slate-505 font-medium">
-              Showing {(currentPage - 1) * pageSize + 1} to {Math.min(currentPage * pageSize, filteredProfiles.length)} of {filteredProfiles.length} leads
+              {t("Showing {start} to {end} of {total} leads").replace("{start}", String((currentPage - 1) * pageSize + 1)).replace("{end}", String(Math.min(currentPage * pageSize, filteredProfiles.length))).replace("{total}", String(filteredProfiles.length))}
             </span>
 
             <div className="flex items-center gap-1.5">
@@ -1485,7 +1485,7 @@ export default function LeadProfilesView({
                     : "hover:bg-slate-50 dark:hover:bg-[#252423] cursor-pointer"
                 }`}
               >
-                Previous
+                {t("Previous")}
               </button>
               
               {Array.from({ length: totalPages }).map((_, i) => {
@@ -1516,7 +1516,7 @@ export default function LeadProfilesView({
                     : "hover:bg-slate-50 dark:hover:bg-[#252423] cursor-pointer"
                 }`}
               >
-                Next
+                {t("Next")}
               </button>
             </div>
           </div>

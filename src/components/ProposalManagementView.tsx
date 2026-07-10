@@ -517,12 +517,10 @@ export default function ProposalManagementView() {
         <div className="absolute top-0 left-0 right-0 h-1.5 bg-gradient-to-r from-emerald-500 via-[#0078D4] to-blue-500" />
         <div>
           <h2 className="text-xl font-bold tracking-tight text-slate-800 dark:text-zinc-150">
-            {lang === "TR" ? "Teklif Yönetimi" : "Proposal Management"}
+            {t("Proposal Management")}
           </h2>
           <p className="text-xs text-slate-450 dark:text-zinc-400 mt-1">
-            {lang === "TR"
-              ? "CRM fırsatlarıyla senkronize edilmiş kurumsal B2B teklifleri oluşturun, revize edin, denetleyin ve gönderin"
-              : "Establish, revise, audit, and dispatch executive B2B quotes synced to CRM opportunities"}
+            {t("Establish, revise, audit, and dispatch executive B2B quotes synced to CRM opportunities")}
           </p>
         </div>
         <div className="flex items-center gap-2">
@@ -533,7 +531,7 @@ export default function ProposalManagementView() {
             }}
             className="bg-slate-100 hover:bg-slate-200 dark:bg-zinc-800 dark:hover:bg-zinc-700 text-slate-700 dark:text-zinc-200 font-extrabold px-4 py-2 rounded-lg flex items-center gap-1.5 text-xs cursor-pointer border border-slate-200 dark:border-zinc-700"
           >
-            <FileText className="w-4 h-4" /> {lang === "TR" ? "Word Şablonları" : "Word Templates"}
+            <FileText className="w-4 h-4" /> {t("Word Templates")}
           </button>
           <button
             onClick={() => {
@@ -541,7 +539,7 @@ export default function ProposalManagementView() {
             }}
             className="bg-green-600 hover:bg-green-700 text-white font-extrabold px-5 py-2 rounded-lg flex items-center gap-1.5 shadow-sm hover:shadow active:scale-[0.98] transition-all text-xs cursor-pointer animate-pulse"
           >
-            <Plus className="w-4 h-4" /> {lang === "TR" ? "Teklif Oluştur" : "Create Proposal"}
+            <Plus className="w-4 h-4" /> {t("Create Proposal")}
           </button>
         </div>
       </div>
@@ -552,7 +550,7 @@ export default function ProposalManagementView() {
         {/* KPI 1: Total Proposal Amount (Verilen Tekliflerin Toplamı) */}
         <div className="bg-white dark:bg-zinc-900 border border-slate-150 dark:border-zinc-800/80 p-4 rounded-xl shadow-xs space-y-2">
           <span className="text-[10px] uppercase tracking-wider text-slate-450 dark:text-zinc-550 font-extrabold block">
-            {lang === "TR" ? "VERİLEN TEKLİFLER TOPLAMI" : "TOTAL PROPOSALS VALUE"}
+            {t("TOTAL PROPOSALS VALUE")}
           </span>
           <div className="font-mono text-lg font-black text-slate-800 dark:text-zinc-200">
             {getSystemCurrency().symbol} {sumForCurrency(getSystemCurrency().symbol).toLocaleString()}
@@ -562,7 +560,7 @@ export default function ProposalManagementView() {
         {/* KPI 2: Pending Approval (Onay Bekleyen Tekliflerin Toplamı) */}
         <div className="bg-white dark:bg-zinc-900 border border-slate-150 dark:border-zinc-800/80 p-4 rounded-xl shadow-xs space-y-2">
           <span className="text-[10px] uppercase tracking-wider text-amber-600 font-extrabold block">
-            {lang === "TR" ? "ONAY BEKLEYEN TEKLİFLER TOPLAMI" : "PENDING APPROVAL VALUE"}
+            {t("PENDING APPROVAL VALUE")}
           </span>
           <div className="font-mono text-lg font-black text-amber-600 dark:text-amber-450">
             {getSystemCurrency().symbol} {sumForCurrency(getSystemCurrency().symbol, ["Sent", "Under Evaluation", "Revision Requested", "Draft"]).toLocaleString()}
@@ -572,7 +570,7 @@ export default function ProposalManagementView() {
         {/* KPI 3: Won Proposals (Kazanılan Tekliflerin Toplamı) */}
         <div className="bg-white dark:bg-zinc-900 border border-slate-150 dark:border-zinc-800/80 p-4 rounded-xl shadow-xs space-y-2">
           <span className="text-[10px] uppercase tracking-wider text-green-750 font-extrabold block">
-            {lang === "TR" ? "KAZANILAN TEKLİFLER TOPLAMI" : "WON PROPOSALS VALUE"}
+            {t("WON PROPOSALS VALUE")}
           </span>
           <div className="font-mono text-lg font-black text-green-600 dark:text-green-400">
             {getSystemCurrency().symbol} {sumForCurrency(getSystemCurrency().symbol, "Accepted").toLocaleString()}
@@ -582,7 +580,7 @@ export default function ProposalManagementView() {
         {/* KPI 4: Lost Proposals (Kaybedilen Tekliflerin Toplamı) */}
         <div className="bg-white dark:bg-zinc-900 border border-slate-150 dark:border-zinc-800/80 p-4 rounded-xl shadow-xs space-y-2">
           <span className="text-[10px] uppercase tracking-wider text-red-600 font-extrabold block">
-            {lang === "TR" ? "KAYBEDİLEN TEKLİFLER TOPLAMI" : "LOST PROPOSALS VALUE"}
+            {t("LOST PROPOSALS VALUE")}
           </span>
           <div className="font-mono text-lg font-black text-red-600 dark:text-red-400">
             {getSystemCurrency().symbol} {sumForCurrency(getSystemCurrency().symbol, "Rejected").toLocaleString()}
@@ -600,7 +598,7 @@ export default function ProposalManagementView() {
             <input
               type="text"
               className="bg-transparent border-none outline-none w-full text-xs text-slate-700 dark:text-zinc-200"
-              placeholder={lang === "TR" ? "Teklif konusu veya başlığında ara..." : "Search core proposal subject..."}
+              placeholder={t("Search core proposal subject...")}
               value={searchSubject}
               onChange={(e) => setSearchSubject(e.target.value)}
             />
@@ -613,10 +611,10 @@ export default function ProposalManagementView() {
                 ? "bg-emerald-50 dark:bg-emerald-950/20 border-emerald-500 text-emerald-750 dark:text-emerald-400"
                 : "bg-slate-50 hover:bg-slate-100 dark:bg-zinc-800 dark:hover:bg-zinc-750 border-slate-200 dark:border-zinc-700 text-slate-700 dark:text-zinc-300"
             }`}
-            title={lang === "TR" ? "Detaylı arama filtrelerini göster/gizle" : "Toggle interactive filter panel"}
+            title={t("Toggle interactive filter panel")}
           >
             <Filter className={`w-4 h-4 ${isFilterPanelOpen ? "text-emerald-500 rotate-12" : "text-slate-400"}`} />
-            <span>{lang === "TR" ? `Filtre Panelini ${isFilterPanelOpen ? "Kapat" : "Aç"}` : `${isFilterPanelOpen ? "Hide" : "Show"} Filter Panel`}</span>
+            <span>{isFilterPanelOpen ? t("Hide Filter Panel") : t("Show Filter Panel")}</span>
             {(filterCompany || filterStatus || filterCurrency || filterOwner) && (
               <span className="w-2 h-2 rounded-full bg-emerald-500 dark:bg-emerald-400 inline-block animate-ping" />
             )}
@@ -629,14 +627,14 @@ export default function ProposalManagementView() {
           <div className="pt-3 border-t border-slate-100 dark:border-zinc-800 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3 text-xs animate-in fade-in duration-200">
             <div>
               <label className="block text-[10px] font-bold text-slate-400 dark:text-zinc-500 uppercase tracking-widest mb-1 select-none">
-                {lang === "TR" ? "Firma / Şirket" : "Company"}
+                {t("Company")}
               </label>
               <select
                 value={filterCompany}
                 onChange={(e) => setFilterCompany(e.target.value)}
                 className="w-full p-2 border border-slate-150 dark:border-zinc-700 bg-white dark:bg-zinc-800 rounded-lg outline-none text-slate-700 dark:text-zinc-200"
               >
-                <option value="">{lang === "TR" ? "-- Tüm Firmalar --" : "-- All Companies --"}</option>
+                <option value="">{t("-- All Companies --")}</option>
                 {companies.map((c) => (
                   <option key={c.id} value={c.id}>
                     {(c as any).companyName || c.name}
@@ -647,33 +645,33 @@ export default function ProposalManagementView() {
 
             <div>
               <label className="block text-[10px] font-bold text-slate-400 dark:text-zinc-500 uppercase tracking-widest mb-1 select-none">
-                {lang === "TR" ? "Durum / Aşama" : "Status"}
+                {t("Status")}
               </label>
               <select
                 value={filterStatus}
                 onChange={(e) => setFilterStatus(e.target.value)}
                 className="w-full p-2 border border-slate-150 dark:border-zinc-700 bg-white dark:bg-zinc-800 rounded-lg outline-none font-medium text-slate-700 dark:text-zinc-200"
               >
-                <option value="">{lang === "TR" ? "-- Tüm Durumlar --" : "-- All Statuses --"}</option>
-                <option value="Draft">{lang === "TR" ? "Taslak (Draft)" : "Draft"}</option>
-                <option value="Sent">{lang === "TR" ? "Gönderildi (Sent)" : "Sent"}</option>
-                <option value="Revision Requested">{lang === "TR" ? "Revizyon İstendi" : "Revision Requested"}</option>
-                <option value="Accepted">{lang === "TR" ? "Kabul Edildi / Kazanıldı" : "Accepted"}</option>
-                <option value="Rejected">{lang === "TR" ? "Reddedildi / Kaybedildi" : "Rejected"}</option>
-                <option value="Cancelled">{lang === "TR" ? "İptal Edildi" : "Cancelled"}</option>
+                <option value="">{t("-- All Statuses --")}</option>
+                <option value="Draft">{t("Draft")}</option>
+                <option value="Sent">{t("Sent")}</option>
+                <option value="Revision Requested">{t("Revision Requested")}</option>
+                <option value="Accepted">{t("Accepted")}</option>
+                <option value="Rejected">{t("Rejected")}</option>
+                <option value="Cancelled">{t("Cancelled")}</option>
               </select>
             </div>
 
             <div>
               <label className="block text-[10px] font-bold text-slate-400 dark:text-zinc-550 uppercase tracking-widest mb-1 select-none">
-                {lang === "TR" ? "Para Birimi" : "Currency"}
+                {t("Currency")}
               </label>
               <select
                 value={filterCurrency}
                 onChange={(e) => setFilterCurrency(e.target.value)}
                 className="w-full p-2 border border-slate-150 dark:border-zinc-700 bg-white dark:bg-zinc-800 rounded-lg outline-none font-bold text-slate-700 dark:text-zinc-200"
               >
-                <option value="">{lang === "TR" ? "-- Tüm Para Birimleri --" : "-- All Currencies --"}</option>
+                <option value="">{t("-- All Currencies --")}</option>
                 <option value="₺">₺ TRY</option>
                 <option value="$">$ USD</option>
                 <option value="€">€ EUR</option>
@@ -682,12 +680,12 @@ export default function ProposalManagementView() {
 
             <div>
               <label className="block text-[10px] font-bold text-slate-400 dark:text-zinc-550 uppercase tracking-widest mb-1 select-none">
-                {lang === "TR" ? "Sorumlu Temsilci" : "Owner"}
+                {t("Owner")}
               </label>
               <div className="flex gap-2">
                 <input
                   type="text"
-                  placeholder={lang === "TR" ? "Sorumlu ara..." : "Search owner..."}
+                  placeholder={t("Search owner...")}
                   className="w-full p-2 border border-slate-150 dark:border-zinc-700 bg-white dark:bg-zinc-800 rounded-lg outline-none text-slate-700 dark:text-zinc-200"
                   value={filterOwner}
                   onChange={(e) => setFilterOwner(e.target.value)}
@@ -701,9 +699,9 @@ export default function ProposalManagementView() {
                     setFilterCurrency("");
                   }}
                   className="px-3 bg-rose-50 hover:bg-rose-100 text-rose-600 border border-rose-200 dark:bg-rose-950/20 dark:border-rose-900/60 dark:text-rose-400 rounded-lg font-bold cursor-pointer select-none whitespace-nowrap"
-                  title={lang === "TR" ? "Tüm Filtreleri Sıfırla" : "Reset Filters"}
+                  title={t("Reset Filters")}
                 >
-                  {lang === "TR" ? "Sıfırla" : "Reset"}
+                  {t("Reset")}
                 </button>
               </div>
             </div>
@@ -719,24 +717,22 @@ export default function ProposalManagementView() {
           <table className="w-full text-xs text-left border-collapse">
             <thead>
               <tr className="bg-slate-50 dark:bg-black/15 text-slate-450 uppercase font-mono tracking-wider border-b border-slate-150 dark:border-zinc-800 text-[9px] font-extrabold">
-                <th className="p-3 text-center">{lang === "TR" ? "Sıra" : "Seq"}</th>
-                <th className="p-3">{lang === "TR" ? "Referans Kodu" : "Ref Code"}</th>
-                <th className="p-3">{lang === "TR" ? "Firma / Şirket" : "Company"}</th>
-                <th className="p-3">{lang === "TR" ? "Teklif Konusu / Başlık" : "Proposal Subject"}</th>
-                <th className="p-3">{lang === "TR" ? "Sorumlu / Oluşturan" : "Owner / Creator"}</th>
-                <th className="p-3 text-center">{lang === "TR" ? "Durum" : "Status"}</th>
-                <th className="p-3 text-center">{lang === "TR" ? "Sürüm" : "Version"}</th>
-                <th className="p-3 text-right">{lang === "TR" ? "Teklif Tutarı" : "Offer Amount"}</th>
-                <th className="p-3 text-center">{lang === "TR" ? "Aksiyonlar" : "Actions"}</th>
+                <th className="p-3 text-center">{t("Seq")}</th>
+                <th className="p-3">{t("Ref Code")}</th>
+                <th className="p-3">{t("Company")}</th>
+                <th className="p-3">{t("Proposal Subject")}</th>
+                <th className="p-3">{t("Owner / Creator")}</th>
+                <th className="p-3 text-center">{t("Status")}</th>
+                <th className="p-3 text-center">{t("Version")}</th>
+                <th className="p-3 text-right">{t("Offer Amount")}</th>
+                <th className="p-3 text-center">{t("Actions")}</th>
               </tr>
             </thead>
             <tbody>
               {filteredProposals.length === 0 ? (
                 <tr>
                   <td colSpan={9} className="p-10 text-center text-slate-400 italic">
-                    {lang === "TR" 
-                      ? "Kriterlere uygun teklif bulunamadı. '+ Teklif Oluştur' butonuna tıklayarak yeni bir teklif oluşturabilirsiniz!"
-                      : "No proposals logged matching the criteria. Establish one clicking '+ Create Proposal' !"}
+                    {t("No proposals logged matching the criteria. Establish one clicking '+ Create Proposal' !")}
                   </td>
                 </tr>
               ) : (
@@ -745,7 +741,7 @@ export default function ProposalManagementView() {
                     key={p.id} 
                     onClick={() => setSelectedProposalForDetail(p)}
                     className="border-b border-slate-100 dark:border-zinc-800/85 hover:bg-slate-50/50 dark:hover:bg-zinc-800/20 transition-all font-medium cursor-pointer"
-                    title={lang === "TR" ? "Teklif özet ve PDF belgesini görüntülemek için tıklayın" : "Click to view proposal summary and PDF file"}
+                    title={t("Click to view proposal summary and PDF file")}
                   >
                     <td className="p-3 text-center font-mono text-slate-400 text-[10px]">{p.sequenceNo}</td>
                     <td className="p-3 font-mono font-bold text-slate-700 dark:text-zinc-300">{p.proposalNumber}</td>
@@ -753,7 +749,7 @@ export default function ProposalManagementView() {
                       <div 
                         onClick={(e) => handleCompanyClick(e, p.companyName, p.companyId)}
                         className="flex items-center gap-1.5 cursor-pointer hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors group"
-                        title={lang === "TR" ? "Şirket detayını görüntülemek için tıklayın" : "Click to view Company details"}
+                        title={t("Click to view Company details")}
                       >
                         <Building className="w-3.5 h-3.5 text-slate-400 group-hover:text-indigo-650 shrink-0" />
                         <span className="font-bold text-slate-800 dark:text-zinc-150 group-hover:underline">{p.companyName}</span>
@@ -763,8 +759,8 @@ export default function ProposalManagementView() {
                       {p.proposalSubject}
                     </td>
                     <td className="p-3">
-                      <div className="text-[10px] text-slate-500">{lang === "TR" ? "Sorumlu" : "Owner"}: {p.owner}</div>
-                      <div className="text-[8px] text-slate-400 font-mono">{lang === "TR" ? "Yazan" : "By"}: {p.createdBy}</div>
+                      <div className="text-[10px] text-slate-500">{t("Owner")}: {p.owner}</div>
+                      <div className="text-[8px] text-slate-400 font-mono">{t("By")}: {p.createdBy}</div>
                     </td>
                     <td className="p-3 text-center">
                       <span className={`px-2 py-0.5 rounded-full text-[9px] font-bold ${
@@ -811,7 +807,7 @@ export default function ProposalManagementView() {
                         <button
                           onClick={() => handleEditProposal(p)}
                           className="p-1.5 hover:bg-slate-100 dark:hover:bg-zinc-800 text-slate-650 dark:text-zinc-400 rounded cursor-pointer"
-                          title={lang === "TR" ? "Teklif Detaylarını Düzenle" : "Edit Opportunity & Proposal Details"}
+                          title={t("Edit Opportunity & Proposal Details")}
                         >
                           <Edit className="w-3.5 h-3.5" />
                         </button>
@@ -820,7 +816,7 @@ export default function ProposalManagementView() {
                         <button
                           onClick={() => handleOpenRevisionModal(p)}
                           className="p-1.5 hover:bg-emerald-50 text-emerald-600 dark:hover:bg-green-955/20 rounded cursor-pointer"
-                          title={lang === "TR" ? "Revizyon Sürümü Oluştur (V2, V3 vb.)" : "Clone & create new revision (V2, V3 etc.)"}
+                          title={t("Clone & create new revision (V2, V3 etc.)")}
                         >
                           <RefreshCw className="w-3.5 h-3.5" />
                         </button>
@@ -829,7 +825,7 @@ export default function ProposalManagementView() {
                         <button
                           onClick={() => handleRunAiAnalysis(p)}
                           className="p-1.5 hover:bg-gradient-to-r hover:from-amber-500 hover:to-orange-500 hover:text-white text-orange-600 dark:hover:bg-amber-955 rounded cursor-pointer"
-                          title={lang === "TR" ? "Gemini Akıllı Satış ve Risk Stratejisi Değerlendirmesi Yap" : "Run Gemini Sales & Strategy Risk Assessment"}
+                          title={t("Run Gemini Sales & Strategy Risk Assessment")}
                         >
                           <Sparkles className="w-3.5 h-3.5" />
                         </button>
@@ -838,7 +834,7 @@ export default function ProposalManagementView() {
                         <button
                           onClick={() => handleOpenSendPanel(p)}
                           className="p-1.5 hover:bg-blue-50 text-blue-600 dark:hover:bg-blue-955/35 rounded cursor-pointer"
-                          title={lang === "TR" ? "E-posta Taslağı Hazırla ve Müşteriye Gönder" : "Draft proposal presentation email & sync with Outlook"}
+                          title={t("Draft proposal presentation email & sync with Outlook")}
                         >
                           <Send className="w-3.5 h-3.5" />
                         </button>
@@ -847,7 +843,7 @@ export default function ProposalManagementView() {
                         <button
                           onClick={() => handleDownloadWordDoc(p)}
                           className="p-1.5 hover:bg-amber-50 text-amber-700 dark:hover:bg-amber-955/20 rounded cursor-pointer"
-                          title={lang === "TR" ? "Sözleşme / Teklif Şablonunu Word Olarak İndir" : "Download Word Document Proposal/Contract Template"}
+                          title={t("Download Word Document Proposal/Contract Template")}
                         >
                           <Download className="w-3.5 h-3.5" />
                         </button>
@@ -856,7 +852,7 @@ export default function ProposalManagementView() {
                         <button
                           onClick={() => setViewingProposalDoc(p)}
                           className="p-1.5 hover:bg-slate-100 dark:hover:bg-zinc-800 text-slate-500 rounded cursor-pointer"
-                          title={lang === "TR" ? "Antetli Kağıt Şablon Önizlemesi" : "Live Letterhead Render Preview"}
+                          title={t("Live Letterhead Render Preview")}
                         >
                           <Eye className="w-3.5 h-3.5" />
                         </button>
@@ -865,7 +861,7 @@ export default function ProposalManagementView() {
                         <button
                           onClick={() => handleDeleteProposal(p.id)}
                           className="p-1.5 hover:bg-red-55/15 text-red-650 dark:hover:bg-red-955/20 rounded cursor-pointer"
-                          title={lang === "TR" ? "Teklifi Sil" : "Delete Proposal"}
+                          title={t("Delete Proposal")}
                         >
                           <Trash2 className="w-3.5 h-3.5" />
                         </button>
@@ -1042,19 +1038,19 @@ export default function ProposalManagementView() {
             
             {/* Toolbar */}
             <div className="bg-slate-100 dark:bg-zinc-850 px-6 py-4 border-b flex items-center justify-between text-xs">
-              <span className="font-extrabold text-slate-500 font-mono">B2B LETTERHEAD PREVIEW [Ref: PROP {viewingProposalDoc.proposalNumber}]</span>
+              <span className="font-extrabold text-slate-500 font-mono">{t("B2B LETTERHEAD PREVIEW [Ref: PROP {number}]").replace("{number}", viewingProposalDoc.proposalNumber)}</span>
               <div className="flex items-center gap-2">
                 <button
                   onClick={() => handleDownloadWordDoc(viewingProposalDoc)}
                   className="bg-emerald-600 hover:bg-emerald-700 text-white p-1.5 px-3 rounded font-bold flex items-center gap-1 cursor-pointer transition-all"
                 >
-                  <Download className="w-3.5 h-3.5" /> Export Microsoft Word ID
+                  <Download className="w-3.5 h-3.5" /> {t("Export Microsoft Word ID")}
                 </button>
                 <button
                   onClick={() => window.print()}
                   className="bg-slate-800 hover:bg-black text-white p-1.5 px-3 rounded font-bold flex items-center gap-1 cursor-pointer transition-all"
                 >
-                  <Eye className="w-3.5 h-3.5" /> Trigger PDF Print
+                  <Eye className="w-3.5 h-3.5" /> {t("Trigger PDF Print")}
                 </button>
                 <button onClick={() => setViewingProposalDoc(null)} className="p-1 px-2 hover:bg-slate-200 rounded text-slate-650 cursor-pointer">
                   Close
@@ -1078,7 +1074,7 @@ export default function ProposalManagementView() {
                   <div className="border-b pb-5 flex flex-col items-center justify-center gap-2">
                     <img src={viewingProposalDoc.coverImage} alt="cover letterhead" referrerPolicy="no-referrer" className="max-h-48 object-contain" />
                     <div className="text-center text-[10px] text-slate-450 font-mono mt-2">
-                      <p>Date: {viewingProposalDoc.date} | Ref: PROP-{viewingProposalDoc.proposalNumber} | Status: {viewingProposalDoc.status}</p>
+                      <p>{t("Date:")} {viewingProposalDoc.date} | {t("Ref:")} PROP-{viewingProposalDoc.proposalNumber} | {t("Status:")} {viewingProposalDoc.status}</p>
                     </div>
                   </div>
                 ) : (
@@ -1086,12 +1082,12 @@ export default function ProposalManagementView() {
                   <div className="border-b pb-5 flex justify-between items-start">
                     <div>
                       <h3 className="font-black text-emerald-600 tracking-widest text-lg">GEMBA PARTNER</h3>
-                      <p className="text-[10px] text-slate-400 uppercase font-mono tracking-wider mt-0.5">Lean Operations &amp; Strategy Advisory Group</p>
+                      <p className="text-[10px] text-slate-400 uppercase font-mono tracking-wider mt-0.5">{t("Lean Operations & Strategy Advisory Group")}</p>
                     </div>
                     <div className="text-right text-[10px] text-slate-450 font-mono">
-                      <p>Date: {viewingProposalDoc.date}</p>
-                      <p>Ref: PROP-{viewingProposalDoc.proposalNumber}</p>
-                      <p>Status: {viewingProposalDoc.status}</p>
+                      <p>{t("Date:")} {viewingProposalDoc.date}</p>
+                      <p>{t("Ref:")} PROP-{viewingProposalDoc.proposalNumber}</p>
+                      <p>{t("Status:")} {viewingProposalDoc.status}</p>
                     </div>
                   </div>
                 )}
@@ -1111,20 +1107,20 @@ export default function ProposalManagementView() {
                     {viewingProposalDoc.proposalSubject}
                   </h1>
                   <p className="text-[11px] text-slate-450 uppercase font-mono tracking-wider">
-                    Prepared For: <strong>{viewingProposalDoc.companyName}</strong> | Attn: {viewingProposalDoc.contactPerson}
+                    {t("Prepared For:")} <strong>{viewingProposalDoc.companyName}</strong> | {t("Attn:")} {viewingProposalDoc.contactPerson}
                   </p>
                 </div>
 
                 {/* Description */}
                 <div className="space-y-2 border-l-4 border-l-emerald-500 pl-4 bg-slate-50 dark:bg-black/10 py-2">
-                  <h4 className="font-mono text-[10px] text-slate-450 uppercase font-bold tracking-wider">1. Opportunity Focus Statement</h4>
-                  <p className="text-xs italic text-slate-600 dark:text-zinc-350">{viewingProposalDoc.description || "Field walkthrough on bottleneck areas."}</p>
+                  <h4 className="font-mono text-[10px] text-slate-450 uppercase font-bold tracking-wider">{t("1. Opportunity Focus Statement")}</h4>
+                  <p className="text-xs italic text-slate-600 dark:text-zinc-350">{viewingProposalDoc.description || t("Field walkthrough on bottleneck areas.")}</p>
                 </div>
 
                 {/* Methodology (Render HTML tables securely) */}
                 {viewingProposalDoc.methodology && (
                   <div className="space-y-2">
-                    <h4 className="font-mono text-[10px] text-slate-450 uppercase font-bold tracking-wider">2. Lean Methodology &amp; Structural Approach</h4>
+                    <h4 className="font-mono text-[10px] text-slate-450 uppercase font-bold tracking-wider">{t("2. Lean Methodology & Structural Approach")}</h4>
                     <div className="text-xs text-slate-700 dark:text-zinc-300 border dark:border-zinc-800 p-4 rounded-xl bg-slate-50/50 dark:bg-zinc-900/40 overflow-x-auto prose dark:prose-invert max-w-none" dangerouslySetInnerHTML={{ __html: viewingProposalDoc.methodology }} />
                   </div>
                 )}
@@ -1132,7 +1128,7 @@ export default function ProposalManagementView() {
                 {/* Project Plan (Render HTML tables securely) */}
                 {viewingProposalDoc.projectPlan && (
                   <div className="space-y-2">
-                    <h4 className="font-mono text-[10px] text-slate-450 uppercase font-bold tracking-wider">3. Phase-by-Phase Project Plan</h4>
+                    <h4 className="font-mono text-[10px] text-slate-450 uppercase font-bold tracking-wider">{t("3. Phase-by-Phase Project Plan")}</h4>
                     <div className="text-xs text-slate-700 dark:text-zinc-300 border dark:border-zinc-800 p-4 rounded-xl bg-slate-50/50 dark:bg-zinc-900/40 overflow-x-auto prose dark:prose-invert max-w-none" dangerouslySetInnerHTML={{ __html: viewingProposalDoc.projectPlan }} />
                   </div>
                 )}
@@ -1140,14 +1136,14 @@ export default function ProposalManagementView() {
                 {/* Timeline (Render HTML tables securely) */}
                 {viewingProposalDoc.timeline && (
                   <div className="space-y-2">
-                    <h4 className="font-mono text-[10px] text-slate-450 uppercase font-bold tracking-wider">4. Timeline &amp; Sprints Milestones</h4>
+                    <h4 className="font-mono text-[10px] text-slate-450 uppercase font-bold tracking-wider">{t("4. Timeline & Sprints Milestones")}</h4>
                     <div className="text-xs text-slate-700 dark:text-zinc-300 border dark:border-zinc-800 p-4 rounded-xl bg-slate-50/50 dark:bg-zinc-900/40 overflow-x-auto prose dark:prose-invert max-w-none" dangerouslySetInnerHTML={{ __html: viewingProposalDoc.timeline }} />
                   </div>
                 )}
 
                 {/* Services Grid */}
                 <div className="space-y-2">
-                  <h4 className="font-mono text-[10px] text-slate-450 uppercase font-bold tracking-wider">5. Services Involved</h4>
+                  <h4 className="font-mono text-[10px] text-slate-450 uppercase font-bold tracking-wider">{t("5. Services Involved")}</h4>
                   <div className="grid grid-cols-2 gap-2">
                     {(viewingProposalDoc.services || []).map((s) => (
                       <div key={s} className="bg-zinc-50 dark:bg-zinc-800 px-3 py-1.5 rounded-lg border border-slate-100 dark:border-zinc-700 text-xs text-slate-700 dark:text-zinc-300">
@@ -1159,16 +1155,16 @@ export default function ProposalManagementView() {
 
                 {/* Options and budgets table */}
                 <div className="space-y-3">
-                  <h4 className="font-mono text-[10px] text-slate-450 uppercase font-bold tracking-wider">6. Pricing Packages Options</h4>
+                  <h4 className="font-mono text-[10px] text-slate-450 uppercase font-bold tracking-wider">{t("6. Pricing Packages Options")}</h4>
                   <div className="overflow-x-auto w-full border border-slate-200 dark:border-zinc-800 rounded-xl">
                     <table className="w-full text-xs table-auto border-collapse min-w-[650px]">
                       <thead>
                         <tr className="bg-slate-50 dark:bg-zinc-850 border-b text-[10px] font-mono text-slate-450 uppercase">
-                          <th className="p-3 text-left font-bold">Selection</th>
-                          <th className="p-3 text-right font-bold">Man-Days</th>
-                          <th className="p-3 text-right font-bold">Daily Rate</th>
-                          <th className="p-3 text-right font-bold">Expenses Allowance</th>
-                          <th className="p-3 text-right font-bold">Option Est</th>
+                          <th className="p-3 text-left font-bold">{t("Selection")}</th>
+                          <th className="p-3 text-right font-bold">{t("Man-Days")}</th>
+                          <th className="p-3 text-right font-bold">{t("Daily Rate")}</th>
+                          <th className="p-3 text-right font-bold">{t("Expenses Allowance")}</th>
+                          <th className="p-3 text-right font-bold">{t("Option Est")}</th>
                         </tr>
                       </thead>
                       <tbody>
@@ -1192,17 +1188,17 @@ export default function ProposalManagementView() {
 
                 {/* Calculations Card */}
                 <div className="bg-emerald-50/30 dark:bg-[#111] p-4 rounded-xl border border-emerald-100 select-none text-right font-mono space-y-1">
-                  <p className="text-xs text-slate-500">Proposal Net Subtotal: {viewingProposalDoc.currency} {viewingProposalDoc.totalBudget.toLocaleString()}</p>
-                  <p className="text-xs text-slate-500">VAT surcharge (20%): {viewingProposalDoc.currency} {viewingProposalDoc.taxes.toLocaleString()}</p>
+                  <p className="text-xs text-slate-500">{t("Proposal Net Subtotal:")} {viewingProposalDoc.currency} {viewingProposalDoc.totalBudget.toLocaleString()}</p>
+                  <p className="text-xs text-slate-500">{t("VAT surcharge (20%):")} {viewingProposalDoc.currency} {viewingProposalDoc.taxes.toLocaleString()}</p>
                   <h4 className="text-sm font-bold text-emerald-600 dark:text-emerald-400">
-                    Grand Total Proposal Offer: {viewingProposalDoc.currency} {viewingProposalDoc.grandTotal.toLocaleString()}
+                    {t("Grand Total Proposal Offer:")} {viewingProposalDoc.currency} {viewingProposalDoc.grandTotal.toLocaleString()}
                   </h4>
                 </div>
 
                 {/* Terms and Conditions */}
                 {viewingProposalDoc.terms && (
                   <div className="space-y-2">
-                    <h4 className="font-mono text-[10px] text-slate-450 uppercase font-bold tracking-wider">7. Terms, Conditions &amp; Scope Protections</h4>
+                    <h4 className="font-mono text-[10px] text-slate-450 uppercase font-bold tracking-wider">{t("7. Terms, Conditions & Scope Protections")}</h4>
                     <div className="text-xs text-slate-700 dark:text-zinc-300 border dark:border-zinc-800 p-4 rounded-xl bg-slate-50/50 dark:bg-zinc-900/40 overflow-x-auto prose dark:prose-invert max-w-none" dangerouslySetInnerHTML={{ __html: viewingProposalDoc.terms }} />
                   </div>
                 )}
@@ -1210,15 +1206,15 @@ export default function ProposalManagementView() {
                 {/* Sign lines */}
                 <div className="grid grid-cols-2 gap-4 pt-10 text-xs border-t">
                   <div className="space-y-4">
-                    <h4 className="font-mono text-[10px] text-slate-450 uppercase font-bold tracking-wider">8. Authorization &amp; Signatures</h4>
-                    <p className="text-slate-400 font-mono text-[9px] uppercase">Advisor Authorization</p>
+                    <h4 className="font-mono text-[10px] text-slate-450 uppercase font-bold tracking-wider">{t("8. Authorization & Signatures")}</h4>
+                    <p className="text-slate-400 font-mono text-[9px] uppercase">{t("Advisor Authorization")}</p>
                     <div className="h-10 border-b border-dashed"></div>
-                    <p><strong>Gemba Partner Officer</strong></p>
+                    <p><strong>{t("Gemba Partner Officer")}</strong></p>
                   </div>
                   <div className="space-y-4 pt-[24px]">
-                    <p className="text-slate-400 font-mono text-[9px] uppercase">Client Representative</p>
+                    <p className="text-slate-400 font-mono text-[9px] uppercase">{t("Client Representative")}</p>
                     <div className="h-10 border-b border-dashed"></div>
-                    <p><strong>{viewingProposalDoc.companyName} authorized representative</strong></p>
+                    <p><strong>{t("{company} authorized representative").replace("{company}", viewingProposalDoc.companyName)}</strong></p>
                   </div>
                 </div>
 
@@ -1256,7 +1252,7 @@ export default function ProposalManagementView() {
                     value={emailTo}
                     onChange={(e) => setEmailTo(e.target.value)}
                     className="w-full p-2 border border-slate-205 bg-white dark:bg-zinc-800 rounded mt-1 outline-none font-medium"
-                    placeholder="customer@domain.com"
+                    placeholder={t("customer@domain.com")}
                   />
                 </div>
                 <div>
@@ -1473,19 +1469,19 @@ export default function ProposalManagementView() {
                     className="bg-green-600 hover:bg-green-700 text-white p-2 px-3 rounded-lg font-extrabold text-[11px] flex items-center gap-1.5 cursor-pointer"
                   >
                     <CheckCircle className="w-3.5 h-3.5" />
-                    {lang === "TR" ? "Onayla" : "Approve"}
+                    {t("Approve")}
                   </button>
                 )}
                 {selectedProposalForDetail.approvalStatus !== "Rejected" && (
                   <button
                     onClick={() => {
-                      const notes = prompt(lang === "TR" ? "Red nedeni (isteğe bağlı):" : "Rejection reason (optional):");
+                      const notes = prompt(t("Rejection reason (optional):"));
                       void handleSetApproval(selectedProposalForDetail, "Rejected", notes || undefined);
                     }}
                     className="bg-red-600 hover:bg-red-700 text-white p-2 px-3 rounded-lg font-extrabold text-[11px] flex items-center gap-1.5 cursor-pointer"
                   >
                     <X className="w-3.5 h-3.5" />
-                    {lang === "TR" ? "Reddet" : "Reject"}
+                    {t("Reject")}
                   </button>
                 )}
                 <button
@@ -1493,7 +1489,7 @@ export default function ProposalManagementView() {
                   className="bg-blue-600 hover:bg-blue-700 text-white p-2 px-3 rounded-lg font-extrabold text-[11px] flex items-center gap-1.5 cursor-pointer"
                 >
                   <Send className="w-3.5 h-3.5" />
-                  {lang === "TR" ? "E-posta Gönder" : "Send Email"}
+                  {t("Send Email")}
                 </button>
                 <button
                   onClick={() => handleDownloadWordDoc(selectedProposalForDetail)}
@@ -1530,16 +1526,16 @@ export default function ProposalManagementView() {
                 {/* 1. Client & Owner Details */}
                 <div className="bg-slate-50/50 dark:bg-zinc-900/35 border border-slate-200/60 dark:border-zinc-800/60 p-4 rounded-xl space-y-3.5">
                   <h3 className="text-[10px] font-extrabold text-slate-400 font-mono uppercase tracking-wider">
-                    {lang === "TR" ? "Müşteri ve Sorumlu Bilgileri" : "Client & Owner Details"}
+                    {t("Client & Owner Details")}
                   </h3>
                   
                   <div className="grid grid-cols-2 gap-4">
                     <div className="space-y-1">
-                      <span className="text-[9px] text-slate-400 font-bold block">{lang === "TR" ? "Şirket / Firma" : "Company"}</span>
+                      <span className="text-[9px] text-slate-400 font-bold block">{t("Company")}</span>
                       <p 
                         onClick={(e) => handleCompanyClick(e, selectedProposalForDetail.companyName, selectedProposalForDetail.companyId)}
                         className="text-[11px] font-extrabold text-indigo-600 dark:text-indigo-400 hover:underline cursor-pointer flex items-center gap-1"
-                        title={lang === "TR" ? "Şirket detayını görüntülemek için tıklayın" : "Click to view Company details"}
+                        title={t("Click to view Company details")}
                       >
                         <Building className="w-3 h-3 shrink-0" />
                         {selectedProposalForDetail.companyName}
@@ -1547,7 +1543,7 @@ export default function ProposalManagementView() {
                     </div>
 
                     <div className="space-y-1">
-                      <span className="text-[9px] text-slate-400 font-bold block">{lang === "TR" ? "İrtibat Kişisi" : "Attention Contact"}</span>
+                      <span className="text-[9px] text-slate-400 font-bold block">{t("Attention Contact")}</span>
                       <p className="text-[11px] font-bold text-slate-800 dark:text-zinc-200 flex items-center gap-1">
                         <User className="w-3 h-3 text-slate-400 shrink-0" />
                         {selectedProposalForDetail.contactPerson}
@@ -1555,7 +1551,7 @@ export default function ProposalManagementView() {
                     </div>
 
                     <div className="space-y-1">
-                      <span className="text-[9px] text-slate-400 font-bold block">{lang === "TR" ? "E-posta Adresi" : "Contact Email"}</span>
+                      <span className="text-[9px] text-slate-400 font-bold block">{t("Contact Email")}</span>
                       <p className="text-[11px] font-bold text-slate-655 dark:text-zinc-300 truncate flex items-center gap-1" title={selectedProposalForDetail.contactEmail}>
                         <Mail className="w-3 h-3 text-slate-400 shrink-0" />
                         {selectedProposalForDetail.contactEmail || "N/A"}
@@ -1563,37 +1559,37 @@ export default function ProposalManagementView() {
                     </div>
 
                     <div className="space-y-1">
-                      <span className="text-[9px] text-slate-400 font-bold block">{lang === "TR" ? "Teklif Tarihi" : "Offer Date"}</span>
+                      <span className="text-[9px] text-slate-400 font-bold block">{t("Offer Date")}</span>
                       <p className="text-[11px] font-mono font-bold text-slate-800 dark:text-zinc-200">
                         {selectedProposalForDetail.date}
                       </p>
                     </div>
 
                     <div className="space-y-1">
-                      <span className="text-[9px] text-slate-400 font-bold block">{lang === "TR" ? "Teklif Sorumlusu" : "Consulting Partner"}</span>
+                      <span className="text-[9px] text-slate-400 font-bold block">{t("Consulting Partner")}</span>
                       <p className="text-[11px] font-bold text-indigo-600 dark:text-indigo-400">
                         {selectedProposalForDetail.owner}
                       </p>
                     </div>
 
                     <div className="space-y-1">
-                      <span className="text-[9px] text-slate-400 font-bold block">{lang === "TR" ? "Bağlı Fırsat / Deal" : "Linked Deal"}</span>
+                      <span className="text-[9px] text-slate-400 font-bold block">{t("Linked Deal")}</span>
                       <p className="text-[11px] font-bold text-slate-800 dark:text-zinc-200">
                         {selectedProposalForDetail.dealName || (selectedProposalForDetail.dealId
                           ? CrmDb.getDeals().find((d) => d.id === selectedProposalForDetail.dealId)?.dealName || selectedProposalForDetail.dealId
-                          : (lang === "TR" ? "Bağlı değil" : "Not linked"))}
+                          : (t("Not linked")))}
                       </p>
                     </div>
 
                     <div className="space-y-1">
-                      <span className="text-[9px] text-slate-400 font-bold block">{lang === "TR" ? "Word Şablonu" : "Word Template"}</span>
+                      <span className="text-[9px] text-slate-400 font-bold block">{t("Word Template")}</span>
                       <p className="text-[11px] font-bold text-slate-800 dark:text-zinc-200">
-                        {wordTemplates.find((t) => t.id === selectedProposalForDetail.wordTemplateId)?.name || (lang === "TR" ? "Varsayılan" : "Default")}
+                        {wordTemplates.find((t) => t.id === selectedProposalForDetail.wordTemplateId)?.name || (t("Default"))}
                       </p>
                     </div>
 
                     <div className="space-y-1">
-                      <span className="text-[9px] text-slate-400 font-bold block">{lang === "TR" ? "Aktif Sürüm" : "Active Version"}</span>
+                      <span className="text-[9px] text-slate-400 font-bold block">{t("Active Version")}</span>
                       <p className="text-[11px] font-mono font-bold text-slate-800 dark:text-zinc-200">
                         {selectedProposalForDetail.currentVersion}
                       </p>
@@ -1605,7 +1601,7 @@ export default function ProposalManagementView() {
                 {proposalTimeline.length > 0 && (
                   <div className="space-y-2.5">
                     <h3 className="text-[10px] font-extrabold text-slate-400 font-mono uppercase tracking-wider">
-                      {lang === "TR" ? "Teklif Zaman Çizelgesi" : "Proposal Timeline"}
+                      {t("Proposal Timeline")}
                     </h3>
                     <div className="space-y-2 max-h-48 overflow-y-auto pr-1">
                       {proposalTimeline.map((evt) => (
@@ -1628,7 +1624,7 @@ export default function ProposalManagementView() {
                 {proposalAuditLog.length > 0 && (
                   <div className="space-y-2.5">
                     <h3 className="text-[10px] font-extrabold text-slate-400 font-mono uppercase tracking-wider">
-                      {lang === "TR" ? "Denetim Kaydı" : "Audit Log"}
+                      {t("Audit Log")}
                     </h3>
                     <div className="space-y-2 max-h-48 overflow-y-auto pr-1">
                       {proposalAuditLog.map((entry) => (
@@ -1649,11 +1645,11 @@ export default function ProposalManagementView() {
                 {/* 2. Executive Focus Description */}
                 <div className="space-y-2">
                   <h3 className="text-[10px] font-extrabold text-slate-400 font-mono uppercase tracking-wider">
-                    {lang === "TR" ? "Hizmet Hedefleri ve Açıklama" : "Engagement Objectives & Focus"}
+                    {t("Engagement Objectives & Focus")}
                   </h3>
                   <div className="p-3.5 bg-slate-50 dark:bg-zinc-900/30 border border-slate-150 dark:border-zinc-800/80 rounded-xl">
                     <p className="text-[11px] text-slate-650 dark:text-zinc-350 leading-relaxed whitespace-pre-line">
-                      {selectedProposalForDetail.description || (lang === "TR" ? "Bu işbirliği teklifi kapsamında hedeflenen sürekli iyileştirme çalışmaları ve kilit performans parametreleri." : "Continuous improvement parameters and operational alignment metrics.")}
+                      {selectedProposalForDetail.description || (t("Continuous improvement parameters and operational alignment metrics."))}
                     </p>
                   </div>
                 </div>
@@ -1661,7 +1657,7 @@ export default function ProposalManagementView() {
                 {/* 3. Services checkboxes list */}
                 <div className="space-y-3">
                   <h3 className="text-[10px] font-extrabold text-slate-400 font-mono uppercase tracking-wider">
-                    {lang === "TR" ? "Kapsama Dahil Yalın Sütunlar" : "Included Lean Service Pillars"}
+                    {t("Included Lean Service Pillars")}
                   </h3>
                   <div className="grid grid-cols-2 gap-2">
                     {(selectedProposalForDetail.services || []).map((srv) => (
@@ -1677,7 +1673,7 @@ export default function ProposalManagementView() {
                     ))}
                     {(!selectedProposalForDetail.services || selectedProposalForDetail.services.length === 0) && (
                       <p className="text-slate-400 italic text-[11px] col-span-2">
-                        {lang === "TR" ? "Belirtilen hizmet kalemi yok." : "No explicit services indicated."}
+                        {t("No explicit services indicated.")}
                       </p>
                     )}
                   </div>
@@ -1686,7 +1682,7 @@ export default function ProposalManagementView() {
                 {/* 4. Pricing Option Packages */}
                 <div className="space-y-3">
                   <h3 className="text-[10px] font-extrabold text-slate-400 font-mono uppercase tracking-wider">
-                    {lang === "TR" ? "Bütçe ve Paket Teklifleri" : "Structured Pricing Options"}
+                    {t("Structured Pricing Options")}
                   </h3>
                   
                   <div className="space-y-2.5">
@@ -1707,15 +1703,15 @@ export default function ProposalManagementView() {
 
                           <div className="grid grid-cols-3 gap-2 text-[10px] text-slate-500">
                             <div>
-                              <span className="block text-[8px] text-slate-400 font-mono uppercase">{lang === "TR" ? "Efor" : "Days"}</span>
-                              <span className="font-bold text-slate-750 dark:text-zinc-300">{opt.manDays} {lang === "TR" ? "Gün" : "Days"}</span>
+                              <span className="block text-[8px] text-slate-400 font-mono uppercase">{t("Days")}</span>
+                              <span className="font-bold text-slate-750 dark:text-zinc-300">{opt.manDays} {t("Days")}</span>
                             </div>
                             <div>
-                              <span className="block text-[8px] text-slate-400 font-mono uppercase">{lang === "TR" ? "Günlük Ücret" : "Daily Rate"}</span>
+                              <span className="block text-[8px] text-slate-400 font-mono uppercase">{t("Daily Rate")}</span>
                               <span className="font-bold text-slate-750 dark:text-zinc-300">{selectedProposalForDetail.currency}{opt.dailyRate}</span>
                             </div>
                             <div>
-                              <span className="block text-[8px] text-slate-400 font-mono uppercase">{lang === "TR" ? "Masraf" : "Expenses"}</span>
+                              <span className="block text-[8px] text-slate-400 font-mono uppercase">{t("Expenses")}</span>
                               <span className="font-bold text-slate-750 dark:text-zinc-300">{selectedProposalForDetail.currency}{opt.expenses}</span>
                             </div>
                           </div>
@@ -1728,19 +1724,19 @@ export default function ProposalManagementView() {
                 {/* 5. Calculations Summary */}
                 <div className="bg-[#f8fafc] dark:bg-zinc-900/60 border border-slate-200 dark:border-zinc-800 rounded-xl p-4 space-y-2">
                   <div className="flex justify-between text-[11px] text-slate-500">
-                    <span>{lang === "TR" ? "Ara Toplam (Net)" : "Subtotal (Net)"}:</span>
+                    <span>{t("Subtotal (Net)")}:</span>
                     <span className="font-mono font-bold text-slate-700 dark:text-zinc-300">
                       {selectedProposalForDetail.currency} {selectedProposalForDetail.totalBudget.toLocaleString()}
                     </span>
                   </div>
                   <div className="flex justify-between text-[11px] text-slate-500">
-                    <span>{lang === "TR" ? "KDV (%20)" : "VAT (20%)"}:</span>
+                    <span>{t("VAT (20%)")}:</span>
                     <span className="font-mono font-bold text-slate-700 dark:text-zinc-300">
                       {selectedProposalForDetail.currency} {selectedProposalForDetail.taxes.toLocaleString()}
                     </span>
                   </div>
                   <div className="flex justify-between text-xs font-black text-slate-800 dark:text-zinc-150 pt-1.5 border-t border-slate-200 dark:border-zinc-800">
-                    <span>{lang === "TR" ? "GENEL TOPLAM" : "GRAND TOTAL OFFER"}:</span>
+                    <span>{t("GRAND TOTAL OFFER")}:</span>
                     <span className="font-mono text-emerald-600 dark:text-emerald-400 text-sm">
                       {selectedProposalForDetail.currency} {selectedProposalForDetail.grandTotal.toLocaleString()}
                     </span>
@@ -1751,7 +1747,7 @@ export default function ProposalManagementView() {
                 {selectedProposalForDetail.versions && selectedProposalForDetail.versions.length > 1 && (
                   <div className="space-y-2.5">
                     <h3 className="text-[10px] font-extrabold text-slate-400 font-mono uppercase tracking-wider">
-                      {lang === "TR" ? "Revizyon ve Sürüm Geçmişi" : "Revision & Version Logs"}
+                      {t("Revision & Version Logs")}
                     </h3>
                     <div className="space-y-2 max-h-40 overflow-y-auto pr-1">
                       {selectedProposalForDetail.versions.map((ver) => (
@@ -1761,11 +1757,11 @@ export default function ProposalManagementView() {
                             <span className="text-[8px] font-mono text-slate-400">{ver.date}</span>
                           </div>
                           <p className="text-slate-650 dark:text-zinc-300 font-medium">
-                            <strong className="text-slate-500 dark:text-zinc-400">{lang === "TR" ? "Neden" : "Reason"}:</strong> {ver.reason}
+                            <strong className="text-slate-500 dark:text-zinc-400">{t("Reason")}:</strong> {ver.reason}
                           </p>
                           {ver.notes && (
                             <p className="text-slate-500 dark:text-zinc-400 text-[9px] italic">
-                              <strong className="text-slate-400 not-italic font-bold">{lang === "TR" ? "Notlar" : "Notes"}:</strong> {ver.notes}
+                              <strong className="text-slate-400 not-italic font-bold">{t("Notes")}:</strong> {ver.notes}
                             </p>
                           )}
                         </div>
@@ -1782,8 +1778,8 @@ export default function ProposalManagementView() {
                   
                   {/* Watermark Label */}
                   <div className="bg-slate-50 dark:bg-[#1a1918] p-2 px-4 border-b border-slate-200 dark:border-zinc-800 text-[9px] font-extrabold text-slate-400 uppercase tracking-wider font-mono flex items-center justify-between">
-                    <span>{lang === "TR" ? "RESMİ TEKLİF BELGESİ (PDF)" : "OFFICIAL PROPOSAL DOCUMENT (PDF)"}</span>
-                    <span className="text-emerald-500 font-bold">● LIVE GENERATED</span>
+                    <span>{t("OFFICIAL PROPOSAL DOCUMENT (PDF)")}</span>
+                    <span className="text-emerald-500 font-bold">{t("● LIVE GENERATED")}</span>
                   </div>
 
                   {/* Frame renderer */}
@@ -1798,10 +1794,10 @@ export default function ProposalManagementView() {
                       <RefreshCw className="w-10 h-10 text-emerald-500 animate-spin" />
                       <div className="space-y-1.5">
                         <p className="font-bold text-xs text-slate-700 dark:text-zinc-300">
-                          {lang === "TR" ? "PDF Belgesi Hazırlanıyor..." : "Compiling Premium PDF File..."}
+                          {t("Compiling Premium PDF File...")}
                         </p>
                         <p className="text-[10px] text-slate-400 font-mono">
-                          Generating corporate layout using vector coordinates...
+                          {t("Generating corporate layout using vector coordinates...")}
                         </p>
                       </div>
                     </div>
@@ -1824,7 +1820,7 @@ export default function ProposalManagementView() {
               <div className="flex items-center gap-2">
                 <FileText className="w-5 h-5 text-emerald-600" />
                 <span className="font-extrabold text-sm text-slate-800 dark:text-zinc-150">
-                  {lang === "TR" ? "Word Şablon Yönetimi" : "Word Template Management"}
+                  {t("Word Template Management")}
                 </span>
               </div>
               <button
@@ -1840,9 +1836,7 @@ export default function ProposalManagementView() {
 
             <div className="flex justify-between items-center">
               <p className="text-slate-500 text-[11px]">
-                {lang === "TR"
-                  ? "Placeholder'lar: {{company_name}}, {{proposal_number}}, {{grand_total}} vb."
-                  : "Use placeholders like {{company_name}}, {{proposal_number}}, {{grand_total}}, etc."}
+                {t("Use placeholders like {{company_name}}, {{proposal_number}}, {{grand_total}}, etc.")}
               </p>
               <button
                 onClick={() =>
@@ -1856,7 +1850,7 @@ export default function ProposalManagementView() {
                 }
                 className="bg-emerald-600 hover:bg-emerald-700 text-white px-3 py-1.5 rounded font-bold cursor-pointer flex items-center gap-1"
               >
-                <Plus className="w-3.5 h-3.5" /> {lang === "TR" ? "Yeni Şablon" : "New Template"}
+                <Plus className="w-3.5 h-3.5" /> {t("New Template")}
               </button>
             </div>
 
@@ -1888,7 +1882,7 @@ export default function ProposalManagementView() {
               ))}
               {wordTemplates.length === 0 && (
                 <p className="text-slate-400 italic col-span-2 text-center py-6">
-                  {lang === "TR" ? "Henüz şablon yok. Yeni şablon oluşturun." : "No templates yet. Create your first template."}
+                  {t("No templates yet. Create your first template.")}
                 </p>
               )}
             </div>
@@ -1896,11 +1890,11 @@ export default function ProposalManagementView() {
             {editingTemplate && (
               <div className="border-t pt-4 space-y-3">
                 <h4 className="font-bold text-slate-700 dark:text-zinc-300">
-                  {editingTemplate.id ? (lang === "TR" ? "Şablonu Düzenle" : "Edit Template") : (lang === "TR" ? "Yeni Şablon" : "New Template")}
+                  {editingTemplate.id ? (t("Edit Template")) : (t("New Template"))}
                 </h4>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                   <div>
-                    <label className="block text-[9px] text-slate-400 font-bold uppercase">{lang === "TR" ? "Şablon Adı" : "Template Name"} *</label>
+                    <label className="block text-[9px] text-slate-400 font-bold uppercase">{t("Template Name")} *</label>
                     <input
                       type="text"
                       value={editingTemplate.name}
@@ -1909,7 +1903,7 @@ export default function ProposalManagementView() {
                     />
                   </div>
                   <div>
-                    <label className="block text-[9px] text-slate-400 font-bold uppercase">{lang === "TR" ? "Açıklama" : "Description"}</label>
+                    <label className="block text-[9px] text-slate-400 font-bold uppercase">{t("Description")}</label>
                     <input
                       type="text"
                       value={editingTemplate.description || ""}
@@ -1920,7 +1914,7 @@ export default function ProposalManagementView() {
                 </div>
                 <div>
                   <label className="block text-[9px] text-slate-400 font-bold uppercase mb-1">
-                    {lang === "TR" ? "Şablon İçeriği (HTML + Placeholder)" : "Template Content (HTML + Placeholders)"}
+                    {t("Template Content (HTML + Placeholders)")}
                   </label>
                   <textarea
                     value={editingTemplate.content}
@@ -1937,13 +1931,13 @@ export default function ProposalManagementView() {
                     onClick={() => setEditingTemplate(null)}
                     className="px-4 py-1.5 bg-slate-100 hover:bg-slate-200 rounded font-bold cursor-pointer"
                   >
-                    {lang === "TR" ? "İptal" : "Cancel"}
+                    {t("Cancel")}
                   </button>
                   <button
                     onClick={() => void handleSaveTemplate()}
                     className="px-4 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded font-extrabold cursor-pointer"
                   >
-                    {lang === "TR" ? "Kaydet" : "Save Template"}
+                    {t("Save Template")}
                   </button>
                 </div>
               </div>

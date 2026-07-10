@@ -7,7 +7,7 @@ import AuthLayout, { AuthButton, AuthError, AuthField, AuthSuccess } from "./Aut
 
 export default function ResetPasswordPage() {
   const { updatePassword, session } = useAuth();
-  const { lang } = useLanguage();
+  const { t } = useLanguage();
   const navigate = useNavigate();
 
   const [password, setPassword] = useState("");
@@ -26,11 +26,7 @@ export default function ResetPasswordPage() {
 
       if (!client) {
         setReady(true);
-        setError(
-          lang === "TR"
-            ? "Kimlik doğrulama yapılandırılmamış. Lütfen yönetici ile iletişime geçin."
-            : "Authentication is not configured. Please contact your administrator."
-        );
+        setError(t("Authentication is not configured. Please contact your administrator."));
         return;
       }
 
@@ -43,20 +39,12 @@ export default function ResetPasswordPage() {
         setReady(true);
 
         if (!recoverySession) {
-          setError(
-            lang === "TR"
-              ? "Geçersiz veya süresi dolmuş sıfırlama bağlantısı. Lütfen yeni bir bağlantı isteyin."
-              : "Invalid or expired reset link. Please request a new one."
-          );
+          setError(t("Invalid or expired reset link. Please request a new one."));
         }
       } catch {
         if (!mounted) return;
         setReady(true);
-        setError(
-          lang === "TR"
-            ? "Oturum doğrulanamadı. Lütfen yeni bir sıfırlama bağlantısı isteyin."
-            : "Could not verify session. Please request a new reset link."
-        );
+        setError(t("Could not verify session. Please request a new reset link."));
       }
     };
 
@@ -65,7 +53,7 @@ export default function ResetPasswordPage() {
     return () => {
       mounted = false;
     };
-  }, [lang]);
+  }, [t]);
 
   if (session && success) {
     return <Navigate to="/" replace />;
@@ -77,11 +65,11 @@ export default function ResetPasswordPage() {
     setSuccess(null);
 
     if (password.length < 6) {
-      setError(lang === "TR" ? "Şifre en az 6 karakter olmalıdır." : "Password must be at least 6 characters.");
+      setError(t("Password must be at least 6 characters."));
       return;
     }
     if (password !== confirmPassword) {
-      setError(lang === "TR" ? "Şifreler eşleşmiyor." : "Passwords do not match.");
+      setError(t("Passwords do not match."));
       return;
     }
 
@@ -94,15 +82,9 @@ export default function ResetPasswordPage() {
       return;
     }
 
-    setSuccess(
-      lang === "TR"
-        ? "Şifreniz güncellendi. Uygulamaya yönlendiriliyorsunuz..."
-        : "Your password has been updated. Redirecting to the app..."
-    );
+    setSuccess(t("Your password has been updated. Redirecting to the app..."));
     setTimeout(() => navigate("/", { replace: true }), 1500);
   };
-
-  const tr = lang === "TR";
 
   if (!ready) {
     return null;
@@ -110,11 +92,11 @@ export default function ResetPasswordPage() {
 
   return (
     <AuthLayout
-      title={tr ? "Şifreyi Sıfırla" : "Reset Password"}
-      subtitle={tr ? "Yeni şifrenizi belirleyin" : "Set your new password"}
+      title={t("Reset Password")}
+      subtitle={t("Set your new password")}
       footer={
         <Link to="/login" className="font-semibold text-[#1E3A5F] dark:text-indigo-400 hover:underline">
-          {tr ? "Giriş sayfasına dön" : "Back to sign in"}
+          {t("Back to sign in")}
         </Link>
       }
     >
@@ -123,7 +105,7 @@ export default function ResetPasswordPage() {
         <AuthSuccess message={success} />
         <AuthField
           id="password"
-          label={tr ? "Yeni Şifre" : "New Password"}
+          label={t("New Password")}
           type="password"
           value={password}
           onChange={setPassword}
@@ -131,14 +113,14 @@ export default function ResetPasswordPage() {
         />
         <AuthField
           id="confirmPassword"
-          label={tr ? "Yeni Şifre Tekrar" : "Confirm New Password"}
+          label={t("Confirm New Password")}
           type="password"
           value={confirmPassword}
           onChange={setConfirmPassword}
           autoComplete="new-password"
         />
         <AuthButton loading={loading} disabled={!!error && !session}>
-          {tr ? "Şifreyi Güncelle" : "Update Password"}
+          {t("Update Password")}
         </AuthButton>
       </form>
     </AuthLayout>

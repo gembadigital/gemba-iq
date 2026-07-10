@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { Company, CustomFieldDefinition } from "../CompaniesView";
 import { Building, Phone, Globe, DollarSign, Users, CheckCircle, TrendingUp, Edit2, Check, X, MapPin, Layers, Sparkles, Shield } from "lucide-react";
+import { useLanguage } from "../../lib/LanguageContext";
 
 interface CompanyOverviewTabProps {
   company: Company;
@@ -13,10 +14,11 @@ interface CompanyOverviewTabProps {
 export default function CompanyOverviewTab({
   company,
   customFieldDefs,
-  lang,
+  lang: _langProp,
   getTranslatedValue,
   onUpdateCompany
 }: CompanyOverviewTabProps) {
+  const { t } = useLanguage();
   // Inline edit state tracking which field is currently being edited
   const [editingField, setEditingField] = useState<string | null>(null);
   const [tempValue, setTempValue] = useState<string>("");
@@ -74,7 +76,7 @@ export default function CompanyOverviewTab({
     isCustom = false
   ) => {
     const isEditing = editingField === field;
-    const displayVal = value || (lang === "TR" ? "Belirtilmemiş" : "Not specified");
+    const displayVal = value || t("Not specified");
 
     return (
       <div className="group relative p-2.5 bg-slate-50/50 dark:bg-zinc-900/40 hover:bg-slate-50 dark:hover:bg-zinc-800/60 rounded-lg border border-slate-100 dark:border-zinc-800/50 transition-all font-sans text-xs">
@@ -117,7 +119,7 @@ export default function CompanyOverviewTab({
                 type="button"
                 onClick={() => handleSaveEdit(field, isCustom)}
                 className="p-1 bg-emerald-500 text-white hover:bg-emerald-600 rounded transition-colors cursor-pointer"
-                title={lang === "TR" ? "Kaydet" : "Save"}
+                title={t("Save")}
               >
                 <Check className="w-3.5 h-3.5" />
               </button>
@@ -125,7 +127,7 @@ export default function CompanyOverviewTab({
                 type="button"
                 onClick={handleCancelEdit}
                 className="p-1 bg-slate-200 dark:bg-zinc-800 text-slate-500 hover:bg-slate-300 dark:hover:bg-zinc-700 rounded transition-colors cursor-pointer"
-                title={lang === "TR" ? "İptal" : "Cancel"}
+                title={t("Cancel")}
               >
                 <X className="w-3.5 h-3.5" />
               </button>
@@ -140,7 +142,7 @@ export default function CompanyOverviewTab({
               type="button"
               onClick={() => handleStartEdit(String(field), value)}
               className="p-1 opacity-0 group-hover:opacity-100 hover:bg-slate-200 dark:hover:bg-zinc-700 rounded text-slate-400 hover:text-slate-600 dark:hover:text-zinc-200 transition-all cursor-pointer"
-              title={lang === "TR" ? "Düzenle" : "Edit"}
+              title={t("Edit")}
             >
               <Edit2 className="w-3 h-3" />
             </button>
@@ -159,48 +161,48 @@ export default function CompanyOverviewTab({
           <div className="flex items-center gap-2 border-b border-slate-100 dark:border-zinc-800/80 pb-2.5">
             <Building className="w-4 h-4 text-[#0078D4]" />
             <h4 className="text-xs font-bold uppercase text-slate-800 dark:text-zinc-200 tracking-wider">
-              {lang === "TR" ? "Şirket Özellikleri ve Kimliği" : "Company Profile & Identity"}
+              {t("Company Profile & Identity")}
             </h4>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-            {renderEditableField(lang === "TR" ? "Şirket Adı" : "Company Name", "name", company.name)}
+            {renderEditableField(t("Company Name"), "name", company.name)}
             {renderEditableField(
-              lang === "TR" ? "Hesap Durumu" : "Account Status",
+              t("Account Status"),
               "customerStatus",
               company.customerStatus,
               "select",
               ["Prospect", "Active Customer", "Existing Customer", "Inactive", "Lost Customer", "Former Customer", "Archived", "Implementation", "Nurturing", "Lead"]
             )}
             {renderEditableField(
-              lang === "TR" ? "Yolculuk Aşaması" : "Lifecycle Stage",
+              t("Lifecycle Stage"),
               "lifecycleStage",
               company.lifecycleStage || "Customer",
               "select",
               ["Lead", "Subscriber", "Opportunity", "Customer", "Evangelist"]
             )}
-            {renderEditableField(lang === "TR" ? "Hesap Temsilcisi" : "Account Owner", "accountOwner", company.accountOwner)}
-            {renderEditableField(lang === "TR" ? "Telefon" : "Phone", "phone", company.phone || "")}
-            {renderEditableField(lang === "TR" ? "Web Sitesi" : "Website", "website", company.website || "")}
+            {renderEditableField(t("Account Owner"), "accountOwner", company.accountOwner)}
+            {renderEditableField(t("Phone"), "phone", company.phone || "")}
+            {renderEditableField(t("Website"), "website", company.website || "")}
             {renderEditableField(
-              lang === "TR" ? "Ciro Değeri" : "Annual Revenue",
+              t("Annual Revenue"),
               "annualRevenue",
               company.annualRevenue || ""
             )}
             {renderEditableField(
-              lang === "TR" ? "Çalışan Sayısı" : "Headcount (Employees)",
+              t("Headcount (Employees)"),
               "employeeCount",
               company.employeeCount ? String(company.employeeCount) : "0",
               "number"
             )}
             {renderEditableField(
-              lang === "TR" ? "Sağlık Skoru (1-100)" : "Health Score (1-100)",
+              t("Health Score (1-100)"),
               "healthScore",
               company.healthScore ? String(company.healthScore) : "75",
               "number"
             )}
             {renderEditableField(
-              lang === "TR" ? "Sektör" : "Industry Group",
+              t("Industry Group"),
               "industry",
               company.industry,
               "select",
@@ -210,7 +212,7 @@ export default function CompanyOverviewTab({
           
           <div className="space-y-1">
             {renderEditableField(
-              lang === "TR" ? "Alt Sektör / Niş Alan" : "Sector Segment / Niche",
+              t("Sector Segment / Niche"),
               "sector",
               company.sector || "",
               "text"
@@ -219,7 +221,7 @@ export default function CompanyOverviewTab({
 
           <div className="space-y-1">
             {renderEditableField(
-              lang === "TR" ? "Kurumsal Açıklama" : "Executive Description",
+              t("Executive Description"),
               "description",
               company.description || "",
               "textarea"
@@ -232,20 +234,20 @@ export default function CompanyOverviewTab({
           <div className="flex items-center gap-2 border-b border-slate-100 dark:border-zinc-800/80 pb-2.5">
             <MapPin className="w-4 h-4 text-[#0078D4]" />
             <h4 className="text-xs font-bold uppercase text-slate-800 dark:text-zinc-200 tracking-wider">
-              {lang === "TR" ? "Adres & Fatura Bilgileri" : "Location & Billing Details"}
+              {t("Location & Billing Details")}
             </h4>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-            {renderEditableField(lang === "TR" ? "Şehir" : "HQ City", "billingCity", company.billingCity || "")}
-            {renderEditableField(lang === "TR" ? "İlçe" : "District", "billingDistrict", company.billingDistrict || "")}
-            {renderEditableField(lang === "TR" ? "Posta Kodu" : "Postal Code", "billingPostalCode", company.billingPostalCode || "")}
-            {renderEditableField(lang === "TR" ? "Ülke" : "Country", "billingCountry", company.billingCountry || "Türkiye")}
-            {renderEditableField(lang === "TR" ? "Vergi Dairesi" : "Tax Office", "taxOffice", company.taxOffice || "")}
-            {renderEditableField(lang === "TR" ? "Vergi No" : "Tax ID / No", "taxNo", company.taxNo || "")}
+            {renderEditableField(t("HQ City"), "billingCity", company.billingCity || "")}
+            {renderEditableField(t("District"), "billingDistrict", company.billingDistrict || "")}
+            {renderEditableField(t("Postal Code"), "billingPostalCode", company.billingPostalCode || "")}
+            {renderEditableField(t("Country"), "billingCountry", company.billingCountry || "Türkiye")}
+            {renderEditableField(t("Tax Office"), "taxOffice", company.taxOffice || "")}
+            {renderEditableField(t("Tax ID / No"), "taxNo", company.taxNo || "")}
           </div>
           <div className="space-y-1">
-            {renderEditableField(lang === "TR" ? "Açık Adres" : "Full Address", "billingAddress", company.billingAddress || "", "textarea")}
+            {renderEditableField(t("Full Address"), "billingAddress", company.billingAddress || "", "textarea")}
           </div>
         </div>
       </div>
@@ -258,38 +260,38 @@ export default function CompanyOverviewTab({
           <div className="flex items-center gap-2 border-b border-slate-100 dark:border-zinc-800/80 pb-2.5">
             <TrendingUp className="w-4 h-4 text-emerald-500" />
             <h4 className="text-xs font-bold uppercase text-slate-800 dark:text-zinc-200 tracking-wider">
-              {lang === "TR" ? "Fabrika & Yalın Üretim Profili" : "Plant & Lean Production Profile"}
+              {t("Plant & Lean Production Profile")}
             </h4>
           </div>
 
           <div className="space-y-3">
             {renderEditableField(
-              lang === "TR" ? "Vardiya Düzeni" : "Shift Pattern",
+              t("Shift Pattern"),
               "shift",
               company.shift,
               "select",
               ["1 Shift", "2 Shifts", "3 Shifts", "4 Shifts (Continuous)"]
             )}
             {renderEditableField(
-              lang === "TR" ? "Üretim Akış Tipi" : "Production Flow Type",
+              t("Production Flow Type"),
               "productionType",
               company.productionType || "",
               "text"
             )}
             {renderEditableField(
-              lang === "TR" ? "Fabrika Alanı (m²)" : "Plant Area (sqm)",
+              t("Plant Area (sqm)"),
               "squareMeter",
               company.squareMeter || "",
               "text"
             )}
             {renderEditableField(
-              lang === "TR" ? "Dijital / ERP Altyapısı" : "Digital & ERP Backend",
+              t("Digital & ERP Backend"),
               "digitalInfrastructure",
               company.digitalInfrastructure,
               "text"
             )}
             {renderEditableField(
-              lang === "TR" ? "Kilit İrtibat Ekibi" : "Executive Management",
+              t("Executive Management"),
               "managementTeam",
               company.managementTeam || "",
               "text"
@@ -302,16 +304,14 @@ export default function CompanyOverviewTab({
           <div className="flex items-center gap-2 border-b border-slate-100 dark:border-zinc-800/80 pb-2.5">
             <Layers className="w-4 h-4 text-purple-500" />
             <h4 className="text-xs font-bold uppercase text-slate-800 dark:text-zinc-200 tracking-wider">
-              {lang === "TR" ? "Kurumsal Özel Alanlar" : "Custom Corporate Fields"}
+              {t("Custom Corporate Fields")}
             </h4>
           </div>
 
           {customFieldDefs.length === 0 ? (
             <div className="p-4 text-center border border-dashed border-slate-200 dark:border-zinc-800 rounded-lg">
               <span className="text-[11px] text-slate-400">
-                {lang === "TR" 
-                  ? "Tanımlanmış özel alan bulunmamaktadır. Sağ üstteki 'Alanları Özelleştir' butonundan ekleyebilirsiniz."
-                  : "No custom fields defined yet. Add them using 'Customize Fields' on the list page."}
+                {t("No custom fields defined yet. Add them using 'Customize Fields' on the list page.")}
               </span>
             </div>
           ) : (
@@ -343,10 +343,10 @@ export default function CompanyOverviewTab({
             </div>
             <div>
               <span className="text-[9px] uppercase font-bold text-slate-400 font-mono">
-                {lang === "TR" ? "Müşteri Sağlık Endeksi" : "Client Health Index"}
+                {t("Client Health Index")}
               </span>
               <div className="text-sm font-extrabold text-slate-700 dark:text-zinc-200 mt-0.5">
-                {company.healthScore || 75}/100 Score
+                {company.healthScore || 75}/100 {t("Score")}
               </div>
             </div>
           </div>
@@ -358,10 +358,10 @@ export default function CompanyOverviewTab({
                 : "bg-rose-50 text-rose-600 dark:bg-rose-950/20 dark:text-rose-400"
           }`}>
             {(company.healthScore || 75) >= 80 
-              ? (lang === "TR" ? "Sağlıklı" : "Healthy") 
+              ? t("Healthy") 
               : (company.healthScore || 75) >= 60 
-                ? (lang === "TR" ? "Dikkat" : "Warning") 
-                : (lang === "TR" ? "Riskli" : "At Risk")}
+                ? t("Warning") 
+                : t("At Risk")}
           </span>
         </div>
       </div>

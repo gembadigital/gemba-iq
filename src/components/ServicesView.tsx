@@ -48,6 +48,7 @@ import { jsPDF } from "jspdf";
 import Docxtemplater from "docxtemplater";
 import PizZip from "pizzip";
 import { CrmDb } from "../lib/CrmDb";
+import { useLanguage } from "../lib/LanguageContext";
 
 // --- CORE INTERFACES ---
 interface ServiceCard {
@@ -263,7 +264,7 @@ const DEFAULT_SERVICE_CARDS: ServiceCard[] = [
 const LETTERHEADS = [
   {
     id: "classic_blue",
-    name: "Mavi Kurumsal (Classic)",
+    name: "Blue Corporate (Classic)",
     primaryColor: "#0078D4",
     accentColor: "#DEECF9",
     tagline: "GEMBA OPERASYONEL MÜKEMMELLİK DANIŞMANLIK A.Ş.",
@@ -271,7 +272,7 @@ const LETTERHEADS = [
   },
   {
     id: "emerald_lean",
-    name: "Zümrüt Yeşili (Lean Industrial)",
+    name: "Emerald Green (Lean Industrial)",
     primaryColor: "#107C41",
     accentColor: "#DFF6DD",
     tagline: "GEMBA OPERASYONEL MÜKEMMELLİK & YALIN DÖNÜŞÜM",
@@ -279,7 +280,7 @@ const LETTERHEADS = [
   },
   {
     id: "classic_slate",
-    name: "Karanlık Tema (Tech Slate)",
+    name: "Dark Theme (Tech Slate)",
     primaryColor: "#334155",
     accentColor: "#F1F5F9",
     tagline: "GEMBA PARTNERS / MANAGEMENT CONSULTING GROUP",
@@ -304,6 +305,7 @@ interface OptionRowEditorProps {
 }
 
 export const OptionRowEditor: React.FC<OptionRowEditorProps> = ({ rows, onChange, optionLabel }) => {
+  const { t } = useLanguage();
   const handleAddRow = () => {
     const nextId = `${optionLabel.toLowerCase().replace(/\s/g, "")}-row-${Date.now()}`;
     onChange([
@@ -444,6 +446,7 @@ export default function ServicesView({
   defaultTab?: "cards" | "wizard"; 
   showSwitcher?: boolean; 
 }) {
+  const { t } = useLanguage();
   const [activeTab, setActiveTab] = useState<"cards" | "wizard">(defaultTab);
 
   useEffect(() => {
@@ -769,8 +772,8 @@ export default function ServicesView({
       }
       return c;
     }));
-    setToastMessage("Hizmet şablonu varsayılan olarak başarıyla kaydedildi!");
-    alert("Bu hizmet türüne ait güncel ayarlar (kapak yazısı, opsiyon alternatifleri, açıklamalar ve bütçelendirilmiş efor tabloları) başarıyla varsayılan şablon olarak kaydedildi. Gelecekte oluşturacağınız tekliflerde bu şablon otomatik olarak yüklenecektir.");
+    setToastMessage(t("Default template saved successfully!"));
+    alert(t("Service defaults saved as template for future proposals."));
   };
   
   const filteredServiceCards = serviceCards.filter(c =>
@@ -957,7 +960,7 @@ export default function ServicesView({
       const cleaned = cleanWordHTML(htmlText);
       targetSetter(cleaned);
       // Give feedback
-      alert("Microsoft Word tablosu başarıyla algılandı ve A4 standartlarına uyacak şekilde temizlenerek yapıştırıldı!");
+      alert(t("Word table detected and pasted cleanly!"));
     }
   };
 
@@ -967,7 +970,7 @@ export default function ServicesView({
       setEditTableHtml(cleaned);
       setPastePrompt(false);
       setRawPastedHtml("");
-      alert("Tablo kopyala-yapıştır süzgecinden geçirildi ve editöre yerleştirildi!");
+      alert(t("Table pasted through copy-paste filter!"));
     }
   };
 
@@ -988,13 +991,13 @@ export default function ServicesView({
         setEditTableHtml(data.htmlTable);
         setPastePrompt(false);
         setRawPastedHtml("");
-        alert("Yapay zeka, yapıştırılan tablo içeriğini başarıyla hiyerarşik ve şık bir tabloya dönüştürdü!");
+        alert(t("AI converted pasted table to structured HTML!"));
       } else {
         throw new Error("Yapay zekadan geçerli bir tablo alınamadı.");
       }
     } catch (err: any) {
       console.error(err);
-      alert("Tablo dönüştürme hatası: " + (err.message || "Yapay zeka servisine erişilemedi."));
+      alert(t("Table conversion error: {error}").replace("{error}", err.message || t("AI service unreachable.")));
     } finally {
       setIsAiConverting(false);
     }
@@ -1006,7 +1009,7 @@ export default function ServicesView({
       setWizardTableHtml(cleaned);
       setWizardPastePrompt(false);
       setWizardRawPastedHtml("");
-      alert("Tablo kopyala-yapıştır süzgecinden geçirildi ve sihirbaz editörüne yerleştirildi!");
+      alert(t("Table pasted through copy-paste filter!"));
     }
   };
 
@@ -1027,13 +1030,13 @@ export default function ServicesView({
         setWizardTableHtml(data.htmlTable);
         setWizardPastePrompt(false);
         setWizardRawPastedHtml("");
-        alert("Yapay zeka, yapıştırılan tablo içeriğini başarıyla hiyerarşik ve şık bir tabloya dönüştürdü!");
+        alert(t("AI converted pasted table to structured HTML!"));
       } else {
         throw new Error("Yapay zekadan geçerli bir tablo alınamadı.");
       }
     } catch (err: any) {
       console.error(err);
-      alert("Tablo dönüştürme hatası: " + (err.message || "Yapay zeka servisine erişilemedi."));
+      alert(t("Table conversion error: {error}").replace("{error}", err.message || t("AI service unreachable.")));
     } finally {
       setIsWizardAiConverting(false);
     }
@@ -1056,7 +1059,7 @@ export default function ServicesView({
       return c;
     }));
     // setSelectedEditCardId(null);
-    setToastMessage("Hizmet kartı başarıyla güncellendi!");
+    setToastMessage(t("Service card updated successfully!"));
     setTimeout(() => {
       setToastMessage(null);
     }, 3000);
@@ -1080,8 +1083,8 @@ export default function ServicesView({
   const removeCard = (id: string, name: string) => {
     setConfirmDeleteModal({
       isOpen: true,
-      title: "Hizmet Tanımı Silinecek",
-      message: `"${name}" hizmet kartı kalıcı olarak silinecektir. Geri dönüşüm kutusuna taşınsın mı?`,
+      title: t("Service definition will be deleted"),
+      message: `${t("\"{name}\" service card will be permanently deleted.").replace("{name}", name)} ${t("Move to recycle bin?")}`,
       onConfirm: () => {
         setServiceCards(prev => prev.filter(c => c.id !== id));
         if (selectedEditCardId === id) {
@@ -1712,7 +1715,7 @@ export default function ServicesView({
   }, [selectedEmailTemplateId, emailTemplates, clientTitle, selectedService, clientContactPerson, assignedPm, proposalNumber, proposalDate]);
 
   const handleSaveCurrentEmailTemplate = () => {
-    const templateName = prompt("Lütfen bu e-posta taslağı için bir başlık/isim girin:", "Gemba Özel Taslak");
+    const templateName = prompt(t("Please enter a title/name for this email draft:"), t("Gemba Custom Draft"));
     if (!templateName) return;
 
     const newTemplate = {
@@ -1725,23 +1728,23 @@ export default function ServicesView({
     const updated = [...emailTemplates, newTemplate];
     setEmailTemplates(updated);
     setSelectedEmailTemplateId(newTemplate.id);
-    setToastMessage("Yeni e-posta şablonu kaydedildi!");
+    setToastMessage(t("New email template saved!"));
   };
 
   const handleDeleteEmailTemplate = (idToDelete: string) => {
     if (emailTemplates.length <= 1) {
-      alert("Sistemde en az bir adet e-posta şablonu kalmalıdır!");
+      alert(t("At least one email template must remain in the system!"));
       return;
     }
     setConfirmDeleteModal({
       isOpen: true,
-      title: "E-Posta Taslağı Silinecek",
-      message: "Geri dönüşüm kutusuna taşınsın mı?",
+      title: t("Email draft will be deleted"),
+      message: t("Move to recycle bin?"),
       onConfirm: () => {
         const updated = emailTemplates.filter(t => t.id !== idToDelete);
         setEmailTemplates(updated);
         setSelectedEmailTemplateId(updated[0].id);
-        setToastMessage("Şablon başarıyla silindi.");
+        setToastMessage(t("Template deleted successfully."));
       }
     });
   };
@@ -1766,7 +1769,7 @@ export default function ServicesView({
 
   const handleCreateAndSaveProposal = (silent = false) => {
     if (!clientTitle.trim()) {
-      alert("Lütfen Müşteri Ticari Unvanı alanını doldurun!");
+      alert(t("Please fill in the Client Legal Name field!"));
       return;
     }
 
@@ -1911,7 +1914,7 @@ export default function ServicesView({
 
     if (!silent) {
       // Step 5 trigger: Save database AND open print PDF immediately!
-      setToastMessage("Teklif ve Fırsat Kaydedildi!");
+      setToastMessage(t("Proposal and opportunity saved!"));
       
       // Auto open PDF print/save setup
       handlePrint();
@@ -2136,15 +2139,15 @@ export default function ServicesView({
             </div>
             <div>
               <h1 id="services-page-title" className="text-xl font-black text-slate-900 dark:text-white tracking-tight flex items-center gap-2">
-                {activeTab === "cards" ? "Hizmet Şablonları & Master Data" : "Yeni Teklif Sihirbazı (Proposal Wizard)"}
+                {activeTab === "cards" ? t("Service Templates & Master Data") : t("New Proposal Wizard")}
                 <span className="text-[10px] bg-emerald-50 text-emerald-700 dark:bg-emerald-950/50 dark:text-emerald-400 font-bold px-2 py-0.5 rounded-full">
-                  {activeTab === "cards" ? "Master Data & Word Layout" : "Multi-Option Proposal"}
+                  {activeTab === "cards" ? t("Master Data & Word Layout") : t("Multi-Option Proposal")}
                 </span>
               </h1>
               <p className="text-xs text-slate-550 dark:text-slate-400 mt-0.5 leading-relaxed">
                 {activeTab === "cards" 
-                  ? "10 temel hizmet kartını yönetin, karmaşık Word tablolarını kopyalayıp temizleyin ve teklif şablonlarını düzenleyin."
-                  : "Müşterileriniz için çok alternatifli (Opsiyon 1-2-3) profesyonel teklif dokümanları tasarlayın ve PDF/Word çıktısı üretin."}
+                  ? t("Manage 10 core service cards, copy and clean complex Word tables, and edit proposal templates.")
+                  : t("Design professional multi-option (Option 1-2-3) proposal documents for your clients and export PDF/Word output.")}
               </p>
             </div>
           </div>
@@ -2210,7 +2213,7 @@ export default function ServicesView({
                     onChange={(e) => {
                       const file = e.target.files?.[0];
                       if (file) {
-                        alert(`'${file.name}' Word şablonu başarıyla yüklendi! Bu şablon teklif çıktısında master layout olarak uygulanacaktır.`);
+                        alert(t("Word template '{name}' uploaded successfully!").replace("{name}", file.name));
                       }
                     }}
                   />
@@ -2295,7 +2298,7 @@ export default function ServicesView({
                 {/* Grid Title / Code / Category */}
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                   <div className="space-y-1">
-                    <label className="text-[11px] font-bold text-slate-500 dark:text-slate-400">Hizmet Adı (Text)</label>
+                    <label className="text-[11px] font-bold text-slate-500 dark:text-slate-400">{t("Service Name (Text)")}</label>
                     <input
                       type="text"
                       value={editName}
@@ -2446,7 +2449,7 @@ export default function ServicesView({
                   <div className="space-y-1.5 pb-2">
                     <div className="flex items-center justify-between">
                       <label className="text-[11px] font-bold text-slate-500 dark:text-slate-400 flex items-center gap-1.5">
-                        Ürün Tablosu Düzenleme Alanı <span className="text-[9px] text-slate-450 dark:text-slate-450 font-mono bg-slate-100 dark:bg-zinc-800 px-1 py-0.5 rounded opacity-75 font-normal">{"{{EforTablosu}}"}</span> (Source HTML)
+                        Ürün Tablosu Düzenleme Alanı <span className="text-[9px] text-slate-450 dark:text-slate-450 font-mono bg-slate-100 dark:bg-zinc-800 px-1 py-0.5 rounded opacity-75 font-normal">{"{{EforTablosu}}"}</span> {t("(Source HTML)")}
                       </label>
                       <button 
                         type="button" 
@@ -2474,7 +2477,7 @@ export default function ServicesView({
                   <div className="space-y-1.5">
                     <label className="text-[11px] font-bold text-slate-500 dark:text-slate-400 flex items-center gap-1">
                       <FileSignature className="w-3.5 h-3.5" />
-                      Hizmete Özel Varsayılan Sözleşme Genel Şartları <span className="text-[9px] text-slate-450 dark:text-slate-450 font-mono bg-slate-100 dark:bg-zinc-800 px-1 py-0.5 rounded opacity-75 font-normal">{"{{GenelSartlar}}"}</span> (Text Lines)
+                      Hizmete Özel Varsayılan Sözleşme Genel Şartları <span className="text-[9px] text-slate-450 dark:text-slate-450 font-mono bg-slate-100 dark:bg-zinc-800 px-1 py-0.5 rounded opacity-75 font-normal">{"{{GenelSartlar}}"}</span> {t("(Text Lines)")}
                     </label>
                     <textarea
                       rows={4}
@@ -2492,7 +2495,7 @@ export default function ServicesView({
                         <FileCheck className="w-4 h-4 text-[#0078D4]" />
                         <span className="text-xs font-bold text-slate-800 dark:text-white">A4 Kurumsal Görsel Şablon Yükleme Alanı (PNG)</span>
                       </div>
-                      <span className="text-[10px] bg-red-100 text-red-800 dark:bg-red-950/40 dark:text-red-300 font-semibold px-2 py-0.5 rounded uppercase tracking-wider">A4 PNG Engine</span>
+                      <span className="text-[10px] bg-red-100 text-red-800 dark:bg-red-950/40 dark:text-red-300 font-semibold px-2 py-0.5 rounded uppercase tracking-wider">{t("A4 PNG Engine")}</span>
                     </div>
 
                     <div className="p-3 bg-blue-50/40 dark:bg-blue-950/20 rounded border border-blue-100 dark:border-blue-900/30 text-[11px] text-blue-800 dark:text-blue-300 leading-relaxed flex items-start gap-2">
@@ -2560,7 +2563,7 @@ export default function ServicesView({
                                 const file = e.target.files?.[0];
                                 if (file) {
                                   if (!file.type.includes("png")) {
-                                    alert("Lütfen yalnızca PNG uzantılı resim dosyası seçin.");
+                                    alert(t("Please upload PNG image files only."));
                                     return;
                                   }
                                   const reader = new FileReader();
@@ -2594,7 +2597,7 @@ export default function ServicesView({
                                       setUploadedCoverTemplates(updated);
                                       CrmDb.setKv("crm_uploaded_cover_templates", updated);
                                       CrmDb.setKv(`crm_png_template_cover_${selectedEditCardId}`, `/templates/cover_${selectedEditCardId}.png`);
-                                      alert("Kapak şablonu başarıyla eklendi ve sunucuya kaydedildi!");
+                                      alert(t("Cover template saved to server!"));
                                     })
                                     .catch(err => {
                                       console.error("Failed to upload cover template to server:", err);
@@ -2610,7 +2613,7 @@ export default function ServicesView({
                                       setUploadedCoverTemplates(updated);
                                       CrmDb.setKv("crm_uploaded_cover_templates", updated);
                                       CrmDb.setKv(`crm_png_template_cover_${selectedEditCardId}`, base64);
-                                      alert("Kapak şablonu yerel tarayıcıya kaydedildi (sunucu bağlantı hatası).");
+                                      alert(t("Cover template saved locally (server error)."));
                                     });
                                   };
                                   reader.readAsDataURL(file);
@@ -2678,7 +2681,7 @@ export default function ServicesView({
                                 const file = e.target.files?.[0];
                                 if (file) {
                                   if (!file.type.includes("png")) {
-                                    alert("Lütfen yalnızca PNG uzantılı resim dosyası seçin.");
+                                    alert(t("Please upload PNG image files only."));
                                     return;
                                   }
                                   const reader = new FileReader();
@@ -2712,7 +2715,7 @@ export default function ServicesView({
                                       setUploadedPageTemplates(updated);
                                       CrmDb.setKv("crm_uploaded_page_templates", updated);
                                       CrmDb.setKv(`crm_png_template_page_${selectedEditCardId}`, `/templates/page_${selectedEditCardId}.png`);
-                                      alert("İç sayfa şablonu başarıyla eklendi ve sunucuya kaydedildi!");
+                                      alert(t("Inner page template saved to server!"));
                                     })
                                     .catch(err => {
                                       console.error("Failed to upload page template to server:", err);
@@ -2728,7 +2731,7 @@ export default function ServicesView({
                                       setUploadedPageTemplates(updated);
                                       CrmDb.setKv("crm_uploaded_page_templates", updated);
                                       CrmDb.setKv(`crm_png_template_page_${selectedEditCardId}`, base64);
-                                      alert("İç sayfa şablonu yerel tarayıcıya kaydedildi (sunucu bağlantı hatası).");
+                                      alert(t("Inner page template saved locally (server error)."));
                                     });
                                   };
                                   reader.readAsDataURL(file);
@@ -3083,7 +3086,7 @@ export default function ServicesView({
                             className="w-full px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white text-[10px] font-black rounded flex items-center justify-center gap-1 shadow-sm transition-all cursor-pointer"
                             title="Mevcut düzenlemeleri (kapak, bütçe tablosu, genel şartlar vs.) bu hizmet kartı için varsayılan yap"
                           >
-                            <Save className="w-3.5 h-3.5" /> Şablonu Varsayılan Yap (Save Default)
+                            <Save className="w-3.5 h-3.5" /> {t("Save as Default Template")}
                           </button>
                         </div>
                       </div>
@@ -3475,8 +3478,8 @@ export default function ServicesView({
                         type="button"
                         onClick={() => {
                           CrmDb.setKv("crm_persistent_general_terms", wizardTermsAndConditions);
-                          alert("Genel şartlar başarıyla kalıcı olarak sisteme kaydedildi! Tüm yeni tekliflerde bu taslak otomatik kullanılacaktır.");
-                          setToastMessage("Genel Şartlar Kaydedildi!");
+                          alert(t("Terms saved permanently for all new proposals!"));
+                          setToastMessage(t("Terms saved!"));
                         }}
                         className="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white text-[11px] font-black rounded flex items-center gap-1 shadow-xs transition-all cursor-pointer"
                       >
@@ -3515,7 +3518,7 @@ export default function ServicesView({
                       >
                         {LETTERHEADS.map(lh => (
                           <option key={lh.id} value={lh.id} className="bg-white dark:bg-[#1b1a19] text-slate-950 dark:text-white font-semibold">
-                            {lh.name}
+                            {t(lh.name)}
                           </option>
                         ))}
                         {(uploadedCoverTemplates[selectedCardId] || uploadedPageTemplates[selectedCardId]) && (
@@ -3554,7 +3557,7 @@ export default function ServicesView({
                   </div>
 
                   <p className="text-[12px] font-normal text-slate-500 dark:text-slate-400 leading-relaxed">
-                    Mevcut teklif parametrelerini (müşteri, tarih, kalem fiyatları ve versiyon) arşive kaydeder ve <strong>Deal Management (B2B CRM Pipeline)</strong> sürecinde otomatik olarak <em className="text-blue-600 dark:text-blue-400 font-bold">"Proposal Submitted (Teklif Gönderildi)"</em> aşamasına yeni bir kart ekler.
+                    Mevcut teklif parametrelerini (müşteri, tarih, kalem fiyatları ve versiyon) arşive kaydeder ve <strong>{t("Deal Management (B2B CRM Pipeline)")}</strong> sürecinde otomatik olarak <em className="text-blue-600 dark:text-blue-400 font-bold">{t("Proposal Submitted (Quote Sent)")}</em> aşamasına yeni bir kart ekler.
                   </p>
 
                   <button
@@ -3562,7 +3565,7 @@ export default function ServicesView({
                     onClick={() => handleCreateAndSaveProposal(false)}
                     className="w-full h-[52px] px-6 py-3.5 bg-[#0078D4] hover:bg-[#106ebe] text-white font-semibold rounded-md flex items-center justify-center gap-2 transition-colors border border-[#005a9e] cursor-pointer text-[14px]"
                   >
-                    <Save className="w-4 h-4 text-blue-100" /> Teklifi Oluştur & CRM'e Kaydet
+                    <Save className="w-4 h-4 text-blue-100" /> {t("Create Proposal & Save to CRM")}
                   </button>
                 </div>
               )}
@@ -3604,7 +3607,7 @@ export default function ServicesView({
 
                   {/* Subject editor */}
                   <div className="space-y-1.5">
-                    <label className="text-[13px] font-semibold text-slate-700 dark:text-slate-300 block">Konu (Subject)</label>
+                    <label className="text-[13px] font-semibold text-slate-700 dark:text-slate-300 block">{t("Subject")}</label>
                     <input
                       type="text"
                       value={mailSubject}
@@ -3660,7 +3663,7 @@ export default function ServicesView({
                         }`}
                       >
                         <span className="text-base">🌐</span>
-                        <span className="tracking-tight leading-none">Office 365</span>
+                        <span className="tracking-tight leading-none">{t("Office 365")}</span>
                       </button>
                       
                       <button
@@ -3673,7 +3676,7 @@ export default function ServicesView({
                         }`}
                       >
                         <span className="text-base">🌐</span>
-                        <span className="tracking-tight leading-none">Outlook Live</span>
+                        <span className="tracking-tight leading-none">{t("Outlook Live")}</span>
                       </button>
                       
                       <button
@@ -3686,7 +3689,7 @@ export default function ServicesView({
                         }`}
                       >
                         <span className="text-base">🌐</span>
-                        <span className="tracking-tight leading-none">Web Gmail</span>
+                        <span className="tracking-tight leading-none">{t("Web Gmail")}</span>
                       </button>
                     </div>
                   </div>
@@ -3845,7 +3848,7 @@ export default function ServicesView({
                 </div>
                 <div>
                   <h3 className="text-lg font-black tracking-tight text-white select-none">
-                     E-Posta Belge Ek (Attachment) Yardımcısı
+                     {t("Email Attachment Helper")}
                   </h3>
                   <p className="text-xs opacity-90 select-none">
                     Teklif PDF'inizi e-postanızla eşleştirme yönergesi
@@ -3881,7 +3884,7 @@ export default function ServicesView({
                     <h4 className="text-xs font-black text-slate-800 dark:text-slate-100">Posta Kutusu Kontrolü</h4>
                   </div>
                   <p className="text-[11px] text-slate-500 dark:text-slate-400 leading-relaxed">
-                    Arka planda seçtiğiniz e-posta istemcisi ({mailClientType === "mailto" ? "Masaüstü Outlook" : mailClientType === "gmail" ? "Web Gmail" : mailClientType === "outlook-corp" ? "Office 365 Kurumsal Web" : "Bireysel Web Outlook"}) alıcı, konu başlığı ve mektup metniyle otomatik açıldı.
+                    Arka planda seçtiğiniz e-posta istemcisi ({mailClientType === "mailto" ? t("Desktop Outlook") : mailClientType === "gmail" ? t("Web Gmail") : mailClientType === "outlook-corp" ? t("Office 365 Corporate Web") : t("Personal Web Outlook")}) {t("Your selected email client opened in the background with recipient, subject, and body.")}
                   </p>
                 </div>
 
@@ -3940,10 +3943,10 @@ export default function ServicesView({
               <Trash2 className="w-6 h-6 animate-pulse" />
             </div>
             <h3 className="font-extrabold text-slate-800 dark:text-zinc-100 text-sm mb-2">
-              {confirmDeleteModal.title || "Kayıt Silinecek"}
+              {confirmDeleteModal.title || t("Record will be deleted")}
             </h3>
             <p className="text-slate-500 dark:text-zinc-400 text-xs mb-6 font-semibold animate-pulse">
-              {confirmDeleteModal.message || "Geri dönüşüm kutusuna taşınsın mı?"}
+              {confirmDeleteModal.message || t("Move to recycle bin?")}
             </p>
             <div className="flex gap-3 justify-center select-none font-bold">
               <button
@@ -3951,7 +3954,7 @@ export default function ServicesView({
                 onClick={() => setConfirmDeleteModal({ isOpen: false, onConfirm: () => {} })}
                 className="border border-slate-200 dark:border-zinc-800 text-slate-600 dark:text-zinc-300 hover:bg-slate-50 dark:hover:bg-zinc-900 px-4 py-2 text-xs rounded-lg transition-colors cursor-pointer w-24"
               >
-                İptal
+                {t("Cancel")}
               </button>
               <button
                 type="button"
@@ -3961,7 +3964,7 @@ export default function ServicesView({
                 }}
                 className="bg-rose-600 hover:bg-rose-700 text-white px-4 py-2 text-xs rounded-lg transition-colors cursor-pointer shadow-sm w-24 active:scale-95 transition-transform"
               >
-                Sil
+                {t("Delete")}
               </button>
             </div>
           </div>

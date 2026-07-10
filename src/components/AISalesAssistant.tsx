@@ -886,7 +886,7 @@ Tavily Search Engine successfully matched supplementary real-time operational da
                   required
                   value={companyInput}
                   onChange={(e) => setCompanyInput(e.target.value)}
-                  placeholder="Örn: Vestel, Kordsa, siseçam.com"
+                  placeholder={t("e.g. Vestel, Kordsa, siseçam.com")}
                   disabled={loading}
                   className="w-full pl-9 pr-3 py-2.5 text-xs bg-white dark:bg-[#11100f] border border-[#D2D0CE] dark:border-[#323130] rounded-lg focus:outline-none focus:border-[#0078D4] dark:focus:border-brand-500 text-slate-800 dark:text-slate-100 placeholder-slate-400"
                 />
@@ -1467,7 +1467,7 @@ Tavily Search Engine successfully matched supplementary real-time operational da
                             value={generatorTopic}
                             onChange={(e) => setGeneratorTopic(e.target.value)}
                             className="w-full text-xs bg-slate-50 dark:bg-black/20 text-slate-800 dark:text-slate-200 px-3 py-2 border border-slate-200 dark:border-[#323130] rounded-lg focus:outline-none focus:border-indigo-500"
-                            placeholder="Ya da farklı bir odak konusu yazın..."
+                            placeholder={t("Or enter a different focus topic...")}
                           />
                         </div>
 
@@ -1493,7 +1493,7 @@ Tavily Search Engine successfully matched supplementary real-time operational da
                             value={generatorExtraContext}
                             onChange={(e) => setGeneratorExtraContext(e.target.value)}
                             className="w-full text-xs bg-slate-50 dark:bg-black/20 text-slate-800 dark:text-slate-200 px-3 py-2 border border-slate-200 dark:border-[#323130] rounded-lg focus:outline-none focus:border-indigo-500 h-16 resize-none"
-                            placeholder="Tesis büyüklüğü referansı, ortak bağlantı veya vurgulamak istediğiniz özel israf noktası..."
+                            placeholder={t("Facility size reference, shared connection, or waste point to highlight...")}
                           />
                         </div>
 
@@ -1731,7 +1731,7 @@ Tavily Search Engine successfully matched supplementary real-time operational da
                         value={generatorTopic}
                         onChange={(e) => setGeneratorTopic(e.target.value)}
                         className="w-full text-xs bg-white dark:bg-black/35 text-slate-800 dark:text-slate-200 px-3 py-2.5 border border-slate-200 dark:border-[#323130] rounded-lg focus:outline-none focus:border-indigo-500"
-                        placeholder="Ya da farklı bir odak konusu yazın..."
+                        placeholder={t("Or enter a different focus topic...")}
                       />
                     </div>
 
@@ -1757,7 +1757,7 @@ Tavily Search Engine successfully matched supplementary real-time operational da
                         value={generatorExtraContext}
                         onChange={(e) => setGeneratorExtraContext(e.target.value)}
                         className="w-full text-xs bg-white dark:bg-black/35 text-slate-800 dark:text-slate-200 px-3 py-2.5 border border-slate-200 dark:border-[#323130] rounded-lg focus:outline-none focus:border-indigo-500 h-24 resize-none"
-                        placeholder="Tesis büyüklüğü referansı, ortak bağlantı veya vurgulamak istediğiniz özel israf noktası..."
+                        placeholder={t("Facility size reference, shared connection, or waste point to highlight...")}
                       />
                     </div>
 

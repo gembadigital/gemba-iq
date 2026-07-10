@@ -57,9 +57,8 @@ export default function DocumentExplorer({
   initialFolder = "companies",
   compact = false,
 }: DocumentExplorerProps) {
-  const { lang } = useLanguage();
+  const { lang, t } = useLanguage();
   const { actorName } = useOrganization();
-  const tr = lang === "TR";
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const [documents, setDocuments] = useState<EnterpriseDocument[]>([]);
@@ -98,7 +97,7 @@ export default function DocumentExplorer({
     try {
       await action();
     } catch (err) {
-      setActionError(err instanceof Error ? err.message : "Action failed.");
+      setActionError(err instanceof Error ? err.message : t("Action failed."));
     }
   };
 
@@ -132,7 +131,7 @@ export default function DocumentExplorer({
         setPreviewUrl(null);
       }
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to load documents.");
+      setError(err instanceof Error ? err.message : t("Failed to load documents."));
     } finally {
       setLoading(false);
     }
@@ -211,7 +210,7 @@ export default function DocumentExplorer({
               ? {
                   ...item,
                   status: "error",
-                  error: err instanceof Error ? err.message : "Upload failed",
+                  error: err instanceof Error ? err.message : t("Upload failed"),
                 }
               : item
           )
@@ -267,7 +266,7 @@ export default function DocumentExplorer({
   };
 
   const handleDelete = async (doc: EnterpriseDocument) => {
-    if (!window.confirm(tr ? "Bu belge silinsin mi?" : "Delete this document?")) return;
+    if (!window.confirm(t("Delete this document?"))) return;
     await runAction(async () => {
       await deleteDocument(doc.id);
       if (selectedDoc?.id === doc.id) {
@@ -305,7 +304,7 @@ export default function DocumentExplorer({
       {!compact && (
         <aside className="rounded-2xl border border-slate-200 dark:border-zinc-800 bg-white dark:bg-[#0f0f11] p-3 h-fit">
           <p className="px-2 py-1 text-[11px] font-bold uppercase tracking-wider text-slate-500">
-            {tr ? "Klasörler" : "Folders"}
+            {t("Folders")}
           </p>
           <div className="mt-2 space-y-1">
             {DOCUMENT_FOLDERS.map((folder) => (
@@ -333,13 +332,11 @@ export default function DocumentExplorer({
             <div>
               <h2 className="text-lg font-bold text-slate-900 dark:text-zinc-100">
                 {companyName
-                  ? `${companyName} ${tr ? "Belgeleri" : "Documents"}`
-                  : tr
-                    ? "Kurumsal Belgeler"
-                    : "Enterprise Documents"}
+                  ? t("{company} Documents").replace("{company}", companyName)
+                  : t("Enterprise Documents")}
               </h2>
               <p className="text-xs text-slate-500">
-                {tr ? "SharePoint tarzı belge yönetimi" : "SharePoint-style document management"} · {actorName}
+                {t("SharePoint-style document management")} · {actorName}
               </p>
             </div>
             <div className="flex items-center gap-2">
@@ -362,7 +359,7 @@ export default function DocumentExplorer({
                 className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-[#1E3A5F] text-white text-xs font-bold"
               >
                 <Upload className="w-4 h-4" />
-                {tr ? "Yükle" : "Upload"}
+                {t("Upload")}
               </button>
               <input
                 ref={fileInputRef}
@@ -386,7 +383,7 @@ export default function DocumentExplorer({
               <input
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
-                placeholder={tr ? "Ara..." : "Search..."}
+                placeholder={t("Search...")}
                 className="w-full pl-9 pr-3 py-2 rounded-xl border border-slate-200 dark:border-zinc-700 text-sm bg-white dark:bg-zinc-900"
               />
             </div>
@@ -396,7 +393,7 @@ export default function DocumentExplorer({
                 onChange={(e) => setCompanyFilter(e.target.value)}
                 className="text-sm rounded-xl border border-slate-200 dark:border-zinc-700 px-3 py-2 bg-white dark:bg-zinc-900"
               >
-                <option value="">{tr ? "Tüm şirketler" : "All companies"}</option>
+                <option value="">{t("All companies")}</option>
                 {companies.map((company) => (
                   <option key={company.id} value={company.id}>
                     {company.name}
@@ -409,7 +406,7 @@ export default function DocumentExplorer({
               onChange={(e) => setTypeFilter(e.target.value)}
               className="text-sm rounded-xl border border-slate-200 dark:border-zinc-700 px-3 py-2 bg-white dark:bg-zinc-900"
             >
-              <option value="">{tr ? "Tüm tipler" : "All types"}</option>
+              <option value="">{t("All types")}</option>
               {Array.from(ALLOWED_EXTENSIONS).map((ext) => (
                 <option key={ext} value={ext}>
                   .{ext}
@@ -421,7 +418,7 @@ export default function DocumentExplorer({
               onChange={(e) => setUploaderFilter(e.target.value)}
               className="text-sm rounded-xl border border-slate-200 dark:border-zinc-700 px-3 py-2 bg-white dark:bg-zinc-900"
             >
-              <option value="">{tr ? "Tüm yükleyenler" : "All uploaders"}</option>
+              <option value="">{t("All uploaders")}</option>
               {uploaders.map((id) => (
                 <option key={id} value={id}>
                   {documents.find((doc) => doc.uploader_id === id)?.uploader_name || id.slice(0, 8)}
@@ -434,9 +431,9 @@ export default function DocumentExplorer({
                 onChange={(e) => setSortBy(e.target.value as "date" | "size" | "name")}
                 className="flex-1 text-sm rounded-xl border border-slate-200 dark:border-zinc-700 px-3 py-2 bg-white dark:bg-zinc-900"
               >
-                <option value="date">{tr ? "Tarih" : "Date"}</option>
-                <option value="size">{tr ? "Boyut" : "Size"}</option>
-                <option value="name">{tr ? "Ad" : "Name"}</option>
+                <option value="date">{t("Date")}</option>
+                <option value="size">{t("Size")}</option>
+                <option value="name">{t("Name")}</option>
               </select>
               <select
                 value={sortDir}
@@ -451,7 +448,7 @@ export default function DocumentExplorer({
           <input
             value={tagFilter}
             onChange={(e) => setTagFilter(e.target.value)}
-            placeholder={tr ? "Etiket filtrele" : "Filter by tag"}
+            placeholder={t("Filter by tag")}
             className="w-full text-sm rounded-xl border border-slate-200 dark:border-zinc-700 px-3 py-2 bg-white dark:bg-zinc-900"
           />
         </div>
@@ -505,12 +502,12 @@ export default function DocumentExplorer({
           {loading ? (
             <div className="flex items-center justify-center py-16 text-slate-500">
               <Loader2 className="w-5 h-5 animate-spin mr-2" />
-              {tr ? "Belgeler yükleniyor..." : "Loading documents..."}
+              {t("Loading documents...")}
             </div>
           ) : documents.length === 0 ? (
             <div className="text-center py-16 text-slate-500">
               <Upload className="w-8 h-8 mx-auto mb-3 opacity-40" />
-              <p>{tr ? "Henüz belge yok. Sürükleyip bırakın veya yükleyin." : "No documents yet. Drag & drop or upload."}</p>
+              <p>{t("No documents yet. Drag & drop or upload.")}</p>
             </div>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
@@ -558,7 +555,7 @@ export default function DocumentExplorer({
                         className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg border text-[11px] font-semibold"
                       >
                         <Download className="w-3 h-3" />
-                        {tr ? "İndir" : "Download"}
+                        {t("Download")}
                       </button>
                       <button
                         type="button"
@@ -570,7 +567,7 @@ export default function DocumentExplorer({
                         className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg border text-[11px] font-semibold"
                       >
                         <Pencil className="w-3 h-3" />
-                        {tr ? "Adlandır" : "Rename"}
+                        {t("Rename")}
                       </button>
                       <button
                         type="button"
@@ -578,7 +575,7 @@ export default function DocumentExplorer({
                         className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg border border-rose-200 text-rose-600 text-[11px] font-semibold"
                       >
                         <Trash2 className="w-3 h-3" />
-                        {tr ? "Sil" : "Delete"}
+                        {t("Delete")}
                       </button>
                     </div>
                   )}
@@ -593,7 +590,7 @@ export default function DocumentExplorer({
         <aside className="rounded-2xl border border-slate-200 dark:border-zinc-800 bg-white dark:bg-[#0f0f11] p-4 h-fit xl:sticky xl:top-4">
           {!selectedDoc ? (
             <div className="text-sm text-slate-500 py-16 text-center">
-              {tr ? "Önizleme için bir belge seçin" : "Select a document to preview"}
+              {t("Select a document to preview")}
             </div>
           ) : (
             <div className="space-y-4">
@@ -618,7 +615,7 @@ export default function DocumentExplorer({
                 )}
                 {previewUrl && !isImageExtension(selectedDoc.extension) && !isPdfExtension(selectedDoc.extension) && (
                   <div className="h-[220px] flex items-center justify-center text-sm text-slate-500">
-                    {tr ? "Bu dosya türü için önizleme yok" : "No preview available for this file type"}
+                    {t("No preview available for this file type")}
                   </div>
                 )}
               </div>
@@ -630,7 +627,7 @@ export default function DocumentExplorer({
                   className="inline-flex items-center justify-center gap-1 px-3 py-2 rounded-xl border text-xs font-semibold"
                 >
                   <Download className="w-3.5 h-3.5" />
-                  {tr ? "İndir" : "Download"}
+                  {t("Download")}
                 </button>
                 <button
                   type="button"
@@ -641,7 +638,7 @@ export default function DocumentExplorer({
                   className="inline-flex items-center justify-center gap-1 px-3 py-2 rounded-xl border text-xs font-semibold"
                 >
                   <Pencil className="w-3.5 h-3.5" />
-                  {tr ? "Yeniden Adlandır" : "Rename"}
+                  {t("Rename")}
                 </button>
                 <button
                   type="button"
@@ -652,7 +649,7 @@ export default function DocumentExplorer({
                   className="inline-flex items-center justify-center gap-1 px-3 py-2 rounded-xl border text-xs font-semibold"
                 >
                   <MoveRight className="w-3.5 h-3.5" />
-                  {tr ? "Taşı" : "Move"}
+                  {t("Move")}
                 </button>
                 <button
                   type="button"
@@ -660,7 +657,7 @@ export default function DocumentExplorer({
                   className="inline-flex items-center justify-center gap-1 px-3 py-2 rounded-xl border text-xs font-semibold"
                 >
                   <Copy className="w-3.5 h-3.5" />
-                  {tr ? "Kopyala" : "Copy"}
+                  {t("Copy")}
                 </button>
                 <button
                   type="button"
@@ -668,7 +665,7 @@ export default function DocumentExplorer({
                   className="inline-flex items-center justify-center gap-1 px-3 py-2 rounded-xl border text-xs font-semibold"
                 >
                   <History className="w-3.5 h-3.5" />
-                  {tr ? "Sürümler" : "Versions"}
+                  {t("Versions")}
                 </button>
                 <button
                   type="button"
@@ -676,12 +673,12 @@ export default function DocumentExplorer({
                   className="inline-flex items-center justify-center gap-1 px-3 py-2 rounded-xl border border-rose-200 text-rose-600 text-xs font-semibold"
                 >
                   <Trash2 className="w-3.5 h-3.5" />
-                  {tr ? "Sil" : "Delete"}
+                  {t("Delete")}
                 </button>
               </div>
 
               <label className="block">
-                <span className="text-xs font-semibold text-slate-500">{tr ? "Yeni sürüm yükle" : "Upload new version"}</span>
+                <span className="text-xs font-semibold text-slate-500">{t("Upload new version")}</span>
                 <input
                   type="file"
                   className="mt-1 block w-full text-xs"
@@ -702,12 +699,8 @@ export default function DocumentExplorer({
           <div className="w-full max-w-md rounded-2xl bg-white dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 p-5 space-y-4">
             <h3 className="font-bold text-slate-900 dark:text-zinc-100">
               {actionModal === "rename"
-                ? tr
-                  ? "Yeniden Adlandır"
-                  : "Rename"
-                : tr
-                  ? "Taşı"
-                  : "Move"}
+                ? t("Rename")
+                : t("Move")}
             </h3>
             {actionModal === "rename" ? (
               <input
@@ -730,14 +723,14 @@ export default function DocumentExplorer({
             )}
             <div className="flex justify-end gap-2">
               <button type="button" onClick={() => setActionModal(null)} className="px-4 py-2 rounded-xl border text-sm">
-                {tr ? "İptal" : "Cancel"}
+                {t("Cancel")}
               </button>
               <button
                 type="button"
                 onClick={() => void (actionModal === "rename" ? handleRename() : handleMove())}
                 className="px-4 py-2 rounded-xl bg-[#1E3A5F] text-white text-sm font-semibold"
               >
-                {tr ? "Kaydet" : "Save"}
+                {t("Save")}
               </button>
             </div>
           </div>
@@ -748,7 +741,7 @@ export default function DocumentExplorer({
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
           <div className="w-full max-w-lg rounded-2xl bg-white dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 p-5">
             <div className="flex items-center justify-between mb-4">
-              <h3 className="font-bold">{tr ? "Sürüm Geçmişi" : "Version History"}</h3>
+              <h3 className="font-bold">{t("Version History")}</h3>
               <button type="button" onClick={() => setShowVersions(false)}>
                 <X className="w-4 h-4" />
               </button>
@@ -768,7 +761,7 @@ export default function DocumentExplorer({
                     onClick={() => void handleDownload(version)}
                     className="text-xs font-semibold text-[#1E3A5F]"
                   >
-                    {tr ? "İndir" : "Download"}
+                    {t("Download")}
                   </button>
                 </div>
               ))}

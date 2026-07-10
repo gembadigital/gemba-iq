@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { CrmDb, CrmEmail, CrmDocument } from "../../lib/CrmDb";
 import { Mail, Send, Trash2, Plus, Sparkles, Paperclip, ChevronRight, User, X } from "lucide-react";
+import { useLanguage } from "../../lib/LanguageContext";
 
 interface CompanyEmailsTabProps {
   companyId: string;
@@ -13,12 +14,13 @@ interface CompanyEmailsTabProps {
 
 export default function CompanyEmailsTab({
   companyId,
-  lang,
+  lang: _langProp,
   companyName,
   contactPersonName = "Yetkili",
   contactEmail = "",
   onLogTimelineEvent
 }: CompanyEmailsTabProps) {
+  const { t, lang } = useLanguage();
   const [emails, setEmails] = useState<CrmEmail[]>(() => CrmDb.getEmailsByCompany(companyId));
   const [documents] = useState<CrmDocument[]>(() => CrmDb.getDocumentsByCompany(companyId));
   const [isComposerOpen, setIsComposerOpen] = useState(false);
@@ -39,19 +41,19 @@ export default function CompanyEmailsTab({
   const templates = [
     {
       id: "followup",
-      name: lang === "TR" ? "Yalın Teşhis Takip E-postası" : "Lean Diagnostic Follow-Up",
+      name: t("Lean Diagnostic Follow-Up"),
       subject: `Gemba Partner: ${companyName} Yalın Üretim Değerlendirmesi`,
       body: `Sayın ${contactPersonName},\n\nGeçtiğimiz günlerde gerçekleştirdiğimiz ön teşhis çalışmasında bahsettiğimiz SMED ve Değer Akış Haritalama projelerimizin üzerinden geçmek istedik. Tesisinizdeki Muda (israf) noktalarını en aza indirmek ve OEE verimlilik puanınızı artırmak adına gerçekleştireceğimiz danışmanlık programıyla ilgili detaylı teklifimiz ekte yer almaktadır.\n\nSüreç hakkında sormak istediğiniz her türlü teknik ve ticari hususta yardımcı olmaktan memnuniyet duyarız. Değerli geri dönüşlerinizi bekler, iyi çalışmalar dileriz.\n\nSaygılarımızla,\nAtakan Zehir\nGemba Partner Kıdemli Danışman`
     },
     {
       id: "intro",
-      name: lang === "TR" ? "Hizmet ve Metot Tanıtımı" : "Consulting Service & Methodology Intro",
+      name: t("Consulting Service & Methodology Intro"),
       subject: `Gemba Partner: Sürekli İyileştirme ve Hücresel Üretim Ortaklığı`,
       body: `Sayın Yetkili,\n\nGemba Partner olarak, ${companyName} bünyesinde operasyonel mükemmelliği tesis etmek ve israfları elimine etmek adına yürüttüğümüz çalışmaların bir özetini sunmak istiyoruz. \n\nSüreçlerinizi analiz ederek katma değersiz adımları (Muda) ortadan kaldırıyor, 5S, Kanban ve Standart İş Talimatları ile sürdürülebilir bir sistem kuruyoruz. Ekiplerinizin eğitimi ve sahada aktif Gemba yürüyüşleriyle dönüşüm sürecinizi destekliyoruz.\n\nSizinle kısa bir tanışma toplantısı organize ederek tesisinize özel yol haritasını değerlendirmek isteriz.\n\nSaygılarımızla,\nGemba Partner Danışmanlık Ekibi`
     },
     {
       id: "invoice",
-      name: lang === "TR" ? "Fatura ve Ödeme Hatırlatması" : "Invoice & Outstanding Payments",
+      name: t("Invoice & Outstanding Payments"),
       subject: `Gemba Partner: Fatura Ödeme Süreç Takibi`,
       body: `Sayın ${contactPersonName},\n\n${companyName} adına tamamladığımız Yalın Dönüşüm Saha Teşhis çalışmamıza ait faturamız ekte yer almaktadır. Ödeme vademiz gereği faturanın kapatılması hususunda muhasebe biriminizle koordinasyon sağlamanızı rica eder, destekleriniz için teşekkür ederiz.\n\nYeni dönem projelerimizde de birlikte çalışmak dileğiyle.\n\nSaygılarımızla,\nGemba Partner Finans Birimi`
     }
@@ -82,7 +84,7 @@ export default function CompanyEmailsTab({
   const handleSendEmail = (e: React.FormEvent) => {
     e.preventDefault();
     if (!formState.recipient || !formState.subject || !formState.body) {
-      alert(lang === "TR" ? "Lütfen tüm zorunlu alanları doldurun!" : "Please fill out all required fields!");
+      alert(t("Please fill out all required fields!"));
       return;
     }
 
@@ -99,7 +101,7 @@ export default function CompanyEmailsTab({
 
     if (onLogTimelineEvent) {
       onLogTimelineEvent(
-        lang === "TR" ? "E-posta Gönderildi" : "Email Sent",
+        t("Email Sent"),
         `Alıcı: ${formState.recipient} • Konu: ${formState.subject}`,
         "email"
       );
@@ -123,7 +125,7 @@ export default function CompanyEmailsTab({
       {/* Top action block */}
       <div className="flex items-center justify-between bg-white dark:bg-[#151515] p-3.5 rounded-xl border border-slate-100 dark:border-zinc-800/80 shadow-[0_1px_2px_rgba(0,0,0,0.01)]">
         <h4 className="text-xs font-bold uppercase text-slate-800 dark:text-zinc-200 tracking-wider">
-          {lang === "TR" ? "Gönderilen ve Alınan Kurumsal E-postalar" : "Client Email Communications"}
+          {t("Client Email Communications")}
         </h4>
         <button
           type="button"
@@ -131,7 +133,7 @@ export default function CompanyEmailsTab({
           className="px-3.5 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg font-bold flex items-center gap-1.5 cursor-pointer transition-all text-xs"
         >
           <Plus className="w-3.5 h-3.5" />
-          <span>{lang === "TR" ? "E-posta Gönder" : "Compose Email"}</span>
+          <span>{t("Compose Email")}</span>
         </button>
       </div>
 
@@ -144,7 +146,7 @@ export default function CompanyEmailsTab({
           <div className="flex items-center justify-between border-b border-dashed border-slate-200 dark:border-zinc-800 pb-2">
             <span className="font-bold text-slate-700 dark:text-zinc-200 flex items-center gap-1.5">
               <Mail className="w-4 h-4 text-indigo-500 animate-pulse" />
-              {lang === "TR" ? "Akıllı E-posta Oluşturucu" : "SaaS Core Mail Composer"}
+              {t("SaaS Core Mail Composer")}
             </span>
             <button
               type="button"
@@ -157,7 +159,7 @@ export default function CompanyEmailsTab({
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
             <div>
-              <label className="block text-[9px] uppercase font-bold text-slate-400 mb-1">{lang === "TR" ? "Alıcı E-posta *" : "Recipient Email *"}</label>
+              <label className="block text-[9px] uppercase font-bold text-slate-400 mb-1">{t("Recipient Email *")}</label>
               <input
                 type="email"
                 required
@@ -167,13 +169,13 @@ export default function CompanyEmailsTab({
               />
             </div>
             <div>
-              <label className="block text-[9px] uppercase font-bold text-slate-400 mb-1">{lang === "TR" ? "Akıllı E-posta Şablonu" : "Select CRM Template"}</label>
+              <label className="block text-[9px] uppercase font-bold text-slate-400 mb-1">{t("Select CRM Template")}</label>
               <select
                 value={selectedTemplate}
                 onChange={handleTemplateChange}
                 className="w-full bg-white dark:bg-zinc-800 border border-slate-200 dark:border-zinc-700 rounded p-1.5 text-xs text-slate-800 dark:text-zinc-200 focus:outline-none"
               >
-                <option value="">{lang === "TR" ? "-- Boş Taslak --" : "-- Blank Template --"}</option>
+                <option value="">{t("-- Blank Template --")}</option>
                 {templates.map(t => (
                   <option key={t.id} value={t.id}>{t.name}</option>
                 ))}
@@ -182,11 +184,11 @@ export default function CompanyEmailsTab({
           </div>
 
           <div>
-            <label className="block text-[9px] uppercase font-bold text-slate-400 mb-1">{lang === "TR" ? "E-posta Konusu *" : "Subject *"}</label>
+            <label className="block text-[9px] uppercase font-bold text-slate-400 mb-1">{t("Subject *")}</label>
             <input
               type="text"
               required
-              placeholder={lang === "TR" ? "Örn. Gemba Partner Yalın Gözlem Takvimi" : "e.g. Diagnostic diagnostic schedule follow-up"}
+              placeholder={t("e.g. Diagnostic diagnostic schedule follow-up")}
               value={formState.subject}
               onChange={(e) => setFormState({ ...formState, subject: e.target.value })}
               className="w-full bg-white dark:bg-zinc-800 border border-slate-200 dark:border-zinc-700 rounded p-1.5 text-xs text-slate-800 dark:text-zinc-200 focus:outline-none focus:border-indigo-500"
@@ -194,7 +196,7 @@ export default function CompanyEmailsTab({
           </div>
 
           <div>
-            <label className="block text-[9px] uppercase font-bold text-slate-400 mb-1">E-posta Metni *</label>
+            <label className="block text-[9px] uppercase font-bold text-slate-400 mb-1">{t("Email Body *")}</label>
             <textarea
               required
               value={formState.body}
@@ -206,14 +208,14 @@ export default function CompanyEmailsTab({
           <div>
             <label className="block text-[9px] uppercase font-bold text-slate-400 mb-1 flex items-center gap-1">
               <Paperclip className="w-3 h-3" />
-              <span>{lang === "TR" ? "Belge Ek Referansı Seç" : "Attach Company Document Reference"}</span>
+              <span>{t("Attach Company Document Reference")}</span>
             </label>
             <select
               value={formState.attachmentName}
               onChange={(e) => setFormState({ ...formState, attachmentName: e.target.value })}
               className="w-full bg-white dark:bg-zinc-800 border border-slate-200 dark:border-zinc-700 rounded p-1.5 text-xs text-slate-800 dark:text-zinc-200 focus:outline-none"
             >
-              <option value="">{lang === "TR" ? "-- Ekli Dosya Yok --" : "-- No Attachment --"}</option>
+              <option value="">{t("-- No Attachment --")}</option>
               {documents.map(doc => (
                 <option key={doc.id} value={doc.name}>{doc.name} ({doc.size})</option>
               ))}
@@ -226,14 +228,14 @@ export default function CompanyEmailsTab({
               onClick={() => setIsComposerOpen(false)}
               className="px-3.5 py-1.5 bg-slate-200 hover:bg-slate-300 text-slate-700 rounded font-semibold cursor-pointer"
             >
-              {lang === "TR" ? "İptal" : "Cancel"}
+              {t("Cancel")}
             </button>
             <button
               type="submit"
               className="px-4.5 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded font-bold flex items-center gap-1.5 cursor-pointer shadow-sm"
             >
               <Send className="w-3.5 h-3.5" />
-              <span>{lang === "TR" ? "E-postayı Gönder" : "Send Email"}</span>
+              <span>{t("Send Email")}</span>
             </button>
           </div>
         </form>
@@ -245,7 +247,7 @@ export default function CompanyEmailsTab({
           <div className="p-12 text-center bg-white dark:bg-[#151515] border border-dashed border-slate-200 dark:border-zinc-800 rounded-xl">
             <Mail className="w-8 h-8 text-slate-300 mx-auto mb-2" />
             <span className="text-slate-400 block">
-              {lang === "TR" ? "Bu hesaba ait gönderilmiş veya gelen e-posta kaydı bulunmamaktadır." : "No emails exchanged with this client record yet."}
+              {t("No emails exchanged with this client record yet.")}
             </span>
           </div>
         ) : (
@@ -261,12 +263,12 @@ export default function CompanyEmailsTab({
                       ? "bg-teal-50 text-teal-600 dark:bg-teal-950/20 dark:text-teal-400" 
                       : "bg-indigo-50 text-indigo-600 dark:bg-indigo-950/20 dark:text-indigo-400"
                   }`}>
-                    {email.isIncoming ? (lang === "TR" ? "Gelen" : "Inbox") : (lang === "TR" ? "Gönderildi" : "Sent")}
+                    {email.isIncoming ? t("Inbox") : t("Sent")}
                   </span>
                   <span className="font-bold text-slate-750 dark:text-zinc-200">
                     {email.isIncoming 
-                      ? `${lang === "TR" ? "Gönderen:" : "From:"} ${email.sender}` 
-                      : `${lang === "TR" ? "Alıcı:" : "To:"} ${email.recipient}`}
+                      ? `${t("From:")} ${email.sender}` 
+                      : `${t("To:")} ${email.recipient}`}
                   </span>
                 </div>
                 <span className="text-[10px] text-slate-400 font-mono">
@@ -287,7 +289,7 @@ export default function CompanyEmailsTab({
                 <div className="flex flex-wrap items-center gap-2 pt-2 border-t border-dashed border-slate-50 dark:border-zinc-850">
                   <span className="text-[9px] uppercase font-bold text-slate-400 font-mono flex items-center gap-1">
                     <Paperclip className="w-3.5 h-3.5" />
-                    {lang === "TR" ? "Ekler:" : "Attachments:"}
+                    {t("Attachments:")}
                   </span>
                   {email.attachments.map((att, i) => (
                     <span

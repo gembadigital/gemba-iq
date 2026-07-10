@@ -57,7 +57,7 @@ export default function CompanyDetailView({
 
   // Localization utilities for database fields
   const getTranslatedValue = (value: string | undefined, field: string) => {
-    if (!value) return lang === "TR" ? "Belirtilmemiş" : "Not specified";
+    if (!value) return t("Not specified");
     if (lang !== "TR") return value;
     
     const translations: { [key: string]: string } = {
@@ -138,7 +138,7 @@ export default function CompanyDetailView({
               type="button"
               onClick={onClose}
               className="p-1.5 bg-white dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 text-slate-500 hover:text-rose-600 dark:hover:text-rose-400 rounded-lg cursor-pointer transition-colors"
-              title={lang === "TR" ? "Kapat" : "Close"}
+              title={t("Close")}
             >
               <X className="w-4 h-4" />
             </button>
@@ -147,7 +147,7 @@ export default function CompanyDetailView({
               type="button"
               onClick={onClose}
               className="p-1.5 bg-white dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 text-slate-500 hover:text-slate-800 dark:hover:text-zinc-200 rounded-lg cursor-pointer transition-colors"
-              title={lang === "TR" ? "Listeye Geri Dön" : "Back to Registry"}
+              title={t("Back to Registry")}
             >
               <ArrowLeft className="w-4 h-4" />
             </button>
@@ -200,7 +200,7 @@ export default function CompanyDetailView({
               className="px-3.5 py-1.5 bg-white hover:bg-slate-50 dark:bg-zinc-900 dark:hover:bg-zinc-800 border border-slate-205 dark:border-zinc-800 text-slate-700 dark:text-zinc-300 rounded-lg font-semibold flex items-center gap-1 cursor-pointer transition-colors text-xs"
             >
               <Edit2 className="w-3.5 h-3.5" />
-              <span>{lang === "TR" ? "Profili Düzenle" : "Edit Profile"}</span>
+              <span>{t("Edit Company Profile")}</span>
             </button>
           )}
 
@@ -211,7 +211,7 @@ export default function CompanyDetailView({
               className="px-3 py-1.5 bg-rose-50 hover:bg-rose-100 dark:bg-rose-950/20 text-rose-600 dark:text-rose-400 rounded-lg font-bold flex items-center gap-1 cursor-pointer transition-colors text-xs"
             >
               <Trash2 className="w-3.5 h-3.5" />
-              <span>{lang === "TR" ? "Şirketi Sil" : "Delete"}</span>
+              <span>{t("Remove Company")}</span>
             </button>
           )}
         </div>
@@ -221,16 +221,16 @@ export default function CompanyDetailView({
       {/* CRM Navigation Tabs selectors (10 TAB) */}
       <div className="overflow-x-auto border-b border-slate-100 dark:border-zinc-900/60 pb-1 flex items-center gap-1 scrollbar-thin z-10 sticky top-0 bg-[#FAF9F8] dark:bg-[#0B0B0C] pt-1">
         {[
-          { id: "overview", label: lang === "TR" ? "Özet & Detaylar" : "Overview", icon: <Building className="w-3.5 h-3.5" /> },
-          { id: "contacts", label: lang === "TR" ? "İletişim Kişileri" : "Contacts", icon: <Users className="w-3.5 h-3.5" /> },
-          { id: "activities", label: lang === "TR" ? "Zaman Tüneli" : "Activities Feed", icon: <Clock className="w-3.5 h-3.5" /> },
-          { id: "opportunities", label: lang === "TR" ? "Satış Fırsatları" : "Opportunities", icon: <Briefcase className="w-3.5 h-3.5" /> },
-          { id: "proposals", label: lang === "TR" ? "Teklifler" : "Proposals", icon: <FileCheck2 className="w-3.5 h-3.5" /> },
-          { id: "emails", label: lang === "TR" ? "E-postalar" : "Emails Hub", icon: <Mail className="w-3.5 h-3.5" /> },
-          { id: "documents", label: lang === "TR" ? "Belgeler" : "Documents", icon: <Paperclip className="w-3.5 h-3.5" /> },
-          { id: "opex", label: lang === "TR" ? "Lean Teşhis / Opex" : "Lean Opex Matrix", icon: <Award className="w-3.5 h-3.5" /> },
-          { id: "revenue", label: lang === "TR" ? "Finansal Ciro" : "Revenue Ledger", icon: <DollarSign className="w-3.5 h-3.5" /> },
-          { id: "audit", label: lang === "TR" ? "Denetim Günlüğü" : "Audit Log History", icon: <Layers className="w-3.5 h-3.5" /> }
+          { id: "overview", label: t("Overview"), icon: <Building className="w-3.5 h-3.5" /> },
+          { id: "contacts", label: t("Contacts"), icon: <Users className="w-3.5 h-3.5" /> },
+          { id: "activities", label: t("Activities Feed"), icon: <Clock className="w-3.5 h-3.5" /> },
+          { id: "opportunities", label: t("Opportunities"), icon: <Briefcase className="w-3.5 h-3.5" /> },
+          { id: "proposals", label: t("Proposals"), icon: <FileCheck2 className="w-3.5 h-3.5" /> },
+          { id: "emails", label: t("Emails Hub"), icon: <Mail className="w-3.5 h-3.5" /> },
+          { id: "documents", label: t("Documents"), icon: <Paperclip className="w-3.5 h-3.5" /> },
+          { id: "opex", label: t("Lean Opex Matrix"), icon: <Award className="w-3.5 h-3.5" /> },
+          { id: "revenue", label: t("Revenue Ledger"), icon: <DollarSign className="w-3.5 h-3.5" /> },
+          { id: "audit", label: t("Audit Log History"), icon: <Layers className="w-3.5 h-3.5" /> }
         ].map((tab) => {
           const active = detailTab === tab.id;
           return (
@@ -289,14 +289,14 @@ export default function CompanyDetailView({
           <div className="bg-white dark:bg-[#151515] p-5 rounded-xl border border-slate-100 dark:border-zinc-800/80 space-y-4">
             <div className="flex items-center justify-between border-b border-slate-150 dark:border-zinc-800 pb-2">
               <h4 className="text-xs font-bold uppercase text-slate-800 dark:text-zinc-200 tracking-wider font-mono">
-                {lang === "TR" ? "İlişkili Satış Fırsatları" : "Linked Opportunity Pipeline"}
+                {t("Linked Opportunity Pipeline")}
               </h4>
             </div>
 
             {CrmDb.getDealsByCompany(company.id).length === 0 ? (
               <div className="p-10 text-center">
                 <Briefcase className="w-8 h-8 text-slate-300 mx-auto mb-2" />
-                <span className="text-slate-405">{lang === "TR" ? "Şirkete bağlı aktif satış fırsatı bulunmamaktadır." : "No deals registered for this account yet."}</span>
+                <span className="text-slate-405">{t("No deals registered for this account yet.")}</span>
               </div>
             ) : (
               <div className="overflow-x-auto">
@@ -338,14 +338,14 @@ export default function CompanyDetailView({
           <div className="bg-white dark:bg-[#151515] p-5 rounded-xl border border-slate-100 dark:border-zinc-800/80 space-y-4">
             <div className="flex items-center justify-between border-b border-slate-150 dark:border-zinc-800 pb-2">
               <h4 className="text-xs font-bold uppercase text-slate-800 dark:text-zinc-200 tracking-wider font-mono">
-                {lang === "TR" ? "Grup Teklif Geçmişi" : "Linked Proposal History"}
+                {t("Linked Proposal History")}
               </h4>
             </div>
 
             {CrmDb.getProposalsByCompany(company.id).length === 0 ? (
               <div className="p-10 text-center">
                 <FileCheck2 className="w-8 h-8 text-slate-300 mx-auto mb-2" />
-                <span className="text-slate-450">{lang === "TR" ? "Şirkete gönderilmiş herhangi bir teklif kaydı bulunmamaktadır." : "No proposals registered for this company yet."}</span>
+                <span className="text-slate-450">{t("No proposals registered for this company yet.")}</span>
               </div>
             ) : (
               <div className="overflow-x-auto">
@@ -433,7 +433,7 @@ export default function CompanyDetailView({
           <div className="bg-white dark:bg-[#151515] p-5 rounded-xl border border-slate-100 dark:border-zinc-800/80 space-y-4">
             <div className="flex items-center justify-between border-b border-slate-150 dark:border-zinc-800 pb-2">
               <h4 className="text-xs font-bold uppercase text-slate-800 dark:text-zinc-200 tracking-wider font-mono">
-                {lang === "TR" ? "Şirket Özellikleri Değişim / Denetim Geçmişi" : "Field Change Audit & History Ledger"}
+                {t("Field Change Audit & History Ledger")}
               </h4>
             </div>
 
@@ -443,7 +443,7 @@ export default function CompanyDetailView({
               if (logs.length === 0) {
                 return (
                   <div className="p-10 text-center text-slate-400">
-                    {lang === "TR" ? "Herhangi bir profil düzenleme veya değişiklik geçmişi bulunmamaktadır." : "No change audit logs registered for this company profile yet."}
+                    {t("No change audit logs registered for this company profile yet.")}
                   </div>
                 );
               }

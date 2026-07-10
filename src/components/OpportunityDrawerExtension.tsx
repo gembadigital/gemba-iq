@@ -158,7 +158,7 @@ export function TimelineActivitiesSection({ deal, onUpdateDeal, lang, t }: Timel
     };
     const loggedDeal = addAuditLog(
       updatedDeal,
-      lang === "TR" ? "Yeni Aktivite Eklendi" : "New Activity Created",
+      t("New Activity Created"),
       undefined,
       `${newAct.type}: ${newAct.title}`
     );
@@ -206,7 +206,7 @@ export function TimelineActivitiesSection({ deal, onUpdateDeal, lang, t }: Timel
     const updatedDeal = { ...deal, activities: updatedActs };
     const loggedDeal = addAuditLog(
       updatedDeal,
-      lang === "TR" ? "Aktivite Düzenlendi" : "Activity Edited",
+      t("Activity Edited"),
       undefined,
       editTitle
     );
@@ -215,15 +215,13 @@ export function TimelineActivitiesSection({ deal, onUpdateDeal, lang, t }: Timel
   };
 
   const handleDeleteActivity = (id: string, title: string) => {
-    const msg = lang === "TR"
-      ? `Bu aktiviteyi silmek istediğinizden emin misiniz?\n"${title}"`
-      : `Are you sure you want to delete this activity?\n"${title}"`;
+    const msg = t('Are you sure you want to delete this activity?\n"{title}"').replace("{title}", title);
     if (window.confirm(msg)) {
       const updatedActs = (deal.activities || []).filter((act: any) => act.id !== id);
       const updatedDeal = { ...deal, activities: updatedActs };
       const loggedDeal = addAuditLog(
         updatedDeal,
-        lang === "TR" ? "Aktivite Silindi" : "Activity Deleted",
+        t("Activity Deleted"),
         title,
         undefined
       );
@@ -236,7 +234,7 @@ export function TimelineActivitiesSection({ deal, onUpdateDeal, lang, t }: Timel
     const newAct = {
       ...act,
       id: `act-dup-${Date.now()}`,
-      title: `${act.title} (${lang === "TR" ? "Kopya" : "Copy"})`,
+      title: `${act.title} (${t("Copy")})`,
       date: new Date().toLocaleDateString("tr-TR")
     };
     const currentActs = deal.activities || [];
@@ -247,7 +245,7 @@ export function TimelineActivitiesSection({ deal, onUpdateDeal, lang, t }: Timel
     const updatedDeal = { ...deal, activities: updated };
     const loggedDeal = addAuditLog(
       updatedDeal,
-      lang === "TR" ? "Aktivite Çoğaltıldı" : "Activity Duplicated",
+      t("Activity Duplicated"),
       act.title,
       newAct.title
     );
@@ -283,18 +281,18 @@ export function TimelineActivitiesSection({ deal, onUpdateDeal, lang, t }: Timel
       <div className="bg-slate-50 dark:bg-black/15 p-4 rounded-xl border border-slate-200 dark:border-zinc-800 space-y-4">
         <span className="text-xs font-extrabold text-slate-800 dark:text-zinc-100 flex items-center gap-1.5 font-sans">
           <Calendar className="w-4 h-4 text-emerald-600" />
-          {lang === "TR" ? "📅 Yeni Görüşme / Aktivite Ekle" : "📅 Add New Meeting / Activity"}
+          {t("📅 Add New Meeting / Activity")}
         </span>
 
         <div className="grid grid-cols-2 gap-3">
           <div className="col-span-2 sm:col-span-1">
             <label className="block text-[8px] text-slate-450 uppercase font-mono font-bold mb-1">
-              {lang === "TR" ? "Görüşme Konusu *" : "Meeting Subject *"}
+              {t("Meeting Subject *")}
             </label>
             <input 
               type="text" 
               required
-              placeholder={lang === "TR" ? "Örn: SMED Hazırlık İstişaresi" : "e.g., SMED Prep Alignment"}
+              placeholder={t("e.g., SMED Prep Alignment")}
               value={newActTitle}
               onChange={(e) => setNewActTitle(e.target.value)}
               className="w-full p-2 bg-white dark:bg-zinc-850 border border-slate-250 dark:border-zinc-750 text-slate-800 dark:text-zinc-100 rounded focus:ring-1 focus:ring-emerald-500 outline-none"
@@ -303,24 +301,24 @@ export function TimelineActivitiesSection({ deal, onUpdateDeal, lang, t }: Timel
 
           <div className="col-span-2 sm:col-span-1">
             <label className="block text-[8px] text-slate-455 uppercase font-mono font-bold mb-1">
-              {lang === "TR" ? "Aktivite Türü" : "Activity Type"}
+              {t("Activity Type")}
             </label>
             <select 
               value={newActType}
               onChange={(e) => setNewActType(e.target.value)}
               className="w-full p-2 bg-white dark:bg-zinc-850 border border-slate-250 dark:border-zinc-750 text-slate-800 dark:text-zinc-100 rounded focus:ring-1 focus:ring-emerald-500 outline-none cursor-pointer"
             >
-              <option value="Toplantı">🤝 {lang === "TR" ? "Toplantı (Meeting)" : "Meeting"}</option>
-              <option value="Saha Ziyareti">🏬 {lang === "TR" ? "Saha Ziyareti (Gemba Walk)" : "Site Visit / Gemba"}</option>
-              <option value="E-posta">✉️ {lang === "TR" ? "E-posta İletişimi" : "Email Communication"}</option>
-              <option value="Telefon">📞 {lang === "TR" ? "Telefon Araması" : "Phone Call"}</option>
-              <option value="Diğer">⚙️ {lang === "TR" ? "Diğer Operasyonel" : "Other Operational"}</option>
+              <option value="Toplantı">🤝 {t("Meeting")}</option>
+              <option value="Saha Ziyareti">🏬 {t("Site Visit / Gemba")}</option>
+              <option value="E-posta">✉️ {t("Email Communication")}</option>
+              <option value="Telefon">📞 {t("Phone Call")}</option>
+              <option value="Diğer">⚙️ {t("Other Operational")}</option>
             </select>
           </div>
 
           <div>
             <label className="block text-[8px] text-slate-455 uppercase font-mono font-bold mb-1">
-              {lang === "TR" ? "Görüşme Tarihi *" : "Meeting Date *"}
+              {t("Meeting Date *")}
             </label>
             <input 
               type="date" 
@@ -333,12 +331,12 @@ export function TimelineActivitiesSection({ deal, onUpdateDeal, lang, t }: Timel
 
           <div className="col-span-2">
             <label className="block text-[8px] text-slate-455 uppercase font-mono font-bold mb-1">
-              {lang === "TR" ? "Yapılan Görüşmenin İçeriği / Özeti *" : "Summary / Meeting Content *"}
+              {t("Summary / Meeting Content *")}
             </label>
             <textarea 
               rows={2}
               required
-              placeholder={lang === "TR" ? "Kararları ve detayları buraya yazın..." : "Describe decisions and highlights..."}
+              placeholder={t("Describe decisions and highlights...")}
               value={newActSummary}
               onChange={(e) => setNewActSummary(e.target.value)}
               className="w-full p-2.5 bg-white dark:bg-zinc-850 border border-slate-255 dark:border-zinc-755 text-slate-800 dark:text-zinc-100 rounded focus:ring-1 focus:ring-emerald-500 outline-none h-18 resize-none font-sans text-xs"
@@ -353,7 +351,7 @@ export function TimelineActivitiesSection({ deal, onUpdateDeal, lang, t }: Timel
             onClick={handleCreateActivity}
             className="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold text-[11px] rounded-lg cursor-pointer shadow-2xs transition-all disabled:opacity-50 disabled:cursor-not-allowed uppercase"
           >
-            {lang === "TR" ? "+ Görüşmeyi Kronolojiye Ekle" : "+ Add Meeting to Timeline"}
+            {t("+ Add Meeting to Timeline")}
           </button>
         </div>
       </div>
@@ -361,7 +359,7 @@ export function TimelineActivitiesSection({ deal, onUpdateDeal, lang, t }: Timel
       {/* Timeline List */}
       <div className="bg-slate-50 dark:bg-black/15 p-4 rounded-xl border border-slate-200 dark:border-zinc-800 space-y-3">
         <span className="text-xs font-extrabold text-slate-800 dark:text-zinc-100 block uppercase tracking-wide font-mono">
-          {lang === "TR" ? "Yapılan Görüşmeler & Kronoloji" : "Meetings & Timeline History"}
+          {t("Meetings & Timeline History")}
         </span>
 
         {deal.activities && deal.activities.length > 0 ? (
@@ -380,7 +378,7 @@ export function TimelineActivitiesSection({ deal, onUpdateDeal, lang, t }: Timel
                         value={editTitle} 
                         onChange={(e) => setEditTitle(e.target.value)}
                         className="p-1 border rounded w-full dark:bg-zinc-800 dark:text-white"
-                        placeholder="Title"
+                        placeholder={t("Title")}
                       />
                       <input 
                         type="date" 
@@ -405,7 +403,7 @@ export function TimelineActivitiesSection({ deal, onUpdateDeal, lang, t }: Timel
                       onChange={(e) => setEditSummary(e.target.value)}
                       className="p-1.5 border rounded w-full dark:bg-zinc-800 dark:text-white text-[11px]"
                       rows={2}
-                      placeholder="Summary content..."
+                      placeholder={t("Summary content...")}
                     />
                     <div className="flex justify-end gap-2 text-[10px]">
                       <button 
@@ -458,14 +456,14 @@ export function TimelineActivitiesSection({ deal, onUpdateDeal, lang, t }: Timel
                                 className="w-full px-3 py-1.5 hover:bg-slate-50 dark:hover:bg-zinc-850 flex items-center gap-1.5 font-medium text-slate-750 dark:text-zinc-200"
                               >
                                 <Edit2 className="w-3 h-3 text-blue-500" />
-                                <span>{lang === "TR" ? "Düzenle" : "Edit"}</span>
+                                <span>{t("Edit")}</span>
                               </button>
                               <button
                                 onClick={() => handleDuplicate(a)}
                                 className="w-full px-3 py-1.5 hover:bg-slate-50 dark:hover:bg-zinc-850 flex items-center gap-1.5 font-medium text-slate-750 dark:text-zinc-200"
                               >
                                 <Copy className="w-3 h-3 text-emerald-500" />
-                                <span>{lang === "TR" ? "Çoğalt" : "Duplicate"}</span>
+                                <span>{t("Duplicate")}</span>
                               </button>
                               <button
                                 onClick={() => handleMoveUp(idx)}
@@ -473,7 +471,7 @@ export function TimelineActivitiesSection({ deal, onUpdateDeal, lang, t }: Timel
                                 className="w-full px-3 py-1.5 hover:bg-slate-50 dark:hover:bg-zinc-850 flex items-center gap-1.5 font-medium text-slate-750 dark:text-zinc-200 disabled:opacity-40"
                               >
                                 <ArrowUp className="w-3 h-3 text-indigo-500" />
-                                <span>{lang === "TR" ? "Yukarı Taşı" : "Move Up"}</span>
+                                <span>{t("Move Up")}</span>
                               </button>
                               <button
                                 onClick={() => handleMoveDown(idx)}
@@ -481,7 +479,7 @@ export function TimelineActivitiesSection({ deal, onUpdateDeal, lang, t }: Timel
                                 className="w-full px-3 py-1.5 hover:bg-slate-50 dark:hover:bg-zinc-850 flex items-center gap-1.5 font-medium text-slate-750 dark:text-zinc-200 disabled:opacity-40"
                               >
                                 <ArrowDown className="w-3 h-3 text-indigo-500" />
-                                <span>{lang === "TR" ? "Aşağı Taşı" : "Move Down"}</span>
+                                <span>{t("Move Down")}</span>
                               </button>
                               <div className="border-t border-slate-100 dark:border-zinc-800 my-0.5" />
                               <button
@@ -489,7 +487,7 @@ export function TimelineActivitiesSection({ deal, onUpdateDeal, lang, t }: Timel
                                 className="w-full px-3 py-1.5 hover:bg-rose-50 dark:hover:bg-rose-950/20 flex items-center gap-1.5 font-bold text-rose-600"
                               >
                                 <Trash2 className="w-3 h-3 text-rose-600" />
-                                <span>{lang === "TR" ? "Sil" : "Delete"}</span>
+                                <span>{t("Delete")}</span>
                               </button>
                             </div>
                           )}
@@ -499,7 +497,7 @@ export function TimelineActivitiesSection({ deal, onUpdateDeal, lang, t }: Timel
 
                     {a.summary && (
                       <p className="p-2.5 bg-white dark:bg-[#111110] border border-slate-150 dark:border-zinc-805/50 rounded text-[11px] text-slate-600 dark:text-zinc-300 leading-normal pl-3 font-sans italic border-l-2 border-l-emerald-500">
-                        <strong>{lang === "TR" ? "Özet:" : "Summary:"}</strong> {a.summary}
+                        <strong>{t("Summary:")}</strong> {a.summary}
                       </p>
                     )}
                   </div>
@@ -509,7 +507,7 @@ export function TimelineActivitiesSection({ deal, onUpdateDeal, lang, t }: Timel
           </div>
         ) : (
           <p className="text-[11px] text-slate-450 text-center italic py-4">
-            {lang === "TR" ? "Fırsata ait geçmiş aktivite bulunmamaktadır." : "No activities have been logged for this opportunity."}
+            {t("No activities have been logged for this opportunity.")}
           </p>
         )}
       </div>
@@ -640,8 +638,8 @@ export function OpexAssessmentSection({ deal, onUpdateDeal, lang, t, readOnly = 
     const logged = addAuditLog(
       nextDeal,
       isAutoSave 
-        ? `${lang === "TR" ? "Otomatik Kayıt" : "Auto Saved"}: Not Versiyon V${nextVer}` 
-        : `${lang === "TR" ? "Not Versiyonu Kaydedildi" : "Note Version V" + nextVer + " Saved"}`,
+        ? `${t("Auto Saved")}: Not Versiyon V${nextVer}` 
+        : `${t("Note Version V") + nextVer + " Saved"}`,
       latest ? `V${latest.version}` : undefined,
       `V${nextVer}`
     );
@@ -651,7 +649,7 @@ export function OpexAssessmentSection({ deal, onUpdateDeal, lang, t, readOnly = 
   const handleManualSave = () => {
     if (editableRef.current) {
       saveNoteVersion(editableRef.current.innerHTML, false);
-      alert(lang === "TR" ? "Notunuz yeni bir versiyon olarak başarıyla kaydedildi!" : "Note successfully saved as a new version!");
+      alert(t("Note successfully saved as a new version!"));
     }
   };
 
@@ -732,9 +730,10 @@ export function OpexAssessmentSection({ deal, onUpdateDeal, lang, t, readOnly = 
       const sizeInMB = f.size / (1024 * 1024);
       if (sizeInMB > maxFileSize) {
         alert(
-          lang === "TR"
-            ? `Hata: "${f.name}" dosyası sınırı aşmaktadır (${sizeInMB.toFixed(1)} MB > Maksimum ${maxFileSize} MB)`
-            : `Error: "${f.name}" file size exceeds limit (${sizeInMB.toFixed(1)} MB > Configured max ${maxFileSize} MB)`
+          t('Error: "{name}" file size exceeds limit ({size} MB > Configured max {max} MB)')
+            .replace("{name}", f.name)
+            .replace("{size}", sizeInMB.toFixed(1))
+            .replace("{max}", String(maxFileSize))
         );
         return;
       }
@@ -770,9 +769,9 @@ export function OpexAssessmentSection({ deal, onUpdateDeal, lang, t, readOnly = 
         };
         updatedAtts[existingIdx] = updatedFile;
         alert(
-          lang === "TR"
-            ? `"${f.name}" dosyasının yeni bir versiyonu yüklenerek V${nextVer} seviyesine çıkarıldı!`
-            : `"${f.name}" successfully updated to version V${nextVer}!`
+          t('"{name}" successfully updated to version V{version}!')
+            .replace("{name}", f.name)
+            .replace("{version}", String(nextVer))
         );
       } else {
         // Create new attachment
@@ -796,7 +795,7 @@ export function OpexAssessmentSection({ deal, onUpdateDeal, lang, t, readOnly = 
     // Log Audit
     const logged = addAuditLog(
       deal,
-      lang === "TR" ? "Yeni Ek Dosya Yüklendi" : "New Attachment Uploaded",
+      t("New Attachment Uploaded"),
       undefined,
       uploaded.map(x => x.name).join(", ")
     );
@@ -805,9 +804,7 @@ export function OpexAssessmentSection({ deal, onUpdateDeal, lang, t, readOnly = 
 
   const handleDeleteAttachment = (id: string, name: string) => {
     if (readOnly) return;
-    const msg = lang === "TR" 
-      ? `"${name}" dosyasını silmek istediğinizden emin misiniz?` 
-      : `Are you sure you want to delete "${name}"?`;
+    const msg = t('Are you sure you want to delete "{name}"?').replace("{name}", name);
     if (window.confirm(msg)) {
       const updated = attachments.filter(a => a.id !== id);
       setAttachments(updated);
@@ -815,7 +812,7 @@ export function OpexAssessmentSection({ deal, onUpdateDeal, lang, t, readOnly = 
 
       const logged = addAuditLog(
         deal,
-        lang === "TR" ? "Ek Dosya Silindi" : "Attachment Deleted",
+        t("Attachment Deleted"),
         name,
         undefined
       );
@@ -834,15 +831,15 @@ export function OpexAssessmentSection({ deal, onUpdateDeal, lang, t, readOnly = 
           <div className="flex items-center justify-between border-b pb-2">
             <div className="flex items-center gap-1.5">
               <span className="font-extrabold text-slate-800 dark:text-zinc-150 uppercase tracking-wide font-sans text-xs">
-                ✍️ {lang === "TR" ? "Saha Danışman Notları" : "Consultant Notes"}
+                ✍️ {t("Consultant Notes")}
               </span>
               <span className="px-1.5 py-0.5 bg-indigo-500/10 text-indigo-600 rounded text-[9px] font-mono font-bold animate-pulse">
-                {lang === "TR" ? "Auto-Save Aktif" : "Auto-Save Active"}
+                {t("Auto-Save Active")}
               </span>
             </div>
 
             <div className="flex items-center gap-1.5">
-              <label className="text-[10px] text-slate-450 font-bold font-mono">Author:</label>
+              <label className="text-[10px] text-slate-450 font-bold font-mono">{t("Author:")}</label>
               <input 
                 type="text" 
                 value={editorAuthor}
@@ -856,15 +853,15 @@ export function OpexAssessmentSection({ deal, onUpdateDeal, lang, t, readOnly = 
           {/* Editor Format Toolbar */}
           {!readOnly && (
             <div className="flex flex-wrap items-center gap-1 bg-slate-100 dark:bg-zinc-850 p-1.5 rounded-lg border border-slate-200/50 dark:border-zinc-750">
-              <button onClick={() => execCommand("bold")} className="p-1 px-1.5 hover:bg-white dark:hover:bg-zinc-800 rounded font-bold" title="Bold">B</button>
-              <button onClick={() => execCommand("italic")} className="p-1 px-1.5 hover:bg-white dark:hover:bg-zinc-800 rounded italic" title="Italic">I</button>
-              <button onClick={() => execCommand("underline")} className="p-1 px-1.5 hover:bg-white dark:hover:bg-zinc-800 rounded underline" title="Underline">U</button>
+              <button onClick={() => execCommand("bold")} className="p-1 px-1.5 hover:bg-white dark:hover:bg-zinc-800 rounded font-bold" title={t("Bold")}>B</button>
+              <button onClick={() => execCommand("italic")} className="p-1 px-1.5 hover:bg-white dark:hover:bg-zinc-800 rounded italic" title={t("Italic")}>I</button>
+              <button onClick={() => execCommand("underline")} className="p-1 px-1.5 hover:bg-white dark:hover:bg-zinc-800 rounded underline" title={t("Underline")}>U</button>
               <div className="w-[1px] h-4 bg-slate-300 dark:bg-zinc-700 mx-1" />
-              <button onClick={() => execCommand("insertUnorderedList")} className="p-1 px-1.5 hover:bg-white dark:hover:bg-zinc-800 rounded" title="Bullet List">• List</button>
-              <button onClick={() => execCommand("insertOrderedList")} className="p-1 px-1.5 hover:bg-white dark:hover:bg-zinc-800 rounded" title="Numbered List">1. List</button>
-              <button onClick={insertTable} className="p-1 px-1.5 hover:bg-white dark:hover:bg-zinc-800 rounded" title="Insert Table">📊 Table</button>
-              <button onClick={insertLink} className="p-1 px-1.5 hover:bg-white dark:hover:bg-zinc-800 rounded" title="Insert Link">🔗 Link</button>
-              <button onClick={insertImage} className="p-1 px-1.5 hover:bg-white dark:hover:bg-zinc-800 rounded" title="Insert Image">🖼️ Image</button>
+              <button onClick={() => execCommand("insertUnorderedList")} className="p-1 px-1.5 hover:bg-white dark:hover:bg-zinc-800 rounded" title={t("Bullet List")}>• List</button>
+              <button onClick={() => execCommand("insertOrderedList")} className="p-1 px-1.5 hover:bg-white dark:hover:bg-zinc-800 rounded" title={t("Numbered List")}>1. List</button>
+              <button onClick={insertTable} className="p-1 px-1.5 hover:bg-white dark:hover:bg-zinc-800 rounded" title={t("Insert Table")}>📊 Table</button>
+              <button onClick={insertLink} className="p-1 px-1.5 hover:bg-white dark:hover:bg-zinc-800 rounded" title={t("Insert Link")}>🔗 Link</button>
+              <button onClick={insertImage} className="p-1 px-1.5 hover:bg-white dark:hover:bg-zinc-800 rounded" title={t("Insert Image")}>🖼️ Image</button>
             </div>
           )}
 
@@ -879,13 +876,13 @@ export function OpexAssessmentSection({ deal, onUpdateDeal, lang, t, readOnly = 
               }
             }}
             className="w-full min-h-[160px] max-h-[300px] overflow-y-auto p-3 border border-slate-250 dark:border-zinc-755 bg-slate-50/20 dark:bg-[#121211] text-slate-800 dark:text-zinc-200 rounded-lg outline-none focus:ring-1 focus:ring-indigo-500 font-sans leading-relaxed text-xs"
-            placeholder={lang === "TR" ? "Gemba analiz notlarınızı buraya yazın..." : "Start typing consultant notes here..."}
+            placeholder={t("Start typing consultant notes here...")}
             dangerouslySetInnerHTML={{ __html: editorContent || (notes[0] ? notes[0].content : "") }}
           />
 
           <div className="flex items-center justify-between text-[10px] text-slate-400">
             <span>
-              {lang === "TR" ? "Son kaydedilen versiyon: " : "Last saved: "} 
+              {t("Last saved: ")} 
               <strong>V{notes[0] ? notes[0].version : 1}</strong> ({notes[0] ? notes[0].timestamp : "N/A"})
             </span>
             
@@ -895,7 +892,7 @@ export function OpexAssessmentSection({ deal, onUpdateDeal, lang, t, readOnly = 
                 onClick={handleManualSave}
                 className="px-3 py-1 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded cursor-pointer uppercase font-mono tracking-tight"
               >
-                💾 {lang === "TR" ? "Versiyon Kaydet" : "Save Version"}
+                💾 {t("Save Version")}
               </button>
             )}
           </div>
@@ -903,7 +900,7 @@ export function OpexAssessmentSection({ deal, onUpdateDeal, lang, t, readOnly = 
           {/* Note Versions History */}
           <div className="mt-4 border-t pt-3 space-y-2">
             <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wide block">
-              📜 {lang === "TR" ? "Not Revizyon Geçmişi" : "Notes Version History"}
+              📜 {t("Notes Version History")}
             </span>
 
             <div className="max-h-[120px] overflow-y-auto space-y-1">
@@ -927,7 +924,7 @@ export function OpexAssessmentSection({ deal, onUpdateDeal, lang, t, readOnly = 
                     <span className="font-bold text-indigo-600 dark:text-indigo-400 font-mono">V{n.version}</span>
                     <span className="text-slate-500 font-mono text-[9px]">{n.timestamp}</span>
                   </div>
-                  <span className="text-[9px] text-slate-400 font-mono">By: {n.author}</span>
+                  <span className="text-[9px] text-slate-400 font-mono">{t("By:")} {n.author}</span>
                 </div>
               ))}
             </div>
@@ -937,13 +934,13 @@ export function OpexAssessmentSection({ deal, onUpdateDeal, lang, t, readOnly = 
         {/* RIGHT COLUMN: Attachments Area with Drag & Drop */}
         <div className="lg:col-span-5 bg-white dark:bg-zinc-900/60 p-4 rounded-xl border border-slate-200 dark:border-zinc-800 space-y-4">
           <span className="font-extrabold text-slate-800 dark:text-zinc-150 uppercase tracking-wide font-sans text-xs block">
-            📎 {lang === "TR" ? "Saha Analiz Dokümanları" : "Attachments & Documents"}
+            📎 {t("Attachments & Documents")}
           </span>
 
           {/* Configurable max size & Proposal associations */}
           <div className="grid grid-cols-2 gap-2 text-[10px] bg-slate-50 dark:bg-black/20 p-2 rounded-lg border border-slate-150 dark:border-zinc-800">
             <div>
-              <label className="block text-slate-455 font-bold uppercase font-mono mb-1">Maks Dosya Boyutu (MB)</label>
+              <label className="block text-slate-455 font-bold uppercase font-mono mb-1">{t("Max File Size (MB)")}</label>
               <input 
                 type="number" 
                 value={maxFileSize}
@@ -955,16 +952,16 @@ export function OpexAssessmentSection({ deal, onUpdateDeal, lang, t, readOnly = 
             </div>
 
             <div>
-              <label className="block text-slate-455 font-bold uppercase font-mono mb-1">Bağlı Teklif Versiyonu</label>
+              <label className="block text-slate-455 font-bold uppercase font-mono mb-1">{t("Linked Proposal Version")}</label>
               <select
                 value={associatedProposalId}
                 onChange={(e) => setAssociatedProposalId(e.target.value)}
                 className="w-full p-1 bg-white dark:bg-zinc-800 border rounded outline-none"
               >
-                <option value="General">🏢 Opportunity (General)</option>
+                <option value="General">{t("🏢 Opportunity (General)")}</option>
                 {proposalsList.map(p => (
                   <option key={p.id} value={p.proposalNumber}>
-                    Offer #{p.proposalNumber} ({p.currentVersion})
+                    {t("Offer #{number} ({version})").replace("{number}", p.proposalNumber).replace("{version}", p.currentVersion)}
                   </option>
                 ))}
               </select>
@@ -994,10 +991,10 @@ export function OpexAssessmentSection({ deal, onUpdateDeal, lang, t, readOnly = 
               <label htmlFor="file-upload" className="cursor-pointer space-y-2 block">
                 <Upload className="w-8 h-8 text-slate-400 mx-auto" />
                 <div className="font-bold text-slate-700 dark:text-zinc-300">
-                  {lang === "TR" ? "Dosyaları sürükleyip bırakın veya göz atın" : "Drag & Drop files or browse"}
+                  {t("Drag & Drop files or browse")}
                 </div>
                 <div className="text-[10px] text-slate-450 font-sans font-medium">
-                  {lang === "TR" ? "PDF, Excel, PowerPoint, Word, Görseller, ZIP (Maks " : "Supports PDF, Excel, PPT, Word, Images, ZIP (Max "} {maxFileSize}MB)
+                  {t("Supports PDF, Excel, PPT, Word, Images, ZIP (Max ")} {maxFileSize}MB)
                 </div>
               </label>
             </div>
@@ -1006,12 +1003,12 @@ export function OpexAssessmentSection({ deal, onUpdateDeal, lang, t, readOnly = 
           {/* List of Attachments */}
           <div className="space-y-2">
             <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wide block">
-              📁 {lang === "TR" ? "Yüklenmiş Belgeler" : "Document Library"}
+              📁 {t("Document Library")}
             </span>
 
             {attachments.length === 0 ? (
               <p className="text-[10px] text-slate-450 italic text-center py-2">
-                {lang === "TR" ? "Yüklenmiş dosya bulunmamaktadır." : "No files attached."}
+                {t("No files attached.")}
               </p>
             ) : (
               <div className="space-y-1.5 max-h-[160px] overflow-y-auto">
@@ -1040,7 +1037,7 @@ export function OpexAssessmentSection({ deal, onUpdateDeal, lang, t, readOnly = 
                       <button
                         onClick={() => setPreviewFile(att)}
                         className="p-1 text-slate-400 hover:text-indigo-600 hover:bg-slate-50 dark:hover:bg-zinc-800 rounded transition-all cursor-pointer"
-                        title="Preview File"
+                        title={t("Preview File")}
                       >
                         <Eye className="w-3.5 h-3.5" />
                       </button>
@@ -1050,7 +1047,7 @@ export function OpexAssessmentSection({ deal, onUpdateDeal, lang, t, readOnly = 
                           alert(`💾 '${att.name}' indiriliyor (Simüle edildi). Boyut: ${att.size}`);
                         }}
                         className="p-1 text-slate-400 hover:text-emerald-600 hover:bg-slate-50 dark:hover:bg-zinc-800 rounded transition-all cursor-pointer"
-                        title="Download File"
+                        title={t("Download File")}
                       >
                         <Download className="w-3.5 h-3.5" />
                       </button>
@@ -1059,7 +1056,7 @@ export function OpexAssessmentSection({ deal, onUpdateDeal, lang, t, readOnly = 
                         <button
                           onClick={() => handleDeleteAttachment(att.id, att.name)}
                           className="p-1 text-slate-400 hover:text-rose-600 hover:bg-slate-50 dark:hover:bg-zinc-800 rounded transition-all cursor-pointer"
-                          title="Delete File"
+                          title={t("Delete File")}
                         >
                           <Trash2 className="w-3.5 h-3.5" />
                         </button>
@@ -1092,16 +1089,16 @@ export function OpexAssessmentSection({ deal, onUpdateDeal, lang, t, readOnly = 
               <div className="p-4 bg-slate-50 dark:bg-black/15 border rounded-lg text-center font-mono">
                 <File className="w-12 h-12 text-slate-400 mx-auto mb-2" />
                 <span className="font-bold text-xs text-slate-800 dark:text-zinc-100 block">{previewFile.name}</span>
-                <span className="text-[10px] text-slate-450 block">Formatted Ext: .{previewFile.type}</span>
+                <span className="text-[10px] text-slate-450 block">{t("Formatted Ext:")} .{previewFile.type}</span>
               </div>
 
               <div className="grid grid-cols-2 gap-2 text-[10px] font-sans">
                 <div className="p-2 bg-slate-50 dark:bg-black/10 rounded">
-                  <span className="text-slate-450 block uppercase font-mono font-bold">Uploaded By</span>
+                  <span className="text-slate-450 block uppercase font-mono font-bold">{t("Uploaded By")}</span>
                   <span className="font-semibold text-slate-800 dark:text-zinc-200">{previewFile.uploadedBy}</span>
                 </div>
                 <div className="p-2 bg-slate-50 dark:bg-black/10 rounded">
-                  <span className="text-slate-450 block uppercase font-mono font-bold">Uploaded At</span>
+                  <span className="text-slate-450 block uppercase font-mono font-bold">{t("Uploaded At")}</span>
                   <span className="font-semibold text-slate-800 dark:text-zinc-200">{previewFile.uploadedAt}</span>
                 </div>
                 <div className="p-2 bg-slate-50 dark:bg-black/10 rounded">
@@ -1109,7 +1106,7 @@ export function OpexAssessmentSection({ deal, onUpdateDeal, lang, t, readOnly = 
                   <span className="font-extrabold text-indigo-600 dark:text-indigo-400">V{previewFile.version}</span>
                 </div>
                 <div className="p-2 bg-slate-50 dark:bg-black/10 rounded">
-                  <span className="text-slate-450 block uppercase font-mono font-bold">File Size</span>
+                  <span className="text-slate-450 block uppercase font-mono font-bold">{t("File Size")}</span>
                   <span className="font-semibold text-slate-800 dark:text-zinc-200">{previewFile.size}</span>
                 </div>
               </div>
@@ -1117,11 +1114,11 @@ export function OpexAssessmentSection({ deal, onUpdateDeal, lang, t, readOnly = 
               {/* Document Version History */}
               {previewFile.versions && previewFile.versions.length > 0 && (
                 <div className="space-y-1.5 pt-2">
-                  <span className="text-[9px] font-bold text-slate-400 uppercase tracking-wide block">Past Versions History Log:</span>
+                  <span className="text-[9px] font-bold text-slate-400 uppercase tracking-wide block">{t("Past Versions History Log:")}</span>
                   <div className="space-y-1 max-h-[80px] overflow-y-auto font-mono text-[9px]">
                     {previewFile.versions.map((pv, i) => (
                       <div key={i} className="p-1.5 border rounded bg-slate-50 dark:bg-black/15 flex items-center justify-between">
-                        <span>Version V{pv.version} - {pv.size}</span>
+                        <span>{t("Version V{version} - {size}").replace("{version}", String(pv.version)).replace("{size}", pv.size)}</span>
                         <span className="text-slate-400">{pv.uploadedAt}</span>
                       </div>
                     ))}
@@ -1333,7 +1330,7 @@ export function ProposalContractSection({
       doc.save(`Proposal_${prop.proposalNumber}_${prop.currentVersion}.pdf`);
 
       // Add Audit
-      const updated = addAuditLog(deal, lang === "TR" ? "Teklif PDF İndirildi" : "Proposal PDF Downloaded", prop.proposalNumber);
+      const updated = addAuditLog(deal, t("Proposal PDF Downloaded"), prop.proposalNumber);
       onUpdateDeal(updated);
     } catch (err) {
       console.error(err);
@@ -1403,13 +1400,13 @@ export function ProposalContractSection({
         };
         const logged = addAuditLog(
           nextDeal,
-          lang === "TR" ? "Teklif Revizyonu Oluşturuldu" : "Proposal Revision Created",
+          t("Proposal Revision Created"),
           `V${currentVerNum}`,
           nextVerStr
         );
         onUpdateDeal(logged);
         setShowRevisionModal(false);
-        alert(lang === "TR" ? "Yeni teklif revizyonu başarıyla tescil edildi!" : "Successfully created new proposal revision!");
+        alert(t("Successfully created new proposal revision!"));
       }
     } catch (_) {}
   };
@@ -1442,20 +1439,19 @@ export function ProposalContractSection({
 
       const logged = addAuditLog(
         deal,
-        lang === "TR" ? "Teklif Çoğaltıldı" : "Proposal Duplicated",
+        t("Proposal Duplicated"),
         prop.proposalNumber,
         formattedNum
       );
       onUpdateDeal(logged);
-      alert(lang === "TR" ? "Teklif başarıyla kopyalandı!" : "Proposal duplicated successfully!");
+      alert(t("Proposal duplicated successfully!"));
     } catch (_) {}
   };
 
   // 5. Delete Proposal (SOFT DELETE)
   const handleDeleteProposal = (prop: Proposal) => {
-    const msg = lang === "TR" 
-      ? `Bu teklifi silmek istediğinizden emin misiniz?\nTeklif No: #${prop.proposalNumber}\n(Bu işlem soft-delete kurallarına göre yapılacak olup, yönetici tarafından kurtarılabilir.)`
-      : `Are you sure you want to soft-delete this proposal?\nProposal No: #${prop.proposalNumber}\n(Admins will be able to recover this proposal.)`;
+    const msg = t("Are you sure you want to soft-delete this proposal?\nProposal No: #{number}\n(Admins will be able to recover this proposal.)")
+      .replace("{number}", prop.proposalNumber);
     if (window.confirm(msg)) {
       try {
         const savedList = CrmDb.getProposals();
@@ -1471,12 +1467,12 @@ export function ProposalContractSection({
 
         const logged = addAuditLog(
           deal,
-          lang === "TR" ? "Teklif Silindi (Soft-Delete)" : "Proposal Soft-Deleted",
+          t("Proposal Soft-Deleted"),
           prop.proposalNumber,
           undefined
         );
         onUpdateDeal(logged);
-        alert(lang === "TR" ? "Teklif silindi (Kurtarılabilir Arşive Atıldı)." : "Proposal soft-deleted successfully.");
+        alert(t("Proposal soft-deleted successfully."));
       } catch (_) {}
     }
   };
@@ -1497,12 +1493,12 @@ export function ProposalContractSection({
 
       const logged = addAuditLog(
         deal,
-        lang === "TR" ? "Teklif Geri Yüklendi" : "Proposal Recovered / Un-deleted",
+        t("Proposal Recovered / Un-deleted"),
         propId,
         undefined
       );
       onUpdateDeal(logged);
-      alert(lang === "TR" ? "Teklif başarıyla geri yüklendi!" : "Proposal successfully recovered!");
+      alert(t("Proposal successfully recovered!"));
     } catch (_) {}
   };
 
@@ -1516,12 +1512,12 @@ export function ProposalContractSection({
     // Simulate email send
     const logged = addAuditLog(
       deal,
-      lang === "TR" ? "Teklif E-postası Gönderildi" : "Proposal Email Dispatched",
+      t("Proposal Email Dispatched"),
       undefined,
       activeProposal.proposalNumber
     );
     onUpdateDeal(logged);
-    alert(lang === "TR" ? `Teklif e-postası başarıyla gönderildi!\nAlıcı: ${deal.contactEmail}` : `Proposal dispatched to ${deal.contactEmail} successfully!`);
+    alert(t("Proposal dispatched to {email} successfully!").replace("{email}", deal.contactEmail));
   };
 
   // 7. Share Link
@@ -1529,17 +1525,15 @@ export function ProposalContractSection({
     if (!activeProposal) return;
     const url = `https://gemba-partner.com/shared/proposal/${activeProposal.id}`;
     navigator.clipboard.writeText(url);
-    alert(lang === "TR" ? "Paylaşım linki kopyalandı!" : "Shareable link copied to clipboard!");
-    const logged = addAuditLog(deal, lang === "TR" ? "Teklif Linki Paylaşıldı" : "Proposal Link Shared", undefined, url);
+    alert(t("Shareable link copied to clipboard!"));
+    const logged = addAuditLog(deal, t("Proposal Link Shared"), undefined, url);
     onUpdateDeal(logged);
   };
 
   // 8. Convert to Contract
   const handleConvertToContract = () => {
     if (!activeProposal) return;
-    const msg = lang === "TR"
-      ? "Bu teklifi resmi sözleşmeye dönüştürmek, fırsat aşamasını 'Kazanıldı' olarak güncellemek istiyor musunuz?"
-      : "Convert this proposal to an official contract and update Opportunity Stage to 'Won'?";
+    const msg = t("Convert this proposal to an official contract and update Opportunity Stage to 'Won'?");
     if (window.confirm(msg)) {
       const nextDeal = {
         ...deal,
@@ -1566,18 +1560,18 @@ export function ProposalContractSection({
 
       const logged = addAuditLog(
         nextDeal,
-        lang === "TR" ? "Sözleşmeye Dönüştürüldü (Kazanıldı)" : "Converted to Contract (Opportunity Won)",
+        t("Converted to Contract (Opportunity Won)"),
         activeProposal.proposalNumber,
         "Won"
       );
       onUpdateDeal(logged);
-      alert(lang === "TR" ? "Tebrikler! Fırsat Kazanıldı (Won) sütununa çekildi ve sözleşme akdedildi." : "Congratulations! Opportunity converted to contract and set to 'Won'.");
+      alert(t("Congratulations! Opportunity converted to contract and set to 'Won'."));
     }
   };
 
   const handleCompareVersions = () => {
     if (!activeProposal || activeProposal.versions.length < 2) {
-      alert(lang === "TR" ? "Karşılaştırma için en az 2 versiyon olması gerekmektedir." : "At least 2 versions are required to compare.");
+      alert(t("At least 2 versions are required to compare."));
       return;
     }
     setCompareV1(activeProposal.versions[0].version);
@@ -1592,12 +1586,10 @@ export function ProposalContractSection({
         <div className="max-w-md mx-auto p-6 bg-slate-50 dark:bg-black/15 border border-dashed border-slate-250 dark:border-zinc-800 rounded-xl space-y-4">
           <AlertTriangle className="w-10 h-10 text-amber-500 mx-auto" />
           <h4 className="text-sm font-bold text-slate-800 dark:text-zinc-150">
-            {lang === "TR" ? "Sistemde Kayıtlı Resmi Teklif Bulunamadı" : "No Official Proposal Created"}
+            {t("No Official Proposal Created")}
           </h4>
           <p className="text-slate-500 leading-relaxed text-[11px]">
-            {lang === "TR" 
-              ? "Bu fırsata ait herhangi bir resmi teklif belgesi veya revizyonu tescil edilmemiştir. Aşağıdaki butonu kullanarak doğrudan teklif oluşturma sihirbazına geçebilirsiniz."
-              : "No official proposal or revision exists for this customer opportunity yet. Launch the wizard below to pre-fill opportunity details and generate one."}
+            {t("No official proposal or revision exists for this customer opportunity yet. Launch the wizard below to pre-fill opportunity details and generate one.")}
           </p>
 
           <div className="flex flex-col gap-2 pt-2">
@@ -1607,7 +1599,7 @@ export function ProposalContractSection({
               className="px-5 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white font-extrabold text-xs rounded-lg inline-flex items-center justify-center gap-1.5 cursor-pointer shadow-md active:scale-95 transition-all"
             >
               <Plus className="w-4 h-4" />
-              <span>{lang === "TR" ? "Teklif Sihirbazını Aç" : "Open Proposal Wizard"}</span>
+              <span>{t("Open Proposal Wizard")}</span>
             </button>
 
             {/* Admin recover toggle */}
@@ -1615,7 +1607,7 @@ export function ProposalContractSection({
               onClick={() => setShowDeletedProposals(true)}
               className="text-[10px] text-slate-400 hover:text-indigo-500 hover:underline mt-2"
             >
-              ⚙️ {lang === "TR" ? "Silinen Teklifleri Ara / Yönetici Geri Yükleme" : "Show Deleted Proposals (Admin Recovery)"}
+              ⚙️ {t("Show Deleted Proposals (Admin Recovery)")}
             </button>
           </div>
         </div>
@@ -1631,7 +1623,7 @@ export function ProposalContractSection({
       <div className="flex items-center justify-between bg-slate-50 dark:bg-black/15 p-3 rounded-lg border border-slate-200 dark:border-zinc-800 gap-4">
         <div className="flex items-center gap-2 flex-1">
           <label className="font-bold text-slate-500 font-mono tracking-wide uppercase">
-            {lang === "TR" ? "Teklif Seçin:" : "Select Offer:"}
+            {t("Select Offer:")}
           </label>
           <select
             value={selectedProposalId}
@@ -1655,7 +1647,7 @@ export function ProposalContractSection({
               onChange={(e) => setShowDeletedProposals(e.target.checked)}
               className="rounded text-indigo-600 focus:ring-0 cursor-pointer"
             />
-            <span>{lang === "TR" ? "Arşiv (Admin)" : "Archived Logs"}</span>
+            <span>{t("Archived Logs")}</span>
           </label>
 
           <button
@@ -1663,7 +1655,7 @@ export function ProposalContractSection({
             className="px-3 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded font-bold inline-flex items-center gap-1 cursor-pointer"
           >
             <Plus className="w-3.5 h-3.5" />
-            <span>{lang === "TR" ? "Yeni Sihirbaz" : "New Wizard"}</span>
+            <span>{t("New Wizard")}</span>
           </button>
         </div>
       </div>
@@ -1674,13 +1666,13 @@ export function ProposalContractSection({
           {/* Recovery warning if proposal is soft-deleted */}
           {(activeProposal as any).isDeleted && (
             <div className="p-3 bg-rose-500/10 border border-rose-500/20 text-rose-600 rounded-lg flex items-center justify-between font-bold">
-              <span>🗑️ {lang === "TR" ? "Bu teklif soft-delete silinmiştir." : "This proposal has been soft-deleted."}</span>
+              <span>🗑️ {t("This proposal has been soft-deleted.")}</span>
               <button 
                 onClick={() => handleRecoverProposal(activeProposal.id)}
                 className="px-3 py-1 bg-rose-600 hover:bg-rose-700 text-white rounded text-[10px] font-black uppercase flex items-center gap-1 cursor-pointer"
               >
                 <Undo className="w-3 h-3" />
-                <span>{lang === "TR" ? "Geri Yükle" : "Recover / Un-delete"}</span>
+                <span>{t("Recover / Un-delete")}</span>
               </button>
             </div>
           )}
@@ -1784,7 +1776,7 @@ export function ProposalContractSection({
                 className="px-3 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-lg inline-flex items-center gap-1 cursor-pointer transition-all active:scale-95 text-[10.5px] uppercase"
               >
                 <Eye className="w-3.5 h-3.5" />
-                <span>{lang === "TR" ? "Teklifi İncele (Embedded)" : "View Proposal"}</span>
+                <span>{t("View Proposal")}</span>
               </button>
 
               <button
@@ -1792,7 +1784,7 @@ export function ProposalContractSection({
                 className="px-3 py-1.5 bg-slate-200 dark:bg-zinc-800 hover:bg-slate-300 dark:hover:bg-zinc-700 text-slate-800 dark:text-zinc-200 font-bold rounded-lg inline-flex items-center gap-1 cursor-pointer transition-all active:scale-95 text-[10.5px] uppercase"
               >
                 <Download className="w-3.5 h-3.5" />
-                <span>{lang === "TR" ? "PDF İndir" : "Download PDF"}</span>
+                <span>{t("Download PDF")}</span>
               </button>
 
               {!readOnly && (
@@ -1802,7 +1794,7 @@ export function ProposalContractSection({
                     className="px-3 py-1.5 bg-amber-600 hover:bg-amber-700 text-white font-bold rounded-lg inline-flex items-center gap-1 cursor-pointer transition-all active:scale-95 text-[10.5px] uppercase"
                   >
                     <Edit2 className="w-3.5 h-3.5" />
-                    <span>{lang === "TR" ? "Revizyon Oluştur" : "Create Revision"}</span>
+                    <span>{t("Create Revision")}</span>
                   </button>
 
                   <button
@@ -1810,7 +1802,7 @@ export function ProposalContractSection({
                     className="px-3 py-1.5 bg-slate-200 dark:bg-zinc-800 hover:bg-slate-300 dark:hover:bg-zinc-700 text-slate-800 dark:text-zinc-200 font-bold rounded-lg inline-flex items-center gap-1 cursor-pointer transition-all active:scale-95 text-[10.5px] uppercase"
                   >
                     <Copy className="w-3.5 h-3.5" />
-                    <span>{lang === "TR" ? "Çoğalt" : "Duplicate"}</span>
+                    <span>{t("Duplicate")}</span>
                   </button>
 
                   <button
@@ -1818,13 +1810,13 @@ export function ProposalContractSection({
                     className="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-lg inline-flex items-center gap-1 cursor-pointer transition-all active:scale-95 text-[10.5px] uppercase"
                   >
                     <FileSignature className="w-3.5 h-3.5" />
-                    <span>{lang === "TR" ? "Sözleşmeye Dönüştür" : "Convert to Contract"}</span>
+                    <span>{t("Convert to Contract")}</span>
                   </button>
 
                   <button
                     onClick={handleSendEmail}
                     className="p-1.5 bg-slate-200 dark:bg-zinc-800 hover:bg-slate-300 dark:hover:bg-zinc-700 text-slate-800 dark:text-zinc-200 rounded-lg cursor-pointer"
-                    title="Send by Email"
+                    title={t("Send by Email")}
                   >
                     <Send className="w-3.5 h-3.5" />
                   </button>
@@ -1834,7 +1826,7 @@ export function ProposalContractSection({
               <button
                 onClick={handleShareLink}
                 className="p-1.5 bg-slate-200 dark:bg-zinc-800 hover:bg-slate-300 dark:hover:bg-zinc-700 text-slate-800 dark:text-zinc-200 rounded-lg cursor-pointer"
-                title="Shareable Public Link"
+                title={t("Shareable Public Link")}
               >
                 <Share2 className="w-3.5 h-3.5" />
               </button>
@@ -1843,7 +1835,7 @@ export function ProposalContractSection({
                 <button
                   onClick={() => handleDeleteProposal(activeProposal)}
                   className="p-1.5 bg-rose-50 dark:bg-rose-950/20 hover:bg-rose-100 text-rose-600 rounded-lg cursor-pointer ml-auto"
-                  title="Soft Delete"
+                  title={t("Soft Delete")}
                 >
                   <Trash2 className="w-3.5 h-3.5" />
                 </button>
@@ -1857,7 +1849,7 @@ export function ProposalContractSection({
             <div className="bg-white dark:bg-zinc-900/40 p-4 rounded-xl border border-slate-200 dark:border-zinc-800 space-y-3">
               <div className="flex items-center justify-between">
                 <span className="font-extrabold text-slate-800 dark:text-zinc-150 uppercase tracking-wide font-sans">
-                  📜 {lang === "TR" ? "Teklif Sürüm Ağacı & Karşılaştırma" : "Proposal Version Management"}
+                  📜 {t("Proposal Version Management")}
                 </span>
 
                 {activeProposal.versions.length >= 2 && (
@@ -1865,7 +1857,7 @@ export function ProposalContractSection({
                     onClick={handleCompareVersions}
                     className="text-[10px] text-indigo-600 dark:text-indigo-400 font-extrabold hover:underline"
                   >
-                    👉 {lang === "TR" ? "Sürümleri Karşılaştır" : "Compare Versions"}
+                    👉 {t("Compare Versions")}
                   </button>
                 )}
               </div>
@@ -1884,7 +1876,7 @@ export function ProposalContractSection({
                         <span className="font-bold text-slate-750 dark:text-zinc-200">{ver.subject}</span>
                       </div>
                       <p className="text-[10.5px] italic text-slate-500 font-sans">
-                        <strong>Reason:</strong> {ver.reason} | <strong>Changes:</strong> {ver.changes}
+                        <strong>{t("Reason:")}</strong> {ver.reason} | <strong>{t("Changes:")}</strong> {ver.changes}
                       </p>
                     </div>
 
@@ -1903,7 +1895,7 @@ export function ProposalContractSection({
           {/* Audit Trail for the specific opportunity/proposal */}
           <div className="bg-white dark:bg-zinc-900/40 p-4 rounded-xl border border-slate-200 dark:border-zinc-800 space-y-3">
             <span className="font-extrabold text-slate-800 dark:text-zinc-150 uppercase tracking-wide font-sans block">
-              📊 {lang === "TR" ? "Denetim İzi & İzlenebilirlik (Audit Trail)" : "Audit Trail & Full Traceability"}
+              📊 {t("Audit Trail & Full Traceability")}
             </span>
 
             <div className="space-y-2 max-h-[140px] overflow-y-auto pr-1">
@@ -1922,8 +1914,8 @@ export function ProposalContractSection({
 
                     {log.previousValue !== undefined && (
                       <p className="text-[10px] text-slate-500">
-                        <span className="font-bold font-mono">Prev:</span> <span className="line-through">{log.previousValue}</span> 
-                        {log.newValue !== undefined && <> → <span className="font-bold text-emerald-600 dark:text-emerald-400 font-mono">New:</span> {log.newValue}</>}
+                        <span className="font-bold font-mono">{t("Prev:")}</span> <span className="line-through">{log.previousValue}</span> 
+                        {log.newValue !== undefined && <> → <span className="font-bold text-emerald-600 dark:text-emerald-400 font-mono">{t("New:")}</span> {log.newValue}</>}
                       </p>
                     )}
                   </div>
@@ -1965,7 +1957,7 @@ export function ProposalContractSection({
                   <Search className="w-3.5 h-3.5 text-zinc-400 absolute left-2.5 top-2" />
                   <input 
                     type="text" 
-                    placeholder="Search query..."
+                    placeholder={t("Search query...")}
                     value={pdfSearchQuery}
                     onChange={(e) => setPdfSearchQuery(e.target.value)}
                     className="p-1 pl-8 bg-zinc-800 border border-zinc-700 text-xs text-white rounded outline-none w-36 font-sans focus:border-indigo-500"
@@ -1987,7 +1979,7 @@ export function ProposalContractSection({
                 <button 
                   onClick={() => window.print()}
                   className="p-1.5 hover:bg-zinc-800 rounded text-zinc-300 border border-zinc-700" 
-                  title="Print proposal"
+                  title={t("Print proposal")}
                 >
                   <Printer className="w-3.5 h-3.5" />
                 </button>
@@ -1996,7 +1988,7 @@ export function ProposalContractSection({
                 <button 
                   onClick={() => handleDownloadPDF(activeProposal)}
                   className="p-1.5 hover:bg-zinc-800 rounded text-zinc-300 border border-zinc-700" 
-                  title="Download File"
+                  title={t("Download File")}
                 >
                   <Download className="w-3.5 h-3.5" />
                 </button>
@@ -2005,7 +1997,7 @@ export function ProposalContractSection({
                 <button 
                   onClick={() => setIsPdfFullScreen(!isPdfFullScreen)}
                   className="p-1.5 hover:bg-zinc-800 rounded text-zinc-300 border border-zinc-700" 
-                  title="Toggle Full Screen"
+                  title={t("Toggle Full Screen")}
                 >
                   {isPdfFullScreen ? <Minimize2 className="w-3.5 h-3.5" /> : <Maximize2 className="w-3.5 h-3.5" />}
                 </button>
@@ -2064,9 +2056,7 @@ export function ProposalContractSection({
                     <div className="space-y-2 pt-4 border-t border-zinc-100">
                       <h3 className="text-xs font-bold uppercase tracking-wide font-mono text-zinc-500">1. Operational Focus & Scope:</h3>
                       <p className="text-[11px] leading-relaxed text-zinc-650 italic">
-                        {lang === "TR" 
-                          ? "İşbu teklif müşterimizin üretim katında saptanan israf katmanlarını minimize etmeyi, süreç standartizasyonunu güçlendirerek verimlilik çıktılarını yukarı taşımayı amaçlamaktadır."
-                          : "This program aims to dismantle process silos, highlight core TIMWOODS wastes, and deploy standardized cellular practices for resilient productivity."}
+                        {t("This program aims to dismantle process silos, highlight core TIMWOODS wastes, and deploy standardized cellular practices for resilient productivity.")}
                       </p>
                     </div>
 
@@ -2225,7 +2215,7 @@ export function ProposalContractSection({
                 <input 
                   type="text" 
                   required
-                  placeholder="e.g. Scope alignment, rate adjustment"
+                  placeholder={t("e.g. Scope alignment, rate adjustment")}
                   value={revReason}
                   onChange={(e) => setRevReason(e.target.value)}
                   className="w-full p-2 border dark:bg-zinc-850 dark:border-zinc-700 rounded outline-none"
@@ -2237,7 +2227,7 @@ export function ProposalContractSection({
                 <textarea 
                   rows={3}
                   required
-                  placeholder="Describe what has changed in this revision..."
+                  placeholder={t("Describe what has changed in this revision...")}
                   value={revNotes}
                   onChange={(e) => setRevNotes(e.target.value)}
                   className="w-full p-2 border dark:bg-zinc-850 dark:border-zinc-700 rounded outline-none h-20 resize-none"

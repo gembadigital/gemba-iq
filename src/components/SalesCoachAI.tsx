@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from "react";
+import { useLanguage } from "../lib/LanguageContext";
 import {
   Brain,
   Bot,
@@ -60,6 +61,8 @@ interface SalesCoachAIProps {
 }
 
 export default function SalesCoachAI({ deals }: SalesCoachAIProps) {
+  const { t } = useLanguage();
+
   // --- SUBMENU STATE ---
   const [activeSubmenu, setActiveSubmenu] = useState<
     "assistant" | "library" | "history" | "settings" | "knowledge"
@@ -197,14 +200,16 @@ export default function SalesCoachAI({ deals }: SalesCoachAIProps) {
 
   // --- ASSISTANT STATE & CHAT ---
   const [chatInput, setChatInput] = useState("");
-  const [chatMessages, setChatMessages] = useState<{ sender: "user" | "director"; text: string; skillsCited?: string[] }[]>(() => {
-    return [
+  const [chatMessages, setChatMessages] = useState<{ sender: "user" | "director"; text: string; skillsCited?: string[] }[]>([]);
+
+  useEffect(() => {
+    setChatMessages([
       {
         sender: "director",
-        text: "Selam Şef. Ben Satış Direktörün. OPEX CRM verilerini inceledim. \n\nZayıf takipleri sevmem, hedefleri yakalamak için buradayız. Hazırsan **'Haftalık Satış Denetimi Çalıştır'** butonuna tıklayarak pipeline'ı derinlemesine denetleyelim veya sormak istediğin fırsatların detaylarını yaz, masaya yatıralım!"
+        text: t("Sales Director welcome message")
       }
-    ];
-  });
+    ]);
+  }, [t]);
   const [isGenerating, setIsGenerating] = useState(false);
 
   // --- NEW SKILL FORM STATE ---
@@ -288,7 +293,7 @@ export default function SalesCoachAI({ deals }: SalesCoachAIProps) {
       id: "skill-" + Date.now(),
       name: newSkillName,
       category: newSkillCategory,
-      description: newSkillDesc || "Uploaded rulebook for consulting sales excellence.",
+      description: newSkillDesc || t("Uploaded rulebook for consulting sales excellence."),
       tags: newSkillTags ? newSkillTags.split(",").map(t => t.trim()) : [newSkillCategory],
       version: newSkillVersion,
       status: "Active",
@@ -321,7 +326,7 @@ export default function SalesCoachAI({ deals }: SalesCoachAIProps) {
     setIsGenerating(true);
     setChatMessages(prev => [
       ...prev,
-      { sender: "user", text: "Haftalık Satış Denetimi Çalıştır" }
+      { sender: "user", text: t("Run Weekly Sales Audit") }
     ]);
 
     try {
@@ -357,8 +362,8 @@ export default function SalesCoachAI({ deals }: SalesCoachAIProps) {
           impact: detectedStats.impact,
           recommendedSkill: detectedStats.recommendedSkill,
           confidence: 91,
-          action: "Review pipeline aging above 30 days and mandate follow-up campaigns.",
-          businessOutcome: "Improve overall win conversion by 8%.",
+          action: t("Review pipeline aging above 30 days and mandate follow-up campaigns."),
+          businessOutcome: t("Improve overall win conversion by 8%."),
           isCompleted: false
         };
         setRecommendationHistory(prev => [newLog, ...prev]);
@@ -372,7 +377,7 @@ export default function SalesCoachAI({ deals }: SalesCoachAIProps) {
         ...prev,
         {
           sender: "director",
-          text: `Satış denetimi sırasında bir hata oluştu: ${err.message || "Bilinmeyen hata"}. Lütfen Ayarlar > Secrets panelinden GEMINI_API_KEY ortam değişkenini kontrol edin.`
+          text: t("Sales audit error: {error}. Please check GEMINI_API_KEY in Settings > Secrets.").replace("{error}", err.message || t("Unknown error"))
         }
       ]);
     } finally {
@@ -444,7 +449,7 @@ export default function SalesCoachAI({ deals }: SalesCoachAIProps) {
         ...prev,
         {
           sender: "director",
-          text: `Bağlantı kurulurken hata oluştu: ${err.message || "Bilinmeyen hata"}. Lütfen Ayarlar panelinden GEMINI_API_KEY anahtarınızı doğrulayın.`
+          text: t("Connection error: {error}. Please verify your GEMINI_API_KEY in Settings.").replace("{error}", err.message || t("Unknown error"))
         }
       ]);
     } finally {
@@ -464,8 +469,8 @@ export default function SalesCoachAI({ deals }: SalesCoachAIProps) {
                 <Brain className="w-5 h-5" />
               </div>
               <div>
-                <h2 className="text-xs font-black tracking-widest uppercase text-slate-400 dark:text-zinc-500">AI Sales Intelligence</h2>
-                <h1 className="text-sm font-bold text-slate-800 dark:text-slate-100">Sales Coach AI</h1>
+                <h2 className="text-xs font-black tracking-widest uppercase text-slate-400 dark:text-zinc-500">{t("AI Sales Intelligence")}</h2>
+                <h1 className="text-sm font-bold text-slate-800 dark:text-slate-100">{t("Sales Coach AI")}</h1>
               </div>
             </div>
 
@@ -480,7 +485,7 @@ export default function SalesCoachAI({ deals }: SalesCoachAIProps) {
               >
                 <div className="flex items-center gap-2.5">
                   <Bot className="w-4 h-4" />
-                  <span>Sales Director Assistant</span>
+                  <span>{t("Sales Director Assistant")}</span>
                 </div>
                 {activeSubmenu === "assistant" && <ChevronRight className="w-3.5 h-3.5" />}
               </button>
@@ -495,7 +500,7 @@ export default function SalesCoachAI({ deals }: SalesCoachAIProps) {
               >
                 <div className="flex items-center gap-2.5">
                   <BookOpen className="w-4 h-4" />
-                  <span>Skill Library</span>
+                  <span>{t("Skill Library")}</span>
                 </div>
                 <span className="text-[10px] bg-amber-100 dark:bg-amber-950/50 text-amber-600 dark:text-amber-400 px-1.5 py-0.5 rounded-full font-mono">
                   {skills.length}
@@ -512,7 +517,7 @@ export default function SalesCoachAI({ deals }: SalesCoachAIProps) {
               >
                 <div className="flex items-center gap-2.5">
                   <History className="w-4 h-4" />
-                  <span>Recommendations History</span>
+                  <span>{t("Recommendations History")}</span>
                 </div>
                 {activeSubmenu === "history" && <ChevronRight className="w-3.5 h-3.5" />}
               </button>
@@ -527,7 +532,7 @@ export default function SalesCoachAI({ deals }: SalesCoachAIProps) {
               >
                 <div className="flex items-center gap-2.5">
                   <FolderOpen className="w-4 h-4" />
-                  <span>Knowledge Base</span>
+                  <span>{t("Knowledge Base")}</span>
                 </div>
                 {activeSubmenu === "knowledge" && <ChevronRight className="w-3.5 h-3.5" />}
               </button>
@@ -542,7 +547,7 @@ export default function SalesCoachAI({ deals }: SalesCoachAIProps) {
               >
                 <div className="flex items-center gap-2.5">
                   <Settings className="w-4 h-4" />
-                  <span>AI Settings</span>
+                  <span>{t("AI Settings")}</span>
                 </div>
                 {activeSubmenu === "settings" && <ChevronRight className="w-3.5 h-3.5" />}
               </button>
@@ -550,13 +555,13 @@ export default function SalesCoachAI({ deals }: SalesCoachAIProps) {
           </div>
 
           <div className="hidden lg:block p-3.5 bg-slate-50 dark:bg-zinc-900 border border-slate-100 dark:border-zinc-800 rounded-xl space-y-1.5">
-            <span className="text-[10px] uppercase font-bold text-slate-400 font-mono tracking-widest block">Operational Mode</span>
+            <span className="text-[10px] uppercase font-bold text-slate-400 font-mono tracking-widest block">{t("Operational Mode")}</span>
             <div className="flex items-center gap-1.5">
               <span className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse" />
-              <span className="text-xs font-extrabold font-mono text-emerald-600 dark:text-emerald-400">COACH CONNECTED</span>
+              <span className="text-xs font-extrabold font-mono text-emerald-600 dark:text-emerald-400">{t("COACH CONNECTED")}</span>
             </div>
             <p className="text-[10px] text-slate-500 leading-snug">
-              Weekly KPI logs are automatically piped into Director system.
+              {t("Weekly KPI logs are automatically piped into Director system.")}
             </p>
           </div>
         </div>
@@ -571,8 +576,8 @@ export default function SalesCoachAI({ deals }: SalesCoachAIProps) {
               {/* Header section with Dynamic trigger */}
               <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-white dark:bg-[#201f1e] border border-slate-200/50 dark:border-zinc-800/80 p-4 rounded-xl shadow-xs">
                 <div>
-                  <h2 className="text-sm font-black text-slate-900 dark:text-slate-100">Weekly Performance Audit Deck</h2>
-                  <p className="text-xs text-slate-500 mt-0.5">Let Gemini analyze current pipeline leaks and score salesperson productivity.</p>
+                  <h2 className="text-sm font-black text-slate-900 dark:text-slate-100">{t("Weekly Performance Audit Deck")}</h2>
+                  <p className="text-xs text-slate-500 mt-0.5">{t("Let Gemini analyze current pipeline leaks and score salesperson productivity.")}</p>
                 </div>
                 <button
                   type="button"
@@ -582,7 +587,7 @@ export default function SalesCoachAI({ deals }: SalesCoachAIProps) {
                   id="btn-run-director-audit"
                 >
                   <Sparkles className="w-4 h-4 text-white" />
-                  <span>{isGenerating ? "Denetleniyor..." : "Haftalık Satış Denetimi Çalıştır"}</span>
+                  <span>{isGenerating ? t("Auditing...") : t("Run Weekly Sales Audit")}</span>
                 </button>
               </div>
 
@@ -615,12 +620,12 @@ export default function SalesCoachAI({ deals }: SalesCoachAIProps) {
                       {/* Cited Active Skills footer */}
                       {msg.sender === "director" && index > 0 && (
                         <div className="mt-4 pt-3 border-t border-slate-100 dark:border-zinc-800/80 flex flex-wrap items-center gap-2">
-                          <span className="text-[9px] uppercase tracking-wider font-extrabold text-amber-500 font-mono">Suggested AI Skills:</span>
+                          <span className="text-[9px] uppercase tracking-wider font-extrabold text-amber-500 font-mono">{t("Suggested AI Skills:")}</span>
                           <span className="px-1.5 py-0.5 rounded bg-amber-50 dark:bg-amber-950/20 text-amber-600 dark:text-amber-400 font-mono text-[9px] border border-amber-200/50">
                             MTM Work Measurement v1.4
                           </span>
                           <span className="px-1.5 py-0.5 rounded bg-emerald-50 dark:bg-emerald-950/20 text-emerald-600 dark:text-emerald-400 font-mono text-[9px] border border-emerald-200/50">
-                            Confidence: 91%
+                            {t("Confidence: {percent}%").replace("{percent}", "91")}
                           </span>
                         </div>
                       )}
@@ -634,7 +639,7 @@ export default function SalesCoachAI({ deals }: SalesCoachAIProps) {
                     </div>
                     <div className="bg-slate-50 dark:bg-zinc-900 text-slate-600 dark:text-zinc-300 p-4 border border-slate-200/50 dark:border-zinc-800 rounded-2xl flex items-center gap-2.5 font-mono text-xs">
                       <RefreshCw className="w-4 h-4 animate-spin text-rose-500" />
-                      <span>Rapor hazırlanıyor, pipeline inceleniyor...</span>
+                      <span>{t("Preparing report, reviewing pipeline...")}</span>
                     </div>
                   </div>
                 )}
@@ -645,7 +650,7 @@ export default function SalesCoachAI({ deals }: SalesCoachAIProps) {
               <form onSubmit={handleSendMessage} className="flex gap-2">
                 <input
                   type="text"
-                  placeholder="Satış Direktörüne pipeline veya bir teklif hakkında hesap sor..."
+                  placeholder={t("Ask the Sales Director about pipeline or a deal...")}
                   value={chatInput}
                   onChange={(e) => setChatInput(e.target.value)}
                   disabled={isGenerating}
@@ -656,7 +661,7 @@ export default function SalesCoachAI({ deals }: SalesCoachAIProps) {
                   disabled={isGenerating || !chatInput.trim()}
                   className="px-5 py-3 rounded-xl bg-[#0078D4] hover:bg-[#005a9e] text-white text-xs font-bold shadow-sm transition-all disabled:opacity-40 select-none cursor-pointer flex items-center gap-1.5"
                 >
-                  <span>Sorgula</span>
+                  <span>{t("Ask")}</span>
                   <Plus className="w-3.5 h-3.5" />
                 </button>
               </form>
@@ -668,15 +673,15 @@ export default function SalesCoachAI({ deals }: SalesCoachAIProps) {
             <div className="space-y-6">
               <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
                 <div>
-                  <h1 className="text-base font-extrabold text-slate-900 dark:text-slate-100">Consulting AI Skill Library</h1>
-                  <p className="text-xs text-slate-500 mt-0.5">Let administrators manage the SOPs and methodologies evaluated by Sales Coach AI.</p>
+                  <h1 className="text-base font-extrabold text-slate-900 dark:text-slate-100">{t("Consulting AI Skill Library")}</h1>
+                  <p className="text-xs text-slate-500 mt-0.5">{t("Let administrators manage the SOPs and methodologies evaluated by Sales Coach AI.")}</p>
                 </div>
                 <button
                   onClick={() => setShowAddSkillModal(true)}
                   className="px-4 py-2 text-xs font-bold text-white bg-slate-900 hover:bg-black dark:bg-[#2d2c2b] dark:hover:bg-[#3d3c3b] border border-[#EDEBE9] dark:border-[#323130] rounded-lg shadow-sm flex items-center gap-1.5 cursor-pointer select-none transition-all"
                 >
                   <Plus className="w-4 h-4 text-white" />
-                  <span>Add Custom Skill Document</span>
+                  <span>{t("Add Custom Skill Document")}</span>
                 </button>
               </div>
 
@@ -693,7 +698,7 @@ export default function SalesCoachAI({ deals }: SalesCoachAIProps) {
                             ? "bg-blue-100 dark:bg-blue-950/35 text-blue-700 dark:text-blue-400"
                             : "bg-emerald-100 dark:bg-emerald-950/35 text-emerald-700 dark:text-emerald-400"
                         }`}>
-                          {s.category}
+                          {t(s.category)}
                         </span>
                         <div className="flex items-center gap-2">
                           <span className="text-[10px] text-slate-400 font-mono">{s.version}</span>
@@ -728,7 +733,7 @@ export default function SalesCoachAI({ deals }: SalesCoachAIProps) {
                       <button
                         onClick={() => handleDeleteSkill(s.id)}
                         className="p-1 hover:bg-rose-50 dark:hover:bg-rose-950/30 text-slate-400 hover:text-rose-500 rounded transition-all cursor-pointer"
-                        title="Delete Skill"
+                        title={t("Delete Skill")}
                       >
                         <Trash className="w-3.5 h-3.5" />
                       </button>
@@ -742,7 +747,7 @@ export default function SalesCoachAI({ deals }: SalesCoachAIProps) {
                 <div className="fixed inset-0 bg-black/60 backdrop-blur-xs flex items-center justify-center z-50 animate-in fade-in duration-150">
                   <div className="bg-white dark:bg-[#1f1e1d] border border-slate-200 dark:border-[#323130] rounded-xl w-full max-w-lg shadow-2xl overflow-hidden animate-in zoom-in-95 duration-150">
                     <div className="p-5 border-b border-[#EDEBE9] dark:border-[#323130] flex items-center justify-between">
-                      <h3 className="text-sm font-extrabold uppercase text-slate-850 dark:text-slate-100">Upload methodology / Skill</h3>
+                      <h3 className="text-sm font-extrabold uppercase text-slate-850 dark:text-slate-100">{t("Upload methodology / Skill")}</h3>
                       <button onClick={() => setShowAddSkillModal(false)} className="p-1 hover:bg-slate-100 dark:hover:bg-[#252423] rounded">
                         <X className="w-4 h-4" />
                       </button>
@@ -763,53 +768,53 @@ export default function SalesCoachAI({ deals }: SalesCoachAIProps) {
                         }`}
                       >
                         <Upload className="w-8 h-8 text-slate-400 mb-2 animate-bounce" />
-                        <span className="text-xs font-bold block text-slate-700 dark:text-zinc-300">Drag & Drop Skill Document here</span>
-                        <span className="text-[10px] text-slate-400 block mt-0.5">Supports .md, .txt, .pdf, .docx</span>
+                        <span className="text-xs font-bold block text-slate-700 dark:text-zinc-300">{t("Drag & Drop Skill Document here")}</span>
+                        <span className="text-[10px] text-slate-400 block mt-0.5">{t("Supports .md, .txt, .pdf, .docx")}</span>
                         
                         <label className="mt-3 inline-block px-3 py-1.5 text-[10px] font-bold bg-[#0078D4] hover:bg-[#005a9e] text-white rounded cursor-pointer select-none">
-                          Browse Files
+                          {t("Browse Files")}
                           <input type="file" onChange={handleFileChange} className="hidden" accept=".md,.txt,.pdf,.docx" />
                         </label>
                         {uploadedFileName && (
                           <div className="mt-2.5 flex items-center gap-1.5 text-emerald-600 dark:text-emerald-400 text-xs font-bold bg-emerald-50 dark:bg-emerald-950/20 px-2 py-1 rounded">
                             <Check className="w-4 h-4" />
-                            <span>Loaded: {uploadedFileName}</span>
+                            <span>{t("Loaded: {filename}").replace("{filename}", uploadedFileName)}</span>
                           </div>
                         )}
                       </div>
 
                       <div className="grid grid-cols-2 gap-4">
                         <div className="space-y-1">
-                          <label className="text-[10px] uppercase font-bold text-slate-400 tracking-wider">Skill Name</label>
+                          <label className="text-[10px] uppercase font-bold text-slate-400 tracking-wider">{t("Skill Name")}</label>
                           <input
                             type="text"
                             required
-                            placeholder="e.g. Kaizen VSM Guideline"
+                            placeholder={t("e.g. Kaizen VSM Guideline")}
                             value={newSkillName}
                             onChange={(e) => setNewSkillName(e.target.value)}
                             className="w-full px-3 py-2 text-xs bg-white dark:bg-zinc-900 border border-slate-250 dark:border-zinc-800 rounded-lg text-slate-800 dark:text-slate-200 focus:outline-hidden"
                           />
                         </div>
                         <div className="space-y-1">
-                          <label className="text-[10px] uppercase font-bold text-slate-400 tracking-wider">Category</label>
+                          <label className="text-[10px] uppercase font-bold text-slate-400 tracking-wider">{t("Category")}</label>
                           <select
                             value={newSkillCategory}
                             onChange={(e) => setNewSkillCategory(e.target.value as any)}
                             className="w-full px-3 py-2 text-xs bg-white dark:bg-zinc-900 border border-slate-250 dark:border-zinc-800 rounded-lg text-slate-800 dark:text-slate-200 focus:outline-hidden"
                           >
-                            <option value="Operational Excellence">Operational Excellence</option>
-                            <option value="Industrial Engineering">Industrial Engineering</option>
-                            <option value="Sales Excellence">Sales Excellence</option>
-                            <option value="Leadership">Leadership</option>
+                            <option value="Operational Excellence">{t("Operational Excellence")}</option>
+                            <option value="Industrial Engineering">{t("Industrial Engineering")}</option>
+                            <option value="Sales Excellence">{t("Sales Excellence")}</option>
+                            <option value="Leadership">{t("Leadership")}</option>
                           </select>
                         </div>
                       </div>
 
                       <div className="space-y-1">
-                        <label className="text-[10px] uppercase font-bold text-slate-400 tracking-wider">Description</label>
+                        <label className="text-[10px] uppercase font-bold text-slate-400 tracking-wider">{t("Description")}</label>
                         <textarea
                           rows={2}
-                          placeholder="Summarize what concepts this methodology file controls or extracts..."
+                          placeholder={t("Summarize what concepts this methodology file controls or extracts...")}
                           value={newSkillDesc}
                           onChange={(e) => setNewSkillDesc(e.target.value)}
                           className="w-full px-3 py-2 text-xs bg-white dark:bg-zinc-900 border border-slate-250 dark:border-zinc-800 rounded-lg text-slate-800 dark:text-slate-200 focus:outline-hidden"
@@ -818,17 +823,17 @@ export default function SalesCoachAI({ deals }: SalesCoachAIProps) {
 
                       <div className="grid grid-cols-2 gap-4">
                         <div className="space-y-1">
-                          <label className="text-[10px] uppercase font-bold text-slate-400 tracking-wider">Tags (comma separated)</label>
+                          <label className="text-[10px] uppercase font-bold text-slate-400 tracking-wider">{t("Tags (comma separated)")}</label>
                           <input
                             type="text"
-                            placeholder="e.g. kaizen, smed, efficiency"
+                            placeholder={t("e.g. kaizen, smed, efficiency")}
                             value={newSkillTags}
                             onChange={(e) => setNewSkillTags(e.target.value)}
                             className="w-full px-3 py-2 text-xs bg-white dark:bg-zinc-900 border border-slate-250 dark:border-zinc-800 rounded-lg focus:outline-hidden"
                           />
                         </div>
                         <div className="space-y-1">
-                          <label className="text-[10px] uppercase font-bold text-slate-400 tracking-wider">Version</label>
+                          <label className="text-[10px] uppercase font-bold text-slate-400 tracking-wider">{t("Version")}</label>
                           <input
                             type="text"
                             value={newSkillVersion}
@@ -844,13 +849,13 @@ export default function SalesCoachAI({ deals }: SalesCoachAIProps) {
                           onClick={() => setShowAddSkillModal(false)}
                           className="px-4 py-2 border border-slate-250 dark:border-zinc-800 text-slate-650 dark:text-slate-400 text-xs font-bold rounded-lg hover:bg-slate-50"
                         >
-                          Cancel
+                          {t("Cancel")}
                         </button>
                         <button
                           type="submit"
                           className="px-4 py-2 bg-slate-900 hover:bg-black dark:bg-[#2d2c2b] dark:hover:bg-[#3d3c3b] text-white text-xs font-bold rounded-lg shadow-sm"
                         >
-                          Process & Index Skill
+                          {t("Process & Index Skill")}
                         </button>
                       </div>
                     </form>
@@ -864,8 +869,8 @@ export default function SalesCoachAI({ deals }: SalesCoachAIProps) {
           {activeSubmenu === "history" && (
             <div className="space-y-6">
               <div>
-                <h1 className="text-base font-extrabold text-slate-900 dark:text-slate-100">AI Recommendations Audit Registry</h1>
-                <p className="text-xs text-slate-500 mt-0.5">Trace past diagnostic audits and commercial intelligence briefs produced by Gemini.</p>
+                <h1 className="text-base font-extrabold text-slate-900 dark:text-slate-100">{t("AI Recommendations Audit Registry")}</h1>
+                <p className="text-xs text-slate-500 mt-0.5">{t("Trace past diagnostic audits and commercial intelligence briefs produced by Gemini.")}</p>
               </div>
 
               <div className="bg-white dark:bg-[#201f1e] border border-slate-200/50 dark:border-zinc-850 rounded-xl overflow-hidden shadow-xs">
@@ -873,11 +878,11 @@ export default function SalesCoachAI({ deals }: SalesCoachAIProps) {
                   <table className="w-full font-sans text-xs">
                     <thead>
                       <tr className="bg-slate-50 dark:bg-zinc-900 border-b border-slate-250 dark:border-zinc-800 font-extrabold text-[10px] text-slate-400 uppercase tracking-widest text-left">
-                        <th className="p-4">Date / Trigger</th>
-                        <th className="p-4">Diagnostic Problem & Impact</th>
-                        <th className="p-4">Suggested Skill Citation</th>
-                        <th className="p-4">Action Recommendation</th>
-                        <th className="p-4 text-center">Status</th>
+                        <th className="p-4">{t("Date / Trigger")}</th>
+                        <th className="p-4">{t("Diagnostic Problem & Impact")}</th>
+                        <th className="p-4">{t("Suggested Skill Citation")}</th>
+                        <th className="p-4">{t("Action Recommendation")}</th>
+                        <th className="p-4 text-center">{t("Status")}</th>
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-slate-100 dark:divide-zinc-850 font-medium">
@@ -886,7 +891,7 @@ export default function SalesCoachAI({ deals }: SalesCoachAIProps) {
                           <td className="p-4">
                             <span className="font-bold text-slate-800 dark:text-slate-200 block">{rec.date}</span>
                             <span className="text-[10px] text-slate-400 bg-slate-100 dark:bg-zinc-800 font-mono px-1.5 py-0.5 rounded inline-block mt-1">
-                              {rec.triggerType}
+                              {t(rec.triggerType)}
                             </span>
                           </td>
                           <td className="p-4 max-w-xs space-y-1">
@@ -894,20 +899,20 @@ export default function SalesCoachAI({ deals }: SalesCoachAIProps) {
                               <AlertTriangle className="w-3.5 h-3.5 text-amber-500 inline-block shrink-0" />
                               <span className="font-bold text-slate-800 dark:text-slate-200">{rec.problem}</span>
                             </div>
-                            <p className="text-[11px] text-slate-500 italic">Impact: {rec.impact}</p>
+                            <p className="text-[11px] text-slate-500 italic">{t("Impact:")} {rec.impact}</p>
                           </td>
                           <td className="p-4">
                             <div className="space-y-1">
                               <span className="font-extrabold text-slate-800 dark:text-slate-200">{rec.recommendedSkill}</span>
                               <div className="flex items-center gap-1.5">
-                                <span className="text-[9px] bg-emerald-50 text-emerald-600 font-mono px-1 rounded">Confidence: {rec.confidence}%</span>
+                                <span className="text-[9px] bg-emerald-50 text-emerald-600 font-mono px-1 rounded">{t("Confidence: {percent}%").replace("{percent}", String(rec.confidence))}</span>
                               </div>
                             </div>
                           </td>
                           <td className="p-4 text-slate-500 max-w-xs leading-relaxed">
                             {rec.action}
                             <div className="mt-1.5 text-[10px] font-bold text-emerald-600 dark:text-emerald-400">
-                              🎯 Goal: {rec.businessOutcome}
+                              🎯 {t("Goal:")} {rec.businessOutcome}
                             </div>
                           </td>
                           <td className="p-4 text-center">
@@ -921,7 +926,7 @@ export default function SalesCoachAI({ deals }: SalesCoachAIProps) {
                                   : "bg-amber-50 border-amber-100 text-amber-600 dark:bg-amber-950/20 dark:border-amber-900"
                               }`}
                             >
-                              {rec.isCompleted ? "COMPLETED" : "PENDING"}
+                              {rec.isCompleted ? t("COMPLETED") : t("Pending")}
                             </button>
                           </td>
                         </tr>
@@ -937,23 +942,23 @@ export default function SalesCoachAI({ deals }: SalesCoachAIProps) {
           {activeSubmenu === "knowledge" && (
             <div className="space-y-6">
               <div>
-                <h1 className="text-base font-extrabold text-slate-900 dark:text-slate-100">Knowledge Base Vector Indexes</h1>
-                <p className="text-xs text-slate-500 mt-0.5 font-sans">View unstructured context chunks and corporate training rulebooks loaded as vector embeddings.</p>
+                <h1 className="text-base font-extrabold text-slate-900 dark:text-slate-100">{t("Knowledge Base Vector Indexes")}</h1>
+                <p className="text-xs text-slate-500 mt-0.5 font-sans">{t("View unstructured context chunks and corporate training rulebooks loaded as vector embeddings.")}</p>
               </div>
 
               <div className="bg-white dark:bg-[#201f1e] border border-slate-200/50 dark:border-zinc-850 rounded-xl p-5 shadow-xs space-y-4">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
                     <Layers className="w-5 h-5 text-indigo-500" />
-                    <span className="text-xs font-bold text-slate-800 dark:text-slate-100 uppercase font-mono">Index Status: Healthy</span>
+                    <span className="text-xs font-bold text-slate-800 dark:text-slate-100 uppercase font-mono">{t("Index Status: Healthy")}</span>
                   </div>
                   <span className="text-[10px] font-mono bg-indigo-50 text-indigo-600 dark:bg-indigo-950/20 dark:text-indigo-400 px-2 py-0.5 rounded font-extrabold">
-                    84 Embeddings Chunks Active
+                    {t("84 Embeddings Chunks Active")}
                   </span>
                 </div>
                 
                 <p className="text-xs text-slate-500 leading-relaxed">
-                  When methodology articles are uploaded to the Skill Library, Sales Coach AI parses chapter blocks, generates vector embeddings, and registers index targets. This enables real-time citation accuracy on diagnostic alerts.
+                  {t("When methodology articles are uploaded to the Skill Library, Sales Coach AI parses chapter blocks, generates vector embeddings, and registers index targets. This enables real-time citation accuracy on diagnostic alerts.")}
                 </p>
 
                 <div className="space-y-2 pt-2">
@@ -962,10 +967,10 @@ export default function SalesCoachAI({ deals }: SalesCoachAIProps) {
                       <FileText className="w-4 h-4 text-emerald-500" />
                       <div>
                         <span className="text-xs font-extrabold block text-slate-850 dark:text-zinc-200">TIMWOODS_Objection_Playbook.chunk</span>
-                        <span className="text-[10px] text-slate-400 font-mono">Last hashed: 2026-06-19 • Size: 2.1k tokens</span>
+                        <span className="text-[10px] text-slate-400 font-mono">{t("Last hashed: {date} • Size: {size} tokens").replace("{date}", "2026-06-19").replace("{size}", "2.1k")}</span>
                       </div>
                     </div>
-                    <span className="text-[9px] bg-slate-150 text-slate-650 dark:bg-zinc-800 px-1.5 py-0.5 font-mono rounded">100% Synced</span>
+                    <span className="text-[9px] bg-slate-150 text-slate-650 dark:bg-zinc-800 px-1.5 py-0.5 font-mono rounded">{t("100% Synced")}</span>
                   </div>
 
                   <div className="p-3.5 bg-slate-50 dark:bg-zinc-900 border border-slate-150 dark:border-zinc-800 rounded-lg flex items-center justify-between">
@@ -973,10 +978,10 @@ export default function SalesCoachAI({ deals }: SalesCoachAIProps) {
                       <FileText className="w-4 h-4 text-blue-500" />
                       <div>
                         <span className="text-xs font-extrabold block text-slate-850 dark:text-zinc-200">MTM_TimeStudy_Formula_Decks.chunk</span>
-                        <span className="text-[10px] text-slate-400 font-mono">Last hashed: 2026-06-18 • Size: 4.8k tokens</span>
+                        <span className="text-[10px] text-slate-400 font-mono">{t("Last hashed: {date} • Size: {size} tokens").replace("{date}", "2026-06-18").replace("{size}", "4.8k")}</span>
                       </div>
                     </div>
-                    <span className="text-[9px] bg-slate-150 text-slate-650 dark:bg-zinc-800 px-1.5 py-0.5 font-mono rounded">100% Synced</span>
+                    <span className="text-[9px] bg-slate-150 text-slate-650 dark:bg-zinc-800 px-1.5 py-0.5 font-mono rounded">{t("100% Synced")}</span>
                   </div>
 
                   <div className="p-3.5 bg-slate-50 dark:bg-zinc-900 border border-slate-150 dark:border-zinc-800 rounded-lg flex items-center justify-between">
@@ -984,10 +989,10 @@ export default function SalesCoachAI({ deals }: SalesCoachAIProps) {
                       <FileText className="w-4 h-4 text-purple-500" />
                       <div>
                         <span className="text-xs font-extrabold block text-slate-850 dark:text-zinc-200">OEE_SMED_AssemblyLine_Case_Studies.chunk</span>
-                        <span className="text-[10px] text-slate-400 font-mono">Last hashed: 2026-06-15 • Size: 5.4k tokens</span>
+                        <span className="text-[10px] text-slate-400 font-mono">{t("Last hashed: {date} • Size: {size} tokens").replace("{date}", "2026-06-15").replace("{size}", "5.4k")}</span>
                       </div>
                     </div>
-                    <span className="text-[9px] bg-slate-150 text-slate-650 dark:bg-zinc-800 px-1.5 py-0.5 font-mono rounded">100% Synced</span>
+                    <span className="text-[9px] bg-slate-150 text-slate-650 dark:bg-zinc-800 px-1.5 py-0.5 font-mono rounded">{t("100% Synced")}</span>
                   </div>
                 </div>
               </div>
@@ -998,14 +1003,14 @@ export default function SalesCoachAI({ deals }: SalesCoachAIProps) {
           {activeSubmenu === "settings" && (
             <div className="space-y-6">
               <div>
-                <h1 className="text-base font-extrabold text-slate-900 dark:text-slate-100">AI Sales Intelligence Configuration</h1>
-                <p className="text-xs text-slate-500 mt-0.5">Instruct the model on tone, confidence score cutoffs, and warning timers.</p>
+                <h1 className="text-base font-extrabold text-slate-900 dark:text-slate-100">{t("AI Sales Intelligence Configuration")}</h1>
+                <p className="text-xs text-slate-500 mt-0.5">{t("Instruct the model on tone, confidence score cutoffs, and warning timers.")}</p>
               </div>
 
               <div className="bg-white dark:bg-[#201f1e] border border-slate-200/50 dark:border-zinc-850 rounded-xl p-5 shadow-xs space-y-4">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="space-y-1">
-                    <label className="text-[10px] uppercase font-black text-slate-450 block">Gemini Engine Model</label>
+                    <label className="text-[10px] uppercase font-black text-slate-450 block">{t("Gemini Engine Model")}</label>
                     <select
                       value={settings.model}
                       onChange={(e) => setSettings(prev => ({ ...prev, model: e.target.value }))}
@@ -1017,33 +1022,33 @@ export default function SalesCoachAI({ deals }: SalesCoachAIProps) {
                   </div>
 
                   <div className="space-y-1">
-                    <label className="text-[10px] uppercase font-black text-slate-455 block">Coaching Rigor Tone</label>
+                    <label className="text-[10px] uppercase font-black text-slate-455 block">{t("Coaching Rigor Tone")}</label>
                     <select
                       value={settings.coachingRigor}
                       onChange={(e) => setSettings(prev => ({ ...prev, coachingRigor: e.target.value }))}
                       className="w-full px-3 py-2 text-xs bg-slate-50 dark:bg-zinc-900 border border-slate-250 dark:border-zinc-850 rounded-lg"
                     >
-                      <option value="Gentle">Gentle Guidance (Polite & Supportive)</option>
-                      <option value="Challenging">Challenging Critic (Identifies Weaknesses)</option>
-                      <option value="Aggressive">High Stakes Director (Direct & Rigorous)</option>
+                      <option value="Gentle">{t("Gentle Guidance (Polite & Supportive)")}</option>
+                      <option value="Challenging">{t("Challenging Critic (Identifies Weaknesses)")}</option>
+                      <option value="Aggressive">{t("High Stakes Director (Direct & Rigorous)")}</option>
                     </select>
                   </div>
 
                   <div className="space-y-1">
-                    <label className="text-[10px] uppercase font-black text-slate-455 block">Rapport Style</label>
+                    <label className="text-[10px] uppercase font-black text-slate-455 block">{t("Rapport Style")}</label>
                     <select
                       value={settings.rapportStyle}
                       onChange={(e) => setSettings(prev => ({ ...prev, rapportStyle: e.target.value }))}
                       className="w-full px-3 py-2 text-xs bg-slate-50 dark:bg-zinc-900 border border-slate-250 dark:border-zinc-850 rounded-lg"
                     >
-                      <option value="Socratic">Socratic Questioning (Guide to solutions)</option>
-                      <option value="Directive">Directive Mandate (Instruct direct steps)</option>
-                      <option value="Accountable">High Accountability (Focuses on quotas)</option>
+                      <option value="Socratic">{t("Socratic Questioning (Guide to solutions)")}</option>
+                      <option value="Directive">{t("Directive Mandate (Instruct direct steps)")}</option>
+                      <option value="Accountable">{t("High Accountability (Focuses on quotas)")}</option>
                     </select>
                   </div>
 
                   <div className="space-y-1">
-                    <label className="text-[10px] uppercase font-black text-slate-455 block">Aging Warning Threshold (Days)</label>
+                    <label className="text-[10px] uppercase font-black text-slate-455 block">{t("Aging Warning Threshold (Days)")}</label>
                     <input
                       type="number"
                       value={settings.alertOnAgingDays}
@@ -1054,14 +1059,14 @@ export default function SalesCoachAI({ deals }: SalesCoachAIProps) {
                 </div>
 
                 <div className="pt-4 border-t border-slate-100 dark:border-zinc-850 flex items-center justify-between">
-                  <span className="text-xs text-slate-500 font-sans">Settings automatically synchronized to local storage cache.</span>
+                  <span className="text-xs text-slate-500 font-sans">{t("Settings automatically synchronized to local storage cache.")}</span>
                   <button
                     onClick={() => {
-                      alert("Ayarlar başarıyla kaydedildi!");
+                      alert(t("Settings saved successfully!"));
                     }}
                     className="px-4 py-2 bg-[#0078D4] hover:bg-[#005a9e] text-white text-xs font-bold rounded-lg shadow-xs cursor-pointer select-none"
                   >
-                    Save Changes
+                    {t("Save Changes")}
                   </button>
                 </div>
               </div>

@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { useLanguage } from "../lib/LanguageContext";
 import {
   Mail,
   FolderOpen,
@@ -76,6 +77,7 @@ export default function EmailLeadDiscoveryView({
   onAddCompaniesToMaster,
   onAddTargetAccount
 }: EmailLeadDiscoveryViewProps) {
+  const { t } = useLanguage();
   
   // Tab/State states
   const [connections, setConnections] = useState<MailboxConnection[]>([]);
@@ -242,37 +244,37 @@ export default function EmailLeadDiscoveryView({
     const filtered: FilteredOutLead[] = [
       {
         email: "bill.internal@gemba-operasyonel.com",
-        reason: "Internal domain excluded (gemba-operasyonel.com)",
+        reason: t("Internal domain excluded ({domain})").replace("{domain}", "gemba-operasyonel.com"),
         folder: "Inbox",
         date: "2026-06-20"
       },
       {
         email: "marketing-camp@gmail.com",
-        reason: "Excluded public email provider (gmail.com)",
+        reason: t("Excluded public email provider ({domain})").replace("{domain}", "gmail.com"),
         folder: "Inbox",
         date: "2026-06-18"
       },
       {
         email: "customer-support-junk@hotmail.com",
-        reason: "Excluded public email provider (hotmail.com)",
+        reason: t("Excluded public email provider ({domain})").replace("{domain}", "hotmail.com"),
         folder: "Sent Items",
         date: "2026-06-15"
       },
       {
         email: "team-activities@yahoo.co.uk",
-        reason: "Excluded public email provider (yahoo.co.uk)",
+        reason: t("Excluded public email provider ({domain})").replace("{domain}", "yahoo.co.uk"),
         folder: "Inbox",
         date: "2026-06-12"
       },
       {
         email: "no-reply@hubspot.com",
-        reason: "Automated newsletter / drip sender",
+        reason: t("Automated newsletter / drip sender"),
         folder: "Inbox",
         date: "2026-06-21"
       },
       {
         email: "alert@aws-infra-monitor.com",
-        reason: "Automated alert key phrase detected",
+        reason: t("Automated alert key phrase detected"),
         folder: "Inbox",
         date: "2026-06-22"
       }
@@ -372,7 +374,7 @@ export default function EmailLeadDiscoveryView({
   const handleAddMailbox = (e: React.FormEvent) => {
     e.preventDefault();
     if (!newMailboxEmail.trim() || !newMailboxEmail.includes("@")) {
-      alert("Lütfen geçerli bir e-posta adresi giriniz.");
+      alert(t("Please enter a valid email address."));
       return;
     }
 
@@ -388,15 +390,15 @@ export default function EmailLeadDiscoveryView({
     setSelectedMailboxIds(prev => [...prev, newConn.id]);
     setNewMailboxEmail("");
     setIsConnectModalOpen(false);
-    triggerToast(`${newConn.provider} Hesabı (${newConn.email}) başarıyla bağlandı!`);
+    triggerToast(t("{provider} account ({email}) connected successfully!").replace("{provider}", newConn.provider).replace("{email}", newConn.email));
   };
 
   // Action: Remove Mailbox Connection
   const handleRemoveConnection = (id: string, email: string) => {
-    if (confirm(`${email} bağlantısını kaldırmak istediğinize emin misiniz?`)) {
+    if (confirm(t("Remove connection for {email}?").replace("{email}", email))) {
       setConnections(connections.filter(c => c.id !== id));
       setSelectedMailboxIds(prev => prev.filter(selectedId => selectedId !== id));
-      triggerToast("Posta kutusu bağlantısı kaldırıldı.", "info");
+      triggerToast(t("Mailbox connection removed."), "info");
     }
   };
 
@@ -418,31 +420,31 @@ export default function EmailLeadDiscoveryView({
     const hasRealSession = session && session.isConnected && !session.isSandbox && session.accessToken;
 
     const steps = [
-      `Initializing Lead Discovery engine for ${selectedEmails.length} active mailboxes...`,
-      `Scanning connections: [${mailsLabel}]`,
-      `Establishing secure parallel connection to folder: ${selectedFolder}...`
+      t("Initializing Lead Discovery engine for {count} active mailboxes...").replace("{count}", String(selectedEmails.length)),
+      t("Scanning connections: [{emails}]").replace("{emails}", mailsLabel),
+      t("Establishing secure parallel connection to folder: {folder}...").replace("{folder}", selectedFolder)
     ];
 
     if (hasRealSession) {
-      steps.push(`✓ Active Microsoft 365 Exchange Session found for ${session.mail}`);
-      steps.push("📡 Establishing connection with Microsoft Graph API...");
-      steps.push("📥 Syncing folders and downloading raw message headers...");
+      steps.push(t("Active Microsoft 365 Exchange Session found for {email}").replace("{email}", session.mail));
+      steps.push(t("Establishing connection with Microsoft Graph API..."));
+      steps.push(t("Syncing folders and downloading raw message headers..."));
     } else {
-      steps.push("⚠️ WARNING: Live Azure Enterprise Client Keys / Active login token not present.");
-      steps.push("⚠️ SECURITY PROTOCOL ACTIVE: Bypassing live Exchange sockets to protect credentials.");
-      steps.push("🔄 Redirecting scan flow to Secure Local Sandbox Database (Seed mode)...");
+      steps.push(t("WARNING: Live Azure Enterprise Client Keys / Active login token not present."));
+      steps.push(t("SECURITY PROTOCOL ACTIVE: Bypassing live Exchange sockets to protect credentials."));
+      steps.push(t("Redirecting scan flow to Secure Local Sandbox Database (Seed mode)..."));
     }
 
     steps.push(
-      `Analyzing date boundary window from ${startDate} to ${endDate}...`,
-      "Reading raw email message headers and routing tracks (last 1000 emails)...",
-      "Parsing sender information, Reply-To indicators, and To/Cc recipients...",
-      "Resolving internal domain names to exclude internal corporate communication...",
-      "Executing email signature heuristic detection (capturing titles, company, phones)...",
-      "Scattering public domains (Gmail, Hotmail, Yahoo, etc.) outbound...",
-      "Discarding CRM-registered automated service accounts, bounces, and newsletters...",
-      "Compiling parsed intelligence, computing Lead and Relationship engagement scores...",
-      "Rebuilding lead profile proposals, creating smart CRM domain suggestions..."
+      t("Analyzing date boundary window from {start} to {end}...").replace("{start}", startDate).replace("{end}", endDate),
+      t("Reading raw email message headers and routing tracks (last 1000 emails)..."),
+      t("Parsing sender information, Reply-To indicators, and To/Cc recipients..."),
+      t("Resolving internal domain names to exclude internal corporate communication..."),
+      t("Executing email signature heuristic detection (capturing titles, company, phones)..."),
+      t("Scattering public domains (Gmail, Hotmail, Yahoo, etc.) outbound..."),
+      t("Discarding CRM-registered automated service accounts, bounces, and newsletters..."),
+      t("Compiling parsed intelligence, computing Lead and Relationship engagement scores..."),
+      t("Rebuilding lead profile proposals, creating smart CRM domain suggestions...")
     );
 
     let currentStep = 0;
@@ -457,7 +459,7 @@ export default function EmailLeadDiscoveryView({
         
         if (hasRealSession) {
           try {
-            setScanLogs(prev => [...prev, `[${new Date().toLocaleTimeString()}] ⏳ Performing live parsing on Microsoft Graph API incoming payload...`]);
+            setScanLogs(prev => [...prev, `[${new Date().toLocaleTimeString()}] ⏳ ${t("Performing live parsing on Microsoft Graph API incoming payload...")}`]);
             
             // Query up to 50 recent messages from Inbox
             const response = await fetch("https://graph.microsoft.com/v1.0/me/messages?$top=50&$select=id,subject,receivedDateTime,from,toRecipients,bodyPreview", {
@@ -630,7 +632,7 @@ export default function EmailLeadDiscoveryView({
                 });
                 setIsScanning(false);
                 setHasScanned(true);
-                triggerToast(`${parsedList.length} gerçek aday e-postalarınızdan başarıyla çıkarıldı!`);
+          triggerToast(t("{count} real leads extracted from your emails!").replace("{count}", String(parsedList.length)));
                 return;
               } else {
                 setDiscoveredLeads([]);
@@ -649,7 +651,7 @@ export default function EmailLeadDiscoveryView({
                 });
                 setIsScanning(false);
                 setHasScanned(true);
-                triggerToast("Canlı bağlantı kuruldu, ancak kriterlere uyan yeni aday bulunamadı.", "info");
+                triggerToast(t("Live connection established but no matching leads found."), "info");
                 return;
               }
             } else {
@@ -685,7 +687,7 @@ export default function EmailLeadDiscoveryView({
             });
             setIsScanning(false);
             setHasScanned(true);
-            triggerToast("Hata: Canlı tarama başarısız oldu!", "info");
+            triggerToast(t("Error: Live scan failed!"), "info");
           }
         } else {
           // Normal seed data load for sandbox / demo mode
@@ -699,7 +701,7 @@ export default function EmailLeadDiscoveryView({
           });
           setIsScanning(false);
           setHasScanned(true);
-          triggerToast("Taramadan imza adayları başarıyla süzüldü (Simülasyon Modu)!");
+          triggerToast(t("Candidates extracted from scan (Simulation Mode)!"));
         }
       }
     }, 450);
@@ -735,7 +737,7 @@ export default function EmailLeadDiscoveryView({
 
     // Update state to reflect added
     setDiscoveredLeads(prev => prev.map(item => item.id === lead.id ? { ...item, status: "added_leads" } : item));
-    triggerToast(`${lead.name} başarıyla Lead Veritabanına (Master Leads) eklendi!`);
+    triggerToast(t("{name} added to Lead Database successfully!").replace("{name}", lead.name));
   };
 
   const handleAddToCompaniesSingle = (lead: DiscoveredLead) => {
@@ -743,7 +745,7 @@ export default function EmailLeadDiscoveryView({
       onAddCompaniesToMaster(lead.company, lead.website, "Tech & Operations");
     }
     setDiscoveredLeads(prev => prev.map(item => item.id === lead.id ? { ...item, status: "added_companies" } : item));
-    triggerToast(`${lead.company}, Müşteriler (Companies Registry) veritabanına eklendi!`);
+    triggerToast(t("{company} added to Companies registry!").replace("{company}", lead.company));
   };
 
   const handleAddToTargetAccountsSingle = (lead: DiscoveredLead) => {
@@ -751,19 +753,19 @@ export default function EmailLeadDiscoveryView({
       onAddTargetAccount(lead.company, lead.website);
     }
     setDiscoveredLeads(prev => prev.map(item => item.id === lead.id ? { ...item, status: "added_target" } : item));
-    triggerToast(`${lead.company}, Hedef Hesaplar (Target Accounts) listesine eklendi!`);
+    triggerToast(t("{company} added to Target Accounts!").replace("{company}", lead.company));
   };
 
   const handleAssignSalesperson = (leadId: string, name: string) => {
     setDiscoveredLeads(prev => prev.map(item => item.id === leadId ? { ...item, assignedSalesperson: name } : item));
-    triggerToast(`${name} satış temsilcisi olarak atandı.`);
+    triggerToast(t("{name} assigned as salesperson.").replace("{name}", name));
   };
 
   // Bulk Master Actions
   const handleBulkAddToLeads = () => {
     const unadded = discoveredLeads.filter(l => l.status === "new");
     if (unadded.length === 0) {
-      triggerToast("Eklenecek yeni aday bulunamadı.", "info");
+      triggerToast(t("No new leads to add."), "info");
       return;
     }
 
@@ -793,7 +795,7 @@ export default function EmailLeadDiscoveryView({
 
     onAddLeadsToMaster(mappedLeads);
     setDiscoveredLeads(prev => prev.map(item => item.status === "new" ? { ...item, status: "added_leads" } : item));
-    triggerToast(`Tüm ${mappedLeads.length} yeni aday başarıyla Lead veritabanına aktarıldı!`);
+    triggerToast(t("All {count} new leads transferred to Lead database!").replace("{count}", String(mappedLeads.length)));
   };
 
   // Score badge helper
@@ -844,17 +846,17 @@ export default function EmailLeadDiscoveryView({
           <div className="space-y-1 md:max-w-2xl">
             <div className="flex items-center gap-2">
               <span className="inline-flex items-center gap-1 rounded bg-indigo-50 px-2 py-0.5 text-[10px] font-bold text-indigo-700 dark:bg-indigo-950/60 dark:text-indigo-400">
-                <Sparkles className="w-3 h-3" /> Auto Lead-Discovery
+                <Sparkles className="w-3 h-3" /> {t("Auto Lead-Discovery")}
               </span>
               <span className="text-[10px] uppercase font-bold tracking-widest text-[#0078D4] dark:text-indigo-400">
-                Contacted List
+                {t("Contacted List")}
               </span>
             </div>
             <h2 className="text-xl font-bold tracking-tight text-slate-900 dark:text-slate-100">
-              Email Lead Discovery Portal
+              {t("Email Lead Discovery Portal")}
             </h2>
             <p className="text-xs text-slate-500 dark:text-slate-400 leading-relaxed">
-              Bağlı olan Microsoft 365, Gmail ve Outlook kurumsal hesaplarınızın <b>Gelen Kutusu (Inbox)</b> ve <b>Gönderilmiş Ögeler (Sent Items)</b> klasörlerini tarayarak iletişim kurduğunuz ancak CRM sisteminde kayıtlı olmayan B2B şirketleri ve kontakları yapay zeka destekli imza tespiti ile saniyeler içinde otomatik olarak aday listenize çıkartın.
+              {t("Scan connected Microsoft 365, Gmail, and Outlook corporate Inbox and Sent Items to extract B2B contacts not yet in CRM using AI signature detection.")}
             </p>
           </div>
           <div className="flex flex-wrap gap-2.5">
@@ -863,7 +865,7 @@ export default function EmailLeadDiscoveryView({
               className="inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-slate-50 px-3.5 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-100 dark:border-zinc-800 dark:bg-zinc-900 dark:text-zinc-300 dark:hover:bg-zinc-800 transition-colors cursor-pointer shadow-sm"
             >
               <Plus className="w-4 h-4 text-indigo-500" />
-              <span>Yeni Posta Kutusu Bağla</span>
+              <span>{t("Connect New Mailbox")}</span>
             </button>
             <button
               onClick={handleScanEmails}
@@ -875,7 +877,7 @@ export default function EmailLeadDiscoveryView({
               }`}
             >
               <RefreshCw className={`w-4 h-4 ${isScanning ? "animate-spin" : ""}`} />
-              <span>{isScanning ? "E-postalar Taranıyor..." : "Posta Kutularını Tara"}</span>
+              <span>{isScanning ? t("Scanning Emails...") : t("Scan Mailboxes")}</span>
             </button>
           </div>
         </div>
@@ -963,7 +965,7 @@ export default function EmailLeadDiscoveryView({
           <div className="flex items-center justify-between pb-3 border-b border-slate-100 dark:border-zinc-900">
             <h3 className="text-xs font-bold text-slate-950 dark:text-slate-100 uppercase tracking-wider font-mono flex items-center gap-2">
               <Mail className="w-4 h-4 text-indigo-500" />
-              1. Bağlantılı Hesaplar ({connections.length})
+              {t("Connected Accounts ({count})").replace("{count}", String(connections.length))}
             </h3>
             <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
           </div>
@@ -971,12 +973,12 @@ export default function EmailLeadDiscoveryView({
           {connections.length === 0 ? (
             <div className="p-4 rounded-xl border border-dashed border-slate-200 text-center space-y-2 dark:border-zinc-800">
               <AlertCircle className="w-6 h-6 text-slate-400 mx-auto" />
-              <p className="text-[11px] text-slate-500 dark:text-slate-400">Bağlı posta kutusu bulunamadı.</p>
+              <p className="text-[11px] text-slate-500 dark:text-slate-400">{t("No mailboxes connected.")}</p>
             </div>
           ) : (
             <div className="space-y-2.5">
               <p className="text-[10px] text-indigo-600 dark:text-indigo-400 font-medium">
-                💡 Aynı anda taranacak kutuları işaretleyebilirsiniz:
+                {t("Select mailboxes to scan simultaneously:")}
               </p>
               {connections.map((conn) => {
                 const isSelected = selectedMailboxIds.includes(conn.id);
@@ -988,7 +990,7 @@ export default function EmailLeadDiscoveryView({
                         if (selectedMailboxIds.length > 1) {
                           setSelectedMailboxIds(selectedMailboxIds.filter(id => id !== conn.id));
                         } else {
-                          triggerToast("En az bir posta kutusu seçili olmalıdır.", "info");
+                          triggerToast(t("At least one mailbox must remain selected."), "info");
                         }
                       } else {
                         setSelectedMailboxIds([...selectedMailboxIds, conn.id]);
@@ -1019,7 +1021,7 @@ export default function EmailLeadDiscoveryView({
                           handleRemoveConnection(conn.id, conn.email);
                         }}
                         className="text-slate-400 hover:text-rose-500 p-0.5"
-                        title="Bağlantıyı Sil"
+                        title={t("Remove Connection")}
                       >
                         <Trash2 className="w-3.5 h-3.5" />
                       </button>
@@ -1031,11 +1033,11 @@ export default function EmailLeadDiscoveryView({
                       <span>Ref: {conn.connectedAt}</span>
                       {conn.status === "Connected" ? (
                         <span className="text-emerald-500 font-bold flex items-center gap-0.5">
-                          <ShieldCheck className="w-3 h-3 inline" /> Aktif (Canlı)
+                          <ShieldCheck className="w-3 h-3 inline" /> {t("Active (Live)")}
                         </span>
                       ) : (
-                        <span className="text-amber-500 font-semibold flex items-center gap-0.5" title="M365 üzerinden sisteme bağlanılmamıştır">
-                          <AlertCircle className="w-3 h-3 inline" /> Yetki Yok
+                        <span className="text-amber-500 font-semibold flex items-center gap-0.5" title={t("Not Authorized")}>
+                          <AlertCircle className="w-3 h-3 inline" /> {t("Not Authorized")}
                         </span>
                       )}
                     </div>
@@ -1051,9 +1053,9 @@ export default function EmailLeadDiscoveryView({
           <div className="flex items-center justify-between pb-3 border-b border-slate-100 dark:border-zinc-900">
             <h3 className="text-xs font-bold text-slate-950 dark:text-slate-100 uppercase tracking-wider font-mono flex items-center gap-2">
               <FolderOpen className="w-4 h-4 text-indigo-500" />
-              2. Klasör ve Filtre parametreleri
+              {t("Folder & Filter Parameters")}
             </h3>
-            <span className="text-[10px] text-slate-400 font-mono">Güvenli Tarama Modu</span>
+            <span className="text-[10px] text-slate-400 font-mono">{t("Secure Scan Mode")}</span>
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
@@ -1071,7 +1073,7 @@ export default function EmailLeadDiscoveryView({
                     selectedFolder === "Inbox" ? "bg-white dark:bg-zinc-805 text-indigo-600 shadow-xs dark:text-white" : "text-slate-500"
                   }`}
                 >
-                  Gelenler (Inbox)
+                  {t("Inbox Folder")}
                 </button>
                 <button
                   type="button"
@@ -1080,7 +1082,7 @@ export default function EmailLeadDiscoveryView({
                     selectedFolder === "Sent Items" ? "bg-white dark:bg-zinc-805 text-indigo-600 shadow-xs dark:text-white" : "text-slate-500"
                   }`}
                 >
-                  Gidenler (Sent)
+                  {t("Sent Folder")}
                 </button>
                 <button
                   type="button"
@@ -1089,7 +1091,7 @@ export default function EmailLeadDiscoveryView({
                     selectedFolder === "Both" ? "bg-white dark:bg-zinc-805 text-indigo-600 shadow-xs dark:text-white" : "text-slate-500"
                   }`}
                 >
-                  Tümü
+                  {t("Both")}
                 </button>
               </div>
             </div>
@@ -1098,7 +1100,7 @@ export default function EmailLeadDiscoveryView({
             <div className="space-y-1.5">
               <label className="text-[10px] font-bold uppercase text-slate-450 dark:text-zinc-500 tracking-wider flex items-center gap-1">
                 <Calendar className="w-3.5 h-3.5 text-slate-400" />
-                <span>Başlangıç Tarihi</span>
+                <span>{t("Start Date")}</span>
               </label>
               <input
                 type="date"
@@ -1112,7 +1114,7 @@ export default function EmailLeadDiscoveryView({
             <div className="space-y-1.5">
               <label className="text-[10px] font-bold uppercase text-slate-450 dark:text-zinc-500 tracking-wider flex items-center gap-1">
                 <Calendar className="w-3.5 h-3.5 text-slate-400" />
-                <span>Bitiş Tarihi</span>
+                <span>{t("End Date")}</span>
               </label>
               <input
                 type="date"
@@ -1125,7 +1127,7 @@ export default function EmailLeadDiscoveryView({
           </div>
 
           <div className="p-3 bg-amber-50 rounded-xl border border-amber-100 text-[11px] text-amber-900 leading-relaxed dark:bg-amber-950/20 dark:border-amber-900/40 dark:text-amber-400">
-            <span className="font-bold font-mono">Otomatik Süzgeç Kuralları Aktif:</span> Dahili şirket alan adlarınız (örn: gemba-operasyonel.com), ortak servisler (@gmail, @yahoo, @hotmail) ve makineleşmiş bildirim şablonları süzgeçler tarafından otomatik olarak ayıklanacaktır.
+            <span className="font-bold font-mono">{t("Automatic filter rules active: internal domains, public providers, and automated notifications are excluded.")}</span>
           </div>
 
         </div>
@@ -1151,7 +1153,7 @@ export default function EmailLeadDiscoveryView({
             </div>
             <div className="flex-1 space-y-1">
               <h4 className="text-xs font-bold uppercase tracking-wider font-mono text-slate-900 dark:text-slate-100">
-                {scanStatus.success ? "🟢 Canlı Tarama Başarıyla Tamamlandı" : "❌ Canlı Posta Kutusu Tarama Hatası"}
+                {scanStatus.success ? t("Live scan completed successfully") : t("Live mailbox scan error")}
               </h4>
               <p className="text-xs text-slate-600 dark:text-slate-300 leading-relaxed">
                 {scanStatus.message}
@@ -1160,7 +1162,7 @@ export default function EmailLeadDiscoveryView({
               {/* Detailed error if applicable */}
               {scanStatus.errorDetails && (
                 <div className="mt-3 space-y-2 p-3.5 rounded-xl bg-rose-100/30 dark:bg-rose-955/20 border border-rose-200/40">
-                  <span className="text-[10px] font-bold text-rose-700 dark:text-rose-400 block uppercase font-mono">⚠️ Sistem Hata Detayı (Error Details)</span>
+                  <span className="text-[10px] font-bold text-rose-700 dark:text-rose-400 block uppercase font-mono">⚠️ {t("System Error Details")}</span>
                   <p className="text-[11px] font-mono text-rose-800 dark:text-rose-300 break-all select-all">
                     {scanStatus.errorDetails}
                   </p>
@@ -1196,10 +1198,10 @@ export default function EmailLeadDiscoveryView({
         <div className="p-5 rounded-2xl border border-indigo-200 bg-indigo-50/10 space-y-4 animate-pulse dark:border-zinc-800 dark:bg-zinc-950/20">
           <div className="flex items-center justify-between">
             <span className="text-xs font-bold text-indigo-700 dark:text-indigo-400 uppercase tracking-widest font-mono flex items-center gap-1.5">
-              <RefreshCw className="w-4 h-4 animate-spin" /> E-Posta Tarama İstihbarat Havuzu
+              <RefreshCw className="w-4 h-4 animate-spin" /> {t("Email Scan Intelligence Pool")}
             </span>
             <span className="text-[10px] font-mono text-indigo-600 bg-indigo-100/50 px-2.5 py-0.5 rounded-full dark:bg-indigo-950 dark:text-indigo-300">
-              Aşama {scanStep + 1} / 11
+              {t("Stage {current} / {total}").replace("{current}", String(scanStep + 1)).replace("{total}", "11")}
             </span>
           </div>
 
@@ -1227,35 +1229,35 @@ export default function EmailLeadDiscoveryView({
       <div className="grid grid-cols-2 md:grid-cols-6 gap-4">
         
         <div className="bg-white dark:bg-zinc-950 p-4 rounded-xl border border-slate-200 dark:border-zinc-800 shadow-xs flex flex-col justify-between">
-          <span className="text-[10px] font-bold text-slate-450 dark:text-zinc-500 uppercase tracking-wider">Keşfedilen Kontak</span>
+          <span className="text-[10px] font-bold text-slate-450 dark:text-zinc-500 uppercase tracking-wider">{t("Discovered Contacts")}</span>
           <div className="text-2xl font-bold font-mono text-indigo-600 mt-1 dark:text-indigo-400">{newContactsCount}</div>
-          <span className="text-[9px] text-[#16a34a] mt-1">▲ 100% taze kontak</span>
+          <span className="text-[9px] text-[#16a34a] mt-1">▲ {t("100% fresh contacts")}</span>
         </div>
 
         <div className="bg-white dark:bg-zinc-950 p-4 rounded-xl border border-slate-200 dark:border-zinc-800 shadow-xs flex flex-col justify-between">
-          <span className="text-[10px] font-bold text-slate-450 dark:text-zinc-500 uppercase tracking-wider">Yeni B2B Şirket</span>
+          <span className="text-[10px] font-bold text-slate-450 dark:text-zinc-500 uppercase tracking-wider">{t("New B2B Companies")}</span>
           <div className="text-2xl font-bold font-mono text-emerald-600 mt-1 mt-1 dark:text-emerald-400">{newCompaniesCount}</div>
-          <span className="text-[9px] text-slate-450">Harici alan adı</span>
+          <span className="text-[9px] text-slate-450">{t("External domain")}</span>
         </div>
 
         <div className="bg-white dark:bg-zinc-950 p-4 rounded-xl border border-slate-200 dark:border-zinc-800 shadow-xs flex flex-col justify-between">
-          <span className="text-[10px] font-bold text-slate-450 dark:text-zinc-500 uppercase tracking-wider">CRM Eksik Kayıt</span>
+          <span className="text-[10px] font-bold text-slate-450 dark:text-zinc-500 uppercase tracking-wider">{t("Missing CRM Records")}</span>
           <div className="text-2xl font-bold font-mono text-amber-500 mt-1 dark:text-amber-400">{missingInCRMCount}</div>
-          <span className="text-[9px] text-amber-600 font-semibold">Tazelenmesi Gerek</span>
+          <span className="text-[9px] text-amber-600 font-semibold">{t("Needs refresh")}</span>
         </div>
 
         <div className="bg-white dark:bg-zinc-950 p-4 rounded-xl border border-slate-200 dark:border-zinc-800 shadow-xs flex flex-col justify-between col-span-1 md:col-span-2">
-          <span className="text-[10px] font-bold text-slate-450 dark:text-zinc-500 uppercase tracking-wider">En Çok İletişim Kuran</span>
+          <span className="text-[10px] font-bold text-slate-450 dark:text-zinc-500 uppercase tracking-wider">{t("Most Active Contact")}</span>
           <div className="text-sm font-bold text-slate-800 mt-1.5 dark:text-slate-200 truncate">
-            {mostActiveContact.name} ({mostActiveContact.interactionsCount} Etkileşim)
+            {mostActiveContact.name} ({t("{count} Interactions").replace("{count}", String(mostActiveContact.interactionsCount))})
           </div>
           <span className="text-[9px] text-slate-450 truncate block mt-1">{mostActiveContact.company}</span>
         </div>
 
         <div className="bg-slate-50 dark:bg-zinc-900 border-indigo-100 p-4 rounded-xl border border-slate-200 dark:border-zinc-800 shadow-xs flex flex-col justify-between">
-          <span className="text-[10px] font-bold text-indigo-700 dark:text-indigo-400 uppercase tracking-wider">Boşta İletişimler</span>
+          <span className="text-[10px] font-bold text-indigo-700 dark:text-indigo-400 uppercase tracking-wider">{t("Unmanaged Relationships")}</span>
           <div className="text-2xl font-bold font-mono text-slate-800 dark:text-slate-100 mt-1">{unmanagedRelationshipsCount}</div>
-          <span className="text-[9px] text-rose-500 font-semibold font-mono">Takip Eksikliği</span>
+          <span className="text-[9px] text-rose-500 font-semibold font-mono">{t("Follow-up gap")}</span>
         </div>
 
       </div>
@@ -1270,10 +1272,10 @@ export default function EmailLeadDiscoveryView({
             <span className="w-2.5 h-2.5 rounded-full bg-indigo-500" />
             <div>
               <h3 className="text-xs font-bold text-slate-900 dark:text-slate-100 uppercase tracking-widest font-mono">
-                Elde Edilen Aday Keşif Listesi
+                {t("Discovered Lead List")}
               </h3>
               <p className="text-[10px] text-slate-500 dark:text-slate-400">
-                E-posta metinlerinden süzülmüş, ekleyebileceğiniz hazır prospektüsler
+                {t("Ready prospects extracted from email signatures")}
               </p>
             </div>
           </div>
@@ -1289,7 +1291,7 @@ export default function EmailLeadDiscoveryView({
                 type="text"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder="İsim, Şirket veya E-posta..."
+                placeholder={t("Search name, company, or email...")}
                 className="text-[11px] bg-white px-8 py-1.5 border border-slate-200 rounded-lg focus:outline-none focus:ring-1 focus:ring-indigo-500 w-44 dark:border-zinc-800 dark:bg-zinc-90 w-44"
               />
             </div>
@@ -1303,7 +1305,7 @@ export default function EmailLeadDiscoveryView({
                   scoreFilter === "all" ? "bg-slate-105 text-slate-805 font-bold dark:bg-zinc-801" : "text-slate-500"
                 }`}
               >
-                Hepsi
+                {t("All")}
               </button>
               <button
                 type="button"
@@ -1312,7 +1314,7 @@ export default function EmailLeadDiscoveryView({
                   scoreFilter === "hot" ? "bg-emerald-50 text-emerald-800 font-bold dark:bg-emerald-950/20" : "text-slate-500"
                 }`}
               >
-                Yüksek Skor (🔥)
+                {t("High Score")} (🔥)
               </button>
               <button
                 type="button"
@@ -1321,7 +1323,7 @@ export default function EmailLeadDiscoveryView({
                   scoreFilter === "unassigned" ? "bg-amber-50 text-amber-800 font-bold dark:bg-amber-950/20" : "text-slate-500"
                 }`}
               >
-                Atanmamış
+                {t("Unassigned")}
               </button>
             </div>
 
@@ -1331,7 +1333,7 @@ export default function EmailLeadDiscoveryView({
               className="text-[11px] font-bold bg-indigo-650 hover:bg-indigo-600 text-white px-3 py-1.5 rounded-lg flex items-center gap-1 cursor-pointer transition-all shadow-sm"
             >
               <UserPlus className="w-3.5 h-3.5" />
-              <span>Tümünü CRM'e Aktar</span>
+              <span>{t("Transfer All to CRM")}</span>
             </button>
 
           </div>
@@ -1342,22 +1344,22 @@ export default function EmailLeadDiscoveryView({
         {filteredDiscoveredLeads.length === 0 ? (
           <div className="p-12 text-center text-slate-500 space-y-2 max-w-sm mx-auto">
             <Filter className="w-8 h-8 text-slate-350 mx-auto" />
-            <p className="text-xs font-semibold text-slate-700 dark:text-slate-300">Arama şartına uygun aday bulunamadı</p>
-            <p className="text-[10px] text-slate-450">Filtre kriterlerinizi değiştirebilir veya başka posta kutusunu aratabilirsiniz.</p>
+            <p className="text-xs font-semibold text-slate-700 dark:text-slate-300">{t("No leads match search criteria")}</p>
+            <p className="text-[10px] text-slate-450">{t("Try changing filters or scanning another mailbox.")}</p>
           </div>
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full border-collapse text-left text-xs">
               <thead>
                 <tr className="border-b border-slate-100 bg-slate-50 text-[10px] font-extrabold uppercase text-slate-400 tracking-wider dark:border-zinc-900 dark:bg-zinc-900/40">
-                  <th className="px-5 py-3">İletişim Kurulan (Kontak)</th>
-                  <th className="px-5 py-3">Şirket & Web Sitesi</th>
-                  <th className="px-5 py-3">Önerilen Firma Kartı</th>
-                  <th className="px-4 py-3 text-center">Etkileşim</th>
-                  <th className="px-4 py-3">İletişim Tarih Aralığı</th>
-                  <th className="px-4 py-3">Skorlar</th>
-                  <th className="px-4 py-3">Sorumlu Atama</th>
-                  <th className="px-5 py-3 text-right">Eylemler (CRM)</th>
+                  <th className="px-5 py-3">{t("Contact")}</th>
+                  <th className="px-5 py-3">{t("Company & Website")}</th>
+                  <th className="px-5 py-3">{t("Suggested Company Card")}</th>
+                  <th className="px-4 py-3 text-center">{t("Interactions")}</th>
+                  <th className="px-4 py-3">{t("Contact Date Range")}</th>
+                  <th className="px-4 py-3">{t("Scores")}</th>
+                  <th className="px-4 py-3">{t("Assign Owner")}</th>
+                  <th className="px-5 py-3 text-right">{t("CRM Actions")}</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100 dark:divide-zinc-900">
@@ -1372,7 +1374,7 @@ export default function EmailLeadDiscoveryView({
                             {lead.name}
                           </span>
                           <span className="text-[9px] px-1.5 py-0.5 rounded-full font-bold uppercase tracking-widest bg-slate-100 text-slate-600 dark:bg-zinc-800 dark:text-zinc-400">
-                            {lead.sourceFolder}
+                            {t(lead.sourceFolder === "Inbox" ? "Inbox" : "Sent Items")}
                           </span>
                         </div>
                         <div className="text-[11px] text-slate-500 font-medium truncate block leading-none">
@@ -1384,7 +1386,7 @@ export default function EmailLeadDiscoveryView({
                         
                         {/* Signature dropdown preview inside rows */}
                         <div className="text-[10px] bg-slate-50 p-2 rounded-lg border border-slate-200 mt-2 font-mono text-slate-500 hidden group-hover:block dark:bg-zinc-900 dark:border-zinc-800 select-all max-w-[280px]">
-                          <span className="text-[9px] uppercase font-bold text-indigo-500 block mb-1">Tespit Edilen İmza Blok:</span>
+                          <span className="text-[9px] uppercase font-bold text-indigo-500 block mb-1">{t("Detected Signature Block:")}</span>
                           {lead.detectedSignature.split("\n").map((line, idx) => <div key={idx}>{line}</div>)}
                         </div>
                       </div>
@@ -1413,7 +1415,7 @@ export default function EmailLeadDiscoveryView({
                         <span className="text-xs font-semibold text-slate-700 dark:text-slate-350 bg-slate-50 px-2 py-1 rounded border border-slate-150 block dark:bg-zinc-900 dark:border-zinc-800/80">
                           {lead.companySuggestion}
                         </span>
-                        <span className="text-[10px] text-slate-400">Otomatik Yapay Zeka Önerisi</span>
+                        <span className="text-[10px] text-slate-400">{t("AI Auto Suggestion")}</span>
                       </div>
                     </td>
 
@@ -1427,8 +1429,8 @@ export default function EmailLeadDiscoveryView({
                     {/* Dates */}
                     <td className="px-4 py-4 text-[10.5px] font-mono text-slate-500">
                       <div className="space-y-1">
-                        <div>İlk: {lead.firstContactDate}</div>
-                        <div>Son: {lead.lastContactDate}</div>
+                        <div>{t("First:")} {lead.firstContactDate}</div>
+                        <div>{t("Last:")} {lead.lastContactDate}</div>
                       </div>
                     </td>
 
@@ -1436,13 +1438,13 @@ export default function EmailLeadDiscoveryView({
                     <td className="px-4 py-4">
                       <div className="space-y-1.5">
                         <div className="flex items-center gap-2">
-                          <span className="text-[10px] text-slate-400 font-bold uppercase w-12 text-right">Lead:</span>
+                          <span className="text-[10px] text-slate-400 font-bold uppercase w-12 text-right">{t("Lead:")}</span>
                           <span className={`px-2 py-0.5 rounded border text-[10.5px] font-extrabold font-mono ${getScoreColor(lead.leadScore)}`}>
                             {lead.leadScore}
                           </span>
                         </div>
                         <div className="flex items-center gap-2">
-                          <span className="text-[10px] text-slate-400 font-bold uppercase w-12 text-right">İlişki:</span>
+                          <span className="text-[10px] text-slate-400 font-bold uppercase w-12 text-right">{t("Relationship:")}</span>
                           <span className={`px-2 py-0.5 rounded border text-[10.5px] font-extrabold font-mono ${getScoreColor(lead.relationshipScore)}`}>
                             {lead.relationshipScore}
                           </span>
@@ -1458,8 +1460,8 @@ export default function EmailLeadDiscoveryView({
                         className="text-[11px] font-medium bg-white border border-slate-250 px-3 py-1.5 rounded-lg focus:outline-none focus:ring-1 focus:ring-indigo-500 dark:border-zinc-800 dark:bg-zinc-90 select-none cursor-pointer text-slate-800"
                         id={`salesperson-select-${lead.id}`}
                       >
-                        <option value="Unassigned">Sorumlu Seçiniz</option>
-                        <option value="Atakan Zehir">Atakan Zehir (You)</option>
+                        <option value="Unassigned">{t("Select Owner")}</option>
+                        <option value="Atakan Zehir">{t("Atakan Zehir")} ({t("You")})</option>
                         <option value="Sarah Connor">Sarah Connor</option>
                         <option value="David Miller">David Miller</option>
                       </select>
@@ -1474,31 +1476,31 @@ export default function EmailLeadDiscoveryView({
                               type="button"
                               onClick={() => handleAddToLeadsSingle(lead)}
                               className="text-[10px] font-bold bg-indigo-650 hover:bg-indigo-600 text-white px-2.5 py-1.5 rounded-lg transition-all flex items-center justify-center gap-1"
-                              title="Lead Veritabanına Ekle"
+                              title={t("Add to Master Leads")}
                               id={`add-lead-btn-${lead.id}`}
                             >
                               <UserPlus className="w-3 h-3" />
-                              <span>Master Leads'e Ekle</span>
+                              <span>{t("Add to Master Leads")}</span>
                             </button>
                             <button
                               type="button"
                               onClick={() => handleAddToCompaniesSingle(lead)}
                               className="text-[10px] font-bold bg-emerald-600 hover:bg-emerald-500 text-white px-2.5 py-1.5 rounded-lg transition-all flex items-center justify-center gap-1"
-                              title="Customers Veritabanına Ekle"
+                              title={t("Add to Customers")}
                               id={`add-company-btn-${lead.id}`}
                             >
                               <Building className="w-3 h-3" />
-                              <span>Müşterilere Ekle</span>
+                              <span>{t("Add to Customers")}</span>
                             </button>
                             <button
                               type="button"
                               onClick={() => handleAddToTargetAccountsSingle(lead)}
                               className="text-[10px] font-bold bg-sky-650 hover:bg-sky-600 text-white px-2.5 py-1.5 rounded-lg transition-all flex items-center justify-center gap-1"
-                              title="Target Accounts Veritabanına Ekle"
+                              title={t("Add to Target Accounts")}
                               id={`add-target-btn-${lead.id}`}
                             >
                               <Target className="w-3 h-3" />
-                              <span>Target'a Ekle</span>
+                              <span>{t("Add to Target Accounts")}</span>
                             </button>
                           </div>
                         ) : (
@@ -1506,7 +1508,7 @@ export default function EmailLeadDiscoveryView({
                             lead.status === "added_leads" ? "text-indigo-650" : lead.status === "added_companies" ? "text-emerald-650" : "text-sky-650"
                           }`}>
                             <Check className="w-4 h-4 text-emerald-500" />
-                            {lead.status === "added_leads" ? "Leads'e Eklendi" : lead.status === "added_companies" ? "Müşterilere Eklendi" : "Target'ta"}
+                            {lead.status === "added_leads" ? t("Added to Leads") : lead.status === "added_companies" ? t("Added to Customers") : t("Added to Target")}
                           </span>
                         )}
                       </div>
@@ -1527,18 +1529,18 @@ export default function EmailLeadDiscoveryView({
           <div className="flex items-center gap-2.5">
             <Lock className="w-4 h-4 text-amber-500" />
             <h4 className="text-xs font-bold text-slate-800 dark:text-slate-200 uppercase tracking-wider font-mono">
-              Sistem Tarafından Engellenen ve Elenen Adresler ({filteredOutLeads.length})
+              {t("Blocked & Filtered Addresses ({count})").replace("{count}", String(filteredOutLeads.length))}
             </h4>
           </div>
-          <span className="text-[10px] text-slate-400 font-mono">Otomatik Clean-Out Guard</span>
+          <span className="text-[10px] text-slate-400 font-mono">{t("Automatic Clean-Out Guard")}</span>
         </div>
         
         <div className="divide-y divide-slate-100 text-xs dark:divide-zinc-900">
           <div className="grid grid-cols-1 sm:grid-cols-4 gap-4 p-3 bg-slate-50 font-bold text-slate-400 uppercase tracking-widest text-[9.5px] dark:bg-zinc-900/20">
-            <span>Engellenen Adres</span>
-            <span>Nedeni</span>
-            <span>Klasör</span>
-            <span>Tespit Tarihi</span>
+            <span>{t("Blocked Address")}</span>
+            <span>{t("Reason")}</span>
+            <span>{t("Folder")}</span>
+            <span>{t("Detected Date")}</span>
           </div>
           {filteredOutLeads.map((f, idx) => (
             <div key={idx} className="grid grid-cols-1 sm:grid-cols-4 gap-4 p-3.5 hover:bg-slate-50/50 text-slate-600 font-mono text-[11px] dark:hover:bg-zinc-900/10">
@@ -1546,7 +1548,7 @@ export default function EmailLeadDiscoveryView({
               <span className="text-rose-500 font-sans flex items-center gap-1 font-semibold">
                 <AlertCircle className="w-3.5 h-3.5 flex-shrink-0" /> {f.reason}
               </span>
-              <span>{f.folder}</span>
+              <span>{f.folder === "Inbox" ? t("Inbox") : t("Sent Items")}</span>
               <span className="text-slate-400">{f.date}</span>
             </div>
           ))}
@@ -1560,13 +1562,13 @@ export default function EmailLeadDiscoveryView({
             
             <div className="flex items-center justify-between p-5 border-b border-slate-150 bg-slate-50 dark:border-zinc-900 dark:bg-zinc-900/60">
               <h3 className="font-bold text-slate-900 text-sm tracking-tight dark:text-slate-100">
-                Yeni Mailbox Bağlantısı Kur (Connect Account)
+                {t("Connect New Mailbox Account")}
               </h3>
               <button
                 onClick={() => setIsConnectModalOpen(false)}
                 className="text-slate-400 hover:text-slate-600 dark:hover:text-zinc-200"
               >
-                Kapat
+                {t("Close")}
               </button>
             </div>
 
@@ -1574,7 +1576,7 @@ export default function EmailLeadDiscoveryView({
               
               <div className="space-y-1.5">
                 <label className="text-[10px] uppercase font-bold text-slate-450 tracking-wider block">
-                  İstemci & Mail Altyapısı
+                  {t("Client & Mail Infrastructure")}
                 </label>
                 <div className="grid grid-cols-3 gap-2">
                   {(["Microsoft 365", "Outlook", "Google Workspace"] as const).map((type) => (
@@ -1596,18 +1598,18 @@ export default function EmailLeadDiscoveryView({
 
               <div className="space-y-1.5">
                 <label className="text-[10px] uppercase font-bold text-slate-450 tracking-wider block">
-                  Kurumsal E-posta Adresi
+                  {t("Corporate Email Address")}
                 </label>
                 <input
                   type="email"
                   required
                   value={newMailboxEmail}
                   onChange={(e) => setNewMailboxEmail(e.target.value)}
-                  placeholder="prospecting@corporate.com"
+                  placeholder={t("prospecting@corporate.com")}
                   className="w-full text-xs px-3.5 py-2.5 border border-slate-205 rounded-xl focus:outline-none focus:ring-1 focus:ring-indigo-500 font-mono dark:border-zinc-800 dark:bg-zinc-90"
                 />
                 <span className="text-[9.5px] text-slate-400 font-mono block">
-                  Uygulama Microsoft Graph & Google OAuth standartlarında yetkilendirme isteyecektir.
+                  {t("OAuth authorization will be requested per Microsoft Graph & Google standards.")}
                 </span>
               </div>
 
@@ -1617,13 +1619,13 @@ export default function EmailLeadDiscoveryView({
                   onClick={() => setIsConnectModalOpen(false)}
                   className="px-4 py-2 text-xs border border-slate-200 rounded-xl hover:bg-slate-50 text-slate-700 cursor-pointer dark:border-zinc-800 dark:bg-zinc-90"
                 >
-                  Vazgeç
+                  {t("Cancel")}
                 </button>
                 <button
                   type="submit"
                   className="px-4 py-2 text-xs font-bold text-white bg-indigo-600 hover:bg-indigo-500 rounded-xl cursor-pointer"
                 >
-                  Bağlantıyı Yetkilendir
+                  {t("Authorize Connection")}
                 </button>
               </div>
 

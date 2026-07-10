@@ -1233,7 +1233,7 @@ export default function App() {
                     ? "bg-slate-100 dark:bg-zinc-800 border-indigo-200 dark:border-zinc-700 text-indigo-650 dark:text-zinc-150" 
                     : "bg-white dark:bg-[#141414] hover:bg-slate-50 dark:hover:bg-zinc-800 text-slate-700 dark:text-zinc-350 border-slate-200 dark:border-zinc-800 shadow-[0_1px_2px_rgba(0,0,0,0.01)]"
                 }`}
-                title="Bildirimler / Notifications"
+                title={t("Notifications")}
               >
                 <Bell className="w-4 h-4 text-slate-600 dark:text-zinc-400" />
                 {notifications.some(n => !n.read) && (
@@ -1358,7 +1358,7 @@ export default function App() {
                     ? "bg-slate-100 dark:bg-zinc-800 border-indigo-200 dark:border-zinc-700 text-indigo-650 dark:text-zinc-150"
                     : "bg-white dark:bg-[#141414] hover:bg-slate-50 dark:hover:bg-zinc-800 text-slate-700 dark:text-zinc-355 border-slate-200 dark:border-zinc-800 shadow-[0_1px_2px_rgba(0,0,0,0.01)]"
                 }`}
-                title="Yönetim / Administration"
+                title={t("System Administration")}
               >
                 <Settings className={`w-4 h-4 text-slate-600 dark:text-zinc-400 transition-transform duration-300 ${isSettingsDropdownOpen ? "rotate-45 text-indigo-500" : ""}`} />
               </button>

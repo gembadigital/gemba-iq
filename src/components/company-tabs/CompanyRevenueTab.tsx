@@ -254,7 +254,7 @@ export default function CompanyRevenueTab({
                   <input
                     type="text"
                     required
-                    placeholder="e.g. Milestone 4: OEE Verification Audit"
+                    placeholder={t("e.g. Milestone 4: OEE Verification Audit")}
                     value={newMilestone.milestone}
                     onChange={(e) => setNewMilestone({ ...newMilestone, milestone: e.target.value })}
                     className="w-full bg-white dark:bg-zinc-800 border border-slate-200 dark:border-zinc-700 rounded p-1.5 text-xs text-slate-800 dark:text-zinc-200 focus:outline-none"
