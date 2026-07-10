@@ -10,7 +10,6 @@ import {
   HardDrive,
   Activity,
   UserCheck,
-  ShieldAlert,
   Sliders,
   Sparkles,
   Search,
@@ -98,6 +97,55 @@ interface AdministrationCenterProps {
 
 export default function AdministrationCenter({ onClose, initialSubTab }: AdministrationCenterProps) {
   const { lang: selectedLanguage, setLang: setSelectedLanguage, t } = useLanguage();
+  const isTR = selectedLanguage === "TR";
+  const L = (trText: string, enText: string) => (isTR ? trText : enText);
+  const menuLabel = (menu: string) => {
+    const labels: Record<string, [string, string]> = {
+      Companies: ["Şirketler", "Companies"],
+      Leads: ["Adaylar", "Leads"],
+      Opportunities: ["Fırsatlar", "Opportunities"],
+      Proposals: ["Teklifler", "Proposals"],
+      Campaigns: ["Kampanyalar", "Campaigns"],
+      "Activity Reports": ["Faaliyet Raporları", "Activity Reports"],
+      "Revenue Reports": ["Gelir Raporları", "Revenue Reports"],
+      Administration: ["Yönetim", "Administration"],
+      "AI Assistant": ["Yapay Zeka Asistanı", "AI Assistant"],
+      "Skill Library": ["Yetenek Kütüphanesi", "Skill Library"],
+      "Email Management": ["E-posta Yönetimi", "Email Management"],
+    };
+    const pair = labels[menu];
+    return pair ? L(pair[0], pair[1]) : menu;
+  };
+  const permLabel = (perm: string) => {
+    const labels: Record<string, [string, string]> = {
+      View: ["Görüntüle", "View"],
+      Create: ["Oluştur", "Create"],
+      Edit: ["Düzenle", "Edit"],
+      Delete: ["Sil", "Delete"],
+      Export: ["Dışa Aktar", "Export"],
+      Admin: ["Yönetici", "Admin"],
+    };
+    const pair = labels[perm];
+    return pair ? L(pair[0], pair[1]) : perm;
+  };
+  const categoryLabel = (category: string) => {
+    const labels: Record<string, [string, string]> = {
+      "Proposal Templates": ["Teklif Şablonları", "Proposal Templates"],
+      "Campaign Templates": ["Kampanya Şablonları", "Campaign Templates"],
+      "Follow-Up Templates": ["Takip Şablonları", "Follow-Up Templates"],
+      "Meeting Templates": ["Toplantı Şablonları", "Meeting Templates"],
+      "Project Templates": ["Proje Şablonları", "Project Templates"],
+      "System Templates": ["Sistem Şablonları", "System Templates"],
+    };
+    const pair = labels[category];
+    return pair ? L(pair[0], pair[1]) : category;
+  };
+  const resultLabel = (result: string) => {
+    if (result === "Success") return L("Başarılı", "Success");
+    if (result === "Failure") return L("Başarısız", "Failure");
+    if (result === "Warning") return L("Uyarı", "Warning");
+    return result;
+  };
   const { user } = useAuth();
   const { actorName, actorEmail, companyName } = useOrganization();
   const adminDisplayName = actorName;
@@ -780,20 +828,22 @@ export default function AdministrationCenter({ onClose, initialSubTab }: Adminis
     <div className="space-y-6">
       {/* HEADER ROW WITH USER METRICS */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-white dark:bg-[#18181b] p-6 rounded-2xl border border-slate-150 dark:border-zinc-800/80 shadow-xs">
-        <div className="space-y-1">
+        <div className="space-y-1 text-left">
           <div className="flex items-center gap-2">
             <span className="p-1 px-2.5 bg-indigo-50 dark:bg-zinc-900 border border-indigo-200 dark:border-zinc-800 text-indigo-650 dark:text-zinc-200 rounded-lg text-[10px] font-bold font-mono tracking-wider uppercase">
-              YÖNETİM PANELİ (ADMINISTRATION)
+              {L("YÖNETİM PANELİ", "ADMINISTRATION PANEL")}
             </span>
             <span className="w-1.5 h-1.5 bg-emerald-500 rounded-full animate-ping"></span>
-            <span className="text-[10px] text-slate-400 font-bold uppercase font-mono">Yetki Sınıfı: Super Admin</span>
+            <span className="text-[10px] text-slate-400 font-bold uppercase font-mono">
+              {L("Yetki Sınıfı: Süper Yönetici", "Access Level: Super Admin")}
+            </span>
           </div>
           <h2 className="text-xl font-bold text-slate-900 dark:text-zinc-150 font-sans tracking-tight">
-            Gemba Partner Business Operating System™ Merkez Ofis Portalı
+            {L(
+              "Gemba Partner İşletim Sistemi™ Merkez Ofis Portalı",
+              "Gemba Partner Business Operating System™ Central Office Portal"
+            )}
           </h2>
-          <p className="text-xs text-slate-500 dark:text-zinc-400">
-            Organizasyonel yapıyı, kullanıcı izinlerini, posta kutularını, veri hub bağlantılarını ve AI modellerini merkezi olarak yönetin.
-          </p>
         </div>
 
         <div className="flex flex-col sm:flex-row items-center gap-3">
@@ -801,7 +851,9 @@ export default function AdministrationCenter({ onClose, initialSubTab }: Adminis
           <div className="text-right hidden sm:block">
             <span className="text-xs font-bold text-slate-900 dark:text-zinc-200 block">{adminDisplayName}</span>
             <span className="text-[10px] font-mono text-slate-405 block">{adminEmail}</span>
-            <span className="text-[9px] font-semibold text-emerald-500 bg-emerald-50 dark:bg-emerald-950/20 px-1.5 py-0.5 rounded-md mt-1 inline-block">Lisans: Aktif</span>
+            <span className="text-[9px] font-semibold text-emerald-500 bg-emerald-50 dark:bg-emerald-950/20 px-1.5 py-0.5 rounded-md mt-1 inline-block">
+              {L("Lisans: Aktif", "License: Active")}
+            </span>
           </div>
           <div className="w-11 h-11 bg-indigo-550 group-hover:bg-indigo-600 rounded-lg flex items-center justify-center text-white font-black text-sm shadow-md cursor-pointer border-2 border-slate-100 dark:border-zinc-800 mr-2">
             {adminInitials}
@@ -809,17 +861,17 @@ export default function AdministrationCenter({ onClose, initialSubTab }: Adminis
           <div className="flex items-center gap-3">
             {showSavedMsg && (
               <span className="text-xs font-bold text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-900 px-2 py-1.5 rounded-lg animate-pulse shadow-sm">
-                ✓ Kaydedildi
+                ✓ {L("Kaydedildi", "Saved")}
               </span>
             )}
             <button
               type="button"
               onClick={handleSaveAndClose}
               className="p-2.5 px-4 bg-emerald-600 hover:bg-emerald-555 border border-emerald-500 text-xs font-bold text-white rounded-xl shadow-md transition-all cursor-pointer flex items-center gap-1.5"
-              title="Kaydet / Kapat"
+              title={L("Kaydet / Kapat", "Save / Close")}
             >
               <Check className="w-4 h-4" />
-              <span>Kaydet / Kapat</span>
+              <span>{L("Kaydet / Kapat", "Save / Close")}</span>
             </button>
           </div>
         </div>
@@ -829,135 +881,133 @@ export default function AdministrationCenter({ onClose, initialSubTab }: Adminis
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
         
         {/* SIDE BAR NAVIGATION WITHIN ADMIN VIEW */}
-        <aside className="lg:col-span-3 bg-white dark:bg-[#18181b] rounded-2xl border border-slate-200/60 dark:border-zinc-800/85 p-3.5 space-y-1.5 shadow-xs">
-          <span className="px-3.5 py-1 text-[9px] font-bold text-slate-400 uppercase tracking-widest font-mono block">AYAR KATEGORİLERİ</span>
+        <aside className="lg:col-span-3 bg-white dark:bg-[#18181b] rounded-2xl border border-slate-200/60 dark:border-zinc-800/85 p-3.5 space-y-1.5 shadow-xs text-left">
+          <span className="px-3.5 py-1 text-[9px] font-bold text-slate-400 uppercase tracking-widest font-mono block">
+            {L("AYAR KATEGORİLERİ", "SETTING CATEGORIES")}
+          </span>
           
           <button
             type="button"
             onClick={() => setActiveSubTab("organization")}
-            className={`w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-xs font-bold transition-all ${
+            className={`w-full flex items-center justify-start gap-3 px-3.5 py-2.5 rounded-xl text-xs font-bold transition-all text-left ${
               activeSubTab === "organization"
                 ? "bg-indigo-50/70 border-l-4 border-l-indigo-650 text-indigo-750 dark:bg-zinc-800/70 dark:text-white dark:border-l-indigo-400"
                 : "text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-zinc-800/40"
             }`}
           >
             <Building className="w-4 h-4 text-slate-400" />
-            <span>Organizasyon Ayarları</span>
+            <span>{L("Organizasyon Ayarları", "Organization Settings")}</span>
           </button>
 
           <button
             type="button"
             onClick={() => setActiveSubTab("users")}
-            className={`w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-xs font-bold transition-all ${
+            className={`w-full flex items-center justify-start gap-3 px-3.5 py-2.5 rounded-xl text-xs font-bold transition-all text-left ${
               activeSubTab === "users"
                 ? "bg-indigo-50/70 border-l-4 border-l-indigo-650 text-indigo-750 dark:bg-zinc-800/70 dark:text-white dark:border-l-indigo-400"
                 : "text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-zinc-800/40"
             }`}
           >
             <Users className="w-4 h-4 text-slate-400" />
-            <span>{selectedLanguage === "TR" ? "Kullanıcılar ve İzinler" : "Users & Permissions"}</span>
+            <span>{L("Kullanıcılar ve İzinler", "Users & Permissions")}</span>
           </button>
 
           <button
             type="button"
             onClick={() => setActiveSubTab("email")}
-            className={`w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-xs font-bold transition-all ${
+            className={`w-full flex items-center justify-start gap-3 px-3.5 py-2.5 rounded-xl text-xs font-bold transition-all text-left ${
               activeSubTab === "email"
                 ? "bg-indigo-50/70 border-l-4 border-l-indigo-650 text-indigo-750 dark:bg-zinc-800/70 dark:text-white dark:border-l-indigo-400"
                 : "text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-zinc-800/40"
             }`}
           >
             <Mail className="w-4 h-4 text-slate-400" />
-            <span>Bağlı E-posta Kutuları</span>
+            <span>{L("Bağlı E-posta Kutuları", "Connected Mailboxes")}</span>
           </button>
 
           <button
             type="button"
             onClick={() => setActiveSubTab("templates")}
-            className={`w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-xs font-bold transition-all ${
+            className={`w-full flex items-center justify-start gap-3 px-3.5 py-2.5 rounded-xl text-xs font-bold transition-all text-left ${
               activeSubTab === "templates"
                 ? "bg-indigo-50/70 border-l-4 border-l-indigo-650 text-indigo-750 dark:bg-zinc-800/70 dark:text-white dark:border-l-indigo-400"
                 : "text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-zinc-800/40"
             }`}
           >
             <FileText className="w-4 h-4 text-slate-400" />
-            <span>E-posta Şablonları</span>
+            <span>{L("E-posta Şablonları", "Email Templates")}</span>
           </button>
 
           <button
             type="button"
             onClick={() => setActiveSubTab("datahub")}
-            className={`w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-xs font-bold transition-all ${
+            className={`w-full flex items-center justify-start gap-3 px-3.5 py-2.5 rounded-xl text-xs font-bold transition-all text-left ${
               activeSubTab === "datahub"
                 ? "bg-indigo-50/70 border-l-4 border-l-indigo-650 text-indigo-750 dark:bg-zinc-800/70 dark:text-white dark:border-l-indigo-400"
                 : "text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-zinc-800/40"
             }`}
           >
             <HardDrive className="w-4 h-4 text-slate-400" />
-            <span>Bulut Depolama & Data Hub</span>
+            <span>{L("Bulut Depolama ve Veri Merkezi", "Cloud Storage & Data Hub")}</span>
           </button>
 
           <button
             type="button"
             onClick={() => setActiveSubTab("auditlogs")}
-            className={`w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-xs font-bold transition-all ${
+            className={`w-full flex items-center justify-start gap-3 px-3.5 py-2.5 rounded-xl text-xs font-bold transition-all text-left ${
               activeSubTab === "auditlogs"
                 ? "bg-indigo-50/70 border-l-4 border-l-indigo-650 text-indigo-750 dark:bg-zinc-800/70 dark:text-white dark:border-l-indigo-400"
                 : "text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-zinc-800/40"
             }`}
           >
             <UserCheck className="w-4 h-4 text-slate-400" />
-            <span>Denetim Günlükleri (Audit Logs)</span>
+            <span>{L("Denetim Günlükleri", "Audit Logs")}</span>
           </button>
 
           <button
             type="button"
             onClick={() => setActiveSubTab("aisettings")}
-            className={`w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-xs font-bold transition-all ${
+            className={`w-full flex items-center justify-start gap-3 px-3.5 py-2.5 rounded-xl text-xs font-bold transition-all text-left ${
               activeSubTab === "aisettings"
                 ? "bg-indigo-50/70 border-l-4 border-l-indigo-650 text-indigo-750 dark:bg-zinc-800/70 dark:text-white dark:border-l-indigo-400"
                 : "text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-zinc-800/40"
             }`}
           >
             <Sparkles className="w-4 h-4 text-indigo-550" />
-            <span>AI Yardımcı & Prompt Ayarları</span>
+            <span>{L("Yapay Zeka ve Prompt Ayarları", "AI Assistant & Prompt Settings")}</span>
           </button>
 
           <button
             type="button"
             onClick={() => setActiveSubTab("systemhealth")}
-            className={`w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-xs font-bold transition-all ${
+            className={`w-full flex items-center justify-start gap-3 px-3.5 py-2.5 rounded-xl text-xs font-bold transition-all text-left ${
               activeSubTab === "systemhealth"
                 ? "bg-indigo-50/70 border-l-4 border-l-indigo-650 text-indigo-750 dark:bg-zinc-800/70 dark:text-white dark:border-l-indigo-400"
                 : "text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-zinc-800/40"
             }`}
           >
             <Activity className="w-4 h-4 text-slate-400" />
-            <span>Sistem Sağlığı Dashboard</span>
+            <span>{L("Sistem Sağlığı Gösterge Paneli", "System Health Dashboard")}</span>
           </button>
-
-          <div className="pt-6 border-t border-slate-100 dark:border-zinc-800/70">
-            <div className="bg-amber-50/65 dark:bg-[#251f15] p-3 rounded-xl border border-amber-200 dark:border-amber-900/60 text-[11px] text-amber-800 dark:text-amber-250 leading-relaxed font-sans font-semibold">
-              <ShieldAlert className="w-4 h-4 text-amber-600 inline mr-1" />
-              Organizasyon Ayarları tüm şirketin operasyon modelini etkiler.
-            </div>
-          </div>
         </aside>
 
         {/* DETAILS WORKSPACE CONTAINER */}
-        <div className="lg:col-span-9 bg-white dark:bg-[#18181b] rounded-2xl border border-slate-205/60 dark:border-zinc-800/80 shadow-xs p-6 md:p-8 min-h-[500px]">
+        <div className="lg:col-span-9 bg-white dark:bg-[#18181b] rounded-2xl border border-slate-205/60 dark:border-zinc-800/80 shadow-xs p-6 md:p-8 min-h-[500px] text-left">
           
           {/* ==================== SECTION 1: ORGANIZATION SETTINGS ==================== */}
           {activeSubTab === "organization" && (
             <div className="space-y-6">
-              <div className="border-b border-slate-100 dark:border-zinc-800/80 pb-4">
-                <h3 className="text-lg font-bold text-slate-800 dark:text-zinc-150">1. Organizasyon Temel Konfigürasyonu</h3>
-                <p className="text-xs text-slate-500">Gemba Partner firmasının tüzel kişiliği, varsayılan para birimi, çalışma saatleri ve yıllık mali plan dönemlerine yönelik resmi tanımlar.</p>
+              <div className="border-b border-slate-100 dark:border-zinc-800/80 pb-4 text-left">
+                <h3 className="text-lg font-bold text-slate-800 dark:text-zinc-150">
+                  {L("1. Organizasyon Temel Konfigürasyonu", "1. Organization Basic Configuration")}
+                </h3>
               </div>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-[10px] font-bold text-slate-450 uppercase font-mono mb-1.5">Şirket Resmi Adı (Organization Name)</label>
+                  <label className="block text-[10px] font-bold text-slate-450 uppercase font-mono mb-1.5">
+                    {L("Şirket Resmi Adı", "Official Company Name")}
+                  </label>
                   <input
                     type="text"
                     value={orgSettings.name}
@@ -967,7 +1017,9 @@ export default function AdministrationCenter({ onClose, initialSubTab }: Adminis
                 </div>
 
                 <div>
-                  <label className="block text-[10px] font-bold text-slate-450 uppercase font-mono mb-1.5">Şirket Logosu / Marka İmzası</label>
+                  <label className="block text-[10px] font-bold text-slate-450 uppercase font-mono mb-1.5">
+                    {L("Şirket Logosu / Marka İmzası", "Company Logo / Brand Signature")}
+                  </label>
                   <div className="flex items-center gap-3">
                     {orgSettings.logo ? (
                       <img 
@@ -981,7 +1033,7 @@ export default function AdministrationCenter({ onClose, initialSubTab }: Adminis
                       </div>
                     )}
                     <label className="text-xs font-semibold text-slate-700 dark:text-zinc-300 bg-slate-100 dark:bg-[#252423] hover:bg-slate-200 dark:hover:bg-zinc-800 px-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-zinc-800 transition-colors cursor-pointer flex items-center gap-1.5">
-                      <span>Yeni Logo Yükle</span>
+                      <span>{L("Yeni Logo Yükle", "Upload New Logo")}</span>
                       <input
                         type="file"
                         accept="image/*"
@@ -1004,7 +1056,9 @@ export default function AdministrationCenter({ onClose, initialSubTab }: Adminis
                 </div>
 
                 <div>
-                  <label className="block text-[10px] font-bold text-slate-450 uppercase font-mono mb-1.5">Vergi Dairesi ve Numarası (Tax Info)</label>
+                  <label className="block text-[10px] font-bold text-slate-450 uppercase font-mono mb-1.5">
+                    {L("Vergi Dairesi ve Numarası", "Tax Office & Number")}
+                  </label>
                   <input
                     type="text"
                     value={orgSettings.taxInfo}
@@ -1014,7 +1068,9 @@ export default function AdministrationCenter({ onClose, initialSubTab }: Adminis
                 </div>
 
                 <div>
-                  <label className="block text-[10px] font-bold text-slate-450 uppercase font-mono mb-1.5">Resmi Web Sitesi (Website)</label>
+                  <label className="block text-[10px] font-bold text-slate-450 uppercase font-mono mb-1.5">
+                    {L("Resmi Web Sitesi", "Official Website")}
+                  </label>
                   <input
                     type="text"
                     value={orgSettings.website}
@@ -1024,7 +1080,9 @@ export default function AdministrationCenter({ onClose, initialSubTab }: Adminis
                 </div>
 
                 <div>
-                  <label className="block text-[10px] font-bold text-slate-450 uppercase font-mono mb-1.5">Telefon Numarası (Phone)</label>
+                  <label className="block text-[10px] font-bold text-slate-450 uppercase font-mono mb-1.5">
+                    {L("Telefon Numarası", "Phone Number")}
+                  </label>
                   <input
                     type="text"
                     value={orgSettings.phone}
@@ -1034,7 +1092,9 @@ export default function AdministrationCenter({ onClose, initialSubTab }: Adminis
                 </div>
 
                 <div>
-                  <label className="block text-[10px] font-bold text-slate-450 uppercase font-mono mb-1.5">Varsayılan Para Birimi (Default Currency)</label>
+                  <label className="block text-[10px] font-bold text-slate-450 uppercase font-mono mb-1.5">
+                    {L("Varsayılan Para Birimi", "Default Currency")}
+                  </label>
                   <select
                     value={orgSettings.defaultCurrency}
                     onChange={(e) => setOrgSettings({ ...orgSettings, defaultCurrency: e.target.value })}
@@ -1049,16 +1109,22 @@ export default function AdministrationCenter({ onClose, initialSubTab }: Adminis
 
                 <div className="flex items-center gap-2 bg-[#FAFAFA] dark:bg-black/20 p-3.5 rounded-xl border border-slate-200 dark:border-zinc-800">
                   <div className="text-xs">
-                    <span className="font-bold text-slate-450 uppercase font-mono block text-[10px] mb-1">Aktif Sistem Dili / Active Language</span>
+                    <span className="font-bold text-slate-450 uppercase font-mono block text-[10px] mb-1">
+                      {L("Aktif Sistem Dili", "Active System Language")}
+                    </span>
                     <span className="font-bold text-slate-800 dark:text-zinc-200 flex items-center gap-1.5">
-                      <span>{selectedLanguage === "TR" ? "🇹🇷 Türkçe (TR)" : "🇬🇧 English (EN)"}</span>
-                      <span className="text-[9px] bg-indigo-50 dark:bg-zinc-800 text-indigo-650 dark:text-zinc-400 px-1.5 py-0.5 rounded uppercase font-mono font-extrabold">{selectedLanguage === "TR" ? "Üst Menüden Değiştirilir" : "Change via Header"}</span>
+                      <span>{isTR ? "🇹🇷 Türkçe" : "🇬🇧 English"}</span>
+                      <span className="text-[9px] bg-indigo-50 dark:bg-zinc-800 text-indigo-650 dark:text-zinc-400 px-1.5 py-0.5 rounded uppercase font-mono font-extrabold">
+                        {L("Üst Menüden Değiştirilir", "Change via Header")}
+                      </span>
                     </span>
                   </div>
                 </div>
 
                 <div className="sm:col-span-2">
-                  <label className="block text-[10px] font-bold text-slate-450 uppercase font-mono mb-1.5">Resmi Merkez Adresi (Address)</label>
+                  <label className="block text-[10px] font-bold text-slate-450 uppercase font-mono mb-1.5">
+                    {L("Resmi Merkez Adresi", "Official Headquarters Address")}
+                  </label>
                   <textarea
                     rows={2}
                     value={orgSettings.address}
@@ -1070,10 +1136,14 @@ export default function AdministrationCenter({ onClose, initialSubTab }: Adminis
 
               {/* Business days configuration */}
               <div className="pt-4 border-t border-slate-100 dark:border-zinc-800/85 space-y-3">
-                <h4 className="text-xs font-bold text-slate-800 dark:text-zinc-200 uppercase tracking-wide font-mono">Çalışma Düzeni & Takvim Yapılandırması</h4>
+                <h4 className="text-xs font-bold text-slate-800 dark:text-zinc-200 uppercase tracking-wide font-mono">
+                  {L("Çalışma Düzeni ve Takvim Yapılandırması", "Work Schedule & Calendar Configuration")}
+                </h4>
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                   <div>
-                    <label className="block text-[10px] font-semibold text-slate-455 mb-1">Mali Yıl Başlangıcı (Fiscal Year)</label>
+                    <label className="block text-[10px] font-semibold text-slate-455 mb-1">
+                      {L("Mali Yıl Başlangıcı", "Fiscal Year Start")}
+                    </label>
                     <input
                       type="text"
                       value={orgSettings.fiscalYear}
@@ -1083,7 +1153,9 @@ export default function AdministrationCenter({ onClose, initialSubTab }: Adminis
                   </div>
 
                   <div>
-                    <label className="block text-[10px] font-semibold text-slate-455 mb-1">Günlük Çalışma Saatleri (Working Hours)</label>
+                    <label className="block text-[10px] font-semibold text-slate-455 mb-1">
+                      {L("Günlük Çalışma Saatleri", "Daily Working Hours")}
+                    </label>
                     <input
                       type="text"
                       value={orgSettings.workingHours}
@@ -1093,7 +1165,9 @@ export default function AdministrationCenter({ onClose, initialSubTab }: Adminis
                   </div>
 
                   <div>
-                    <label className="block text-[10px] font-semibold text-slate-455 mb-1">Varsayılan Saat Dilimi (Timezone)</label>
+                    <label className="block text-[10px] font-semibold text-slate-455 mb-1">
+                      {L("Varsayılan Saat Dilimi", "Default Timezone")}
+                    </label>
                     <input
                       type="text"
                       value={orgSettings.timezone}
@@ -1104,7 +1178,9 @@ export default function AdministrationCenter({ onClose, initialSubTab }: Adminis
                 </div>
 
                 <div className="space-y-1 pt-2">
-                  <span className="text-[10px] font-bold text-slate-450 block uppercase">Aktif İş Günleri (Business Days)</span>
+                  <span className="text-[10px] font-bold text-slate-450 block uppercase">
+                    {L("Aktif İş Günleri", "Active Business Days")}
+                  </span>
                   <div className="flex flex-wrap gap-2 pt-1.5">
                     {["Pazartesi", "Salı", "Çarşamba", "Perşembe", "Cuma", "Cumartesi", "Pazar"].map(day => {
                       const isChecked = orgSettings.businessDays.includes(day);
@@ -1138,7 +1214,7 @@ export default function AdministrationCenter({ onClose, initialSubTab }: Adminis
               <div className="pt-4 flex items-center justify-end gap-3">
                 {showSavedMsg && (
                   <span className="text-xs font-bold text-emerald-650 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-900 px-3 py-2 rounded-xl animate-pulse shadow-xs">
-                    ✓ Kaydedildi
+                    ✓ {L("Kaydedildi", "Saved")}
                   </span>
                 )}
                 <button
@@ -1153,7 +1229,7 @@ export default function AdministrationCenter({ onClose, initialSubTab }: Adminis
                   className="px-5 py-2.5 text-xs font-bold text-white bg-indigo-650 hover:bg-indigo-600 rounded-xl transition-all shadow-xs cursor-pointer flex items-center gap-1.5"
                 >
                   <Check className="w-4 h-4" />
-                  Değişiklikleri Kaydet
+                  {L("Değişiklikleri Kaydet", "Save Changes")}
                 </button>
               </div>
             </div>
@@ -1172,39 +1248,38 @@ export default function AdministrationCenter({ onClose, initialSubTab }: Adminis
 
               {/* Dynamic Permissions Matrix component */}
               <div className="pt-6 border-t border-slate-100 dark:border-zinc-800 space-y-4">
-                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 text-left">
                   <div>
                     <h4 className="text-sm font-bold text-slate-800 dark:text-zinc-200 uppercase tracking-wide font-mono flex items-center gap-1.5">
                       <Lock className="w-4 h-4 text-slate-400" />
-                      Rol Bazlı Menü İzin Matrisi (Permissions Grid)
+                      {L("Rol Bazlı Menü İzin Matrisi", "Role-Based Menu Permission Matrix")}
                     </h4>
-                    <p className="text-xs text-slate-500">Uygulama üzerindeki menülerin hangi rollere açık olacağını gerçek zamanlı maskeleyin.</p>
                   </div>
 
                   <div className="flex items-center gap-2">
-                    <span className="text-xs font-bold text-slate-500 font-mono">Rol Seçin:</span>
+                    <span className="text-xs font-bold text-slate-500 font-mono">{L("Rol Seçin:", "Select Role:")}</span>
                     <select
                       value={selectedRoleForMatrix}
                       onChange={(e) => setSelectedRoleForMatrix(e.target.value)}
                       className="text-xs bg-slate-50 dark:bg-zinc-900 border border-slate-205 md:p-2 p-1.5 rounded-lg"
                     >
-                      <option>Super Admin</option>
-                      <option>Admin</option>
-                      <option>Sales Manager</option>
-                      <option>Consultant</option>
-                      <option>Standard User</option>
-                      <option>Custom Role</option>
+                      <option value="Super Admin">{L("Süper Yönetici", "Super Admin")}</option>
+                      <option value="Admin">{L("Yönetici", "Admin")}</option>
+                      <option value="Sales Manager">{L("Satış Yöneticisi", "Sales Manager")}</option>
+                      <option value="Consultant">{L("Danışman", "Consultant")}</option>
+                      <option value="Standard User">{L("Standart Kullanıcı", "Standard User")}</option>
+                      <option value="Custom Role">{L("Özel Rol", "Custom Role")}</option>
                     </select>
                   </div>
                 </div>
 
                 <div className="overflow-x-auto border border-slate-150 dark:border-zinc-800 rounded-xl">
-                  <table className="w-full text-center border-collapse">
+                  <table className="w-full text-left border-collapse">
                     <thead>
                       <tr className="bg-slate-50 dark:bg-neutral-900 text-[10px] font-bold font-mono text-slate-450 uppercase border-b border-slate-150 dark:border-zinc-800">
-                        <th className="p-3 text-left w-1/4">Menü & Yetki Grubu</th>
+                        <th className="p-3 text-left w-1/4">{L("Menü ve Yetki Grubu", "Menu & Permission Group")}</th>
                         {permsList.map(perm => (
-                          <th key={perm} className="p-3">{perm}</th>
+                          <th key={perm} className="p-3">{permLabel(perm)}</th>
                         ))}
                       </tr>
                     </thead>
@@ -1215,7 +1290,7 @@ export default function AdministrationCenter({ onClose, initialSubTab }: Adminis
 
                         return (
                           <tr key={menu} className="hover:bg-slate-50/50 dark:hover:bg-zinc-800/10">
-                            <td className="p-3 text-left font-bold text-slate-700 dark:text-zinc-300">{menu}</td>
+                            <td className="p-3 text-left font-bold text-slate-700 dark:text-zinc-300">{menuLabel(menu)}</td>
                             {permsList.map(perm => {
                               const hasPerm = menuActivePerms.includes(perm);
                               return (
@@ -1247,10 +1322,11 @@ export default function AdministrationCenter({ onClose, initialSubTab }: Adminis
           {/* ==================== SECTION 3: CONNECTED MAILBOXES ==================== */}
           {activeSubTab === "email" && (
             <div className="space-y-6 animate-in fade-in duration-100">
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-100 dark:border-zinc-800 pb-4">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-100 dark:border-zinc-800 pb-4 text-left">
                 <div>
-                  <h3 className="text-lg font-bold text-slate-800 dark:text-zinc-150">3. Çoklu E-postalar &amp; Bağlı Klasör Yönetimi</h3>
-                  <p className="text-xs text-slate-500">Sistem kullanıcıları ile e-posta posta kutuları bağımsız varlıklardır. Bir kullanıcı birden fazla mail kutusuna erişebilir.</p>
+                  <h3 className="text-lg font-bold text-slate-800 dark:text-zinc-150">
+                    {L("3. Çoklu E-postalar ve Bağlı Klasör Yönetimi", "3. Multiple Emails & Connected Folder Management")}
+                  </h3>
                 </div>
                 <button
                   type="button"
@@ -1258,7 +1334,7 @@ export default function AdministrationCenter({ onClose, initialSubTab }: Adminis
                   className="p-2.5 px-4 text-xs font-bold text-white bg-indigo-650 rounded-xl hover:bg-indigo-600 transition-all flex items-center gap-1.5 cursor-pointer shadow-xs"
                 >
                   <Plus className="w-4 h-4" />
-                  Exchange / OAuth Girişi Yap
+                  {L("Exchange / OAuth Girişi Yap", "Connect Exchange / OAuth")}
                 </button>
               </div>
 
@@ -1268,13 +1344,8 @@ export default function AdministrationCenter({ onClose, initialSubTab }: Adminis
                   <div className="space-y-1">
                     <h4 className="text-xs font-black text-rose-700 dark:text-rose-450 uppercase tracking-wider font-mono flex items-center gap-1.5">
                       <AlertTriangle className="w-4 h-4 text-rose-600 stroke-[2.5]" />
-                      <span>{selectedLanguage === "TR" ? "⚠️ E-Posta Entegrasyon &amp; Token Hata Simülatörü" : "⚠️ Email Integration &amp; Token Error Simulator"}</span>
+                      <span>{L("⚠️ E-Posta Entegrasyon ve Token Hata Simülatörü", "⚠️ Email Integration & Token Error Simulator")}</span>
                     </h4>
-                    <p className="text-[11px] text-slate-500 dark:text-zinc-400">
-                      {selectedLanguage === "TR"
-                        ? "Bu anahtarı açtığınızda; davet e-postaları gönderilirken veya CRM üzerinden e-posta yollanırken API / OAuth token uyuşmazlığı ve sunucu bağlantı hataları canlandırılır."
-                        : "Enabling this switch forces simulated OAuth2 handshake and SMTP connection errors when sending user invites or deal emails."}
-                    </p>
                   </div>
                   <label className="relative inline-flex items-center cursor-pointer select-none">
                     <input
@@ -1294,7 +1365,7 @@ export default function AdministrationCenter({ onClose, initialSubTab }: Adminis
                     />
                     <div className="w-11 h-6 bg-slate-200 dark:bg-zinc-800 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-rose-600"></div>
                     <span className="ml-3 text-xs font-black uppercase font-mono tracking-wider text-rose-700 dark:text-rose-450">
-                      {simulateEmailError ? (selectedLanguage === "TR" ? "AÇIK / ACTIVE" : "ON / SIMULATING") : (selectedLanguage === "TR" ? "KAPALI / DISABLED" : "OFF / NORMAL")}
+                      {simulateEmailError ? L("AÇIK", "ON") : L("KAPALI", "OFF")}
                     </span>
                   </label>
                 </div>
@@ -1302,7 +1373,9 @@ export default function AdministrationCenter({ onClose, initialSubTab }: Adminis
 
               {isConnectMailboxOpen && (
                 <form onSubmit={handleConnectNewMailbox} className="p-5 rounded-2xl border border-indigo-200 bg-indigo-50/15 dark:border-zinc-800 dark:bg-black/20 space-y-4 animate-in slide-in-from-top-2 duration-150">
-                  <span className="text-[10px] font-bold text-indigo-750 dark:text-indigo-400 font-mono uppercase block">YENİ MAILBOX ETKİLEŞİMİ</span>
+                  <span className="text-[10px] font-bold text-indigo-750 dark:text-indigo-400 font-mono uppercase block">
+                    {L("YENİ POSTA KUTUSU ETKİLEŞİMİ", "NEW MAILBOX CONNECTION")}
+                  </span>
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                     <input
                       type="text"
@@ -1364,17 +1437,17 @@ export default function AdministrationCenter({ onClose, initialSubTab }: Adminis
                       <span className={`inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-full ${
                         box.status === "Connected" ? "text-emerald-600 bg-emerald-50 dark:bg-zinc-900" : "text-amber-600 bg-amber-50 dark:bg-zinc-900"
                       }`}>
-                        {box.status === "Connected" ? "Canlı (Okuma/Yazma)" : "Yetki Yok/Süre Doldu"}
+                        {box.status === "Connected" ? L("Canlı (Okuma/Yazma)", "Live (Read/Write)") : L("Yetki Yok/Süre Doldu", "No Permission/Expired")}
                       </span>
                     </div>
 
                     <div className="grid grid-cols-2 gap-2 text-[11px] border-t border-slate-100 pt-2 dark:border-zinc-850/60 font-mono">
                       <div>
-                        <span className="text-slate-400">Sorumlu: </span>
+                        <span className="text-slate-400">{L("Sorumlu:", "Owner:")} </span>
                         <span className="text-slate-700 dark:text-zinc-300 font-bold">{box.owner}</span>
                       </div>
                       <div className="text-right">
-                        <span className="text-slate-400">Senkronizasyon: </span>
+                        <span className="text-slate-400">{L("Senkronizasyon:", "Sync:")} </span>
                         <span className="text-slate-700 dark:text-zinc-305 font-bold">{box.lastSync}</span>
                       </div>
                     </div>
@@ -1384,9 +1457,14 @@ export default function AdministrationCenter({ onClose, initialSubTab }: Adminis
 
               {/* Integration check info */}
               <div className="p-4 rounded-xl border border-dashed border-indigo-200 bg-indigo-50/10 dark:border-zinc-800/80 dark:bg-zinc-950/20 text-xs text-slate-650 leading-relaxed space-y-1.5 dark:text-zinc-300">
-                <span className="font-bold text-slate-800 dark:text-zinc-200 block uppercase font-mono tracking-wider text-[10px]">⚠️ MICROSOFT GRAPH API PAYLAŞIM KURALLARI</span>
+                <span className="font-bold text-slate-800 dark:text-zinc-200 block uppercase font-mono tracking-wider text-[10px]">
+                  {L("⚠️ MICROSOFT GRAPH API PAYLAŞIM KURALLARI", "⚠️ MICROSOFT GRAPH API SHARING RULES")}
+                </span>
                 <p>
-                  Sorumlu e-postalarında ortak (shared) gelen kutusu izin modeli aktiftir. Bir kullanıcı, Microsoft OAuth aracılığıyla kurumsal hesabı bağladığında, bu hesaba <strong>"Admin"</strong> paneli üzerinden atanan tüm CRM danışmanları aynı e-posta üzerinden veri okuyabilir ve kampanya gönderebilir.
+                  {L(
+                    `Sorumlu e-postalarında ortak (shared) gelen kutusu izin modeli aktiftir. Bir kullanıcı, Microsoft OAuth aracılığıyla kurumsal hesabı bağladığında, bu hesaba "${L("Yönetici", "Admin")}" paneli üzerinden atanan tüm CRM danışmanları aynı e-posta üzerinden veri okuyabilir ve kampanya gönderebilir.`,
+                    `Shared inbox permission model is active for responsible emails. When a user connects a corporate account via Microsoft OAuth, all CRM consultants assigned to that account through the "${L("Yönetici", "Admin")}" panel can read data and send campaigns from the same email.`
+                  )}
                 </p>
               </div>
             </div>
@@ -1395,10 +1473,11 @@ export default function AdministrationCenter({ onClose, initialSubTab }: Adminis
           {/* ==================== SECTION 4: EMAIL TEMPLATES ==================== */}
           {activeSubTab === "templates" && (
             <div className="space-y-6 animate-in fade-in duration-100">
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-100 dark:border-[#323130] pb-4">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-100 dark:border-[#323130] pb-4 text-left">
                 <div>
-                  <h3 className="text-lg font-bold text-slate-800 dark:text-zinc-150">4. Standart E-posta Şablonları (Templates)</h3>
-                  <p className="text-xs text-slate-500">Teklif gönderimleri, pazarlama kampanyaları, anlık takipler ve toplantı davetleri için hazırlanmış ön yapılandırmalı şablonları yönetin.</p>
+                  <h3 className="text-lg font-bold text-slate-800 dark:text-zinc-150">
+                    {L("4. Standart E-posta Şablonları", "4. Standard Email Templates")}
+                  </h3>
                 </div>
                 <button
                   type="button"
@@ -1406,13 +1485,15 @@ export default function AdministrationCenter({ onClose, initialSubTab }: Adminis
                   className="p-2.5 px-4 text-xs font-bold text-white bg-indigo-650 rounded-xl hover:bg-indigo-600 transition-all flex items-center gap-1.5 cursor-pointer shadow-xs"
                 >
                   <Plus className="w-4 h-4" />
-                  Şablon Oluştur
+                  {L("Şablon Oluştur", "Create Template")}
                 </button>
               </div>
 
               {isNewTemplateOpen && (
                 <form onSubmit={handleCreateTemplate} className="p-5 rounded-2xl border border-slate-200 bg-slate-50/50 dark:border-zinc-800 dark:bg-black/20 space-y-3 text-xs animate-in slide-in-from-top-2 duration-150">
-                  <span className="font-mono font-bold text-slate-450 uppercase block">YENİ ŞABLON OLUŞTURMA SÜZÜCÜSÜ</span>
+                  <span className="font-mono font-bold text-slate-450 uppercase block">
+                    {L("YENİ ŞABLON OLUŞTURMA", "CREATE NEW TEMPLATE")}
+                  </span>
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                     <input
                       type="text"
@@ -1427,16 +1508,16 @@ export default function AdministrationCenter({ onClose, initialSubTab }: Adminis
                       onChange={(e) => setNewTemplate({ ...newTemplate, category: e.target.value as any })}
                       className="bg-white dark:bg-black p-3 rounded-xl border border-slate-205 dark:border-zinc-805"
                     >
-                      <option>Proposal Templates</option>
-                      <option>Campaign Templates</option>
-                      <option>Follow-Up Templates</option>
-                      <option>Meeting Templates</option>
-                      <option>Project Templates</option>
-                      <option>System Templates</option>
+                      <option>{L("Teklif Şablonları", "Proposal Templates")}</option>
+                      <option>{L("Kampanya Şablonları", "Campaign Templates")}</option>
+                      <option>{L("Takip Şablonları", "Follow-Up Templates")}</option>
+                      <option>{L("Toplantı Şablonları", "Meeting Templates")}</option>
+                      <option>{L("Proje Şablonları", "Project Templates")}</option>
+                      <option>{L("Sistem Şablonları", "System Templates")}</option>
                     </select>
                     <input
                       type="text"
-                      placeholder="Konu Satırı (Email Subject) *"
+                      placeholder={L("Konu Satırı *", "Email Subject *")}
                       required
                       value={newTemplate.subject}
                       onChange={(e) => setNewTemplate({ ...newTemplate, subject: e.target.value })}
@@ -1455,11 +1536,11 @@ export default function AdministrationCenter({ onClose, initialSubTab }: Adminis
                 <table className="w-full text-left border-collapse">
                   <thead>
                     <tr className="bg-slate-50 dark:bg-black/10 text-[10px] font-bold font-mono text-slate-400 uppercase border-b border-slate-100">
-                      <th className="p-3">Şablon Adı</th>
-                      <th className="p-3">Kategori</th>
-                      <th className="p-3">Varsayılan Konu (Subject)</th>
-                      <th className="p-3">Durum</th>
-                      <th className="p-3 text-right">Aksiyon</th>
+                      <th className="p-3">{L("Şablon Adı", "Template Name")}</th>
+                      <th className="p-3">{L("Kategori", "Category")}</th>
+                      <th className="p-3">{L("Varsayılan Konu", "Default Subject")}</th>
+                      <th className="p-3">{L("Durum", "Status")}</th>
+                      <th className="p-3 text-right">{L("Aksiyon", "Action")}</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-slate-100 dark:divide-zinc-800/80 text-xs">
@@ -1468,7 +1549,7 @@ export default function AdministrationCenter({ onClose, initialSubTab }: Adminis
                         <td className="p-3 font-semibold text-slate-800 dark:text-zinc-200">{t.name}</td>
                         <td className="p-3">
                           <span className="p-1 px-2.5 rounded bg-slate-100 dark:bg-zinc-800 text-[10px] text-slate-655 dark:text-zinc-350 font-bold">
-                            {t.category}
+                            {categoryLabel(t.category)}
                           </span>
                         </td>
                         <td className="p-3 italic max-w-xs truncate text-slate-500">{t.subject}</td>
@@ -1476,7 +1557,7 @@ export default function AdministrationCenter({ onClose, initialSubTab }: Adminis
                           <span className={`p-1 px-1.5 rounded text-[10px] font-bold ${
                             t.status === "Active" ? "bg-emerald-50 text-emerald-600" : "bg-slate-50 text-slate-500"
                           }`}>
-                            {t.status === "Active" ? "Etkin" : "Taslak"}
+                            {t.status === "Active" ? L("Etkin", "Active") : L("Taslak", "Draft")}
                           </span>
                         </td>
                         <td className="p-3 text-right">
@@ -1499,12 +1580,11 @@ export default function AdministrationCenter({ onClose, initialSubTab }: Adminis
           {/* ==================== SECTION 5: Bulut Depolama & DATA HUB ==================== */}
           {activeSubTab === "datahub" && (
             <div className="space-y-6 animate-in fade-in duration-100">
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-105 dark:border-[#323130] pb-4">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-105 dark:border-[#323130] pb-4 text-left">
                 <div>
-                  <h3 className="text-lg font-bold text-slate-800 dark:text-zinc-150">5. Enterprise Document Infrastructure & Cloud Storage</h3>
-                  <p className="text-xs text-slate-500">
-                    Teklif PDF'leri, sözleşmeler, raporlar ve müşteri dökümanlarının yönetildiği soyut depolama kanallarını ve bağlantı parametrelerini yapılandırın.
-                  </p>
+                  <h3 className="text-lg font-bold text-slate-800 dark:text-zinc-150">
+                    {L("5. Kurumsal Belge Altyapısı ve Bulut Depolama", "5. Enterprise Document Infrastructure & Cloud Storage")}
+                  </h3>
                 </div>
                 <button
                   type="button"
@@ -1516,7 +1596,7 @@ export default function AdministrationCenter({ onClose, initialSubTab }: Adminis
                   className="p-2.5 px-4 text-xs font-bold text-white bg-indigo-650 rounded-xl hover:bg-indigo-600 transition-all flex items-center gap-1.5 cursor-pointer shadow-xs"
                 >
                   <Plus className="w-4 h-4" />
-                  Yeni Depolama Kanalı Ekle
+                  {L("Yeni Depolama Kanalı Ekle", "Add New Storage Channel")}
                 </button>
               </div>
 
@@ -1565,7 +1645,7 @@ export default function AdministrationCenter({ onClose, initialSubTab }: Adminis
 
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                     <div className="space-y-1">
-                      <label className="font-bold text-slate-600">İstemci Kimliği (Client ID / API Key)</label>
+                      <label className="font-bold text-slate-600">{L("İstemci Kimliği", "Client ID / API Key")}</label>
                       <input
                         type="text"
                         placeholder="Uygulama istemci kimliğini girin"
@@ -1575,7 +1655,7 @@ export default function AdministrationCenter({ onClose, initialSubTab }: Adminis
                       />
                     </div>
                     <div className="space-y-1">
-                      <label className="font-bold text-slate-600">Giriş Parolası (Client Secret / Access Token)</label>
+                      <label className="font-bold text-slate-600">{L("Giriş Parolası", "Client Secret / Access Token")}</label>
                       <input
                         type="password"
                         placeholder="••••••••••••••••••••"
@@ -1643,7 +1723,7 @@ export default function AdministrationCenter({ onClose, initialSubTab }: Adminis
 
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                     <div className="space-y-1">
-                      <label className="font-bold text-slate-600">İstemci Kimliği (Client ID / API Key)</label>
+                      <label className="font-bold text-slate-600">{L("İstemci Kimliği", "Client ID / API Key")}</label>
                       <input
                         type="text"
                         value={editForm.clientId || ""}
@@ -1652,7 +1732,7 @@ export default function AdministrationCenter({ onClose, initialSubTab }: Adminis
                       />
                     </div>
                     <div className="space-y-1">
-                      <label className="font-bold text-slate-600">Giriş Parolası (Client Secret)</label>
+                      <label className="font-bold text-slate-600">{L("Giriş Parolası", "Client Secret")}</label>
                       <input
                         type="password"
                         placeholder={editForm.clientSecret ? "••••••••••••••••••••" : ""}
@@ -1665,10 +1745,16 @@ export default function AdministrationCenter({ onClose, initialSubTab }: Adminis
 
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                     <div className="space-y-1">
-                      <label className="font-bold text-slate-600 font-mono text-[10px]">CREATED DATE: <span className="text-slate-500 font-normal">{editForm.createdDate}</span></label>
+                      <label className="font-bold text-slate-600 font-mono text-[10px]">
+                        {L("OLUŞTURULMA TARİHİ:", "CREATED DATE:")}{" "}
+                        <span className="text-slate-500 font-normal">{editForm.createdDate}</span>
+                      </label>
                     </div>
                     <div className="space-y-1 sm:text-right">
-                      <label className="font-bold text-slate-600 font-mono text-[10px]">LAST MODIFIED: <span className="text-slate-500 font-normal">{editForm.lastModified}</span></label>
+                      <label className="font-bold text-slate-600 font-mono text-[10px]">
+                        {L("SON GÜNCELLEME:", "LAST MODIFIED:")}{" "}
+                        <span className="text-slate-500 font-normal">{editForm.lastModified}</span>
+                      </label>
                     </div>
                   </div>
 
@@ -1810,18 +1896,15 @@ export default function AdministrationCenter({ onClose, initialSubTab }: Adminis
                 <div className="lg:col-span-1 p-5 rounded-2xl border border-slate-150 bg-slate-50/55 dark:border-zinc-800 dark:bg-black/10 space-y-3 text-xs">
                   <h4 className="font-bold text-slate-805 dark:text-zinc-200 font-mono text-xs uppercase flex items-center gap-1.5">
                     <Database className="w-4 h-4 text-indigo-550" />
-                    Belge Kategorisi Oluştur
+                    {L("Belge Kategorisi Oluştur", "Create Document Category")}
                   </h4>
-                  <p className="text-[11px] text-slate-500">
-                    Sistemde kullanılmak üzere limitsiz döküman kategorisi ve dosya türü oluşturun.
-                  </p>
                   <form onSubmit={handleAddDocType} className="space-y-3 pt-2">
                     <div className="space-y-1">
                       <label className="font-bold text-slate-600">Kategori Adı *</label>
                       <input
                         type="text"
                         required
-                        placeholder="Örn: Site Survey Report"
+                        placeholder={L("Örn: Saha Anket Raporu", "e.g. Site Survey Report")}
                         value={newTypeName}
                         onChange={(e) => setNewTypeName(e.target.value)}
                         className="w-full bg-white dark:bg-zinc-900 p-2 rounded-lg border border-slate-205 dark:border-zinc-805 outline-none"
@@ -1840,13 +1923,15 @@ export default function AdministrationCenter({ onClose, initialSubTab }: Adminis
                       type="submit"
                       className="w-full p-2 bg-indigo-650 hover:bg-indigo-600 text-white font-bold rounded-lg cursor-pointer text-center"
                     >
-                      Kategori Türünü Kaydet
+                      {L("Kategori Türünü Kaydet", "Save Category Type")}
                     </button>
                   </form>
                 </div>
 
                 <div className="lg:col-span-2 space-y-3">
-                  <span className="text-[10px] font-bold text-slate-450 block uppercase font-mono tracking-wider">AKTİF BELGE KATEGORİLERİ ({docTypes.length})</span>
+                  <span className="text-[10px] font-bold text-slate-450 block uppercase font-mono tracking-wider">
+                    {L(`AKTİF BELGE KATEGORİLERİ (${docTypes.length})`, `ACTIVE DOCUMENT CATEGORIES (${docTypes.length})`)}
+                  </span>
                   <div className="border border-slate-105 dark:border-zinc-800 rounded-xl overflow-hidden text-xs">
                     <div className="grid grid-cols-3 bg-slate-50 dark:bg-black/10 p-2.5 text-[9px] font-mono text-slate-400 font-bold border-b border-slate-100">
                       <div>Kategori Adı</div>
@@ -1883,7 +1968,7 @@ export default function AdministrationCenter({ onClose, initialSubTab }: Adminis
                 <div className="flex items-center justify-between">
                   <span className="text-[10px] font-bold text-slate-450 block uppercase font-mono tracking-wider flex items-center gap-1.5">
                     <Clock className="w-4 h-4 text-slate-400" />
-                    Döküman Yönetim Sistemi (DMS) Denetim Logları (Real-Time Audit Log)
+                    {L("Döküman Yönetim Sistemi Denetim Logları", "Document Management System Audit Logs")}
                   </span>
                   <button
                     type="button"
@@ -1907,7 +1992,9 @@ export default function AdministrationCenter({ onClose, initialSubTab }: Adminis
                   </div>
                   <div className="divide-y divide-slate-100 dark:divide-zinc-800 max-h-[180px] overflow-y-auto font-mono text-[11px]">
                     {DocumentService.getAuditLogs().length === 0 ? (
-                      <div className="p-4 text-center text-slate-400 italic">DMS üzerinde henüz herhangi bir işlem gerçekleştirilmedi.</div>
+                      <div className="p-4 text-left text-slate-400 italic">
+                        {L("DMS üzerinde henüz herhangi bir işlem gerçekleştirilmedi.", "No operations have been performed on DMS yet.")}
+                      </div>
                     ) : (
                       DocumentService.getAuditLogs().map((log) => (
                         <div key={log.id} className="grid grid-cols-6 p-2 items-center hover:bg-slate-50/50">
@@ -1928,7 +2015,7 @@ export default function AdministrationCenter({ onClose, initialSubTab }: Adminis
                           </div>
                           <div className="text-right">
                             <span className={`font-bold uppercase text-[10px] ${log.result === "Success" ? "text-emerald-600" : "text-rose-600"}`}>
-                              {log.result}
+                              {resultLabel(log.result)}
                             </span>
                           </div>
                         </div>
@@ -1943,15 +2030,18 @@ export default function AdministrationCenter({ onClose, initialSubTab }: Adminis
           {/* ==================== SECTION 6: AUDIT LOGS ==================== */}
           {activeSubTab === "auditlogs" && (
             <div className="space-y-6 animate-in fade-in duration-100">
-              <div className="border-b border-slate-100 dark:border-zinc-800 pb-4">
-                <h3 className="text-lg font-bold text-slate-800 dark:text-zinc-150">6. Denetim Günlükleri & Güvenlik Takibi (Audit Logs)</h3>
-                <p className="text-xs text-slate-500">Business Operating System üzerindeki tüm kullanıcı girişleri, izin güncellemeleri, teklif hazırlıkları ve e-posta operasyonları anlık olarak mühürlenir.</p>
+              <div className="border-b border-slate-100 dark:border-zinc-800 pb-4 text-left">
+                <h3 className="text-lg font-bold text-slate-800 dark:text-zinc-150">
+                  {L("6. Denetim Günlükleri ve Güvenlik Takibi", "6. Audit Logs & Security Tracking")}
+                </h3>
               </div>
 
               <div className="flex justify-between items-center bg-slate-50/80 dark:bg-black/10 p-3.5 rounded-xl border border-slate-150 dark:border-zinc-800/60">
                 <div className="flex items-center gap-2">
                   <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
-                  <span className="text-xs font-bold text-slate-700 dark:text-zinc-250 font-sans">Anlık Log Sinyali: Aktif</span>
+                  <span className="text-xs font-bold text-slate-700 dark:text-zinc-250 font-sans">
+                    {L("Anlık Log Sinyali: Aktif", "Live Log Signal: Active")}
+                  </span>
                 </div>
                 <button
                   type="button"
@@ -1961,7 +2051,7 @@ export default function AdministrationCenter({ onClose, initialSubTab }: Adminis
                   }}
                   className="p-1.5 px-3 bg-white hover:bg-slate-50 border border-slate-200 dark:bg-[#1f1f1e] dark:border-zinc-800 rounded-lg text-[10px] font-bold text-slate-700 dark:text-zinc-300 font-mono transition-all flex items-center gap-1 cursor-pointer"
                 >
-                  <Copy className="w-3 h-3 inline" /> CSV Olarak İndir
+                  <Copy className="w-3 h-3 inline" /> {L("CSV Olarak İndir", "Download as CSV")}
                 </button>
               </div>
 
@@ -1970,11 +2060,11 @@ export default function AdministrationCenter({ onClose, initialSubTab }: Adminis
                 <table className="w-full text-left border-collapse">
                   <thead>
                     <tr className="bg-slate-50 dark:bg-neutral-900 text-[10px] font-bold font-mono text-slate-400 uppercase border-b border-slate-100">
-                      <th className="p-3">Kullanıcı (User)</th>
-                      <th className="p-3">Zaman Damgası (Timestamp)</th>
-                      <th className="p-3">Gerçekleştirilen Eylem (Action)</th>
-                      <th className="p-3">Modül</th>
-                      <th className="p-3">Sonuç</th>
+                      <th className="p-3">{L("Kullanıcı", "User")}</th>
+                      <th className="p-3">{L("Zaman Damgası", "Timestamp")}</th>
+                      <th className="p-3">{L("Gerçekleştirilen Eylem", "Action")}</th>
+                      <th className="p-3">{L("Modül", "Module")}</th>
+                      <th className="p-3">{L("Sonuç", "Result")}</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-slate-100 dark:divide-zinc-800/80 text-[11px] font-mono">
@@ -1992,7 +2082,7 @@ export default function AdministrationCenter({ onClose, initialSubTab }: Adminis
                           <span className={`p-1 px-1.5 rounded text-[10px] font-bold ${
                             l.result === "Success" ? "bg-emerald-50 text-emerald-600" : "bg-rose-50 text-rose-600"
                           }`}>
-                            {l.result}
+                            {resultLabel(l.result)}
                           </span>
                         </td>
                       </tr>
@@ -2006,26 +2096,33 @@ export default function AdministrationCenter({ onClose, initialSubTab }: Adminis
           {/* ==================== SECTION 7: AI SETTINGS ==================== */}
           {activeSubTab === "aisettings" && (
             <div className="space-y-6 animate-in fade-in duration-100">
-              <div className="border-b border-slate-100 dark:border-zinc-800 pb-4">
-                <h3 className="text-lg font-bold text-slate-805 dark:text-zinc-150">7. Yapay Zeka (AI Settings) & Prompt Yönetimi</h3>
-                <p className="text-xs text-slate-500">Müşteri maillerini işleyen imza ayrıştırıcı model ve otomatik yanıt üreteci prompt şablonlarını centralize yönetin.</p>
+              <div className="border-b border-slate-100 dark:border-zinc-800 pb-4 text-left">
+                <h3 className="text-lg font-bold text-slate-805 dark:text-zinc-150">
+                  {L("7. Yapay Zeka ve Prompt Yönetimi", "7. AI Settings & Prompt Management")}
+                </h3>
               </div>
 
               <div className="p-4 rounded-xl border border-indigo-150 bg-indigo-50/5 dark:border-zinc-800 dark:bg-black/10 space-y-1.5 text-xs">
-                <div className="text-[10px] font-bold text-slate-400 uppercase font-mono">AKTİF HİZMET ANALİZİ</div>
+                <div className="text-[10px] font-bold text-slate-400 uppercase font-mono">
+                  {L("AKTİF HİZMET ANALİZİ", "ACTIVE SERVICE ANALYSIS")}
+                </div>
                 <div className="flex items-center justify-between">
-                  <span className="font-bold text-slate-800 dark:text-zinc-200">Kullanılan Yapay Zeka Model Servisi:</span>
+                  <span className="font-bold text-slate-800 dark:text-zinc-200">
+                    {L("Kullanılan Yapay Zeka Model Servisi:", "Active AI Model Service:")}
+                  </span>
                   <span className="font-bold text-[#0078D4] font-mono">Gemini-3.5-Flash (Google SDK)</span>
                 </div>
                 <div className="flex items-center justify-between text-[11px] pt-1">
-                  <span className="text-slate-500">Kimlik Tanımı:</span>
+                  <span className="text-slate-500">{L("Kimlik Tanımı:", "Identity:")}</span>
                   <span className="text-slate-600 dark:text-slate-300 font-mono font-bold">{aiApiKeyName} ✅</span>
                 </div>
               </div>
 
               {/* Prompt template modifiers */}
               <div className="space-y-4">
-                <span className="text-[10px] font-bold text-slate-450 block uppercase font-mono tracking-wider">PROMPT ŞABLONLARINI DÜZENLE (SYSTEM INSTRUCTIONS)</span>
+                <span className="text-[10px] font-bold text-slate-450 block uppercase font-mono tracking-wider">
+                  {L("PROMPT ŞABLONLARINI DÜZENLE", "EDIT PROMPT TEMPLATES")}
+                </span>
                 
                 {promptTemplates.map((item, idx) => (
                   <div key={idx} className="p-4 rounded-xl border border-slate-150 dark:border-zinc-800 bg-slate-50/30 space-y-2.5">
@@ -2040,8 +2137,8 @@ export default function AdministrationCenter({ onClose, initialSubTab }: Adminis
                       className="w-full text-[11px] font-mono p-3 bg-white dark:bg-black text-slate-800 dark:text-zinc-300 rounded-lg border border-slate-200 dark:border-zinc-800 focus:outline-none focus:ring-1 focus:ring-indigo-650"
                     />
                     <div className="flex items-center justify-between text-[10px] text-slate-400">
-                      <span>* Bu kutu dışına tıkladığınızda prompt doğrudan veritabanına kaydedilir.</span>
-                      <span>Harcama Sınıfı: {item.tokenUsage}</span>
+                      <span>{L("* Bu kutu dışına tıkladığınızda prompt doğrudan veritabanına kaydedilir.", "* Prompt is saved to the database when you click outside this box.")}</span>
+                      <span>{L("Harcama Sınıfı:", "Usage Tier:")} {item.tokenUsage}</span>
                     </div>
                   </div>
                 ))}
@@ -2050,8 +2147,9 @@ export default function AdministrationCenter({ onClose, initialSubTab }: Adminis
               {/* Dynamic Skill Controls */}
               <div className="pt-4 border-t border-slate-100 dark:border-zinc-800 space-y-3.5">
                 <div>
-                  <h4 className="text-xs font-bold text-slate-800 dark:text-zinc-200 uppercase tracking-widest font-mono">AI Ajanı Yetenek Aktivasyon Listesi</h4>
-                  <p className="text-[10px] text-slate-505">Destek kütüphanesine yüklenen dosyaların işlenme mekanizması ve akıllı öneri motorlarının aktif yetenek süzgeci.</p>
+                  <h4 className="text-xs font-bold text-slate-800 dark:text-zinc-200 uppercase tracking-widest font-mono">
+                    {L("Yapay Zeka Ajanı Yetenek Aktivasyon Listesi", "AI Agent Skill Activation List")}
+                  </h4>
                 </div>
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
@@ -2069,9 +2167,9 @@ export default function AdministrationCenter({ onClose, initialSubTab }: Adminis
                         className="text-slate-550 transition-colors"
                       >
                         {skill.active ? (
-                          <span className="text-emerald-500 font-bold flex items-center gap-1">🟢 Aktif</span>
+                          <span className="text-emerald-500 font-bold flex items-center gap-1">🟢 {L("Aktif", "Active")}</span>
                         ) : (
-                          <span className="text-slate-400 font-bold flex items-center gap-1">⚪ Kapalı</span>
+                          <span className="text-slate-400 font-bold flex items-center gap-1">⚪ {L("Kapalı", "Off")}</span>
                         )}
                       </button>
                     </div>
@@ -2084,63 +2182,97 @@ export default function AdministrationCenter({ onClose, initialSubTab }: Adminis
           {/* ==================== SECTION 8: SYSTEM HEALTH ==================== */}
           {activeSubTab === "systemhealth" && (
             <div className="space-y-6 animate-in fade-in duration-100">
-              <div className="border-b border-slate-100 dark:border-zinc-800 pb-4">
-                <h3 className="text-lg font-bold text-slate-800 dark:text-zinc-150">8. Sistem & Entegrasyon Sağlığı Gösterge Paneli</h3>
-                <p className="text-xs text-slate-500">Gemba Partner altyapısının can damarları olan bulut servislerin, posta kutularının ve veritabanı kullanım detaylarının anlık izlenimi.</p>
+              <div className="border-b border-slate-100 dark:border-zinc-800 pb-4 text-left">
+                <h3 className="text-lg font-bold text-slate-800 dark:text-zinc-150">
+                  {L("8. Sistem ve Entegrasyon Sağlığı Gösterge Paneli", "8. System & Integration Health Dashboard")}
+                </h3>
               </div>
 
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                 
                 <div className="p-4 bg-emerald-50/20 rounded-2xl border border-emerald-200/50 space-y-1">
-                  <span className="text-[9px] font-bold text-emerald-500 font-mono block uppercase">CONNECTED MAILBOXES</span>
+                  <span className="text-[9px] font-bold text-emerald-500 font-mono block uppercase">
+                    {L("BAĞLI POSTA KUTULARI", "CONNECTED MAILBOXES")}
+                  </span>
                   <div className="text-xl font-black text-slate-800 dark:text-emerald-400">{mailboxes.filter(m => m.status === "Connected").length} / {mailboxes.length}</div>
-                  <p className="text-[10px] text-slate-405 leading-none">Aktif Exchange hesaplar</p>
+                  <p className="text-[10px] text-slate-405 leading-none">{L("Aktif Exchange hesaplar", "Active Exchange accounts")}</p>
                 </div>
 
                 <div className="p-4 bg-indigo-50/20 rounded-2xl border border-indigo-200/50 space-y-1">
-                  <span className="text-[9px] font-bold text-indigo-550 font-mono block uppercase">CLOUD STORAGE CHANNELS</span>
-                  <div className="text-xl font-black text-indigo-650 dark:text-indigo-400">3 Bağlantı</div>
-                  <p className="text-[10px] text-slate-405 leading-none">OneDrive, Dropbox / S3</p>
+                  <span className="text-[9px] font-bold text-indigo-550 font-mono block uppercase">
+                    {L("BULUT DEPOLAMA KANALLARI", "CLOUD STORAGE CHANNELS")}
+                  </span>
+                  <div className="text-xl font-black text-indigo-650 dark:text-indigo-400">
+                    {L("3 Bağlantı", "3 Connections")}
+                  </div>
+                  <p className="text-[10px] text-slate-405 leading-none">{L("OneDrive, Dropbox / S3", "OneDrive, Dropbox / S3")}</p>
                 </div>
 
                 <div className="p-4 bg-white dark:bg-black/10 rounded-2xl border border-slate-200/80 space-y-1">
-                  <span className="text-[9px] font-bold text-slate-500 font-mono block uppercase">DATABASE STORAGE</span>
+                  <span className="text-[9px] font-bold text-slate-500 font-mono block uppercase">
+                    {L("VERİTABANI DEPOLAMASI", "DATABASE STORAGE")}
+                  </span>
                   <div className="text-xl font-black text-slate-800 dark:text-zinc-300">62.8 MB</div>
-                  <p className="text-[10px] text-slate-405 leading-none">Total metadata records size</p>
+                  <p className="text-[10px] text-slate-405 leading-none">
+                    {L("Toplam meta veri kayıt boyutu", "Total metadata records size")}
+                  </p>
                 </div>
               </div>
 
               {/* Status and telemetry lines */}
               <div className="pt-4 border-t border-slate-100 dark:border-zinc-800/80 space-y-3">
-                <span className="text-[10px] font-bold text-slate-450 block uppercase font-mono">GERÇEK ZAMANLI SERVİS TELEMETRİSİ (API & ENGINE STATUS)</span>
+                <span className="text-[10px] font-bold text-slate-450 block uppercase font-mono">
+                  {L("GERÇEK ZAMANLI SERVİS TELEMETRİSİ", "REAL-TIME SERVICE TELEMETRY")}
+                </span>
                 
                 <div className="space-y-2.5">
                   <div className="flex items-center justify-between p-3 bg-slate-50/60 dark:bg-zinc-900 border border-slate-150 rounded-xl text-xs">
-                    <span className="font-bold text-slate-700 dark:text-zinc-300">Microsoft Graph API Durumu (Azure AD):</span>
-                    <span className="text-emerald-600 font-bold flex items-center gap-1 font-mono uppercase">🟢 ÇALIŞIYOR (SUCCESS)</span>
+                    <span className="font-bold text-slate-700 dark:text-zinc-300">
+                      {L("Microsoft Graph API Durumu (Azure AD):", "Microsoft Graph API Status (Azure AD):")}
+                    </span>
+                    <span className="text-emerald-600 font-bold flex items-center gap-1 font-mono uppercase">
+                      {L("🟢 ÇALIŞIYOR", "🟢 RUNNING")}
+                    </span>
                   </div>
 
                   <div className="flex items-center justify-between p-3 bg-slate-50/60 dark:bg-zinc-900 border border-slate-150 rounded-xl text-xs">
-                    <span className="font-bold text-slate-700 dark:text-zinc-300">Google Gemini Üretken Yapay Zeka Kapasitesi:</span>
-                    <span className="text-emerald-600 font-bold flex items-center gap-1 font-mono uppercase">🟢 ÇALIŞIYOR (120 RPM)</span>
+                    <span className="font-bold text-slate-700 dark:text-zinc-300">
+                      {L("Google Gemini Üretken Yapay Zeka Kapasitesi:", "Google Gemini Generative AI Capacity:")}
+                    </span>
+                    <span className="text-emerald-600 font-bold flex items-center gap-1 font-mono uppercase">
+                      {L("🟢 ÇALIŞIYOR (120 RPM)", "🟢 RUNNING (120 RPM)")}
+                    </span>
                   </div>
 
                   <div className="flex items-center justify-between p-3 bg-slate-50/60 dark:bg-zinc-900 border border-slate-150 rounded-xl text-xs">
-                    <span className="font-bold text-slate-700 dark:text-zinc-300">Tavily Search Engine API Entegrasyonu:</span>
-                    <span className="text-amber-600 font-bold flex items-center gap-1 font-mono uppercase">🟢 BAĞLI (Simülasyon Fallback)</span>
+                    <span className="font-bold text-slate-700 dark:text-zinc-300">
+                      {L("Tavily Arama Motoru API Entegrasyonu:", "Tavily Search Engine API Integration:")}
+                    </span>
+                    <span className="text-amber-600 font-bold flex items-center gap-1 font-mono uppercase">
+                      {L("🟢 BAĞLI (Simülasyon Yedek)", "🟢 CONNECTED (Simulation Fallback)")}
+                    </span>
                   </div>
 
                   <div className="flex items-center justify-between p-3 bg-slate-50/60 dark:bg-zinc-900 border border-slate-150 rounded-xl text-xs">
-                    <span className="font-bold text-slate-700 dark:text-zinc-300">Masaüstü E-posta Senkronizasyon (Cron daemon):</span>
-                    <span className="text-emerald-600 font-bold flex items-center gap-1 font-mono uppercase">🟢 ÇALIŞIYOR</span>
+                    <span className="font-bold text-slate-700 dark:text-zinc-300">
+                      {L("Masaüstü E-posta Senkronizasyonu (Cron daemon):", "Desktop Email Sync (Cron daemon):")}
+                    </span>
+                    <span className="text-emerald-600 font-bold flex items-center gap-1 font-mono uppercase">
+                      {L("🟢 ÇALIŞIYOR", "🟢 RUNNING")}
+                    </span>
                   </div>
                 </div>
               </div>
 
               {/* System Error metrics */}
               <div className="p-4 rounded-xl bg-slate-50/50 border border-slate-200 dark:bg-neutral-900 text-xs text-slate-700 dark:text-zinc-300">
-                <strong className="block font-bold text-slate-800 dark:text-zinc-200 uppercase font-mono tracking-wider text-[10px] mb-1">⏱️ OPERASYONEL ARIZA VE ÇAKIŞMALAR</strong>
-                Son 48 saat içinde hiçbir kritik kesinti veya veri tabanı çöküşü saptanmamıştır. 1 adet Microsoft Graph e-posta okuma yetki aşımı log (Yetki Yok) olarak başarıyla yakalanıp e-posta detayı günlüğüne raporlanmıştır.
+                <strong className="block font-bold text-slate-800 dark:text-zinc-200 uppercase font-mono tracking-wider text-[10px] mb-1">
+                  {L("⏱️ OPERASYONEL ARIZA VE ÇAKIŞMALAR", "⏱️ OPERATIONAL FAILURES AND CONFLICTS")}
+                </strong>
+                {L(
+                  "Son 48 saat içinde hiçbir kritik kesinti veya veri tabanı çöküşü saptanmamıştır. 1 adet Microsoft Graph e-posta okuma yetki aşımı log (Yetki Yok) olarak başarıyla yakalanıp e-posta detayı günlüğüne raporlanmıştır.",
+                  "No critical outages or database crashes detected in the last 48 hours. One Microsoft Graph email read permission exceeded log (No Permission) was successfully captured and reported to the email detail log."
+                )}
               </div>
             </div>
           )}
@@ -2152,7 +2284,9 @@ export default function AdministrationCenter({ onClose, initialSubTab }: Adminis
           <div className="fixed bottom-6 right-6 z-[9999] p-4 rounded-xl shadow-2xl border text-xs font-bold flex items-center gap-3 animate-in fade-in slide-in-from-bottom-5 duration-300 max-w-sm font-sans bg-white dark:bg-zinc-900 border-slate-200 dark:border-zinc-800 text-slate-800 dark:text-zinc-100">
             <div className={`w-2.5 h-2.5 rounded-full ${toast.type === "success" ? "bg-emerald-500" : toast.type === "error" ? "bg-rose-500" : "bg-blue-500"}`} />
             <p className="flex-1">{toast.message}</p>
-            <button type="button" onClick={() => setToast(null)} className="text-[10px] text-slate-400 hover:text-slate-650 cursor-pointer">[Kapat]</button>
+            <button type="button" onClick={() => setToast(null)} className="text-[10px] text-slate-400 hover:text-slate-650 cursor-pointer">
+              [{L("Kapat", "Close")}]
+            </button>
           </div>
         )}
 
