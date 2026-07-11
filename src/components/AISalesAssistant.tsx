@@ -72,6 +72,24 @@ function getTavilyApiKey(): string {
   return localStorage.getItem("tavily_api_key")?.trim() || "";
 }
 
+async function parseJsonApiResponse(resp: Response): Promise<Record<string, unknown>> {
+  const contentType = resp.headers.get("content-type") || "";
+  if (!contentType.includes("application/json")) {
+    const text = await resp.text();
+    throw new Error(
+      `API yanıtı JSON değil (${resp.status}): ${text.slice(0, 120)}`
+    );
+  }
+  const data = await resp.json();
+  if (!resp.ok) {
+    const message =
+      (typeof data.error === "string" && data.error) ||
+      `İstek başarısız (${resp.status})`;
+    throw Object.assign(new Error(message), { data, status: resp.status });
+  }
+  return data;
+}
+
 export default function AISalesAssistant({ onOpenSettings }: AISalesAssistantProps) {
   const { lang, t } = useLanguage();
   const [companyInput, setCompanyInput] = useState("");
@@ -268,38 +286,36 @@ export default function AISalesAssistant({ onOpenSettings }: AISalesAssistantPro
         }),
       });
 
-      const data = await resp.json();
-
-      if (!resp.ok) {
-        if (data.code === "TAVILY_API_KEY_MISSING") {
+      let data: Record<string, unknown>;
+      try {
+        data = await parseJsonApiResponse(resp);
+      } catch (parseErr: any) {
+        if (parseErr?.data?.code === "TAVILY_API_KEY_MISSING") {
           setHasTavilyKey(false);
           return;
         }
-        if (resp.status === 429 || data.isQuotaExhausted) {
+        if (parseErr?.status === 429 || parseErr?.data?.isQuotaExhausted) {
           throw new Error(
-            data.error || "Gemini API kullanım kotası aşıldı."
+            parseErr.message || "Gemini API kullanım kotası aşıldı."
           );
         }
-        throw new Error(
-          data.error ||
-            (data.code === "TAVILY_SEARCH_FAILED"
-              ? "Tavily arama servisi yanıt vermedi. Lütfen API anahtarınızı kontrol edin."
-              : "Analiz tamamlanamadı.")
-        );
+        throw parseErr;
       }
 
       if (!data.success || !data.rawOutput) {
-        throw new Error(data.error || "Analiz tamamlanamadı.");
+        throw new Error(
+          (typeof data.error === "string" && data.error) || "Analiz tamamlanamadı."
+        );
       }
 
-      const parsedData = parseScreenerOutput(data.rawOutput);
+      const parsedData = parseScreenerOutput(String(data.rawOutput));
 
       const newAnalysis: SavedAnalysis = {
         id: "analysis_" + Date.now() + "_" + Math.floor(Math.random() * 1000000),
         timestamp: new Date().toLocaleString("tr-TR"),
         companyInput: companyInput.trim(),
-        rawOutput: data.rawOutput,
-        sources: data.sources || [],
+        rawOutput: String(data.rawOutput),
+        sources: (data.sources as ResearchSource[]) || [],
         parsed: parsedData,
       };
 

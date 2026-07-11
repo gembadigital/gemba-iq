@@ -10,10 +10,7 @@ const projectRoot = process.cwd();
 dotenv.config({ path: path.join(projectRoot, ".env") });
 
 import { GoogleGenAI } from "@google/genai";
-import {
-  fetchCompanyResearch,
-  formatTavilyContext,
-} from "./tavilyCompanyResearch";
+import { runCompanyAnalysis } from "./api/lib/analyzeCompanyCore.js";
 const ai = new GoogleGenAI({
   apiKey: process.env.GEMINI_API_KEY,
   httpOptions: {
@@ -882,146 +879,22 @@ Target Channel Context: "${targetChannel || 'Lean Consulting Page'}"`;
   }
 });
 
-// API: Gemini AI Sales Assistant Company Screener (Tavily-only data source)
+// API: Gemini AI Sales Assistant Company Screener (delegates to shared core; Vercel uses api/gemini/analyze-company.js)
 app.post("/api/gemini/analyze-company", async (req, res) => {
-  const { companyInput } = req.body;
-
-  if (!companyInput || !companyInput.trim()) {
-    return res.status(400).json({ error: "Firma adı boş olamaz." });
-  }
-
-  const tavilyApiKey =
-    req.body.tavilyApiKey ||
-    req.headers["x-tavily-api-key"] ||
-    process.env.TAVILY_API_KEY;
-
-  if (!tavilyApiKey || !String(tavilyApiKey).trim()) {
-    return res.status(400).json({
-      success: false,
-      code: "TAVILY_API_KEY_MISSING",
-      error:
-        "Tavily API anahtarı tanımlı değil. Gerçek şirket araştırması yapabilmek için Tavily API anahtarınızı Sistem Ayarları > API Bağlantıları bölümüne giriniz.",
-    });
-  }
-
-  if (!process.env.GEMINI_API_KEY) {
-    return res.status(400).json({
-      success: false,
-      error:
-        "GEMINI_API_KEY ortam değişkeni tanımlı değil. Lütfen sunucu ayarlarından ekleyin.",
-    });
-  }
-
-  const company = companyInput.trim();
-
   try {
-    let research;
-    try {
-      console.log(`Tavily company research started for: ${company}`);
-      research = await fetchCompanyResearch(String(tavilyApiKey).trim(), company);
-    } catch (tavilyErr: any) {
-      console.error("Tavily research failed:", tavilyErr);
-      return res.status(502).json({
-        success: false,
-        code: "TAVILY_SEARCH_FAILED",
-        error:
-          "Tavily arama servisi şu anda yanıt vermiyor. Lütfen API anahtarınızı kontrol edip birkaç dakika sonra tekrar deneyin.",
-      });
-    }
-
-    const tavilyContextText = formatTavilyContext(company, research.results);
-
-    const userPromptText = `Sen bir B2B Satış İstihbaratı analisti ve Operasyonel Mükemmellik (OpEx) danışmanısın.
-
-KRİTİK KURAL: Yalnızca aşağıda sunulan Tavily arama sonuçlarını analiz edeceksin. Kendi genel bilgini, tahminini veya çıkarımını KULLANMA.
-
-YASAKLAR (kesinlikle yapma):
-- Dummy data, örnek veri, placeholder, lorem ipsum
-- Tahmini çalışan sayısı, tahmini ciro, tahmini e-posta formatı
-- Uydurulmuş kişi isimleri, sahte adresler, sahte telefon numaraları
-- Kaynağı olmayan hiçbir bilgi
-- Eksik alanları tahmin etme veya doldurma
-- Google Search veya başka kaynak kullanma — sadece aşağıdaki Tavily içeriği
-
-Şirket: "${company}"
-
---- TAVILY ARAMA SONUÇLARI (TEK VERİ KAYNAĞI) ---
-${tavilyContextText}
---- SON ---
-
-Aşağıdaki bölümleri Türkçe olarak, tam olarak bu markdown başlıklarıyla yaz:
-
-# Şirket Özeti
-Sadece kaynaklarda bulunan bilgileri özetle: sektör, ana ürün/hizmetler, web sitesi, lokasyonlar, üretim tesisleri.
-Bulunamayan her alan için: "Bilgi bulunamadı"
-Her bilgi satırının sonuna kaynak referansı ekle: [Kaynak: domain]
-
-# Finansal Veriler
-Kaynaklarda bulunan finansal bilgileri özetle: ciro, çalışan sayısı, ülkeler, yatırım, üretim tesisleri, ihracat.
-Hiçbir finansal veri yoksa yalnızca şunu yaz: "Finansal bilgi bulunamadı"
-Tahmin yapma. Her bulunan veri için [Kaynak: domain] ekle.
-
-# E-posta Keşfi
-Yalnızca kaynak metinlerinde açıkça geçen (yazılı olarak bulunan) e-posta adreslerini listele.
-Format: e-posta | Kaynak: URL veya domain
-E-posta bulunamazsa yalnızca şunu yaz: "Doğrulanmış e-posta bulunamadı"
-E-posta formatı tahmin etme.
-
-# Karar Vericiler
-Yalnızca kaynaklarda ismi ve ünvanı açıkça geçen, doğrulanabilir kişileri listele.
-Her kişi için: İsim | Ünvan | Kaynak: URL/domain | LinkedIn (varsa) | Şirket web sitesi (varsa)
-Bulunamazsa yalnızca şunu yaz: "Karar verici bilgisi bulunamadı"
-
-# Fırsat Analizi
-Yalnızca kaynaklarda bulunan somut verileri yorumla (ör: Lean yatırımı, ISO sertifikası, sürdürülebilirlik raporu, yeni fabrika, otomasyon yatırımı, OpEx ekibi, kalite direktörü).
-Bu verilerden satış fırsatı çıkar. Her fırsat için dayandığı kaynağı belirt: [Kaynak: domain]
-Yeterli veri yoksa yalnızca şunu yaz: "Yeterli veri bulunamadığı için fırsat analizi oluşturulamadı."`;
-
-    let aiRes;
-    try {
-      aiRes = await ai.models.generateContent({
-        model: "gemini-3.5-flash",
-        contents: userPromptText,
-      });
-    } catch (geminiErr: any) {
-      console.error("Gemini analysis failed:", geminiErr);
-      return res.status(500).json({
-        success: false,
-        code: "GEMINI_ANALYSIS_FAILED",
-        error: "Analiz tamamlanamadı.",
-        sources: research.sources,
-      });
-    }
-
-    const resultText = aiRes.text;
-    if (!resultText) {
-      return res.status(500).json({
-        success: false,
-        code: "GEMINI_ANALYSIS_FAILED",
-        error: "Analiz tamamlanamadı.",
-        sources: research.sources,
-      });
-    }
-
-    res.json({
-      success: true,
-      rawOutput: resultText,
-      sources: research.sources,
+    const result = await runCompanyAnalysis({
+      companyInput: req.body?.companyInput,
+      tavilyApiKey:
+        req.body?.tavilyApiKey ||
+        req.headers["x-tavily-api-key"] ||
+        process.env.TAVILY_API_KEY,
     });
+    res.status(result.status).json(result.body);
   } catch (error: any) {
-    console.error("Analyze company error:", error);
-    const errStr = String(error.message || error);
-    const isQuota =
-      errStr.includes("429") ||
-      errStr.toLowerCase().includes("quota") ||
-      errStr.includes("RESOURCE_EXHAUSTED");
-
-    res.status(isQuota ? 429 : 500).json({
+    console.error("Analyze company route error:", error);
+    res.status(500).json({
       success: false,
-      isQuotaExhausted: isQuota,
-      error: isQuota
-        ? "Gemini API kullanım kotanız aşıldı. Lütfen API kotalarınızı kontrol edin."
-        : "Analiz tamamlanamadı.",
+      error: "Gemini analysis failed",
     });
   }
 });
