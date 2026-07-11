@@ -52,6 +52,50 @@ Bu verilerden satış fırsatı çıkar. Her fırsat için dayandığı kaynağ�
 Yeterli veri yoksa yalnızca şunu yaz: "Yeterli veri bulunamadığı için fırsat analizi oluşturulamadı."`;
 }
 
+const GEMINI_MODEL = "gemini-3.5-flash";
+
+function extractGeminiErrorInfo(err) {
+  const message = err?.message || String(err);
+  const stack = err?.stack || null;
+
+  let httpStatus = err?.status ?? err?.statusCode ?? null;
+  let errorBody = err?.body ?? err?.errorDetails ?? null;
+
+  if (err?.response) {
+    httpStatus = httpStatus ?? err.response?.status ?? err.response?.statusCode ?? null;
+    errorBody = errorBody ?? err.response?.data ?? err.response?.body ?? err.response;
+  }
+
+  if (err?.cause && typeof err.cause === "object") {
+    httpStatus = httpStatus ?? err.cause?.status ?? err.cause?.statusCode ?? null;
+    errorBody = errorBody ?? err.cause?.body ?? err.cause?.errorDetails ?? err.cause;
+  }
+
+  if (errorBody != null && typeof errorBody !== "string") {
+    try {
+      errorBody = JSON.stringify(errorBody);
+    } catch {
+      errorBody = String(errorBody);
+    }
+  }
+
+  return { message, stack, httpStatus, errorBody };
+}
+
+function logGeminiCallFailure(err) {
+  const { message, stack, httpStatus, errorBody } = extractGeminiErrorInfo(err);
+
+  console.error("[analyze-company] Gemini model:", GEMINI_MODEL);
+  console.error("[analyze-company] Gemini HTTP status:", httpStatus ?? "unknown");
+  console.error("[analyze-company] Gemini error message:", message);
+  if (errorBody) {
+    console.error("[analyze-company] Gemini error body:", errorBody);
+  }
+  console.error("[analyze-company] Gemini stack trace:", stack ?? "no stack trace");
+
+  return { message, httpStatus, errorBody };
+}
+
 /**
  * Run Tavily search + Gemini analysis.
  * Returns { status, body } where body is always JSON-serializable.
@@ -111,7 +155,7 @@ export async function runCompanyAnalysis({ companyInput, tavilyApiKey }) {
   try {
     const ai = new GoogleGenAI({ apiKey: geminiApiKey });
     const aiRes = await ai.models.generateContent({
-      model: "gemini-3.5-flash",
+      model: GEMINI_MODEL,
       contents: userPromptText,
     });
 
@@ -137,12 +181,13 @@ export async function runCompanyAnalysis({ companyInput, tavilyApiKey }) {
       },
     };
   } catch (geminiErr) {
-    console.error("Gemini analysis failed:", geminiErr);
-    const errStr = String(geminiErr?.message || geminiErr);
+    const { message, httpStatus, errorBody } = logGeminiCallFailure(geminiErr);
+    const errStr = message;
     const isQuota =
       errStr.includes("429") ||
       errStr.toLowerCase().includes("quota") ||
-      errStr.includes("RESOURCE_EXHAUSTED");
+      errStr.includes("RESOURCE_EXHAUSTED") ||
+      httpStatus === 429;
 
     return {
       status: isQuota ? 429 : 500,
@@ -150,9 +195,7 @@ export async function runCompanyAnalysis({ companyInput, tavilyApiKey }) {
         success: false,
         code: "GEMINI_ANALYSIS_FAILED",
         isQuotaExhausted: isQuota,
-        error: isQuota
-          ? "Gemini API quota exceeded"
-          : "Gemini analysis failed",
+        error: message,
         sources: research.sources,
       },
     };
