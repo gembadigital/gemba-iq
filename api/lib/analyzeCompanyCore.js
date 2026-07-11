@@ -3,56 +3,40 @@ import {
   fetchCompanyResearch,
   formatTavilyContext,
 } from "./tavilyCompanyResearch.js";
+import {
+  buildTavilyFindings,
+  buildRawOutputFromParsed,
+  GEMINI_UNAVAILABLE_MESSAGE,
+} from "./tavilyFindingsBuilder.js";
 
-function buildGeminiPrompt(company, tavilyContextText) {
+const GEMINI_RETRY_PLAN = [
+  { attempt: 1, model: "gemini-2.5-flash", waitAfter503Ms: 3000 },
+  { attempt: 2, model: "gemini-2.0-flash", waitAfter503Ms: 5000 },
+  { attempt: 3, model: "gemini-2.5-flash", waitAfter503Ms: 0 },
+];
+
+const TAVILY_KEY_MESSAGE =
+  "Tavily API anahtarı bulunamadı. Lütfen Sistem Ayarları > API Anahtarları bölümünden Tavily API Key giriniz.";
+const TAVILY_FAIL_MESSAGE = "İnternet araştırması gerçekleştirilemedi.";
+
+function buildGeminiOpportunityPrompt(company, tavilyContextText) {
   return `Sen bir B2B Satış İstihbaratı analisti ve Operasyonel Mükemmellik (OpEx) danışmanısın.
 
-KRİTİK KURAL: Yalnızca aşağıda sunulan Tavily arama sonuçlarını analiz edeceksin. Kendi genel bilgini, tahminini veya çıkarımını KULLANMA.
-
-YASAKLAR (kesinlikle yapma):
-- Dummy data, örnek veri, placeholder, lorem ipsum
-- Tahmini çalışan sayısı, tahmini ciro, tahmini e-posta formatı
-- Uydurulmuş kişi isimleri, sahte adresler, sahte telefon numaraları
-- Kaynağı olmayan hiçbir bilgi
-- Eksik alanları tahmin etme veya doldurma
-- Google Search veya başka kaynak kullanma — sadece aşağıdaki Tavily içeriği
+KRİTİK KURAL: Yalnızca aşağıda sunulan Tavily arama sonuçlarını yorumlayacaksın. Yeni bilgi üretme, tahmin etme veya uydurma.
 
 Şirket: "${company}"
 
---- TAVILY ARAMA SONUÇLARI (TEK VERİ KAYNAĞI) ---
+--- TAVILY ARAMA SONUÇLARI ---
 ${tavilyContextText}
 --- SON ---
 
-Aşağıdaki bölümleri Türkçe olarak, tam olarak bu markdown başlıklarıyla yaz:
-
-# Şirket Özeti
-Sadece kaynaklarda bulunan bilgileri özetle: sektör, ana ürün/hizmetler, web sitesi, lokasyonlar, üretim tesisleri.
-Bulunamayan her alan için: "Bilgi bulunamadı"
-Her bilgi satırının sonuna kaynak referansı ekle: [Kaynak: domain]
-
-# Finansal Veriler
-Kaynaklarda bulunan finansal bilgileri özetle: ciro, çalışan sayısı, ülkeler, yatırım, üretim tesisleri, ihracat.
-Hiçbir finansal veri yoksa yalnızca şunu yaz: "Finansal bilgi bulunamadı"
-Tahmin yapma. Her bulunan veri için [Kaynak: domain] ekle.
-
-# E-posta Keşfi
-Yalnızca kaynak metinlerinde açıkça geçen (yazılı olarak bulunan) e-posta adreslerini listele.
-Format: e-posta | Kaynak: URL veya domain
-E-posta bulunamazsa yalnızca şunu yaz: "Doğrulanmış e-posta bulunamadı"
-E-posta formatı tahmin etme.
-
-# Karar Vericiler
-Yalnızca kaynaklarda ismi ve ünvanı açıkça geçen, doğrulanabilir kişileri listele.
-Her kişi için: İsim | Ünvan | Kaynak: URL/domain | LinkedIn (varsa) | Şirket web sitesi (varsa)
-Bulunamazsa yalnızca şunu yaz: "Karar verici bilgisi bulunamadı"
+Yalnızca aşağıdaki tek bölümü Türkçe olarak yaz:
 
 # Fırsat Analizi
-Yalnızca kaynaklarda bulunan somut verileri yorumla (ör: Lean yatırımı, ISO sertifikası, sürdürülebilirlik raporu, yeni fabrika, otomasyon yatırımı, OpEx ekibi, kalite direktörü).
-Bu verilerden satış fırsatı çıkar. Her fırsat için dayandığı kaynağı belirt: [Kaynak: domain]
+Kaynaklarda bulunan somut verileri yorumla (Lean yatırımı, ISO, sürdürülebilirlik, fabrika, otomasyon, OpEx, kalite vb.).
+Her fırsat için kaynak belirt: [Kaynak: URL veya domain]
 Yeterli veri yoksa yalnızca şunu yaz: "Yeterli veri bulunamadığı için fırsat analizi oluşturulamadı."`;
 }
-
-const GEMINI_MODEL = "gemini-3.5-flash";
 
 function extractGeminiErrorInfo(err) {
   const message = err?.message || String(err);
@@ -82,10 +66,10 @@ function extractGeminiErrorInfo(err) {
   return { message, stack, httpStatus, errorBody };
 }
 
-function logGeminiCallFailure(err) {
+function logGeminiCallFailure(err, model) {
   const { message, stack, httpStatus, errorBody } = extractGeminiErrorInfo(err);
 
-  console.error("[analyze-company] Gemini model:", GEMINI_MODEL);
+  console.error("[analyze-company] Gemini model:", model);
   console.error("[analyze-company] Gemini HTTP status:", httpStatus ?? "unknown");
   console.error("[analyze-company] Gemini error message:", message);
   if (errorBody) {
@@ -96,15 +80,77 @@ function logGeminiCallFailure(err) {
   return { message, httpStatus, errorBody };
 }
 
+function isRetryableGeminiOverload(err) {
+  const { message, httpStatus, errorBody } = extractGeminiErrorInfo(err);
+  const combined = `${message} ${errorBody || ""}`.toUpperCase();
+  return (
+    httpStatus === 503 ||
+    combined.includes("UNAVAILABLE") ||
+    combined.includes("HIGH DEMAND") ||
+    combined.includes("RESOURCE_EXHAUSTED")
+  );
+}
+
+function parseOpportunityFromGemini(text) {
+  if (!text) return "";
+  const match = text.match(/#\s*Fırsat Analizi\s*([\s\S]*)/i);
+  if (match) return match[1].trim();
+  return text.trim();
+}
+
+function sleep(ms) {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+async function runGeminiOpportunityAnalysis(geminiApiKey, company, tavilyContextText) {
+  const ai = new GoogleGenAI({ apiKey: geminiApiKey });
+  const prompt = buildGeminiOpportunityPrompt(company, tavilyContextText);
+  let lastError = null;
+
+  for (let i = 0; i < GEMINI_RETRY_PLAN.length; i++) {
+    const { attempt, model, waitAfter503Ms } = GEMINI_RETRY_PLAN[i];
+    console.log("[analyze-company] Gemini retry attempt:", attempt, "model:", model);
+
+    try {
+      const aiRes = await ai.models.generateContent({
+        model,
+        contents: prompt,
+      });
+      const text = aiRes.text?.trim();
+      if (!text) {
+        throw new Error("Gemini returned an empty opportunity analysis");
+      }
+      console.log("[analyze-company] Gemini final status: success, model:", model);
+      return { status: "success", text: parseOpportunityFromGemini(text), model };
+    } catch (err) {
+      lastError = err;
+      logGeminiCallFailure(err, model);
+      const canRetry =
+        isRetryableGeminiOverload(err) && i < GEMINI_RETRY_PLAN.length - 1;
+      if (!canRetry) break;
+      if (waitAfter503Ms > 0) {
+        console.log(
+          "[analyze-company] Gemini retry waiting:",
+          waitAfter503Ms,
+          "ms before next attempt"
+        );
+        await sleep(waitAfter503Ms);
+      }
+    }
+  }
+
+  console.log("[analyze-company] Gemini final status: failed after retries");
+  return { status: "failed", error: lastError };
+}
+
 /**
- * Run Tavily search + Gemini analysis.
- * Returns { status, body } where body is always JSON-serializable.
+ * Run Tavily search (mandatory) + optional Gemini opportunity analysis.
  */
 export async function runCompanyAnalysis({ companyInput, tavilyApiKey }) {
   if (!companyInput || !String(companyInput).trim()) {
     return {
       status: 400,
-      body: { success: false, error: "Company name is required" },
+      body: { success: false, error: "Şirket adı gereklidir." },
     };
   }
 
@@ -115,18 +161,7 @@ export async function runCompanyAnalysis({ companyInput, tavilyApiKey }) {
       body: {
         success: false,
         code: "TAVILY_API_KEY_MISSING",
-        error: "Tavily API key missing",
-      },
-    };
-  }
-
-  const geminiApiKey = process.env.GEMINI_API_KEY;
-  if (!geminiApiKey) {
-    return {
-      status: 500,
-      body: {
-        success: false,
-        error: "Gemini API key is not configured on the server",
+        error: TAVILY_KEY_MESSAGE,
       },
     };
   }
@@ -135,69 +170,62 @@ export async function runCompanyAnalysis({ companyInput, tavilyApiKey }) {
   let research;
 
   try {
-    console.log(`Tavily company research started for: ${company}`);
+    console.log("[analyze-company] Tavily request:", {
+      company,
+      apiKeyProvided: true,
+    });
     research = await fetchCompanyResearch(resolvedTavilyKey, company);
+    console.log("[analyze-company] Tavily response:", {
+      resultCount: research.results.length,
+      sourceCount: research.sources.length,
+    });
   } catch (tavilyErr) {
-    console.error("Tavily research failed:", tavilyErr);
+    console.error("[analyze-company] Tavily request failed:", tavilyErr?.message || tavilyErr);
     return {
       status: 502,
       body: {
         success: false,
         code: "TAVILY_SEARCH_FAILED",
-        error: "Tavily search failed",
+        error: TAVILY_FAIL_MESSAGE,
       },
     };
   }
 
+  const parsed = buildTavilyFindings(company, research.results);
   const tavilyContextText = formatTavilyContext(company, research.results);
-  const userPromptText = buildGeminiPrompt(company, tavilyContextText);
+  const geminiApiKey = process.env.GEMINI_API_KEY;
+  let geminiStatus = "skipped";
 
-  try {
-    const ai = new GoogleGenAI({ apiKey: geminiApiKey });
-    const aiRes = await ai.models.generateContent({
-      model: GEMINI_MODEL,
-      contents: userPromptText,
-    });
+  if (geminiApiKey) {
+    const geminiResult = await runGeminiOpportunityAnalysis(
+      geminiApiKey,
+      company,
+      tavilyContextText
+    );
 
-    const resultText = aiRes.text;
-    if (!resultText) {
-      return {
-        status: 500,
-        body: {
-          success: false,
-          code: "GEMINI_ANALYSIS_FAILED",
-          error: "Gemini analysis failed",
-          sources: research.sources,
-        },
-      };
+    if (geminiResult.status === "success") {
+      parsed.opportunityAnalysis = geminiResult.text;
+      geminiStatus = "success";
+    } else {
+      parsed.opportunityAnalysis = GEMINI_UNAVAILABLE_MESSAGE;
+      geminiStatus = "failed";
     }
-
-    return {
-      status: 200,
-      body: {
-        success: true,
-        rawOutput: resultText,
-        sources: research.sources,
-      },
-    };
-  } catch (geminiErr) {
-    const { message, httpStatus, errorBody } = logGeminiCallFailure(geminiErr);
-    const errStr = message;
-    const isQuota =
-      errStr.includes("429") ||
-      errStr.toLowerCase().includes("quota") ||
-      errStr.includes("RESOURCE_EXHAUSTED") ||
-      httpStatus === 429;
-
-    return {
-      status: isQuota ? 429 : 500,
-      body: {
-        success: false,
-        code: "GEMINI_ANALYSIS_FAILED",
-        isQuotaExhausted: isQuota,
-        error: message,
-        sources: research.sources,
-      },
-    };
+  } else {
+    parsed.opportunityAnalysis = GEMINI_UNAVAILABLE_MESSAGE;
+    geminiStatus = "skipped";
   }
+
+  const rawOutput = buildRawOutputFromParsed(parsed);
+
+  return {
+    status: 200,
+    body: {
+      success: true,
+      sources: research.sources,
+      parsed,
+      rawOutput,
+      geminiStatus,
+      partialGemini: geminiStatus !== "success",
+    },
+  };
 }

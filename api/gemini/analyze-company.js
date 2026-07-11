@@ -26,7 +26,7 @@ export default async function handler(request, response) {
     console.error("analyze-company handler error:", error);
     return response.status(500).json({
       success: false,
-      error: "Gemini analysis failed",
+      error: "Araştırma tamamlanamadı. Lütfen tekrar deneyin.",
     });
   }
 }

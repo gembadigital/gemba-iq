@@ -894,7 +894,7 @@ app.post("/api/gemini/analyze-company", async (req, res) => {
     console.error("Analyze company route error:", error);
     res.status(500).json({
       success: false,
-      error: "Gemini analysis failed",
+      error: "Araştırma tamamlanamadı. Lütfen tekrar deneyin.",
     });
   }
 });

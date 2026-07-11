@@ -40,7 +40,7 @@ export function buildSearchQueries(companyName) {
   );
 }
 
-async function runTavilySearch(apiKey, query, maxResults = 3) {
+async function runTavilySearch(apiKey, query, maxResults = 3, propagateError = false) {
   const resp = await fetch("https://api.tavily.com/search", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
@@ -55,9 +55,12 @@ async function runTavilySearch(apiKey, query, maxResults = 3) {
 
   if (!resp.ok) {
     const errText = await resp.text().catch(() => "");
-    throw new Error(
+    const err = new Error(
       `Tavily API hatası (${resp.status}): ${errText || resp.statusText}`
     );
+    if (propagateError) throw err;
+    console.warn(`Tavily search failed for "${query}":`, err.message);
+    return [];
   }
 
   const data = await resp.json();
@@ -81,15 +84,20 @@ export async function fetchCompanyResearch(apiKey, companyName) {
   const allResults = [];
   const seenUrls = new Set();
 
-  for (let i = 0; i < queries.length; i += batchSize) {
-    const batch = queries.slice(i, i + batchSize);
+  // Primary company search must succeed for Tavily connectivity validation.
+  const primaryResults = await runTavilySearch(apiKey, companyName.trim(), 5, true);
+  for (const item of primaryResults) {
+    const normalized = item.url.toLowerCase().split("#")[0];
+    if (seenUrls.has(normalized)) continue;
+    seenUrls.add(normalized);
+    allResults.push(item);
+  }
+
+  const enrichmentQueries = queries.slice(1);
+  for (let i = 0; i < enrichmentQueries.length; i += batchSize) {
+    const batch = enrichmentQueries.slice(i, i + batchSize);
     const batchResults = await Promise.all(
-      batch.map((q) =>
-        runTavilySearch(apiKey, q).catch((err) => {
-          console.warn(`Tavily search failed for "${q}":`, err.message);
-          return [];
-        })
-      )
+      batch.map((q) => runTavilySearch(apiKey, q))
     );
 
     for (const results of batchResults) {

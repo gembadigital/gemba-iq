@@ -61,33 +61,61 @@ interface AISalesAssistantProps {
   onOpenSettings?: () => void;
 }
 
-const NOT_FOUND_SUMMARY = "Bilgi bulunamadı";
-const NOT_FOUND_FINANCIAL = "Finansal bilgi bulunamadı";
-const NOT_FOUND_EMAIL = "Doğrulanmış e-posta bulunamadı";
-const NOT_FOUND_DECISION_MAKERS = "Karar verici bilgisi bulunamadı";
+const NOT_FOUND_SUMMARY = "Doğrulanabilir bilgi bulunamadı.";
+const NOT_FOUND_FINANCIAL = "Finansal veri bulunamadı.";
+const NOT_FOUND_EMAIL = "E-posta adresi tespit edilemedi.";
+const NOT_FOUND_DECISION_MAKERS = "Karar verici bilgisi bulunamadı.";
 const NOT_FOUND_OPPORTUNITY =
   "Yeterli veri bulunamadığı için fırsat analizi oluşturulamadı.";
+const TAVILY_KEY_MESSAGE =
+  "Tavily API anahtarı bulunamadı. Lütfen Sistem Ayarları > API Anahtarları bölümünden Tavily API Key giriniz.";
 
-function getTavilyApiKey(): string {
-  return localStorage.getItem("tavily_api_key")?.trim() || "";
+function getBusinessErrorMessage(
+  data?: Record<string, unknown>,
+  fallback = "Araştırma tamamlanamadı. Lütfen tekrar deneyin."
+): string {
+  if (data?.code === "TAVILY_API_KEY_MISSING") return TAVILY_KEY_MESSAGE;
+  if (data?.code === "TAVILY_SEARCH_FAILED") {
+    return "İnternet araştırması gerçekleştirilemedi.";
+  }
+  if (typeof data?.error === "string" && data.error.trim()) {
+    return data.error;
+  }
+  return fallback;
+}
+
+function toUserFacingError(err: any): string {
+  if (err?.data && typeof err.data === "object") {
+    return getBusinessErrorMessage(err.data as Record<string, unknown>);
+  }
+  const msg = String(err?.message || "");
+  if (
+    msg.includes("JSON değil") ||
+    msg.includes("Unexpected token") ||
+    msg.includes("stack") ||
+    msg.length > 220
+  ) {
+    return "Araştırma tamamlanamadı. Lütfen tekrar deneyin.";
+  }
+  return msg || "Araştırma tamamlanamadı. Lütfen tekrar deneyin.";
 }
 
 async function parseJsonApiResponse(resp: Response): Promise<Record<string, unknown>> {
   const contentType = resp.headers.get("content-type") || "";
   if (!contentType.includes("application/json")) {
-    const text = await resp.text();
-    throw new Error(
-      `API yanıtı JSON değil (${resp.status}): ${text.slice(0, 120)}`
-    );
+    await resp.text();
+    throw new Error("Sunucu yanıtı işlenemedi. Lütfen tekrar deneyin.");
   }
   const data = await resp.json();
   if (!resp.ok) {
-    const message =
-      (typeof data.error === "string" && data.error) ||
-      `İstek başarısız (${resp.status})`;
+    const message = getBusinessErrorMessage(data as Record<string, unknown>);
     throw Object.assign(new Error(message), { data, status: resp.status });
   }
   return data;
+}
+
+function getTavilyApiKey(): string {
+  return localStorage.getItem("tavily_api_key")?.trim() || "";
 }
 
 export default function AISalesAssistant({ onOpenSettings }: AISalesAssistantProps) {
@@ -294,27 +322,32 @@ export default function AISalesAssistant({ onOpenSettings }: AISalesAssistantPro
           setHasTavilyKey(false);
           return;
         }
-        if (parseErr?.status === 429 || parseErr?.data?.isQuotaExhausted) {
-          throw new Error(
-            parseErr.message || "Gemini API kullanım kotası aşıldı."
-          );
-        }
         throw parseErr;
       }
 
-      if (!data.success || !data.rawOutput) {
+      if (!data.success || !data.parsed) {
         throw new Error(
-          (typeof data.error === "string" && data.error) || "Analiz tamamlanamadı."
+          getBusinessErrorMessage(data as Record<string, unknown>)
         );
       }
 
-      const parsedData = parseScreenerOutput(String(data.rawOutput));
+      const parsedData = data.parsed as SavedAnalysis["parsed"];
+      const rawOutput =
+        typeof data.rawOutput === "string"
+          ? data.rawOutput
+          : [
+              `# Şirket Özeti\n${parsedData.companySummary}`,
+              `# Finansal Veriler\n${parsedData.financialData}`,
+              `# E-posta Keşfi\n${parsedData.emailDiscovery}`,
+              `# Karar Vericiler\n${parsedData.decisionMakers}`,
+              `# Fırsat Analizi\n${parsedData.opportunityAnalysis}`,
+            ].join("\n\n");
 
       const newAnalysis: SavedAnalysis = {
         id: "analysis_" + Date.now() + "_" + Math.floor(Math.random() * 1000000),
         timestamp: new Date().toLocaleString("tr-TR"),
         companyInput: companyInput.trim(),
-        rawOutput: String(data.rawOutput),
+        rawOutput,
         sources: (data.sources as ResearchSource[]) || [],
         parsed: parsedData,
       };
@@ -323,10 +356,17 @@ export default function AISalesAssistant({ onOpenSettings }: AISalesAssistantPro
       saveAnalysesList(updatedList);
       setActiveAnalysis(newAnalysis);
       setCompanyInput("");
-      showToast("Şirket araştırması başarıyla tamamlandı!", "success");
+      if (data.partialGemini) {
+        showToast(
+          "İnternet araştırması tamamlandı. AI yorumu şu anda oluşturulamadı.",
+          "success"
+        );
+      } else {
+        showToast("Şirket araştırması başarıyla tamamlandı!", "success");
+      }
     } catch (err: any) {
       console.error("Search company failed:", err);
-      setError(err.message || "Analiz tamamlanamadı.");
+      setError(toUserFacingError(err));
     } finally {
       setLoading(false);
     }
@@ -491,7 +531,7 @@ export default function AISalesAssistant({ onOpenSettings }: AISalesAssistantPro
 
     const verifiedEmails = extractVerifiedEmails(activeAnalysis.parsed.emailDiscovery);
     if (!verifiedEmails.length) {
-      showToast("Doğrulanmış e-posta bulunamadı. Lead eklenemedi.", "error");
+      showToast("E-posta adresi tespit edilemedi. Lead eklenemedi.", "error");
       return;
     }
 
@@ -593,7 +633,7 @@ export default function AISalesAssistant({ onOpenSettings }: AISalesAssistantPro
           : activeAnalysis.parsed.companySummary.split("\n").find((l) => /lokasyon|konum|location|fabrika/i.test(l))?.substring(0, 80) || "Bilgi bulunamadı",
         contactName: dm?.firstName || "—",
         contactSurname: dm?.lastName || "—",
-        contactEmail: verifiedEmails[0] || "Doğrulanmış e-posta bulunamadı",
+        contactEmail: verifiedEmails[0] || "E-posta adresi tespit edilemedi.",
         department: dm?.title || "Bilgi bulunamadı",
         leadStatus: "New",
         leadSegment: "Warm Lead",
@@ -624,10 +664,10 @@ export default function AISalesAssistant({ onOpenSettings }: AISalesAssistantPro
         <ShieldAlert className="w-7 h-7" />
       </div>
       <h4 className="text-base font-bold text-slate-800 dark:text-slate-100 mb-3">
-        Tavily API bağlantısı bulunamadı
+        Tavily API anahtarı bulunamadı
       </h4>
       <p className="text-xs text-slate-500 dark:text-slate-400 leading-relaxed mb-6">
-        Gerçek şirket araştırması yapabilmek için Tavily API anahtarınızı Sistem Ayarları &gt; API Bağlantıları bölümüne giriniz.
+        {TAVILY_KEY_MESSAGE}
       </p>
       {onOpenSettings && (
         <button
@@ -678,7 +718,7 @@ export default function AISalesAssistant({ onOpenSettings }: AISalesAssistantPro
 
           {!hasTavilyKey && (
             <div className="mb-4 p-3 rounded-lg border border-amber-200 dark:border-amber-900/40 bg-amber-50/50 dark:bg-amber-950/10 text-[10px] text-amber-700 dark:text-amber-400">
-              Tavily API anahtarı gerekli. Araştırma başlatılamaz.
+              {TAVILY_KEY_MESSAGE}
             </div>
           )}
 
