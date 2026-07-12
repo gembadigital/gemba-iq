@@ -147,7 +147,7 @@ export default function AdministrationCenter({ onClose, initialSubTab }: Adminis
     return result;
   };
   const { user } = useAuth();
-  const { actorName, actorEmail, companyName } = useOrganization();
+  const { actorName, actorEmail, companyName, isAppAdmin } = useOrganization();
   const adminDisplayName = actorName;
   const adminEmail = actorEmail;
   const adminInitials = getDisplayInitials(actorName, actorEmail);
@@ -823,6 +823,21 @@ export default function AdministrationCenter({ onClose, initialSubTab }: Adminis
       addAuditLog(actorName, "Sistem Sağlığı Kontrolü", "Tüm sistem servisleri ve harici API'ler başarıyla test edildi.", "Sistem Sağlığı");
     }, 800);
   };
+
+  if (!isAppAdmin) {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-[320px] p-8 text-center space-y-3">
+        <Lock className="w-10 h-10 text-rose-500" />
+        <h2 className="text-lg font-bold text-slate-800 dark:text-zinc-200">{L("Erişim Reddedildi", "Access Denied")}</h2>
+        <p className="text-sm text-slate-500 dark:text-zinc-400 max-w-md">
+          {L(
+            "Bu sayfaya erişmek için yönetici yetkisine sahip olmanız gerekir.",
+            "You need administrator privileges to access this page."
+          )}
+        </p>
+      </div>
+    );
+  }
 
   return (
     <div className="w-full text-left space-y-6">

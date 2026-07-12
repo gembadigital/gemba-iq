@@ -11,8 +11,42 @@ import ForgotPasswordPage from "./components/auth/ForgotPasswordPage";
 import ResetPasswordPage from "./components/auth/ResetPasswordPage";
 import JoinPage from "./components/auth/JoinPage";
 import WelcomeWizard from "./components/onboarding/WelcomeWizard";
+import AdministrationPage from "./components/auth/AdministrationPage";
 
 const App = lazy(() => import("./App"));
+
+function AdministrationRoute() {
+  const { user } = useAuth();
+  const { needsOnboarding, loading: orgLoading, isAppAdmin } = useOrganization();
+  const pendingInvitationToken = getPendingInvitationToken();
+
+  if (!user) {
+    return <Navigate to="/login" replace />;
+  }
+
+  if (orgLoading) {
+    return <AuthLoadingScreen />;
+  }
+
+  if (needsOnboarding) {
+    if (pendingInvitationToken) {
+      return <Navigate to={`/join?token=${encodeURIComponent(pendingInvitationToken)}`} replace />;
+    }
+    return <WelcomeWizard />;
+  }
+
+  if (!isAppAdmin) {
+    return <Navigate to="/" replace />;
+  }
+
+  return (
+    <CrmProvider>
+      <Suspense fallback={<AuthLoadingScreen />}>
+        <AdministrationPage />
+      </Suspense>
+    </CrmProvider>
+  );
+}
 
 function ProtectedApp() {
   const { user } = useAuth();
@@ -59,6 +93,7 @@ function AppRoutes() {
         <Route path="/register" element={user ? <Navigate to="/" replace /> : <RegisterPage />} />
         <Route path="/forgot-password" element={user ? <Navigate to="/" replace /> : <ForgotPasswordPage />} />
         <Route path="/reset-password" element={user ? <Navigate to="/" replace /> : <ResetPasswordPage />} />
+        <Route path="/administration" element={<AdministrationRoute />} />
         <Route path="/*" element={<ProtectedApp />} />
       </Routes>
     </OrganizationProvider>
