@@ -929,7 +929,7 @@ export default function AdministrationCenter({ onClose, initialSubTab }: Adminis
             }`}
           >
             <Mail className="w-4 h-4 text-slate-400" />
-            <span>{L("Bağlı E-posta Kutuları", "Connected Mailboxes")}</span>
+            <span>{L("Paylaşımlı E-posta Kutuları", "Shared Mailboxes")}</span>
           </button>
 
           <button
@@ -1322,14 +1322,20 @@ export default function AdministrationCenter({ onClose, initialSubTab }: Adminis
             </div>
           )}
 
-          {/* ==================== SECTION 3: CONNECTED MAILBOXES ==================== */}
+          {/* ==================== SECTION 3: SHARED MAILBOXES (FUTURE) ==================== */}
           {activeSubTab === "email" && (
             <div className="space-y-6 animate-in fade-in duration-100">
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-100 dark:border-zinc-800 pb-4 text-left">
                 <div>
                   <h3 className="text-lg font-bold text-slate-800 dark:text-zinc-150">
-                    {L("3. Çoklu E-postalar ve Bağlı Klasör Yönetimi", "3. Multiple Emails & Connected Folder Management")}
+                    {L("3. Paylaşımlı E-posta Kutuları (Gelecek)", "3. Shared Mailboxes (Future)")}
                   </h3>
+                  <p className="text-xs text-slate-500 dark:text-zinc-400 mt-1">
+                    {L(
+                      "Kişisel Microsoft OAuth bağlantıları My Account alanındadır. Bu bölüm ileride info@, sales@ ve support@ gibi paylaşımlı kutular için kullanılacaktır.",
+                      "Personal Microsoft OAuth connections live in My Account. This section is reserved for future shared mailboxes such as info@, sales@, and support@."
+                    )}
+                  </p>
                 </div>
                 <button
                   type="button"
@@ -1337,7 +1343,7 @@ export default function AdministrationCenter({ onClose, initialSubTab }: Adminis
                   className="p-2.5 px-4 text-xs font-bold text-white bg-indigo-650 rounded-xl hover:bg-indigo-600 transition-all flex items-center gap-1.5 cursor-pointer shadow-xs"
                 >
                   <Plus className="w-4 h-4" />
-                  {L("Exchange / OAuth Girişi Yap", "Connect Exchange / OAuth")}
+                  {L("Paylaşımlı Kutu Taslağı Ekle", "Add Shared Mailbox Draft")}
                 </button>
               </div>
 
@@ -1347,7 +1353,7 @@ export default function AdministrationCenter({ onClose, initialSubTab }: Adminis
                   <div className="space-y-1">
                     <h4 className="text-xs font-black text-rose-700 dark:text-rose-450 uppercase tracking-wider font-mono flex items-center gap-1.5">
                       <AlertTriangle className="w-4 h-4 text-rose-600 stroke-[2.5]" />
-                      <span>{L("⚠️ E-Posta Entegrasyon ve Token Hata Simülatörü", "⚠️ Email Integration & Token Error Simulator")}</span>
+                      <span>{L("⚠️ Paylaşımlı Kutu Mimari Hazırlığı", "⚠️ Shared Mailbox Architecture Preparation")}</span>
                     </h4>
                   </div>
                   <label className="relative inline-flex items-center cursor-pointer select-none">
@@ -1377,12 +1383,12 @@ export default function AdministrationCenter({ onClose, initialSubTab }: Adminis
               {isConnectMailboxOpen && (
                 <form onSubmit={handleConnectNewMailbox} className="p-5 rounded-2xl border border-indigo-200 bg-indigo-50/15 dark:border-zinc-800 dark:bg-black/20 space-y-4 animate-in slide-in-from-top-2 duration-150">
                   <span className="text-[10px] font-bold text-indigo-750 dark:text-indigo-400 font-mono uppercase block">
-                    {L("YENİ POSTA KUTUSU ETKİLEŞİMİ", "NEW MAILBOX CONNECTION")}
+                    {L("YENİ PAYLAŞIMLI POSTA KUTUSU TASLAĞI", "NEW SHARED MAILBOX DRAFT")}
                   </span>
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                     <input
                       type="text"
-                      placeholder="Hesap Adı (Örn: Gemba Destek Masası)"
+                      placeholder={L("Kutu adı (Örn: Gemba Destek Masası)", "Mailbox name (e.g. Gemba Support Desk)")}
                       required
                       value={newMailbox.name}
                       onChange={(e) => setNewMailbox({ ...newMailbox, name: e.target.value })}
@@ -1415,12 +1421,14 @@ export default function AdministrationCenter({ onClose, initialSubTab }: Adminis
                   </div>
                   <div className="flex justify-end gap-2 text-xs">
                     <button type="button" onClick={() => setIsConnectMailboxOpen(false)} className="p-2 px-3.5 bg-slate-100 dark:bg-zinc-800 rounded">İptal</button>
-                    <button type="submit" className="p-2 px-4 bg-indigo-650 text-white font-bold rounded">Microsoft OAuth Yetkisi Al</button>
+                    <button type="submit" className="p-2 px-4 bg-indigo-650 text-white font-bold rounded">
+                      {L("Taslak Olarak Kaydet", "Save Draft")}
+                    </button>
                   </div>
                 </form>
               )}
 
-              {/* Connected Mailboxes Display Grid */}
+              {/* Shared mailbox drafts display grid */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {mailboxes.map(box => (
                   <div key={box.id} className="p-4 rounded-xl border border-slate-150 bg-slate-50/50 dark:border-zinc-800 dark:bg-black/10 space-y-3 relative overflow-hidden">
@@ -1457,12 +1465,12 @@ export default function AdministrationCenter({ onClose, initialSubTab }: Adminis
               {/* Integration check info */}
               <div className="p-4 rounded-xl border border-dashed border-indigo-200 bg-indigo-50/10 dark:border-zinc-800/80 dark:bg-zinc-950/20 text-xs text-slate-650 leading-relaxed space-y-1.5 dark:text-zinc-300">
                 <span className="font-bold text-slate-800 dark:text-zinc-200 block uppercase font-mono tracking-wider text-[10px]">
-                  {L("⚠️ MICROSOFT GRAPH API PAYLAŞIM KURALLARI", "⚠️ MICROSOFT GRAPH API SHARING RULES")}
+                  {L("⚠️ PAYLAŞIMLI KUTU GÖNDERİMİ BUGÜN AKTİF DEĞİL", "⚠️ SHARED MAILBOX SENDING IS NOT ACTIVE TODAY")}
                 </span>
                 <p>
                   {L(
-                    "Sorumlu e-postalarında ortak (shared) gelen kutusu izin modeli aktiftir. ADMIN tarafından yetkilendirilen operasyon kullanıcıları aynı e-posta üzerinden veri okuyabilir ve kampanya gönderebilir.",
-                    "Shared inbox permission model is active for responsible emails. Operational users authorized by ADMIN can read data and send campaigns from the same email."
+                    "Paylaşımlı kutu mimarisi sadece gelecek kullanım için hazırlanmıştır. Bugünkü gönderim akışı her zaman kullanıcının My Account alanındaki varsayılan kişisel kutusunu kullanır.",
+                    "Shared mailbox architecture is prepared only for future use. Today's sending flow always uses the current user's default personal mailbox from My Account."
                   )}
                 </p>
               </div>

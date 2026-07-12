@@ -1,5 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useLanguage } from "../lib/LanguageContext";
+import { useAuth } from "../lib/AuthContext";
+import { loadUserMailboxSession } from "../lib/mailboxConnections";
 import {
   Mail,
   FolderOpen,
@@ -78,6 +80,7 @@ export default function EmailLeadDiscoveryView({
   onAddTargetAccount
 }: EmailLeadDiscoveryViewProps) {
   const { t } = useLanguage();
+  const { user } = useAuth();
   
   // Tab/State states
   const [connections, setConnections] = useState<MailboxConnection[]>([]);
@@ -287,9 +290,9 @@ export default function EmailLeadDiscoveryView({
   useEffect(() => {
     let currentSession: MailboxSession | null = null;
     try {
-      const saved = localStorage.getItem("m365_mailbox_session");
+      const saved = loadUserMailboxSession(user?.id);
       if (saved) {
-        currentSession = JSON.parse(saved) as MailboxSession;
+        currentSession = saved;
         setSession(currentSession);
       }
     } catch (e) {
@@ -368,7 +371,7 @@ export default function EmailLeadDiscoveryView({
       setSelectedMailboxIds(["conn-sandbox-1", "conn-sandbox-2"]);
       seedDiscoveredData();
     }
-  }, []);
+  }, [user?.id]);
 
   // Action: Add Mailbox Connection
   const handleAddMailbox = (e: React.FormEvent) => {
