@@ -726,12 +726,15 @@ export default function App() {
       >
         <div className={`flex min-h-0 flex-1 flex-col overflow-hidden ${sidebarCollapsed ? "py-2 px-0" : "py-[12px] px-0"}`}>
           {/* Main Launcher App Branding Header */}
-          <div className={`flex pb-[12px] mb-[12px] select-none border-b ${isNotionMode ? "border-[#1f1f1f]/10 dark:border-white/10" : "border-[#EDEBE9] dark:border-[#323130]"} ${sidebarCollapsed ? "justify-center items-center px-2" : "items-center justify-start gap-3 px-6"}`}>
+          <a
+            href="https://gemba-iq.vercel.app/"
+            className={`flex pb-[12px] mb-[12px] select-none border-b no-underline ${isNotionMode ? "border-[#1f1f1f]/10 dark:border-white/10" : "border-[#EDEBE9] dark:border-[#323130]"} ${sidebarCollapsed ? "justify-center items-center px-2" : "items-center justify-start gap-3 px-6"}`}
+          >
             {isNotionMode ? (
               <span className="text-2xl" role="img" aria-label="Notion icon">🧠</span>
             ) : (
               <img
-                src="/logos/GIQ.png"
+                src="/logos/Giqlogo.png"
                 alt="Gemba IQ"
                 className="h-[40px] w-auto object-contain shrink-0"
               />
@@ -741,7 +744,7 @@ export default function App() {
                 GEMBA IQ
               </h2>
             )}
-          </div>
+          </a>
 
           {/* Navigation Action Buttons list */}
           <nav className="flex min-h-0 flex-1 flex-col gap-[20px] overflow-x-hidden overflow-y-auto">

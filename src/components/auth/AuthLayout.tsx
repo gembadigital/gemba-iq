@@ -9,7 +9,7 @@ interface AuthLayoutProps {
   logoSrc?: string;
 }
 
-export default function AuthLayout({ title, subtitle, children, footer, logoSrc = "/logos/GIQ.png" }: AuthLayoutProps) {
+export default function AuthLayout({ title, subtitle, children, footer, logoSrc = "/logos/Giqlogo.png" }: AuthLayoutProps) {
   return (
     <div className="min-h-screen flex items-center justify-center bg-[#FAFAFA] dark:bg-[#09090b] px-4 py-10">
       <div className="w-full max-w-md">
