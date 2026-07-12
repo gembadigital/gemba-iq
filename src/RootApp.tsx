@@ -15,10 +15,21 @@ import AdministrationPage from "./components/auth/AdministrationPage";
 
 const App = lazy(() => import("./App"));
 
+function getUserInvitationToken(user: { user_metadata?: Record<string, unknown> } | null): string | null {
+  const token = user?.user_metadata?.invitation_token;
+  return typeof token === "string" && token.trim() ? token.trim() : null;
+}
+
+function getRouteInvitationToken(search: string, user: { user_metadata?: Record<string, unknown> } | null): string | null {
+  const routeToken = new URLSearchParams(search).get("token");
+  return routeToken || getPendingInvitationToken() || getUserInvitationToken(user);
+}
+
 function AdministrationRoute() {
   const { user } = useAuth();
   const { needsOnboarding, loading: orgLoading, isAdmin } = useOrganization();
-  const pendingInvitationToken = getPendingInvitationToken();
+  const location = useLocation();
+  const pendingInvitationToken = getRouteInvitationToken(location.search, user);
 
   if (!user) {
     return <Navigate to="/login" replace />;
@@ -52,7 +63,7 @@ function ProtectedApp() {
   const { user } = useAuth();
   const { needsOnboarding, loading: orgLoading } = useOrganization();
   const location = useLocation();
-  const pendingInvitationToken = getPendingInvitationToken();
+  const pendingInvitationToken = getRouteInvitationToken(location.search, user);
 
   if (!user) {
     return <Navigate to="/login" replace state={{ from: location }} />;
@@ -80,6 +91,9 @@ function ProtectedApp() {
 
 function AppRoutes() {
   const { user, loading } = useAuth();
+  const location = useLocation();
+  const pendingInvitationToken = getRouteInvitationToken(location.search, user);
+  const authenticatedRedirect = pendingInvitationToken ? `/join?token=${encodeURIComponent(pendingInvitationToken)}` : "/";
 
   if (loading) {
     return <AuthLoadingScreen />;
@@ -89,8 +103,8 @@ function AppRoutes() {
     <OrganizationProvider>
       <Routes>
         <Route path="/join" element={<JoinPage />} />
-        <Route path="/login" element={user ? <Navigate to="/" replace /> : <LoginPage />} />
-        <Route path="/register" element={user ? <Navigate to="/" replace /> : <RegisterPage />} />
+        <Route path="/login" element={user ? <Navigate to={authenticatedRedirect} replace /> : <LoginPage />} />
+        <Route path="/register" element={user ? <Navigate to={authenticatedRedirect} replace /> : <RegisterPage />} />
         <Route path="/forgot-password" element={user ? <Navigate to="/" replace /> : <ForgotPasswordPage />} />
         <Route path="/reset-password" element={user ? <Navigate to="/" replace /> : <ResetPasswordPage />} />
         <Route path="/administration/*" element={<AdministrationRoute />} />

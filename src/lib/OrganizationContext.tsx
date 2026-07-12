@@ -42,6 +42,11 @@ const OrganizationContext = createContext<OrganizationContextValue | undefined>(
 
 const ORG_BOOTSTRAP_TIMEOUT_MS = 10_000;
 
+function getUserInvitationToken(user: { user_metadata?: Record<string, unknown> } | null): string | null {
+  const token = user?.user_metadata?.invitation_token;
+  return typeof token === "string" && token.trim() ? token.trim() : null;
+}
+
 function withTimeout<T>(promise: Promise<T>, ms: number, message: string): Promise<T> {
   return new Promise<T>((resolve, reject) => {
     const timer = window.setTimeout(() => reject(new Error(message)), ms);
@@ -120,7 +125,7 @@ export function OrganizationProvider({ children }: { children: React.ReactNode }
       );
       if (seq !== loadSeq.current) return;
 
-      const pendingToken = getPendingInvitationToken();
+      const pendingToken = getPendingInvitationToken() || getUserInvitationToken(user);
 
       if (!bootstrap.membership && pendingToken) {
         try {
@@ -184,7 +189,19 @@ export function OrganizationProvider({ children }: { children: React.ReactNode }
     async (data: WelcomeWizardData) => {
       setError(null);
       try {
-        await completeWelcomeWizard(data);
+        const pendingToken = getPendingInvitationToken() || getUserInvitationToken(user);
+        if (pendingToken) {
+          await acceptOrganizationInvitation(pendingToken, {
+            fullName: data.fullName,
+            jobTitle: data.jobTitle,
+            phone: data.phone,
+            country: data.country,
+            language: data.language,
+          });
+          clearPendingInvitationToken();
+        } else {
+          await completeWelcomeWizard(data);
+        }
         await loadOrganization();
         return { error: null };
       } catch (err) {
@@ -193,7 +210,7 @@ export function OrganizationProvider({ children }: { children: React.ReactNode }
         return { error: message };
       }
     },
-    [loadOrganization]
+    [loadOrganization, user]
   );
 
   const value = useMemo<OrganizationContextValue>(() => {
@@ -206,16 +223,19 @@ export function OrganizationProvider({ children }: { children: React.ReactNode }
     const actorEmail = user?.email ?? "";
     const companyName = organization?.name ?? "Organization";
     const memberRole = membership?.role ?? null;
+    const appRole = getAppRole(memberRole);
+    const isAdmin = isAdminRole(memberRole);
+    const organizationId = organization?.id ?? null;
     const needsOnboarding = !!user && !loading && checkNeedsOnboarding({ profile, organization, membership });
 
     return {
       profile,
       organization,
       membership,
-      organizationId: organization?.id ?? null,
+      organizationId,
       memberRole,
-      appRole: getAppRole(memberRole),
-      isAdmin: isAdminRole(memberRole),
+      appRole,
+      isAdmin,
       canInviteUsers: canInviteUsers(memberRole),
       loading: authLoading || loading,
       needsOnboarding,
