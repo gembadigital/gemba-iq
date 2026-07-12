@@ -32,7 +32,7 @@ create table if not exists public.organization_members (
   id uuid primary key default gen_random_uuid(),
   organization_id uuid not null references public.organizations (id) on delete cascade,
   user_id uuid not null references auth.users (id) on delete cascade,
-  role text not null default 'owner',
+  role text not null default 'ADMIN',
   created_at timestamptz not null default now(),
   unique (organization_id, user_id)
 );
@@ -84,10 +84,10 @@ as $$
 $$;
 
 -- ---------------------------------------------------------------------------
--- Onboarding RPC: create org + profile + owner membership
+-- Onboarding RPC: create org + profile + ADMIN membership
 -- ---------------------------------------------------------------------------
 
-create or replace function public.create_organization_with_owner(
+create or replace function public.create_organization_with_admin(
   p_full_name text,
   p_company_name text,
   p_job_title text,
@@ -145,13 +145,13 @@ begin
     updated_at = now();
 
   insert into public.organization_members (organization_id, user_id, role)
-  values (v_org_id, v_user_id, 'owner');
+  values (v_org_id, v_user_id, 'ADMIN');
 
   return v_org_id;
 end;
 $$;
 
-grant execute on function public.create_organization_with_owner(text, text, text, text, text, text)
+grant execute on function public.create_organization_with_admin(text, text, text, text, text, text)
   to authenticated;
 
 -- ---------------------------------------------------------------------------

@@ -17,7 +17,7 @@ const App = lazy(() => import("./App"));
 
 function AdministrationRoute() {
   const { user } = useAuth();
-  const { needsOnboarding, loading: orgLoading, isAppAdmin } = useOrganization();
+  const { needsOnboarding, loading: orgLoading, isAdmin } = useOrganization();
   const pendingInvitationToken = getPendingInvitationToken();
 
   if (!user) {
@@ -35,7 +35,7 @@ function AdministrationRoute() {
     return <WelcomeWizard />;
   }
 
-  if (!isAppAdmin) {
+  if (!isAdmin) {
     return <Navigate to="/" replace />;
   }
 
@@ -93,7 +93,15 @@ function AppRoutes() {
         <Route path="/register" element={user ? <Navigate to="/" replace /> : <RegisterPage />} />
         <Route path="/forgot-password" element={user ? <Navigate to="/" replace /> : <ForgotPasswordPage />} />
         <Route path="/reset-password" element={user ? <Navigate to="/" replace /> : <ResetPasswordPage />} />
-        <Route path="/administration" element={<AdministrationRoute />} />
+        <Route path="/administration/*" element={<AdministrationRoute />} />
+        <Route path="/admin/*" element={<AdministrationRoute />} />
+        <Route path="/settings/*" element={<AdministrationRoute />} />
+        <Route path="/licenses/*" element={<AdministrationRoute />} />
+        <Route path="/license/*" element={<AdministrationRoute />} />
+        <Route path="/system/*" element={<AdministrationRoute />} />
+        <Route path="/security/*" element={<AdministrationRoute />} />
+        <Route path="/connections/*" element={<AdministrationRoute />} />
+        <Route path="/connection/*" element={<AdministrationRoute />} />
         <Route path="/*" element={<ProtectedApp />} />
       </Routes>
     </OrganizationProvider>

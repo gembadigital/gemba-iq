@@ -123,7 +123,7 @@ export default function AdministrationCenter({ onClose, initialSubTab }: Adminis
       Edit: ["Düzenle", "Edit"],
       Delete: ["Sil", "Delete"],
       Export: ["Dışa Aktar", "Export"],
-      Admin: ["Yönetici", "Admin"],
+      Manage: ["Yönet", "Manage"],
     };
     const pair = labels[perm];
     return pair ? L(pair[0], pair[1]) : perm;
@@ -147,7 +147,7 @@ export default function AdministrationCenter({ onClose, initialSubTab }: Adminis
     return result;
   };
   const { user } = useAuth();
-  const { actorName, actorEmail, companyName, isAppAdmin } = useOrganization();
+  const { actorName, actorEmail, companyName, isAdmin } = useOrganization();
   const adminDisplayName = actorName;
   const adminEmail = actorEmail;
   const adminInitials = getDisplayInitials(actorName, actorEmail);
@@ -159,7 +159,6 @@ export default function AdministrationCenter({ onClose, initialSubTab }: Adminis
     }
   }, [initialSubTab]);
 
-  const [isAdmin, setIsAdmin] = useState<boolean>(true); // Verification indicator
   const [showSavedMsg, setShowSavedMsg] = useState<boolean>(false);
 
   // 1. Organization Settings
@@ -215,48 +214,41 @@ export default function AdministrationCenter({ onClose, initialSubTab }: Adminis
   }, [simulateEmailError]);
 
   // 2.2 Permissions Matrix state
-  const [pMatrix, setPMatrix] = useState<{ [role: string]: { [menu: string]: string[] } }>(() => {
-    const saved = localStorage.getItem("admin_perms_matrix");
-    return saved ? JSON.parse(saved) : {
-      "Super Admin": {
-        "Companies": ["View", "Create", "Edit", "Delete", "Export", "Admin"],
-        "Leads": ["View", "Create", "Edit", "Delete", "Export", "Admin"],
-        "Opportunities": ["View", "Create", "Edit", "Delete", "Export", "Admin"],
-        "Proposals": ["View", "Create", "Edit", "Delete", "Export", "Admin"],
-        "Campaigns": ["View", "Create", "Edit", "Delete", "Export", "Admin"],
-        "Activity Reports": ["View", "Create", "Edit", "Delete", "Export", "Admin"],
-        "Revenue Reports": ["View", "Create", "Edit", "Delete", "Export", "Admin"],
-        "Administration": ["View", "Create", "Edit", "Delete", "Export", "Admin"],
-        "AI Assistant": ["View", "Create", "Edit", "Delete", "Export", "Admin"],
-        "Skill Library": ["View", "Create", "Edit", "Delete", "Export", "Admin"],
-        "Email Management": ["View", "Create", "Edit", "Delete", "Export", "Admin"]
-      },
-      "Consultant": {
-        "Companies": ["View", "Create", "Edit"],
-        "Leads": ["View", "Create", "Edit"],
-        "Opportunities": ["View", "Create", "Edit"],
-        "Proposals": ["View", "Create"],
-        "Campaigns": ["View"],
-        "Activity Reports": ["View", "Create", "Edit"],
-        "Revenue Reports": ["View"],
-        "Administration": [],
-        "AI Assistant": ["View", "Create"],
-        "Skill Library": ["View", "Create", "Edit"],
-        "Email Management": ["View"]
-      }
-    };
-  });
-
-  useEffect(() => {
-    localStorage.setItem("admin_perms_matrix", JSON.stringify(pMatrix));
-  }, [pMatrix]);
+  const [pMatrix, setPMatrix] = useState<{ [role: string]: { [menu: string]: string[] } }>(() => ({
+    ADMIN: {
+      "Companies": ["View", "Create", "Edit", "Delete", "Export", "Manage"],
+      "Leads": ["View", "Create", "Edit", "Delete", "Export", "Manage"],
+      "Opportunities": ["View", "Create", "Edit", "Delete", "Export", "Manage"],
+      "Proposals": ["View", "Create", "Edit", "Delete", "Export", "Manage"],
+      "Campaigns": ["View", "Create", "Edit", "Delete", "Export", "Manage"],
+      "Activity Reports": ["View", "Create", "Edit", "Delete", "Export", "Manage"],
+      "Revenue Reports": ["View", "Create", "Edit", "Delete", "Export", "Manage"],
+      "Administration": ["View", "Create", "Edit", "Delete", "Export", "Manage"],
+      "AI Assistant": ["View", "Create", "Edit", "Delete", "Export", "Manage"],
+      "Skill Library": ["View", "Create", "Edit", "Delete", "Export", "Manage"],
+      "Email Management": ["View", "Create", "Edit", "Delete", "Export", "Manage"]
+    },
+    USER: {
+      "Companies": ["View", "Create", "Edit"],
+      "Leads": ["View", "Create", "Edit"],
+      "Opportunities": ["View", "Create", "Edit"],
+      "Proposals": ["View", "Create"],
+      "Campaigns": ["View"],
+      "Activity Reports": ["View", "Create", "Edit"],
+      "Revenue Reports": ["View"],
+      "Administration": [],
+      "AI Assistant": ["View", "Create"],
+      "Skill Library": ["View", "Create", "Edit"],
+      "Email Management": ["View"]
+    }
+  }));
 
   const menusList = [
     "Companies", "Leads", "Opportunities", "Proposals", "Campaigns",
     "Activity Reports", "Revenue Reports", "Administration", "AI Assistant", "Skill Library", "Email Management"
   ];
-  const permsList = ["View", "Create", "Edit", "Delete", "Export", "Admin"];
-  const [selectedRoleForMatrix, setSelectedRoleForMatrix] = useState<string>("Consultant");
+  const permsList = ["View", "Create", "Edit", "Delete", "Export", "Manage"];
+  const [selectedRoleForMatrix, setSelectedRoleForMatrix] = useState<string>("USER");
 
   const togglePermission = (menu: string, perm: string) => {
     const current = pMatrix[selectedRoleForMatrix] || {};
@@ -480,7 +472,7 @@ export default function AdministrationCenter({ onClose, initialSubTab }: Adminis
         lastModified: "2026-06-15",
         connectionHealth: "Untested",
         defaultRootFolder: "GembaCRM_Documents",
-        owner: "Admin"
+        owner: "ADMIN"
       },
       {
         id: "sh-onedrive",
@@ -495,7 +487,7 @@ export default function AdministrationCenter({ onClose, initialSubTab }: Adminis
         lastModified: "2026-06-15",
         connectionHealth: "Untested",
         defaultRootFolder: "/Documents/GembaWalks",
-        owner: "Admin"
+        owner: "ADMIN"
       },
       {
         id: "sh-azure",
@@ -510,7 +502,7 @@ export default function AdministrationCenter({ onClose, initialSubTab }: Adminis
         lastModified: "2026-06-20",
         connectionHealth: "Untested",
         defaultRootFolder: "crm-document-blobs",
-        owner: "Admin"
+        owner: "ADMIN"
       }
     ];
     localStorage.setItem("admin_data_hub_connections", JSON.stringify(defaultConns));
@@ -824,7 +816,7 @@ export default function AdministrationCenter({ onClose, initialSubTab }: Adminis
     }, 800);
   };
 
-  if (!isAppAdmin) {
+  if (!isAdmin) {
     return (
       <div className="flex flex-col items-center justify-center min-h-[320px] p-8 text-center space-y-3">
         <Lock className="w-10 h-10 text-rose-500" />
@@ -850,7 +842,7 @@ export default function AdministrationCenter({ onClose, initialSubTab }: Adminis
             </span>
             <span className="w-1.5 h-1.5 bg-emerald-500 rounded-full animate-ping"></span>
             <span className="text-[10px] text-slate-400 font-bold uppercase font-mono">
-              {L("Yetki Sınıfı: Süper Yönetici", "Access Level: Super Admin")}
+              {L("Yetki Sınıfı: ADMIN", "Access Level: ADMIN")}
             </span>
           </div>
           <h2 className="text-xl font-bold text-slate-900 dark:text-zinc-150 font-sans tracking-tight">
@@ -1278,12 +1270,8 @@ export default function AdministrationCenter({ onClose, initialSubTab }: Adminis
                       onChange={(e) => setSelectedRoleForMatrix(e.target.value)}
                       className="text-xs bg-slate-50 dark:bg-zinc-900 border border-slate-205 md:p-2 p-1.5 rounded-lg"
                     >
-                      <option value="Super Admin">{L("Süper Yönetici", "Super Admin")}</option>
-                      <option value="Admin">{L("Yönetici", "Admin")}</option>
-                      <option value="Sales Manager">{L("Satış Yöneticisi", "Sales Manager")}</option>
-                      <option value="Consultant">{L("Danışman", "Consultant")}</option>
-                      <option value="Standard User">{L("Standart Kullanıcı", "Standard User")}</option>
-                      <option value="Custom Role">{L("Özel Rol", "Custom Role")}</option>
+                      <option value="ADMIN">ADMIN</option>
+                      <option value="USER">USER</option>
                     </select>
                   </div>
                 </div>
@@ -1419,7 +1407,7 @@ export default function AdministrationCenter({ onClose, initialSubTab }: Adminis
                     </select>
                     <input
                       type="text"
-                      placeholder="Hesap Sorumlusu / Sahibi"
+                      placeholder={L("Hesap Sorumlusu", "Account Responsible")}
                       value={newMailbox.owner}
                       onChange={(e) => setNewMailbox({ ...newMailbox, owner: e.target.value })}
                       className="text-xs bg-white dark:bg-black p-3 rounded-xl border border-slate-200 dark:border-zinc-800"
@@ -1454,7 +1442,7 @@ export default function AdministrationCenter({ onClose, initialSubTab }: Adminis
 
                     <div className="grid grid-cols-2 gap-2 text-[11px] border-t border-slate-100 pt-2 dark:border-zinc-850/60 font-mono">
                       <div>
-                        <span className="text-slate-400">{L("Sorumlu:", "Owner:")} </span>
+                        <span className="text-slate-400">{L("Sorumlu:", "Responsible:")} </span>
                         <span className="text-slate-700 dark:text-zinc-300 font-bold">{box.owner}</span>
                       </div>
                       <div className="text-right">
@@ -1473,8 +1461,8 @@ export default function AdministrationCenter({ onClose, initialSubTab }: Adminis
                 </span>
                 <p>
                   {L(
-                    `Sorumlu e-postalarında ortak (shared) gelen kutusu izin modeli aktiftir. Bir kullanıcı, Microsoft OAuth aracılığıyla kurumsal hesabı bağladığında, bu hesaba "${L("Yönetici", "Admin")}" paneli üzerinden atanan tüm CRM danışmanları aynı e-posta üzerinden veri okuyabilir ve kampanya gönderebilir.`,
-                    `Shared inbox permission model is active for responsible emails. When a user connects a corporate account via Microsoft OAuth, all CRM consultants assigned to that account through the "${L("Yönetici", "Admin")}" panel can read data and send campaigns from the same email.`
+                    "Sorumlu e-postalarında ortak (shared) gelen kutusu izin modeli aktiftir. ADMIN tarafından yetkilendirilen operasyon kullanıcıları aynı e-posta üzerinden veri okuyabilir ve kampanya gönderebilir.",
+                    "Shared inbox permission model is active for responsible emails. Operational users authorized by ADMIN can read data and send campaigns from the same email."
                   )}
                 </p>
               </div>

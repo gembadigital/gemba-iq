@@ -17,7 +17,7 @@ alter table public.organization_members
 
 alter table public.organization_members
   add constraint organization_members_role_check
-  check (role in ('owner', 'admin', 'manager', 'sales', 'consultant', 'viewer'));
+  check (role in ('ADMIN', 'USER'));
 
 -- ---------------------------------------------------------------------------
 -- Invitations table
@@ -27,7 +27,7 @@ create table if not exists public.invitations (
   id uuid primary key default gen_random_uuid(),
   organization_id uuid not null references public.organizations (id) on delete cascade,
   invited_email text not null,
-  role text not null check (role in ('owner', 'admin', 'manager', 'sales', 'consultant', 'viewer')),
+  role text not null check (role in ('ADMIN', 'USER')),
   invited_by uuid not null references auth.users (id) on delete cascade,
   token uuid not null default gen_random_uuid() unique,
   status text not null default 'pending'
@@ -62,7 +62,7 @@ as $$
     from public.organization_members
     where organization_id = p_organization_id
       and user_id = auth.uid()
-      and role in ('owner', 'admin')
+      and role = 'ADMIN'
   );
 $$;
 
@@ -125,7 +125,7 @@ $$;
 grant execute on function public.get_invitation_preview(uuid) to anon, authenticated;
 
 -- ---------------------------------------------------------------------------
--- Create invitation (owner/admin only)
+-- Create invitation (ADMIN only)
 -- ---------------------------------------------------------------------------
 
 create or replace function public.create_organization_invitation(
@@ -142,7 +142,7 @@ declare
   v_org_id uuid;
   v_invitation public.invitations%rowtype;
   v_email text := lower(trim(p_email));
-  v_role text := lower(trim(p_role));
+  v_role text := upper(trim(p_role));
 begin
   if v_user_id is null then
     raise exception 'Not authenticated';
@@ -152,7 +152,7 @@ begin
     raise exception 'Email is required';
   end if;
 
-  if v_role not in ('admin', 'manager', 'sales', 'consultant', 'viewer') then
+  if v_role not in ('ADMIN', 'USER') then
     raise exception 'Invalid invitation role';
   end if;
 
@@ -162,7 +162,7 @@ begin
   end if;
 
   if not public.user_can_manage_members(v_org_id) then
-    raise exception 'Only organization owners and admins can invite users';
+    raise exception 'Only ADMIN can invite users';
   end if;
 
   if exists (
@@ -322,7 +322,7 @@ begin
   end if;
 
   if not public.user_can_manage_members(v_invitation.organization_id) then
-    raise exception 'Only organization owners and admins can cancel invitations';
+    raise exception 'Only ADMIN can cancel invitations';
   end if;
 
   if v_invitation.status <> 'pending' then

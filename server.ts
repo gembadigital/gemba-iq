@@ -54,6 +54,17 @@ app.post("/api/invitations/send", async (req, res) => {
   }
 });
 
+// API: Update organization member application role
+app.post("/api/organization/members/role", async (req, res) => {
+  try {
+    const handler = (await import("./api/organization/members/role.js")).default;
+    await handler(req, res);
+  } catch (error) {
+    console.error("Organization role update handler failed:", error);
+    res.status(500).json({ error: "Failed to update user role." });
+  }
+});
+
 // API: Health / Config Endpoint
 app.get("/api/config", (req, res) => {
   const appUrl = (process.env.APP_URL || "").replace(/\/$/, "");

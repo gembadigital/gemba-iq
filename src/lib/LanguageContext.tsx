@@ -60,7 +60,8 @@ const dictionary: Record<Language, Record<string, string>> = {
 
     // Top Bar
     "Gemba Partner Operating System": "Gemba Partner İşletim Sistemi",
-    "ADMIN": "ADMİN",
+    "ADMIN": "ADMIN",
+    "USER": "KULLANICI",
     "İstanbul, TR": "İstanbul, TR",
 
     // Generic words
@@ -214,6 +215,7 @@ const dictionary: Record<Language, Record<string, string>> = {
     // Top Bar
     "Gemba Partner Operating System": "Gemba Partner Operating System",
     "ADMIN": "ADMIN",
+    "USER": "USER",
     "İstanbul, TR": "Istanbul, TR",
 
     // Generic words
@@ -250,7 +252,7 @@ const dictionary: Record<Language, Record<string, string>> = {
     "Akıllı Mail Şablonları": "Smart Email Templates",
     "Denetim İzleri (Audit Logs)": "Audit Logs",
     "Kullanıcı Listesi ve Rol Yönetimi": "User List and Role Management",
-    "Yönetici, danışman ve standart kullanıcıların yetki düzeylerini, aktiflik durumlarını buradan güncelleyin.": "Update access levels, active status of managers, consultants, and standard users from here.",
+    "Yönetici, danışman ve standart kullanıcıların yetki düzeylerini, aktiflik durumlarını buradan güncelleyin.": "Update ADMIN and USER access levels and active status from here.",
     "Yeni Kullanıcı Davet Et": "Invite New User",
     "Kullanıcı Rolü": "User Role",
     "E-Posta Adresi": "Email Address",

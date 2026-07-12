@@ -15,19 +15,20 @@ import {
 import { useLanguage } from "../../lib/LanguageContext";
 import { useOrganization } from "../../lib/OrganizationContext";
 import {
-  INVITABLE_ROLES,
-  canInviteUsers,
-  formatOrganizationRole,
-} from "../../lib/invitationConstants";
-import {
   cancelOrganizationInvitation,
   fetchOrganizationDirectory,
   sendInvitationEmail,
+  updateOrganizationMemberRole,
 } from "../../lib/invitationService";
+import {
+  APP_ROLES,
+  formatAppRole,
+  normalizeAppRole,
+  type AppRole,
+} from "../../lib/roleHelpers";
 import type {
   OrganizationDirectoryInvitation,
   OrganizationDirectoryMember,
-  OrganizationRole,
 } from "../../types/organization";
 
 interface OrganizationUsersPanelProps {
@@ -53,9 +54,15 @@ function formatDate(value: string | null | undefined, lang: "TR" | "EN"): string
   }
 }
 
+function roleBadgeClass(role: AppRole): string {
+  return role === "ADMIN"
+    ? "bg-rose-100 text-rose-700 dark:bg-rose-950/30 dark:text-rose-300"
+    : "bg-blue-100 text-blue-700 dark:bg-blue-950/30 dark:text-blue-300";
+}
+
 export default function OrganizationUsersPanel({ onAuditLog }: OrganizationUsersPanelProps) {
   const { lang, t } = useLanguage();
-  const { membership, actorName, companyName, refreshOrganization } = useOrganization();
+  const { membership, actorName, companyName, isAdmin, refreshOrganization } = useOrganization();
 
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -63,7 +70,8 @@ export default function OrganizationUsersPanel({ onAuditLog }: OrganizationUsers
   const [invitations, setInvitations] = useState<OrganizationDirectoryInvitation[]>([]);
   const [inviteOpen, setInviteOpen] = useState(false);
   const [inviteEmail, setInviteEmail] = useState("");
-  const [inviteRole, setInviteRole] = useState<OrganizationRole>("consultant");
+  const [roleSelections, setRoleSelections] = useState<Record<string, AppRole>>({});
+  const [savingRoleId, setSavingRoleId] = useState<string | null>(null);
   const [inviteLoading, setInviteLoading] = useState(false);
   const [inviteMessage, setInviteMessage] = useState<{
     type: "success" | "error";
@@ -71,7 +79,7 @@ export default function OrganizationUsersPanel({ onAuditLog }: OrganizationUsers
     link?: string;
   } | null>(null);
 
-  const canManage = canInviteUsers(membership?.role);
+  const canManage = isAdmin;
 
   const loadDirectory = useCallback(async () => {
     setLoading(true);
@@ -90,6 +98,16 @@ export default function OrganizationUsersPanel({ onAuditLog }: OrganizationUsers
   useEffect(() => {
     void loadDirectory();
   }, [loadDirectory]);
+
+  useEffect(() => {
+    setRoleSelections((current) => {
+      const next: Record<string, AppRole> = {};
+      members.forEach((member) => {
+        next[member.membership_id] = current[member.membership_id] ?? normalizeAppRole(member.role);
+      });
+      return next;
+    });
+  }, [members]);
 
   const rows = useMemo<DirectoryRow[]>(() => {
     const pendingRows: DirectoryRow[] = invitations.map((invitation) => ({
@@ -110,7 +128,7 @@ export default function OrganizationUsersPanel({ onAuditLog }: OrganizationUsers
     setInviteLoading(true);
     setInviteMessage(null);
     try {
-      const result = await sendInvitationEmail(inviteEmail.trim(), inviteRole);
+      const result = await sendInvitationEmail(inviteEmail.trim(), "USER");
       setInviteEmail("");
       setInviteOpen(false);
       setInviteMessage({
@@ -122,7 +140,7 @@ export default function OrganizationUsersPanel({ onAuditLog }: OrganizationUsers
       });
       onAuditLog?.(
         "Kullanıcı Davet Edildi",
-        `${result.invitation.invited_email} için ${inviteRole} rolüyle davet gönderildi.`
+        `${result.invitation.invited_email} için USER rolüyle davet gönderildi.`
       );
       await loadDirectory();
       await refreshOrganization();
@@ -150,6 +168,30 @@ export default function OrganizationUsersPanel({ onAuditLog }: OrganizationUsers
     }
   };
 
+  const handleSaveRole = async (row: OrganizationDirectoryMember) => {
+    if (!canManage || row.user_id === membership?.user_id) return;
+    const nextRole = roleSelections[row.membership_id] ?? normalizeAppRole(row.role);
+    setSavingRoleId(row.membership_id);
+    setInviteMessage(null);
+    try {
+      await updateOrganizationMemberRole(row.membership_id, nextRole);
+      onAuditLog?.("Rol Güncellendi", `${row.email} rolü ${formatAppRole(nextRole)} olarak güncellendi.`);
+      await loadDirectory();
+      await refreshOrganization();
+      setInviteMessage({
+        type: "success",
+        text: t("Role updated successfully."),
+      });
+    } catch (err) {
+      setInviteMessage({
+        type: "error",
+        text: err instanceof Error ? err.message : t("Failed to update user role."),
+      });
+    } finally {
+      setSavingRoleId(null);
+    }
+  };
+
   return (
     <div className="space-y-6 animate-in fade-in duration-150">
       <div className="rounded-2xl border border-slate-200 dark:border-zinc-800 bg-white dark:bg-[#0f0f11] shadow-sm overflow-hidden">
@@ -160,10 +202,10 @@ export default function OrganizationUsersPanel({ onAuditLog }: OrganizationUsers
             </div>
             <div>
               <h3 className="text-lg font-bold text-slate-900 dark:text-zinc-100">
-                {t("Users & Permissions")}
+              {t("User Management")}
               </h3>
               <p className="text-sm text-slate-500 dark:text-zinc-400">
-                {t("Manage active users and pending invitations for {company}.").replace("{company}", companyName)}
+              {t("Manage active users, roles, and pending invitations for {company}.").replace("{company}", companyName)}
               </p>
             </div>
           </div>
@@ -194,7 +236,7 @@ export default function OrganizationUsersPanel({ onAuditLog }: OrganizationUsers
           <div className="mx-6 mt-4 flex items-start gap-3 rounded-xl border border-amber-200 bg-amber-50/70 dark:border-amber-900/40 dark:bg-amber-950/20 px-4 py-3 text-sm text-amber-800 dark:text-amber-300">
             <Shield className="w-4 h-4 mt-0.5 shrink-0" />
             <span>
-              {t("Only Owner and Admin roles can send invitations.")}
+              {t("Only ADMIN can manage invitations and roles.")}
             </span>
           </div>
         )}
@@ -260,22 +302,14 @@ export default function OrganizationUsersPanel({ onAuditLog }: OrganizationUsers
                   className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-zinc-700 bg-white dark:bg-[#0c0c0e] text-sm"
                 />
               </label>
-              <label className="space-y-1.5">
+              <div className="space-y-1.5">
                 <span className="text-xs font-semibold text-slate-600 dark:text-zinc-300">
-                  {t("Role")}
+                  {t("Default Role")}
                 </span>
-                <select
-                  value={inviteRole}
-                  onChange={(e) => setInviteRole(e.target.value as OrganizationRole)}
-                  className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-zinc-700 bg-white dark:bg-[#0c0c0e] text-sm"
-                >
-                  {INVITABLE_ROLES.map((role) => (
-                    <option key={role} value={role}>
-                      {formatOrganizationRole(role, lang)}
-                    </option>
-                  ))}
-                </select>
-              </label>
+                <div className={`w-full px-3.5 py-2.5 rounded-xl border border-blue-200 dark:border-blue-900/50 text-sm font-bold ${roleBadgeClass("USER")}`}>
+                  {formatAppRole("USER")}
+                </div>
+              </div>
             </div>
             <div className="flex justify-end gap-2">
               <button
@@ -307,24 +341,25 @@ export default function OrganizationUsersPanel({ onAuditLog }: OrganizationUsers
             <table className="min-w-full text-left">
               <thead className="bg-slate-50 dark:bg-zinc-900/60 text-[11px] uppercase tracking-wider font-bold text-slate-500">
                 <tr>
-                  <th className="px-4 py-3">{t("User")}</th>
-                  <th className="px-4 py-3">{t("Status")}</th>
+                  <th className="px-4 py-3">{t("Name")}</th>
+                  <th className="px-4 py-3">{t("Email")}</th>
                   <th className="px-4 py-3">{t("Role")}</th>
+                  <th className="px-4 py-3">{t("Status")}</th>
                   <th className="px-4 py-3">{t("Last Login")}</th>
-                  <th className="px-4 py-3">{t("Invite / Joined")}</th>
+                  <th className="px-4 py-3">{t("Created Date")}</th>
                   <th className="px-4 py-3 text-right">{t("Actions")}</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100 dark:divide-zinc-800 text-sm">
                 {loading ? (
                   <tr>
-                    <td colSpan={6} className="px-4 py-10 text-center text-slate-500">
+                    <td colSpan={7} className="px-4 py-10 text-center text-slate-500">
                       {t("Loading users...")}
                     </td>
                   </tr>
                 ) : rows.length === 0 ? (
                   <tr>
-                    <td colSpan={6} className="px-4 py-10 text-center text-slate-500">
+                    <td colSpan={7} className="px-4 py-10 text-center text-slate-500">
                       {t("No users found yet.")}
                     </td>
                   </tr>
@@ -334,6 +369,9 @@ export default function OrganizationUsersPanel({ onAuditLog }: OrganizationUsers
                       return (
                         <tr key={`invite-${row.id}`} className="hover:bg-slate-50/70 dark:hover:bg-zinc-900/30">
                           <td className="px-4 py-4">
+                            <div className="font-semibold text-slate-900 dark:text-zinc-100">—</div>
+                          </td>
+                          <td className="px-4 py-4">
                             <div className="font-semibold text-slate-900 dark:text-zinc-100">{row.invited_email}</div>
                             <div className="text-xs text-slate-500 flex items-center gap-1 mt-1">
                               <Mail className="w-3 h-3" />
@@ -341,14 +379,14 @@ export default function OrganizationUsersPanel({ onAuditLog }: OrganizationUsers
                             </div>
                           </td>
                           <td className="px-4 py-4">
-                            <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-bold bg-amber-100 text-amber-700 dark:bg-amber-950/30 dark:text-amber-300">
-                              <Clock3 className="w-3 h-3" />
-                              {t("Pending")}
+                            <span className={`px-2.5 py-1 rounded-lg text-xs font-bold ${roleBadgeClass(normalizeAppRole(row.role))}`}>
+                              {formatAppRole(row.role)}
                             </span>
                           </td>
                           <td className="px-4 py-4">
-                            <span className="px-2.5 py-1 rounded-lg text-xs font-bold bg-slate-100 dark:bg-zinc-800">
-                              {formatOrganizationRole(row.role, lang)}
+                            <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-bold bg-amber-100 text-amber-700 dark:bg-amber-950/30 dark:text-amber-300">
+                              <Clock3 className="w-3 h-3" />
+                              {t("Pending")}
                             </span>
                           </td>
                           <td className="px-4 py-4 text-slate-500">—</td>
@@ -370,26 +408,52 @@ export default function OrganizationUsersPanel({ onAuditLog }: OrganizationUsers
                       );
                     }
 
+                    const currentRole = normalizeAppRole(row.role);
+                    const selectedRole = roleSelections[row.membership_id] ?? currentRole;
+                    const isSelf = row.user_id === membership?.user_id;
+                    const hasRoleChange = selectedRole !== currentRole;
+
                     return (
                       <tr key={`member-${row.membership_id}`} className="hover:bg-slate-50/70 dark:hover:bg-zinc-900/30">
                         <td className="px-4 py-4">
                           <div className="font-semibold text-slate-900 dark:text-zinc-100">
                             {row.full_name || row.email}
                           </div>
-                          <div className="text-xs text-slate-500">{row.email}</div>
                           {row.job_title && (
                             <div className="text-[11px] text-slate-400 mt-1">{row.job_title}</div>
+                          )}
+                        </td>
+                        <td className="px-4 py-4 text-slate-600 dark:text-zinc-400">
+                          {row.email}
+                        </td>
+                        <td className="px-4 py-4">
+                          {canManage && !isSelf ? (
+                            <select
+                              value={selectedRole}
+                              onChange={(event) =>
+                                setRoleSelections((current) => ({
+                                  ...current,
+                                  [row.membership_id]: event.target.value as AppRole,
+                                }))
+                              }
+                              className={`min-w-[150px] px-2.5 py-1.5 rounded-lg border text-xs font-bold ${roleBadgeClass(selectedRole)}`}
+                            >
+                              {APP_ROLES.map((role) => (
+                                <option key={role} value={role}>
+                                  {formatAppRole(role)}
+                                </option>
+                              ))}
+                            </select>
+                          ) : (
+                            <span className={`px-2.5 py-1 rounded-lg text-xs font-bold ${roleBadgeClass(currentRole)}`}>
+                              {formatAppRole(currentRole)}
+                            </span>
                           )}
                         </td>
                         <td className="px-4 py-4">
                           <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-bold bg-emerald-100 text-emerald-700 dark:bg-emerald-950/30 dark:text-emerald-300">
                             <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
                             {t("Active")}
-                          </span>
-                        </td>
-                        <td className="px-4 py-4">
-                          <span className="px-2.5 py-1 rounded-lg text-xs font-bold bg-indigo-50 text-indigo-700 dark:bg-indigo-950/30 dark:text-indigo-300">
-                            {formatOrganizationRole(row.role, lang)}
                           </span>
                         </td>
                         <td className="px-4 py-4 text-slate-600 dark:text-zinc-400">
@@ -399,7 +463,20 @@ export default function OrganizationUsersPanel({ onAuditLog }: OrganizationUsers
                           {formatDate(row.joined_at, lang)}
                         </td>
                         <td className="px-4 py-4 text-right text-xs text-slate-400">
-                          {row.user_id === membership?.user_id ? t("You") : "—"}
+                          {isSelf ? (
+                            t("You")
+                          ) : hasRoleChange ? (
+                            <button
+                              type="button"
+                              disabled={savingRoleId === row.membership_id}
+                              onClick={() => void handleSaveRole(row)}
+                              className="px-3 py-1.5 rounded-lg text-xs font-bold text-white bg-[#1E3A5F] hover:bg-[#162d4a] disabled:opacity-60"
+                            >
+                              {savingRoleId === row.membership_id ? t("Saving...") : t("Save changes")}
+                            </button>
+                          ) : (
+                            "—"
+                          )}
                         </td>
                       </tr>
                     );

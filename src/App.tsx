@@ -80,7 +80,7 @@ import {
 export default function App() {
   const { lang, setLang, t } = useLanguage();
   const { user, signOut } = useAuth();
-  const { actorName, actorEmail, companyName, isAppAdmin } = useOrganization();
+  const { actorName, actorEmail, companyName, isAdmin } = useOrganization();
   const navigate = useNavigate();
   const displayName = actorName;
   const userEmail = actorEmail;
@@ -258,14 +258,14 @@ export default function App() {
   }, [activeTab]);
 
   useEffect(() => {
-    if (!isAppAdmin) {
+    if (!isAdmin) {
       setIsSettingsOpen(false);
       setIsSettingsDropdownOpen(false);
       if (activeTab === "administration") {
         setActiveTab("revenue-management");
       }
     }
-  }, [isAppAdmin, activeTab]);
+  }, [isAdmin, activeTab]);
 
   // Load configuration and cached sessions on mount
   useEffect(() => {
@@ -1359,7 +1359,7 @@ export default function App() {
             </div>
 
             {/* 3. Settings Icon that opens administration dropdown */}
-            {isAppAdmin && (
+            {isAdmin && (
             <div className="relative">
               <button
                 type="button"
@@ -1548,7 +1548,7 @@ export default function App() {
                         <span>{t("My Profile")}</span>
                       </button>
 
-                      {isAppAdmin && (
+                      {isAdmin && (
                       <button
                         type="button"
                         onClick={() => {
@@ -1687,7 +1687,7 @@ export default function App() {
             {activeTab === "ai-sales-assistant" && (
               <AISalesAssistant
                 onOpenSettings={
-                  isAppAdmin
+                  isAdmin
                     ? () => {
                         setSettingsActiveTab("system-config");
                         setIsSettingsOpen(true);
@@ -1780,7 +1780,7 @@ export default function App() {
         </div>
 
         {/* SETTINGS OVERLAY SLIDE-OVER WIDE DRAWER */}
-        {isAppAdmin && isSettingsOpen && (
+        {isAdmin && isSettingsOpen && (
           <div className="fixed inset-0 bg-slate-900/45 dark:bg-black/60 backdrop-blur-xs flex justify-end z-50 animate-in fade-in duration-200">
             {/* Backdrop click to close */}
             <div 

@@ -1,15 +1,25 @@
-import type { OrganizationRole } from "./invitationConstants";
-
 export type AppRole = "ADMIN" | "USER";
 
-const ADMIN_ROLES: OrganizationRole[] = ["owner", "admin"];
+export const APP_ROLES: AppRole[] = ["ADMIN", "USER"];
 
-/** Maps organization_members.role to application ADMIN tier. */
-export function isAppAdmin(role: OrganizationRole | null | undefined): boolean {
-  return !!role && ADMIN_ROLES.includes(role);
+/** Normalizes persisted role values into the only roles the application supports. */
+export function normalizeAppRole(role: unknown): AppRole {
+  const value = String(role ?? "").trim();
+  return value === "ADMIN" ? "ADMIN" : "USER";
 }
 
-/** Resolves the two-tier app role from organization_members.role. */
-export function getAppRole(role: OrganizationRole | null | undefined): AppRole {
-  return isAppAdmin(role) ? "ADMIN" : "USER";
+export function isAdminRole(role: unknown): boolean {
+  return normalizeAppRole(role) === "ADMIN";
+}
+
+export function getAppRole(role: unknown): AppRole {
+  return normalizeAppRole(role);
+}
+
+export function toPersistedOrganizationRole(role: AppRole): AppRole {
+  return role;
+}
+
+export function formatAppRole(role: unknown): string {
+  return normalizeAppRole(role);
 }

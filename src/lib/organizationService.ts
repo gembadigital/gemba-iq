@@ -60,7 +60,7 @@ export async function completeWelcomeWizard(data: WelcomeWizardData): Promise<st
     throw new Error("Supabase is not configured.");
   }
 
-  const { data: orgId, error } = await client.rpc("create_organization_with_owner", {
+  const { data: orgId, error } = await client.rpc("create_organization_with_admin", {
     p_full_name: data.fullName.trim(),
     p_company_name: data.companyName.trim(),
     p_job_title: data.jobTitle.trim(),

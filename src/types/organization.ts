@@ -1,7 +1,7 @@
 import type {
   InvitationStatus,
   OrganizationRole,
-} from "./invitationConstants";
+} from "../lib/invitationConstants";
 
 export interface Organization {
   id: string;

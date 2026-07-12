@@ -5,6 +5,7 @@ import type {
   InvitationPreview,
   OrganizationDirectory,
 } from "../types/organization";
+import { toPersistedOrganizationRole, type AppRole } from "./roleHelpers";
 
 async function requireClient() {
   const client = getSupabase();
@@ -45,12 +46,12 @@ export async function getInvitationPreview(token: string): Promise<InvitationPre
 
 export async function createOrganizationInvitation(
   email: string,
-  role: string
+  role: AppRole = "USER"
 ): Promise<CreatedInvitationResult> {
   const client = await requireClient();
   const { data, error } = await client.rpc("create_organization_invitation", {
     p_email: email.trim(),
-    p_role: role,
+    p_role: toPersistedOrganizationRole(role),
   });
   if (error) {
     throw new Error(error.message);
@@ -60,7 +61,7 @@ export async function createOrganizationInvitation(
 
 export async function sendInvitationEmail(
   email: string,
-  role: string
+  role: AppRole = "USER"
 ): Promise<{
   invitation: CreatedInvitationResult;
   inviteLink: string;
@@ -74,7 +75,7 @@ export async function sendInvitationEmail(
       "Content-Type": "application/json",
       Authorization: `Bearer ${accessToken}`,
     },
-    body: JSON.stringify({ email: email.trim(), role }),
+    body: JSON.stringify({ email: email.trim(), role: toPersistedOrganizationRole(role) }),
   });
 
   const payload = await response.json().catch(() => ({}));
@@ -83,6 +84,26 @@ export async function sendInvitationEmail(
   }
 
   return payload;
+}
+
+export async function updateOrganizationMemberRole(
+  membershipId: string,
+  role: AppRole
+): Promise<void> {
+  const accessToken = await getAccessToken();
+  const response = await fetch("/api/organization/members/role", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${accessToken}`,
+    },
+    body: JSON.stringify({ membershipId, role }),
+  });
+
+  const payload = await response.json().catch(() => ({}));
+  if (!response.ok) {
+    throw new Error(payload.error || "Failed to update user role.");
+  }
 }
 
 export async function cancelOrganizationInvitation(invitationId: string): Promise<void> {

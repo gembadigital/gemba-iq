@@ -29,9 +29,9 @@ export default async function handler(request, response) {
   }
 
   const email = String(request.body?.email || "").trim().toLowerCase();
-  const role = String(request.body?.role || "").trim().toLowerCase();
+  const requestedRole = String(request.body?.role || "USER").trim();
 
-  if (!email || !role) {
+  if (!email || !["ADMIN", "USER"].includes(requestedRole)) {
     return response.status(400).json({ error: "Email and role are required." });
   }
 
@@ -52,7 +52,7 @@ export default async function handler(request, response) {
     "create_organization_invitation",
     {
       p_email: email,
-      p_role: role,
+      p_role: requestedRole,
     }
   );
 
