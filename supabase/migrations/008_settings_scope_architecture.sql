@@ -1,4 +1,4 @@
--- Settings scope architecture: organization-wide configuration and personal mailbox connections.
+-- Settings scope architecture: organization-wide configuration and organization mailbox support.
 
 create table if not exists public.organization_settings (
   organization_id uuid primary key references public.organizations (id) on delete cascade,

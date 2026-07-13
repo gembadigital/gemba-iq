@@ -443,7 +443,7 @@ export default function EmailLeadDiscoveryView({
                 const toName = msg.toRecipients?.[0]?.emailAddress?.name || "";
                 const rDate = msg.receivedDateTime ? msg.receivedDateTime.split("T")[0] : "2026-06-22";
 
-                // Live status feed rendering subjects directly to prove real mailbox sync works
+                // Live status feed rendering subjects directly to prove organization mailbox sync works
                 setScanLogs(prev => [
                   ...prev,
                   `   • [Okundu] E-posta: "${mailSubject.length > 35 ? mailSubject.substring(0, 35) + "..." : mailSubject}" | Gönderen: ${fromAddress}`
@@ -877,7 +877,7 @@ export default function EmailLeadDiscoveryView({
                 ⚠️ API Entegrasyon Durumu: Simülasyon Gözlem Modu (Sandbox Devrede)
               </h4>
               <p className="text-[11px] text-slate-600 dark:text-slate-300 leading-relaxed">
-                Değerli Atakan Zehir, bu uygulama tarayıcı içi korumalı ve yalıtılmış bir önizleme (sandbox iframe) ortamında çalışmaktadır. Tanımladığınız kurumsal posta kutusu adreslerine (<code className="bg-amber-100/70 dark:bg-amber-905 px-1 rounded text-red-650 font-mono text-[10px]">info@gembapartner.com</code> ve <code className="bg-amber-100/70 dark:bg-amber-905 px-1 rounded text-red-650 font-mono text-[10px]">a.zehir@gembapartner.com</code>) canlı, gerçek zamanlı bağlantı kurularak e-postaların okunabilmesi için <b>Microsoft Entra ID (Azure AD) / Google Cloud Console üzerinden OAuth App Client ID ve Secret Key</b> yapılandırmasının veya bireysel M365 erişim anahtarının girilmesi gereklidir.
+                Değerli Atakan Zehir, bu uygulama tarayıcı içi korumalı ve yalıtılmış bir önizleme (sandbox iframe) ortamında çalışmaktadır. Tanımladığınız kurumsal posta kutusu adreslerine (<code className="bg-amber-100/70 dark:bg-amber-905 px-1 rounded text-red-650 font-mono text-[10px]">info@gembapartner.com</code> ve <code className="bg-amber-100/70 dark:bg-amber-905 px-1 rounded text-red-650 font-mono text-[10px]">a.zehir@gembapartner.com</code>) canlı, gerçek zamanlı bağlantı kurularak e-postaların okunabilmesi için <b>Organization Mailbox</b> bağlantısının ADMIN tarafından yapılandırılması gereklidir.
               </p>
             </div>
           </div>
@@ -888,15 +888,15 @@ export default function EmailLeadDiscoveryView({
               <div className="space-y-1 text-slate-500 dark:text-slate-400">
                 <div><span className="font-bold">Hata Sınıfı:</span> <span className="text-red-500">OAUTH_KEYS_PENDING_PROVISION</span></div>
                 <div><span className="font-bold">Bağlantı Sinyali:</span> <span className="text-slate-600 dark:text-slate-350">BYPASS_TO_ENCRYPTED_SEED_DB</span></div>
-                <div><span className="font-bold">Açıklama:</span> Kimlik doğrulama anahtarları boş olduğundan gerçek e-postalarınız yerine, imza tarama algoritmamızın başarısını test etmeniz adına <b>simüle edilen senaryo aday verileri</b> listelenmektedir. Üstteki <b>M365 Exchange Online'ı Bağla</b> butonundan giriş yaparak bunu aşabilirsiniz!</div>
+                <div><span className="font-bold">Açıklama:</span> Organization Mailbox bağlı olmadığından gerçek e-postalar yerine, imza tarama algoritmamızın başarısını test etmeniz adına <b>simüle edilen senaryo aday verileri</b> listelenmektedir. ADMIN, Organization Settings içindeki <b>Organization Mailbox</b> ekranından bağlantı kurmalıdır.</div>
               </div>
             </div>
             <div className="space-y-1.5 p-3 rounded-xl bg-amber-100/30 dark:bg-zinc-900/40 text-slate-600 dark:text-slate-350">
               <span className="text-[10px] font-bold text-indigo-700 dark:text-indigo-400 block uppercase">🚀 GERÇEK VERİYE NASIL GEÇİLİR?</span>
               <ol className="list-decimal pl-4 space-y-1">
-                <li>Sağ üst köşedeki M365 Exchange Online bağlantı adımını kullanarak veya <b>bireysel Access Token'ınızı</b> girerek anında bağlanın.</li>
-                <li>Müşteri gizliliği ve güvenliğiniz için tarama işlemleri doğrudan tarayıcınızdan izole soketlerle yapılır.</li>
-                <li>Erişimi başlattığınızda gerçek e-postalarınız anında taranır!</li>
+                <li>ADMIN, Organization Settings içinde Organization Mailbox bağlantısını kurar.</li>
+                <li>Tüm kullanıcılar aynı organizasyon posta kutusu yapılandırmasını otomatik kullanır.</li>
+                <li>Bağlantı aktif olduğunda organizasyon e-postaları taranır.</li>
               </ol>
             </div>
           </div>
@@ -1114,9 +1114,9 @@ export default function EmailLeadDiscoveryView({
                   </p>
                   <p className="text-[11px] text-slate-500 leading-relaxed bg-white/40 dark:bg-black/30 p-2.5 rounded-md mt-2 border border-slate-200/40">
                     <strong>Hata Nedenleri & Nasıl Giderilir?</strong><br />
-                    1. <strong>Access Token Süresinin Dolması:</strong> Microsoft Graph yetki anahtarlarının geçerlilik süresi güvenlik sebebiyle 60 dakikadır. Eğer bu süreyi aştıysanız bağlantınız kesilmiş olabilir.<br />
+                    1. <strong>Organization Mailbox bağlantısının yenilenmesi:</strong> Microsoft Graph yetkileri sunucu tarafında otomatik yenilenir. Yenileme başarısız olursa ADMIN bağlantıyı yeniden kurmalıdır.<br />
                     2. <strong>Yetersiz İzin Kapsamı:</strong> Giriş yapılan profilin e-postaları okuyabilmesi için <code className="bg-slate-100 px-1 py-0.5 rounded text-[10px] dark:bg-zinc-900 dark:text-zinc-300">Mail.Read</code> yetkisinin verilmiş olması şarttır.<br />
-                    <strong className="text-indigo-650 dark:text-indigo-400 block mt-1">✓ Çözüm: Ana yönetim ekranından 'M365 Exchange Online'ı Bağla' butonuna tıklayarak yeni bir erişim anahtarı giriniz.</strong>
+                    <strong className="text-indigo-650 dark:text-indigo-400 block mt-1">✓ Çözüm: Organization Settings içindeki Organization Mailbox ekranından bağlantıyı test edin veya yeniden bağlayın.</strong>
                   </p>
                 </div>
               )}

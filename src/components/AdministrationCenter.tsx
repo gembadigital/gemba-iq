@@ -943,7 +943,7 @@ export default function AdministrationCenter({
             }`}
           >
             <Mail className="w-4 h-4 text-slate-400" />
-            <span>{L("Paylaşımlı E-posta Kutuları", "Shared Mailboxes")}</span>
+            <span>{L("Organizasyon Posta Kutusu", "Organization Mailbox")}</span>
           </button>
 
           <button
@@ -1336,13 +1336,13 @@ export default function AdministrationCenter({
             </div>
           )}
 
-          {/* ==================== SECTION 3: SHARED MAILBOXES (FUTURE) ==================== */}
+          {/* ==================== SECTION 3: ORGANIZATION MAILBOX ==================== */}
           {activeSubTab === "email" && (
             <div className="space-y-6 animate-in fade-in duration-100">
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-100 dark:border-zinc-800 pb-4 text-left">
                 <div>
                   <h3 className="text-lg font-bold text-slate-800 dark:text-zinc-150">
-                    {L("3. Organizasyon Microsoft 365 Posta Kutusu", "3. Organization Microsoft 365 Mailbox")}
+                    {L("3. Organizasyon Posta Kutusu", "3. Organization Mailbox")}
                   </h3>
                   <p className="text-xs text-slate-500 dark:text-zinc-400 mt-1">
                     {L(
@@ -1419,145 +1419,6 @@ export default function AdministrationCenter({
                     )}
                   </div>
                 </div>
-              </div>
-
-              {/* API and Integration Error Simulator Panel */}
-              <div className="p-4.5 rounded-2xl border border-rose-200/50 bg-rose-50/10 dark:border-rose-950/20 dark:bg-rose-950/5 space-y-3">
-                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-                  <div className="space-y-1">
-                    <h4 className="text-xs font-black text-rose-700 dark:text-rose-450 uppercase tracking-wider font-mono flex items-center gap-1.5">
-                      <AlertTriangle className="w-4 h-4 text-rose-600 stroke-[2.5]" />
-                      <span>{L("⚠️ Paylaşımlı Kutu Mimari Hazırlığı", "⚠️ Shared Mailbox Architecture Preparation")}</span>
-                    </h4>
-                  </div>
-                  <label className="relative inline-flex items-center cursor-pointer select-none">
-                    <input
-                      type="checkbox"
-                      checked={simulateEmailError}
-                      onChange={(e) => {
-                        const checked = e.target.checked;
-                        setSimulateEmailError(checked);
-                        showToast(
-                          selectedLanguage === "TR"
-                            ? (checked ? "API Hata Simülatörü Aktif Edildi!" : "API Hata Simülatörü Devre Dışı Bırakıldı!")
-                            : (checked ? "API Error Simulator Activated!" : "API Error Simulator Deactivated!"),
-                          checked ? "error" : "success"
-                        );
-                      }}
-                      className="sr-only peer"
-                    />
-                    <div className="w-11 h-6 bg-slate-200 dark:bg-zinc-800 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-rose-600"></div>
-                    <span className="ml-3 text-xs font-black uppercase font-mono tracking-wider text-rose-700 dark:text-rose-450">
-                      {simulateEmailError ? L("AÇIK", "ON") : L("KAPALI", "OFF")}
-                    </span>
-                  </label>
-                </div>
-              </div>
-
-              <div className="flex justify-end">
-                <button
-                  type="button"
-                  onClick={() => setIsConnectMailboxOpen(true)}
-                  className="p-2.5 px-4 text-xs font-bold text-white bg-indigo-650 rounded-xl hover:bg-indigo-600 transition-all flex items-center gap-1.5 cursor-pointer shadow-xs"
-                >
-                  <Plus className="w-4 h-4" />
-                  {L("Paylaşımlı Kutu Taslağı Ekle", "Add Shared Mailbox Draft")}
-                </button>
-              </div>
-
-              {isConnectMailboxOpen && (
-                <form onSubmit={handleConnectNewMailbox} className="p-5 rounded-2xl border border-indigo-200 bg-indigo-50/15 dark:border-zinc-800 dark:bg-black/20 space-y-4 animate-in slide-in-from-top-2 duration-150">
-                  <span className="text-[10px] font-bold text-indigo-750 dark:text-indigo-400 font-mono uppercase block">
-                    {L("YENİ PAYLAŞIMLI POSTA KUTUSU TASLAĞI", "NEW SHARED MAILBOX DRAFT")}
-                  </span>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                    <input
-                      type="text"
-                      placeholder={L("Kutu adı (Örn: Gemba Destek Masası)", "Mailbox name (e.g. Gemba Support Desk)")}
-                      required
-                      value={newMailbox.name}
-                      onChange={(e) => setNewMailbox({ ...newMailbox, name: e.target.value })}
-                      className="text-xs bg-white dark:bg-black p-3 rounded-xl border border-slate-200 dark:border-zinc-800"
-                    />
-                    <input
-                      type="email"
-                      placeholder="E-posta Adresi *"
-                      required
-                      value={newMailbox.email}
-                      onChange={(e) => setNewMailbox({ ...newMailbox, email: e.target.value })}
-                      className="text-xs bg-white dark:bg-black p-3 rounded-xl border border-slate-200 dark:border-zinc-800"
-                    />
-                    <select
-                      value={newMailbox.provider}
-                      onChange={(e) => setNewMailbox({ ...newMailbox, provider: e.target.value as any })}
-                      className="text-xs bg-white dark:bg-black p-3 rounded-xl border border-slate-200 dark:border-zinc-800"
-                    >
-                      {(["Microsoft 365", "Outlook", "Exchange Online", "Gmail", "Google Workspace", "IMAP", "SMTP"] as const).map((provider) => (
-                        <option key={provider} value={provider}>{t(provider)}</option>
-                      ))}
-                    </select>
-                    <input
-                      type="text"
-                      placeholder={L("Hesap Sorumlusu", "Account Responsible")}
-                      value={newMailbox.owner}
-                      onChange={(e) => setNewMailbox({ ...newMailbox, owner: e.target.value })}
-                      className="text-xs bg-white dark:bg-black p-3 rounded-xl border border-slate-200 dark:border-zinc-800"
-                    />
-                  </div>
-                  <div className="flex justify-end gap-2 text-xs">
-                    <button type="button" onClick={() => setIsConnectMailboxOpen(false)} className="p-2 px-3.5 bg-slate-100 dark:bg-zinc-800 rounded">İptal</button>
-                    <button type="submit" className="p-2 px-4 bg-indigo-650 text-white font-bold rounded">
-                      {L("Taslak Olarak Kaydet", "Save Draft")}
-                    </button>
-                  </div>
-                </form>
-              )}
-
-              {/* Shared mailbox drafts display grid */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {mailboxes.map(box => (
-                  <div key={box.id} className="p-4 rounded-xl border border-slate-150 bg-slate-50/50 dark:border-zinc-800 dark:bg-black/10 space-y-3 relative overflow-hidden">
-                    <div className="flex justify-between items-start">
-                      <div className="space-y-1">
-                        <span className="p-1 px-2 rounded bg-indigo-50 dark:bg-zinc-900 text-indigo-700 text-[9px] font-bold font-mono tracking-wide uppercase">
-                          {t(box.provider)}
-                        </span>
-                        <h4 className="text-xs font-bold text-slate-800 dark:text-zinc-200 pt-1">{box.name}</h4>
-                        <span className="text-[10px] text-slate-400 font-mono block">{box.email}</span>
-                      </div>
-
-                      <span className={`inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-full ${
-                        box.status === "Connected" ? "text-emerald-600 bg-emerald-50 dark:bg-zinc-900" : "text-amber-600 bg-amber-50 dark:bg-zinc-900"
-                      }`}>
-                        {box.status === "Connected" ? L("Canlı (Okuma/Yazma)", "Live (Read/Write)") : L("Yetki Yok/Süre Doldu", "No Permission/Expired")}
-                      </span>
-                    </div>
-
-                    <div className="grid grid-cols-2 gap-2 text-[11px] border-t border-slate-100 pt-2 dark:border-zinc-850/60 font-mono">
-                      <div>
-                        <span className="text-slate-400">{L("Sorumlu:", "Responsible:")} </span>
-                        <span className="text-slate-700 dark:text-zinc-300 font-bold">{box.owner}</span>
-                      </div>
-                      <div className="text-right">
-                        <span className="text-slate-400">{L("Senkronizasyon:", "Sync:")} </span>
-                        <span className="text-slate-700 dark:text-zinc-305 font-bold">{box.lastSync}</span>
-                      </div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-
-              {/* Integration check info */}
-              <div className="p-4 rounded-xl border border-dashed border-indigo-200 bg-indigo-50/10 dark:border-zinc-800/80 dark:bg-zinc-950/20 text-xs text-slate-650 leading-relaxed space-y-1.5 dark:text-zinc-300">
-                <span className="font-bold text-slate-800 dark:text-zinc-200 block uppercase font-mono tracking-wider text-[10px]">
-                  {L("⚠️ PAYLAŞIMLI KUTU GÖNDERİMİ BUGÜN AKTİF DEĞİL", "⚠️ SHARED MAILBOX SENDING IS NOT ACTIVE TODAY")}
-                </span>
-                <p>
-                  {L(
-                    "Paylaşımlı kutu mimarisi sadece gelecek kullanım için hazırlanmıştır. Bugünkü gönderim akışı her zaman organizasyonun varsayılan Microsoft 365 kutusunu kullanır.",
-                    "Shared mailbox architecture is prepared only for future use. Today's sending flow always uses the organization's default Microsoft 365 mailbox."
-                  )}
-                </p>
               </div>
             </div>
           )}
@@ -1744,7 +1605,7 @@ export default function AdministrationCenter({
                       />
                     </div>
                     <div className="space-y-1">
-                      <label className="font-bold text-slate-600">{L("Giriş Parolası", "Client Secret / Access Token")}</label>
+                      <label className="font-bold text-slate-600">{L("Giriş Parolası", "Client Secret")}</label>
                       <input
                         type="password"
                         placeholder="••••••••••••••••••••"

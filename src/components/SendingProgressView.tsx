@@ -33,7 +33,6 @@ interface SendingProgressViewProps {
   onBackToDesigner: () => void;
   onCampaignComplete: (campaign: Campaign) => void;
   trackingService: string;
-  onUpdateSession?: (session: MailboxSession) => void;
 }
 
 export default function SendingProgressView({
@@ -44,8 +43,7 @@ export default function SendingProgressView({
   attachments,
   onBackToDesigner,
   onCampaignComplete,
-  trackingService,
-  onUpdateSession
+  trackingService
 }: SendingProgressViewProps) {
   const { lang, t: globalT } = useLanguage();
   const t = (key: string) => getCampaignTranslation(lang, key) ?? globalT(key) ?? key;
@@ -71,8 +69,6 @@ export default function SendingProgressView({
   const [latestMailingError, setLatestMailingError] = useState<{ code: string; message: string; diagnostics: string } | null>(null);
   const [pixelOpensCount, setPixelOpensCount] = useState(0);
   const [bouncedEmailsCount, setBouncedEmailsCount] = useState(0);
-  const [webhookSubscribed, setWebhookSubscribed] = useState(false);
-  const [subscriptionChecking, setSubscriptionChecking] = useState(false);
   
   // PDF Blob URLs
   const [pdfBlobUrl, setPdfBlobUrl] = useState<string | null>(null);
@@ -458,7 +454,7 @@ export default function SendingProgressView({
           
           const errMessage = error.message || t("Failed to process SMTP Exchange Online handover.");
           let errCode = t("ERR_MAIL_HANDOVER_FAILED");
-          let diagDetails = t("Check your mail server credentials or access token configuration.");
+          let diagDetails = t("Check the Organization Mailbox configuration and Microsoft Graph permissions.");
 
           if (errMessage.toLowerCase().includes("permission") || errMessage.toLowerCase().includes("access denied") || errMessage.toLowerCase().includes("forbidden") || errMessage.toLowerCase().includes("403")) {
             errCode = t("ERR_SMTP_PERMISSION_DENIED_403");
@@ -495,7 +491,7 @@ export default function SendingProgressView({
     }
 
     return () => clearTimeout(timerId);
-  }, [isPlaying, campaignStarted, campaignFinished, currentIndex, activeRecipients, session, deliveryTiming, currentRunDateTime, sendMode, subject, templateBody, attachments, trackingService, onUpdateSession]);
+  }, [isPlaying, campaignStarted, campaignFinished, currentIndex, activeRecipients, session, deliveryTiming, currentRunDateTime, sendMode, subject, templateBody, attachments, trackingService]);
 
   // Simulated open metrics for visual dashboard tracking
   const triggerTrackedOpenSimulation = (recipientId: string) => {
@@ -777,7 +773,7 @@ export default function SendingProgressView({
 {t('This is a simulated sandbox for testing mail merges. The rows in the sender queue will change to "Drafted" or "Success" in the web app screen, but no real emails or draft messages are actually created in your physical Outlook account / mailbox')}
                     </p>
                     <p className="mt-1 font-semibold text-slate-800 dark:text-slate-200">
-{t("To get real drafts sent to your actual mailbox, you must disconnect and connect your real mailbox via an Access Token or Azure flow.")}
+{t("Real drafts and sends use the Organization Mailbox configured by ADMIN.")}
                     </p>
                   </div>
                 </div>
@@ -875,7 +871,7 @@ export default function SendingProgressView({
                   </div>
                 )}
 
-                {/* Mailing Dispatch Mode (Only for real active Outlook connections) */}
+                {/* Mailing Dispatch Mode (Only for active Organization Mailbox connections) */}
                 {!session?.isSandbox && session?.isConnected && (
                   <div className="pt-3 border-t border-[#EDEBE9] dark:border-[#323130]/60 space-y-2">
                     <span className="text-[10px] uppercase font-bold text-slate-400 tracking-wide block">
@@ -1157,50 +1153,16 @@ export default function SendingProgressView({
 <span className="bg-[#0078D4]/10 text-[#0078D4] text-[9px] px-1.5 py-0.5 rounded uppercase font-semibold">{t("Production Node")}</span>
                     </h4>
                     <p className="text-[11px] text-slate-500 mt-1 font-medium">
-                      {webhookSubscribed 
-                        ? t("Active Webhook Tunnel established! Node.js subscription is listening directly to changeType:created notifications on Inbox resource.")
-: t("Sandbox Active. Real Webhook subscriptions require an HTTPS SSL endpoint (automatically generated on Google Cloud Run environments).")}
+                      {t("Organization mailbox delivery telemetry is handled by the server-side Microsoft Graph integration.")}
                     </p>
                   </div>
                 </div>
 
                 <div className="flex items-center gap-2">
-                  <button
-                    type="button"
-                    disabled={subscriptionChecking}
-                    onClick={async () => {
-                      setSubscriptionChecking(true);
-                      try {
-                        const tokenOfChoice = session?.accessToken || "";
-                        if (!tokenOfChoice) {
-                          alert(t("A valid Microsoft account session is required to initiate real subscriptions."));
-                          setSubscriptionChecking(false);
-                          return;
-                        }
-                        const res = await fetch("/api/webhooks/microsoft/subscribe", {
-                          method: "POST",
-                          headers: { "Content-Type": "application/json" },
-                          body: JSON.stringify({ accessToken: tokenOfChoice })
-                        });
-                        const data = await res.json();
-                        if (!res.ok) throw new Error(data.error);
-                        setWebhookSubscribed(true);
-                        alert(t("Successfully registered Microsoft Graph API subscription on Inbox messages!"));
-                      } catch (err: any) {
-                        alert(t("Webhook registration failed: {error}.\n\nNote: For external Graph webhook validation, the backend requires a publicly routable HTTPS server address so that Microsoft registration handshake tokens are resolved. You can still test this flow perfectly using the simulator!").replace("{error}", err.message));
-                      } finally {
-                        setSubscriptionChecking(false);
-                      }
-                    }}
-                    className={`text-[11px] font-bold px-3 py-1.5 rounded cursor-pointer transition-all flex items-center gap-1.5 border ${
-                      webhookSubscribed
-                        ? "bg-emerald-50 text-emerald-700 border-emerald-250 dark:bg-emerald-950/20 dark:text-emerald-400"
-                        : "bg-[#0078D4] hover:bg-[#005a9e] text-white border-[#0078D4]"
-                    }`}
-                  >
+                  <span className="text-[11px] font-bold px-3 py-1.5 rounded transition-all flex items-center gap-1.5 border bg-emerald-50 text-emerald-700 border-emerald-250 dark:bg-emerald-950/20 dark:text-emerald-400">
                     <Radio className="w-3.5 h-3.5 animate-pulse" />
-                    <span>{webhookSubscribed ? t("Subscription Online") : t("Subscribe to Real NDRs")}</span>
-                  </button>
+                    <span>{t("Organization Mailbox Active")}</span>
+                  </span>
                 </div>
               </div>
 
@@ -1348,45 +1310,22 @@ export default function SendingProgressView({
                       {t("Microsoft Graph API Access Problem Detected")}
                     </h4>
                     <p className="text-xs text-rose-600 dark:text-rose-400 font-semibold mt-1 leading-normal">
-{t("Your connected Microsoft account does not currently have permission to send emails on your behalf (Access Denied / Forbidden). Please use one of the easy methods below to grant proper consent:")}
+{t("The Organization Mailbox does not currently have permission to send emails. ADMIN must review Microsoft Graph permissions in Organization Settings.")}
                     </p>
                   </div>
                 </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs font-medium text-slate-650 dark:text-slate-350">
+                <div className="grid grid-cols-1 gap-4 text-xs font-medium text-slate-650 dark:text-slate-350">
                   <div className="p-3.5 bg-white dark:bg-[#11100f] border border-[#EDEBE9] dark:border-[#323130] rounded space-y-2">
                     <p className="font-bold text-[#0078D4] dark:text-brand-300 flex items-center gap-1.5">
-<span className="bg-[#0078D4]/10 text-[#0078D4] px-1.5 py-0.5 rounded text-[10px]">{t("Method A")}</span>
-<span>{t("If connected via Graph Explorer token")}</span>
+<span className="bg-[#0078D4]/10 text-[#0078D4] px-1.5 py-0.5 rounded text-[10px]">{t("ADMIN")}</span>
+<span>{t("Organization Mailbox permission check")}</span>
                     </p>
                     <ol className="list-decimal pl-4.5 space-y-1.5 text-[11px] leading-relaxed">
-                      <li>
-                        {t("Go back to your open")}{" "}
-                        <a href="https://developer.microsoft.com/en-us/graph/graph-explorer" target="_blank" rel="noreferrer" className="text-[#0078D4] dark:text-[#329bf0] underline font-bold hover:text-[#006cc0]">{t("Microsoft Graph Explorer")}</a>
-                        {t(" tab.")}
-                      </li>
-                      <li>{t("In the center pane (below the query URL address bar), click the Consent to permissions or Modify permissions tab.")}</li>
-                      <li>{t("Search for the Mail.Send permission.")}</li>
-                      <li>{t("Click the Consent button next to it. (A corporate login popup will ask you or your tenant administrator to accept).")}</li>
-                      <li>{t("After consenting, click the Access token tab again, copy the brand new token string.")}</li>
-                      <li>{t('Go back to the Outlook Connection section here, click "Disconnect Mailbox", then connect again and paste the brand-new token.')}</li>
-                    </ol>
-                  </div>
-
-                  <div className="p-3.5 bg-white dark:bg-[#11100f] border border-[#EDEBE9] dark:border-[#323130] rounded space-y-2">
-                    <p className="font-bold text-[#0078D4] dark:text-brand-300 flex items-center gap-1.5">
-<span className="bg-[#0078D4]/10 text-[#0078D4] px-1.5 py-0.5 rounded text-[10px]">{t("Method B")}</span>
-<span>{t("If using custom Entra App Registration")}</span>
-                    </p>
-                    <ol className="list-decimal pl-4.5 space-y-1.5 text-[11px] leading-relaxed">
-                      <li>
-                        {t("Log into the")}{" "}
-                        <a href="https://portal.azure.com" target="_blank" rel="noreferrer" className="text-[#0078D4] dark:text-[#329bf0] underline font-bold hover:text-[#006cc0]">{t("Azure Portal")}</a>.
-                      </li>
-                      <li>{t("Open your App Registration and navigate to the API permissions page.")}</li>
-                      <li>{t("Verify that Mail.Send is listed under Delegated permissions.")}</li>
-                      <li>{t('CRITICAL step: Click the "Grant admin consent for Your Tenant Name" button right above the permission table. Enterprise directories require this administrative consent to enable outbound mailing.')}</li>
-                      <li>{t("Wait 1 minute, return here, and retry your campaign!")}</li>
+                      <li>{t("Open Organization Settings and go to Organization Mailbox.")}</li>
+                      <li>{t("Reconnect Microsoft 365 with an ADMIN account if consent was revoked or expired.")}</li>
+                      <li>{t("Confirm Mail.Send, Mail.ReadWrite, and User.Read delegated permissions are granted for the organization mailbox.")}</li>
+                      <li>{t("Use Test Connection, then retry this campaign.")}</li>
                     </ol>
                   </div>
                 </div>
@@ -1404,83 +1343,48 @@ export default function SendingProgressView({
                   <AlertCircle className="w-5 h-5 text-amber-600 flex-shrink-0 mt-0.5" />
                   <div>
                     <h4 className="text-xs font-bold text-amber-700 dark:text-amber-400 uppercase tracking-wider flex items-center gap-1.5">
-                      {t("Microsoft Graph Session Token Expired")}
+                      {t("Organization Mailbox Token Refresh Required")}
                     </h4>
                     <p className="text-xs text-amber-600 dark:text-amber-450 font-semibold mt-1 leading-normal">
-{t('Your current session has expired ("Lifetime validation failed, the token is expired"). This is expected behavior enforcing security policies (default tokens expire after 60 minutes).')}
+{t("The organization mailbox token needs to be refreshed or reconnected. Server-side refresh is attempted automatically before each send.")}
                     </p>
                     <p className="text-xs text-slate-650 dark:text-slate-350 mt-1">
-{t("No worries! All of your campaign progress and imported data are fully preserved in-memory. Simply input a fresh token or re-authenticate below to immediately resume sending where you left off:")}
+{t("Campaign progress and imported data are preserved in-memory. Retry with the Organization Mailbox after ADMIN verifies the connection.")}
                     </p>
                   </div>
                 </div>
 
                 <div className="p-4 bg-white dark:bg-[#11100f] border border-[#EDEBE9] dark:border-[#323130] rounded space-y-3">
                   <div className="space-y-1">
-                    <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">{t("Paste Fresh Access Token")}</label>
-                    <div className="flex flex-col sm:flex-row items-stretch gap-2">
-                      <input
-                        type="password"
-                        id="input-fresh-token"
-                        placeholder={t("Paste fresh access token starting with eyJ...")}
-                        className="flex-1 text-xs p-2.5 rounded border border-[#EDEBE9] dark:border-[#323130] bg-[#faf9f8] dark:bg-[#252423] font-mono outline-none focus:border-[#0078D4]"
-                        onChange={async (e) => {
-                          const val = e.target.value.trim();
-                          if (val && session && onUpdateSession) {
-                            onUpdateSession({
-                              ...session,
-                              accessToken: val
-                            });
-                          }
-                        }}
-                      />
-                      <button
-                        type="button"
-                        onClick={async () => {
-                          if (!session?.accessToken) {
-                            alert(t("Please paste progress validation token first."));
-                            return;
-                          }
-                          try {
-                            const valResponse = await fetch("/api/auth/validate-token", {
-                              method: "POST",
-                              headers: { "Content-Type": "application/json" },
-                              body: JSON.stringify({ accessToken: session.accessToken })
-                            });
-                            const data = await valResponse.json();
-                            if (!valResponse.ok) throw new Error(data.error);
-
-                            // Change failed recipient with token issue back to idle
-                            setActiveRecipients((prev) =>
-                              prev.map((r) => {
-                                const err = (r.errorMessage || "").toLowerCase();
-                                if (r.status === "failed" && (
-                                  err.includes("expired") ||
-                                  err.includes("lifetime") ||
-                                  err.includes("token") ||
-                                  err.includes("handover")
-                                )) {
-                                  return { ...r, status: "idle", errorMessage: undefined };
-                                }
-                                return r;
-                              })
-                            );
-                            setFailedCount(0);
-                            setIsPlaying(true);
-                            alert(t("Token Session Resumed! Re-marked expired rows to idle queue. Resume sending active."));
-                          } catch (err: any) {
-                            alert(t("Failed token validation: {error}").replace("{error}", err.message));
-                          }
-                        }}
-                        className="bg-[#0078D4] hover:bg-[#005a9e] text-white text-xs font-bold px-4 py-2.5 rounded cursor-pointer transition-all flex items-center justify-center gap-1.5"
-                      >
-                        <RotateCw className="w-3.5 h-3.5" />
-                        <span>{t("Validate & Resume")}</span>
-                      </button>
-                    </div>
+                    <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">{t("Organization Mailbox Token Refresh")}</label>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setActiveRecipients((prev) =>
+                          prev.map((r) => {
+                            const err = (r.errorMessage || "").toLowerCase();
+                            if (r.status === "failed" && (
+                              err.includes("expired") ||
+                              err.includes("lifetime") ||
+                              err.includes("token") ||
+                              err.includes("handover")
+                            )) {
+                              return { ...r, status: "idle", errorMessage: undefined };
+                            }
+                            return r;
+                          })
+                        );
+                        setFailedCount(0);
+                        setIsPlaying(true);
+                      }}
+                      className="bg-[#0078D4] hover:bg-[#005a9e] text-white text-xs font-bold px-4 py-2.5 rounded cursor-pointer transition-all flex items-center justify-center gap-1.5"
+                    >
+                      <RotateCw className="w-3.5 h-3.5" />
+                      <span>{t("Retry with Organization Mailbox")}</span>
+                    </button>
                   </div>
                   <p className="text-[11px] text-slate-500">
-{t("To get a new live token: Open your Microsoft Graph Explorer, select the Access token tab, copy the long string, and paste it here.")}
+{t("Microsoft Graph credentials are refreshed automatically on the server from organization_settings. Reconnect the Organization Mailbox in Organization Settings only if refresh fails repeatedly.")}
                   </p>
                 </div>
               </div>

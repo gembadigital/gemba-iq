@@ -91,21 +91,6 @@ const dictionary: Record<Language, Record<string, string>> = {
     "Attachments": "Dosya Ekle",
     "Notes": "Notlar",
     
-    // Connection Status
-    "M365 Exchange Online Connection": "M365 Exchange Online Bağlantısı",
-    "Secure connection for individual Microsoft Graph operations": "Bireysel Microsoft Graph işlemleri için güvenli bağlantı",
-    "Demo Sandbox Active": "Demo Sandbox Aktif",
-    "Outlook Connected": "Outlook Bağlandı",
-    "Disconnect Mailbox": "E-posta Kutusunun Bağlantısını Kes",
-    "Connect M365 Exchange": "M365 Exchange Bağlan",
-    "Connect via Access Token (Zero Setup)": "Erişim Jetonu ile Bağlan (Sıfır Kurulum)",
-    "Enable Sandbox Mode": "Sandbox Modunu Etkinleştir",
-    "Requires Azure configuration in Secrets": "Secrets panelinde Azure yapılandırması gerektirir",
-    "Connect with official tenant App Registration flow": "Resmi tenant Uygulama Kayıt akışı ile bağlan",
-    "Connect directly using a Microsoft Graph Explorer developer token": "Doğrudan bir Microsoft Graph Explorer geliştirici tokenı kullanarak bağlan",
-    "Direct Microsoft Graph Token Connection": "Doğrudan Microsoft Graph Token Bağlantısı",
-    "Close Panel": "Paneli Kapat",
-    
     // Settings Tab & Connections
     "1. Tavily Arama Motoru API Anahtarı (Search Grounding Engine)": "1. Tavily Arama Motoru API Anahtarı (Search Grounding Engine)",
     "Used for the 'Deep Research with Tavily' button in the AI Sales Assistant module. Conducts live cyber intelligence and web searches to prepare enriched company analysis kits in seconds.": "AI Sales Assistant modülünde \"Tavily ile Derin Araştırma Yap (Deep Search)\" butonu için kullanılır. Canlı siber istihbarat ve internet taraması yaparak saniyeler içinde zenginleştirilmiş şirket analiz kiti hazırlar.",
@@ -114,8 +99,6 @@ const dictionary: Record<Language, Record<string, string>> = {
     "Currently, your key is stored in local browser memory as {status}.": "Şu anda anahtarınız {status} olarak yerel tarayıcı hafızasında saklanmaktadır.",
     "Saved: {prefix}...*****": "Kaydedildi: {prefix}...*****",
     "Empty (Enters simulation mode)": "Boş (Simülasyon moduna geçilir)",
-    "2. Microsoft 365 Exchange Online Bağlantısı (Outlook Mailbox)": "2. Microsoft 365 Exchange Online Bağlantısı (Outlook Mailbox)",
-    "Log in or paste an Access Token so your B2B campaigns and smart emails are saved to drafts on your own Microsoft 365 Outlook address.": "B2B kampanyalarınızın ve akıllı maillerinizin kendi Microsoft 365 Outlook adresiniz üzerinden taslaklara kaydedilmesi için oturum açın ya da Access Token yapıştırın.",
     "Active Permissions & API Infrastructure (Google AI Studio Build)": "Aktif İzinler ve API Alt Yapısı (Google AI Studio Build)",
     "This application hosts a secure server-side proxy using the Gemini 1.5 Flash model and Microsoft Graph API.": "Bu uygulama Gemini-3.5-Flash modelini ve Microsoft Graph API'yi kullanarak sunucu taraflı güvenli proxy barındırmaktadır.",
 
@@ -205,7 +188,7 @@ const dictionary: Record<Language, Record<string, string>> = {
     "Dark mode toggle": "Dark Mode Toggle",
     "Outlook / Exchange Suite": "Outlook / Exchange Suite",
     "Yönetim Portalı & Sistem Entegrasyonları": "Admin Portal & System Integrations",
-    "Organizasyon yapısını, yetkileri, mail şablonlarını ve Microsoft 365 bağlantı durumunu yapılandırın": "Configure organizational structure, permissions, mail templates, and Microsoft 365 connection status",
+    "Organizasyon yapısını, yetkileri, mail şablonlarını ve Microsoft 365 bağlantı durumunu yapılandırın": "Configure organizational structure, permissions, mail templates, and organization mailbox status",
     "Kapat": "Close",
     "Ayarları Kaydet ve Kapat": "Save Settings & Close",
     "Administration Center": "Administration Center",
