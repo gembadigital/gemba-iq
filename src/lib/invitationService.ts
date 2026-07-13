@@ -86,6 +86,45 @@ export async function sendInvitationEmail(
   return payload;
 }
 
+export async function fetchInvitationEmailConfig(): Promise<{ emailConfigured: boolean }> {
+  const response = await fetch("/api/invitations/config", { cache: "no-store" });
+  if (!response.ok) {
+    return { emailConfigured: false };
+  }
+  const payload = await response.json().catch(() => ({}));
+  return { emailConfigured: payload.emailConfigured === true };
+}
+
+export async function sendCreatedInvitationEmail(
+  invitation: CreatedInvitationResult,
+  fullName?: string
+): Promise<{
+  invitation: CreatedInvitationResult;
+  inviteLink: string;
+  emailSent: boolean;
+  message?: string;
+}> {
+  const accessToken = await getAccessToken();
+  const response = await fetch("/api/invitations/send", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${accessToken}`,
+    },
+    body: JSON.stringify({
+      invitationToken: invitation.token,
+      fullName: fullName?.trim() || null,
+    }),
+  });
+
+  const payload = await response.json().catch(() => ({}));
+  if (!response.ok) {
+    throw new Error(payload.error || "Failed to send invitation email.");
+  }
+
+  return payload;
+}
+
 export async function updateOrganizationMemberRole(
   membershipId: string,
   role: AppRole

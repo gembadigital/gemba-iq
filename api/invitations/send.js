@@ -28,10 +28,12 @@ export default async function handler(request, response) {
     return response.status(503).json({ error: "Supabase is not configured." });
   }
 
-  const email = String(request.body?.email || "").trim().toLowerCase();
+  const invitationToken = String(request.body?.invitationToken || "").trim();
+  const requestedEmail = String(request.body?.email || "").trim().toLowerCase();
   const requestedRole = String(request.body?.role || "USER").trim();
+  const fullName = String(request.body?.fullName || "").trim();
 
-  if (!email || !["ADMIN", "USER"].includes(requestedRole)) {
+  if (!invitationToken && (!requestedEmail || !["ADMIN", "USER"].includes(requestedRole))) {
     return response.status(400).json({ error: "Email and role are required." });
   }
 
@@ -48,23 +50,50 @@ export default async function handler(request, response) {
     return response.status(401).json({ error: "Unauthorized" });
   }
 
-  const { data: invitation, error: invitationError } = await userClient.rpc(
-    "create_organization_invitation",
-    {
-      p_email: email,
-      p_role: requestedRole,
-    }
-  );
+  let invitation;
 
-  if (invitationError) {
-    return response.status(400).json({ error: invitationError.message });
+  if (invitationToken) {
+    const { data: existingInvitation, error: existingInvitationError } = await userClient
+      .from("invitations")
+      .select("id, token, invited_email, role, status, expires_at, organization_id")
+      .eq("token", invitationToken)
+      .maybeSingle();
+
+    if (existingInvitationError) {
+      return response.status(400).json({ error: existingInvitationError.message });
+    }
+
+    if (!existingInvitation) {
+      return response.status(404).json({ error: "Invitation not found." });
+    }
+
+    if (existingInvitation.status !== "pending" || new Date(existingInvitation.expires_at) < new Date()) {
+      return response.status(400).json({ error: "Invitation is no longer valid." });
+    }
+
+    invitation = existingInvitation;
+  } else {
+    const { data: createdInvitation, error: invitationError } = await userClient.rpc(
+      "create_organization_invitation",
+      {
+        p_email: requestedEmail,
+        p_role: requestedRole,
+      }
+    );
+
+    if (invitationError) {
+      return response.status(400).json({ error: invitationError.message });
+    }
+
+    invitation = createdInvitation;
   }
 
   const origin = request.headers.origin || appUrl || "http://localhost:3000";
   const inviteLink = `${origin}/join?token=${invitation.token}`;
+  const email = String(invitation.invited_email || "").trim().toLowerCase();
 
   if (!serviceKey) {
-    return response.status(200).json({
+    return response.status(invitationToken ? 503 : 200).json({
       invitation,
       inviteLink,
       emailSent: false,
@@ -80,6 +109,7 @@ export default async function handler(request, response) {
   const { error: inviteError } = await adminClient.auth.admin.inviteUserByEmail(email, {
     redirectTo: inviteLink,
     data: {
+      full_name: fullName || null,
       invitation_token: invitation.token,
       organization_id: invitation.organization_id,
       invited_role: invitation.role,

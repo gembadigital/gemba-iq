@@ -16,8 +16,10 @@ import { useLanguage } from "../../lib/LanguageContext";
 import { useOrganization } from "../../lib/OrganizationContext";
 import {
   cancelOrganizationInvitation,
+  createOrganizationInvitation,
   fetchOrganizationDirectory,
-  sendInvitationEmail,
+  fetchInvitationEmailConfig,
+  sendCreatedInvitationEmail,
   updateOrganizationMemberRole,
 } from "../../lib/invitationService";
 import {
@@ -27,6 +29,7 @@ import {
   type AppRole,
 } from "../../lib/roleHelpers";
 import type {
+  CreatedInvitationResult,
   OrganizationDirectoryInvitation,
   OrganizationDirectoryMember,
 } from "../../types/organization";
@@ -69,14 +72,21 @@ export default function OrganizationUsersPanel({ onAuditLog }: OrganizationUsers
   const [members, setMembers] = useState<OrganizationDirectoryMember[]>([]);
   const [invitations, setInvitations] = useState<OrganizationDirectoryInvitation[]>([]);
   const [inviteOpen, setInviteOpen] = useState(false);
+  const [inviteName, setInviteName] = useState("");
   const [inviteEmail, setInviteEmail] = useState("");
+  const [inviteRole, setInviteRole] = useState<AppRole>("USER");
   const [roleSelections, setRoleSelections] = useState<Record<string, AppRole>>({});
   const [savingRoleId, setSavingRoleId] = useState<string | null>(null);
   const [inviteLoading, setInviteLoading] = useState(false);
+  const [emailConfigured, setEmailConfigured] = useState(false);
+  const [emailSending, setEmailSending] = useState(false);
   const [inviteMessage, setInviteMessage] = useState<{
     type: "success" | "error";
     text: string;
     link?: string;
+    invitation?: CreatedInvitationResult;
+    fullName?: string;
+    emailSent?: boolean;
   } | null>(null);
 
   const canManage = isAdmin;
@@ -98,6 +108,14 @@ export default function OrganizationUsersPanel({ onAuditLog }: OrganizationUsers
   useEffect(() => {
     void loadDirectory();
   }, [loadDirectory]);
+
+  useEffect(() => {
+    if (!canManage) return;
+    void (async () => {
+      const config = await fetchInvitationEmailConfig();
+      setEmailConfigured(config.emailConfigured);
+    })();
+  }, [canManage]);
 
   useEffect(() => {
     setRoleSelections((current) => {
@@ -128,29 +146,61 @@ export default function OrganizationUsersPanel({ onAuditLog }: OrganizationUsers
     setInviteLoading(true);
     setInviteMessage(null);
     try {
-      const result = await sendInvitationEmail(inviteEmail.trim(), "USER");
+      const invitation = await createOrganizationInvitation(inviteEmail.trim(), inviteRole);
+      const inviteLink = `${window.location.origin}/join?token=${invitation.token}`;
+      const fullName = inviteName.trim();
+      setInviteName("");
       setInviteEmail("");
+      setInviteRole("USER");
       setInviteOpen(false);
       setInviteMessage({
         type: "success",
-        text: result.emailSent
-          ? t("Invitation email sent to {email}.").replace("{email}", result.invitation.invited_email)
-          : result.message || t("Invitation created. Share the link to invite the user."),
-        link: result.inviteLink,
+        text: t("Invitation created. Share the link to invite the user."),
+        link: inviteLink,
+        invitation,
+        fullName,
+        emailSent: false,
       });
       onAuditLog?.(
         "Kullanıcı Davet Edildi",
-        `${result.invitation.invited_email} için USER rolüyle davet gönderildi.`
+        `${invitation.invited_email} için ${formatAppRole(inviteRole)} rolüyle davet oluşturuldu.`
       );
       await loadDirectory();
       await refreshOrganization();
     } catch (err) {
       setInviteMessage({
         type: "error",
-        text: err instanceof Error ? err.message : t("Failed to send invitation."),
+        text: err instanceof Error ? err.message : t("Failed to create invitation."),
       });
     } finally {
       setInviteLoading(false);
+    }
+  };
+
+  const handleSendEmail = async () => {
+    if (!inviteMessage?.invitation || !emailConfigured || emailSending) return;
+
+    setEmailSending(true);
+    try {
+      const result = await sendCreatedInvitationEmail(inviteMessage.invitation, inviteMessage.fullName);
+      setInviteMessage({
+        type: "success",
+        text: result.emailSent
+          ? t("Invitation email sent to {email}.").replace("{email}", result.invitation.invited_email)
+          : result.message || t("Invitation created. Share the link to invite the user."),
+        link: result.inviteLink,
+        invitation: result.invitation,
+        fullName: inviteMessage.fullName,
+        emailSent: result.emailSent,
+      });
+    } catch (err) {
+      setInviteMessage({
+        ...inviteMessage,
+        type: "error",
+        text: err instanceof Error ? err.message : t("Failed to send invitation."),
+      });
+    } finally {
+      setEmailSending(false);
     }
   };
 
@@ -269,8 +319,19 @@ export default function OrganizationUsersPanel({ onAuditLog }: OrganizationUsers
                         className="inline-flex items-center gap-1 px-2 py-1 rounded-lg text-[11px] font-bold bg-[#1E3A5F] text-white"
                       >
                         <Copy className="w-3 h-3" />
-                        {t("Copy to Clipboard")}
+                        {t("Copy Link")}
                       </button>
+                      {emailConfigured && inviteMessage.invitation && !inviteMessage.emailSent && (
+                        <button
+                          type="button"
+                          disabled={emailSending}
+                          onClick={() => void handleSendEmail()}
+                          className="inline-flex items-center gap-1 px-2 py-1 rounded-lg text-[11px] font-bold bg-white/80 dark:bg-black/30 border border-current/10"
+                        >
+                          <Mail className="w-3 h-3" />
+                          {emailSending ? t("Sending...") : t("Send Email")}
+                        </button>
+                      )}
                     </div>
                   )}
                 </div>
@@ -289,7 +350,20 @@ export default function OrganizationUsersPanel({ onAuditLog }: OrganizationUsers
               {t("New Invitation")}
             </div>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-              <label className="space-y-1.5 md:col-span-2">
+              <label className="space-y-1.5">
+                <span className="text-xs font-semibold text-slate-600 dark:text-zinc-300">
+                  {t("Name")}
+                </span>
+                <input
+                  type="text"
+                  required
+                  value={inviteName}
+                  onChange={(e) => setInviteName(e.target.value)}
+                  placeholder={t("Full Name")}
+                  className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-zinc-700 bg-white dark:bg-[#0c0c0e] text-sm"
+                />
+              </label>
+              <label className="space-y-1.5">
                 <span className="text-xs font-semibold text-slate-600 dark:text-zinc-300">
                   {t("Email")}
                 </span>
@@ -302,19 +376,32 @@ export default function OrganizationUsersPanel({ onAuditLog }: OrganizationUsers
                   className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-zinc-700 bg-white dark:bg-[#0c0c0e] text-sm"
                 />
               </label>
-              <div className="space-y-1.5">
+              <label className="space-y-1.5">
                 <span className="text-xs font-semibold text-slate-600 dark:text-zinc-300">
-                  {t("Default Role")}
+                  {t("Role")}
                 </span>
-                <div className={`w-full px-3.5 py-2.5 rounded-xl border border-blue-200 dark:border-blue-900/50 text-sm font-bold ${roleBadgeClass("USER")}`}>
-                  {formatAppRole("USER")}
-                </div>
-              </div>
+                <select
+                  value={inviteRole}
+                  onChange={(event) => setInviteRole(event.target.value as AppRole)}
+                  className={`w-full px-3.5 py-2.5 rounded-xl border text-sm font-bold ${roleBadgeClass(inviteRole)}`}
+                >
+                  {APP_ROLES.map((role) => (
+                    <option key={role} value={role}>
+                      {formatAppRole(role)}
+                    </option>
+                  ))}
+                </select>
+              </label>
             </div>
             <div className="flex justify-end gap-2">
               <button
                 type="button"
-                onClick={() => setInviteOpen(false)}
+                onClick={() => {
+                  setInviteOpen(false);
+                  setInviteName("");
+                  setInviteEmail("");
+                  setInviteRole("USER");
+                }}
                 className="px-4 py-2 rounded-xl text-xs font-semibold border border-slate-200 dark:border-zinc-700"
               >
                 {t("Cancel")}
@@ -324,7 +411,7 @@ export default function OrganizationUsersPanel({ onAuditLog }: OrganizationUsers
                 disabled={inviteLoading}
                 className="px-4 py-2 rounded-xl text-xs font-bold text-white bg-[#1E3A5F] hover:bg-[#162d4a] disabled:opacity-60"
               >
-                {inviteLoading ? t("Sending...") : t("Send Invitation")}
+                {inviteLoading ? t("Creating...") : t("Create Invitation")}
               </button>
             </div>
           </form>
