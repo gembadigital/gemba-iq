@@ -16,8 +16,8 @@ export function getAppRole(role: unknown): AppRole {
   return normalizeAppRole(role);
 }
 
-export function toPersistedOrganizationRole(role: AppRole): AppRole {
-  return role;
+export function toPersistedOrganizationRole(role: unknown): AppRole {
+  return normalizeAppRole(role);
 }
 
 export function formatAppRole(role: unknown): string {

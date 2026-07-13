@@ -122,14 +122,16 @@ export default async function handler(request, response) {
       message.includes("already registered") ||
       message.includes("already exists") ||
       message.includes("user already");
+    const invalidAuthRole = message.includes("invalid role");
 
-    if (alreadyRegistered) {
+    if (alreadyRegistered || invalidAuthRole) {
       return response.status(200).json({
         invitation,
         inviteLink,
         emailSent: false,
-        message:
-          "User already has an account. Share the invitation link or ask them to sign in with the invited email.",
+        message: alreadyRegistered
+          ? "User already has an account. Share the invitation link or ask them to sign in with the invited email."
+          : "Invitation created. Email delivery is not available; share the invitation link manually.",
       });
     }
 

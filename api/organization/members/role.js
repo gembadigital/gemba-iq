@@ -35,7 +35,7 @@ export default async function handler(request, response) {
 
   const accessToken = authHeader.slice(7);
   const membershipId = String(request.body?.membershipId || "").trim();
-  const requestedRole = String(request.body?.role || "").trim();
+  const requestedRole = String(request.body?.role || "").trim().toUpperCase();
 
   if (!membershipId || !["ADMIN", "USER"].includes(requestedRole)) {
     return response.status(400).json({ error: "Membership id and a valid role are required." });
