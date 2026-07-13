@@ -311,7 +311,6 @@ export const uiDictionaryTR: Record<string, string> = {
   "DATES CLOSED": "KAPANMA TARİHLERİ",
   "CONTACT SUBJECT": "İLETİŞİM KONUSU",
   "SUGGESTED PRODUCTS": "ÖNERİLEN ÜRÜNLER",
-  "Microsoft Exchange Mailbox Integration": "Microsoft Exchange Posta Kutusu Entegrasyonu",
   "Dosya Eki / Attachment File": "Dosya Eki",
   "Observation Description": "Gözlem Açıklaması",
   "Format: DD.MM.YYYY": "Format: GG.AA.YYYY",
@@ -1230,7 +1229,6 @@ export const uiDictionaryTR: Record<string, string> = {
   "Go to API permissions, add Mail.Send, Mail.ReadWrite, and User.Read delegated permissions, and grant admin consent (if corporate policy requires).": "API izinlerine gidin, Mail.Send, Mail.ReadWrite ve User.Read yetkilendirilmiş izinlerini ekleyin ve yönetici onayı verin (kurumsal politika gerektiriyorsa).",
   "Place your Client ID and client secret in the secure Secrets panel in AI Studio as:": "İstemci Kimliğinizi ve istemci gizli anahtarınızı AI Studio'daki güvenli Sırlar paneline şu şekilde yerleştirin:",
   "No Azure account ready?": "Azure hesabınız hazır değil mi?",
-  "Click \"Enable Sandbox Mode\" above. It hosts a full sandbox simulator with responsive open-rate simulations, recipient progress tracking, and executive PDF reporting instantly, requiring no cloud configurations!": "Yukarıdaki \"Sandbox Modunu Etkinleştir\"e tıklayın. Bulut yapılandırması gerektirmeden açılma oranı simülasyonları, alıcı ilerleme takibi ve yönetici PDF raporlaması sunan tam bir sandbox simülatörü barındırır!",
 
   // Companies View
   "No valid company records found to import. Please check column headers.": "Yüklenecek geçerli şirket kaydı bulunamadı. Lütfen sütun başlıklarını kontrol edin.",

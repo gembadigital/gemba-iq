@@ -33,7 +33,7 @@ app.use(express.urlencoded({ limit: "50mb", extended: true }));
 
 // Helper to determine the configured state of Microsoft Graph credentials
 const hasMicrosoftConfig = () => {
-  return !!(process.env.MICROSOFT_CLIENT_ID && process.env.MICROSOFT_CLIENT_SECRET);
+  return !!(process.env.AZURE_CLIENT_ID && process.env.AZURE_CLIENT_SECRET && process.env.AZURE_TENANT_ID);
 };
 
 // API: Public runtime env for client-side Supabase configuration
@@ -94,12 +94,12 @@ app.all("/api/organization/mailbox", async (req, res) => {
 // API: Health / Config Endpoint
 app.get("/api/config", (req, res) => {
   const appUrl = (process.env.APP_URL || "").replace(/\/$/, "");
-  const redirectUri = `${appUrl}/auth/callback`;
   
   res.json({
     hasClientKeys: hasMicrosoftConfig(),
-    clientId: process.env.MICROSOFT_CLIENT_ID || "",
-    redirectUri: redirectUri,
+    clientId: process.env.AZURE_CLIENT_ID || "",
+    tenantId: process.env.AZURE_TENANT_ID || "",
+    redirectUri: "",
     appUrl: appUrl
   });
 });
@@ -326,15 +326,18 @@ app.post("/api/auth/validate-token", async (req, res) => {
 // API: Proxy Send Mail via Microsoft Graph
 // We proxy this through Express to guarantee request reliability, handle headers cleanly, and log outcomes if required.
 app.post("/api/mail/send", async (req, res) => {
-  const { recipient, subject, body, attachments } = req.body;
-  if (!recipient || !subject || !body) {
-    return res.status(400).json({ error: "Missing required mail parameters (recipient, subject, body)." });
+  const { recipient, recipients, cc, bcc, subject, body, attachments } = req.body;
+  if (!(recipient || recipients) || !subject || !body) {
+    return res.status(400).json({ error: "Missing required mail parameters (recipient/recipients, subject, body)." });
   }
 
   try {
     const context = await getOrganizationMailboxForRequest(req, { requireConnected: true });
     await sendGraphMailWithMailbox(context.adminClient, context.organizationId, context.mailbox, {
       recipient,
+      recipients,
+      cc,
+      bcc,
       subject,
       body,
       attachments,

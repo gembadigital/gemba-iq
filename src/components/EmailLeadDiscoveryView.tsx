@@ -839,10 +839,10 @@ export default function EmailLeadDiscoveryView({
             <ShieldCheck className="w-5 h-5 text-emerald-600 dark:text-emerald-400 shrink-0 mt-0.5" />
             <div className="space-y-1">
               <h4 className="text-xs font-bold text-slate-900 dark:text-slate-100 uppercase tracking-wider font-mono flex items-center gap-2">
-                🟢 API Entegrasyon Durumu: M365 Exchange Canlı Giriş Aktif
+                🟢 API Entegrasyon Durumu: Organization Mailbox Aktif
               </h4>
               <p className="text-[11px] text-slate-600 dark:text-slate-300 leading-relaxed">
-                Değerli Atakan Zehir, Microsoft 365 / Exchange Online bağlantınız <strong className="text-emerald-700 dark:text-emerald-400 font-mono font-bold">{session.mail}</strong> adresi üzerinden başarıyla doğrulanmıştır. <b>E-posta İmzası Arama Motoru (Email Lead Discovery)</b> şu anda canlı modda çalışmakta olup, e-posta kutunuzdan son mesajlarınızı gerçek zamanlı olarak ve güvenle tarayarak imzalardan yeni kurumsal adaylar çıkarabilir!
+                Değerli Atakan Zehir, Organization Mailbox <strong className="text-emerald-700 dark:text-emerald-400 font-mono font-bold">{session.mail}</strong> adresi üzerinden başarıyla doğrulanmıştır. <b>E-posta İmzası Arama Motoru (Email Lead Discovery)</b> canlı modda çalışmak için organizasyon posta kutusu yapılandırmasını kullanır.
               </p>
             </div>
           </div>
@@ -851,15 +851,15 @@ export default function EmailLeadDiscoveryView({
             <div className="space-y-1.5 p-3 rounded-xl bg-emerald-100/30 dark:bg-zinc-900/40">
               <span className="text-[10px] font-bold text-emerald-800 dark:text-emerald-400 block uppercase">⚙️ CANLI BAĞLANTI PARAMETRELERİ</span>
               <div className="space-y-1 text-slate-500 dark:text-slate-400">
-                <div><span className="font-bold">Bağlı Hesap:</span> <span className="text-slate-800 dark:text-slate-100">{session.displayName || "M365 Kullanıcısı"} ({session.mail})</span></div>
-                <div><span className="font-bold">Kimlik Doğrulama:</span> <span className="text-indigo-600 dark:text-indigo-400 font-bold">Microsoft Graph OAuth2 (Bearer Token)</span></div>
-                <div><span className="font-bold">Erişim Yetkileri:</span> <span className="text-emerald-600 dark:text-emerald-400 font-bold">Mail.Read, Mail.Send, Mail.ReadWrite</span></div>
+                <div><span className="font-bold">Organizasyon Posta Kutusu:</span> <span className="text-slate-800 dark:text-slate-100">{session.displayName || "Organization Mailbox"} ({session.mail})</span></div>
+                <div><span className="font-bold">Kimlik Doğrulama:</span> <span className="text-indigo-600 dark:text-indigo-400 font-bold">Microsoft Graph Application Permission</span></div>
+                <div><span className="font-bold">Yönetim Yeri:</span> <span className="text-emerald-600 dark:text-emerald-400 font-bold">Organization Settings / Shared Mailboxes</span></div>
               </div>
             </div>
             <div className="space-y-1.5 p-3 rounded-xl bg-emerald-100/30 dark:bg-zinc-900/40 text-slate-600 dark:text-slate-350">
               <span className="text-[10px] font-bold text-indigo-700 dark:text-indigo-400 block uppercase">🎯 GERÇEK REKORD TARAMA HEURISTIQLERİ</span>
               <div className="space-y-1 text-slate-500 dark:text-slate-400">
-                <div>Taramayı başlattığınızda sistem, Microsoft Graph API üzerinden son 50 e-postanızı çeker.</div>
+                <div>Taramayı başlattığınızda sistem, organizasyon posta kutusu yapılandırmasını kullanır.</div>
                 <div>Gönderenlerin unvanı, kurumsal web sitesi, telefon numarası ve şirket adı yapay zeka heuristikleriyle süzülerek doğrudan CRM tablonuza aktarılmaya hazır hale getirilir.</div>
               </div>
             </div>
@@ -874,7 +874,7 @@ export default function EmailLeadDiscoveryView({
             <AlertCircle className="w-5 h-5 text-amber-600 dark:text-amber-400 shrink-0 mt-0.5" />
             <div className="space-y-1">
               <h4 className="text-xs font-bold text-slate-900 dark:text-slate-100 uppercase tracking-wider font-mono flex items-center gap-2">
-                ⚠️ API Entegrasyon Durumu: Simülasyon Gözlem Modu (Sandbox Devrede)
+                ⚠️ API Entegrasyon Durumu: Organization Mailbox Bağlı Değil
               </h4>
               <p className="text-[11px] text-slate-600 dark:text-slate-300 leading-relaxed">
                 Değerli Atakan Zehir, bu uygulama tarayıcı içi korumalı ve yalıtılmış bir önizleme (sandbox iframe) ortamında çalışmaktadır. Tanımladığınız kurumsal posta kutusu adreslerine (<code className="bg-amber-100/70 dark:bg-amber-905 px-1 rounded text-red-650 font-mono text-[10px]">info@gembapartner.com</code> ve <code className="bg-amber-100/70 dark:bg-amber-905 px-1 rounded text-red-650 font-mono text-[10px]">a.zehir@gembapartner.com</code>) canlı, gerçek zamanlı bağlantı kurularak e-postaların okunabilmesi için <b>Organization Mailbox</b> bağlantısının ADMIN tarafından yapılandırılması gereklidir.
@@ -888,13 +888,13 @@ export default function EmailLeadDiscoveryView({
               <div className="space-y-1 text-slate-500 dark:text-slate-400">
                 <div><span className="font-bold">Hata Sınıfı:</span> <span className="text-red-500">OAUTH_KEYS_PENDING_PROVISION</span></div>
                 <div><span className="font-bold">Bağlantı Sinyali:</span> <span className="text-slate-600 dark:text-slate-350">BYPASS_TO_ENCRYPTED_SEED_DB</span></div>
-                <div><span className="font-bold">Açıklama:</span> Organization Mailbox bağlı olmadığından gerçek e-postalar yerine, imza tarama algoritmamızın başarısını test etmeniz adına <b>simüle edilen senaryo aday verileri</b> listelenmektedir. ADMIN, Organization Settings içindeki <b>Organization Mailbox</b> ekranından bağlantı kurmalıdır.</div>
+                <div><span className="font-bold">Açıklama:</span> Organization Mailbox bağlı olmadığından gerçek e-postalar yerine, imza tarama algoritmamızın başarısını test etmeniz adına <b>simüle edilen senaryo aday verileri</b> listelenmektedir. ADMIN, Organization Settings içindeki <b>Shared Mailboxes</b> ekranından bağlantı kurmalıdır.</div>
               </div>
             </div>
             <div className="space-y-1.5 p-3 rounded-xl bg-amber-100/30 dark:bg-zinc-900/40 text-slate-600 dark:text-slate-350">
               <span className="text-[10px] font-bold text-indigo-700 dark:text-indigo-400 block uppercase">🚀 GERÇEK VERİYE NASIL GEÇİLİR?</span>
               <ol className="list-decimal pl-4 space-y-1">
-                <li>ADMIN, Organization Settings içinde Organization Mailbox bağlantısını kurar.</li>
+                <li>ADMIN, Organization Settings içinde Shared Mailboxes sayfasından Organization Mailbox bağlantısını kurar.</li>
                 <li>Tüm kullanıcılar aynı organizasyon posta kutusu yapılandırmasını otomatik kullanır.</li>
                 <li>Bağlantı aktif olduğunda organizasyon e-postaları taranır.</li>
               </ol>
@@ -1116,7 +1116,7 @@ export default function EmailLeadDiscoveryView({
                     <strong>Hata Nedenleri & Nasıl Giderilir?</strong><br />
                     1. <strong>Organization Mailbox bağlantısının yenilenmesi:</strong> Microsoft Graph yetkileri sunucu tarafında otomatik yenilenir. Yenileme başarısız olursa ADMIN bağlantıyı yeniden kurmalıdır.<br />
                     2. <strong>Yetersiz İzin Kapsamı:</strong> Giriş yapılan profilin e-postaları okuyabilmesi için <code className="bg-slate-100 px-1 py-0.5 rounded text-[10px] dark:bg-zinc-900 dark:text-zinc-300">Mail.Read</code> yetkisinin verilmiş olması şarttır.<br />
-                    <strong className="text-indigo-650 dark:text-indigo-400 block mt-1">✓ Çözüm: Organization Settings içindeki Organization Mailbox ekranından bağlantıyı test edin veya yeniden bağlayın.</strong>
+                    <strong className="text-indigo-650 dark:text-indigo-400 block mt-1">✓ Çözüm: Organization Settings içindeki Shared Mailboxes ekranından bağlantıyı test edin veya yeniden bağlayın.</strong>
                   </p>
                 </div>
               )}

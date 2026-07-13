@@ -3504,28 +3504,16 @@ export default function DealManagementView({ initialTab = "dashboard", onNavigat
                         <RefreshCw className={`w-4.5 h-4.5 ${isExchangeConnected ? "animate-spin" : ""}`} style={{ animationDuration: "14s" }} />
                       </div>
                       <div>
-                        <p className="text-xs font-bold text-slate-800 dark:text-zinc-100">{t("Microsoft Exchange Mailbox Integration")}</p>
+                        <p className="text-xs font-bold text-slate-800 dark:text-zinc-100">{t("Organization Mailbox")}</p>
                         <p className="text-[10px] text-slate-450 dark:text-zinc-400">
-                          {isExchangeConnected
-                            ? "Connected (Realtime Outlook B2B Mail Sync active)"
-                            : "Disconnected (Mail history logged offline)"}
+                          {t("Managed in Organization Settings > Shared Mailboxes")}
                         </p>
                       </div>
                     </div>
 
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setIsExchangeConnected(!isExchangeConnected);
-                      }}
-                      className={`text-[10px] font-bold px-3 py-1.5 rounded-lg border transition-all cursor-pointer ${
-                        isExchangeConnected
-                          ? "bg-green-50 hover:bg-green-100 text-green-700 border-green-200"
-                          : "bg-slate-100 hover:bg-slate-200 text-slate-600 border-slate-300"
-                      }`}
-                    >
-                      {isExchangeConnected ? "Disconnect Sync" : "Sync Outlook Mailbox"}
-                    </button>
+                    <span className="text-[10px] font-bold px-3 py-1.5 rounded-lg border bg-slate-100 text-slate-600 border-slate-300">
+                      {t("Shared Mailboxes")}
+                    </span>
                   </div>
 
                   {/* Complete Email Conversation stack */}

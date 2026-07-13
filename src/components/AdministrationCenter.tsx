@@ -96,7 +96,7 @@ interface AdministrationCenterProps {
   initialSubTab?: string;
   organizationMailbox?: OrganizationMailbox | null;
   microsoftConfig?: { hasClientKeys: boolean } | null;
-  onConnectOrganizationMailbox?: () => void;
+  onConnectOrganizationMailbox?: (mailboxAddress: string) => void;
   onDisconnectOrganizationMailbox?: () => void;
   onTestOrganizationMailbox?: () => void;
 }
@@ -174,6 +174,13 @@ export default function AdministrationCenter({
   }, [initialSubTab]);
 
   const [showSavedMsg, setShowSavedMsg] = useState<boolean>(false);
+  const [mailboxAddress, setMailboxAddress] = useState<string>(
+    organizationMailbox?.organizationMailbox || organizationMailbox?.mailbox_email || ""
+  );
+
+  useEffect(() => {
+    setMailboxAddress(organizationMailbox?.organizationMailbox || organizationMailbox?.mailbox_email || "");
+  }, [organizationMailbox?.organizationMailbox, organizationMailbox?.mailbox_email]);
 
   // 1. Organization Settings
   const [orgSettings, setOrgSettings] = useState(() => {
@@ -830,6 +837,109 @@ export default function AdministrationCenter({
     }, 800);
   };
 
+  const organizationMailboxCard = (
+    <div className="space-y-4 pt-6 border-t border-slate-100 dark:border-zinc-800">
+      <div className="text-left">
+        <h4 className="text-sm font-bold text-slate-800 dark:text-zinc-200 uppercase tracking-wide font-mono flex items-center gap-1.5">
+          <Mail className="w-4 h-4 text-slate-400" />
+          {L("Organizasyon Posta Kutusu", "Organization Mailbox")}
+        </h4>
+        <p className="text-xs text-slate-500 dark:text-zinc-400 mt-1">
+          {L(
+            "Microsoft 365 bağlantısı organizasyon kapsamındadır. Tüm kullanıcılar bu kutuyu otomatik kullanır.",
+            "Microsoft 365 is organization-scoped. All users automatically use this mailbox."
+          )}
+        </p>
+      </div>
+
+      <div className="p-5 rounded-2xl border border-indigo-200/70 bg-indigo-50/20 dark:border-zinc-800 dark:bg-black/20 space-y-4">
+        <div className="flex flex-col lg:flex-row lg:items-start justify-between gap-4">
+          <div className="space-y-2">
+            <span className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[10px] font-black uppercase ${
+              organizationMailbox?.status === "Connected"
+                ? "bg-emerald-50 text-emerald-700 dark:bg-emerald-950/30 dark:text-emerald-300"
+                : organizationMailbox?.status === "Expired"
+                  ? "bg-amber-50 text-amber-700 dark:bg-amber-950/30 dark:text-amber-300"
+                  : "bg-slate-100 text-slate-600 dark:bg-zinc-900 dark:text-zinc-300"
+            }`}>
+              {organizationMailbox?.status || "Disconnected"}
+            </span>
+            <div>
+              <h4 className="text-sm font-bold text-slate-850 dark:text-zinc-100">
+                {organizationMailbox?.mailbox_email || L("Bağlı organizasyon posta kutusu yok", "No organization mailbox connected")}
+              </h4>
+              <p className="text-xs text-slate-500 dark:text-zinc-400 mt-1">
+                {organizationMailbox?.sender_name
+                  ? `${organizationMailbox.sender_name} · ${organizationMailbox.tenant_name || "Microsoft 365"}`
+                  : L("Yalnızca ADMIN Microsoft 365 bağlantısını kurabilir veya kesebilir.", "Only ADMIN can connect or disconnect Microsoft 365.")}
+              </p>
+            </div>
+            {organizationMailbox?.connected_at && (
+              <p className="text-[10px] text-slate-400 font-mono">
+                {L("Bağlanma:", "Connected:")} {new Date(organizationMailbox.connected_at).toLocaleString()}
+              </p>
+            )}
+          </div>
+
+          <div className="w-full lg:max-w-md space-y-3">
+            <label className="block text-[10px] font-bold text-slate-500 uppercase font-mono">
+              {L("Posta Kutusu Adresi", "Mailbox Address")}
+            </label>
+            <input
+              type="email"
+              value={mailboxAddress}
+              onChange={(event) => setMailboxAddress(event.target.value)}
+              placeholder="info@example.com"
+              className="w-full text-xs bg-white dark:bg-black/35 text-slate-800 dark:text-slate-200 px-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-zinc-800 focus:outline-none focus:ring-1 focus:ring-indigo-500 font-semibold"
+            />
+            <p className="text-[10px] text-slate-500 dark:text-zinc-400">
+              {microsoftConfig?.hasClientKeys
+                ? L("Azure uygulama kimlik bilgileri hazır.", "Azure application credentials are configured.")
+                : L("Azure uygulama kimlik bilgileri eksik.", "Azure application credentials are missing.")}
+            </p>
+          </div>
+
+          <div className="flex flex-wrap gap-2 lg:justify-end">
+            <button
+              type="button"
+              onClick={() => onConnectOrganizationMailbox?.(mailboxAddress.trim())}
+              disabled={!mailboxAddress.trim()}
+              className={`p-2.5 px-4 text-xs font-bold rounded-xl transition-all flex items-center gap-1.5 ${
+                mailboxAddress.trim()
+                  ? "text-white bg-indigo-650 hover:bg-indigo-600 cursor-pointer"
+                  : "text-slate-400 bg-slate-100 dark:bg-zinc-900 cursor-not-allowed"
+              }`}
+            >
+              <Plus className="w-4 h-4" />
+              {L("Bağla", "Connect")}
+            </button>
+            {organizationMailbox?.status === "Connected" || organizationMailbox?.status === "Expired" ? (
+              <>
+                <button
+                  type="button"
+                  onClick={onTestOrganizationMailbox}
+                  disabled={organizationMailbox?.status !== "Connected"}
+                  className="p-2.5 px-4 text-xs font-bold text-indigo-700 bg-white border border-indigo-200 rounded-xl hover:bg-indigo-50 transition-all flex items-center gap-1.5 disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  <Mail className="w-4 h-4" />
+                  {L("Test Gönder", "Test Connection")}
+                </button>
+                <button
+                  type="button"
+                  onClick={onDisconnectOrganizationMailbox}
+                  className="p-2.5 px-4 text-xs font-bold text-rose-700 bg-white border border-rose-200 rounded-xl hover:bg-rose-50 transition-all flex items-center gap-1.5"
+                >
+                  <Trash2 className="w-4 h-4" />
+                  {L("Bağlantıyı Kes", "Disconnect")}
+                </button>
+              </>
+            ) : null}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+
   if (!isAdmin) {
     return (
       <div className="flex flex-col items-center justify-center min-h-[320px] p-8 text-center space-y-3">
@@ -943,7 +1053,7 @@ export default function AdministrationCenter({
             }`}
           >
             <Mail className="w-4 h-4 text-slate-400" />
-            <span>{L("Organizasyon Posta Kutusu", "Organization Mailbox")}</span>
+            <span>{L("Paylaşımlı E-posta Kutuları", "Shared Mailboxes")}</span>
           </button>
 
           <button
@@ -1336,90 +1446,24 @@ export default function AdministrationCenter({
             </div>
           )}
 
-          {/* ==================== SECTION 3: ORGANIZATION MAILBOX ==================== */}
+          {/* ==================== SECTION 3: SHARED MAILBOXES ==================== */}
           {activeSubTab === "email" && (
             <div className="space-y-6 animate-in fade-in duration-100">
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-100 dark:border-zinc-800 pb-4 text-left">
                 <div>
                   <h3 className="text-lg font-bold text-slate-800 dark:text-zinc-150">
-                    {L("3. Organizasyon Posta Kutusu", "3. Organization Mailbox")}
+                    {L("3. Paylaşımlı E-posta Kutuları", "3. Shared Mailboxes")}
                   </h3>
                   <p className="text-xs text-slate-500 dark:text-zinc-400 mt-1">
                     {L(
-                      "Microsoft 365 bağlantısı organizasyon kapsamındadır. Tüm kullanıcılar davet, lead ve teklif e-postalarında bu kutuyu otomatik kullanır.",
-                      "Microsoft 365 is organization-scoped. All users automatically use this mailbox for invitation, lead, and proposal emails."
+                      "Organizasyon kapsamındaki Microsoft 365 posta kutularını yönetin.",
+                      "Manage organization-scoped Microsoft 365 mailboxes."
                     )}
                   </p>
                 </div>
               </div>
 
-              <div className="p-5 rounded-2xl border border-indigo-200/70 bg-indigo-50/20 dark:border-zinc-800 dark:bg-black/20 space-y-4">
-                <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
-                  <div className="space-y-2">
-                    <span className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[10px] font-black uppercase ${
-                      organizationMailbox?.status === "Connected"
-                        ? "bg-emerald-50 text-emerald-700 dark:bg-emerald-950/30 dark:text-emerald-300"
-                        : organizationMailbox?.status === "Expired"
-                          ? "bg-amber-50 text-amber-700 dark:bg-amber-950/30 dark:text-amber-300"
-                          : "bg-slate-100 text-slate-600 dark:bg-zinc-900 dark:text-zinc-300"
-                    }`}>
-                      {organizationMailbox?.status || "Disconnected"}
-                    </span>
-                    <div>
-                      <h4 className="text-sm font-bold text-slate-850 dark:text-zinc-100">
-                        {organizationMailbox?.mailbox_email || L("Bağlı organizasyon posta kutusu yok", "No organization mailbox connected")}
-                      </h4>
-                      <p className="text-xs text-slate-500 dark:text-zinc-400 mt-1">
-                        {organizationMailbox?.sender_name
-                          ? `${organizationMailbox.sender_name} · ${organizationMailbox.tenant_name || "Microsoft 365"}`
-                          : L("Yalnızca ADMIN Microsoft 365 bağlantısını kurabilir veya kesebilir.", "Only ADMIN can connect or disconnect Microsoft 365.")}
-                      </p>
-                    </div>
-                    {organizationMailbox?.connected_at && (
-                      <p className="text-[10px] text-slate-400 font-mono">
-                        {L("Bağlanma:", "Connected:")} {new Date(organizationMailbox.connected_at).toLocaleString()}
-                      </p>
-                    )}
-                  </div>
-
-                  <div className="flex flex-wrap gap-2">
-                    {organizationMailbox?.status === "Connected" || organizationMailbox?.status === "Expired" ? (
-                      <>
-                        <button
-                          type="button"
-                          onClick={onTestOrganizationMailbox}
-                          className="p-2.5 px-4 text-xs font-bold text-indigo-700 bg-white border border-indigo-200 rounded-xl hover:bg-indigo-50 transition-all flex items-center gap-1.5"
-                        >
-                          <Mail className="w-4 h-4" />
-                          {L("Test Gönder", "Test Connection")}
-                        </button>
-                        <button
-                          type="button"
-                          onClick={onDisconnectOrganizationMailbox}
-                          className="p-2.5 px-4 text-xs font-bold text-rose-700 bg-white border border-rose-200 rounded-xl hover:bg-rose-50 transition-all flex items-center gap-1.5"
-                        >
-                          <Trash2 className="w-4 h-4" />
-                          {L("Bağlantıyı Kes", "Disconnect")}
-                        </button>
-                      </>
-                    ) : (
-                      <button
-                        type="button"
-                        onClick={onConnectOrganizationMailbox}
-                        disabled={!microsoftConfig?.hasClientKeys}
-                        className={`p-2.5 px-4 text-xs font-bold rounded-xl transition-all flex items-center gap-1.5 ${
-                          microsoftConfig?.hasClientKeys
-                            ? "text-white bg-indigo-650 hover:bg-indigo-600 cursor-pointer"
-                            : "text-slate-400 bg-slate-100 dark:bg-zinc-900 cursor-not-allowed"
-                        }`}
-                      >
-                        <Plus className="w-4 h-4" />
-                        {L("Microsoft 365 Bağla", "Connect Microsoft 365")}
-                      </button>
-                    )}
-                  </div>
-                </div>
-              </div>
+              {organizationMailboxCard}
             </div>
           )}
 

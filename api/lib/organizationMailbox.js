@@ -1,4 +1,8 @@
 import { createClient } from "@supabase/supabase-js";
+import {
+  isMicrosoftGraphConfigured,
+  sendMicrosoftGraphMail,
+} from "./microsoftGraphMailService.js";
 
 export function getSupabaseConfig() {
   const supabaseUrl = process.env.VITE_SUPABASE_URL || "";
@@ -8,34 +12,16 @@ export function getSupabaseConfig() {
   return { supabaseUrl, anonKey, serviceKey };
 }
 
-export function getMicrosoftConfig() {
-  return {
-    clientId: process.env.MICROSOFT_CLIENT_ID || "",
-    clientSecret: process.env.MICROSOFT_CLIENT_SECRET || "",
-  };
-}
-
-function decodeJwtPayload(token) {
-  try {
-    const payload = token.split(".")[1];
-    if (!payload) return {};
-    const padded = payload.padEnd(payload.length + ((4 - (payload.length % 4)) % 4), "=");
-    return JSON.parse(Buffer.from(padded, "base64url").toString("utf8"));
-  } catch {
-    return {};
-  }
-}
-
 function getBearerToken(request) {
   const authHeader = request.headers.authorization || "";
   return authHeader.startsWith("Bearer ") ? authHeader.slice(7) : "";
 }
 
 export function getMailboxStatus(mailbox) {
-  if (!mailbox?.access_token || !mailbox?.refresh_token || !mailbox?.mailbox_email) {
+  if (!mailbox?.organizationMailbox && !mailbox?.mailbox_email) {
     return "Disconnected";
   }
-  if (mailbox.expires_at && new Date(mailbox.expires_at).getTime() <= Date.now()) {
+  if (!isMicrosoftGraphConfigured()) {
     return "Expired";
   }
   return "Connected";
@@ -47,11 +33,16 @@ function publicMailbox(mailbox) {
     status,
     tenant_id: mailbox?.tenant_id || "",
     tenant_name: mailbox?.tenant_name || "",
-    mailbox_email: mailbox?.mailbox_email || "",
+    mailbox_email: mailbox?.organizationMailbox || mailbox?.mailbox_email || "",
+    organizationMailbox: mailbox?.organizationMailbox || mailbox?.mailbox_email || "",
     sender_name: mailbox?.sender_name || "",
     connected_by: mailbox?.connected_by || "",
     connected_at: mailbox?.connected_at || "",
     expires_at: mailbox?.expires_at || "",
+    error:
+      status === "Expired"
+        ? "Azure application credentials are missing or incomplete."
+        : "",
   };
 }
 
@@ -140,64 +131,15 @@ export async function getStoredMailbox(adminClient, organizationId) {
   return settings.microsoft_graph_application?.organization_mailbox || null;
 }
 
-async function fetchGraphMe(accessToken) {
-  const response = await fetch("https://graph.microsoft.com/v1.0/me", {
-    headers: { Authorization: `Bearer ${accessToken}` },
-  });
-  if (!response.ok) {
-    const text = await response.text();
-    throw new Error(text || "Microsoft Graph profile validation failed.");
-  }
-  return response.json();
-}
-
-export async function refreshOrganizationMailbox(adminClient, organizationId, mailbox) {
-  if (!mailbox?.refresh_token) return mailbox;
-  if (mailbox.expires_at && new Date(mailbox.expires_at).getTime() > Date.now() + 60_000) {
-    return mailbox;
-  }
-
-  const { clientId, clientSecret } = getMicrosoftConfig();
-  if (!clientId || !clientSecret) {
-    throw new Error("Microsoft OAuth application is not configured.");
-  }
-
-  const tenantId = mailbox.tenant_id || "common";
-  const response = await fetch(`https://login.microsoftonline.com/${tenantId}/oauth2/v2.0/token`, {
-    method: "POST",
-    headers: { "Content-Type": "application/x-www-form-urlencoded" },
-    body: new URLSearchParams({
-      client_id: clientId,
-      client_secret: clientSecret,
-      refresh_token: mailbox.refresh_token,
-      grant_type: "refresh_token",
-      scope: "offline_access user.read mail.send mail.readwrite",
-    }),
-  });
-
-  const payload = await response.json().catch(() => ({}));
-  if (!response.ok) {
-    throw new Error(payload.error_description || payload.error || "Microsoft token refresh failed.");
-  }
-
-  const refreshed = {
-    ...mailbox,
-    access_token: payload.access_token,
-    refresh_token: payload.refresh_token || mailbox.refresh_token,
-    expires_at: new Date(Date.now() + Number(payload.expires_in || 3600) * 1000).toISOString(),
-  };
-  await writeMailbox(adminClient, organizationId, refreshed);
-  return refreshed;
-}
-
 export async function getOrganizationMailboxForRequest(request, { requireConnected = false } = {}) {
   const context = await getRequestContext(request);
-  let mailbox = await getStoredMailbox(context.adminClient, context.organizationId);
-  if (mailbox && getMailboxStatus(mailbox) === "Expired") {
-    mailbox = await refreshOrganizationMailbox(context.adminClient, context.organizationId, mailbox);
-  }
+  const mailbox = await getStoredMailbox(context.adminClient, context.organizationId);
   if (requireConnected && getMailboxStatus(mailbox) !== "Connected") {
-    const error = new Error("Organization Microsoft 365 mailbox is not connected.");
+    const error = new Error(
+      mailbox
+        ? "Organization Microsoft 365 mailbox is configured, but Azure application credentials are incomplete."
+        : "Organization Microsoft 365 mailbox is not connected."
+    );
     error.status = 400;
     throw error;
   }
@@ -212,28 +154,26 @@ export async function connectOrganizationMailbox(request, body) {
     throw error;
   }
 
-  const tokenPayload = decodeJwtPayload(body?.tokens?.access_token || "");
-  const graphUser = body?.user?.mail || body?.user?.userPrincipalName
-    ? body.user
-    : await fetchGraphMe(body?.tokens?.access_token || "");
-  const mailboxEmail = graphUser.mail || graphUser.userPrincipalName || "";
-  const mailbox = {
-    tenant_id: tokenPayload.tid || body?.tenant_id || "common",
-    tenant_name: tokenPayload.iss || mailboxEmail.split("@")[1] || "Microsoft 365",
-    mailbox_email: mailboxEmail,
-    sender_name: graphUser.displayName || mailboxEmail,
-    access_token: body?.tokens?.access_token || "",
-    refresh_token: body?.tokens?.refresh_token || body?.refresh_token || "",
-    expires_at: new Date(Date.now() + Number(body?.tokens?.expires_in || 3600) * 1000).toISOString(),
-    connected_by: context.user.id,
-    connected_at: new Date().toISOString(),
-  };
-
-  if (!mailbox.mailbox_email || !mailbox.access_token || !mailbox.refresh_token) {
-    const error = new Error("Microsoft 365 mailbox connection requires access and refresh tokens.");
+  const mailboxEmail = String(
+    body?.organizationMailbox || body?.mailbox_email || body?.mailboxEmail || ""
+  ).trim().toLowerCase();
+  if (!mailboxEmail || !mailboxEmail.includes("@")) {
+    const error = new Error("A valid organization mailbox address is required.");
     error.status = 400;
     throw error;
   }
+
+  const mailbox = {
+    organizationMailbox: mailboxEmail,
+    tenant_id: process.env.AZURE_TENANT_ID || "",
+    tenant_name: mailboxEmail.split("@")[1] || "Microsoft 365",
+    mailbox_email: mailboxEmail,
+    sender_name: body?.sender_name || mailboxEmail,
+    provider: "Microsoft 365",
+    auth_type: "client_credentials",
+    connected_by: context.user.id,
+    connected_at: new Date().toISOString(),
+  };
 
   await writeMailbox(context.adminClient, context.organizationId, mailbox);
   return publicMailbox(mailbox);
@@ -256,38 +196,22 @@ export async function getOrganizationMailboxStatus(request) {
 }
 
 export async function sendGraphMailWithMailbox(adminClient, organizationId, mailbox, mail, { draft = false } = {}) {
-  const freshMailbox = await refreshOrganizationMailbox(adminClient, organizationId, mailbox);
-  const endpoint = draft ? "https://graph.microsoft.com/v1.0/me/messages" : "https://graph.microsoft.com/v1.0/me/sendMail";
-  const message = {
-    subject: mail.subject,
-    body: { contentType: "HTML", content: mail.body },
-    toRecipients: [{ emailAddress: { address: mail.recipient } }],
-    attachments: (mail.attachments || []).map((att) => ({
-      "@odata.type": "#microsoft.graph.fileAttachment",
-      name: att.name,
-      contentType: att.type || "application/octet-stream",
-      contentBytes: att.contentBytes,
-    })),
-  };
-  const graphPayload = draft ? message : { message, saveToSentItems: "true" };
-
-  const response = await fetch(endpoint, {
-    method: "POST",
-    headers: {
-      Authorization: `Bearer ${freshMailbox.access_token}`,
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify(graphPayload),
-  });
-  if (!response.ok) {
-    const text = await response.text();
-    let details = text;
-    try {
-      details = JSON.parse(text).error?.message || text;
-    } catch {}
-    throw new Error(details || "Microsoft Graph mail delivery failed.");
+  void adminClient;
+  void organizationId;
+  if (draft) {
+    const error = new Error("Draft creation is not supported by Phase 1 Organization Mailbox Mail.Send integration.");
+    error.status = 501;
+    throw error;
   }
-  return draft ? response.json() : { success: true };
+  return sendMicrosoftGraphMail({
+    organizationMailbox: mailbox?.organizationMailbox || mailbox?.mailbox_email,
+    to: mail.to || mail.recipients || mail.recipient,
+    cc: mail.cc || [],
+    bcc: mail.bcc || [],
+    subject: mail.subject,
+    html: mail.html || mail.body,
+    attachments: mail.attachments || [],
+  });
 }
 
 export async function sendOrganizationMailboxTest(request) {
@@ -313,5 +237,8 @@ export async function sendOrganizationMailboxTest(request) {
 
 export async function handleMailboxError(response, error) {
   const status = error.status || 500;
-  return response.status(status).json({ error: error.message || "Organization mailbox request failed." });
+  return response.status(status).json({
+    error: error.message || "Organization mailbox request failed.",
+    details: error.details || undefined,
+  });
 }

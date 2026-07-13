@@ -24,13 +24,7 @@ import { useLanguage } from "./lib/LanguageContext";
 import { useAuth } from "./lib/AuthContext";
 import { useOrganization } from "./lib/OrganizationContext";
 import { getDisplayInitials } from "./lib/authHelpers";
-import {
-  connectOrganizationMailbox,
-  disconnectOrganizationMailbox,
-  fetchOrganizationMailbox,
-  testOrganizationMailbox,
-  type OrganizationMailbox,
-} from "./lib/organizationMailbox";
+import { useOrganizationMailboxController } from "./lib/useOrganizationMailboxController";
 import { useNavigate } from "react-router-dom";
 const logoImage = "https://lh3.googleusercontent.com/d/13bNnthJU4LIICB4iiF1a4GH1PEn05MBx";
 
@@ -38,8 +32,6 @@ import {
   Recipient,
   AttachmentFile,
   Campaign,
-  MailboxSession,
-  ExchangeConfig,
   DashboardStats
 } from "./types";
 
@@ -83,9 +75,47 @@ import {
   Globe
 } from "lucide-react";
 
+const ACTIVE_TAB_STORAGE_KEY = "gemba_iq_active_tab";
+const ACTIVE_TABS = [
+  "company-discovery",
+  "revenue-management",
+  "dashboard",
+  "designer",
+  "lead-generator",
+  "lead-profiles",
+  "ai-sales-assistant",
+  "target-accounts",
+  "deal-management",
+  "sales-dashboard",
+  "services",
+  "create-proposal",
+  "campaign-manager",
+  "progress",
+  "history",
+  "companies-registry",
+  "proposal-management",
+  "todo-list",
+  "contract-manager",
+  "documents",
+  "administration",
+] as const;
+type ActiveTab = typeof ACTIVE_TABS[number];
+
+function getInitialActiveTab(): ActiveTab {
+  try {
+    const storedTab = sessionStorage.getItem(ACTIVE_TAB_STORAGE_KEY);
+    if (ACTIVE_TABS.includes(storedTab as ActiveTab)) {
+      return storedTab as ActiveTab;
+    }
+  } catch {
+    // Keep the existing default if sessionStorage is unavailable.
+  }
+  return "revenue-management";
+}
+
 export default function App() {
   const { lang, setLang, t } = useLanguage();
-  const { user, signOut } = useAuth();
+  const { signOut } = useAuth();
   const { actorName, actorEmail, companyName, isAdmin } = useOrganization();
   const navigate = useNavigate();
   const displayName = actorName;
@@ -174,7 +204,7 @@ export default function App() {
   ]);
 
   // Navigation State
-  const [activeTab, setActiveTab] = useState<"company-discovery" | "revenue-management" | "dashboard" | "designer" | "lead-generator" | "lead-profiles" | "ai-sales-assistant" | "target-accounts" | "deal-management" | "sales-dashboard" | "services" | "create-proposal" | "campaign-manager" | "progress" | "history" | "companies-registry" | "proposal-management" | "todo-list" | "contract-manager" | "documents" | "administration">("revenue-management");
+  const [activeTab, setActiveTab] = useState<ActiveTab>(getInitialActiveTab);
   const [activityReportMenuExpanded, setActivityReportMenuExpanded] = useState<boolean>(true);
   const [companiesMenuExpanded, setCompaniesMenuExpanded] = useState<boolean>(true);
   const [dealsMenuExpanded, setDealsMenuExpanded] = useState<boolean>(true);
@@ -199,9 +229,14 @@ export default function App() {
   });
 
   // Exchange Statuses
-  const [session, setSession] = useState<MailboxSession | null>(null);
-  const [organizationMailbox, setOrganizationMailbox] = useState<OrganizationMailbox | null>(null);
-  const [config, setConfig] = useState<ExchangeConfig | null>(null);
+  const {
+    session,
+    organizationMailbox,
+    microsoftConfig,
+    onConnectOrganizationMailbox,
+    onDisconnectOrganizationMailbox,
+    onTestOrganizationMailbox,
+  } = useOrganizationMailboxController();
   const [trackingService, setTrackingService] = useState<string>("none");
 
   // Core Campaign state managers
@@ -265,6 +300,14 @@ export default function App() {
   }, [activeTab]);
 
   useEffect(() => {
+    try {
+      sessionStorage.setItem(ACTIVE_TAB_STORAGE_KEY, activeTab);
+    } catch {
+      // Navigation should keep working even if browser storage is blocked.
+    }
+  }, [activeTab]);
+
+  useEffect(() => {
     if (!isAdmin) {
       setIsSettingsOpen(false);
       setIsSettingsDropdownOpen(false);
@@ -274,37 +317,8 @@ export default function App() {
     }
   }, [isAdmin, activeTab]);
 
-  // Load configuration and organization-scoped mailbox on mount
+  // Load persisted local campaign state on mount
   useEffect(() => {
-    const fetchConfig = async () => {
-      try {
-        const response = await fetch("/api/config");
-        if (response.ok) {
-          const data = await response.json();
-          setConfig(data);
-        }
-      } catch (err) {
-        console.error("Failed fetching Microsoft OAuth client configuration:", err);
-      }
-    };
-
-    fetchConfig();
-    if (user) {
-      fetchOrganizationMailbox()
-        .then(({ mailbox, session: mailboxSession }) => {
-          setOrganizationMailbox(mailbox);
-          setSession(mailboxSession);
-        })
-        .catch((err) => {
-          console.warn("Failed loading organization mailbox:", err);
-          setOrganizationMailbox(null);
-          setSession(null);
-        });
-    } else {
-      setOrganizationMailbox(null);
-      setSession(null);
-    }
-
     // Recover Campaign History logs
     const savedLogs = localStorage.getItem("smart_mailmerge_historic_campaigns");
     if (savedLogs) {
@@ -337,7 +351,7 @@ export default function App() {
     return () => {
       window.removeEventListener("change-tab", handleCustomChangeTab);
     };
-  }, [user]);
+  }, []);
 
   // Save changes to working drafts
   useEffect(() => {
@@ -349,81 +363,10 @@ export default function App() {
     }
   }, [subject, templateBody, attachments, recipients, trackingService]);
 
-  // Secure cross-envelope popup listener for Graph OAuth tokens
-  useEffect(() => {
-    const handleMessage = async (event: MessageEvent) => {
-      // Security: filter origins
-      const origin = event.origin;
-      if (!origin.endsWith(".run.app") && !origin.includes("localhost")) {
-        return;
-      }
-
-      if (event.data?.type === "OAUTH_AUTH_SUCCESS") {
-        const { tokens, user } = event.data;
-        try {
-          const { mailbox, session: mailboxSession } = await connectOrganizationMailbox(tokens, user);
-          setOrganizationMailbox(mailbox);
-          setSession(mailboxSession);
-        } catch (err: any) {
-          alert(err.message || t("Failed to save organization mailbox connection."));
-        }
-      }
-    };
-
-    window.addEventListener("message", handleMessage);
-    return () => window.removeEventListener("message", handleMessage);
-  }, [t]);
-
-  // Action: Launch Exchange auth popup
-  const handleConnect = async () => {
-    try {
-      const response = await fetch("/api/auth/url");
-      if (!response.ok) {
-        const err = await response.json();
-        throw new Error(err.error || "Could not retrieve Outlook auth URL.");
-      }
-
-      const { url } = await response.json();
-      
-      // Open Microsoft OAuth login pop-up direktly
-      const authWindow = window.open(
-        url,
-        "smart_mail_merge_oauth_popup",
-        "width=550,height=680"
-      );
-
-      if (!authWindow) {
-        alert(t("The pop-up authorization window was blocked. Please enable browser popups to sign in with Microsoft 365."));
-      }
-    } catch (error: any) {
-      console.error("Microsoft connection exception:", error);
-      alert(error.message);
-    }
-  };
-
-  const handleDisconnect = async () => {
-    try {
-      const mailbox = await disconnectOrganizationMailbox();
-      setOrganizationMailbox(mailbox);
-      setSession(null);
-    } catch (err: any) {
-      alert(err.message || t("Failed to disconnect organization mailbox."));
-    }
-  };
-
   const handleLogout = async () => {
     setIsUserDropdownOpen(false);
     await signOut();
     navigate("/login", { replace: true });
-  };
-
-  const handleTestOrganizationMailbox = async () => {
-    try {
-      const result = await testOrganizationMailbox();
-      alert(t("Organization mailbox test email sent to {email}.").replace("{email}", result.recipient));
-    } catch (err: any) {
-      alert(err.message || t("Failed to test organization mailbox."));
-    }
   };
 
   // Logs management
@@ -1799,10 +1742,10 @@ export default function App() {
                       onClose={() => setIsSettingsOpen(false)}
                       initialSubTab={initialAdminSubTab}
                       organizationMailbox={organizationMailbox}
-                      microsoftConfig={config}
-                      onConnectOrganizationMailbox={handleConnect}
-                      onDisconnectOrganizationMailbox={handleDisconnect}
-                      onTestOrganizationMailbox={handleTestOrganizationMailbox}
+                      microsoftConfig={microsoftConfig}
+                      onConnectOrganizationMailbox={onConnectOrganizationMailbox}
+                      onDisconnectOrganizationMailbox={onDisconnectOrganizationMailbox}
+                      onTestOrganizationMailbox={onTestOrganizationMailbox}
                     />
                   </div>
                 ) : (

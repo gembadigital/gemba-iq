@@ -8,10 +8,12 @@ export interface OrganizationMailbox {
   tenant_id: string;
   tenant_name: string;
   mailbox_email: string;
+  organizationMailbox?: string;
   sender_name: string;
   connected_by: string;
   connected_at: string;
   expires_at: string;
+  error?: string;
 }
 
 async function getAccessToken(): Promise<string> {
@@ -56,7 +58,7 @@ export async function fetchOrganizationMailbox(): Promise<{
   return { mailbox, session: toSession(mailbox) };
 }
 
-export async function connectOrganizationMailbox(tokens: unknown, user: unknown): Promise<{
+export async function connectOrganizationMailbox(organizationMailbox: string): Promise<{
   mailbox: OrganizationMailbox;
   session: MailboxSession | null;
 }> {
@@ -67,7 +69,7 @@ export async function connectOrganizationMailbox(tokens: unknown, user: unknown)
       "Content-Type": "application/json",
       Authorization: `Bearer ${accessToken}`,
     },
-    body: JSON.stringify({ action: "connect", tokens, user }),
+    body: JSON.stringify({ action: "connect", organizationMailbox }),
   });
   const mailbox = await response.json();
   if (!response.ok) {

@@ -1,12 +1,5 @@
 import React from "react";
-import {
-  Bell,
-  Globe,
-  Palette,
-  PenLine,
-  Sparkles,
-  User,
-} from "lucide-react";
+import { Mail, User } from "lucide-react";
 import { useLanguage } from "../lib/LanguageContext";
 import { useOrganization } from "../lib/OrganizationContext";
 
@@ -16,20 +9,11 @@ interface UserAccountSettingsProps {
   onToggleTheme: () => void;
 }
 
-const SECTIONS = [
-  { id: "profile", icon: User, titleKey: "My Profile" },
-  { id: "signature", icon: PenLine, titleKey: "Mail Signature" },
-  { id: "notifications", icon: Bell, titleKey: "Notifications" },
-  { id: "language", icon: Globe, titleKey: "Language" },
-  { id: "theme", icon: Palette, titleKey: "Theme" },
-  { id: "ai", icon: Sparkles, titleKey: "Personal AI Preferences" },
-] as const;
-
 export default function UserAccountSettings({
-  darkMode,
-  onToggleTheme,
+  darkMode: _darkMode,
+  onToggleTheme: _onToggleTheme,
 }: UserAccountSettingsProps) {
-  const { lang, setLang, t } = useLanguage();
+  const { t } = useLanguage();
   const { actorName, actorEmail } = useOrganization();
 
   return (
@@ -41,10 +25,10 @@ export default function UserAccountSettings({
               {t("Personal Scope")}
             </p>
             <h3 className="text-base font-bold text-slate-900 dark:text-slate-100 mt-1">
-              {t("Account")}
+              {t("My Account")}
             </h3>
             <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">
-              {t("These settings belong only to the signed-in user. Organization resources are managed separately by ADMIN.")}
+              {t("Personal Microsoft 365 mailbox integration will be available in Phase 2.")}
             </p>
           </div>
           <div className="text-right text-xs">
@@ -70,53 +54,24 @@ export default function UserAccountSettings({
         </div>
       </section>
 
-      {SECTIONS.filter((section) => section.id !== "profile").map(({ id, icon: Icon, titleKey }) => (
-        <section
-          key={id}
-          className="rounded-xl border border-slate-200/80 dark:border-slate-800 bg-white dark:bg-[#11100f] p-5"
-        >
-          <div className="flex items-start gap-3">
-            <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-slate-100 dark:bg-slate-800/80 text-slate-600 dark:text-slate-300">
-              <Icon className="h-4 w-4" />
-            </div>
-            <div className="min-w-0 flex-1">
-              <h3 className="text-sm font-semibold text-slate-900 dark:text-slate-100">
-                {t(titleKey)}
-              </h3>
-              {id === "language" ? (
-                <div className="mt-3 flex gap-2">
-                  {(["TR", "EN"] as const).map((option) => (
-                    <button
-                      key={option}
-                      type="button"
-                      onClick={() => setLang(option)}
-                      className={`px-3 py-1.5 rounded-lg text-xs font-bold border ${
-                        lang === option
-                          ? "bg-indigo-600 text-white border-indigo-600"
-                          : "bg-white dark:bg-black/20 border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-300"
-                      }`}
-                    >
-                      {option}
-                    </button>
-                  ))}
-                </div>
-              ) : id === "theme" ? (
-                <button
-                  type="button"
-                  onClick={onToggleTheme}
-                  className="mt-3 px-3 py-1.5 rounded-lg text-xs font-bold border border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300"
-                >
-                  {darkMode ? t("Switch to Light Theme") : t("Switch to Dark Theme")}
-                </button>
-              ) : (
-                <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">
-                  {t("Personal setting reserved for the signed-in user.")}
-                </p>
-              )}
-            </div>
+      <section className="rounded-2xl border border-blue-200/80 dark:border-blue-950/50 bg-blue-50/20 dark:bg-blue-950/10 p-5">
+        <div className="flex items-start gap-3">
+          <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-blue-100 dark:bg-blue-950/50 text-blue-700 dark:text-blue-300">
+            <Mail className="h-4 w-4" />
           </div>
-        </section>
-      ))}
+          <div className="min-w-0 flex-1">
+            <h3 className="text-sm font-semibold text-slate-900 dark:text-slate-100">
+              {t("Personal Mailbox")}
+            </h3>
+            <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">
+              {t("Personal Microsoft 365 mailbox integration will be available in Phase 2.")}
+            </p>
+            <p className="mt-3 text-[10px] font-bold uppercase tracking-wider text-blue-700 dark:text-blue-300">
+              {t("No personal mailbox actions are available in Phase 1.")}
+            </p>
+          </div>
+        </div>
+      </section>
     </div>
   );
 }

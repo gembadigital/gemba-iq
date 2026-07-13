@@ -716,8 +716,8 @@ export default function SendingProgressView({
                     <h4 className="text-xs font-bold text-slate-800 dark:text-slate-200">{t("Exchange Online Server")}</h4>
                     <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5 leading-tight">
                       {session?.isConnected
-                        ? `${session.displayName} (${session.isSandbox ? t("Sandbox Simulator") : t("Outlook Active")})`
-                        : t("Required: Connect M365 account first.")}
+                        ? `${session.displayName} (${t("Organization Mailbox Active")})`
+                        : t("Required: Configure Organization Mailbox in Shared Mailboxes.")}
                     </p>
                   </div>
                 </div>
@@ -763,14 +763,14 @@ export default function SendingProgressView({
 
               </div>
               
-              {/* Sandbox info alert */}
+              {/* Organization mailbox status alert */}
               {session?.isSandbox && (
                 <div className="mt-4 p-3 rounded bg-amber-50 dark:bg-amber-955/20 text-[11px] leading-relaxed text-amber-800 dark:text-amber-400 flex gap-2 border border-amber-205 dark:border-amber-900/40">
                   <AlertCircle className="w-4.5 h-4.5 text-amber-500 flex-shrink-0 mt-0.5" />
                   <div>
-<span className="font-bold block">{t("⚠️ Simulator Sandbox Mode Enabled:")}</span>
+<span className="font-bold block">{t("⚠️ Organization Mailbox Not Active:")}</span>
                     <p className="mt-0.5">
-{t('This is a simulated sandbox for testing mail merges. The rows in the sender queue will change to "Drafted" or "Success" in the web app screen, but no real emails or draft messages are actually created in your physical Outlook account / mailbox')}
+{t("Mail delivery requires the Organization Mailbox configured in Organization Settings > Shared Mailboxes.")}
                     </p>
                     <p className="mt-1 font-semibold text-slate-800 dark:text-slate-200">
 {t("Real drafts and sends use the Organization Mailbox configured by ADMIN.")}
@@ -993,7 +993,7 @@ export default function SendingProgressView({
               <div className="mt-6 p-3 bg-rose-50 dark:bg-rose-950/20 text-xs text-rose-800 dark:text-rose-400 rounded flex gap-2 border border-rose-150">
                 <AlertCircle className="w-5 h-5 flex-shrink-0 text-rose-500" />
                 <p>
-<strong>{t("Mailbox disconnected.")}</strong> {t("Please connect M365 or utilize the Simulator Sandbox mode in the connection dashboard to launch this merge.")}
+<strong>{t("Mailbox disconnected.")}</strong> {t("Configure the Organization Mailbox in Organization Settings > Shared Mailboxes to launch this merge.")}
                 </p>
               </div>
             )}
@@ -1322,8 +1322,8 @@ export default function SendingProgressView({
 <span>{t("Organization Mailbox permission check")}</span>
                     </p>
                     <ol className="list-decimal pl-4.5 space-y-1.5 text-[11px] leading-relaxed">
-                      <li>{t("Open Organization Settings and go to Organization Mailbox.")}</li>
-                      <li>{t("Reconnect Microsoft 365 with an ADMIN account if consent was revoked or expired.")}</li>
+                      <li>{t("Open Organization Settings and go to Shared Mailboxes.")}</li>
+                      <li>{t("Reconnect the Organization Mailbox if consent was revoked or expired.")}</li>
                       <li>{t("Confirm Mail.Send, Mail.ReadWrite, and User.Read delegated permissions are granted for the organization mailbox.")}</li>
                       <li>{t("Use Test Connection, then retry this campaign.")}</li>
                     </ol>
@@ -1384,7 +1384,7 @@ export default function SendingProgressView({
                     </button>
                   </div>
                   <p className="text-[11px] text-slate-500">
-{t("Microsoft Graph credentials are refreshed automatically on the server from organization_settings. Reconnect the Organization Mailbox in Organization Settings only if refresh fails repeatedly.")}
+{t("Microsoft Graph credentials are refreshed automatically on the server from organization_settings. Reconnect the Organization Mailbox in Shared Mailboxes only if refresh fails repeatedly.")}
                   </p>
                 </div>
               </div>
