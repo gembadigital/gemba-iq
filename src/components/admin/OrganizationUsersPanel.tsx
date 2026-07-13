@@ -166,7 +166,6 @@ export default function OrganizationUsersPanel({ onAuditLog }: OrganizationUsers
         `${invitation.invited_email} için ${formatAppRole(inviteRole)} rolüyle davet oluşturuldu.`
       );
       await loadDirectory();
-      await refreshOrganization();
     } catch (err) {
       setInviteMessage({
         type: "error",
