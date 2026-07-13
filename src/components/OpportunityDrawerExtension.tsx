@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from "react";
 import { useLanguage } from "../lib/LanguageContext";
+import { getSupabase } from "../lib/supabaseClient";
 import {
   FileText,
   Trash2,
@@ -1503,13 +1504,41 @@ export function ProposalContractSection({
   };
 
   // 6. Send Email Dispatch
-  const handleSendEmail = () => {
+  const handleSendEmail = async () => {
     if (!activeProposal) return;
+    if (!deal.contactEmail) {
+      alert(t("No contact email is available for this proposal."));
+      return;
+    }
     const body = lang === "TR"
       ? `Sayın Yetkili,\n\nTalep ettiğiniz #${activeProposal.proposalNumber} nolu operasyonel gelişim teklifi hazır durumdadır.\n\nİncelemek için aşağıdaki bağlantıyı tıklayabilir veya ekli belgeyi indirebilirsiniz.\n\nGemba Partner Danışmanlık A.Ş.`
       : `Dear Representative,\n\nPlease find attached the official proposal #${activeProposal.proposalNumber} for your operational excellence program review.\n\nBest regards,\nGemba Partner`;
-    
-    // Simulate email send
+
+    const supabase = getSupabase();
+    const {
+      data: { session },
+    } = supabase ? await supabase.auth.getSession() : { data: { session: null } };
+
+    const sendResponse = await fetch("/api/mail/send", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        ...(session?.access_token ? { Authorization: `Bearer ${session.access_token}` } : {}),
+      },
+      body: JSON.stringify({
+        recipient: deal.contactEmail,
+        subject: `${t("Proposal")} #${activeProposal.proposalNumber}`,
+        body: body.replace(/\n/g, "<br />"),
+        attachments: [],
+      }),
+    });
+
+    if (!sendResponse.ok) {
+      const payload = await sendResponse.json().catch(() => ({}));
+      alert(payload.error || t("Proposal email could not be sent."));
+      return;
+    }
+
     const logged = addAuditLog(
       deal,
       t("Proposal Email Dispatched"),

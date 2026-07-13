@@ -11,6 +11,10 @@ dotenv.config({ path: path.join(projectRoot, ".env") });
 
 import { GoogleGenAI } from "@google/genai";
 import { runCompanyAnalysis } from "./api/lib/analyzeCompanyCore.js";
+import {
+  getOrganizationMailboxForRequest,
+  sendGraphMailWithMailbox,
+} from "./api/lib/organizationMailbox.js";
 const ai = new GoogleGenAI({
   apiKey: process.env.GEMINI_API_KEY,
   httpOptions: {
@@ -73,6 +77,17 @@ app.post("/api/organization/members/role", async (req, res) => {
   } catch (error) {
     console.error("Organization role update handler failed:", error);
     res.status(500).json({ error: "Failed to update user role." });
+  }
+});
+
+// API: Organization-scoped Microsoft 365 mailbox
+app.all("/api/organization/mailbox", async (req, res) => {
+  try {
+    const handler = (await import("./api/organization/mailbox.js")).default;
+    await handler(req, res);
+  } catch (error) {
+    console.error("Organization mailbox handler failed:", error);
+    res.status(500).json({ error: "Failed to process organization mailbox request." });
   }
 });
 
@@ -209,7 +224,6 @@ app.get(["/auth/callback", "/auth/callback/"], async (req, res) => {
                 window.opener.postMessage(payload, '*');
                 window.close();
               } else {
-                localStorage.setItem('microsoft_session_temp', JSON.stringify(payload));
                 window.location.href = '/';
               }
             </script>
@@ -312,125 +326,46 @@ app.post("/api/auth/validate-token", async (req, res) => {
 // API: Proxy Send Mail via Microsoft Graph
 // We proxy this through Express to guarantee request reliability, handle headers cleanly, and log outcomes if required.
 app.post("/api/mail/send", async (req, res) => {
-  const { accessToken, recipient, subject, body, attachments } = req.body;
-
-  if (!accessToken) {
-    return res.status(401).json({ error: "Microsoft access token is missing." });
-  }
+  const { recipient, subject, body, attachments } = req.body;
   if (!recipient || !subject || !body) {
     return res.status(400).json({ error: "Missing required mail parameters (recipient, subject, body)." });
   }
 
   try {
-    // Construct Graph API payload
-    const graphPayload: any = {
-      message: {
-        subject: subject,
-        body: {
-          contentType: "HTML",
-          content: body
-        },
-        toRecipients: [
-          {
-            emailAddress: {
-              address: recipient
-            }
-          }
-        ],
-        attachments: (attachments || []).map((att: any) => ({
-          "@odata.type": "#microsoft.graph.fileAttachment",
-          name: att.name,
-          contentType: att.type || "application/octet-stream",
-          contentBytes: att.contentBytes // base64 payload
-        }))
-      },
-      saveToSentItems: "true"
-    };
-
-    const response = await fetch("https://graph.microsoft.com/v1.0/me/sendMail", {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${accessToken}`,
-        "Content-Type": "application/json"
-      },
-      body: JSON.stringify(graphPayload)
+    const context = await getOrganizationMailboxForRequest(req, { requireConnected: true });
+    await sendGraphMailWithMailbox(context.adminClient, context.organizationId, context.mailbox, {
+      recipient,
+      subject,
+      body,
+      attachments,
     });
-
-    if (!response.ok) {
-      const errText = await response.text();
-      let errDetails = errText;
-      try {
-        const errJson = JSON.parse(errText);
-        errDetails = errJson.error?.message || errText;
-      } catch (_) {}
-      throw new Error(errDetails);
-    }
-
     res.json({ success: true, timestamp: new Date().toISOString() });
   } catch (error: any) {
     console.error("Microsoft Graph mail sending failed:", error);
-    res.status(500).json({ error: error.message || "Unknown mail merge sending error." });
+    res.status(error.status || 500).json({ error: error.message || "Unknown mail merge sending error." });
   }
 });
 
 // API: Proxy Create Message Draft via Microsoft Graph
 app.post("/api/mail/draft", async (req, res) => {
-  const { accessToken, recipient, subject, body, attachments } = req.body;
-
-  if (!accessToken) {
-    return res.status(401).json({ error: "Microsoft access token is missing." });
-  }
+  const { recipient, subject, body, attachments } = req.body;
   if (!recipient || !subject || !body) {
     return res.status(400).json({ error: "Missing required mail parameters (recipient, subject, body)." });
   }
 
   try {
-    // Construct single message definition for POST /me/messages
-    const graphPayload: any = {
-      subject: subject,
-      body: {
-        contentType: "HTML",
-        content: body
-      },
-      toRecipients: [
-        {
-          emailAddress: {
-            address: recipient
-          }
-        }
-      ],
-      attachments: (attachments || []).map((att: any) => ({
-        "@odata.type": "#microsoft.graph.fileAttachment",
-        name: att.name,
-        contentType: att.type || "application/octet-stream",
-        contentBytes: att.contentBytes
-      }))
-    };
-
-    const response = await fetch("https://graph.microsoft.com/v1.0/me/messages", {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${accessToken}`,
-        "Content-Type": "application/json"
-      },
-      body: JSON.stringify(graphPayload)
-    });
-
-    if (!response.ok) {
-      const errText = await response.text();
-      let errDetails = errText;
-      try {
-        const errJson = JSON.parse(errText);
-        errDetails = errJson.error?.message || errText;
-      } catch (_) {}
-      throw new Error(errDetails);
-    }
-
-    const data = await response.json();
+    const context = await getOrganizationMailboxForRequest(req, { requireConnected: true });
+    const data = await sendGraphMailWithMailbox(
+      context.adminClient,
+      context.organizationId,
+      context.mailbox,
+      { recipient, subject, body, attachments },
+      { draft: true }
+    );
     res.json({ success: true, id: data.id, webLink: data.webLink, timestamp: new Date().toISOString() });
   } catch (error: any) {
     console.error("Microsoft Graph draft creation failed:", error);
-    res.status(500).json({ error: error.message || "Unknown mail merge draft error." });
+    res.status(error.status || 500).json({ error: error.message || "Unknown mail merge draft error." });
   }
 });
 

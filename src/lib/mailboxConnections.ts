@@ -10,53 +10,34 @@ export interface MailboxConnectionRecord {
   defaultMailbox: boolean;
 }
 
-const LEGACY_MAILBOX_SESSION_KEY = "m365_mailbox_session";
-
-function sanitizeStoragePart(value: string): string {
-  return value.trim().toLowerCase().replace(/[^a-z0-9._-]+/g, "_");
-}
-
 export function getUserMailboxSessionKey(userId: string | null | undefined): string {
-  return userId
-    ? `m365_mailbox_session:${sanitizeStoragePart(userId)}`
-    : LEGACY_MAILBOX_SESSION_KEY;
+  return userId ? "organization_mailbox_session:disabled" : "organization_mailbox_session:anonymous";
 }
 
 export function getUserMailboxConnectionsKey(userId: string | null | undefined): string {
-  return userId
-    ? `mailbox_connections:${sanitizeStoragePart(userId)}`
-    : "mailbox_connections:anonymous";
+  return userId ? "organization_mailbox_connections:disabled" : "organization_mailbox_connections:anonymous";
 }
 
 export function loadUserMailboxSession(userId: string | null | undefined): MailboxSession | null {
-  try {
-    const userKey = getUserMailboxSessionKey(userId);
-    const savedSession = localStorage.getItem(userKey) || localStorage.getItem(LEGACY_MAILBOX_SESSION_KEY);
-    return savedSession ? (JSON.parse(savedSession) as MailboxSession) : null;
-  } catch {
-    return null;
-  }
+  void userId;
+  return null;
 }
 
 export function saveUserMailboxSession(
   userId: string | null | undefined,
   session: MailboxSession
 ): void {
-  localStorage.setItem(getUserMailboxSessionKey(userId), JSON.stringify(session));
-  localStorage.setItem(getUserMailboxConnectionsKey(userId), JSON.stringify([sessionToConnection(session)]));
+  void userId;
+  void session;
 }
 
 export function clearUserMailboxSession(userId: string | null | undefined): void {
-  localStorage.removeItem(getUserMailboxSessionKey(userId));
+  void userId;
 }
 
 export function loadUserMailboxConnections(userId: string | null | undefined): MailboxConnectionRecord[] {
-  try {
-    const saved = localStorage.getItem(getUserMailboxConnectionsKey(userId));
-    return saved ? (JSON.parse(saved) as MailboxConnectionRecord[]) : [];
-  } catch {
-    return [];
-  }
+  void userId;
+  return [];
 }
 
 export function sessionToConnection(session: MailboxSession): MailboxConnectionRecord {

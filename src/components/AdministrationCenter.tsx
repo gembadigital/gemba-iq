@@ -38,6 +38,7 @@ import { useLanguage } from "../lib/LanguageContext";
 import { DocumentService } from "../services/DocumentService";
 import { CrmDb } from "../lib/CrmDb";
 import OrganizationUsersPanel from "./admin/OrganizationUsersPanel";
+import type { OrganizationMailbox } from "../lib/organizationMailbox";
 const logoImage = "https://lh3.googleusercontent.com/d/13bNnthJU4LIICB4iiF1a4GH1PEn05MBx";
 
 interface TemplateItem {
@@ -93,9 +94,22 @@ interface AuditLogItem {
 interface AdministrationCenterProps {
   onClose?: () => void;
   initialSubTab?: string;
+  organizationMailbox?: OrganizationMailbox | null;
+  microsoftConfig?: { hasClientKeys: boolean } | null;
+  onConnectOrganizationMailbox?: () => void;
+  onDisconnectOrganizationMailbox?: () => void;
+  onTestOrganizationMailbox?: () => void;
 }
 
-export default function AdministrationCenter({ onClose, initialSubTab }: AdministrationCenterProps) {
+export default function AdministrationCenter({
+  onClose,
+  initialSubTab,
+  organizationMailbox,
+  microsoftConfig,
+  onConnectOrganizationMailbox,
+  onDisconnectOrganizationMailbox,
+  onTestOrganizationMailbox,
+}: AdministrationCenterProps) {
   const { lang: selectedLanguage, setLang: setSelectedLanguage, t } = useLanguage();
   const isTR = selectedLanguage === "TR";
   const L = (trText: string, enText: string) => (isTR ? trText : enText);
@@ -1328,23 +1342,83 @@ export default function AdministrationCenter({ onClose, initialSubTab }: Adminis
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-100 dark:border-zinc-800 pb-4 text-left">
                 <div>
                   <h3 className="text-lg font-bold text-slate-800 dark:text-zinc-150">
-                    {L("3. Paylaşımlı E-posta Kutuları (Gelecek)", "3. Shared Mailboxes (Future)")}
+                    {L("3. Organizasyon Microsoft 365 Posta Kutusu", "3. Organization Microsoft 365 Mailbox")}
                   </h3>
                   <p className="text-xs text-slate-500 dark:text-zinc-400 mt-1">
                     {L(
-                      "Kişisel Microsoft OAuth bağlantıları My Account alanındadır. Bu bölüm ileride info@, sales@ ve support@ gibi paylaşımlı kutular için kullanılacaktır.",
-                      "Personal Microsoft OAuth connections live in My Account. This section is reserved for future shared mailboxes such as info@, sales@, and support@."
+                      "Microsoft 365 bağlantısı organizasyon kapsamındadır. Tüm kullanıcılar davet, lead ve teklif e-postalarında bu kutuyu otomatik kullanır.",
+                      "Microsoft 365 is organization-scoped. All users automatically use this mailbox for invitation, lead, and proposal emails."
                     )}
                   </p>
                 </div>
-                <button
-                  type="button"
-                  onClick={() => setIsConnectMailboxOpen(true)}
-                  className="p-2.5 px-4 text-xs font-bold text-white bg-indigo-650 rounded-xl hover:bg-indigo-600 transition-all flex items-center gap-1.5 cursor-pointer shadow-xs"
-                >
-                  <Plus className="w-4 h-4" />
-                  {L("Paylaşımlı Kutu Taslağı Ekle", "Add Shared Mailbox Draft")}
-                </button>
+              </div>
+
+              <div className="p-5 rounded-2xl border border-indigo-200/70 bg-indigo-50/20 dark:border-zinc-800 dark:bg-black/20 space-y-4">
+                <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+                  <div className="space-y-2">
+                    <span className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[10px] font-black uppercase ${
+                      organizationMailbox?.status === "Connected"
+                        ? "bg-emerald-50 text-emerald-700 dark:bg-emerald-950/30 dark:text-emerald-300"
+                        : organizationMailbox?.status === "Expired"
+                          ? "bg-amber-50 text-amber-700 dark:bg-amber-950/30 dark:text-amber-300"
+                          : "bg-slate-100 text-slate-600 dark:bg-zinc-900 dark:text-zinc-300"
+                    }`}>
+                      {organizationMailbox?.status || "Disconnected"}
+                    </span>
+                    <div>
+                      <h4 className="text-sm font-bold text-slate-850 dark:text-zinc-100">
+                        {organizationMailbox?.mailbox_email || L("Bağlı organizasyon posta kutusu yok", "No organization mailbox connected")}
+                      </h4>
+                      <p className="text-xs text-slate-500 dark:text-zinc-400 mt-1">
+                        {organizationMailbox?.sender_name
+                          ? `${organizationMailbox.sender_name} · ${organizationMailbox.tenant_name || "Microsoft 365"}`
+                          : L("Yalnızca ADMIN Microsoft 365 bağlantısını kurabilir veya kesebilir.", "Only ADMIN can connect or disconnect Microsoft 365.")}
+                      </p>
+                    </div>
+                    {organizationMailbox?.connected_at && (
+                      <p className="text-[10px] text-slate-400 font-mono">
+                        {L("Bağlanma:", "Connected:")} {new Date(organizationMailbox.connected_at).toLocaleString()}
+                      </p>
+                    )}
+                  </div>
+
+                  <div className="flex flex-wrap gap-2">
+                    {organizationMailbox?.status === "Connected" || organizationMailbox?.status === "Expired" ? (
+                      <>
+                        <button
+                          type="button"
+                          onClick={onTestOrganizationMailbox}
+                          className="p-2.5 px-4 text-xs font-bold text-indigo-700 bg-white border border-indigo-200 rounded-xl hover:bg-indigo-50 transition-all flex items-center gap-1.5"
+                        >
+                          <Mail className="w-4 h-4" />
+                          {L("Test Gönder", "Test Connection")}
+                        </button>
+                        <button
+                          type="button"
+                          onClick={onDisconnectOrganizationMailbox}
+                          className="p-2.5 px-4 text-xs font-bold text-rose-700 bg-white border border-rose-200 rounded-xl hover:bg-rose-50 transition-all flex items-center gap-1.5"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                          {L("Bağlantıyı Kes", "Disconnect")}
+                        </button>
+                      </>
+                    ) : (
+                      <button
+                        type="button"
+                        onClick={onConnectOrganizationMailbox}
+                        disabled={!microsoftConfig?.hasClientKeys}
+                        className={`p-2.5 px-4 text-xs font-bold rounded-xl transition-all flex items-center gap-1.5 ${
+                          microsoftConfig?.hasClientKeys
+                            ? "text-white bg-indigo-650 hover:bg-indigo-600 cursor-pointer"
+                            : "text-slate-400 bg-slate-100 dark:bg-zinc-900 cursor-not-allowed"
+                        }`}
+                      >
+                        <Plus className="w-4 h-4" />
+                        {L("Microsoft 365 Bağla", "Connect Microsoft 365")}
+                      </button>
+                    )}
+                  </div>
+                </div>
               </div>
 
               {/* API and Integration Error Simulator Panel */}
@@ -1378,6 +1452,17 @@ export default function AdministrationCenter({ onClose, initialSubTab }: Adminis
                     </span>
                   </label>
                 </div>
+              </div>
+
+              <div className="flex justify-end">
+                <button
+                  type="button"
+                  onClick={() => setIsConnectMailboxOpen(true)}
+                  className="p-2.5 px-4 text-xs font-bold text-white bg-indigo-650 rounded-xl hover:bg-indigo-600 transition-all flex items-center gap-1.5 cursor-pointer shadow-xs"
+                >
+                  <Plus className="w-4 h-4" />
+                  {L("Paylaşımlı Kutu Taslağı Ekle", "Add Shared Mailbox Draft")}
+                </button>
               </div>
 
               {isConnectMailboxOpen && (
@@ -1469,8 +1554,8 @@ export default function AdministrationCenter({ onClose, initialSubTab }: Adminis
                 </span>
                 <p>
                   {L(
-                    "Paylaşımlı kutu mimarisi sadece gelecek kullanım için hazırlanmıştır. Bugünkü gönderim akışı her zaman kullanıcının My Account alanındaki varsayılan kişisel kutusunu kullanır.",
-                    "Shared mailbox architecture is prepared only for future use. Today's sending flow always uses the current user's default personal mailbox from My Account."
+                    "Paylaşımlı kutu mimarisi sadece gelecek kullanım için hazırlanmıştır. Bugünkü gönderim akışı her zaman organizasyonun varsayılan Microsoft 365 kutusunu kullanır.",
+                    "Shared mailbox architecture is prepared only for future use. Today's sending flow always uses the organization's default Microsoft 365 mailbox."
                   )}
                 </p>
               </div>

@@ -1,4 +1,8 @@
 import { createClient } from "@supabase/supabase-js";
+import {
+  getOrganizationMailboxForRequest,
+  sendGraphMailWithMailbox,
+} from "../lib/organizationMailbox.js";
 
 function getSupabaseConfig() {
   const supabaseUrl = process.env.VITE_SUPABASE_URL || "";
@@ -22,7 +26,7 @@ export default async function handler(request, response) {
   }
 
   const accessToken = authHeader.slice(7);
-  const { supabaseUrl, anonKey, serviceKey, appUrl } = getSupabaseConfig();
+  const { supabaseUrl, anonKey, appUrl } = getSupabaseConfig();
 
   if (!supabaseUrl || !anonKey) {
     return response.status(503).json({ error: "Supabase is not configured." });
@@ -92,50 +96,27 @@ export default async function handler(request, response) {
   const inviteLink = `${origin}/join?token=${invitation.token}`;
   const email = String(invitation.invited_email || "").trim().toLowerCase();
 
-  if (!serviceKey) {
-    return response.status(invitationToken ? 503 : 200).json({
+  try {
+    const context = await getOrganizationMailboxForRequest(request, { requireConnected: true });
+    await sendGraphMailWithMailbox(context.adminClient, context.organizationId, context.mailbox, {
+      recipient: email,
+      subject: "You're invited to join Gemba IQ",
+      body: `
+        <p>Hello${fullName ? ` ${fullName}` : ""},</p>
+        <p>You have been invited to join an organization in Gemba IQ.</p>
+        <p><a href="${inviteLink}">Accept your invitation</a></p>
+        <p>If the button does not work, copy this link into your browser:<br>${inviteLink}</p>
+      `,
+      attachments: [],
+    });
+  } catch (mailError) {
+    return response.status(200).json({
       invitation,
       inviteLink,
       emailSent: false,
       message:
-        "Invitation created. Configure SUPABASE_SERVICE_ROLE_KEY to send Supabase Auth invitation emails automatically.",
+        mailError.message || "Invitation created. Connect the organization Microsoft 365 mailbox to send email automatically.",
     });
-  }
-
-  const adminClient = createClient(supabaseUrl, serviceKey, {
-    auth: { autoRefreshToken: false, persistSession: false },
-  });
-
-  const { error: inviteError } = await adminClient.auth.admin.inviteUserByEmail(email, {
-    redirectTo: inviteLink,
-    data: {
-      full_name: fullName || null,
-      invitation_token: invitation.token,
-      organization_id: invitation.organization_id,
-      invited_role: invitation.role,
-    },
-  });
-
-  if (inviteError) {
-    const message = inviteError.message.toLowerCase();
-    const alreadyRegistered =
-      message.includes("already registered") ||
-      message.includes("already exists") ||
-      message.includes("user already");
-    const invalidAuthRole = message.includes("invalid role");
-
-    if (alreadyRegistered || invalidAuthRole) {
-      return response.status(200).json({
-        invitation,
-        inviteLink,
-        emailSent: false,
-        message: alreadyRegistered
-          ? "User already has an account. Share the invitation link or ask them to sign in with the invited email."
-          : "Invitation created. Email delivery is not available; share the invitation link manually.",
-      });
-    }
-
-    return response.status(400).json({ error: inviteError.message });
   }
 
   return response.status(200).json({

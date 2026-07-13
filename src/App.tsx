@@ -25,10 +25,12 @@ import { useAuth } from "./lib/AuthContext";
 import { useOrganization } from "./lib/OrganizationContext";
 import { getDisplayInitials } from "./lib/authHelpers";
 import {
-  clearUserMailboxSession,
-  loadUserMailboxSession,
-  saveUserMailboxSession,
-} from "./lib/mailboxConnections";
+  connectOrganizationMailbox,
+  disconnectOrganizationMailbox,
+  fetchOrganizationMailbox,
+  testOrganizationMailbox,
+  type OrganizationMailbox,
+} from "./lib/organizationMailbox";
 import { useNavigate } from "react-router-dom";
 const logoImage = "https://lh3.googleusercontent.com/d/13bNnthJU4LIICB4iiF1a4GH1PEn05MBx";
 
@@ -198,9 +200,9 @@ export default function App() {
 
   // Exchange Statuses
   const [session, setSession] = useState<MailboxSession | null>(null);
+  const [organizationMailbox, setOrganizationMailbox] = useState<OrganizationMailbox | null>(null);
   const [config, setConfig] = useState<ExchangeConfig | null>(null);
   const [trackingService, setTrackingService] = useState<string>("none");
-  const activeUserId = user?.id ?? userEmail;
 
   // Core Campaign state managers
   const [recipients, setRecipients] = useState<Recipient[]>([]);
@@ -272,7 +274,7 @@ export default function App() {
     }
   }, [isAdmin, activeTab]);
 
-  // Load configuration and cached sessions on mount
+  // Load configuration and organization-scoped mailbox on mount
   useEffect(() => {
     const fetchConfig = async () => {
       try {
@@ -287,8 +289,21 @@ export default function App() {
     };
 
     fetchConfig();
-
-    setSession(loadUserMailboxSession(activeUserId));
+    if (user) {
+      fetchOrganizationMailbox()
+        .then(({ mailbox, session: mailboxSession }) => {
+          setOrganizationMailbox(mailbox);
+          setSession(mailboxSession);
+        })
+        .catch((err) => {
+          console.warn("Failed loading organization mailbox:", err);
+          setOrganizationMailbox(null);
+          setSession(null);
+        });
+    } else {
+      setOrganizationMailbox(null);
+      setSession(null);
+    }
 
     // Recover Campaign History logs
     const savedLogs = localStorage.getItem("smart_mailmerge_historic_campaigns");
@@ -322,7 +337,7 @@ export default function App() {
     return () => {
       window.removeEventListener("change-tab", handleCustomChangeTab);
     };
-  }, [activeUserId]);
+  }, [user]);
 
   // Save changes to working drafts
   useEffect(() => {
@@ -336,7 +351,7 @@ export default function App() {
 
   // Secure cross-envelope popup listener for Graph OAuth tokens
   useEffect(() => {
-    const handleMessage = (event: MessageEvent) => {
+    const handleMessage = async (event: MessageEvent) => {
       // Security: filter origins
       const origin = event.origin;
       if (!origin.endsWith(".run.app") && !origin.includes("localhost")) {
@@ -345,24 +360,19 @@ export default function App() {
 
       if (event.data?.type === "OAUTH_AUTH_SUCCESS") {
         const { tokens, user } = event.data;
-        const newSession: MailboxSession = {
-          isConnected: true,
-          isSandbox: false,
-          displayName: user.displayName || "Microsoft Account User",
-          mail: user.mail || user.userPrincipalName || "user@outlook.com",
-          userPrincipalName: user.userPrincipalName || "",
-          accessToken: tokens.access_token,
-          refreshToken: tokens.refresh_token
-        };
-
-        setSession(newSession);
-        saveUserMailboxSession(activeUserId, newSession);
+        try {
+          const { mailbox, session: mailboxSession } = await connectOrganizationMailbox(tokens, user);
+          setOrganizationMailbox(mailbox);
+          setSession(mailboxSession);
+        } catch (err: any) {
+          alert(err.message || t("Failed to save organization mailbox connection."));
+        }
       }
     };
 
     window.addEventListener("message", handleMessage);
     return () => window.removeEventListener("message", handleMessage);
-  }, [activeUserId]);
+  }, [t]);
 
   // Action: Launch Exchange auth popup
   const handleConnect = async () => {
@@ -391,39 +401,13 @@ export default function App() {
     }
   };
 
-  const handleDisconnect = () => {
-    setSession(null);
-    clearUserMailboxSession(activeUserId);
-  };
-
-  const handleConnectWithToken = async (accessToken: string) => {
+  const handleDisconnect = async () => {
     try {
-      const response = await fetch("/api/auth/validate-token", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ accessToken })
-      });
-
-      if (!response.ok) {
-        const data = await response.json();
-        throw new Error(data.error || "Failed to validate Microsoft access token.");
-      }
-
-      const data = await response.json();
-      const newSession: MailboxSession = {
-        isConnected: true,
-        isSandbox: false,
-        displayName: data.user.displayName,
-        mail: data.user.mail,
-        userPrincipalName: data.user.userPrincipalName,
-        accessToken: accessToken
-      };
-
-      setSession(newSession);
-      saveUserMailboxSession(activeUserId, newSession);
-    } catch (error: any) {
-      console.error("Manual token validation failed:", error);
-      throw error;
+      const mailbox = await disconnectOrganizationMailbox();
+      setOrganizationMailbox(mailbox);
+      setSession(null);
+    } catch (err: any) {
+      alert(err.message || t("Failed to disconnect organization mailbox."));
     }
   };
 
@@ -433,19 +417,13 @@ export default function App() {
     navigate("/login", { replace: true });
   };
 
-  // Demo Sandbox connection setup
-  const handleActivateSandbox = () => {
-    const sandboxSession: MailboxSession = {
-      isConnected: true,
-      isSandbox: true,
-      displayName: "M365 Admin Simulator",
-      mail: "marketing@corporate-m365.com",
-      userPrincipalName: "marketing@corporate-m355.com",
-      accessToken: "mock_sandbox_access_token"
-    };
-
-    setSession(sandboxSession);
-    saveUserMailboxSession(activeUserId, sandboxSession);
+  const handleTestOrganizationMailbox = async () => {
+    try {
+      const result = await testOrganizationMailbox();
+      alert(t("Organization mailbox test email sent to {email}.").replace("{email}", result.recipient));
+    } catch (err: any) {
+      alert(err.message || t("Failed to test organization mailbox."));
+    }
   };
 
   // Logs management
@@ -1747,7 +1725,6 @@ export default function App() {
                 trackingService={trackingService}
                 onUpdateSession={(updatedSession) => {
                   setSession(updatedSession);
-                  saveUserMailboxSession(activeUserId, updatedSession);
                 }}
               />
             )}
@@ -1835,7 +1812,15 @@ export default function App() {
               <div className="pt-6 pb-6 pl-6 pr-6 md:pt-8 md:pb-8 md:pl-8 md:pr-8 overflow-y-auto flex-1">
                 {settingsActiveTab === "admin-center" ? (
                   <div className="animate-in fade-in duration-200">
-                    <AdministrationCenter onClose={() => setIsSettingsOpen(false)} initialSubTab={initialAdminSubTab} />
+                    <AdministrationCenter
+                      onClose={() => setIsSettingsOpen(false)}
+                      initialSubTab={initialAdminSubTab}
+                      organizationMailbox={organizationMailbox}
+                      microsoftConfig={config}
+                      onConnectOrganizationMailbox={handleConnect}
+                      onDisconnectOrganizationMailbox={handleDisconnect}
+                      onTestOrganizationMailbox={handleTestOrganizationMailbox}
+                    />
                   </div>
                 ) : (
                   <div className="space-y-8 max-w-4xl mx-auto animate-in fade-in duration-200 bg-white dark:bg-[#121212] p-6 rounded-2xl border border-slate-150 dark:border-zinc-800 shadow-xs">
@@ -1984,15 +1969,6 @@ export default function App() {
                 <UserAccountSettings
                   onClose={() => setIsUserAccountSettingsOpen(false)}
                   session={session}
-                  config={config}
-                  onConnect={handleConnect}
-                  onDisconnect={handleDisconnect}
-                  onActivateSandbox={handleActivateSandbox}
-                  onConnectWithToken={handleConnectWithToken}
-                  onUpdateSession={(updatedSession) => {
-                    setSession(updatedSession);
-                    saveUserMailboxSession(activeUserId, updatedSession);
-                  }}
                   darkMode={darkMode}
                   onToggleTheme={() => setDarkMode((current) => !current)}
                 />

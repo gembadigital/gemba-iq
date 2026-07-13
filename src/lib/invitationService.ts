@@ -87,7 +87,11 @@ export async function sendInvitationEmail(
 }
 
 export async function fetchInvitationEmailConfig(): Promise<{ emailConfigured: boolean }> {
-  const response = await fetch("/api/invitations/config", { cache: "no-store" });
+  const accessToken = await getAccessToken();
+  const response = await fetch("/api/invitations/config", {
+    cache: "no-store",
+    headers: { Authorization: `Bearer ${accessToken}` },
+  });
   if (!response.ok) {
     return { emailConfigured: false };
   }

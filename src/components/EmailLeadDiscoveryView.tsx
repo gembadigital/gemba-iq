@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useLanguage } from "../lib/LanguageContext";
-import { useAuth } from "../lib/AuthContext";
-import { loadUserMailboxSession } from "../lib/mailboxConnections";
+import { fetchOrganizationMailbox } from "../lib/organizationMailbox";
 import {
   Mail,
   FolderOpen,
@@ -12,7 +11,6 @@ import {
   Target,
   Sparkles,
   RefreshCw,
-  Plus,
   CheckCircle,
   HelpCircle,
   Check,
@@ -80,7 +78,6 @@ export default function EmailLeadDiscoveryView({
   onAddTargetAccount
 }: EmailLeadDiscoveryViewProps) {
   const { t } = useLanguage();
-  const { user } = useAuth();
   
   // Tab/State states
   const [connections, setConnections] = useState<MailboxConnection[]>([]);
@@ -109,11 +106,6 @@ export default function EmailLeadDiscoveryView({
     totalParsed?: number;
     totalFiltered?: number;
   } | null>(null);
-
-  // New mailbox connection modal state
-  const [isConnectModalOpen, setIsConnectModalOpen] = useState(false);
-  const [newMailboxType, setNewMailboxType] = useState<"Microsoft 365" | "Outlook" | "Google Workspace">("Microsoft 365");
-  const [newMailboxEmail, setNewMailboxEmail] = useState("");
 
   // Lists of results
   const [discoveredLeads, setDiscoveredLeads] = useState<DiscoveredLead[]>([]);
@@ -288,69 +280,50 @@ export default function EmailLeadDiscoveryView({
   };
 
   useEffect(() => {
-    let currentSession: MailboxSession | null = null;
-    try {
-      const saved = loadUserMailboxSession(user?.id);
-      if (saved) {
-        currentSession = saved;
-        setSession(currentSession);
-      }
-    } catch (e) {
-      console.error("Error reading cached session in lead generator", e);
-    }
+    let isMounted = true;
 
-    if (currentSession && currentSession.isConnected && !currentSession.isSandbox) {
-      // Live authenticated Microsoft 365 session detected on mount!
-      const realConn: MailboxConnection = {
-        id: "conn-real-m365",
-        provider: "Microsoft 365",
-        email: currentSession.mail || "user@gembapartner.com",
-        status: "Connected",
-        connectedAt: new Date().toISOString().split("T")[0]
-      };
-      // List the real account as Connected, and others as Expired / Yetki Yok
-      setConnections([
-        realConn,
-        {
-          id: "conn-pending-1",
-          provider: "Microsoft 365",
-          email: "info@gembapartner.com",
-          status: "Expired",
-          connectedAt: "Kurulum Yok"
-        },
-        {
-          id: "conn-pending-2",
-          provider: "Google Workspace",
-          email: "a.zehir@gembapartner.com",
-          status: "Expired",
-          connectedAt: "Kurulum Yok"
+    fetchOrganizationMailbox()
+      .then(({ mailbox, session: orgSession }) => {
+        if (!isMounted) return;
+        setSession(orgSession);
+        if (orgSession && mailbox.status === "Connected") {
+          setConnections([
+            {
+              id: "conn-organization-m365",
+              provider: "Microsoft 365",
+              email: orgSession.mail || "organization-mailbox",
+              status: "Connected",
+              connectedAt: mailbox.connected_at
+                ? new Date(mailbox.connected_at).toISOString().split("T")[0]
+                : new Date().toISOString().split("T")[0],
+            },
+          ]);
+          setSelectedMailboxIds(["conn-organization-m365"]);
+          setDiscoveredLeads([]);
+          setFilteredOutLeads([]);
+          return;
         }
-      ]);
-      setSelectedMailboxIds(["conn-real-m365"]);
-      // Keep lists blank so the user knows they are in live-connected mode and can start their real scan
-      setDiscoveredLeads([]);
-      setFilteredOutLeads([]);
-    } else if (currentSession && currentSession.isConnected && currentSession.isSandbox) {
-      // Sandbox mode
-      setConnections([
-        {
-          id: "conn-sandbox-1",
-          provider: "Microsoft 365",
-          email: "info@gembapartner.com",
-          status: "Connected",
-          connectedAt: "2026-06-22"
-        },
-        {
-          id: "conn-sandbox-2",
-          provider: "Google Workspace",
-          email: "a.zehir@gembapartner.com",
-          status: "Connected",
-          connectedAt: "2026-06-22"
-        }
-      ]);
-      setSelectedMailboxIds(["conn-sandbox-1", "conn-sandbox-2"]);
-      seedDiscoveredData();
-    } else {
+
+        setSession(null);
+        setConnections([]);
+        setSelectedMailboxIds([]);
+        seedDiscoveredData();
+      })
+      .catch(() => {
+        if (!isMounted) return;
+        setSession(null);
+        setConnections([]);
+        setSelectedMailboxIds([]);
+        seedDiscoveredData();
+      });
+
+    return () => {
+      isMounted = false;
+    };
+  }, []);
+
+  useEffect(() => {
+    if (connections.length === 0) {
       // Default fallback when no session has been set yet (treat as Sandbox demo mode)
       setConnections([
         {
@@ -371,30 +344,7 @@ export default function EmailLeadDiscoveryView({
       setSelectedMailboxIds(["conn-sandbox-1", "conn-sandbox-2"]);
       seedDiscoveredData();
     }
-  }, [user?.id]);
-
-  // Action: Add Mailbox Connection
-  const handleAddMailbox = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!newMailboxEmail.trim() || !newMailboxEmail.includes("@")) {
-      alert(t("Please enter a valid email address."));
-      return;
-    }
-
-    const newConn: MailboxConnection = {
-      id: `conn-${Date.now()}`,
-      provider: newMailboxType,
-      email: newMailboxEmail.trim(),
-      status: "Connected",
-      connectedAt: new Date().toISOString().split("T")[0]
-    };
-
-    setConnections([...connections, newConn]);
-    setSelectedMailboxIds(prev => [...prev, newConn.id]);
-    setNewMailboxEmail("");
-    setIsConnectModalOpen(false);
-    triggerToast(t("{provider} account ({email}) connected successfully!").replace("{provider}", newConn.provider).replace("{email}", newConn.email));
-  };
+  }, [connections.length]);
 
   // Action: Remove Mailbox Connection
   const handleRemoveConnection = (id: string, email: string) => {
@@ -863,13 +813,6 @@ export default function EmailLeadDiscoveryView({
             </p>
           </div>
           <div className="flex flex-wrap gap-2.5">
-            <button
-              onClick={() => setIsConnectModalOpen(true)}
-              className="inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-slate-50 px-3.5 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-100 dark:border-zinc-800 dark:bg-zinc-900 dark:text-zinc-300 dark:hover:bg-zinc-800 transition-colors cursor-pointer shadow-sm"
-            >
-              <Plus className="w-4 h-4 text-indigo-500" />
-              <span>{t("Connect New Mailbox")}</span>
-            </button>
             <button
               onClick={handleScanEmails}
               disabled={isScanning || connections.length === 0}
@@ -1557,86 +1500,6 @@ export default function EmailLeadDiscoveryView({
           ))}
         </div>
       </div>
-
-      {/* MODAL: CONNECT MAILBOX CONNECTION FORM */}
-      {isConnectModalOpen && (
-        <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center z-50 p-4 animate-in fade-in duration-150">
-          <div className="bg-white rounded-2xl border border-slate-200 shadow-2xl w-full max-w-md overflow-hidden animate-in zoom-in-95 duration-150 dark:border-zinc-800 dark:bg-zinc-950">
-            
-            <div className="flex items-center justify-between p-5 border-b border-slate-150 bg-slate-50 dark:border-zinc-900 dark:bg-zinc-900/60">
-              <h3 className="font-bold text-slate-900 text-sm tracking-tight dark:text-slate-100">
-                {t("Connect New Mailbox Account")}
-              </h3>
-              <button
-                onClick={() => setIsConnectModalOpen(false)}
-                className="text-slate-400 hover:text-slate-600 dark:hover:text-zinc-200"
-              >
-                {t("Close")}
-              </button>
-            </div>
-
-            <form onSubmit={handleAddMailbox} className="p-5 space-y-4">
-              
-              <div className="space-y-1.5">
-                <label className="text-[10px] uppercase font-bold text-slate-450 tracking-wider block">
-                  {t("Client & Mail Infrastructure")}
-                </label>
-                <div className="grid grid-cols-3 gap-2">
-                  {(["Microsoft 365", "Outlook", "Google Workspace"] as const).map((type) => (
-                    <button
-                      key={type}
-                      type="button"
-                      onClick={() => setNewMailboxType(type)}
-                      className={`px-3 py-2.5 text-xs rounded-xl border text-center font-bold tracking-tight cursor-pointer transition-all ${
-                        newMailboxType === type
-                          ? "border-indigo-600 bg-indigo-50/20 text-indigo-700 dark:border-indigo-500 dark:text-indigo-400"
-                          : "border-slate-200 hover:bg-slate-50 dark:border-zinc-805 dark:hover:bg-zinc-900"
-                      }`}
-                    >
-                      {type}
-                    </button>
-                  ))}
-                </div>
-              </div>
-
-              <div className="space-y-1.5">
-                <label className="text-[10px] uppercase font-bold text-slate-450 tracking-wider block">
-                  {t("Corporate Email Address")}
-                </label>
-                <input
-                  type="email"
-                  required
-                  value={newMailboxEmail}
-                  onChange={(e) => setNewMailboxEmail(e.target.value)}
-                  placeholder={t("prospecting@corporate.com")}
-                  className="w-full text-xs px-3.5 py-2.5 border border-slate-205 rounded-xl focus:outline-none focus:ring-1 focus:ring-indigo-500 font-mono dark:border-zinc-800 dark:bg-zinc-90"
-                />
-                <span className="text-[9.5px] text-slate-400 font-mono block">
-                  {t("OAuth authorization will be requested per Microsoft Graph & Google standards.")}
-                </span>
-              </div>
-
-              <div className="pt-3 border-t border-slate-100 flex justify-end gap-2.5 dark:border-zinc-900">
-                <button
-                  type="button"
-                  onClick={() => setIsConnectModalOpen(false)}
-                  className="px-4 py-2 text-xs border border-slate-200 rounded-xl hover:bg-slate-50 text-slate-700 cursor-pointer dark:border-zinc-800 dark:bg-zinc-90"
-                >
-                  {t("Cancel")}
-                </button>
-                <button
-                  type="submit"
-                  className="px-4 py-2 text-xs font-bold text-white bg-indigo-600 hover:bg-indigo-500 rounded-xl cursor-pointer"
-                >
-                  {t("Authorize Connection")}
-                </button>
-              </div>
-
-            </form>
-
-          </div>
-        </div>
-      )}
 
     </div>
   );

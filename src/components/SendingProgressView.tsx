@@ -3,6 +3,7 @@ import { useLanguage } from "../lib/LanguageContext";
 import { getCampaignTranslation, getCampaignStatusLabel } from "./campaignI18n";
 import { Recipient, AttachmentFile, Campaign, MailboxSession } from "../types";
 import { generateCampaignReport } from "../utils/pdfGenerator";
+import { getSupabase } from "../lib/supabaseClient";
 import {
   Play,
   Pause,
@@ -315,14 +316,20 @@ export default function SendingProgressView({
             }
 
             const endpoint = sendMode === "draft" ? "/api/mail/draft" : "/api/mail/send";
-            let currentToken = session?.accessToken || "";
+            const supabase = getSupabase();
+            const {
+              data: { session: authSession },
+            } = supabase ? await supabase.auth.getSession() : { data: { session: null } };
+            const authToken = authSession?.access_token || "";
 
-            const doSendMail = async (tokenToUse: string) => {
+            const doSendMail = async () => {
               return fetch(endpoint, {
                 method: "POST",
-                headers: { "Content-Type": "application/json" },
+                headers: {
+                  "Content-Type": "application/json",
+                  ...(authToken ? { Authorization: `Bearer ${authToken}` } : {}),
+                },
                 body: JSON.stringify({
-                  accessToken: tokenToUse,
                   recipient: recipient.Email,
                   subject: mergedSubject,
                   body: mergedBody,
@@ -331,7 +338,7 @@ export default function SendingProgressView({
               });
             };
 
-            let sendResponse = await doSendMail(currentToken);
+            let sendResponse = await doSendMail();
 
             if (!sendResponse.ok) {
               let responseText = "";
@@ -339,45 +346,7 @@ export default function SendingProgressView({
                 responseText = await sendResponse.text();
               } catch (_) {}
 
-              const isTokenExpired = responseText.toLowerCase().includes("expired") || 
-                                     responseText.toLowerCase().includes("lifetime validation") ||
-                                     responseText.toLowerCase().includes("token") ||
-                                     sendResponse.status === 401;
-
-              if (isTokenExpired && session?.refreshToken && onUpdateSession) {
-                console.log("Token expired during mail transmission. Attempting silent token refresh...");
-                try {
-                  const refreshRes = await fetch("/api/auth/refresh", {
-                    method: "POST",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({ refreshToken: session.refreshToken })
-                  });
-                  if (refreshRes.ok) {
-                    const refreshedTokens = await refreshRes.json();
-                    if (refreshedTokens.access_token) {
-                      console.log("Silent token refresh successful!");
-                      const updatedSession = {
-                        ...session,
-                        accessToken: refreshedTokens.access_token,
-                        refreshToken: refreshedTokens.refresh_token || session.refreshToken
-                      };
-                      onUpdateSession(updatedSession);
-                      // Retry sending with new access token
-                      currentToken = refreshedTokens.access_token;
-                      sendResponse = await doSendMail(currentToken);
-                      if (!sendResponse.ok) {
-                        try {
-                          responseText = await sendResponse.text();
-                        } catch (_) {}
-                      }
-                    }
-                  }
-                } catch (refreshErr) {
-                  console.error("Token refresh invocation failed:", refreshErr);
-                }
-              }
-
-              // Double check if it finally succeeded after retries
+              // Token refresh is handled server-side against organization_settings.
               if (!sendResponse.ok) {
                 let errorMsg = t("Microsoft API delivery failure.");
                 try {
