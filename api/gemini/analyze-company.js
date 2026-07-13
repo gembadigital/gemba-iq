@@ -1,4 +1,4 @@
-import { runCompanyAnalysis } from "../lib/analyzeCompanyCore.js";
+import { runCompanyAnalysis } from "../../lib/server/analyzeCompanyCore.js";
 
 export default async function handler(request, response) {
   response.setHeader("Content-Type", "application/json");

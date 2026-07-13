@@ -1,4 +1,4 @@
-import { getOrganizationMailboxStatus } from "../lib/organizationMailbox.js";
+import { getOrganizationMailboxStatus } from "../../lib/server/organizationMailbox.js";
 
 export default async function handler(request, response) {
   if (request.method !== "GET") {

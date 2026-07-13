@@ -2,7 +2,7 @@ import {
   getOrganizationMailboxForRequest,
   handleMailboxError,
   sendGraphMailWithMailbox,
-} from "../lib/organizationMailbox.js";
+} from "../../lib/server/organizationMailbox.js";
 
 export default async function handler(request, response) {
   if (request.method !== "POST") {

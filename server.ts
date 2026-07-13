@@ -10,11 +10,11 @@ const projectRoot = process.cwd();
 dotenv.config({ path: path.join(projectRoot, ".env") });
 
 import { GoogleGenAI } from "@google/genai";
-import { runCompanyAnalysis } from "./api/lib/analyzeCompanyCore.js";
+import { runCompanyAnalysis } from "./lib/server/analyzeCompanyCore.js";
 import {
   getOrganizationMailboxForRequest,
   sendGraphMailWithMailbox,
-} from "./api/lib/organizationMailbox.js";
+} from "./lib/server/organizationMailbox.js";
 const ai = new GoogleGenAI({
   apiKey: process.env.GEMINI_API_KEY,
   httpOptions: {

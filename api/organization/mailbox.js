@@ -4,7 +4,7 @@ import {
   getOrganizationMailboxStatus,
   handleMailboxError,
   sendOrganizationMailboxTest,
-} from "../lib/organizationMailbox.js";
+} from "../../lib/server/organizationMailbox.js";
 
 export default async function handler(request, response) {
   try {

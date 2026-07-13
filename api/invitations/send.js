@@ -2,7 +2,7 @@ import { createClient } from "@supabase/supabase-js";
 import {
   getOrganizationMailboxForRequest,
   sendGraphMailWithMailbox,
-} from "../lib/organizationMailbox.js";
+} from "../../lib/server/organizationMailbox.js";
 
 function getSupabaseConfig() {
   const supabaseUrl = process.env.VITE_SUPABASE_URL || "";
