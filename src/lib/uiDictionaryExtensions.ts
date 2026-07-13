@@ -1300,7 +1300,7 @@ export const uiDictionaryTR: Record<string, string> = {
   "Manage active users and pending invitations for {company}.": "{company} organizasyonundaki aktif kullanıcıları ve bekleyen davetleri yönetin.",
   "Invite User": "Kullanıcı Davet Et",
   "Refresh": "Yenile",
-  "Only Owner and Admin roles can send invitations.": "Davet gönderme yetkisi yalnızca Sahip ve Yönetici rollerinde bulunur.",
+  "Only ADMIN can send invitations.": "Davet gönderme yetkisi yalnızca ADMIN rolünde bulunur.",
   "Invitation email sent to {email}.": "Davet e-postası {email} adresine gönderildi.",
   "Invitation created. Share the link to invite the user.": "Davet oluşturuldu. Bağlantıyı paylaşarak kullanıcıyı davet edebilirsiniz.",
   "Failed to send invitation.": "Davet gönderilemedi.",

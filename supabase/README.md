@@ -14,7 +14,7 @@ Apply the multi-tenant foundation before first login with onboarding.
 This creates:
 
 - `organizations`, `profiles`, `organization_members`
-- `invitations` with owner/admin-managed invites
+- `invitations` with ADMIN-managed invites
 - `documents` table and `organization-documents` storage bucket
 - `companies`, `contacts`, `deals`, `proposals`, `tasks` CRM tables
 - `proposal_number_sequences`, `proposal_templates`, `proposal_timeline_events`, `proposal_audit_logs`
@@ -35,15 +35,15 @@ Server (Vercel + local `.env`) for Supabase Auth invitation emails:
 
 Without the service role key, invitations are still created in the database and the admin UI shows a copyable `/join?token=...` link.
 
-## First-time owner flow
+## First-time ADMIN flow
 
 1. User registers and verifies email.
 2. On first login, `OrganizationContext` finds no profile/membership.
-3. `WelcomeWizard` creates the organization, profile, and owner membership.
+3. `WelcomeWizard` creates the organization, profile, and ADMIN membership.
 
 ## Invitation flow
 
-1. Owner or Admin opens **Administration → Users & Permissions**.
+1. ADMIN opens **Administration → Users & Permissions**.
 2. They invite a user by email and role.
 3. The app creates an `invitations` row and sends a Supabase Auth invite email when configured.
 4. The invitee opens `/join?token=...`, signs in or registers with the invited email.
@@ -52,8 +52,9 @@ Without the service role key, invitations are still created in the database and 
 
 ## Roles
 
-- `owner`, `admin`, `manager`, `sales`, `consultant`, `viewer`
-- Only `owner` and `admin` can send or cancel invitations.
+- `ADMIN`
+- `USER`
+- Only `ADMIN` can create, send, or cancel invitations.
 
 ## Future modules
 

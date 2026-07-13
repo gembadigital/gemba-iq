@@ -30,7 +30,7 @@ export default async function handler(request, response) {
 
   const invitationToken = String(request.body?.invitationToken || "").trim();
   const requestedEmail = String(request.body?.email || "").trim().toLowerCase();
-  const requestedRole = String(request.body?.role || "USER").trim();
+  const requestedRole = String(request.body?.role || "USER").trim().toUpperCase();
   const fullName = String(request.body?.fullName || "").trim();
 
   if (!invitationToken && (!requestedEmail || !["ADMIN", "USER"].includes(requestedRole))) {

@@ -4,7 +4,7 @@ export type OrganizationRole = AppRole;
 
 export type InvitationStatus = "pending" | "accepted" | "expired" | "cancelled";
 
-export const INVITABLE_ROLES: AppRole[] = ["USER"];
+export const INVITABLE_ROLES: AppRole[] = APP_ROLES;
 
 export const ORGANIZATION_ROLES: AppRole[] = APP_ROLES;
 

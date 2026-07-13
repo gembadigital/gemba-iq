@@ -54,6 +54,17 @@ app.post("/api/invitations/send", async (req, res) => {
   }
 });
 
+// API: Invitation email delivery availability
+app.get("/api/invitations/config", async (req, res) => {
+  try {
+    const handler = (await import("./api/invitations/config.js")).default;
+    await handler(req, res);
+  } catch (error) {
+    console.error("Invitation config handler failed:", error);
+    res.status(500).json({ error: "Failed to load invitation email configuration." });
+  }
+});
+
 // API: Update organization member application role
 app.post("/api/organization/members/role", async (req, res) => {
   try {
