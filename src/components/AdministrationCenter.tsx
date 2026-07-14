@@ -41,6 +41,13 @@ import OrganizationUsersPanel from "./admin/OrganizationUsersPanel";
 import type { OrganizationMailbox } from "../lib/organizationMailbox";
 const logoImage = "https://lh3.googleusercontent.com/d/13bNnthJU4LIICB4iiF1a4GH1PEn05MBx";
 
+// Organization-scoped keys in the shared CRM auxiliary store (Supabase-backed).
+// ADMIN_ORG_SETTINGS_KEY must match the key used by App.tsx and currencyHelper.ts.
+const ADMIN_ORG_SETTINGS_KEY = "crm_admin_org_settings";
+const ADMIN_MAILBOXES_KEY = "crm_admin_mailboxes_list";
+const ADMIN_TEMPLATES_KEY = "crm_admin_templates_list";
+const ADMIN_DATA_HUB_KEY = "crm_admin_data_hub_connections";
+
 interface TemplateItem {
   id: string;
   name: string;
@@ -182,9 +189,8 @@ export default function AdministrationCenter({
     setMailboxAddress(organizationMailbox?.organizationMailbox || organizationMailbox?.mailbox_email || "");
   }, [organizationMailbox?.organizationMailbox, organizationMailbox?.mailbox_email]);
 
-  // 1. Organization Settings
+  // 1. Organization Settings (shared, organization-scoped — Supabase-backed via CrmDb)
   const [orgSettings, setOrgSettings] = useState(() => {
-    const saved = localStorage.getItem("admin_org_settings");
     const defaultSettings = {
       name: companyName || "Organization",
       website: "https://gembapartner.com",
@@ -199,20 +205,16 @@ export default function AdministrationCenter({
       fiscalYear: "Ocak - Aralık",
       logo: logoImage
     };
+    const saved = CrmDb.getKv<Record<string, any> | null>(ADMIN_ORG_SETTINGS_KEY, null);
     if (saved) {
-      try {
-        const parsed = JSON.parse(saved);
-        const logo = (parsed.logo && (parsed.logo.startsWith("data:") || parsed.logo.startsWith("http"))) ? parsed.logo : logoImage;
-        return { ...defaultSettings, ...parsed, logo };
-      } catch (e) {
-        return defaultSettings;
-      }
+      const logo = (saved.logo && (saved.logo.startsWith("data:") || saved.logo.startsWith("http"))) ? saved.logo : logoImage;
+      return { ...defaultSettings, ...saved, logo };
     }
     return defaultSettings;
   });
 
   useEffect(() => {
-    localStorage.setItem("admin_org_settings", JSON.stringify(orgSettings));
+    CrmDb.setKv(ADMIN_ORG_SETTINGS_KEY, orgSettings);
   }, [orgSettings]);
 
   const [toast, setToast] = useState<{ message: string; type: "success" | "error" | "info" } | null>(null);
@@ -290,10 +292,9 @@ export default function AdministrationCenter({
     addAuditLog(actorName, "Yetki Değişikliği", `${selectedRoleForMatrix} rolü için ${menu} yetkileri güncellendi.`, "Yetki Yönetimi");
   };
 
-  // 3. Connected Mailboxes
-  const [mailboxes, setMailboxes] = useState<MailboxItem[]>(() => {
-    const saved = localStorage.getItem("admin_mailboxes_list");
-    return saved ? JSON.parse(saved) : [
+  // 3. Connected Mailboxes (shared, organization-scoped — Supabase-backed via CrmDb)
+  const [mailboxes, setMailboxes] = useState<MailboxItem[]>(() =>
+    CrmDb.getKv<MailboxItem[]>(ADMIN_MAILBOXES_KEY, [
       {
         id: "m-2",
         name: "Atakan Zehir Genel",
@@ -312,11 +313,11 @@ export default function AdministrationCenter({
         owner: "Müşteri Hizmetleri",
         lastSync: "Dün"
       }
-    ];
-  });
+    ])
+  );
 
   useEffect(() => {
-    localStorage.setItem("admin_mailboxes_list", JSON.stringify(mailboxes));
+    CrmDb.setKv(ADMIN_MAILBOXES_KEY, mailboxes);
   }, [mailboxes]);
 
   const [newMailbox, setNewMailbox] = useState<Partial<MailboxItem>>({
@@ -357,10 +358,9 @@ export default function AdministrationCenter({
     }
   };
 
-  // 4. Email Templates
-  const [templates, setTemplates] = useState<TemplateItem[]>(() => {
-    const saved = localStorage.getItem("admin_templates_list");
-    return saved ? JSON.parse(saved) : [
+  // 4. Email Templates (shared, organization-scoped — Supabase-backed via CrmDb)
+  const [templates, setTemplates] = useState<TemplateItem[]>(() =>
+    CrmDb.getKv<TemplateItem[]>(ADMIN_TEMPLATES_KEY, [
       {
         id: "t-1",
         name: "Yalın Danışmanlık İş Birliği Teklifi",
@@ -397,11 +397,11 @@ export default function AdministrationCenter({
         status: "Active",
         updatedAt: "2026-06-10"
       }
-    ];
-  });
+    ])
+  );
 
   useEffect(() => {
-    localStorage.setItem("admin_templates_list", JSON.stringify(templates));
+    CrmDb.setKv(ADMIN_TEMPLATES_KEY, templates);
   }, [templates]);
 
   const [newTemplate, setNewTemplate] = useState<Partial<TemplateItem>>({
@@ -441,27 +441,22 @@ export default function AdministrationCenter({
     addAuditLog(actorName, "Şablon Silindi", `Şablon kaldırıldı: ${name}`, "Şablon Yönetimi");
   };
 
-  // 5. Data Hub (Cloud Storage Connections)
+  // 5. Data Hub (Cloud Storage Connections) — shared, organization-scoped, Supabase-backed via CrmDb
   const [dataHubConnections, setDataHubConnections] = useState<StorageHubItem[]>(() => {
-    const saved = localStorage.getItem("admin_data_hub_connections");
+    const saved = CrmDb.getKv<any[] | null>(ADMIN_DATA_HUB_KEY, null);
     if (saved) {
-      try {
-        const parsed = JSON.parse(saved);
-        // Ensure all enterprise properties exist in parsed data
-        return parsed.map((item: any) => ({
-          ...item,
-          enabled: item.enabled !== undefined ? item.enabled : item.status === "Connected",
-          defaultStorage: item.defaultStorage !== undefined ? item.defaultStorage : (item.id === "sh-local" || item.provider === "Local Storage"),
-          description: item.description || `${item.provider} depolama kanalı.`,
-          createdDate: item.createdDate || "2026-06-15",
-          lastSync: item.lastSync || "Şimdi",
-          lastModified: item.lastModified || "2026-06-28",
-          connectionHealth: item.connectionHealth || (item.status === "Connected" ? "Healthy" : "Untested"),
-          defaultRootFolder: item.defaultRootFolder || "/data/crm/documents"
-        }));
-      } catch (e) {
-        console.error("Error parsing saved connections, using defaults", e);
-      }
+      // Ensure all enterprise properties exist in stored data
+      return saved.map((item: any) => ({
+        ...item,
+        enabled: item.enabled !== undefined ? item.enabled : item.status === "Connected",
+        defaultStorage: item.defaultStorage !== undefined ? item.defaultStorage : (item.id === "sh-local" || item.provider === "Local Storage"),
+        description: item.description || `${item.provider} depolama kanalı.`,
+        createdDate: item.createdDate || "2026-06-15",
+        lastSync: item.lastSync || "Şimdi",
+        lastModified: item.lastModified || "2026-06-28",
+        connectionHealth: item.connectionHealth || (item.status === "Connected" ? "Healthy" : "Untested"),
+        defaultRootFolder: item.defaultRootFolder || "/data/crm/documents"
+      }));
     }
     const defaultConns: StorageHubItem[] = [
       {
@@ -526,12 +521,12 @@ export default function AdministrationCenter({
         owner: "ADMIN"
       }
     ];
-    localStorage.setItem("admin_data_hub_connections", JSON.stringify(defaultConns));
+    CrmDb.setKv(ADMIN_DATA_HUB_KEY, defaultConns);
     return defaultConns;
   });
 
   useEffect(() => {
-    localStorage.setItem("admin_data_hub_connections", JSON.stringify(dataHubConnections));
+    CrmDb.setKv(ADMIN_DATA_HUB_KEY, dataHubConnections);
   }, [dataHubConnections]);
 
   const [editingConnId, setEditingConnId] = useState<string | null>(null);
@@ -1967,7 +1962,7 @@ export default function AdministrationCenter({
                   <button
                     type="button"
                     onClick={() => {
-                      localStorage.setItem("enterprise_doc_audit_logs", JSON.stringify([]));
+                      CrmDb.setKv("enterprise_doc_audit_logs", []);
                       alert("DMS Denetim Logları temizlendi.");
                     }}
                     className="text-[10px] font-mono text-rose-600 font-bold hover:underline cursor-pointer"

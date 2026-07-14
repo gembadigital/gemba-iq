@@ -57,6 +57,14 @@ import {
   INITIAL_INVOICES,
   SERVICE_TYPES_LIST
 } from "../data/revenueData";
+import { CrmDb } from "../lib/CrmDb";
+
+// Organization-scoped keys in the shared CRM auxiliary store (Supabase-backed).
+const REVENUE_CONSULTANTS_KEY = "crm_revenue_consultants";
+const REVENUE_CAPACITIES_KEY = "crm_revenue_capacities";
+const REVENUE_ASSIGNMENTS_KEY = "crm_revenue_assignments";
+const REVENUE_INVOICES_KEY = "crm_revenue_invoices";
+const REVENUE_IMPORT_LOGS_KEY = "crm_revenue_import_logs";
 
 export default function RevenueManagementView() {
   const { lang, t } = useLanguage();
@@ -66,31 +74,26 @@ export default function RevenueManagementView() {
   // --- SUB-DATA TABS (In the "Data" view) ---
   const [activeDataSubTab, setActiveDataSubTab] = useState<"consultants" | "capacity" | "assignments" | "invoices">("consultants");
 
-  // --- LOCAL PERSISTED STATE ---
-  const [consultants, setConsultants] = useState<Consultant[]>(() => {
-    const saved = localStorage.getItem("revenue_consultants");
-    return saved ? JSON.parse(saved) : INITIAL_CONSULTANTS;
-  });
+  // --- SHARED ORGANIZATION STATE (Supabase-backed via CrmDb) ---
+  const [consultants, setConsultants] = useState<Consultant[]>(() =>
+    CrmDb.getKv<Consultant[]>(REVENUE_CONSULTANTS_KEY, INITIAL_CONSULTANTS)
+  );
 
-  const [capacities, setCapacities] = useState<ConsultantCapacity[]>(() => {
-    const saved = localStorage.getItem("revenue_capacities");
-    return saved ? JSON.parse(saved) : INITIAL_CAPACITIES;
-  });
+  const [capacities, setCapacities] = useState<ConsultantCapacity[]>(() =>
+    CrmDb.getKv<ConsultantCapacity[]>(REVENUE_CAPACITIES_KEY, INITIAL_CAPACITIES)
+  );
 
-  const [assignments, setAssignments] = useState<ProjectAssignment[]>(() => {
-    const saved = localStorage.getItem("revenue_assignments");
-    return saved ? JSON.parse(saved) : INITIAL_ASSIGNMENTS;
-  });
+  const [assignments, setAssignments] = useState<ProjectAssignment[]>(() =>
+    CrmDb.getKv<ProjectAssignment[]>(REVENUE_ASSIGNMENTS_KEY, INITIAL_ASSIGNMENTS)
+  );
 
-  const [invoices, setInvoices] = useState<Invoice[]>(() => {
-    const saved = localStorage.getItem("revenue_invoices");
-    return saved ? JSON.parse(saved) : INITIAL_INVOICES;
-  });
+  const [invoices, setInvoices] = useState<Invoice[]>(() =>
+    CrmDb.getKv<Invoice[]>(REVENUE_INVOICES_KEY, INITIAL_INVOICES)
+  );
 
-  const [importLogs, setImportLogs] = useState<string[]>(() => {
-    const saved = localStorage.getItem("revenue_import_logs");
-    return saved ? JSON.parse(saved) : ["2026-06-20 10:00 - Initial system baseline loaded successfully."];
-  });
+  const [importLogs, setImportLogs] = useState<string[]>(() =>
+    CrmDb.getKv<string[]>(REVENUE_IMPORT_LOGS_KEY, ["2026-06-20 10:00 - Initial system baseline loaded successfully."])
+  );
 
   const [selectedMonth, setSelectedMonth] = useState<string>("2026-06");
   const [isRangeMode, setIsRangeMode] = useState<boolean>(false);
@@ -185,25 +188,25 @@ export default function RevenueManagementView() {
     }
   };
 
-  // Save changes to localStorage on edit
+  // Save changes to the shared organization CRM store (Supabase-backed)
   useEffect(() => {
-    localStorage.setItem("revenue_consultants", JSON.stringify(consultants));
+    CrmDb.setKv(REVENUE_CONSULTANTS_KEY, consultants);
   }, [consultants]);
 
   useEffect(() => {
-    localStorage.setItem("revenue_capacities", JSON.stringify(capacities));
+    CrmDb.setKv(REVENUE_CAPACITIES_KEY, capacities);
   }, [capacities]);
 
   useEffect(() => {
-    localStorage.setItem("revenue_assignments", JSON.stringify(assignments));
+    CrmDb.setKv(REVENUE_ASSIGNMENTS_KEY, assignments);
   }, [assignments]);
 
   useEffect(() => {
-    localStorage.setItem("revenue_invoices", JSON.stringify(invoices));
+    CrmDb.setKv(REVENUE_INVOICES_KEY, invoices);
   }, [invoices]);
 
   useEffect(() => {
-    localStorage.setItem("revenue_import_logs", JSON.stringify(importLogs));
+    CrmDb.setKv(REVENUE_IMPORT_LOGS_KEY, importLogs);
   }, [importLogs]);
 
   // --- FORM STATE VARIABLES ---

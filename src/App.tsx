@@ -28,6 +28,8 @@ import { useOrganizationMailboxController } from "./lib/useOrganizationMailboxCo
 import { CrmDb } from "./lib/CrmDb";
 import { useNavigate } from "react-router-dom";
 const logoImage = "https://lh3.googleusercontent.com/d/13bNnthJU4LIICB4iiF1a4GH1PEn05MBx";
+// Must exactly match the key used in AdministrationCenter.tsx and currencyHelper.ts.
+const ADMIN_ORG_SETTINGS_KEY = "crm_admin_org_settings";
 
 import {
   Recipient,
@@ -117,7 +119,7 @@ function getInitialActiveTab(): ActiveTab {
 export default function App() {
   const { lang, setLang, t } = useLanguage();
   const { signOut } = useAuth();
-  const { actorName, actorEmail, companyName, isAdmin } = useOrganization();
+  const { actorName, actorEmail, companyName, isAdmin, organization } = useOrganization();
   const navigate = useNavigate();
   const displayName = actorName;
   const userEmail = actorEmail;
@@ -129,68 +131,69 @@ export default function App() {
   const [isNotificationsOpen, setIsNotificationsOpen] = useState<boolean>(false);
   const [isSettingsDropdownOpen, setIsSettingsDropdownOpen] = useState<boolean>(false);
   const [initialAdminSubTab, setInitialAdminSubTab] = useState<string>("organization");
-  
+
+  // admin_org_settings is shared/organization-scoped and lives in Supabase via
+  // CrmDb (must match the "crm_admin_org_settings" key used by
+  // AdministrationCenter.tsx and currencyHelper.ts). App.tsx only ever runs
+  // inside CrmProvider (see RootApp.tsx), so CrmDb is guaranteed to already be
+  // hydrated here — safe to read/write synchronously.
   const [logoUrl, setLogoUrl] = useState<string>(() => {
-    try {
-      const saved = localStorage.getItem("admin_org_settings");
-      if (saved) {
-        const parsed = JSON.parse(saved);
-        if (parsed.logo && (parsed.logo.startsWith("data:") || parsed.logo.startsWith("http"))) {
-          return parsed.logo;
-        }
-      }
-    } catch (e) {
-      console.error(e);
+    const saved = CrmDb.getKv<Record<string, any> | null>(ADMIN_ORG_SETTINGS_KEY, null);
+    if (saved?.logo && (saved.logo.startsWith("data:") || saved.logo.startsWith("http"))) {
+      return saved.logo;
     }
     return logoImage;
   });
 
+  // Keep admin_org_settings' name/phone/defaultLanguage in sync with the real
+  // (Supabase-backed) organization record, and seed sensible defaults the
+  // first time an organization loads. This replaces a previous sync that lived
+  // in OrganizationContext.tsx — moved here because OrganizationContext runs
+  // before CrmProvider hydrates, which risked writing into CrmDb's cache before
+  // hydration and having that write silently overwritten (data loss risk).
   useEffect(() => {
-    try {
-      const saved = localStorage.getItem("admin_org_settings");
-      if (saved) {
-        const parsed = JSON.parse(saved);
-        if (!parsed.logo || parsed.logo.includes("regenerated_image") || !parsed.logo.startsWith("http")) {
-          parsed.logo = "https://lh3.googleusercontent.com/d/13bNnthJU4LIICB4iiF1a4GH1PEn05MBx";
-          localStorage.setItem("admin_org_settings", JSON.stringify(parsed));
-          setLogoUrl(parsed.logo);
-        }
-      } else {
-        const defaultSettings = {
-          name: companyName || "Organization",
-          website: "https://gembapartner.com",
-          phone: "+90 216 444 04 62",
-          address: "Kolektif House Ataşehir, İstanbul, Türkiye",
-          taxInfo: "Göztepe V.D. - 3900482910",
-          defaultCurrency: "EUR (€)",
-          defaultLanguage: "TR",
-          timezone: "UTC+03:55 (İstanbul)",
-          businessDays: ["Pazartesi", "Salı", "Çarşamba", "Perşembe", "Cuma"],
-          workingHours: "09:00 - 18:00",
-          fiscalYear: "Ocak - Aralık",
-          logo: "https://lh3.googleusercontent.com/d/13bNnthJU4LIICB4iiF1a4GH1PEn05MBx"
-        };
-        localStorage.setItem("admin_org_settings", JSON.stringify(defaultSettings));
-        setLogoUrl(defaultSettings.logo);
+    const saved = CrmDb.getKv<Record<string, any> | null>(ADMIN_ORG_SETTINGS_KEY, null);
+    if (saved) {
+      const merged = {
+        ...saved,
+        name: organization?.name || saved.name,
+        phone: organization?.phone || saved.phone || "",
+        defaultLanguage: organization?.language || saved.defaultLanguage || "TR",
+      };
+      if (!merged.logo || merged.logo.includes("regenerated_image") || !String(merged.logo).startsWith("http")) {
+        merged.logo = "https://lh3.googleusercontent.com/d/13bNnthJU4LIICB4iiF1a4GH1PEn05MBx";
       }
-    } catch (e) {
-      console.error(e);
+      CrmDb.setKv(ADMIN_ORG_SETTINGS_KEY, merged);
+      setLogoUrl(merged.logo);
+    } else {
+      const defaultSettings = {
+        name: companyName || "Organization",
+        website: "https://gembapartner.com",
+        phone: organization?.phone || "+90 216 444 04 62",
+        address: "Kolektif House Ataşehir, İstanbul, Türkiye",
+        taxInfo: "Göztepe V.D. - 3900482910",
+        defaultCurrency: "EUR (€)",
+        defaultLanguage: organization?.language || "TR",
+        timezone: "UTC+03:55 (İstanbul)",
+        businessDays: ["Pazartesi", "Salı", "Çarşamba", "Perşembe", "Cuma"],
+        workingHours: "09:00 - 18:00",
+        fiscalYear: "Ocak - Aralık",
+        logo: "https://lh3.googleusercontent.com/d/13bNnthJU4LIICB4iiF1a4GH1PEn05MBx"
+      };
+      CrmDb.setKv(ADMIN_ORG_SETTINGS_KEY, defaultSettings);
+      setLogoUrl(defaultSettings.logo);
     }
-  }, [companyName]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [companyName, organization?.name, organization?.phone, organization?.language]);
 
   useEffect(() => {
     const interval = setInterval(() => {
-      try {
-        const saved = localStorage.getItem("admin_org_settings");
-        if (saved) {
-          const parsed = JSON.parse(saved);
-          const currentLogo = (parsed.logo && (parsed.logo.startsWith("data:") || parsed.logo.startsWith("http"))) ? parsed.logo : logoImage;
-          if (currentLogo !== logoUrl) {
-            setLogoUrl(currentLogo);
-          }
+      const saved = CrmDb.getKv<Record<string, any> | null>(ADMIN_ORG_SETTINGS_KEY, null);
+      if (saved) {
+        const currentLogo = (saved.logo && (saved.logo.startsWith("data:") || saved.logo.startsWith("http"))) ? saved.logo : logoImage;
+        if (currentLogo !== logoUrl) {
+          setLogoUrl(currentLogo);
         }
-      } catch (e) {
-        // ignore
       }
     }, 1000);
     return () => clearInterval(interval);

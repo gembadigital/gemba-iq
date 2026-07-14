@@ -89,8 +89,7 @@ export default function CompanyTimelineTab({
 
     // Also track as audit log
     const auditLogsKey = `crm_company_audit_logs_${companyId}`;
-    const savedLogs = localStorage.getItem(auditLogsKey);
-    const list = savedLogs ? JSON.parse(savedLogs) : [];
+    const list = CrmDb.getKv<any[]>(auditLogsKey, []);
     list.unshift({
       id: `audit-${Date.now()}`,
       field: "Activity Logged",
@@ -99,7 +98,7 @@ export default function CompanyTimelineTab({
       user: formState.user,
       timestamp: new Date().toISOString()
     });
-    localStorage.setItem(auditLogsKey, JSON.stringify(list));
+    CrmDb.setKv(auditLogsKey, list);
 
     setIsFormOpen(false);
     setFormState({
@@ -201,26 +200,19 @@ export default function CompanyTimelineTab({
 
     // 5. Add custom audit logs as timeline changes
     const auditLogsKey = `crm_company_audit_logs_${companyId}`;
-    const savedLogs = localStorage.getItem(auditLogsKey);
-    if (savedLogs) {
-      try {
-        const logs = JSON.parse(savedLogs);
-        logs.forEach((log: any) => {
-          items.push({
-            id: log.id,
-            type: "system",
-            title: t("System Update: {field}").replace("{field}", log.field),
-            description: log.newValue 
-              ? t("Updated from '{old}' to '{new}'.").replace("{old}", log.oldValue).replace("{new}", log.newValue)
-              : log.field,
-            date: log.timestamp || new Date().toISOString(),
-            user: log.user || "GP Admin"
-          });
-        });
-      } catch (err) {
-        console.error("Error reading audits", err);
-      }
-    }
+    const logs = CrmDb.getKv<any[]>(auditLogsKey, []);
+    logs.forEach((log: any) => {
+      items.push({
+        id: log.id,
+        type: "system",
+        title: t("System Update: {field}").replace("{field}", log.field),
+        description: log.newValue
+          ? t("Updated from '{old}' to '{new}'.").replace("{old}", log.oldValue).replace("{new}", log.newValue)
+          : log.field,
+        date: log.timestamp || new Date().toISOString(),
+        user: log.user || "GP Admin"
+      });
+    });
 
     // Sort descending chronologically
     return items.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());

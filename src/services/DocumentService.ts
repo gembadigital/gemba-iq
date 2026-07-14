@@ -170,26 +170,22 @@ export const DocumentService = {
     let selectedProvider: "LOCAL" | "SHAREPOINT" | "ONEDRIVE" | "AZURE" = "LOCAL";
     let storageStatus: "Pending External Storage" | "Synced" | "Local Only" = "Pending External Storage";
 
-    const savedConnections = localStorage.getItem("admin_data_hub_connections");
-    if (savedConnections) {
-      try {
-        const conns = JSON.parse(savedConnections);
-        // Find if there is any enabled and default storage provider
-        const activeDefault = conns.find((c: any) => c.enabled && c.defaultStorage);
-        if (activeDefault) {
-          if (activeDefault.provider.includes("SharePoint")) {
-            selectedProvider = "SHAREPOINT";
-            storageStatus = "Synced";
-          } else if (activeDefault.provider.includes("OneDrive")) {
-            selectedProvider = "ONEDRIVE";
-            storageStatus = "Synced";
-          } else if (activeDefault.provider.includes("Azure")) {
-            selectedProvider = "AZURE";
-            storageStatus = "Synced";
-          }
+    // Must exactly match the key AdministrationCenter.tsx uses ("crm_admin_data_hub_connections").
+    const conns = CrmDb.getKv<any[] | null>("crm_admin_data_hub_connections", null);
+    if (conns) {
+      // Find if there is any enabled and default storage provider
+      const activeDefault = conns.find((c: any) => c.enabled && c.defaultStorage);
+      if (activeDefault) {
+        if (activeDefault.provider.includes("SharePoint")) {
+          selectedProvider = "SHAREPOINT";
+          storageStatus = "Synced";
+        } else if (activeDefault.provider.includes("OneDrive")) {
+          selectedProvider = "ONEDRIVE";
+          storageStatus = "Synced";
+        } else if (activeDefault.provider.includes("Azure")) {
+          selectedProvider = "AZURE";
+          storageStatus = "Synced";
         }
-      } catch (err) {
-        console.error("Error reading storage connections during upload:", err);
       }
     }
 
@@ -464,15 +460,11 @@ export const DocumentService = {
   // DOCUMENT CATEGORY CUSTOMIZATIONS
   // -------------------------------------------------------------
   getDocTypes(): DocTypeDefinition[] {
-    const saved = localStorage.getItem("enterprise_doc_types");
+    const saved = CrmDb.getKv<DocTypeDefinition[] | null>("enterprise_doc_types", null);
     if (saved) {
-      try {
-        return JSON.parse(saved);
-      } catch (e) {
-        console.error("Error reading custom doc types", e);
-      }
+      return saved;
     }
-    localStorage.setItem("enterprise_doc_types", JSON.stringify(DEFAULT_DOC_TYPES));
+    CrmDb.setKv("enterprise_doc_types", DEFAULT_DOC_TYPES);
     return DEFAULT_DOC_TYPES;
   },
 
@@ -489,7 +481,7 @@ export const DocumentService = {
       isCustom: true
     };
     types.push(newType);
-    localStorage.setItem("enterprise_doc_types", JSON.stringify(types));
+    CrmDb.setKv("enterprise_doc_types", types);
     return newType;
   },
 
@@ -499,7 +491,7 @@ export const DocumentService = {
     if (!target || !target.isCustom) return false;
 
     const filtered = types.filter(t => t.id !== id);
-    localStorage.setItem("enterprise_doc_types", JSON.stringify(filtered));
+    CrmDb.setKv("enterprise_doc_types", filtered);
     return true;
   },
 
@@ -507,15 +499,7 @@ export const DocumentService = {
   // AUDIT LOG SERVICE
   // -------------------------------------------------------------
   getAuditLogs(): DocumentAuditLog[] {
-    const saved = localStorage.getItem("enterprise_doc_audit_logs");
-    if (saved) {
-      try {
-        return JSON.parse(saved);
-      } catch (e) {
-        console.error("Error parsing enterprise doc audit logs", e);
-      }
-    }
-    return [];
+    return CrmDb.getKv<DocumentAuditLog[]>("enterprise_doc_audit_logs", []);
   },
 
   logAction(log: Omit<DocumentAuditLog, "id" | "timestamp">) {
@@ -526,6 +510,6 @@ export const DocumentService = {
       timestamp: new Date().toISOString().replace("T", " ").substring(0, 19)
     };
     logs.unshift(newLog);
-    localStorage.setItem("enterprise_doc_audit_logs", JSON.stringify(logs.slice(0, 1000))); // Cap at 1000 logs
+    CrmDb.setKv("enterprise_doc_audit_logs", logs.slice(0, 1000)); // Cap at 1000 logs
   }
 };

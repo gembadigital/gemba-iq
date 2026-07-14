@@ -15,6 +15,7 @@ import {
 } from "recharts";
 import { Sparkles, Star, ShieldCheck, ChevronRight, RefreshCw, Layers, Award } from "lucide-react";
 import { useLanguage } from "../../lib/LanguageContext";
+import { CrmDb } from "../../lib/CrmDb";
 
 interface CompanyOpexTabProps {
   companyId: string;
@@ -42,14 +43,13 @@ export default function CompanyOpexTab({
   const scoreKey = `crm_company_opex_${companyId}`;
 
   // State
-  const [scores, setScores] = useState<OpexScores>(() => {
-    const saved = localStorage.getItem(scoreKey);
-    return saved ? JSON.parse(saved) : { s5: 3, vsm: 2, muda: 3, oee: 2, visual: 3, standard: 2 };
-  });
+  const [scores, setScores] = useState<OpexScores>(() =>
+    CrmDb.getKv<OpexScores>(scoreKey, { s5: 3, vsm: 2, muda: 3, oee: 2, visual: 3, standard: 2 })
+  );
 
   // Save changes
   useEffect(() => {
-    localStorage.setItem(scoreKey, JSON.stringify(scores));
+    CrmDb.setKv(scoreKey, scores);
   }, [scores, scoreKey]);
 
   const handleScoreChange = (pillar: keyof OpexScores, val: number) => {

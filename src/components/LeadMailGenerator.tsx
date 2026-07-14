@@ -17,6 +17,9 @@ import {
   Check
 } from "lucide-react";
 import { Recipient } from "../types";
+import { CrmDb } from "../lib/CrmDb";
+
+const LEAD_MAIL_RECORDS_KEY = "crm_lead_mail_records";
 
 // Standardize lead interface for local usage
 interface LeadRecord {
@@ -62,15 +65,23 @@ export default function LeadMailGenerator({
   const [toastType, setToastType] = useState<"success" | "info" | "error">("success");
   const [hasUnsaved, setHasUnsaved] = useState(false);
 
-  // Load existing records from LocalStorage on mount
+  // Load existing records — organization-shared via CrmDb/Supabase, with a
+  // one-time fallback migration from this browser's legacy localStorage data.
   useEffect(() => {
-    const saved = localStorage.getItem("lead_mail_records");
-    if (saved) {
-      try {
-        setRecords(JSON.parse(saved));
-      } catch (err) {
-        console.error("Failed to parse saved lead records:", err);
+    const stored = CrmDb.getKv<LeadRecord[] | null>(LEAD_MAIL_RECORDS_KEY, null);
+    if (stored) {
+      setRecords(stored);
+      return;
+    }
+    try {
+      const legacy = localStorage.getItem("lead_mail_records");
+      if (legacy) {
+        const parsed = JSON.parse(legacy);
+        setRecords(parsed);
+        CrmDb.setKv(LEAD_MAIL_RECORDS_KEY, parsed);
       }
+    } catch (err) {
+      console.error("Failed to parse saved lead records:", err);
     }
   }, []);
 
@@ -296,7 +307,7 @@ export default function LeadMailGenerator({
   const handleSaveAll = () => {
     const mapped = records.map(r => ({ ...r, saved: true }));
     setRecords(mapped);
-    localStorage.setItem("lead_mail_records", JSON.stringify(mapped));
+    CrmDb.setKv(LEAD_MAIL_RECORDS_KEY, mapped);
     setHasUnsaved(false);
     showToast(t("Data list successfully saved to local storage."), "success");
   };
@@ -335,6 +346,7 @@ export default function LeadMailGenerator({
   const handleClearAll = () => {
     if (window.confirm(t("Are you sure you want to clear all lead records and local storage cache?"))) {
       setRecords([]);
+      CrmDb.setKv(LEAD_MAIL_RECORDS_KEY, []);
       localStorage.removeItem("lead_mail_records");
       setHasUnsaved(false);
       setCurrentPage(1);

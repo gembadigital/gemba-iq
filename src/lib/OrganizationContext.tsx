@@ -62,22 +62,18 @@ function withTimeout<T>(promise: Promise<T>, ms: number, message: string): Promi
   });
 }
 
+// Note: the "admin_org_settings" (organization-scoped) sync used to happen here,
+// but this function runs before CrmProvider/CrmDb hydration completes (see
+// RootApp.tsx provider nesting), which risked writing into CrmDb's cache before
+// hydration and having that write silently discarded by the subsequent
+// hydrateFromSupabase() snapshot apply. That sync now lives in App.tsx, which is
+// guaranteed to run post-hydration.
 function syncLegacyOrgSettings(
   organization: Organization,
   profile: Profile | null,
   actorEmail: string
 ) {
   try {
-    const existing = localStorage.getItem("admin_org_settings");
-    const parsed = existing ? JSON.parse(existing) : {};
-    const merged = {
-      ...parsed,
-      name: organization.name,
-      phone: organization.phone || parsed.phone || "",
-      defaultLanguage: organization.language || parsed.defaultLanguage || "TR",
-      defaultCurrency: parsed.defaultCurrency || "EUR (€)",
-    };
-    localStorage.setItem("admin_org_settings", JSON.stringify(merged));
     setActiveOrganizationContext(
       organization.id,
       profile?.full_name?.trim() || organization.name,

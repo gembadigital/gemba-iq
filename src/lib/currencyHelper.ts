@@ -1,6 +1,10 @@
 /**
  * Helper utility to read and handle the active system currency from organization settings.
  */
+import { CrmDb } from "./CrmDb";
+
+// Must exactly match the key used in App.tsx and AdministrationCenter.tsx.
+const ADMIN_ORG_SETTINGS_KEY = "crm_admin_org_settings";
 
 export interface SystemCurrency {
   code: string;
@@ -8,17 +12,10 @@ export interface SystemCurrency {
 }
 
 export function getSystemCurrency(): SystemCurrency {
-  const saved = localStorage.getItem("admin_org_settings");
+  const saved = CrmDb.getKv<Record<string, any> | null>(ADMIN_ORG_SETTINGS_KEY, null);
   let defaultCurrency = "EUR (€)"; // System default is EUR (€)
-  if (saved) {
-    try {
-      const parsed = JSON.parse(saved);
-      if (parsed && parsed.defaultCurrency) {
-        defaultCurrency = parsed.defaultCurrency;
-      }
-    } catch (e) {
-      // ignore JSON parse errors
-    }
+  if (saved && saved.defaultCurrency) {
+    defaultCurrency = saved.defaultCurrency;
   }
 
   let code = "EUR";

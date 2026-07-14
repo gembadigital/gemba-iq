@@ -41,6 +41,12 @@ const LEAD_PROFILES_KEY = "crm_lead_profiles";
 // Must match the key TargetAccountsView.tsx reads from, otherwise records pushed
 // here never show up on the Target Accounts screen.
 const TARGET_ACCOUNTS_KEY = "crm_target_accounts";
+// "Analiz Geçmişi" (saved company analyses) — organization-shared via CrmDb.
+const COMPANY_ANALYSES_KEY = "crm_company_analyses";
+// Legacy localStorage key kept only as a one-time migration source for anyone
+// with pre-Supabase browser data; safe to remove once all users have migrated.
+const LEGACY_COMPANY_ANALYSES_V3_KEY = "smart_mailmerge_company_analyses_v3";
+const LEGACY_COMPANY_ANALYSES_V2_KEY = "smart_mailmerge_company_analyses_v2";
 
 interface ResearchSource {
   title: string;
@@ -221,13 +227,49 @@ export default function AISalesAssistant({ onOpenSettings }: AISalesAssistantPro
     return () => clearInterval(interval);
   }, [loading]);
 
-  // Load saved analyses from localStorage
+  // Load saved analyses (organization-shared via CrmDb/Supabase, with a
+  // one-time fallback migration from this browser's legacy localStorage data).
   useEffect(() => {
-    const saved = localStorage.getItem("smart_mailmerge_company_analyses_v3");
-    if (saved) {
-      try {
-        const list = JSON.parse(saved);
-        // Deduplicate and regenerate collision IDs to protect user against duplicate key runtime warnings
+    const stored = CrmDb.getKv<any[] | null>(COMPANY_ANALYSES_KEY, null);
+    if (stored) {
+      // Deduplicate and regenerate collision IDs to protect user against duplicate key runtime warnings
+      const seenIds = new Set<string>();
+      const sanitizedList = stored.map((item: any) => {
+        let uniqueId = item.id;
+        if (!uniqueId || seenIds.has(uniqueId)) {
+          uniqueId = (uniqueId || "analysis_").split("_")[0] + "_" + Date.now() + "_" + Math.floor(Math.random() * 1000000);
+        }
+        seenIds.add(uniqueId);
+        const legacyParsed = item.parsed || {};
+        const parsed = legacyParsed.financialData
+          ? legacyParsed
+          : {
+              companySummary: legacyParsed.companySummary || NOT_FOUND_SUMMARY,
+              financialData: legacyParsed.companyFinancialAnalysis || NOT_FOUND_FINANCIAL,
+              emailDiscovery:
+                legacyParsed.estimatedEmailCandidates ||
+                legacyParsed.emailPatternAnalysis ||
+                NOT_FOUND_EMAIL,
+              decisionMakers:
+                legacyParsed.suggestedDecisionMakers || NOT_FOUND_DECISION_MAKERS,
+              opportunityAnalysis:
+                legacyParsed.recommendedOutreachStrategy || NOT_FOUND_OPPORTUNITY,
+            };
+        return { ...item, id: uniqueId, parsed };
+      });
+      setSavedAnalyses(sanitizedList);
+      if (sanitizedList.length > 0) {
+        setActiveAnalysis(sanitizedList[0]);
+      }
+      CrmDb.setKv(COMPANY_ANALYSES_KEY, sanitizedList);
+      return;
+    }
+
+    // Nothing in Supabase yet — try to migrate this browser's legacy localStorage data.
+    try {
+      const savedV3 = localStorage.getItem(LEGACY_COMPANY_ANALYSES_V3_KEY);
+      if (savedV3) {
+        const list = JSON.parse(savedV3);
         const seenIds = new Set<string>();
         const sanitizedList = list.map((item: any) => {
           let uniqueId = item.id;
@@ -256,44 +298,41 @@ export default function AISalesAssistant({ onOpenSettings }: AISalesAssistantPro
         if (sanitizedList.length > 0) {
           setActiveAnalysis(sanitizedList[0]);
         }
-        localStorage.setItem("smart_mailmerge_company_analyses_v3", JSON.stringify(sanitizedList));
-      } catch (err) {
-        console.error("Failed to load company analyses:", err);
+        CrmDb.setKv(COMPANY_ANALYSES_KEY, sanitizedList);
+        return;
       }
-    } else {
+
       // Compatibility with older v2 data if available
-      const legacy = localStorage.getItem("smart_mailmerge_company_analyses_v2");
+      const legacy = localStorage.getItem(LEGACY_COMPANY_ANALYSES_V2_KEY);
       if (legacy) {
-        try {
-          const list = JSON.parse(legacy);
-          const converted = list.map((item: any) => {
-            if (item.parsed && item.parsed.companySummary) {
-              return item;
-            }
-            return {
-              id: item.id,
-              timestamp: item.timestamp,
-              companyInput: item.companyInput,
-              rawOutput: item.rawOutput,
-              sources: item.sources || [],
-              parsed: parseScreenerOutput(item.rawOutput)
-            };
-          });
-          setSavedAnalyses(converted);
-          if (converted.length > 0) {
-            setActiveAnalysis(converted[0]);
-            localStorage.setItem("smart_mailmerge_company_analyses_v3", JSON.stringify(converted));
+        const list = JSON.parse(legacy);
+        const converted = list.map((item: any) => {
+          if (item.parsed && item.parsed.companySummary) {
+            return item;
           }
-        } catch (e) {
-          console.error(e);
+          return {
+            id: item.id,
+            timestamp: item.timestamp,
+            companyInput: item.companyInput,
+            rawOutput: item.rawOutput,
+            sources: item.sources || [],
+            parsed: parseScreenerOutput(item.rawOutput)
+          };
+        });
+        setSavedAnalyses(converted);
+        if (converted.length > 0) {
+          setActiveAnalysis(converted[0]);
         }
+        CrmDb.setKv(COMPANY_ANALYSES_KEY, converted);
       }
+    } catch (err) {
+      console.error("Failed to load company analyses:", err);
     }
   }, []);
 
   const saveAnalysesList = (list: SavedAnalysis[]) => {
     setSavedAnalyses(list);
-    localStorage.setItem("smart_mailmerge_company_analyses_v3", JSON.stringify(list));
+    CrmDb.setKv(COMPANY_ANALYSES_KEY, list);
   };
 
   const handleSearchCompany = async (e: React.FormEvent) => {
