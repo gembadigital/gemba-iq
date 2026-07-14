@@ -17,7 +17,7 @@ import AuthLoadingScreen from "./AuthLoadingScreen";
 
 export default function JoinPage() {
   const { user, loading: authLoading } = useAuth();
-  const { refreshOrganization, membership, loading: orgLoading } = useOrganization();
+  const { refreshOrganization, membership, loading: orgLoading, needsOnboarding } = useOrganization();
   const { lang, t } = useLanguage();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
@@ -31,8 +31,33 @@ export default function JoinPage() {
   const [success, setSuccess] = useState<string | null>(null);
   const [preview, setPreview] = useState<Awaited<ReturnType<typeof getInvitationPreview>> | null>(null);
 
+  console.log("[invite-debug] JoinPage render state", {
+    authLoading,
+    previewLoading,
+    accepting,
+    orgLoading,
+    userEmail: user?.email ?? null,
+    needsOnboarding,
+  });
+
+  useEffect(() => {
+    console.log("[invite-debug] JoinPage mounted", {
+      token,
+      href: window.location.href,
+    });
+  }, []);
+
+  useEffect(() => {
+    console.log("[invite-debug] JoinPage auth user", {
+      userId: user?.id ?? null,
+      email: user?.email ?? null,
+      authLoading,
+    });
+  }, [user, authLoading]);
+
   useEffect(() => {
     if (!token) {
+      console.log("[invite-debug] getInvitationPreview skipped", { reason: "missing token" });
       setPreviewLoading(false);
       setError(t("Invalid invitation link."));
       return;
@@ -42,15 +67,28 @@ export default function JoinPage() {
 
     let mounted = true;
     void (async () => {
+      console.log("[invite-debug] getInvitationPreview started", { token });
       try {
         const data = await getInvitationPreview(token);
         if (!mounted) return;
+        console.log("[invite-debug] getInvitationPreview success", {
+          token,
+          organizationName: data.organization_name,
+          invitedEmail: data.invited_email,
+          role: data.role,
+          status: data.status,
+          isExpired: data.is_expired,
+        });
         setPreview(data);
         if (data.is_expired) {
           setError(t("This invitation has expired."));
         }
       } catch (err) {
         if (!mounted) return;
+        console.log("[invite-debug] getInvitationPreview failure", {
+          token,
+          error: err instanceof Error ? err.message : String(err),
+        });
         setError(err instanceof Error ? err.message : t("Invitation not found."));
       } finally {
         if (mounted) setPreviewLoading(false);
@@ -65,7 +103,14 @@ export default function JoinPage() {
   useEffect(() => {
     if (!user || !token || previewLoading || preview?.is_expired || accepting) return;
     if (membership) {
+      console.log("[invite-debug] final redirect destination", {
+        destination: "/",
+        reason: "JoinPage existing membership",
+      });
       clearPendingInvitationToken();
+      console.log("[race-trace] JoinPage immediately before navigate('/')", {
+        reason: "existing membership",
+      });
       navigate("/", { replace: true });
       return;
     }
@@ -74,20 +119,50 @@ export default function JoinPage() {
     void (async () => {
       setAccepting(true);
       setError(null);
+      console.log("[invite-debug] acceptOrganizationInvitation started", {
+        token,
+        userId: user.id,
+        email: user.email,
+      });
       try {
         await acceptOrganizationInvitation(token, {
           fullName: (user.user_metadata?.full_name as string | undefined) || undefined,
+        });
+        console.log("[invite-debug] acceptOrganizationInvitation success", {
+          token,
+          userId: user.id,
+          email: user.email,
         });
         clearPendingInvitationToken();
         await refreshOrganization();
         if (!mounted) return;
         setSuccess(tr ? "Organizasyona katıldınız. Yönlendiriliyorsunuz..." : "You joined the organization. Redirecting...");
+        console.log("[invite-debug] final redirect destination", {
+          destination: "/",
+          reason: "JoinPage accept success",
+        });
+        console.log("[race-trace] JoinPage immediately before navigate('/')", {
+          reason: "accept success",
+        });
         navigate("/", { replace: true });
       } catch (err) {
         if (!mounted) return;
         const message = err instanceof Error ? err.message : t("Failed to accept invitation.");
+        console.log("[invite-debug] acceptOrganizationInvitation failure", {
+          token,
+          userId: user.id,
+          email: user.email,
+          error: message,
+        });
         if (message.toLowerCase().includes("already belongs")) {
+          console.log("[invite-debug] final redirect destination", {
+            destination: "/",
+            reason: "JoinPage already belongs to organization",
+          });
           clearPendingInvitationToken();
+          console.log("[race-trace] JoinPage immediately before navigate('/')", {
+            reason: "already belongs",
+          });
           navigate("/", { replace: true });
           return;
         }
@@ -113,10 +188,22 @@ export default function JoinPage() {
   ]);
 
   if (authLoading || previewLoading || (user && (orgLoading || accepting))) {
+    console.log("[invite-debug] JoinPage returning AuthLoadingScreen", {
+      authLoading,
+      previewLoading,
+      accepting,
+      orgLoading,
+      userEmail: user?.email ?? null,
+      needsOnboarding,
+    });
     return <AuthLoadingScreen />;
   }
 
   if (user && membership) {
+    console.log("[invite-debug] final redirect destination", {
+      destination: "/",
+      reason: "JoinPage Navigate existing membership",
+    });
     return <Navigate to="/" replace />;
   }
 

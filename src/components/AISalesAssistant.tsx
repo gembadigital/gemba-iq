@@ -34,6 +34,10 @@ import {
   Minimize2
 } from "lucide-react";
 import { LeadProfile, TargetAccount } from "../types";
+import { CrmDb } from "../lib/CrmDb";
+import { getActiveOrganizationId } from "../lib/tenantStorage";
+
+const LEAD_PROFILES_KEY = "crm_lead_profiles";
 
 interface ResearchSource {
   title: string;
@@ -538,11 +542,7 @@ export default function AISalesAssistant({ onOpenSettings }: AISalesAssistantPro
     const dm = extractDecisionMakerName(activeAnalysis.parsed.decisionMakers);
 
     try {
-      const savedProfilesRaw = localStorage.getItem("smart_mailmerge_lead_profiles");
-      let currentProfiles: LeadProfile[] = [];
-      if (savedProfilesRaw) {
-        currentProfiles = JSON.parse(savedProfilesRaw);
-      }
+      const currentProfiles = CrmDb.getKv<LeadProfile[]>(LEAD_PROFILES_KEY, []);
 
       const companyCapitalized =
         activeAnalysis.companyInput.charAt(0).toUpperCase() +
@@ -565,10 +565,11 @@ export default function AISalesAssistant({ onOpenSettings }: AISalesAssistantPro
         customField2: `Kaynak: Tavily Search API`,
         deliveryStatus: "idle",
         openCount: 0,
+        organization_id: getActiveOrganizationId() || undefined,
       };
 
       const updated = [newLead, ...currentProfiles];
-      localStorage.setItem("smart_mailmerge_lead_profiles", JSON.stringify(updated));
+      CrmDb.setKv(LEAD_PROFILES_KEY, updated);
 
       showToast(`${companyCapitalized} Lead Profiles listesine eklendi!`, "success");
     } catch (err) {

@@ -1724,7 +1724,7 @@ export default function SalesDashboardView({ deals, onSelectDeal }: SalesDashboa
                 </defs>
                 <CartesianGrid strokeDasharray="3 3" opacity={0.1} />
                 <XAxis dataKey="name" fontSize={9} tickLine={false} />
-                <YAxis fontSize={9} tickLine={false} formatter={(v: any) => `$${v / 1000}k`} />
+                <YAxis fontSize={9} tickLine={false} format={(v: any) => `$${v / 1000}k`} />
                 <Tooltip formatter={(value: any) => formatCur(value)} />
                 <Legend wrapperStyle={{ fontSize: 9 }} />
                 <Area type="monotone" dataKey="proposal" name={lang === "TR" ? "Gönderilen Teklifler" : "Proposal Sent"} stroke="#3b82f6" strokeWidth={2} fillOpacity={1} fill="url(#colorProposal)" />
@@ -1943,7 +1943,7 @@ export default function SalesDashboardView({ deals, onSelectDeal }: SalesDashboa
               <ComposedChart data={forecastChartData}>
                 <CartesianGrid strokeDasharray="3 3" opacity={0.1} />
                 <XAxis dataKey="month" fontSize={9} tickLine={false} />
-                <YAxis fontSize={9} tickLine={false} formatter={(v: any) => `$${v / 1000}k`} />
+                <YAxis fontSize={9} tickLine={false} format={(v: any) => `$${v / 1000}k`} />
                 <Tooltip formatter={(value: any) => formatCur(value)} />
                 <Legend wrapperStyle={{ fontSize: 9 }} />
                 <Bar dataKey="pipeline" name={t("Current Active Pipeline")} fill="#3b82f6" opacity={0.8} barSize={25} />

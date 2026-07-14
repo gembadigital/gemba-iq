@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from "react";
 import { useLanguage } from "../lib/LanguageContext";
+import { CrmDb } from "../lib/CrmDb";
 import {
   Brain,
   Bot,
@@ -69,16 +70,8 @@ export default function SalesCoachAI({ deals }: SalesCoachAIProps) {
   >("assistant");
 
   // --- LOCAL PERSISTED SKILL LIBRARY ---
-  const [skills, setSkills] = useState<SkillItem[]>(() => {
-    const saved = localStorage.getItem("sales_coach_skills");
-    if (saved) {
-      try {
-        return JSON.parse(saved);
-      } catch (e) {
-        // Fallback below
-      }
-    }
-    return [
+  const [skills, setSkills] = useState<SkillItem[]>(() =>
+    CrmDb.getKv<SkillItem[]>("sales_coach_skills", [
       {
         id: "skill-1",
         name: "Lean Manufacturing Strategy",
@@ -151,22 +144,16 @@ export default function SalesCoachAI({ deals }: SalesCoachAIProps) {
         contentSize: "15 KB",
         uploadedAt: "2026-06-20 10:00"
       }
-    ];
-  });
+    ])
+  );
 
   useEffect(() => {
-    localStorage.setItem("sales_coach_skills", JSON.stringify(skills));
+    CrmDb.setKv("sales_coach_skills", skills);
   }, [skills]);
 
   // --- LOCAL RECOMMENDATION LOGS ---
-  const [recommendationHistory, setRecommendationHistory] = useState<RecommendationLog[]>(() => {
-    const saved = localStorage.getItem("sales_coach_recs");
-    if (saved) {
-      try {
-        return JSON.parse(saved);
-      } catch (e) {}
-    }
-    return [
+  const [recommendationHistory, setRecommendationHistory] = useState<RecommendationLog[]>(() =>
+    CrmDb.getKv<RecommendationLog[]>("sales_coach_recs", [
       {
         id: "rec-1",
         date: "2026-06-19 11:24",
@@ -191,11 +178,11 @@ export default function SalesCoachAI({ deals }: SalesCoachAIProps) {
         businessOutcome: "Farkındalık yaratarak teklif sürecini kapatma aşamasına taşımak.",
         isCompleted: false
       }
-    ];
-  });
+    ])
+  );
 
   useEffect(() => {
-    localStorage.setItem("sales_coach_recs", JSON.stringify(recommendationHistory));
+    CrmDb.setKv("sales_coach_recs", recommendationHistory);
   }, [recommendationHistory]);
 
   // --- ASSISTANT STATE & CHAT ---
@@ -223,24 +210,18 @@ export default function SalesCoachAI({ deals }: SalesCoachAIProps) {
   const [uploadedFileName, setUploadedFileName] = useState("");
 
   // --- AI SETTINGS STATE ---
-  const [settings, setSettings] = useState(() => {
-    const saved = localStorage.getItem("sales_coach_settings");
-    if (saved) {
-      try {
-        return JSON.parse(saved);
-      } catch (e) {}
-    }
-    return {
+  const [settings, setSettings] = useState(() =>
+    CrmDb.getKv("sales_coach_settings", {
       model: "gemini-3.5-flash",
       coachingRigor: "Challenging", // Gentle, Challenging, Aggressive
       rapportStyle: "Directive", // Socratic, Directive, Accountable
       confidenceThreshold: 85,
       alertOnAgingDays: 30
-    };
-  });
+    })
+  );
 
   useEffect(() => {
-    localStorage.setItem("sales_coach_settings", JSON.stringify(settings));
+    CrmDb.setKv("sales_coach_settings", settings);
   }, [settings]);
 
   // --- CHAT WINDOW AUTO-SCROLL ---

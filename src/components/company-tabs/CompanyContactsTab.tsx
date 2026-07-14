@@ -2,6 +2,10 @@ import React, { useState } from "react";
 import { CrmDb, Contact } from "../../lib/CrmDb";
 import { Plus, Trash2, Edit2, Mail, Phone, Users, X, Check, Search, User } from "lucide-react";
 import { useLanguage } from "../../lib/LanguageContext";
+import { getActiveOrganizationId } from "../../lib/tenantStorage";
+import type { LeadProfile } from "../../types";
+
+const LEAD_PROFILES_KEY = "crm_lead_profiles";
 
 interface CompanyContactsTabProps {
   companyId: string;
@@ -100,13 +104,9 @@ export default function CompanyContactsTab({
         leadSegment: formState.leadSegment
       });
       
-      // Automatically add to lead profiles (smart_mailmerge_lead_profiles)
+      // Automatically add to the active organization's shared lead registry.
       try {
-        const savedLeads = localStorage.getItem("smart_mailmerge_lead_profiles");
-        let leads: any[] = [];
-        if (savedLeads) {
-          leads = JSON.parse(savedLeads);
-        }
+        const leads = CrmDb.getKv<LeadProfile[]>(LEAD_PROFILES_KEY, []);
         
         const companyInfo = CrmDb.getCompanyById(companyId);
         const companyName = companyInfo ? companyInfo.name : "";
@@ -135,10 +135,11 @@ export default function CompanyContactsTab({
             customField1: "",
             customField2: "",
             deliveryStatus: "idle",
-            openCount: 0
+            openCount: 0,
+            organization_id: getActiveOrganizationId() || undefined,
           };
           leads.push(newLead);
-          localStorage.setItem("smart_mailmerge_lead_profiles", JSON.stringify(leads));
+          CrmDb.setKv(LEAD_PROFILES_KEY, leads);
         }
       } catch (err) {
         console.error("Auto sync to Lead database failed:", err);

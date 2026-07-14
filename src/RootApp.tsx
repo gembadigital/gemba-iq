@@ -1,4 +1,4 @@
-import React, { Suspense, lazy } from "react";
+import React, { Suspense, lazy, useEffect } from "react";
 import { BrowserRouter, Navigate, Route, Routes, useLocation } from "react-router-dom";
 import { useAuth } from "./lib/AuthContext";
 import { getPendingInvitationToken } from "./lib/invitationConstants";
@@ -14,6 +14,11 @@ import WelcomeWizard from "./components/onboarding/WelcomeWizard";
 import AdministrationPage from "./components/auth/AdministrationPage";
 
 const App = lazy(() => import("./App"));
+
+function LoggedNavigate({ to, reason }: { to: string; reason: string }) {
+  console.log("[invite-debug] final redirect destination", { destination: to, reason });
+  return <Navigate to={to} replace />;
+}
 
 function getUserInvitationToken(user: { user_metadata?: Record<string, unknown> } | null): string | null {
   const token = user?.user_metadata?.invitation_token;
@@ -65,7 +70,21 @@ function ProtectedApp() {
   const location = useLocation();
   const pendingInvitationToken = getRouteInvitationToken(location.search, user);
 
+  useEffect(() => {
+    console.log("[race-trace] ProtectedApp rendered", {
+      pathname: location.pathname,
+      userId: user?.id ?? null,
+      orgLoading,
+      needsOnboarding,
+    });
+  }, [location.pathname, user?.id, orgLoading, needsOnboarding]);
+
   if (!user) {
+    console.log("[invite-debug] final redirect destination", {
+      destination: "/login",
+      reason: "ProtectedApp no user",
+      from: location.pathname,
+    });
     return <Navigate to="/login" replace state={{ from: location }} />;
   }
 
@@ -75,10 +94,28 @@ function ProtectedApp() {
 
   if (needsOnboarding) {
     if (pendingInvitationToken) {
-      return <Navigate to={`/join?token=${encodeURIComponent(pendingInvitationToken)}`} replace />;
+      const destination = `/join?token=${encodeURIComponent(pendingInvitationToken)}`;
+      console.log("[invite-debug] final redirect destination", {
+        destination,
+        reason: "ProtectedApp needsOnboarding with pending invitation token",
+        needsOnboarding,
+      });
+      return <Navigate to={destination} replace />;
     }
+    console.log("[invite-debug] final redirect destination", {
+      destination: "WelcomeWizard",
+      reason: "ProtectedApp needsOnboarding without token",
+      needsOnboarding,
+    });
     return <WelcomeWizard />;
   }
+
+  console.log("[invite-debug] dashboard reached", {
+    destination: location.pathname,
+    userId: user.id,
+    email: user.email,
+    needsOnboarding,
+  });
 
   return (
     <CrmProvider>
@@ -103,8 +140,26 @@ function AppRoutes() {
     <OrganizationProvider>
       <Routes>
         <Route path="/join" element={<JoinPage />} />
-        <Route path="/login" element={user ? <Navigate to={authenticatedRedirect} replace /> : <LoginPage />} />
-        <Route path="/register" element={user ? <Navigate to={authenticatedRedirect} replace /> : <RegisterPage />} />
+        <Route
+          path="/login"
+          element={
+            user ? (
+              <LoggedNavigate to={authenticatedRedirect} reason="AppRoutes authenticated user on /login" />
+            ) : (
+              <LoginPage />
+            )
+          }
+        />
+        <Route
+          path="/register"
+          element={
+            user ? (
+              <LoggedNavigate to={authenticatedRedirect} reason="AppRoutes authenticated user on /register" />
+            ) : (
+              <RegisterPage />
+            )
+          }
+        />
         <Route path="/forgot-password" element={user ? <Navigate to="/" replace /> : <ForgotPasswordPage />} />
         <Route path="/reset-password" element={user ? <Navigate to="/" replace /> : <ResetPasswordPage />} />
         <Route path="/administration/*" element={<AdministrationRoute />} />

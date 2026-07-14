@@ -1833,7 +1833,7 @@ export default function ServicesView({
       contactEmail: clientContactEmail,
       proposalSubject: selectedService?.name || "Yalın Dönüşüm Hizmet Şablona",
       date: proposalDate,
-      currency: "₺",
+      currency: "₺" as const,
       owner: assignedPm,
       description: "Sistem tarafından otomatik üretilen teklif",
       status: "Draft",

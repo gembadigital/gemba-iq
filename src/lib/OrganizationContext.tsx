@@ -1,7 +1,7 @@
 import React, { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from "react";
 import { useAuth } from "./AuthContext";
 import { useLanguage } from "./LanguageContext";
-import type { Organization, OrganizationMember, OrganizationRole, Profile, WelcomeWizardData } from "../types/organization";
+import type { Organization, OrganizationMember, Profile, WelcomeWizardData } from "../types/organization";
 import {
   completeWelcomeWizard,
   fetchOrganizationBootstrap,
@@ -24,7 +24,7 @@ interface OrganizationContextValue {
   organization: Organization | null;
   membership: OrganizationMember | null;
   organizationId: string | null;
-  memberRole: OrganizationRole | null;
+  memberRole: AppRole | null;
   appRole: AppRole;
   isAdmin: boolean;
   canInviteUsers: boolean;
@@ -104,6 +104,11 @@ export function OrganizationProvider({ children }: { children: React.ReactNode }
 
   const loadOrganization = useCallback(async () => {
     const seq = ++loadSeq.current;
+    console.log("[race-trace] loadOrganization start", {
+      seq,
+      currentSeq: loadSeq.current,
+      userId: user?.id ?? null,
+    });
 
     if (!user) {
       setProfile(null);
@@ -150,6 +155,17 @@ export function OrganizationProvider({ children }: { children: React.ReactNode }
       setOrganization(bootstrap.organization);
       setMembership(bootstrap.membership);
 
+      console.log("[invite-debug] OrganizationContext organization loaded", {
+        userId: user.id,
+        userEmail: user.email,
+        organizationId: bootstrap.organization?.id ?? null,
+        organizationName: bootstrap.organization?.name ?? null,
+        membershipId: bootstrap.membership?.id ?? null,
+        membershipRole: bootstrap.membership?.role ?? null,
+        hasProfile: Boolean(bootstrap.profile),
+        needsOnboarding: checkNeedsOnboarding(bootstrap),
+      });
+
       if (bootstrap.membership) {
         void recordProfileLogin();
       }
@@ -174,6 +190,11 @@ export function OrganizationProvider({ children }: { children: React.ReactNode }
       setOrganization(null);
       setMembership(null);
     } finally {
+      console.log("[race-trace] loadOrganization finally", {
+        seq,
+        currentSeq: loadSeq.current,
+        willClearLoading: seq === loadSeq.current,
+      });
       if (seq === loadSeq.current) {
         setLoading(false);
       }
@@ -184,6 +205,27 @@ export function OrganizationProvider({ children }: { children: React.ReactNode }
     if (authLoading) return;
     void loadOrganization();
   }, [authLoading, loadOrganization]);
+
+  useEffect(() => {
+    console.log("[race-trace] orgLoading state transition", {
+      authLoading,
+      organizationLoading: loading,
+      orgLoading: authLoading || loading,
+      currentSeq: loadSeq.current,
+    });
+  }, [authLoading, loading]);
+
+  useEffect(() => {
+    if (authLoading || loading) return;
+    const onboarding = !!user && checkNeedsOnboarding({ profile, organization, membership });
+    console.log("[invite-debug] OrganizationContext needsOnboarding value", {
+      userId: user?.id ?? null,
+      needsOnboarding: onboarding,
+      hasProfile: Boolean(profile),
+      hasOrganization: Boolean(organization),
+      hasMembership: Boolean(membership),
+    });
+  }, [user, profile, organization, membership, authLoading, loading]);
 
   const completeOnboarding = useCallback(
     async (data: WelcomeWizardData) => {

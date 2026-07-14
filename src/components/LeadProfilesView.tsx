@@ -28,6 +28,9 @@ import { LeadProfile, Recipient } from "../types";
 import EmailLeadDiscoveryView from "./EmailLeadDiscoveryView";
 import CompanyAutocomplete from "./CompanyAutocomplete";
 import { CrmDb } from "../lib/CrmDb";
+import { getActiveOrganizationId } from "../lib/tenantStorage";
+
+const LEAD_PROFILES_KEY = "crm_lead_profiles";
 
 interface LeadProfilesViewProps {
   onPushToMailMerge: (newRecs: Recipient[]) => void;
@@ -94,82 +97,20 @@ export default function LeadProfilesView({
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, []);
 
-  // Loading initial set from localStore
+  // Load the active organization's shared lead registry from the CRM snapshot.
   useEffect(() => {
-    const saved = localStorage.getItem("smart_mailmerge_lead_profiles");
-    if (saved) {
-      try {
-        setProfiles(JSON.parse(saved));
-      } catch (err) {
-        console.error("Failed to load Lead profiles from local storage:", err);
-      }
-    } else {
-      // Seed with beautiful initial demo items if none exist to make screen stunning right away
-      const seedData: LeadProfile[] = [
-        {
-          id: "lead_1",
-          no: 1,
-          firstName: "Sophia",
-          lastName: "Chen",
-          email: "sophia.chen@northwind.com",
-          company: "Northwind Traders",
-          department: "Procurement",
-          address: "88 Market St, San Francisco, CA",
-          industry: "Retail & Consumer Goods",
-          leadDemand: "",
-          leadStatus: "Contacted",
-          leadSegment: "Hot Lead",
-          customField1: "Qualified Partner Program",
-          customField2: "Referred by regional division",
-          deliveryStatus: "success",
-          openCount: 2
-        },
-        {
-          id: "lead_2",
-          no: 2,
-          firstName: "Marcus",
-          lastName: "Vance",
-          email: "m.vance@contoso.co.uk",
-          company: "Contoso Ltd",
-          department: "IT Infrastructure",
-          address: "12 London Wall, London EC2M",
-          industry: "Cloud & Hosted Tech",
-          leadDemand: "",
-          leadStatus: "New",
-          leadSegment: "Warm Lead",
-          customField1: "Enterprise Account Spec",
-          customField2: "Downloaded security whitepaper",
-          deliveryStatus: "idle",
-          openCount: 0
-        },
-        {
-          id: "lead_3",
-          no: 3,
-          firstName: "Elena",
-          lastName: "Rostova",
-          email: "e.rostova@adventure-works.com",
-          company: "Adventure Works",
-          department: "Engineering",
-          address: "450 Red Wood Blvd, Redmond, WA",
-          industry: "Manufacturing",
-          leadDemand: "",
-          leadStatus: "Nurturing",
-          leadSegment: "Cold",
-          customField1: "Inbound Catalog Request",
-          customField2: "Pending custom trial approval",
-          deliveryStatus: "failed",
-          openCount: 0
-        }
-      ];
-      setProfiles(seedData);
-      localStorage.setItem("smart_mailmerge_lead_profiles", JSON.stringify(seedData));
-    }
+    setProfiles(CrmDb.getKv<LeadProfile[]>(LEAD_PROFILES_KEY, []));
   }, []);
 
-  // Helper Auto-Saver whenever profile list mutates
+  // Persist the registry through the active organization's CRM auxiliary record.
   const updateProfilesAndPersist = (updated: LeadProfile[]) => {
-    setProfiles(updated);
-    localStorage.setItem("smart_mailmerge_lead_profiles", JSON.stringify(updated));
+    const organizationId = getActiveOrganizationId();
+    const scopedProfiles = updated.map((profile) => ({
+      ...profile,
+      organization_id: organizationId || profile.organization_id,
+    }));
+    setProfiles(scopedProfiles);
+    CrmDb.setKv(LEAD_PROFILES_KEY, scopedProfiles);
   };
 
   const triggerToast = (msg: string, type: "success" | "info" | "error" = "success") => {
@@ -200,7 +141,8 @@ export default function LeadProfilesView({
       customField1: newProfile.customField1.trim(),
       customField2: newProfile.customField2.trim(),
       deliveryStatus: newProfile.deliveryStatus,
-      openCount: newProfile.openCount
+      openCount: newProfile.openCount,
+      organization_id: getActiveOrganizationId() || undefined,
     };
 
     const updatedList = [...profiles, added];
@@ -228,7 +170,7 @@ export default function LeadProfilesView({
   };
 
   const handleManualSaveAll = () => {
-    localStorage.setItem("smart_mailmerge_lead_profiles", JSON.stringify(profiles));
+    updateProfilesAndPersist(profiles);
     triggerToast(t("Lead profile database committed & saved securely."), "success");
   };
 

@@ -85,40 +85,45 @@ function emptyAuxiliary(): OrgAuxiliaryData {
 }
 
 function rowToCompany(row: Row): Company {
-  return { ...(row.data as Company), id: row.id, organization_id: row.organization_id };
+  const data = row.data as unknown as Company;
+  return { ...data, id: row.id, organization_id: row.organization_id };
 }
 
 function rowToContact(row: Row): Contact {
+  const data = row.data as unknown as Contact;
   return {
-    ...(row.data as Contact),
+    ...data,
     id: row.id,
     organization_id: row.organization_id,
-    companyId: row.company_id || (row.data as Contact).companyId,
+    companyId: row.company_id || data.companyId,
   };
 }
 
 function rowToDeal(row: Row): Deal {
+  const data = row.data as unknown as Deal;
   return {
-    ...(row.data as Deal),
+    ...data,
     id: row.id,
     organization_id: row.organization_id,
-    companyId: row.company_id || (row.data as Deal).companyId,
+    companyId: row.company_id || data.companyId,
   };
 }
 
 function rowToProposal(row: Row): Proposal {
+  const data = row.data as unknown as Proposal;
   return {
-    ...(row.data as Proposal),
+    ...data,
     id: row.id,
     organization_id: row.organization_id,
-    companyId: row.company_id || (row.data as Proposal).companyId,
-    dealId: row.deal_id || (row.data as Proposal).dealId,
-    contactId: row.contact_id || (row.data as Proposal).contactId,
+    companyId: row.company_id || data.companyId,
+    dealId: row.deal_id || data.dealId,
+    contactId: row.contact_id || data.contactId,
   };
 }
 
 function rowToTask(row: Row): Task {
-  return { ...(row.data as Task), id: row.id };
+  const data = row.data as unknown as Task;
+  return { ...data, id: row.id };
 }
 
 export async function loadOrganizationCrm(organizationId?: string): Promise<CrmSnapshot> {
