@@ -90,7 +90,19 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         } = client.auth.onAuthStateChange((_event, nextSession) => {
           if (!mounted) return;
           setSession(nextSession);
-          setUser(nextSession?.user ?? null);
+          // Supabase's client silently re-validates the session whenever the
+          // browser tab regains focus/visibility, re-emitting this callback
+          // with a brand-new `user` object even though the signed-in user
+          // hasn't actually changed. If we always swap in the new object
+          // reference, every downstream effect keyed on `user` (notably
+          // OrganizationContext's org/CRM reload effect, which cascades into
+          // CrmProvider re-hydrating from Supabase) fires again — causing a
+          // full reload + loading spinner every time you switch back to this
+          // tab. Keep the same object reference when the user id is
+          // unchanged so those effects stay quiet.
+          setUser((prevUser) =>
+            prevUser?.id === nextSession?.user?.id ? prevUser : (nextSession?.user ?? null)
+          );
           finishLoading();
         });
 
