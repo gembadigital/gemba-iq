@@ -4,6 +4,7 @@ import { getCampaignTranslation, getCampaignStatusLabel } from "./campaignI18n";
 import { Recipient, AttachmentFile, Campaign, MailboxSession } from "../types";
 import { generateCampaignReport } from "../utils/pdfGenerator";
 import { getSupabase } from "../lib/supabaseClient";
+import { CrmDb } from "../lib/CrmDb";
 import {
   Play,
   Pause,
@@ -429,15 +430,8 @@ export default function SendingProgressView({
               opensCount: 0
             };
 
-            const savedStr = localStorage.getItem("smart_mailmerge_email_campaigns");
-            let list = [];
-            if (savedStr) {
-              try {
-                list = JSON.parse(savedStr);
-              } catch (_) {}
-            }
-            list = [agendaItem, ...list];
-            localStorage.setItem("smart_mailmerge_email_campaigns", JSON.stringify(list));
+            const list = [agendaItem, ...CrmDb.getKv<any[]>("crm_email_campaigns", [])];
+            CrmDb.setKv("crm_email_campaigns", list);
           } catch (storageErr) {
             console.error("Failed to add agenda item for sent email:", storageErr);
           }
@@ -513,24 +507,21 @@ export default function SendingProgressView({
 
       if (isOpened) {
         try {
-          const savedStr = localStorage.getItem("smart_mailmerge_email_campaigns");
-          if (savedStr) {
-            let list = JSON.parse(savedStr);
-            let updated = false;
-            list = list.map((item: any) => {
-              if (item.id.includes(`_sent_${recipientId}_`)) {
-                updated = true;
-                return {
-                  ...item,
-                  opensCount: (item.opensCount || 0) + 1,
-                  clicksCount: Math.random() < 0.35 ? (item.clicksCount || 0) + 1 : (item.clicksCount || 0)
-                };
-              }
-              return item;
-            });
-            if (updated) {
-              localStorage.setItem("smart_mailmerge_email_campaigns", JSON.stringify(list));
+          let list = CrmDb.getKv<any[]>("crm_email_campaigns", []);
+          let updated = false;
+          list = list.map((item: any) => {
+            if (item.id.includes(`_sent_${recipientId}_`)) {
+              updated = true;
+              return {
+                ...item,
+                opensCount: (item.opensCount || 0) + 1,
+                clicksCount: Math.random() < 0.35 ? (item.clicksCount || 0) + 1 : (item.clicksCount || 0)
+              };
             }
+            return item;
+          });
+          if (updated) {
+            CrmDb.setKv("crm_email_campaigns", list);
           }
         } catch (_) {}
       }

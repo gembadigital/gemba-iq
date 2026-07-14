@@ -24,6 +24,33 @@ const ai = new GoogleGenAI({
   }
 });
 
+// Retries a Gemini generateContent call when it fails with a transient
+// "high demand" / UNAVAILABLE (503) error, using short exponential backoff.
+// Any other kind of error is re-thrown immediately (no point retrying those).
+async function generateWithRetry(
+  params: Parameters<typeof ai.models.generateContent>[0],
+  maxRetries = 3,
+  baseDelayMs = 1200
+): Promise<Awaited<ReturnType<typeof ai.models.generateContent>>> {
+  let lastError: any;
+  for (let attempt = 0; attempt <= maxRetries; attempt++) {
+    try {
+      return await ai.models.generateContent(params);
+    } catch (err: any) {
+      lastError = err;
+      const errText = String(err?.message || err || "");
+      const isTransient = /UNAVAILABLE|high demand|503|overloaded/i.test(errText);
+      if (!isTransient || attempt === maxRetries) {
+        throw err;
+      }
+      const delay = baseDelayMs * Math.pow(2, attempt);
+      console.warn(`Gemini call hit a transient error, retrying in ${delay}ms (attempt ${attempt + 1}/${maxRetries})...`);
+      await new Promise((resolve) => setTimeout(resolve, delay));
+    }
+  }
+  throw lastError;
+}
+
 const app = express();
 const PORT = 3000;
 
@@ -88,6 +115,19 @@ app.all("/api/organization/mailbox", async (req, res) => {
   } catch (error) {
     console.error("Organization mailbox handler failed:", error);
     res.status(500).json({ error: "Failed to process organization mailbox request." });
+  }
+});
+
+// API: Personal (per-user) Microsoft 365 mailbox — "Phase 2" feature from
+// UserAccountSettings.tsx. Reuses the same Azure application credentials as
+// the organization mailbox above; each user just registers their own address.
+app.all("/api/user/mailbox", async (req, res) => {
+  try {
+    const handler = (await import("./api/user/mailbox.js")).default;
+    await handler(req, res);
+  } catch (error) {
+    console.error("Personal mailbox handler failed:", error);
+    res.status(500).json({ error: "Failed to process personal mailbox request." });
   }
 });
 
@@ -752,6 +792,79 @@ Preserve the existing placeholders like {{FirstName}}, {{LastName}}, {{Company}}
   } catch (error: any) {
     console.error("Gemini Assistant route error:", error);
     res.status(500).json({ error: error.message || "Could not complete text generation with Gemini." });
+  }
+});
+
+// API: Company Search — grounded in real Google Search results (no hallucinated companies).
+// Used by CompanyDiscoveryView.tsx's "Gemba Search" box. Distinct from /api/gemini/assist,
+// which is shared by unrelated email-writing actions and must not be touched here.
+app.post("/api/gemini/company-search", async (req, res) => {
+  const { query } = req.body;
+
+  if (!process.env.GEMINI_API_KEY) {
+    return res.status(400).json({ error: "GEMINI_API_KEY is not configured in environment variables. Please supply it under Settings > Secrets." });
+  }
+
+  if (!query || !String(query).trim()) {
+    return res.status(400).json({ error: "Search query is required." });
+  }
+
+  try {
+    const searchPrompt = `Using Google Search, find real, currently operating Turkish industrial companies / factories that match this search: "${String(query).trim()}".
+
+Only include companies you can verify actually exist from the search results — do NOT invent, guess, or hallucinate any company, website, or address. If you cannot find enough real matches, return fewer results (even an empty array) rather than making any up.
+
+For each real company found (maximum 8), return an object with exactly these fields (leave a field as an empty string "" if you are not confident about it from the search results — never guess):
+{
+  "id": "unique-string",
+  "name": "Company legal/trade name as found in search results",
+  "website": "domain from the actual search result (no https://)",
+  "title": "Short descriptive title for the result",
+  "snippet": "2-3 sentence Turkish description of what the company manufactures/does, grounded in the real search results",
+  "address": "Address or OSB/industrial zone name if found in search results, else empty",
+  "city": "City if found, else empty",
+  "region": "Geographic region (Marmara, Ege, İç Anadolu, Karadeniz, Akdeniz, Doğu/Güneydoğu Anadolu) if determinable, else empty",
+  "zone": "OSB (organize sanayi bölgesi) name if applicable, else empty",
+  "industry": "Automotive" | "Machinery" | "Textile" | "Metallurgy" | "Plastic" | "Food" | "Electronics" | "Other",
+  "size": "Employee size range if stated in search results, else empty",
+  "description": "Manufacturing/facility description grounded in search results",
+  "notes": ""
+}
+
+Return ONLY a raw valid JSON array, no markdown fencing, no commentary before or after it.`;
+
+    // Gemini occasionally returns a transient 503 "model is currently experiencing
+    // high demand" error. Retry a few times with backoff before giving up, since a
+    // real search-grounded call is inherently slower than the old hallucinated one
+    // and users shouldn't see a failure for a passing overload blip.
+    const aiRes = await generateWithRetry({
+      model: "gemini-3.5-flash",
+      contents: searchPrompt,
+      config: {
+        tools: [{ googleSearch: {} }],
+      }
+    });
+
+    const resultText = aiRes.text;
+    if (!resultText) {
+      throw new Error("Empty text response received from AI model.");
+    }
+
+    const groundingChunks = aiRes.candidates?.[0]?.groundingMetadata?.groundingChunks || [];
+    const sources = groundingChunks
+      .map((chunk: any) => chunk.web)
+      .filter((web: any) => web && web.uri)
+      .map((web: any) => ({ title: web.title || web.uri, uri: web.uri }));
+
+    res.json({
+      success: true,
+      response: resultText,
+      grounded: true,
+      sources
+    });
+  } catch (error: any) {
+    console.error("Gemini Company Search route error:", error);
+    res.status(500).json({ error: error.message || "Could not complete company search with Gemini." });
   }
 });
 

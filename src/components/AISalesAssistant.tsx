@@ -38,6 +38,9 @@ import { CrmDb } from "../lib/CrmDb";
 import { getActiveOrganizationId } from "../lib/tenantStorage";
 
 const LEAD_PROFILES_KEY = "crm_lead_profiles";
+// Must match the key TargetAccountsView.tsx reads from, otherwise records pushed
+// here never show up on the Target Accounts screen.
+const TARGET_ACCOUNTS_KEY = "crm_target_accounts";
 
 interface ResearchSource {
   title: string;
@@ -585,11 +588,7 @@ export default function AISalesAssistant({ onOpenSettings }: AISalesAssistantPro
     const dm = extractDecisionMakerName(activeAnalysis.parsed.decisionMakers);
 
     try {
-      const savedAccountsRaw = localStorage.getItem("smart_mailmerge_target_accounts");
-      let currentAccounts: TargetAccount[] = [];
-      if (savedAccountsRaw) {
-        currentAccounts = JSON.parse(savedAccountsRaw);
-      }
+      const currentAccounts: TargetAccount[] = CrmDb.getKv<TargetAccount[]>(TARGET_ACCOUNTS_KEY, []);
 
       const inputStr = activeAnalysis.companyInput.trim().toLowerCase();
       let websiteUrl = "";
@@ -649,8 +648,12 @@ export default function AISalesAssistant({ onOpenSettings }: AISalesAssistantPro
         rawOutput: activeAnalysis.rawOutput,
       };
 
-      const updatedList = [newAccount, ...currentAccounts];
-      localStorage.setItem("smart_mailmerge_target_accounts", JSON.stringify(updatedList));
+      const organizationId = getActiveOrganizationId();
+      const updatedList = [
+        { ...newAccount, organization_id: organizationId || newAccount.organization_id },
+        ...currentAccounts,
+      ];
+      CrmDb.setKv(TARGET_ACCOUNTS_KEY, updatedList);
 
       showToast("Şirket hedef listesine kaydedildi!", "success");
     } catch (err) {

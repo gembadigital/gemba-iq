@@ -25,6 +25,7 @@ import { useAuth } from "./lib/AuthContext";
 import { useOrganization } from "./lib/OrganizationContext";
 import { getDisplayInitials } from "./lib/authHelpers";
 import { useOrganizationMailboxController } from "./lib/useOrganizationMailboxController";
+import { CrmDb } from "./lib/CrmDb";
 import { useNavigate } from "react-router-dom";
 const logoImage = "https://lh3.googleusercontent.com/d/13bNnthJU4LIICB4iiF1a4GH1PEn05MBx";
 
@@ -317,27 +318,23 @@ export default function App() {
     }
   }, [isAdmin, activeTab]);
 
-  // Load persisted local campaign state on mount
+  // Load persisted organization campaign state (Supabase-backed) on mount
   useEffect(() => {
     // Recover Campaign History logs
-    const savedLogs = localStorage.getItem("smart_mailmerge_historic_campaigns");
-    if (savedLogs) {
-      try {
-        setLogs(JSON.parse(savedLogs));
-      } catch (_) {}
+    const savedLogs = CrmDb.getKv<any[]>("crm_campaign_history_logs", []);
+    if (savedLogs && savedLogs.length) {
+      setLogs(savedLogs);
     }
 
-    // Recover Template drafts
-    const savedDraft = localStorage.getItem("smart_mailmerge_working_draft");
-    if (savedDraft) {
-      try {
-        const draft = JSON.parse(savedDraft);
-        setSubject(draft.subject || "");
-        setTemplateBody(draft.templateBody || "");
-        setAttachments(draft.attachments || []);
-        setRecipients(draft.recipients || []);
-        setTrackingService(draft.trackingService || "none");
-      } catch (_) {}
+    // Recover Template drafts (shared with CampaignDesigner.tsx's "Save List" button —
+    // must use the same "crm_working_draft" key)
+    const draft = CrmDb.getKv<any>("crm_working_draft", null);
+    if (draft) {
+      setSubject(draft.subject || "");
+      setTemplateBody(draft.templateBody || "");
+      setAttachments(draft.attachments || []);
+      setRecipients(draft.recipients || []);
+      setTrackingService(draft.trackingService || "none");
     }
 
     // Custom tab-change event listener for easy navigation
@@ -353,14 +350,10 @@ export default function App() {
     };
   }, []);
 
-  // Save changes to working drafts
+  // Save changes to working drafts (organization-scoped, Supabase-backed)
   useEffect(() => {
-    try {
-      const draft = { subject, templateBody, attachments, recipients, trackingService };
-      localStorage.setItem("smart_mailmerge_working_draft", JSON.stringify(draft));
-    } catch (err) {
-      console.warn("Storage warning: Working draft is too large to auto-save to browser local storage. Your campaign remains loaded in-memory.", err);
-    }
+    const draft = { subject, templateBody, attachments, recipients, trackingService };
+    CrmDb.setKv("crm_working_draft", draft);
   }, [subject, templateBody, attachments, recipients, trackingService]);
 
   const handleLogout = async () => {
@@ -390,18 +383,7 @@ export default function App() {
     setLogs((prev) => {
       // Put standard newest date on top
       const updated = [sanitizedCampaign, ...prev];
-      try {
-        localStorage.setItem("smart_mailmerge_historic_campaigns", JSON.stringify(updated));
-      } catch (err) {
-        console.error("Storage limit reached! Failed to save historic campaigns to localStorage:", err);
-        try {
-          // Fallback: prune older logs of past campaigns to make room for the new one (limit to newest 10)
-          const pruned = updated.slice(0, 10);
-          localStorage.setItem("smart_mailmerge_historic_campaigns", JSON.stringify(pruned));
-        } catch (subErr) {
-          console.error("Critical: Failed to save pruned history to local storage:", subErr);
-        }
-      }
+      CrmDb.setKv("crm_campaign_history_logs", updated);
       return updated;
     });
   };
@@ -409,7 +391,7 @@ export default function App() {
   const handleDeleteCampaignLog = (id: string) => {
     setLogs((prev) => {
       const filtered = prev.filter((l) => l.id !== id);
-      localStorage.setItem("smart_mailmerge_historic_campaigns", JSON.stringify(filtered));
+      CrmDb.setKv("crm_campaign_history_logs", filtered);
       return filtered;
     });
   };

@@ -66,295 +66,6 @@ const RECOMMENDED_SERVICES_LIST = [
   "Industrial Engineering"
 ];
 
-// Rich base dataset of Turkish factories/companies to enable offline high-precision searching of hotspots (Konya OSB, Bursa, etc.)
-const INITIAL_DISCOVERY_DATABASE = [
-  {
-    id: "disc-1",
-    name: "Konya Hidrolik ve Silindir Sanayi A.Ş.",
-    website: "konyahidrolik.com.tr",
-    address: "Konya Organize Sanayi Bölgesi, 9. Cadde No: 14",
-    city: "Konya",
-    region: "İç Anadolu",
-    zone: "Konya OSB",
-    industry: "Machinery",
-    phone: "+90 (332) 234 5060",
-    linkedin: "linkedin.com/company/konya-hidrolik",
-    size: "250-500 Çalışan",
-    description: "Yüksek tonajlı hidrolik silindir ve özel iş makineleri aksamları üreticisi. Seri üretim ve montaj hatları mevcuttur.",
-    revenue: "12,000,000 $",
-    productionType: "Siparişe Göre Montaj",
-    digitalInfrastructure: "ERP (Canned), Sınırlı OEE Takibi",
-    founded: 1994,
-    notes: "Hatta darboğazlar mevcut, özellikle kaynak robotlarının verimlilik oranlarında düşüş var."
-  },
-  {
-    id: "disc-2",
-    name: "Bursa Otomotiv Pres ve Sac Şekillendirme",
-    website: "bursaotopres.com",
-    address: "Bursa Organize Sanayi Bölgesi, Mavi Cadde No: 8",
-    city: "Bursa",
-    region: "Marmara",
-    zone: "Bursa OSB",
-    industry: "Automotive",
-    phone: "+90 (224) 443 1250",
-    linkedin: "linkedin.com/company/bursa-otopres",
-    size: "750+ Çalışan",
-    description: "Tier-1 seviyesinde ana sanayilere gövde sacı ve kaynaklı karkas grubu tedarik etmektedir. 22 adet mekanik/hidrolik pres hattı çalışmaktadır.",
-    revenue: "45,000,000 €",
-    productionType: "Seri Sac İşleme & Kaynak",
-    digitalInfrastructure: "Bulut ERP, IoT OEE Terminal",
-    founded: 1988,
-    notes: "Kalıp kalibrasyonu ve SMED süreleri iyileştirilmeli. Değer Akış Haritalama (VSM) fırsatları yüksek."
-  },
-  {
-    id: "disc-3",
-    name: "Manisa Akıllı Elektronik Montaj Teknolojileri",
-    website: "manisaelektronik.com",
-    address: "Manisa Organize Sanayi Bölgesi, III. Kısım No: 20",
-    city: "Manisa",
-    region: "Ege",
-    zone: "Manisa OSB",
-    industry: "Electronics",
-    phone: "+90 (236) 213 8811",
-    linkedin: "linkedin.com/company/manisa-smart-assembly",
-    size: "750+ Çalışan",
-    description: "Beyaz eşya kontrol kartları ve tüketici elektroniği fason montaj fabrikası. SMD hatları ve manuel dizgi konveyörleri ağırlıklı.",
-    revenue: "30,000,000 $",
-    productionType: "Yüksek Hızlı Montaj",
-    digitalInfrastructure: "SAP, MES Entegrasyon Aşaması",
-    founded: 2005,
-    notes: "U düzeni hat tasarımı ve Yamazumi montaj hattı dengeleme ihtiyacı kritik seviyededir."
-  },
-  {
-    id: "disc-4",
-    name: "Konya Döküm ve Ağır Metalurji Fabrikası d.o.o.",
-    website: "konyadokummetal.com",
-    address: "Konya Organize Sanayi Bölgesi, 12. Sokak No: 3",
-    city: "Konya",
-    region: "İç Anadolu",
-    zone: "Konya OSB",
-    industry: "Metallurgy",
-    phone: "+90 (332) 234 7799",
-    linkedin: "linkedin.com/company/konya-heavy-casting",
-    size: "100-250 Çalışan",
-    description: "Pik ve sfero döküm dökümhanesi. Traktör parçaları, fren diskleri ve vana gövdesi dökümü yapmaktadır.",
-    revenue: "8,500,000 $",
-    productionType: "Sürekli Döküm ve Kalıplama",
-    digitalInfrastructure: "Klasik ERP, Excel Odaklı KPI",
-    founded: 1979,
-    notes: "Hurda oranları yüksek. Altı Sigma ve TPM (Toplam Verimli Bakım) ile duruş kayıplarının azaltılması hedeflenmelidir."
-  },
-  {
-    id: "disc-5",
-    name: "Güzeller Kimya ve Plastik Enjeksiyon",
-    website: "guzellerplastik.com",
-    address: "Gebze Plastikçiler OSB, 4. Cadde No: 5",
-    city: "Kocaeli",
-    region: "Marmara",
-    zone: "Gebze OSB",
-    industry: "Plastic",
-    phone: "+90 (262) 751 1040",
-    linkedin: "linkedin.com/company/guzeller-plastic",
-    size: "250-500 Çalışan",
-    description: "Ambalaj ve otomotiv plastik alt aksam üreticisi. 45 adet plastik enjeksiyon makinesi ve hammadde mikser besleme sistemleri aktiftir.",
-    revenue: "18,000,000 $",
-    productionType: "Enjeksiyon Kalıplama",
-    digitalInfrastructure: "Özel MES, Bulut ERP",
-    founded: 1999,
-    notes: "Çevrim sürelerinde sapmalar mevcut. Enjeksiyon hatlarında OEE artış programları yapılmalı."
-  },
-  {
-    id: "disc-6",
-    name: "Dokur Dokuma Tekstil Sanayi",
-    website: "dokurtekstilbursa.com",
-    address: "Bursa DOSAB, Gül Sokak No: 18",
-    city: "Bursa",
-    region: "Marmara",
-    zone: "Bursa OSB",
-    industry: "Textile",
-    phone: "+90 (224) 211 4455",
-    linkedin: "linkedin.com/company/dokur-weaving",
-    size: "250-500 Çalışan",
-    description: "Ev tekstili ve perdelik kumaş üretimi. İplik hazırlama, çözgü ve örgü makineleriyle dikey entegre tesis.",
-    revenue: "14,500,000 $",
-    productionType: "Sürekli Dokuma Entegre",
-    digitalInfrastructure: "Yerel ERP, Makine Takip Yazılımı",
-    founded: 1991,
-    notes: "Kaizen projeleriyle set-up süreleri azaltılabilir. İplik israflarını engellemek için Lean 5S projesi şart."
-  },
-  {
-    id: "disc-7",
-    name: "Konyalı Motor Pompa ve Tarım Ekipmanları",
-    website: "konyamotorpompa.com",
-    address: "Konya OSB, Vatan Caddesi No: 4",
-    city: "Konya",
-    region: "İç Anadolu",
-    zone: "Konya OSB",
-    industry: "Machinery",
-    phone: "+90 (332) 234 9010",
-    linkedin: "",
-    size: "50-100 Çalışan",
-    description: "Tarım pompaları, dizel jeneratör ve sulama fıskiyeleri üzerine montaj ve döküm işleme atölyesi.",
-    revenue: "4,500,000 $",
-    productionType: "Montaj Hattı",
-    digitalInfrastructure: "Excel Tabanlı Takip",
-    founded: 2012,
-    notes: "Hücresel montaj düzenine geçilerek verim %30 artırılabilir. Yerleşim planı (Layout) analizi gerekli."
-  },
-  {
-    id: "disc-8",
-    name: "Ege Pak Gıda Konserve Tesisleri",
-    website: "egepakgida.com",
-    address: "Manisa OSB, 2. Kısım No: 45",
-    city: "Manisa",
-    region: "Ege",
-    zone: "Manisa OSB",
-    industry: "Food",
-    phone: "+90 (236) 213 1290",
-    linkedin: "linkedin.com/company/egepak-gida",
-    size: "100-250 Çalışan",
-    description: "İhracata yönelik konserve gıda, kurutulmuş meyve ve dondurulmuş paketleme tesisi. Yıllık 15,000 ton kapasite.",
-    revenue: "9,000,000 $",
-    productionType: "Bantlı Gıda Paketleme",
-    digitalInfrastructure: "Logo Enterprise",
-    founded: 2001,
-    notes: "Kritik gıda hatlarında darboğaz ve duruş analizleri için OEE ölçümü yapılması önerilir."
-  },
-  {
-    id: "disc-9",
-    name: "Kocaeli Çelik Boru Halat Çekme",
-    website: "kocaelicelikboru.com",
-    address: "Dilovası OSB, Mermerciler Sanayi Bölgesi No: 33",
-    city: "Kocaeli",
-    region: "Marmara",
-    zone: "Kocaeli OSB",
-    industry: "Metallurgy",
-    phone: "+90 (262) 646 9900",
-    linkedin: "linkedin.com/company/kocaeli-wire-rope",
-    size: "500-750 Çalışan",
-    description: "Ağır sanayi için çelik boru, halat çekme ve galvaniz kaplama hatları operatörü. Türkiye'nin en büyük çelik çekme tesislerinden.",
-    revenue: "55,000,000 $",
-    productionType: "Ağır Sanayi Haddeleme",
-    digitalInfrastructure: "SAP ERP, Fabrika Durum Ekranları",
-    founded: 1983,
-    notes: "Fırın set-up süreleri (OEE) iyileştirilmeli. TPM otonom bakım süreçleri derinlik kazanmalı."
-  },
-  {
-    id: "disc-10",
-    name: "Makinaş Dişli ve Redüktör imalatı",
-    website: "makinasdisli.com.tr",
-    address: "Konya OSB, Kos geçidi No: 12",
-    city: "Konya",
-    region: "İç Anadolu",
-    zone: "Konya OSB",
-    industry: "Machinery",
-    phone: "+90 (332) 234 4455",
-    linkedin: "linkedin.com/company/makinas-gears",
-    size: "50-100 Çalışan",
-    description: "Otomotiv ve rüzgar türbini dişlileri, özel redüktör grupları CNC tornalama ve ısıl işlem tesisi.",
-    revenue: "6,200,000 $",
-    productionType: "CNC ve Metal İşleme",
-    digitalInfrastructure: "Yerel Yazılım, Excel",
-    founded: 2008,
-    notes: "CNC makine duruşları yüksek seviyede. OEE izleme ve SMED yalın teknikleri devreye alınabilir."
-  },
-  {
-    id: "disc-11",
-    name: "Bursa Sünger ve Döşeme Sanayi",
-    website: "bursasunger.com",
-    address: "Bursa OSB, Yeşil Cadde No: 29",
-    city: "Bursa",
-    region: "Marmara",
-    zone: "Bursa OSB",
-    industry: "Plastic",
-    phone: "+90 (224) 441 5566",
-    linkedin: "",
-    size: "100-250 Çalışan",
-    description: "Poliüretan blok sünger döküm ve form kesim tesisi. Mobilya ve otomotiv koltuk sanayi yan sanayi tedarikçisi.",
-    revenue: "11,500,000 $",
-    productionType: "Sürekli Blok Kimyasal Reaksiyon",
-    digitalInfrastructure: "Logo, Özel Üretim Modülü",
-    founded: 1997,
-    notes: "Köpük döküm fire oranları yüksek seviyededir. Kaizen Six Sigma projesiyle israf engellenebilir."
-  },
-  {
-    id: "disc-12",
-    name: "Ege Vana ve Armatür Döküm",
-    website: "egevana.com",
-    address: "Kemalpaşa OSB, 3. Cadde No: 54",
-    city: "İzmir",
-    region: "Ege",
-    zone: "İzmir OSB",
-    industry: "Metallurgy",
-    phone: "+90 (232) 877 1221",
-    linkedin: "linkedin.com/company/ege-valves",
-    size: "105-250 Çalışan",
-    description: "Sıhhi tesisat armatür ve endüstriyel hidrolik vana döküm, kaplama ve mekanik montaj tesisleri.",
-    revenue: "13,000,000 $",
-    productionType: "Döküm & Talaşlı İmalat",
-    digitalInfrastructure: "SAP SuccessFactors, Yerel Üretim Takibi",
-    founded: 1985,
-    notes: "Hücre montaj ve SMED kalıp değiştirme verimini artırarak kapasite %20 oranında artırılabilir."
-  },
-  {
-    id: "disc-13",
-    name: "Konya Karoser ve Dorse İmalatı",
-    website: "konyadorsekaroser.co",
-    address: "Konya Organize Sanayi Bölgesi, 15. Cadde No: 22",
-    city: "Konya",
-    region: "İç Anadolu",
-    zone: "Konya OSB",
-    industry: "Automotive",
-    phone: "+90 (332) 234 1177",
-    linkedin: "linkedin.com/company/konya-trailers",
-    size: "100-250 Çalışan",
-    description: "Ağır vasıta, tır dorsesi, damper ve treyler imalatı. Çelik konstrüksiyon kesim, büküm ve gazaltı kaynak montaj hatları mevcuttur.",
-    revenue: "15,500,000 $",
-    productionType: "Hatta Kaynak ve Boyama",
-    digitalInfrastructure: "Özel ERP (Sektörel)",
-    founded: 1993,
-    notes: "Kaynak ve boyahane hatlarında montaj israflarının önüne geçmek için 5S ve Değer Akış Haritalama önerilir."
-  },
-  {
-    id: "disc-14",
-    name: "Yıldız Un İrmik ve Yem Sanayi",
-    website: "yildizun.com",
-    address: "Konya OSB, Değirmenler Sokak No: 7",
-    city: "Konya",
-    region: "İç Anadolu",
-    zone: "Konya OSB",
-    industry: "Food",
-    phone: "+90 (332) 234 2233",
-    linkedin: "",
-    size: "100-250 Çalışan",
-    description: "Endüstriyel un, makarna irmiği ve hayvan yemi dikey silolu değirmen tesisi. Tam otomasyon PLC kumandalıdır.",
-    revenue: "22,000,000 $",
-    productionType: "Sürekli Değirmen Akışı",
-    digitalInfrastructure: "Scada Sistemi, Bağımsız Muhasebe Yazılımı",
-    founded: 1982,
-    notes: "Otonom bakım devreye alınarak mekanik değirmen duruş sürelerinin azaltılması TPM ile sağlanabilir."
-  },
-  {
-    id: "disc-15",
-    name: "Ak-Kablo Kablo Demetleri Sanayi",
-    website: "akkablo.com.tr",
-    address: "Manisa OSB, 4. Cadde No: 1",
-    city: "Manisa",
-    region: "Ege",
-    zone: "Manisa OSB",
-    industry: "Electronics",
-    phone: "+90 (236) 211 4050",
-    linkedin: "linkedin.com/company/ak-kablo",
-    size: "500-750 Çalışan",
-    description: "Otomotiv ve beyaz eşya ana üreticilerine kablo ağaç grubu ve demet montajı yapmaktadır. İstihdam yoğundur.",
-    revenue: "19,500,000 $",
-    productionType: "Manuel Kablolama Pano Montajı",
-    digitalInfrastructure: "ERP, Barkodlu Stok Sistemi",
-    founded: 1995,
-    notes: "Pano montaj hatlarında ergonomi ve hat dengeleme (Yamazumi) ile işçilik giderleri optimize edilmeli."
-  }
-];
-
 export default function CompanyDiscoveryView() {
   const { lang, t } = useLanguage();
   // --- STATE FOR DISCOVERY DATA & PERSISTED LISTS ---
@@ -362,8 +73,10 @@ export default function CompanyDiscoveryView() {
     CrmDb.getKv<any[]>("crm_discovery_db", [])
   );
 
+  // NOTE: must match the "crm_target_accounts" key used by TargetAccountsView.tsx,
+  // LeadProfilesView.tsx and AISalesAssistant.tsx, otherwise records diverge across screens.
   const [targetAccounts, setTargetAccounts] = useState<TargetAccount[]>(() =>
-    CrmDb.getKv<TargetAccount[]>("smart_mailmerge_target_accounts", [])
+    CrmDb.getKv<TargetAccount[]>("crm_target_accounts", [])
   );
 
   const [wonCompanies, setWonCompanies] = useState<Company[]>(() => CrmDb.getCompanies());
@@ -373,7 +86,7 @@ export default function CompanyDiscoveryView() {
   }, [discoveryDb]);
 
   useEffect(() => {
-    CrmDb.setKv("smart_mailmerge_target_accounts", targetAccounts);
+    CrmDb.setKv("crm_target_accounts", targetAccounts);
   }, [targetAccounts]);
 
   useEffect(() => {
@@ -427,6 +140,7 @@ export default function CompanyDiscoveryView() {
   const [googleSearching, setGoogleSearching] = useState(false);
   const [googleSearchedTerm, setGoogleSearchedTerm] = useState("");
   const [googleSearchError, setGoogleSearchError] = useState("");
+  const [googleSearchSources, setGoogleSearchSources] = useState<{ title: string; uri: string }[]>([]);
   const [searchTime, setSearchTime] = useState(0.12);
 
   // Toast Alerts State
@@ -873,104 +587,61 @@ You must output a raw valid JSON ARRAY strictly matching this structure without 
   // --- SIMULATED GOOGLE SEARCH ---
   const handleGoogleSearch = async (queryText: string) => {
     if (!queryText || !queryText.trim()) return;
-    
+
     setGoogleSearching(true);
     setGoogleSearchError("");
+    setGoogleSearchSources([]);
     const startTime = Date.now();
     const query = queryText.trim();
     setGoogleSearchedTerm(query);
     showToast(`Google'da aranıyor: "${query}"`, "info");
 
     try {
-      // Direct request to Gemini model via server route
-      const helperPrompt = `You are a simulated high-fidelity Google Search Engine.
-Generate a valid JSON array of 5 to 7 search results relevant to this query: "${query}".
-Each search result must represent an extremely realistic or famous existing Turkish company, factory, or corporate vendor matching the search terms.
-Each item must have a real or authentic-looking website domain (e.g. "www.coşkunöz.com.tr", "www.kardan.com", "www.ulker.com.tr", etc.), an elegant search result title, and a professional snippet describing their industrial operations, plant setup, and potential OpEx improvements.
-
-Return ONLY a raw valid JSON ARRAY strictly matching this structure without any markdown wrap or extra text (do not write \`\`\`json etc.):
-[
-  {
-    "id": "g-search-res-" + unique_string,
-    "name": "Şirket Adı ve Unvanı",
-    "website": "domain.com.tr",
-    "title": "Arama Sonucu Başlığı (e.g. Coşkunöz Metal Form A.Ş. - Otomotiv Gövde Pres Sac Şekillendirme)",
-    "snippet": "Google snippet açıklaması: 2-3 cümlelik, teknik kelimeler barındıran profesyonel Türkçe Google arama sonucu özet metni.",
-    "address": "Organize Sanayi Bölgesi, Cadde No...",
-    "city": "Şehir",
-    "region": "Coğrafi Bölge (e.g. Marmara, Ege, İç Anadolu...)",
-    "zone": "OSB İsmi (e.g. Bursa OSB, Konya OSB)",
-    "industry": "Automotive" | "Machinery" | "Textile" | "Metallurgy" | "Plastic" | "Food" | "Electronics" | "Other",
-    "size": "100-250 Çalışan" | "250-500 Çalışan" | "750+ Çalışan",
-    "description": "Firma hakkında imalat ve tesis açıklaması.",
-    "notes": "Hat dengeleme ve OEE kayıpları."
-  }
-]`;
-
-      const res = await fetch("/api/gemini/assist", {
+      // Real Google Search, grounded via Gemini's google_search tool — no hallucinated
+      // companies. See /api/gemini/company-search in server.ts.
+      const res = await fetch("/api/gemini/company-search", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ prompt: helperPrompt })
+        body: JSON.stringify({ query })
       });
 
       const data = await res.json();
-      if (data.success && data.response) {
-        const textResponse = data.response;
-        const cleanedJsonText = textResponse.replace(/```json/gi, "").replace(/```/g, "").trim();
-        const parsedArray = JSON.parse(cleanedJsonText);
-
-        if (Array.isArray(parsedArray)) {
-          setGoogleSearchResults(parsedArray);
-          // Auto-integrate with discoveryDb so detail drawers work seamlessly
-          setDiscoveryDb(prev => {
-            const list = [...prev];
-            parsedArray.forEach(newItem => {
-              if (!list.some(x => x.name.toLowerCase() === newItem.name.toLowerCase())) {
-                list.push(newItem);
-              }
-            });
-            return list;
-          });
-        } else {
-          throw new Error("Invalid format");
-        }
-      } else {
-        throw new Error("API failed");
+      if (!res.ok || !data.success || !data.response) {
+        throw new Error(data.error || "Arama isteği başarısız oldu.");
       }
-    } catch (err) {
-      console.warn("Using offline search fallback:", err);
-      // Fallback search logic by filtering discovery database
-      const terms = query.toLowerCase().split(/\s+/).filter(Boolean);
-      const fallbackList = discoveryDb.filter(item => {
-        if (terms.length === 0) return true;
-        return terms.some(term => 
-          item.name?.toLowerCase().includes(term) ||
-          item.website?.toLowerCase().includes(term) ||
-          item.city?.toLowerCase().includes(term) ||
-          item.region?.toLowerCase().includes(term) ||
-          item.zone?.toLowerCase().includes(term) ||
-          item.industry?.toLowerCase().includes(term) ||
-          item.description?.toLowerCase().includes(term)
-        );
+
+      const cleanedJsonText = String(data.response).replace(/```json/gi, "").replace(/```/g, "").trim();
+      const parsedArray = JSON.parse(cleanedJsonText);
+
+      if (!Array.isArray(parsedArray)) {
+        throw new Error("Geçersiz yanıt formatı.");
+      }
+
+      setGoogleSearchResults(parsedArray);
+      setGoogleSearchSources(Array.isArray(data.sources) ? data.sources : []);
+
+      // Auto-integrate with discoveryDb so detail drawers work seamlessly
+      setDiscoveryDb(prev => {
+        const list = [...prev];
+        parsedArray.forEach((newItem: any) => {
+          if (newItem?.name && !list.some(x => x.name?.toLowerCase() === newItem.name.toLowerCase())) {
+            list.push(newItem);
+          }
+        });
+        return list;
       });
-
-      const mappedResults = (fallbackList.length > 0 ? fallbackList : discoveryDb.slice(0, 5)).map((item, idx) => ({
-        id: item.id || `google-fb-${idx}-${Date.now()}`,
-        name: item.name || "Ege Ambalaj ve Plastik Sanayi A.Ş.",
-        website: item.website || "example.com.tr",
-        title: `${item.name} - ${item.zone || item.city || "Sanayi Bölgesi"} Resmi Portalı`,
-        snippet: `${item.description || "Geniş makine parkuru ve seri imalat hatları ile endüstriyel ambalaj çözümleri."} Bu tesis sitemiz fihristinde kayıtlı olup, en verimli OEE ve kalitesizlik maliyetleri (COPQ) azaltım süreçleri danışmanlık kapsamında incelenmektedir.`,
-        address: item.address || `${item.city} OSB`,
-        city: item.city || "Manisa",
-        region: item.region || "Ege",
-        zone: item.zone || "",
-        industry: item.industry || "Other",
-        size: item.size || "100-250 Çalışan",
-        description: item.description || "Hassas imalat fabrikası.",
-        notes: item.notes || "OEE kapasite analizleri planlanıyor."
-      }));
-
-      setGoogleSearchResults(mappedResults);
+    } catch (err) {
+      // Intentionally no fake-data fallback here: showing invented companies as if they
+      // were real search results is misleading for a B2B sales tool. Show an honest
+      // empty state with the real error instead.
+      console.error("Company search failed:", err);
+      setGoogleSearchResults([]);
+      setGoogleSearchSources([]);
+      setGoogleSearchError(
+        err instanceof Error && err.message
+          ? err.message
+          : "Arama başarısız oldu. Lütfen tekrar deneyin."
+      );
     } finally {
       const endTime = Date.now();
       const diffSec = parseFloat(((endTime - startTime) / 1000).toFixed(2));
@@ -1051,10 +722,10 @@ Return ONLY a raw valid JSON ARRAY strictly matching this structure without any 
     }
 
     const selectedCompanies = discoveryDb.filter(d => selectedResultIds.includes(d.id));
-    
-    // Save as draft campaign in `smart_mailmerge_email_campaigns`
-    const savedCampaignsRaw = localStorage.getItem("smart_mailmerge_email_campaigns");
-    const campaignsList = savedCampaignsRaw ? JSON.parse(savedCampaignsRaw) : [];
+
+    // Save as draft campaign in the shared organization CRM store (must match
+    // the "crm_email_campaigns" key used by CampaignManagerView.tsx and SendingProgressView.tsx)
+    const campaignsList: any[] = CrmDb.getKv<any[]>("crm_email_campaigns", []);
 
     const newCampaignId = "camp-disc-" + Date.now();
     const newCampaignRecipients: Recipient[] = selectedCompanies.map((c, idx) => ({
@@ -1089,7 +760,7 @@ Return ONLY a raw valid JSON ARRAY strictly matching this structure without any 
     };
 
     campaignsList.push(campaignRecord);
-    localStorage.setItem("smart_mailmerge_email_campaigns", JSON.stringify(campaignsList));
+    CrmDb.setKv("crm_email_campaigns", campaignsList);
 
     setSelectedResultIds([]);
     setShowCampaignDialog(false);
@@ -1487,9 +1158,33 @@ Return ONLY a raw valid JSON ARRAY strictly matching this structure without any 
               </div>
 
               {/* Stats Line */}
-              <div className="text-xs text-slate-400 dark:text-zinc-500 font-mono">
-                {googleSearchResults.length} sonuç bulundu ({searchTime} saniye) - "<strong>{googleSearchedTerm}</strong>" araması
+              <div className="text-xs text-slate-400 dark:text-zinc-500 font-mono flex flex-wrap items-center gap-2">
+                <span>
+                  {googleSearchResults.length} sonuç bulundu ({searchTime} saniye) - "<strong>{googleSearchedTerm}</strong>" araması
+                </span>
+                {googleSearchSources.length > 0 && (
+                  <span className="inline-flex items-center gap-1 text-emerald-600 dark:text-emerald-400 font-bold">
+                    ✓ Gerçek Google araması ile doğrulandı ({googleSearchSources.length} kaynak)
+                  </span>
+                )}
               </div>
+
+              {googleSearchSources.length > 0 && (
+                <div className="flex flex-wrap items-center gap-2 -mt-2">
+                  {googleSearchSources.slice(0, 6).map((src, idx) => (
+                    <a
+                      key={src.uri || idx}
+                      href={src.uri}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="text-[10px] text-slate-500 hover:text-[#0078D4] dark:text-zinc-400 bg-slate-50 dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 px-2 py-1 rounded-full truncate max-w-[220px]"
+                      title={src.uri}
+                    >
+                      🔗 {src.title || src.uri}
+                    </a>
+                  ))}
+                </div>
+              )}
 
               {/* Layout Content Grid (Search Results Column + Google Info Card on Right) */}
               <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
@@ -1599,8 +1294,17 @@ Return ONLY a raw valid JSON ARRAY strictly matching this structure without any 
 
                       {googleSearchResults.length === 0 && (
                         <div className="py-16 text-center text-slate-450 space-y-2">
-                          <p className="font-mono text-sm font-bold">"<strong>{googleSearchedTerm}</strong>" aramasına uygun doğrulanmış sanayi kaydı bulunamadı.</p>
-                          <p className="text-xs">Yeni bir endüstri odağı veya bölge aramayı deneyin (örn: "Konya metal", "Gebze plastik").</p>
+                          {googleSearchError ? (
+                            <>
+                              <p className="font-mono text-sm font-bold text-rose-600 dark:text-rose-400">Arama başarısız oldu.</p>
+                              <p className="text-xs text-rose-500 dark:text-rose-400">{googleSearchError}</p>
+                            </>
+                          ) : (
+                            <>
+                              <p className="font-mono text-sm font-bold">"<strong>{googleSearchedTerm}</strong>" aramasına uygun doğrulanmış sanayi kaydı bulunamadı.</p>
+                              <p className="text-xs">Yeni bir endüstri odağı veya bölge aramayı deneyin (örn: "Konya metal", "Gebze plastik").</p>
+                            </>
+                          )}
                         </div>
                       )}
                     </div>

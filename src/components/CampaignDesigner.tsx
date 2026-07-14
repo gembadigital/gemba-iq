@@ -3,6 +3,7 @@ import { useLanguage } from "../lib/LanguageContext";
 import { getCampaignTranslation } from "./campaignI18n";
 import { Recipient, AttachmentFile } from "../types";
 import { parseSpreadsheet } from "../utils/excelImport";
+import { CrmDb } from "../lib/CrmDb";
 import * as XLSX from "xlsx";
 import {
   Upload,
@@ -244,14 +245,10 @@ export default function CampaignDesigner({
   const [showSaveSuccess, setShowSaveSuccess] = useState(false);
 
   const handleSaveList = () => {
-    let trackingService = "none";
-    try {
-      const savedDraft = localStorage.getItem("smart_mailmerge_working_draft");
-      if (savedDraft) {
-        const parsed = JSON.parse(savedDraft);
-        trackingService = parsed.trackingService || "none";
-      }
-    } catch (_) {}
+    // Must use the same "crm_working_draft" key App.tsx auto-saves to, otherwise
+    // this manual save and the automatic one diverge.
+    const existingDraft = CrmDb.getKv<any>("crm_working_draft", null);
+    const trackingService = existingDraft?.trackingService || "none";
 
     const draft = {
       subject,
@@ -260,16 +257,11 @@ export default function CampaignDesigner({
       recipients,
       trackingService
     };
-    try {
-      localStorage.setItem("smart_mailmerge_working_draft", JSON.stringify(draft));
-      setShowSaveSuccess(true);
-      setTimeout(() => {
-        setShowSaveSuccess(false);
-      }, 3000);
-    } catch (err) {
-      console.error("Local storage quota limit reached on manual save:", err);
-      alert(t("Save warning: The working campaign draft is too large to fit in browser local storage quota (5MB limit). However, your campaign and recipient lists remain loaded and active in-memory. Please proceed with sending."));
-    }
+    CrmDb.setKv("crm_working_draft", draft);
+    setShowSaveSuccess(true);
+    setTimeout(() => {
+      setShowSaveSuccess(false);
+    }, 3000);
   };
 
   // State for row inline editing

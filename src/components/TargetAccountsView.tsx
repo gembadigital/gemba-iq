@@ -33,6 +33,12 @@ import {
 } from "lucide-react";
 import { TargetAccount, Recipient } from "../types";
 import { useLanguage } from "../lib/LanguageContext";
+import { CrmDb } from "../lib/CrmDb";
+import { getActiveOrganizationId } from "../lib/tenantStorage";
+
+// Shared organization-scoped key — must match the key used by LeadProfilesView.tsx
+// and AISalesAssistant.tsx when pushing a company into the Target Accounts registry.
+const TARGET_ACCOUNTS_KEY = "crm_target_accounts";
 
 interface TargetAccountsViewProps {
   onPushToMailMerge: (newRecs: Recipient[]) => void;
@@ -106,72 +112,22 @@ export default function TargetAccountsView({
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, []);
 
-  // Loading initial set from localStore
+  // Load the active organization's shared target accounts registry from the CRM snapshot.
+  // Uses the same crm_target_accounts key that LeadProfilesView.tsx and
+  // AISalesAssistant.tsx write to, so records pushed from either screen show up here.
   useEffect(() => {
-    const saved = localStorage.getItem("smart_mailmerge_target_accounts");
-    if (saved) {
-      try {
-        setAccounts(JSON.parse(saved));
-      } catch (err) {
-        console.error("Failed to load Target Accounts from local storage:", err);
-      }
-    } else {
-      // Seed with beautiful initial demo items if none exist to make screen stunning right away
-      const seedData: TargetAccount[] = [
-        {
-          id: "target_seed_1",
-          companyName: "Vestel",
-          websiteUrl: "https://www.vestel.com.tr",
-          industryTag: "Elektronik & Teknoloji",
-          companySize: "15000+ Çalışan",
-          locationMain: "Manisa, Türkiye",
-          contactName: "Mehmet",
-          contactSurname: "Kaya",
-          contactEmail: "mehmet.kaya@vestel.com.tr",
-          department: "Süreç İyileştirme Lideri",
-          leadStatus: "Contacted",
-          leadSegment: "Hot Lead",
-          riskScore: 89,
-          customField1: "OEE Optimizasyonu Hedefi",
-          customField2: "Smart Grid Projesi Arşivi",
-          aiAnalysisSummary: "Muda (İsraf) Noktaları & Kalite Riskleri:\n- Çoklu hat aşınmaları ve montaj istasyonu duruş süreleri yüksek.\n- COPQ (Cost of Poor Quality) tahmini %4.2 civarında.\n- OEE oranı %76, dijitalizasyon yatırımı planlanıyor.\n\nYalın Fırsatlar:\n- Dijital Kanban ve Andon hat çağrı sistemlerinin entegrasyonu.\n- Supplier Quality Assurance (Tedarikçi Kalite) standartlaştırma eğitimleri.",
-          draftTemplates: "Subject: Vestel Üretim Verimliliği & OEE Optimizasyonu Raporu\n\nSayın Operasyon Direktörü,\n\nVestel Manisa City tesislerindeki devasa üretim hacmini ve akıllı montaj hedeflerinizi büyük bir hayranlıkla takip ediyoruz.\n\nHata paylarını (COPQ) %15-20 oranında azaltmaya ve OEE oranını %84+ üzerine taşımaya yönelik geliştirdiğimiz B2B Yalın Dijital Dönüşüm paketi hakkında kısa bir sunum yapmak isteriz.\n\nSaygılarımızla,\nGemba IQ Ekibi",
-          analysisSource: "Deep Research (Gemini + Tavily)",
-          analysisDate: new Date().toLocaleString("tr-TR"),
-          rawOutput: "# VESTEL ŞİRKET DETAYLARI\n\nManisa merkezli dev sanayi üreticisi.\nIndustry: Consumer Electronics, Home Appliances.\nLocations: Vestel City Manisa.\n\n# Suggested Decision Makers\n- Plant General Manager\n- Quality Assurance Lead\n\n# Recommended Strategy\nFocus on assembly waste reduction and advanced lean scheduling."
-        },
-        {
-          id: "target_seed_2",
-          companyName: "Kordsa",
-          websiteUrl: "https://www.kordsa.com",
-          industryTag: "Kimya Sanayii",
-          companySize: "4500+ Çalışan",
-          locationMain: "Kocaeli/Gebze, Türkiye",
-          contactName: "Can",
-          contactSurname: "Aydın",
-          contactEmail: "can.aydin@kordsa.com",
-          department: "Continuous Improvement",
-          leadStatus: "New",
-          leadSegment: "Warm Lead",
-          riskScore: 82,
-          customField1: "SMED Kalıp Azaltma Prosedürü",
-          customField2: "Enerji Tasarrufu Yatırımı",
-          aiAnalysisSummary: "Muda Noktaları & Kalite Riskleri:\n- Kompozit pres fırınlarında enerji optimizasyonu ihtiyacı.\n- İplik çekme proseslerinde fire oranları %2.8.\n- ISO 50001 Enerji Yönetim standardı iyileştirme açıkları.\n\nYalın Fırsatlar:\n- Single Minute Exchange of Die (SMED) ile kalıp değişim sürelerini %40 kısaltma.\n- Endüstriyel nesnelerin interneti (IIoT) tabanlı fire izleme yazılımı.",
-          draftTemplates: "Subject: Kordsa Kompozit & İplik Proseslerinde Yangın & SMED Çözümleri\n\nSayın Kalite ve Süreç İyileştirme Lideri,\n\nKordsa'nın küresel kompozit ve güçlendirme teknolojilerindeki lider rolünü yakından izliyoruz. Tesis duruş süreleri ve SMED kalıp değişim sürelerini kısaltarak üretim esnekliğini artırmak isterseniz çözümlerimiz hazır.\n\nSaygılarımızla,\nGemba IQ Ekibi",
-          analysisSource: "Deep Research (Gemini + Tavily)",
-          analysisDate: new Date().toLocaleString("tr-TR"),
-          rawOutput: "# KORDSA\n\nIndustry: Tire reinforcement, Composite technologies.\nLocations: Izmit, Kocaeli.\n\n# Recommends\nFocus on carbon scrap reduction and SMED standardizations."
-        }
-      ];
-      setAccounts(seedData);
-      localStorage.setItem("smart_mailmerge_target_accounts", JSON.stringify(seedData));
-    }
+    setAccounts(CrmDb.getKv<TargetAccount[]>(TARGET_ACCOUNTS_KEY, []));
   }, []);
 
-  // Helper Auto-Saver whenever account list mutates
+  // Persist the registry through the active organization's CRM auxiliary record.
   const updateAccountsAndPersist = (updated: TargetAccount[]) => {
-    setAccounts(updated);
-    localStorage.setItem("smart_mailmerge_target_accounts", JSON.stringify(updated));
+    const organizationId = getActiveOrganizationId();
+    const scopedAccounts = updated.map((account) => ({
+      ...account,
+      organization_id: organizationId || account.organization_id,
+    }));
+    setAccounts(scopedAccounts);
+    CrmDb.setKv(TARGET_ACCOUNTS_KEY, scopedAccounts);
   };
 
   const triggerToast = (msg: string, type: "success" | "info" | "error" = "success") => {
@@ -238,7 +194,7 @@ export default function TargetAccountsView({
   };
 
   const handleManualSaveAll = () => {
-    localStorage.setItem("smart_mailmerge_target_accounts", JSON.stringify(accounts));
+    updateAccountsAndPersist(accounts);
     triggerToast(t("Target accounts database committed & saved securely."), "success");
   };
 

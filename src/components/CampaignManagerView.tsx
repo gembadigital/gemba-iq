@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useLanguage } from "../lib/LanguageContext";
+import { CrmDb } from "../lib/CrmDb";
 import {
   getCampaignTranslation,
   getCampaignStatusLabel,
@@ -171,6 +172,10 @@ interface CampaignManagerViewProps {
   onPushToMailComposer?: (subject: string, body: string) => void;
 }
 
+// Organization-scoped keys in the shared CRM auxiliary store (Supabase-backed).
+const LINKEDIN_POSTS_KEY = "crm_linkedin_posts";
+const EMAIL_CAMPAIGNS_KEY = "crm_email_campaigns";
+
 export default function CampaignManagerView({ onPushToMailComposer }: CampaignManagerViewProps) {
   const { lang, t: globalT } = useLanguage();
   const t = (key: string) => getCampaignTranslation(lang, key) ?? globalT(key) ?? key;
@@ -192,17 +197,9 @@ export default function CampaignManagerView({ onPushToMailComposer }: CampaignMa
   }>({ isOpen: false, onConfirm: () => {} });
 
   // --- LinkedIn States ---
-  const [posts, setPosts] = useState<LinkedInPost[]>(() => {
-    const saved = localStorage.getItem("smart_mailmerge_linkedin_posts");
-    if (saved) {
-      try {
-        return JSON.parse(saved);
-      } catch (_) {
-        return INITIAL_POSTS;
-      }
-    }
-    return INITIAL_POSTS;
-  });
+  const [posts, setPosts] = useState<LinkedInPost[]>(() =>
+    CrmDb.getKv<LinkedInPost[]>(LINKEDIN_POSTS_KEY, INITIAL_POSTS)
+  );
   const [targetChannel, setTargetChannel] = useState<"Gemba Lean" | "Gemba Digital" | "Personal">("Gemba Lean");
   const [postText, setPostText] = useState("");
   const [hashtagInput, setHashtagInput] = useState("");
@@ -217,17 +214,9 @@ export default function CampaignManagerView({ onPushToMailComposer }: CampaignMa
   const [previewReactionsCount, setPreviewReactionsCount] = useState(14);
 
   // --- Email States ---
-  const [campaigns, setCampaigns] = useState<EmailCampaign[]>(() => {
-    const saved = localStorage.getItem("smart_mailmerge_email_campaigns");
-    if (saved) {
-      try {
-        return JSON.parse(saved);
-      } catch (_) {
-        return INITIAL_EMAIL_CAMPAIGNS;
-      }
-    }
-    return INITIAL_EMAIL_CAMPAIGNS;
-  });
+  const [campaigns, setCampaigns] = useState<EmailCampaign[]>(() =>
+    CrmDb.getKv<EmailCampaign[]>(EMAIL_CAMPAIGNS_KEY, INITIAL_EMAIL_CAMPAIGNS)
+  );
   const [emailSubject, setEmailSubject] = useState("");
   const [emailBodyText, setEmailBodyText] = useState("");
   const [targetSegment, setTargetSegment] = useState("Warm Enterprise Leads");
@@ -245,13 +234,13 @@ export default function CampaignManagerView({ onPushToMailComposer }: CampaignMa
   const [currentMonth, setCurrentMonth] = useState(5); // June
 
 
-  // --- Save lists to local storage ---
+  // --- Save lists to the shared organization CRM store (Supabase-backed) ---
   useEffect(() => {
-    localStorage.setItem("smart_mailmerge_linkedin_posts", JSON.stringify(posts));
+    CrmDb.setKv(LINKEDIN_POSTS_KEY, posts);
   }, [posts]);
 
   useEffect(() => {
-    localStorage.setItem("smart_mailmerge_email_campaigns", JSON.stringify(campaigns));
+    CrmDb.setKv(EMAIL_CAMPAIGNS_KEY, campaigns);
   }, [campaigns]);
 
   // --- Post publishing & Email dispatch automatic checks ---
