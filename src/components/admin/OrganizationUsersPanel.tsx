@@ -8,6 +8,7 @@ import {
   Plus,
   RefreshCw,
   Shield,
+  Trash2,
   UserPlus,
   Users,
   X,
@@ -17,6 +18,7 @@ import { useOrganization } from "../../lib/OrganizationContext";
 import {
   cancelOrganizationInvitation,
   createOrganizationInvitation,
+  deleteOrganizationMember,
   fetchOrganizationDirectory,
   fetchInvitationEmailConfig,
   sendCreatedInvitationEmail,
@@ -77,6 +79,7 @@ export default function OrganizationUsersPanel({ onAuditLog }: OrganizationUsers
   const [inviteRole, setInviteRole] = useState<AppRole>("USER");
   const [roleSelections, setRoleSelections] = useState<Record<string, AppRole>>({});
   const [savingRoleId, setSavingRoleId] = useState<string | null>(null);
+  const [deletingId, setDeletingId] = useState<string | null>(null);
   const [inviteLoading, setInviteLoading] = useState(false);
   const [emailConfigured, setEmailConfigured] = useState(false);
   const [emailSending, setEmailSending] = useState(false);
@@ -238,6 +241,37 @@ export default function OrganizationUsersPanel({ onAuditLog }: OrganizationUsers
       });
     } finally {
       setSavingRoleId(null);
+    }
+  };
+
+  const handleDeleteMember = async (row: OrganizationDirectoryMember) => {
+    if (!canManage || row.user_id === membership?.user_id) return;
+
+    const displayName = row.full_name || row.email;
+    const confirmed = window.confirm(
+      t(
+        "This will permanently delete {name}'s account. This cannot be undone and they will lose access immediately. Are you sure?"
+      ).replace("{name}", displayName)
+    );
+    if (!confirmed) return;
+
+    setDeletingId(row.membership_id);
+    setInviteMessage(null);
+    try {
+      await deleteOrganizationMember(row.membership_id);
+      onAuditLog?.("Kullanıcı Silindi", `${row.email} sistemden kalıcı olarak silindi.`);
+      await loadDirectory();
+      setInviteMessage({
+        type: "success",
+        text: t("User deleted successfully."),
+      });
+    } catch (err) {
+      setInviteMessage({
+        type: "error",
+        text: err instanceof Error ? err.message : t("Failed to delete user."),
+      });
+    } finally {
+      setDeletingId(null);
     }
   };
 
@@ -551,17 +585,31 @@ export default function OrganizationUsersPanel({ onAuditLog }: OrganizationUsers
                         <td className="px-4 py-4 text-right text-xs text-slate-400">
                           {isSelf ? (
                             t("You")
-                          ) : hasRoleChange ? (
-                            <button
-                              type="button"
-                              disabled={savingRoleId === row.membership_id}
-                              onClick={() => void handleSaveRole(row)}
-                              className="px-3 py-1.5 rounded-lg text-xs font-bold text-white bg-[#1E3A5F] hover:bg-[#162d4a] disabled:opacity-60"
-                            >
-                              {savingRoleId === row.membership_id ? t("Saving...") : t("Save changes")}
-                            </button>
                           ) : (
-                            "—"
+                            <div className="flex items-center justify-end gap-2">
+                              {hasRoleChange && (
+                                <button
+                                  type="button"
+                                  disabled={savingRoleId === row.membership_id}
+                                  onClick={() => void handleSaveRole(row)}
+                                  className="px-3 py-1.5 rounded-lg text-xs font-bold text-white bg-[#1E3A5F] hover:bg-[#162d4a] disabled:opacity-60"
+                                >
+                                  {savingRoleId === row.membership_id ? t("Saving...") : t("Save changes")}
+                                </button>
+                              )}
+                              {canManage && (
+                                <button
+                                  type="button"
+                                  disabled={deletingId === row.membership_id}
+                                  onClick={() => void handleDeleteMember(row)}
+                                  title={t("Delete User")}
+                                  className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-bold text-rose-600 border border-rose-200 hover:bg-rose-50 dark:text-rose-400 dark:border-rose-900/40 dark:hover:bg-rose-950/20 disabled:opacity-60"
+                                >
+                                  <Trash2 className="w-3.5 h-3.5" />
+                                  {deletingId === row.membership_id ? t("Deleting...") : t("Delete")}
+                                </button>
+                              )}
+                            </div>
                           )}
                         </td>
                       </tr>

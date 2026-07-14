@@ -107,6 +107,17 @@ app.post("/api/organization/members/role", async (req, res) => {
   }
 });
 
+// API: Permanently delete a user (ADMIN only)
+app.post("/api/organization/members/delete", async (req, res) => {
+  try {
+    const handler = (await import("./api/organization/members/delete.js")).default;
+    await handler(req, res);
+  } catch (error) {
+    console.error("Organization member delete handler failed:", error);
+    res.status(500).json({ error: "Failed to delete user." });
+  }
+});
+
 // API: Organization-scoped Microsoft 365 mailbox
 app.all("/api/organization/mailbox", async (req, res) => {
   try {

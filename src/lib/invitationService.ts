@@ -149,6 +149,26 @@ export async function updateOrganizationMemberRole(
   }
 }
 
+// Permanently deletes the user's Supabase Auth account (ADMIN only, cannot
+// target yourself). This is irreversible and removes the user from every
+// organization they belong to, not just this one.
+export async function deleteOrganizationMember(membershipId: string): Promise<void> {
+  const accessToken = await getAccessToken();
+  const response = await fetch("/api/organization/members/delete", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${accessToken}`,
+    },
+    body: JSON.stringify({ membershipId }),
+  });
+
+  const payload = await response.json().catch(() => ({}));
+  if (!response.ok) {
+    throw new Error(payload.error || "Failed to delete user.");
+  }
+}
+
 export async function cancelOrganizationInvitation(invitationId: string): Promise<void> {
   const client = await requireClient();
   const { error } = await client.rpc("cancel_organization_invitation", {
