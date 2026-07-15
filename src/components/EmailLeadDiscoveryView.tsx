@@ -1,6 +1,9 @@
 import React, { useState, useEffect } from "react";
 import { useLanguage } from "../lib/LanguageContext";
+import { useOrganization } from "../lib/OrganizationContext";
 import { fetchOrganizationMailbox } from "../lib/organizationMailbox";
+import { fetchPersonalMailbox } from "../lib/personalMailbox";
+import { scanMailbox, ScannedMailMessage } from "../lib/mailScan";
 import {
   Mail,
   FolderOpen,
@@ -19,7 +22,6 @@ import {
   UserPlus,
   UserCheck,
   ShieldCheck,
-  Trash2,
   Lock,
   ArrowRight,
   TrendingUp,
@@ -67,6 +69,8 @@ interface FilteredOutLead {
 interface MailboxConnection {
   id: string;
   provider: "Microsoft 365" | "Outlook" | "Google Workspace";
+  kind: "organization" | "personal" | "demo";
+  label: string;
   email: string;
   status: "Connected" | "Expired";
   connectedAt: string;
@@ -78,7 +82,8 @@ export default function EmailLeadDiscoveryView({
   onAddTargetAccount
 }: EmailLeadDiscoveryViewProps) {
   const { t } = useLanguage();
-  
+  const { actorName } = useOrganization();
+
   // Tab/State states
   const [connections, setConnections] = useState<MailboxConnection[]>([]);
   const [selectedMailboxIds, setSelectedMailboxIds] = useState<string[]>([]);
@@ -279,385 +284,251 @@ export default function EmailLeadDiscoveryView({
     setFilteredOutLeads(filtered);
   };
 
+  const [isLoadingConnections, setIsLoadingConnections] = useState(true);
+
+  // Load both possible real mailbox connections (Organization + the caller's
+  // own Personal mailbox) before deciding anything. Only falls back to demo
+  // data once we've genuinely confirmed neither is connected — previously
+  // this fired a fake "sandbox" fallback on first render, before the real
+  // check even resolved, which is why the scan always used made-up data.
   useEffect(() => {
     let isMounted = true;
 
-    fetchOrganizationMailbox()
-      .then(({ mailbox, session: orgSession }) => {
+    Promise.allSettled([fetchOrganizationMailbox(), fetchPersonalMailbox()]).then(
+      ([orgResult, personalResult]) => {
         if (!isMounted) return;
-        setSession(orgSession);
-        if (orgSession && mailbox.status === "Connected") {
-          setConnections([
-            {
-              id: "conn-organization-m365",
+
+        const nextConnections: MailboxConnection[] = [];
+
+        if (orgResult.status === "fulfilled") {
+          const { mailbox, session: orgSession } = orgResult.value;
+          if (orgSession && mailbox.status === "Connected") {
+            setSession(orgSession);
+            nextConnections.push({
+              id: "conn-organization",
               provider: "Microsoft 365",
-              email: orgSession.mail || "organization-mailbox",
+              kind: "organization",
+              label: t("Organization Mailbox"),
+              email: orgSession.mail || mailbox.mailbox_email || "organization-mailbox",
               status: "Connected",
               connectedAt: mailbox.connected_at
                 ? new Date(mailbox.connected_at).toISOString().split("T")[0]
                 : new Date().toISOString().split("T")[0],
-            },
-          ]);
-          setSelectedMailboxIds(["conn-organization-m365"]);
-          setDiscoveredLeads([]);
-          setFilteredOutLeads([]);
-          return;
+            });
+          }
         }
 
-        setSession(null);
-        setConnections([]);
-        setSelectedMailboxIds([]);
-        seedDiscoveredData();
-      })
-      .catch(() => {
-        if (!isMounted) return;
-        setSession(null);
-        setConnections([]);
-        setSelectedMailboxIds([]);
-        seedDiscoveredData();
-      });
+        if (personalResult.status === "fulfilled" && personalResult.value.status === "Connected") {
+          const personal = personalResult.value;
+          nextConnections.push({
+            id: "conn-personal",
+            provider: "Microsoft 365",
+            kind: "personal",
+            label: t("My Personal Mailbox"),
+            email: personal.mailbox_address,
+            status: "Connected",
+            connectedAt: personal.connected_at
+              ? new Date(personal.connected_at).toISOString().split("T")[0]
+              : new Date().toISOString().split("T")[0],
+          });
+        }
+
+        if (nextConnections.length > 0) {
+          setConnections(nextConnections);
+          setSelectedMailboxIds(nextConnections.map((c) => c.id));
+          setDiscoveredLeads([]);
+          setFilteredOutLeads([]);
+        } else {
+          setSession(null);
+          setConnections([]);
+          setSelectedMailboxIds([]);
+          seedDiscoveredData();
+        }
+        setIsLoadingConnections(false);
+      }
+    );
 
     return () => {
       isMounted = false;
     };
   }, []);
 
-  useEffect(() => {
-    if (connections.length === 0) {
-      // Default fallback when no session has been set yet (treat as Sandbox demo mode)
-      setConnections([
-        {
-          id: "conn-sandbox-1",
-          provider: "Microsoft 365",
-          email: "info@gembapartner.com",
-          status: "Connected",
-          connectedAt: "2026-06-22"
-        },
-        {
-          id: "conn-sandbox-2",
-          provider: "Google Workspace",
-          email: "a.zehir@gembapartner.com",
-          status: "Connected",
-          connectedAt: "2026-06-22"
-        }
-      ]);
-      setSelectedMailboxIds(["conn-sandbox-1", "conn-sandbox-2"]);
-      seedDiscoveredData();
-    }
-  }, [connections.length]);
+  // Extracts a lead candidate from one scanned message, applying the same
+  // filtering/heuristics regardless of which mailbox or folder it came from.
+  const parseMessageIntoLead = (
+    msg: ScannedMailMessage,
+    myDomain: string,
+    parsedLeadsMap: Map<string, DiscoveredLead>,
+    filteredList: FilteredOutLead[],
+    assignedSalesperson: string
+  ) => {
+    const isSent = msg.folder === "Sent Items";
+    const contact = isSent ? msg.to[0] : msg.from;
+    const contactEmailRaw = contact?.address || "";
+    const contactNameRaw = contact?.name || "";
 
-  // Action: Remove Mailbox Connection
-  const handleRemoveConnection = (id: string, email: string) => {
-    if (confirm(t("Remove connection for {email}?").replace("{email}", email))) {
-      setConnections(connections.filter(c => c.id !== id));
-      setSelectedMailboxIds(prev => prev.filter(selectedId => selectedId !== id));
-      triggerToast(t("Mailbox connection removed."), "info");
+    if (!contactEmailRaw) {
+      filteredList.push({ email: "Bilinmeyen Adres", reason: "Boş kimlik bilgisi", folder: msg.folder, date: msg.date });
+      return;
+    }
+
+    const contactEmail = contactEmailRaw.toLowerCase().trim();
+    const domain = contactEmail.split("@")[1] || "";
+    const contactName = contactNameRaw || contactEmail.split("@")[0];
+
+    if (myDomain && domain === myDomain) {
+      filteredList.push({ email: contactEmail, reason: `İç yazışma (${myDomain})`, folder: msg.folder, date: msg.date });
+      return;
+    }
+    if (contactEmail.includes("noreply") || contactEmail.includes("no-reply") || contactEmail.includes("support") || contactEmail.includes("alert")) {
+      filteredList.push({ email: contactEmail, reason: "Otomatik/Sistem e-postası (no-reply)", folder: msg.folder, date: msg.date });
+      return;
+    }
+    if (["gmail.com", "outlook.com", "hotmail.com", "yahoo.com", "protonmail.com", "aol.com", "yandex.com", "icloud.com"].includes(domain)) {
+      filteredList.push({ email: contactEmail, reason: "Genel bireysel sağlayıcı (" + domain + ")", folder: msg.folder, date: msg.date });
+      return;
+    }
+
+    const companyName = domain ? domain.split(".")[0].toUpperCase() + " Şirketi" : "Kurumsal Kontak";
+    let jobTitle = "Kurumsal İletişim Ortağı";
+    let phoneNum = "Gönderici imzasından süzülüyor...";
+    const bodyPreview = msg.bodyPreview || "";
+
+    const previewLines = bodyPreview.split(/\r?\n|,\s*|\|\s*/);
+    previewLines.forEach((line: string) => {
+      const val = line.trim();
+      const lVal = val.toLowerCase();
+      if (
+        (lVal.includes("manager") || lVal.includes("director") || lVal.includes("lead") ||
+          lVal.includes("vp") || lVal.includes("head") || lVal.includes("müdür") ||
+          lVal.includes("mühendis") || lVal.includes("uzman") || lVal.includes("yönetici") ||
+          lVal.includes("satın alma") || lVal.includes("planlama") || lVal.includes("lojistik") ||
+          lVal.includes("ceo") || lVal.includes("founder") || lVal.includes("kurucu")) &&
+        val.length < 55 && val.length > 3
+      ) {
+        jobTitle = val;
+      }
+      if (
+        (lVal.includes("phone") || lVal.includes("tel") || lVal.includes("mob") || lVal.includes("+90") || lVal.includes("+") || lVal.includes("gsm")) &&
+        val.length < 30 && val.length > 6
+      ) {
+        phoneNum = val;
+      }
+    });
+
+    if (parsedLeadsMap.has(contactEmail)) {
+      parsedLeadsMap.get(contactEmail)!.interactionsCount += 1;
+    } else {
+      parsedLeadsMap.set(contactEmail, {
+        id: `real_disc_${msg.id}_${Date.now()}`,
+        name: contactName,
+        email: contactEmail,
+        company: companyName,
+        jobTitle,
+        phone: phoneNum,
+        website: domain,
+        sourceFolder: msg.folder,
+        firstContactDate: msg.date,
+        lastContactDate: msg.date,
+        interactionsCount: 1,
+        leadScore: Math.floor(Math.random() * 15) + 80,
+        relationshipScore: Math.floor(Math.random() * 15) + 75,
+        companySuggestion: companyName + " A.Ş.",
+        assignedSalesperson,
+        status: "new",
+        detectedSignature: bodyPreview.length > 250 ? bodyPreview.substring(0, 250) + "..." : bodyPreview || "(E-posta imza veya gövde metni boş/algılanamadı)"
+      });
     }
   };
 
-  // Action: Scan Email Process (Simulation with steps or Real Microsoft Graph Fetching)
-  const handleScanEmails = () => {
+  // Action: Scan Email Process — real Microsoft Graph read for connected
+  // mailboxes, or demo data when nothing is connected yet.
+  const handleScanEmails = async () => {
     setIsScanning(true);
     setScanStep(0);
     setScanLogs([]);
     setScanStatus(null);
     setHasScanned(false);
 
-    const selectedEmails = connections
-      .filter(c => selectedMailboxIds.includes(c.id))
-      .map(c => c.email);
-    
-    const mailsLabel = selectedEmails.join(" & ");
+    const selectedConnections = connections.filter(c => selectedMailboxIds.includes(c.id));
+    const realConnections = selectedConnections.filter(c => c.kind === "organization" || c.kind === "personal");
 
-    // Check if we have an active, non-sandbox Microsoft Graph session
-    const hasRealSession = session && session.isConnected && !session.isSandbox && session.accessToken;
+    const log = (line: string) => setScanLogs(prev => [...prev, `[${new Date().toLocaleTimeString()}] ${line}`]);
 
-    const steps = [
-      t("Initializing Lead Discovery engine for {count} active mailboxes...").replace("{count}", String(selectedEmails.length)),
-      t("Scanning connections: [{emails}]").replace("{emails}", mailsLabel),
-      t("Establishing secure parallel connection to folder: {folder}...").replace("{folder}", selectedFolder)
-    ];
-
-    if (hasRealSession) {
-      steps.push(t("Active Microsoft 365 Exchange Session found for {email}").replace("{email}", session.mail));
-      steps.push(t("Establishing connection with Microsoft Graph API..."));
-      steps.push(t("Syncing folders and downloading raw message headers..."));
-    } else {
-      steps.push(t("WARNING: Live Azure Enterprise Client Keys / Active login token not present."));
-      steps.push(t("SECURITY PROTOCOL ACTIVE: Bypassing live Exchange sockets to protect credentials."));
-      steps.push(t("Redirecting scan flow to Secure Local Sandbox Database (Seed mode)..."));
+    if (realConnections.length === 0) {
+      log(t("No real mailbox connected — loading demo signature data instead."));
+      seedDiscoveredData();
+      setScanStatus({
+        success: true,
+        message: "Bağlı gerçek bir posta kutusu olmadığı için örnek/deneme verileri gösteriliyor.",
+        source: "sandbox",
+        totalParsed: 6,
+        totalFiltered: 6
+      });
+      setIsScanning(false);
+      setHasScanned(true);
+      return;
     }
 
-    steps.push(
-      t("Analyzing date boundary window from {start} to {end}...").replace("{start}", startDate).replace("{end}", endDate),
-      t("Reading raw email message headers and routing tracks (last 1000 emails)..."),
-      t("Parsing sender information, Reply-To indicators, and To/Cc recipients..."),
-      t("Resolving internal domain names to exclude internal corporate communication..."),
-      t("Executing email signature heuristic detection (capturing titles, company, phones)..."),
-      t("Scattering public domains (Gmail, Hotmail, Yahoo, etc.) outbound..."),
-      t("Discarding CRM-registered automated service accounts, bounces, and newsletters..."),
-      t("Compiling parsed intelligence, computing Lead and Relationship engagement scores..."),
-      t("Rebuilding lead profile proposals, creating smart CRM domain suggestions...")
-    );
+    log(t("Scanning {count} connected mailbox(es): {emails}").replace("{count}", String(realConnections.length)).replace("{emails}", realConnections.map(c => c.email).join(", ")));
 
-    let currentStep = 0;
-    
-    const interval = setInterval(async () => {
-      if (currentStep < steps.length) {
-        setScanStep(currentStep);
-        setScanLogs(prev => [...prev, `[${new Date().toLocaleTimeString()}] ${steps[currentStep]}`]);
-        currentStep++;
-      } else {
-        clearInterval(interval);
-        
-        if (hasRealSession) {
-          try {
-            setScanLogs(prev => [...prev, `[${new Date().toLocaleTimeString()}] ⏳ ${t("Performing live parsing on Microsoft Graph API incoming payload...")}`]);
-            
-            // Query up to 50 recent messages from Inbox
-            const response = await fetch("https://graph.microsoft.com/v1.0/me/messages?$top=50&$select=id,subject,receivedDateTime,from,toRecipients,bodyPreview", {
-              headers: {
-                "Authorization": `Bearer ${session!.accessToken}`,
-                "Content-Type": "application/json"
-              }
-            });
+    const parsedLeadsMap = new Map<string, DiscoveredLead>();
+    const filteredList: FilteredOutLead[] = [];
+    let totalMessages = 0;
 
-            if (!response.ok) {
-              const errText = await response.text();
-              throw new Error(`Graph API returned HTTP ${response.status}: ${errText}`);
-            }
-
-            const data = await response.json();
-            const fetchedMessages = data.value || [];
-            
-            if (fetchedMessages.length > 0) {
-              const parsedLeadsMap = new Map<string, DiscoveredLead>();
-              const filteredList: FilteredOutLead[] = [];
-              const myEmailLower = session!.mail.toLowerCase();
-
-              fetchedMessages.forEach((msg: any, idx: number) => {
-                const mailSubject = msg.subject || "(No Subject)";
-                const fromAddress = msg.from?.emailAddress?.address || "";
-                const fromName = msg.from?.emailAddress?.name || "Counterparty";
-                const toAddress = msg.toRecipients?.[0]?.emailAddress?.address || "";
-                const toName = msg.toRecipients?.[0]?.emailAddress?.name || "";
-                const rDate = msg.receivedDateTime ? msg.receivedDateTime.split("T")[0] : "2026-06-22";
-
-                // Live status feed rendering subjects directly to prove organization mailbox sync works
-                setScanLogs(prev => [
-                  ...prev,
-                  `   • [Okundu] E-posta: "${mailSubject.length > 35 ? mailSubject.substring(0, 35) + "..." : mailSubject}" | Gönderen: ${fromAddress}`
-                ]);
-
-                // Exclude self and internal communication
-                const isFromInternal = fromAddress.toLowerCase().includes("gemba") || fromAddress.toLowerCase().includes("gembapartner") || fromAddress.toLowerCase() === myEmailLower;
-                const isToInternal = toAddress.toLowerCase().includes("gemba") || toAddress.toLowerCase().includes("gembapartner") || toAddress.toLowerCase() === myEmailLower;
-
-                let contactEmail = "";
-                let contactName = "";
-                let sourceFolder: "Inbox" | "Sent Items" = "Inbox";
-
-                if (isFromInternal && !isToInternal && toAddress) {
-                  contactEmail = toAddress;
-                  contactName = toName || toAddress.split("@")[0];
-                  sourceFolder = "Sent Items";
-                } else if (!isFromInternal && fromAddress) {
-                  contactEmail = fromAddress;
-                  contactName = fromName || fromAddress.split("@")[0];
-                  sourceFolder = "Inbox";
-                }
-
-                if (isFromInternal && isToInternal) {
-                  filteredList.push({
-                    email: fromAddress || toAddress,
-                    reason: "İç yazışma (Internal/Gemba Domain)",
-                    folder: sourceFolder,
-                    date: rDate
-                  });
-                  return;
-                }
-
-                if (!contactEmail) {
-                  filteredList.push({
-                    email: "Bilinmeyen Adres",
-                    reason: "Boş kimlik bilgisi",
-                    folder: sourceFolder,
-                    date: rDate
-                  });
-                  return;
-                }
-
-                contactEmail = contactEmail.toLowerCase().trim();
-                const domain = contactEmail.split("@")[1] || "";
-                
-                // Skip system/no-reply accounts
-                if (contactEmail.includes("noreply") || contactEmail.includes("no-reply") || contactEmail.includes("support") || contactEmail.includes("alert")) {
-                  filteredList.push({
-                    email: contactEmail,
-                    reason: "Otomatik/Sistem e-postası (no-reply)",
-                    folder: sourceFolder,
-                    date: rDate
-                  });
-                  return;
-                }
-
-                // Skip common public email domains for target business discovery
-                if (["gmail.com", "outlook.com", "hotmail.com", "yahoo.com", "protonmail.com", "aol.com", "yandex.com", "icloud.com"].includes(domain)) {
-                  filteredList.push({
-                    email: contactEmail,
-                    reason: "Genel bireysel sağlayıcı (" + domain + ")",
-                    folder: sourceFolder,
-                    date: rDate
-                  });
-                  return;
-                }
-
-                const companyName = domain ? domain.split(".")[0].toUpperCase() + " Şirketi" : "Kurumsal Kontak";
-                
-                let jobTitle = "Kurumsal İletişim Ortağı";
-                let phoneNum = "Gönderici imzasından süzülüyor...";
-                const bodyPreview = msg.bodyPreview || "";
-
-                // Signature parser heuristics: scan for job titles and numbers
-                const previewLines = bodyPreview.split(/\r?\n|,\s*|\|\s*/);
-                previewLines.forEach((line: string) => {
-                  const val = line.trim();
-                  const lVal = val.toLowerCase();
-                  if (
-                    lVal.includes("manager") || lVal.includes("director") || lVal.includes("lead") ||
-                    lVal.includes("vp") || lVal.includes("head") || lVal.includes("müdür") ||
-                    lVal.includes("mühendis") || lVal.includes("uzman") || lVal.includes("yönetici") ||
-                    lVal.includes("satın alma") || lVal.includes("planlama") || lVal.includes("lojistik") ||
-                    lVal.includes("ceo") || lVal.includes("founder") || lVal.includes("kurucu")
-                  ) {
-                    if (val.length < 55 && val.length > 3) {
-                      jobTitle = val;
-                    }
-                  }
-                  if (lVal.includes("phone") || lVal.includes("tel") || lVal.includes("mob") || lVal.includes("+90") || lVal.includes("+") || lVal.includes("gsm")) {
-                    if (val.length < 30 && val.length > 6) {
-                      phoneNum = val;
-                    }
-                  }
-                });
-
-                if (parsedLeadsMap.has(contactEmail)) {
-                  const existing = parsedLeadsMap.get(contactEmail)!;
-                  existing.interactionsCount += 1;
-                } else {
-                  parsedLeadsMap.set(contactEmail, {
-                    id: `real_disc_${idx}_${Date.now()}`,
-                    name: contactName,
-                    email: contactEmail,
-                    company: companyName,
-                    jobTitle: jobTitle,
-                    phone: phoneNum,
-                    website: domain,
-                    sourceFolder: sourceFolder,
-                    firstContactDate: rDate,
-                    lastContactDate: rDate,
-                    interactionsCount: 1,
-                    leadScore: Math.floor(Math.random() * 15) + 80, // 80 - 95 range
-                    relationshipScore: Math.floor(Math.random() * 15) + 75, // 75 - 90 range
-                    companySuggestion: companyName + " A.Ş.",
-                    assignedSalesperson: session?.displayName || "Atakan Zehir",
-                    status: "new",
-                    detectedSignature: bodyPreview.length > 250 ? bodyPreview.substring(0, 250) + "..." : bodyPreview || "(E-posta imza veya gövde metni boş/algılanamadı)"
-                  });
-                }
-              });
-
-              const parsedList = Array.from(parsedLeadsMap.values());
-              setFilteredOutLeads(filteredList);
-
-              if (parsedList.length > 0) {
-                setDiscoveredLeads(parsedList);
-                setScanLogs(prev => [
-                  ...prev, 
-                  `[${new Date().toLocaleTimeString()}] ✓ BAŞARILI: Microsoft Graph API üzerinden ${parsedList.length} gerçek B2B kurumsal kontağı çözümlenip aday listesine alındı!`
-                ]);
-                setScanStatus({
-                  success: true,
-                  message: `Canlı tarama sonucu gelen kutunuzdan ${parsedList.length} adet B2B kurumsal adayı ve telefon/unvan imzası başarıyla çıkarıldı!`,
-                  source: "live",
-                  totalParsed: parsedList.length,
-                  totalFiltered: filteredList.length
-                });
-                setIsScanning(false);
-                setHasScanned(true);
-          triggerToast(t("{count} real leads extracted from your emails!").replace("{count}", String(parsedList.length)));
-                return;
-              } else {
-                setDiscoveredLeads([]);
-                setScanLogs(prev => [
-                  ...prev,
-                  `[${new Date().toLocaleTimeString()}] 🟢 Microsoft Graph API üzerinden e-postalar başarıyla çekildi.`,
-                  `[${new Date().toLocaleTimeString()}] ℹ️ Bilgi: Son gelen kutusu mesajlarınızda, kurumsal imza/unvan parametrelerine uyan taze bir dış B2B adayı bulunamadı.`,
-                  `[${new Date().toLocaleTimeString()}] ℹ️ İncelenen ${fetchedMessages.length} mesaj filtrelendi (Gereksiz, bülten veya genel gmail/outlook e-postaları).`
-                ]);
-                setScanStatus({
-                  success: true,
-                  message: "Bağlantı kuruldu ve e-postalar okundu. Ancak son mesajlarınızda imza kriterlerine uyan yeni bir kurumsal aday tespit edilmedi.",
-                  source: "live",
-                  totalParsed: 0,
-                  totalFiltered: filteredList.length
-                });
-                setIsScanning(false);
-                setHasScanned(true);
-                triggerToast(t("Live connection established but no matching leads found."), "info");
-                return;
-              }
-            } else {
-              setDiscoveredLeads([]);
-              setScanLogs(prev => [
-                ...prev,
-                `[${new Date().toLocaleTimeString()}] ℹ️ Başarılı bağlantı. Ancak taranan posta kutusu klasöründe hiç e-posta mesajı bulunmuyor.`
-              ]);
-              setScanStatus({
-                success: true,
-                message: "Taranan klasörde e-posta bulunmuyor.",
-                source: "live",
-                totalParsed: 0,
-                totalFiltered: 0
-              });
-              setIsScanning(false);
-              setHasScanned(true);
-              return;
-            }
-          } catch (err: any) {
-            console.error("Live scanning error:", err);
-            const errMsg = err.message || JSON.stringify(err);
-            setScanLogs(prev => [
-              ...prev, 
-              `[${new Date().toLocaleTimeString()}] ❌ Canlı Bağlantı Başarısız Oldu: ${errMsg}`,
-              `[${new Date().toLocaleTimeString()}] ⚙️ Hata çözümü için lütfen Microsoft 365 bağlantınızı tazeleyin.`
-            ]);
-            setScanStatus({
-              success: false,
-              message: "Microsoft Graph API erişim hatası nedeniyle canlı tarama gerçekleştirilemedi.",
-              source: "live",
-              errorDetails: errMsg
-            });
-            setIsScanning(false);
-            setHasScanned(true);
-            triggerToast(t("Error: Live scan failed!"), "info");
-          }
-        } else {
-          // Normal seed data load for sandbox / demo mode
-          seedDiscoveredData();
-          setScanStatus({
-            success: true,
-            message: "Simülasyon modunda demo imza verileri başarıyla yüklendi.",
-            source: "sandbox",
-            totalParsed: 6,
-            totalFiltered: 6
-          });
-          setIsScanning(false);
-          setHasScanned(true);
-          triggerToast(t("Candidates extracted from scan (Simulation Mode)!"));
-        }
+    try {
+      for (const conn of realConnections) {
+        log(t("Reading {label} ({email})...").replace("{label}", conn.label).replace("{email}", conn.email));
+        const { messages } = await scanMailbox(conn.kind as "organization" | "personal", 50);
+        const folderScoped = selectedFolder === "Both" ? messages : messages.filter(m => m.folder === selectedFolder);
+        totalMessages += folderScoped.length;
+        const myDomain = conn.email.split("@")[1]?.toLowerCase() || "";
+        folderScoped.forEach(msg => parseMessageIntoLead(msg, myDomain, parsedLeadsMap, filteredList, actorName));
       }
-    }, 450);
+
+      const parsedList = Array.from(parsedLeadsMap.values());
+      setFilteredOutLeads(filteredList);
+
+      if (parsedList.length > 0) {
+        setDiscoveredLeads(parsedList);
+        log(`✓ ${parsedList.length} gerçek B2B kurumsal kontağı çözümlenip aday listesine alındı (${totalMessages} e-posta tarandı).`);
+        setScanStatus({
+          success: true,
+          message: `Canlı tarama sonucu ${parsedList.length} adet B2B kurumsal aday çıkarıldı.`,
+          source: "live",
+          totalParsed: parsedList.length,
+          totalFiltered: filteredList.length
+        });
+        triggerToast(t("{count} real leads extracted from your emails!").replace("{count}", String(parsedList.length)));
+      } else {
+        setDiscoveredLeads([]);
+        log(`Bağlantı kuruldu, ${totalMessages} e-posta okundu. Ancak kurumsal imza/unvan kriterlerine uyan yeni bir aday bulunamadı.`);
+        setScanStatus({
+          success: true,
+          message: "Bağlantı kuruldu ve e-postalar okundu. Ancak imza kriterlerine uyan yeni bir kurumsal aday tespit edilmedi.",
+          source: "live",
+          totalParsed: 0,
+          totalFiltered: filteredList.length
+        });
+        triggerToast(t("Live connection established but no matching leads found."), "info");
+      }
+    } catch (err: any) {
+      console.error("Live scanning error:", err);
+      const errMsg = err.message || String(err);
+      log(`❌ Canlı tarama başarısız: ${errMsg}`);
+      setScanStatus({
+        success: false,
+        message: /mail\.read|permission|forbidden|403/i.test(errMsg)
+          ? "Microsoft Graph 'Mail.Read' izni verilmemiş görünüyor. Azure App Registration'da Mail.Read (application) izni eklenip yönetici onayı (admin consent) verilmesi gerekiyor."
+          : "Microsoft Graph API erişim hatası nedeniyle canlı tarama gerçekleştirilemedi.",
+        source: "live",
+        errorDetails: errMsg
+      });
+      triggerToast(t("Error: Live scan failed!"), "info");
+    } finally {
+      setIsScanning(false);
+      setHasScanned(true);
+    }
   };
 
   // CRM Integration Actions
@@ -683,7 +554,8 @@ export default function EmailLeadDiscoveryView({
       customField1: `First Contact: ${lead.firstContactDate}`,
       customField2: `Website: ${lead.website}`,
       deliveryStatus: "idle",
-      openCount: 0
+      openCount: 0,
+      addedBy: actorName
     };
 
     onAddLeadsToMaster([mappedLead]);
@@ -742,7 +614,8 @@ export default function EmailLeadDiscoveryView({
         customField1: `First Contact: ${lead.firstContactDate}`,
         customField2: `Website: ${lead.website}`,
         deliveryStatus: "idle",
-        openCount: 0
+        openCount: 0,
+        addedBy: actorName
       };
     });
 
@@ -829,77 +702,25 @@ export default function EmailLeadDiscoveryView({
         </div>
       </div>
 
-      {/* Connection & Configuration Panel (Compact Linear Block) */}
-      {session && session.isConnected && !session.isSandbox ? (
-        <div className="bg-emerald-50 dark:bg-emerald-950/20 border border-emerald-200 dark:border-emerald-900/45 rounded-2xl p-5 space-y-3.5 relative overflow-hidden">
-          <div className="absolute top-0 right-0 p-4 opacity-5 pointer-events-none">
-            <ShieldCheck className="w-24 h-24 text-emerald-500" />
-          </div>
-          <div className="flex items-start gap-3">
-            <ShieldCheck className="w-5 h-5 text-emerald-600 dark:text-emerald-400 shrink-0 mt-0.5" />
-            <div className="space-y-1">
-              <h4 className="text-xs font-bold text-slate-900 dark:text-slate-100 uppercase tracking-wider font-mono flex items-center gap-2">
-                🟢 API Entegrasyon Durumu: Organization Mailbox Aktif
-              </h4>
-              <p className="text-[11px] text-slate-600 dark:text-slate-300 leading-relaxed">
-                Değerli Atakan Zehir, Organization Mailbox <strong className="text-emerald-700 dark:text-emerald-400 font-mono font-bold">{session.mail}</strong> adresi üzerinden başarıyla doğrulanmıştır. <b>E-posta İmzası Arama Motoru (Email Lead Discovery)</b> canlı modda çalışmak için organizasyon posta kutusu yapılandırmasını kullanır.
-              </p>
-            </div>
-          </div>
-          
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-1 text-[11px] font-mono border-t border-emerald-200/50 dark:border-emerald-900/30">
-            <div className="space-y-1.5 p-3 rounded-xl bg-emerald-100/30 dark:bg-zinc-900/40">
-              <span className="text-[10px] font-bold text-emerald-800 dark:text-emerald-400 block uppercase">⚙️ CANLI BAĞLANTI PARAMETRELERİ</span>
-              <div className="space-y-1 text-slate-500 dark:text-slate-400">
-                <div><span className="font-bold">Organizasyon Posta Kutusu:</span> <span className="text-slate-800 dark:text-slate-100">{session.displayName || "Organization Mailbox"} ({session.mail})</span></div>
-                <div><span className="font-bold">Kimlik Doğrulama:</span> <span className="text-indigo-600 dark:text-indigo-400 font-bold">Microsoft Graph Application Permission</span></div>
-                <div><span className="font-bold">Yönetim Yeri:</span> <span className="text-emerald-600 dark:text-emerald-400 font-bold">Organization Settings / Shared Mailboxes</span></div>
-              </div>
-            </div>
-            <div className="space-y-1.5 p-3 rounded-xl bg-emerald-100/30 dark:bg-zinc-900/40 text-slate-600 dark:text-slate-350">
-              <span className="text-[10px] font-bold text-indigo-700 dark:text-indigo-400 block uppercase">🎯 GERÇEK REKORD TARAMA HEURISTIQLERİ</span>
-              <div className="space-y-1 text-slate-500 dark:text-slate-400">
-                <div>Taramayı başlattığınızda sistem, organizasyon posta kutusu yapılandırmasını kullanır.</div>
-                <div>Gönderenlerin unvanı, kurumsal web sitesi, telefon numarası ve şirket adı yapay zeka heuristikleriyle süzülerek doğrudan CRM tablonuza aktarılmaya hazır hale getirilir.</div>
-              </div>
-            </div>
-          </div>
+      {/* Mailbox connection status — kept intentionally simple/honest */}
+      {isLoadingConnections ? (
+        <div className="rounded-2xl border border-slate-200 dark:border-zinc-800 bg-white dark:bg-zinc-950 p-4 text-xs text-slate-500 dark:text-slate-400">
+          {t("Loading mailbox connections...")}
+        </div>
+      ) : connections.length > 0 ? (
+        <div className="bg-emerald-50 dark:bg-emerald-950/20 border border-emerald-200 dark:border-emerald-900/45 rounded-2xl p-4 flex items-start gap-3">
+          <ShieldCheck className="w-5 h-5 text-emerald-600 dark:text-emerald-400 shrink-0 mt-0.5" />
+          <p className="text-[11px] text-slate-700 dark:text-slate-300 leading-relaxed">
+            {t("Connected: {mailboxes}. Scanning will read real Inbox and Sent Items from these mailboxes.")
+              .replace("{mailboxes}", connections.map(c => `${c.label} (${c.email})`).join(", "))}
+          </p>
         </div>
       ) : (
-        <div className="bg-amber-50 dark:bg-amber-950/20 border border-amber-200 dark:border-amber-900/45 rounded-2xl p-5 space-y-3.5 relative overflow-hidden">
-          <div className="absolute top-0 right-0 p-4 opacity-5 pointer-events-none">
-            <AlertCircle className="w-24 h-24 text-amber-500" />
-          </div>
-          <div className="flex items-start gap-3">
-            <AlertCircle className="w-5 h-5 text-amber-600 dark:text-amber-400 shrink-0 mt-0.5" />
-            <div className="space-y-1">
-              <h4 className="text-xs font-bold text-slate-900 dark:text-slate-100 uppercase tracking-wider font-mono flex items-center gap-2">
-                ⚠️ API Entegrasyon Durumu: Organization Mailbox Bağlı Değil
-              </h4>
-              <p className="text-[11px] text-slate-600 dark:text-slate-300 leading-relaxed">
-                Değerli Atakan Zehir, bu uygulama tarayıcı içi korumalı ve yalıtılmış bir önizleme (sandbox iframe) ortamında çalışmaktadır. Tanımladığınız kurumsal posta kutusu adreslerine (<code className="bg-amber-100/70 dark:bg-amber-905 px-1 rounded text-red-650 font-mono text-[10px]">info@gembapartner.com</code> ve <code className="bg-amber-100/70 dark:bg-amber-905 px-1 rounded text-red-650 font-mono text-[10px]">a.zehir@gembapartner.com</code>) canlı, gerçek zamanlı bağlantı kurularak e-postaların okunabilmesi için <b>Organization Mailbox</b> bağlantısının ADMIN tarafından yapılandırılması gereklidir.
-              </p>
-            </div>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-1 text-[11px] font-mono border-t border-amber-200/50 dark:border-amber-900/30">
-            <div className="space-y-1.5 p-3 rounded-xl bg-amber-100/30 dark:bg-zinc-900/40">
-              <span className="text-[10px] font-bold text-amber-800 dark:text-amber-400 block uppercase">⚙️ HATA TANIMI & SISTEM SINYALI</span>
-              <div className="space-y-1 text-slate-500 dark:text-slate-400">
-                <div><span className="font-bold">Hata Sınıfı:</span> <span className="text-red-500">OAUTH_KEYS_PENDING_PROVISION</span></div>
-                <div><span className="font-bold">Bağlantı Sinyali:</span> <span className="text-slate-600 dark:text-slate-350">BYPASS_TO_ENCRYPTED_SEED_DB</span></div>
-                <div><span className="font-bold">Açıklama:</span> Organization Mailbox bağlı olmadığından gerçek e-postalar yerine, imza tarama algoritmamızın başarısını test etmeniz adına <b>simüle edilen senaryo aday verileri</b> listelenmektedir. ADMIN, Organization Settings içindeki <b>Shared Mailboxes</b> ekranından bağlantı kurmalıdır.</div>
-              </div>
-            </div>
-            <div className="space-y-1.5 p-3 rounded-xl bg-amber-100/30 dark:bg-zinc-900/40 text-slate-600 dark:text-slate-350">
-              <span className="text-[10px] font-bold text-indigo-700 dark:text-indigo-400 block uppercase">🚀 GERÇEK VERİYE NASIL GEÇİLİR?</span>
-              <ol className="list-decimal pl-4 space-y-1">
-                <li>ADMIN, Organization Settings içinde Shared Mailboxes sayfasından Organization Mailbox bağlantısını kurar.</li>
-                <li>Tüm kullanıcılar aynı organizasyon posta kutusu yapılandırmasını otomatik kullanır.</li>
-                <li>Bağlantı aktif olduğunda organizasyon e-postaları taranır.</li>
-              </ol>
-            </div>
-          </div>
+        <div className="bg-amber-50 dark:bg-amber-950/20 border border-amber-200 dark:border-amber-900/45 rounded-2xl p-4 flex items-start gap-3">
+          <AlertCircle className="w-5 h-5 text-amber-600 dark:text-amber-400 shrink-0 mt-0.5" />
+          <p className="text-[11px] text-slate-700 dark:text-slate-300 leading-relaxed">
+            {t("No mailbox connected yet, so the list below shows demo data. Connect the Organization Mailbox (Organization Settings → Shared Mailboxes) or your own Personal Mailbox (My Account) to scan real emails.")}
+          </p>
         </div>
       )}
 
@@ -957,20 +778,9 @@ export default function EmailLeadDiscoveryView({
                           className="rounded border-slate-300 text-indigo-600 focus:ring-indigo-505 w-3.5 h-3.5 cursor-pointer accent-indigo-600"
                         />
                         <span className="text-[11px] font-bold text-slate-900 dark:text-slate-100 flex items-center gap-1.5">
-                          {conn.provider === "Microsoft 365" || conn.provider === "Outlook" ? "🔵" : "🟣"} {conn.provider}
+                          🔵 {conn.label}
                         </span>
                       </div>
-                      <button
-                        type="button"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          handleRemoveConnection(conn.id, conn.email);
-                        }}
-                        className="text-slate-400 hover:text-rose-500 p-0.5"
-                        title={t("Remove Connection")}
-                      >
-                        <Trash2 className="w-3.5 h-3.5" />
-                      </button>
                     </div>
                     <span className="text-[11px] font-mono text-slate-500 dark:text-slate-400 truncate block">
                       {conn.email}

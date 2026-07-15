@@ -32,6 +32,8 @@ import { getActiveOrganizationId } from "../lib/tenantStorage";
 import { useOrganization } from "../lib/OrganizationContext";
 
 const LEAD_PROFILES_KEY = "crm_lead_profiles";
+// Must match the key TargetAccountsView.tsx / AISalesAssistant.tsx / CompaniesView.tsx read from.
+const TARGET_ACCOUNTS_KEY = "crm_target_accounts";
 
 // Builds a compact page-number list (e.g. 1, 2, 3, ..., 12) instead of one
 // button per page, which becomes an unusable long row once there are many
@@ -629,35 +631,53 @@ export default function LeadProfilesView({
           }}
           onAddCompaniesToMaster={(companyName, domain, industry) => {
             try {
-              const parsed = CrmDb.getKv<any[]>("crm_tracked_discovered_companies", []);
-              if (!parsed.some((c: any) => c.name.toLowerCase() === companyName.toLowerCase())) {
-                parsed.push({ 
-                  id: `comp_${Date.now()}`, 
-                  name: companyName, 
-                  domain, 
-                  industry, 
-                  founded: "2020",
-                  employeeCount: "50-100", 
-                  source: "Email Discovery" 
+              // Write into the real Companies registry (CrmDb.getCompanies/saveCompanies),
+              // not a separate untracked key — otherwise these never show up anywhere.
+              const existingCompanies = CrmDb.getCompanies() as any[];
+              if (!existingCompanies.some((c: any) => c.name.toLowerCase() === companyName.toLowerCase())) {
+                existingCompanies.push({
+                  id: `company-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`,
+                  organization_id: getActiveOrganizationId() || undefined,
+                  name: companyName,
+                  website: domain,
+                  customerStatus: "Lead",
+                  industry: industry || "Manufacturing",
+                  accountOwner: actorName,
+                  shift: "1 Shift",
+                  digitalInfrastructure: "ERP",
+                  healthScore: 75,
                 });
-                CrmDb.setKv("crm_tracked_discovered_companies", parsed);
+                CrmDb.saveCompanies(existingCompanies);
               }
-            } catch (err) {}
+            } catch (err) {
+              console.error("Failed to add discovered company:", err);
+            }
           }}
           onAddTargetAccount={(companyName, domain) => {
             try {
-              const parsed = CrmDb.getKv<any[]>("crm_target_accounts", []);
-              if (!parsed.some((t: any) => t.name.toLowerCase() === companyName.toLowerCase())) {
-                parsed.push({ 
-                  id: `target_${Date.now()}`, 
-                  name: companyName, 
-                  domain, 
-                  segment: "Tier 1",
-                  status: "Cold outreach"
+              const parsed = CrmDb.getKv<any[]>(TARGET_ACCOUNTS_KEY, []);
+              if (!parsed.some((t: any) => t.companyName?.toLowerCase() === companyName.toLowerCase())) {
+                parsed.push({
+                  id: `target_${Date.now()}_${Math.floor(Math.random() * 1000)}`,
+                  organization_id: getActiveOrganizationId() || undefined,
+                  companyName,
+                  websiteUrl: domain,
+                  industryTag: "",
+                  companySize: "",
+                  locationMain: "",
+                  aiAnalysisSummary: "",
+                  draftTemplates: "",
+                  analysisSource: "Email Lead Discovery",
+                  analysisDate: new Date().toISOString(),
+                  riskScore: 0,
+                  rawOutput: "",
+                  no: parsed.length + 1,
                 });
-                CrmDb.setKv("crm_target_accounts", parsed);
+                CrmDb.setKv(TARGET_ACCOUNTS_KEY, parsed);
               }
-            } catch (err) {}
+            } catch (err) {
+              console.error("Failed to add discovered target account:", err);
+            }
           }}
         />
       ) : (

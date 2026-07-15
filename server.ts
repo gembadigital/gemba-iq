@@ -118,6 +118,17 @@ app.post("/api/organization/members/delete", async (req, res) => {
   }
 });
 
+// API: Scan a connected mailbox (Organization or Personal) for Email Lead Discovery
+app.post("/api/mail/scan", async (req, res) => {
+  try {
+    const handler = (await import("./api/mail/scan.js")).default;
+    await handler(req, res);
+  } catch (error) {
+    console.error("Mail scan handler failed:", error);
+    res.status(500).json({ error: "Failed to scan mailbox." });
+  }
+});
+
 // API: Organization-scoped Microsoft 365 mailbox
 app.all("/api/organization/mailbox", async (req, res) => {
   try {
