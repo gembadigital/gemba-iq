@@ -1143,6 +1143,8 @@ export const uiDictionaryTR: Record<string, string> = {
   "{count} active": "{count} aktif",
   "Active compiler state": "Aktif derleyici durumu",
   "Customer / Lead Candidate List": "Müşteri / Aday Listesi",
+  "No": "No",
+  "Download list": "Listeyi İndir",
   "Shrink Screen": "Ekranı Daralt",
   "Expand Screen": "Ekranı Genişlet",
   "Download list in Excel (.xls) format": "Listeyi Excel (.xls) formatında indir",
@@ -1457,6 +1459,11 @@ export const uiDictionaryTR: Record<string, string> = {
   "Folder & Filter Parameters": "Klasör ve Filtre parametreleri",
   "Inbox Folder": "Gelenler (Inbox)",
   "Sent Folder": "Gidenler (Sent)",
+  "Mail Folder": "E-Posta Klasörü",
+  "Start Date": "Başlangıç Tarihi",
+  "End Date": "Bitiş Tarihi",
+  "Connected: {mailboxes}. Scanning will read real Inbox and Sent Items from these mailboxes.": "Bağlı: {mailboxes}. Tarama bu posta kutularındaki gerçek Gelen Kutusu ve Gönderilmiş Öğeler'i okuyacak.",
+  "Filters": "Filtreler",
 
   // Sales Coach AI
   "AI Sales Intelligence": "YZ Satış İstihbaratı",

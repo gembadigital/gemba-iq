@@ -415,6 +415,8 @@ export default function CompanyDetailView({
             lang={lang}
             companyName={company.name}
             onLogTimelineEvent={handleLogTimelineDirect}
+            company={company}
+            onUpdateCompany={handleUpdateCompanyDirect}
           />
         )}
 

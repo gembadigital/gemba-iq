@@ -32,9 +32,21 @@ import {
 } from "lucide-react";
 import { LeadProfile, Recipient, MailboxSession } from "../types";
 
+// Item 8: "Müşterilere ekle" artık sadece boş bir şirket kartı oluşturmuyor —
+// keşfedilen kontak (isim/email/görev) ve o kontaktan gelen/giden ilk e-posta
+// da ilgili şirket kartına (kontak kişisi + e-posta tabı) kaydediliyor.
+export interface DiscoveredContactPayload {
+  name: string;
+  email: string;
+  jobTitle: string;
+  date: string;
+  isIncoming: boolean;
+  snippet: string;
+}
+
 interface EmailLeadDiscoveryViewProps {
   onAddLeadsToMaster: (leads: LeadProfile[]) => void;
-  onAddCompaniesToMaster?: (companyName: string, domain: string, industry: string) => void;
+  onAddCompaniesToMaster?: (companyName: string, domain: string, industry: string, contact: DiscoveredContactPayload) => void;
   onAddTargetAccount?: (accountName: string, domain: string) => void;
 }
 
@@ -482,11 +494,21 @@ export default function EmailLeadDiscoveryView({
     try {
       for (const conn of realConnections) {
         log(t("Reading {label} ({email})...").replace("{label}", conn.label).replace("{email}", conn.email));
-        const { messages } = await scanMailbox(conn.kind as "organization" | "personal", 50);
+        // Item 4: tarih aralığı filtresi eskiden hiç kullanılmıyordu. Graph API
+        // tarih aralığına göre sorgulanamıyor (sadece en yeni N mesaj çekilebiliyor),
+        // bu yüzden en yenisinden en fazla 100 mesajı çekip client-side'da hem
+        // klasöre hem seçili tarih aralığına göre filtreliyoruz.
+        const { messages } = await scanMailbox(conn.kind as "organization" | "personal", 100);
         const folderScoped = selectedFolder === "Both" ? messages : messages.filter(m => m.folder === selectedFolder);
-        totalMessages += folderScoped.length;
+        const dateScoped = folderScoped.filter(m => {
+          if (!m.date) return true;
+          if (startDate && m.date < startDate) return false;
+          if (endDate && m.date > endDate) return false;
+          return true;
+        });
+        totalMessages += dateScoped.length;
         const myDomain = conn.email.split("@")[1]?.toLowerCase() || "";
-        folderScoped.forEach(msg => parseMessageIntoLead(msg, myDomain, parsedLeadsMap, filteredList, actorName));
+        dateScoped.forEach(msg => parseMessageIntoLead(msg, myDomain, parsedLeadsMap, filteredList, actorName));
       }
 
       const parsedList = Array.from(parsedLeadsMap.values());
@@ -568,9 +590,18 @@ export default function EmailLeadDiscoveryView({
     triggerToast(t("{name} added to Lead Database successfully!").replace("{name}", lead.name));
   };
 
+  const buildDiscoveredContactPayload = (lead: DiscoveredLead): DiscoveredContactPayload => ({
+    name: lead.name,
+    email: lead.email,
+    jobTitle: lead.jobTitle,
+    date: lead.lastContactDate || lead.firstContactDate,
+    isIncoming: lead.sourceFolder === "Inbox",
+    snippet: lead.detectedSignature,
+  });
+
   const handleAddToCompaniesSingle = (lead: DiscoveredLead) => {
     if (onAddCompaniesToMaster) {
-      onAddCompaniesToMaster(lead.company, lead.website, "Tech & Operations");
+      onAddCompaniesToMaster(lead.company, lead.website, "Tech & Operations", buildDiscoveredContactPayload(lead));
     }
     setDiscoveredLeads(prev => prev.map(item => item.id === lead.id ? { ...item, status: "added_companies" } : item));
     triggerToast(t("{company} added to Companies registry!").replace("{company}", lead.company));
@@ -679,7 +710,7 @@ export default function EmailLeadDiscoveryView({
       triggerToast(t("No new leads to add."), "info");
       return;
     }
-    selected.forEach(lead => onAddCompaniesToMaster?.(lead.company, lead.website, "Tech & Operations"));
+    selected.forEach(lead => onAddCompaniesToMaster?.(lead.company, lead.website, "Tech & Operations", buildDiscoveredContactPayload(lead)));
     setDiscoveredLeads(prev => prev.map(item => selectedLeadIds.includes(item.id) ? { ...item, status: "added_companies" } : item));
     setSelectedLeadIds([]);
     triggerToast(t("{count} companies added to Companies registry!").replace("{count}", String(selected.length)));
@@ -904,7 +935,7 @@ export default function EmailLeadDiscoveryView({
             {/* Folder Select */}
             <div className="space-y-1.5">
               <label className="text-[10px] font-bold uppercase text-slate-450 dark:text-zinc-500 tracking-wider flex items-center gap-1">
-                <span>E-Posta Klasörü</span>
+                <span>{t("Mail Folder")}</span>
               </label>
               <div className="flex rounded-lg border border-slate-200 p-0.5 bg-slate-50/50 dark:border-zinc-800 dark:bg-zinc-900">
                 <button

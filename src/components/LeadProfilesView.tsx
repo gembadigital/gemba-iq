@@ -112,6 +112,7 @@ export default function LeadProfilesView({
 
   // Wide View layout state
   const [isWide, setIsWide] = useState(false);
+  const [showExportMenu, setShowExportMenu] = useState(false);
 
   // Close wide screen mode on Escape key
   useEffect(() => {
@@ -629,15 +630,24 @@ export default function LeadProfilesView({
             updateProfilesAndPersist(updated);
             triggerToast(t("Duplicate check completed, {count} leads transferred to master database!").replace("{count}", String(newLeads.length)));
           }}
-          onAddCompaniesToMaster={(companyName, domain, industry) => {
+          onAddCompaniesToMaster={(companyName, domain, industry, contact) => {
             try {
-              // Write into the real Companies registry (CrmDb.getCompanies/saveCompanies),
-              // not a separate untracked key — otherwise these never show up anywhere.
+              // Item 8: domain veya unvana göre var olan bir şirket kartı ara —
+              // varsa yeni bir kopya oluşturmak yerine ona bağlanıyoruz.
+              const normalizedDomain = (domain || "").toLowerCase().replace(/^www\./, "").trim();
               const existingCompanies = CrmDb.getCompanies() as any[];
-              if (!existingCompanies.some((c: any) => c.name.toLowerCase() === companyName.toLowerCase())) {
-                existingCompanies.push({
-                  id: `company-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`,
-                  organization_id: getActiveOrganizationId() || undefined,
+              let company = existingCompanies.find((c: any) => {
+                const cWebsite = String(c.website || "")
+                  .toLowerCase()
+                  .replace(/^https?:\/\//, "")
+                  .replace(/^www\./, "")
+                  .replace(/\/$/, "");
+                return (normalizedDomain && cWebsite === normalizedDomain) ||
+                  c.name.toLowerCase().trim() === companyName.toLowerCase().trim();
+              });
+
+              if (!company) {
+                company = CrmDb.createCompany({
                   name: companyName,
                   website: domain,
                   customerStatus: "Lead",
@@ -647,7 +657,36 @@ export default function LeadProfilesView({
                   digitalInfrastructure: "ERP",
                   healthScore: 75,
                 });
-                CrmDb.saveCompanies(existingCompanies);
+              }
+
+              // Keşfedilen kontak kişisini şirket kartına bağlı Contact olarak
+              // kaydet (aynı email zaten kayıtlıysa tekrar eklenmiyor).
+              if (contact?.email && company) {
+                const existingContacts = CrmDb.getContactsByCompany(company.id);
+                if (!existingContacts.some(c => c.email.toLowerCase() === contact.email.toLowerCase())) {
+                  const nameParts = (contact.name || contact.email.split("@")[0]).trim().split(" ");
+                  CrmDb.createContact({
+                    companyId: company.id,
+                    firstName: nameParts[0] || "Yetkili",
+                    lastName: nameParts.slice(1).join(" "),
+                    email: contact.email,
+                    department: contact.jobTitle || "",
+                    leadStatus: "New",
+                  });
+                }
+
+                // Keşfedilen e-postayı da şirketin Email tabına işle.
+                CrmDb.createEmail({
+                  companyId: company.id,
+                  sender: contact.isIncoming ? contact.email : actorName,
+                  recipient: contact.isIncoming ? actorName : contact.email,
+                  subject: contact.isIncoming
+                    ? `E-posta Aday Keşfi: Gelen İlk Temas (${contact.name || contact.email})`
+                    : `E-posta Aday Keşfi: Giden İlk Temas (${contact.name || contact.email})`,
+                  body: contact.snippet || "",
+                  date: contact.date || new Date().toISOString(),
+                  isIncoming: contact.isIncoming,
+                });
               }
             } catch (err) {
               console.error("Failed to add discovered company:", err);
@@ -715,14 +754,39 @@ export default function LeadProfilesView({
             <span>{t("Import Sheet")}</span>
           </button>
 
-          <button
-            type="button"
-            onClick={handleExportCSV}
-            className="text-xs font-bold bg-[#FAF9F8] hover:bg-[#EDEBE9] dark:bg-[#252423] dark:hover:bg-[#323130] text-slate-700 dark:text-slate-200 px-3 py-2 border border-[#EDEBE9] dark:border-[#323130] rounded flex items-center gap-1.5 cursor-pointer transition-all shadow-sm"
-          >
-            <Download className="w-4 h-4" />
-            <span>{t("Export CSV")}</span>
-          </button>
+          {/* Item 11: tek tip indirme butonu — tıklayınca CSV/Excel seçenekleri açılır
+              (eskiden ayrı "Export CSV" ve "Download XLS" butonları vardı). */}
+          <div className="relative">
+            <button
+              type="button"
+              onClick={() => setShowExportMenu(prev => !prev)}
+              className="text-xs font-bold bg-[#FAF9F8] hover:bg-[#EDEBE9] dark:bg-[#252423] dark:hover:bg-[#323130] text-slate-700 dark:text-slate-200 px-3 py-2 border border-[#EDEBE9] dark:border-[#323130] rounded flex items-center gap-1.5 cursor-pointer transition-all shadow-sm"
+            >
+              <Download className="w-4 h-4" />
+              <span>{t("Download list")}</span>
+            </button>
+            {showExportMenu && (
+              <>
+                <div className="fixed inset-0 z-10" onClick={() => setShowExportMenu(false)} />
+                <div className="absolute right-0 mt-1 w-40 bg-white dark:bg-[#252423] border border-[#EDEBE9] dark:border-[#323130] rounded shadow-lg z-20 overflow-hidden">
+                  <button
+                    type="button"
+                    onClick={() => { handleExportCSV(); setShowExportMenu(false); }}
+                    className="w-full text-left text-xs font-semibold px-3 py-2 hover:bg-slate-50 dark:hover:bg-[#323130] text-slate-700 dark:text-slate-200 cursor-pointer"
+                  >
+                    CSV (.csv)
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => { handleExportXLS(); setShowExportMenu(false); }}
+                    className="w-full text-left text-xs font-semibold px-3 py-2 hover:bg-slate-50 dark:hover:bg-[#323130] text-slate-700 dark:text-slate-200 cursor-pointer border-t border-[#EDEBE9] dark:border-[#323130]"
+                  >
+                    Excel (.xls)
+                  </button>
+                </div>
+              </>
+            )}
+          </div>
 
           <button
             type="button"
@@ -796,30 +860,19 @@ export default function LeadProfilesView({
           <div className="flex items-center gap-2">
             <Users className="w-4.5 h-4.5 text-[#0078D4]" />
             <h3 className="text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider font-mono">
-              Müşteri / Lead Aday Listesi
+              {t("Customer / Lead Candidate List")}
             </h3>
           </div>
           <div className="flex items-center gap-2">
-            {/* 1. Ekran Genişletme oku */}
+            {/* 1. Ekran Genişletme oku — ikon-only, ikinci mükerrer buton (eskiden filtre
+                topbarında da vardı) kaldırıldı, tek genişletme kontrolü burada kalıyor. */}
             <button
               type="button"
               onClick={() => setIsWide(!isWide)}
-              className="text-xs font-bold bg-white hover:bg-slate-50 dark:bg-[#252423] dark:hover:bg-[#323130] text-[#0078D4] dark:text-brand-300 px-3 py-1.5 border border-[#EDEBE9] dark:border-[#323130] rounded flex items-center gap-1.5 cursor-pointer transition-all shadow-sm hover:scale-[1.02]"
+              className="bg-white hover:bg-slate-50 dark:bg-[#252423] dark:hover:bg-[#323130] text-[#0078D4] dark:text-brand-300 p-1.5 border border-[#EDEBE9] dark:border-[#323130] rounded flex items-center justify-center cursor-pointer transition-all shadow-sm hover:scale-[1.02]"
               title={isWide ? t("Shrink Screen") : t("Expand Screen")}
             >
               {isWide ? <Minimize2 className="w-4 h-4 text-rose-500" /> : <Maximize2 className="w-4 h-4 text-indigo-500" />}
-              <span>{isWide ? t("Shrink Screen") : t("Expand Screen")}</span>
-            </button>
-
-            {/* 2. Export İndirme oku (.xls biçiminde) */}
-            <button
-              type="button"
-              onClick={handleExportXLS}
-              className="text-xs font-bold bg-[#107c41] hover:bg-[#0b592e] text-white px-3 py-1.5 rounded flex items-center gap-1.5 cursor-pointer transition-all shadow-sm hover:scale-[1.02]"
-              title={t("Download list in Excel (.xls) format")}
-            >
-              <Download className="w-4 h-4 text-white animate-bounce" style={{ animationDuration: "2.5s" }} />
-              <span>{t("Download XLS (Excel)")}</span>
             </button>
           </div>
         </div>
@@ -1075,25 +1128,6 @@ export default function LeadProfilesView({
               <Trash2 className="w-3.5 h-3.5" />
               <span>{t("Delete")}</span>
             </button>
-
-            <button
-              type="button"
-              onClick={() => setIsWide(!isWide)}
-              className="text-xs font-bold bg-white hover:bg-slate-50 dark:bg-[#252423] dark:hover:bg-[#323130] text-[#0078D4] dark:text-brand-300 px-3.5 py-2 border border-[#EDEBE9] dark:border-[#323130] rounded flex items-center gap-1.5 cursor-pointer transition-all shadow-sm"
-              title={isWide ? t("Exit Wide Screen View (Esc)") : t("Expand Table to Wide Screen View")}
-            >
-              {isWide ? (
-                <>
-                  <Minimize2 className="w-3.5 h-3.5" />
-                  <span>{t("Close Wide View")}</span>
-                </>
-              ) : (
-                <>
-                  <Maximize2 className="w-3.5 h-3.5" />
-                  <span>{t("Wide View")}</span>
-                </>
-              )}
-            </button>
           </div>
         </div>
 
@@ -1110,7 +1144,7 @@ export default function LeadProfilesView({
                     className="rounded text-[#0078D4] cursor-pointer"
                   />
                 </th>
-                <th className="p-3 w-14">No</th>
+                <th className="p-3 w-14">{t("No")}</th>
                 <th className="p-3">{t("First Name")}</th>
                 <th className="p-3">{t("Last Name")}</th>
                 <th className="p-3">{t("Email Address")}</th>

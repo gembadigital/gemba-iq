@@ -31,7 +31,8 @@ import {
   Workflow,
   HelpCircle,
   Eye,
-  UserCheck
+  UserCheck,
+  RefreshCw
 } from "lucide-react";
 import * as XLSX from "xlsx";
 import { jsPDF } from "jspdf";
@@ -643,10 +644,16 @@ You must output a raw valid JSON ARRAY strictly matching this structure without 
       console.error("Company search failed:", err);
       setGoogleSearchResults([]);
       setGoogleSearchSources([]);
+      const rawMessage = err instanceof Error && err.message ? err.message : "";
+      // Item 12: Gemini'nin "high demand / UNAVAILABLE (503)" hatası zaten
+      // sunucu tarafında birkaç kez otomatik tekrar deneniyor (geminiCore.js,
+      // generateWithRetry) — hepsi tükendiğinde kullanıcıya çiğ JSON hata metni
+      // yerine anlaşılır bir mesaj + tekrar dene imkanı göster.
+      const isOverloaded = /UNAVAILABLE|high demand|503|overloaded/i.test(rawMessage);
       setGoogleSearchError(
-        err instanceof Error && err.message
-          ? err.message
-          : "Arama başarısız oldu. Lütfen tekrar deneyin."
+        isOverloaded
+          ? "Yapay zeka arama servisi şu anda çok yoğun. Sistem birkaç kez otomatik tekrar denedi ancak başarılı olamadı. Lütfen bir dakika sonra tekrar deneyin."
+          : rawMessage || "Arama başarısız oldu. Lütfen tekrar deneyin."
       );
     } finally {
       const endTime = Date.now();
@@ -1303,7 +1310,16 @@ You must output a raw valid JSON ARRAY strictly matching this structure without 
                           {googleSearchError ? (
                             <>
                               <p className="font-mono text-sm font-bold text-rose-600 dark:text-rose-400">Arama başarısız oldu.</p>
-                              <p className="text-xs text-rose-500 dark:text-rose-400">{googleSearchError}</p>
+                              <p className="text-xs text-rose-500 dark:text-rose-400 max-w-md mx-auto">{googleSearchError}</p>
+                              <button
+                                type="button"
+                                onClick={() => handleGoogleSearch(googleSearchedTerm)}
+                                disabled={googleSearching}
+                                className="mt-2 px-4 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold rounded-lg cursor-pointer disabled:opacity-50 inline-flex items-center gap-1.5"
+                              >
+                                <RefreshCw className={`w-3.5 h-3.5 ${googleSearching ? "animate-spin" : ""}`} />
+                                <span>{googleSearching ? "Deneniyor..." : "Tekrar Dene"}</span>
+                              </button>
                             </>
                           ) : (
                             <>

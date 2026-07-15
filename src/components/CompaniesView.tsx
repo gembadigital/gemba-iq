@@ -273,6 +273,10 @@ export default function CompaniesView() {
   // Sticky header table list container toggle
   const [isFullWidthTable, setIsFullWidthTable] = useState(false);
 
+  // Item 7: filtre/bulk-action/import-export satırları artık varsayılan
+  // olarak gizli — filtre ikonuyla açılıp kapanan bir panele taşındı.
+  const [showFilters, setShowFilters] = useState(false);
+
   // Localization utilities for database fields
   const getTranslatedValue = (value: string | undefined, field: string) => {
     if (!value) return t("Not specified");
@@ -776,7 +780,7 @@ export default function CompaniesView() {
           <div className="bg-white dark:bg-[#131313] p-4 rounded-xl border border-slate-100 dark:border-zinc-900/80 shadow-[0_1px_3px_rgba(0,0,0,0.01)] space-y-3">
             
             <div className="flex flex-col lg:flex-row gap-3">
-              
+
               {/* Search input */}
               <div className="relative flex-1">
                 <Search className="w-4 h-4 text-slate-400 absolute left-3 top-3" />
@@ -789,175 +793,218 @@ export default function CompaniesView() {
                 />
               </div>
 
-              {/* Grid Filter select options */}
-              <div className="grid grid-cols-2 md:grid-cols-3 gap-2 shrink-0">
-                <select
-                  value={industryFilter}
-                  onChange={(e) => { setIndustryFilter(e.target.value); setCurrentPage(1); }}
-                  className="p-2 bg-slate-50 dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 rounded-lg focus:outline-none"
-                >
-                  <option value="All">{t("All Industries")}</option>
-                  <option value="Manufacturing">{t("Manufacturing")}</option>
-                  <option value="Automotive">{t("Automotive")}</option>
-                  <option value="Textiles">{t("Textiles")}</option>
-                </select>
-
-                <select
-                  value={statusFilter}
-                  onChange={(e) => { setStatusFilter(e.target.value); setCurrentPage(1); }}
-                  className="p-2 bg-slate-50 dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 rounded-lg focus:outline-none"
-                >
-                  <option value="All">{t("All Statuses")}</option>
-                  <option value="Lead">{t("Lead")}</option>
-                  <option value="Prospect">{t("Prospect")}</option>
-                  <option value="Active Customer">{t("Active")}</option>
-                </select>
-
-                <select
-                  value={ownerFilter}
-                  onChange={(e) => { setOwnerFilter(e.target.value); setCurrentPage(1); }}
-                  className="p-2 bg-slate-50 dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 rounded-lg focus:outline-none col-span-2 md:col-span-1"
-                >
-                  <option value="All">{t("All Owners")}</option>
-                  <option value="Atakan Zehir">Atakan Zehir</option>
-                  <option value="GP Sales">GP Sales</option>
-                </select>
-              </div>
+              {/* Item 7: filtre ikonu — geniş filtre/toplu işlem/içe-dışa aktarma
+                  satırları artık burada açılıp kapanıyor, varsayılan gizli. */}
+              <button
+                type="button"
+                onClick={() => setShowFilters(prev => !prev)}
+                className={`px-3 py-2 rounded-lg border flex items-center gap-1.5 text-xs font-bold cursor-pointer transition-colors shrink-0 ${
+                  showFilters || industryFilter !== "All" || statusFilter !== "All" || ownerFilter !== "All"
+                    ? "bg-indigo-50 border-indigo-200 text-indigo-700 dark:bg-indigo-950/20 dark:border-indigo-900 dark:text-indigo-400"
+                    : "bg-slate-50 dark:bg-zinc-900 border-slate-200 dark:border-zinc-800 text-slate-500 dark:text-zinc-400"
+                }`}
+              >
+                <Filter className="w-3.5 h-3.5" />
+                <span>{t("Filters")}</span>
+                {(industryFilter !== "All" || statusFilter !== "All" || ownerFilter !== "All") && (
+                  <span className="w-1.5 h-1.5 rounded-full bg-indigo-500" />
+                )}
+              </button>
 
             </div>
 
-            {/* Bulk Actions and Export Toolbar */}
-            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 border-t border-dashed border-slate-100 dark:border-zinc-800 pt-3">
-              
-              {/* Bulk Actions Dropdown */}
-              <div className="flex items-center gap-2 w-full sm:w-auto">
-                <span className="text-[10px] text-slate-400 font-mono shrink-0">
-                  {selectedCompanyIds.length} {t("Selected")}
-                </span>
-
-                <select
-                  disabled={selectedCompanyIds.length === 0}
-                  value={bulkAction}
-                  onChange={(e) => setBulkAction(e.target.value)}
-                  className="p-1.5 bg-slate-50 dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 rounded-lg text-slate-700 dark:text-zinc-300 text-[11px] disabled:opacity-50"
-                >
-                  <option value="">{t("-- Choose Bulk Action --")}</option>
-                  <option value="delete">{t("Delete Selected")}</option>
-                  <option value="status:Active Customer">{t("Set Status: Active")}</option>
-                  <option value="status:Prospect">{t("Set Status: Prospect")}</option>
-                  <option value="owner:Atakan Zehir">{t("Assign Owner: Atakan")}</option>
-                  <option value="target_accounts">{t("Move to Target Accounts")}</option>
-                </select>
-
-                <button
-                  type="button"
-                  disabled={!bulkAction || selectedCompanyIds.length === 0}
-                  onClick={handleExecuteBulkAction}
-                  className="px-3 py-1.5 bg-slate-200 hover:bg-slate-300 dark:bg-zinc-800 dark:hover:bg-zinc-700 text-slate-700 dark:text-zinc-200 rounded-lg font-bold disabled:opacity-50 text-[11px] cursor-pointer shrink-0"
-                >
-                  {t("Apply")}
-                </button>
-              </div>
-
-              {/* Wide View toggle & Exports/Imports */}
-              <div className="flex flex-wrap items-center gap-2 shrink-0 ml-auto w-full sm:w-auto justify-end">
-                {/* Hidden File Inputs for Import */}
-                <input
-                  type="file"
-                  ref={csvImportInputRef}
-                  style={{ display: "none" }}
-                  accept=".csv"
-                  onChange={(e) => {
-                    const file = e.target.files?.[0];
-                    if (file) {
-                      handleImportFile(file);
-                      e.target.value = "";
-                    }
-                  }}
-                />
-                <input
-                  type="file"
-                  ref={xlsImportInputRef}
-                  style={{ display: "none" }}
-                  accept=".xls,.xlsx"
-                  onChange={(e) => {
-                    const file = e.target.files?.[0];
-                    if (file) {
-                      handleImportFile(file);
-                      e.target.value = "";
-                    }
-                  }}
-                />
-
-                <button
-                  type="button"
-                  onClick={() => setIsFullWidthTable(!isFullWidthTable)}
-                  className={`p-1.5 rounded border transition-colors cursor-pointer hidden md:block ${
-                    isFullWidthTable 
-                      ? "bg-slate-200 border-slate-300 text-slate-750" 
-                      : "bg-slate-50 border-slate-200 text-slate-400"
-                  }`}
-                  title={t("Toggle Full-Width Grid")}
-                >
-                  <Maximize2 className="w-3.5 h-3.5" />
-                </button>
-
-                {/* Import Buttons */}
-                <span className="text-[10px] font-mono font-black text-slate-400 dark:text-zinc-500 uppercase ml-1">
-                  {t("IMPORT:")}
-                </span>
-                <div className="inline-flex rounded-lg border border-slate-205 dark:border-zinc-800 overflow-hidden">
-                  <button
-                    type="button"
-                    onClick={() => csvImportInputRef.current?.click()}
-                    className="p-1.5 bg-slate-50 hover:bg-slate-100 dark:bg-zinc-900 dark:hover:bg-zinc-800 text-slate-550 hover:text-slate-800 dark:hover:text-zinc-350 border-r border-slate-205 dark:border-zinc-800 cursor-pointer text-[10px] font-bold flex items-center gap-1"
-                    title={t("Import from CSV File")}
+            {showFilters && (
+              <>
+                {/* Grid Filter select options */}
+                <div className="grid grid-cols-2 md:grid-cols-3 gap-2 border-t border-dashed border-slate-100 dark:border-zinc-800 pt-3">
+                  <select
+                    value={industryFilter}
+                    onChange={(e) => { setIndustryFilter(e.target.value); setCurrentPage(1); }}
+                    className="p-2 bg-slate-50 dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 rounded-lg focus:outline-none"
                   >
-                    <Upload className="w-3.5 h-3.5 text-indigo-550" />
-                    <span>CSV</span>
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => xlsImportInputRef.current?.click()}
-                    className="p-1.5 bg-slate-50 hover:bg-slate-100 dark:bg-zinc-900 dark:hover:bg-zinc-800 text-slate-550 hover:text-slate-800 dark:hover:text-zinc-355 cursor-pointer text-[10px] font-bold flex items-center gap-1"
-                    title={t("Import from Excel File")}
+                    <option value="All">{t("All Industries")}</option>
+                    <option value="Manufacturing">{t("Manufacturing")}</option>
+                    <option value="Automotive">{t("Automotive")}</option>
+                    <option value="Textiles">{t("Textiles")}</option>
+                  </select>
+
+                  <select
+                    value={statusFilter}
+                    onChange={(e) => { setStatusFilter(e.target.value); setCurrentPage(1); }}
+                    className="p-2 bg-slate-50 dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 rounded-lg focus:outline-none"
                   >
-                    <Upload className="w-3.5 h-3.5 text-indigo-550" />
-                    <span>EXCEL</span>
-                  </button>
+                    <option value="All">{t("All Statuses")}</option>
+                    <option value="Lead">{t("Lead")}</option>
+                    <option value="Prospect">{t("Prospect")}</option>
+                    <option value="Active Customer">{t("Active")}</option>
+                  </select>
+
+                  <select
+                    value={ownerFilter}
+                    onChange={(e) => { setOwnerFilter(e.target.value); setCurrentPage(1); }}
+                    className="p-2 bg-slate-50 dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 rounded-lg focus:outline-none col-span-2 md:col-span-1"
+                  >
+                    <option value="All">{t("All Owners")}</option>
+                    <option value="Atakan Zehir">Atakan Zehir</option>
+                    <option value="GP Sales">GP Sales</option>
+                  </select>
                 </div>
 
-                {/* Export Buttons */}
-                <span className="text-[10px] font-mono font-black text-slate-400 dark:text-zinc-500 uppercase ml-1">
-                  {t("EXPORT:")}
-                </span>
-                <div className="inline-flex rounded-lg border border-slate-205 dark:border-zinc-800 overflow-hidden">
-                  <button
-                    type="button"
-                    onClick={handleExportCSV}
-                    className="p-1.5 bg-slate-50 hover:bg-slate-100 dark:bg-zinc-900 dark:hover:bg-zinc-800 text-slate-500 hover:text-slate-800 dark:hover:text-zinc-300 border-r border-slate-205 dark:border-zinc-800 cursor-pointer text-[10px] font-bold flex items-center gap-1"
-                  >
-                    <Download className="w-3.5 h-3.5" />
-                    <span>CSV</span>
-                  </button>
-                  <button
-                    type="button"
-                    onClick={handleExportXLS}
-                    className="p-1.5 bg-slate-50 hover:bg-slate-100 dark:bg-zinc-900 dark:hover:bg-zinc-800 text-slate-500 hover:text-slate-800 dark:hover:text-zinc-300 cursor-pointer text-[10px] font-bold flex items-center gap-1"
-                  >
-                    <Download className="w-3.5 h-3.5" />
-                    <span>EXCEL</span>
-                  </button>
-                </div>
-              </div>
+                {/* Bulk Actions and Export Toolbar */}
+                <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 border-t border-dashed border-slate-100 dark:border-zinc-800 pt-3">
 
-            </div>
+                  {/* Bulk Actions Dropdown */}
+                  <div className="flex items-center gap-2 w-full sm:w-auto">
+                    <span className="text-[10px] text-slate-400 font-mono shrink-0">
+                      {selectedCompanyIds.length} {t("Selected")}
+                    </span>
+
+                    <select
+                      disabled={selectedCompanyIds.length === 0}
+                      value={bulkAction}
+                      onChange={(e) => setBulkAction(e.target.value)}
+                      className="p-1.5 bg-slate-50 dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 rounded-lg text-slate-700 dark:text-zinc-300 text-[11px] disabled:opacity-50"
+                    >
+                      <option value="">{t("-- Choose Bulk Action --")}</option>
+                      <option value="delete">{t("Delete Selected")}</option>
+                      <option value="status:Active Customer">{t("Set Status: Active")}</option>
+                      <option value="status:Prospect">{t("Set Status: Prospect")}</option>
+                      <option value="owner:Atakan Zehir">{t("Assign Owner: Atakan")}</option>
+                      <option value="target_accounts">{t("Move to Target Accounts")}</option>
+                    </select>
+
+                    <button
+                      type="button"
+                      disabled={!bulkAction || selectedCompanyIds.length === 0}
+                      onClick={handleExecuteBulkAction}
+                      className="px-3 py-1.5 bg-slate-200 hover:bg-slate-300 dark:bg-zinc-800 dark:hover:bg-zinc-700 text-slate-700 dark:text-zinc-200 rounded-lg font-bold disabled:opacity-50 text-[11px] cursor-pointer shrink-0"
+                    >
+                      {t("Apply")}
+                    </button>
+                  </div>
+
+                  {/* Wide View toggle & Exports/Imports */}
+                  <div className="flex flex-wrap items-center gap-2 shrink-0 ml-auto w-full sm:w-auto justify-end">
+                    {/* Hidden File Inputs for Import */}
+                    <input
+                      type="file"
+                      ref={csvImportInputRef}
+                      style={{ display: "none" }}
+                      accept=".csv"
+                      onChange={(e) => {
+                        const file = e.target.files?.[0];
+                        if (file) {
+                          handleImportFile(file);
+                          e.target.value = "";
+                        }
+                      }}
+                    />
+                    <input
+                      type="file"
+                      ref={xlsImportInputRef}
+                      style={{ display: "none" }}
+                      accept=".xls,.xlsx"
+                      onChange={(e) => {
+                        const file = e.target.files?.[0];
+                        if (file) {
+                          handleImportFile(file);
+                          e.target.value = "";
+                        }
+                      }}
+                    />
+
+                    <button
+                      type="button"
+                      onClick={() => setIsFullWidthTable(!isFullWidthTable)}
+                      className={`p-1.5 rounded border transition-colors cursor-pointer hidden md:block ${
+                        isFullWidthTable
+                          ? "bg-slate-200 border-slate-300 text-slate-750"
+                          : "bg-slate-50 border-slate-200 text-slate-400"
+                      }`}
+                      title={t("Toggle Full-Width Grid")}
+                    >
+                      <Maximize2 className="w-3.5 h-3.5" />
+                    </button>
+
+                    {/* Import Buttons */}
+                    <span className="text-[10px] font-mono font-black text-slate-400 dark:text-zinc-500 uppercase ml-1">
+                      {t("IMPORT:")}
+                    </span>
+                    <div className="inline-flex rounded-lg border border-slate-205 dark:border-zinc-800 overflow-hidden">
+                      <button
+                        type="button"
+                        onClick={() => csvImportInputRef.current?.click()}
+                        className="p-1.5 bg-slate-50 hover:bg-slate-100 dark:bg-zinc-900 dark:hover:bg-zinc-800 text-slate-550 hover:text-slate-800 dark:hover:text-zinc-350 border-r border-slate-205 dark:border-zinc-800 cursor-pointer text-[10px] font-bold flex items-center gap-1"
+                        title={t("Import from CSV File")}
+                      >
+                        <Upload className="w-3.5 h-3.5 text-indigo-550" />
+                        <span>CSV</span>
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => xlsImportInputRef.current?.click()}
+                        className="p-1.5 bg-slate-50 hover:bg-slate-100 dark:bg-zinc-900 dark:hover:bg-zinc-800 text-slate-550 hover:text-slate-800 dark:hover:text-zinc-355 cursor-pointer text-[10px] font-bold flex items-center gap-1"
+                        title={t("Import from Excel File")}
+                      >
+                        <Upload className="w-3.5 h-3.5 text-indigo-550" />
+                        <span>EXCEL</span>
+                      </button>
+                    </div>
+
+                    {/* Export Buttons */}
+                    <span className="text-[10px] font-mono font-black text-slate-400 dark:text-zinc-500 uppercase ml-1">
+                      {t("EXPORT:")}
+                    </span>
+                    <div className="inline-flex rounded-lg border border-slate-205 dark:border-zinc-800 overflow-hidden">
+                      <button
+                        type="button"
+                        onClick={handleExportCSV}
+                        className="p-1.5 bg-slate-50 hover:bg-slate-100 dark:bg-zinc-900 dark:hover:bg-zinc-800 text-slate-500 hover:text-slate-800 dark:hover:text-zinc-300 border-r border-slate-205 dark:border-zinc-800 cursor-pointer text-[10px] font-bold flex items-center gap-1"
+                      >
+                        <Download className="w-3.5 h-3.5" />
+                        <span>CSV</span>
+                      </button>
+                      <button
+                        type="button"
+                        onClick={handleExportXLS}
+                        className="p-1.5 bg-slate-50 hover:bg-slate-100 dark:bg-zinc-900 dark:hover:bg-zinc-800 text-slate-500 hover:text-slate-800 dark:hover:text-zinc-300 cursor-pointer text-[10px] font-bold flex items-center gap-1"
+                      >
+                        <Download className="w-3.5 h-3.5" />
+                        <span>EXCEL</span>
+                      </button>
+                    </div>
+                  </div>
+
+                </div>
+              </>
+            )}
 
           </div>
 
-          {/* Companies Grid Table */}
-          <div className="bg-white dark:bg-[#131313] rounded-xl border border-slate-100 dark:border-zinc-900/80 shadow-[0_1px_3px_rgba(0,0,0,0.02)] overflow-hidden">
-            <div className="overflow-auto max-h-[calc(100vh-380px)] min-h-[240px]">
+          {/* Companies Grid Table — Item 6: "Toggle Full-Width Grid" ikonu artık
+              gerçekten tam ekran genişletme yapıyor (eskiden sadece kendi
+              rengini değiştiriyordu, tabloya hiçbir etkisi yoktu). */}
+          <div className={isFullWidthTable
+            ? "fixed inset-0 z-40 bg-white dark:bg-[#131313] p-4 overflow-y-auto animate-fadeIn"
+            : "bg-white dark:bg-[#131313] rounded-xl border border-slate-100 dark:border-zinc-900/80 shadow-[0_1px_3px_rgba(0,0,0,0.02)] overflow-hidden"
+          }>
+            {isFullWidthTable && (
+              <div className="flex items-center justify-between pb-3 mb-1 border-b border-slate-100 dark:border-zinc-800">
+                <span className="text-xs font-bold text-slate-700 dark:text-zinc-200 flex items-center gap-1.5">
+                  <Building className="w-4 h-4 text-[#0078D4]" />
+                  {t("Client Portfolio & Accounts")}
+                </span>
+                <button
+                  type="button"
+                  onClick={() => setIsFullWidthTable(false)}
+                  className="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 dark:bg-zinc-800 dark:hover:bg-zinc-700 text-slate-700 dark:text-zinc-200 rounded-lg font-bold flex items-center gap-1.5 cursor-pointer text-[11px]"
+                >
+                  <Minimize2 className="w-3.5 h-3.5" />
+                  <span>{t("Shrink Screen")}</span>
+                </button>
+              </div>
+            )}
+            <div className={isFullWidthTable ? "overflow-auto max-h-[calc(100vh-160px)]" : "overflow-auto max-h-[calc(100vh-380px)] min-h-[240px]"}>
               <table className="w-full text-left border-collapse text-xs font-sans min-w-[900px]">
                 <thead>
                   <tr className="bg-slate-50 dark:bg-zinc-900/80 border-b border-slate-150 dark:border-zinc-850/80 text-[10px] uppercase font-black text-slate-450 dark:text-zinc-500 font-mono tracking-wider sticky top-0 z-10">

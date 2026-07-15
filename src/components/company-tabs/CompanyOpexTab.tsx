@@ -16,12 +16,18 @@ import {
 import { Sparkles, Star, ShieldCheck, ChevronRight, RefreshCw, Layers, Award } from "lucide-react";
 import { useLanguage } from "../../lib/LanguageContext";
 import { CrmDb } from "../../lib/CrmDb";
+import { Company } from "../CompaniesView";
 
 interface CompanyOpexTabProps {
   companyId: string;
   lang: "TR" | "EN";
   companyName: string;
   onLogTimelineEvent?: (title: string, desc: string, type: string) => void;
+  // Item 10: hesaplanan Lean Teşhis puanı (0-100) artık şirket kartındaki
+  // genel "Health Score" alanına da yazılıyor — eskiden sadece bu sekmenin
+  // kendi izole KV kaydında kalıyordu, hiçbir listede/özet kartta görünmüyordu.
+  company?: Company;
+  onUpdateCompany?: (updated: Company, fieldChanged?: string, oldValue?: string, newValue?: string) => void;
 }
 
 interface OpexScores {
@@ -37,7 +43,9 @@ export default function CompanyOpexTab({
   companyId,
   lang,
   companyName,
-  onLogTimelineEvent
+  onLogTimelineEvent,
+  company,
+  onUpdateCompany
 }: CompanyOpexTabProps) {
   const { t } = useLanguage();
   const scoreKey = `crm_company_opex_${companyId}`;
@@ -82,6 +90,20 @@ export default function CompanyOpexTab({
     const sum = scores.s5 + scores.vsm + scores.muda + scores.oee + scores.visual + scores.standard;
     return Math.round((sum / 30) * 100);
   }, [scores]);
+
+  // Item 10: hesaplanan puanı şirket kartının genel Health Score alanına da
+  // yaz — böylece Müşteriler listesinde ve şirket detay özetinde de görünür.
+  useEffect(() => {
+    if (!company || !onUpdateCompany) return;
+    if (company.healthScore === overallScore) return;
+    onUpdateCompany(
+      { ...company, healthScore: overallScore },
+      "Lean Teşhis Puanı",
+      String(company.healthScore ?? ""),
+      String(overallScore)
+    );
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [overallScore]);
 
   const maturityLevel = useMemo(() => {
     if (overallScore >= 81) return {

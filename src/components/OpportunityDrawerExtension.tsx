@@ -32,12 +32,16 @@ import {
   HelpCircle,
   Clock,
   User,
-  Undo
+  Undo,
+  Loader2
 } from "lucide-react";
 import { Proposal, ProposalVersion, ProposalOption } from "../types/proposal";
 import { CrmDb } from "../lib/CrmDb";
 import { Deal } from "./DealManagementView";
 import { jsPDF } from "jspdf";
+import { useOrganization } from "../lib/OrganizationContext";
+import { fetchOrganizationMailbox } from "../lib/organizationMailbox";
+import { fetchPersonalMailbox } from "../lib/personalMailbox";
 
 // Types used in this extension
 export interface OpexNote {
@@ -1165,9 +1169,52 @@ export function ProposalContractSection({
   onNavigateToTab,
   readOnly = false
 }: ProposalContractProps) {
+  const { actorName } = useOrganization();
   const [proposals, setProposals] = useState<Proposal[]>([]);
   const [selectedProposalId, setSelectedProposalId] = useState<string>("");
   const [activeProposal, setActiveProposal] = useState<Proposal | null>(null);
+
+  // Item 9: gönderen posta kutusu seçimi — CompanyEmailsTab.tsx / ServicesView.tsx
+  // ile aynı Organization/Personal mailbox seçim deseni.
+  const [showSendEmailModal, setShowSendEmailModal] = useState(false);
+  const [senderOptions, setSenderOptions] = useState<{ source: "organization" | "personal"; label: string; email: string }[]>([]);
+  const [isLoadingSenders, setIsLoadingSenders] = useState(true);
+  const [selectedSender, setSelectedSender] = useState<"organization" | "personal" | "">("");
+  const [isSendingProposalEmail, setIsSendingProposalEmail] = useState(false);
+
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      setIsLoadingSenders(true);
+      const [orgResult, personalResult] = await Promise.allSettled([
+        fetchOrganizationMailbox(),
+        fetchPersonalMailbox(),
+      ]);
+      if (cancelled) return;
+
+      const options: { source: "organization" | "personal"; label: string; email: string }[] = [];
+      if (orgResult.status === "fulfilled" && orgResult.value.mailbox.status === "Connected") {
+        options.push({
+          source: "organization",
+          label: t("Organization Mailbox"),
+          email: orgResult.value.mailbox.mailbox_email || orgResult.value.mailbox.organizationMailbox || "",
+        });
+      }
+      if (personalResult.status === "fulfilled" && personalResult.value.status === "Connected") {
+        options.push({
+          source: "personal",
+          label: t("My Personal Mailbox"),
+          email: personalResult.value.mailbox_address || "",
+        });
+      }
+      setSenderOptions(options);
+      setSelectedSender(options[0]?.source || "");
+      setIsLoadingSenders(false);
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [t]);
 
   // Revisions compare state
   const [showCompareModal, setShowCompareModal] = useState(false);
@@ -1503,66 +1550,87 @@ export function ProposalContractSection({
     } catch (_) {}
   };
 
-  // 6. Send Email Dispatch
+  // 6. Send Email Dispatch — item 9: artık doğrudan göndermek yerine önce
+  // gönderen posta kutusu (Kurumsal/Kişisel) seçtiren bir onay penceresi açar.
+  const handleOpenSendEmailModal = () => {
+    if (!activeProposal) return;
+    if (!deal.contactEmail) {
+      alert(t("No contact email is available for this proposal."));
+      return;
+    }
+    setShowSendEmailModal(true);
+  };
+
   const handleSendEmail = async () => {
     if (!activeProposal) return;
     if (!deal.contactEmail) {
       alert(t("No contact email is available for this proposal."));
       return;
     }
+    if (!selectedSender) {
+      alert(t("Connect an Organization or Personal mailbox in Settings before sending email."));
+      return;
+    }
     const body = lang === "TR"
       ? `Sayın Yetkili,\n\nTalep ettiğiniz #${activeProposal.proposalNumber} nolu operasyonel gelişim teklifi hazır durumdadır.\n\nİncelemek için aşağıdaki bağlantıyı tıklayabilir veya ekli belgeyi indirebilirsiniz.\n\nGemba Partner Danışmanlık A.Ş.`
       : `Dear Representative,\n\nPlease find attached the official proposal #${activeProposal.proposalNumber} for your operational excellence program review.\n\nBest regards,\nGemba Partner`;
 
-    const supabase = getSupabase();
-    const {
-      data: { session },
-    } = supabase ? await supabase.auth.getSession() : { data: { session: null } };
+    setIsSendingProposalEmail(true);
+    try {
+      const supabase = getSupabase();
+      const {
+        data: { session },
+      } = supabase ? await supabase.auth.getSession() : { data: { session: null } };
 
-    const sendResponse = await fetch("/api/mail/send", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        ...(session?.access_token ? { Authorization: `Bearer ${session.access_token}` } : {}),
-      },
-      body: JSON.stringify({
-        recipient: deal.contactEmail,
-        subject: `${t("Proposal")} #${activeProposal.proposalNumber}`,
-        body: body.replace(/\n/g, "<br />"),
-        attachments: [],
-      }),
-    });
-
-    if (!sendResponse.ok) {
-      const payload = await sendResponse.json().catch(() => ({}));
-      alert(payload.error || t("Proposal email could not be sent."));
-      return;
-    }
-
-    const sendPayload = await sendResponse.json().catch(() => ({}));
-
-    if (deal.companyId) {
-      CrmDb.createEmail({
-        companyId: deal.companyId,
-        recipient: deal.contactEmail,
-        sender: sendPayload.sender || "",
-        subject: `${t("Proposal")} #${activeProposal.proposalNumber}`,
-        body,
-        isIncoming: false,
-        date: new Date().toISOString(),
-        dealId: deal.id,
-        proposalId: activeProposal.id,
+      const sendResponse = await fetch("/api/mail/send", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          ...(session?.access_token ? { Authorization: `Bearer ${session.access_token}` } : {}),
+        },
+        body: JSON.stringify({
+          source: selectedSender,
+          recipient: deal.contactEmail,
+          subject: `${t("Proposal")} #${activeProposal.proposalNumber}`,
+          body: body.replace(/\n/g, "<br />"),
+          attachments: [],
+        }),
       });
-    }
 
-    const logged = addAuditLog(
-      deal,
-      t("Proposal Email Dispatched"),
-      undefined,
-      activeProposal.proposalNumber
-    );
-    onUpdateDeal(logged);
-    alert(t("Proposal dispatched to {email} successfully!").replace("{email}", deal.contactEmail));
+      if (!sendResponse.ok) {
+        const payload = await sendResponse.json().catch(() => ({}));
+        alert(payload.error || t("Proposal email could not be sent."));
+        return;
+      }
+
+      const sendPayload = await sendResponse.json().catch(() => ({}));
+
+      if (deal.companyId) {
+        CrmDb.createEmail({
+          companyId: deal.companyId,
+          recipient: deal.contactEmail,
+          sender: sendPayload.sender || senderOptions.find(o => o.source === selectedSender)?.email || actorName,
+          subject: `${t("Proposal")} #${activeProposal.proposalNumber}`,
+          body,
+          isIncoming: false,
+          date: new Date().toISOString(),
+          dealId: deal.id,
+          proposalId: activeProposal.id,
+        });
+      }
+
+      const logged = addAuditLog(
+        deal,
+        t("Proposal Email Dispatched"),
+        undefined,
+        activeProposal.proposalNumber
+      );
+      onUpdateDeal(logged);
+      setShowSendEmailModal(false);
+      alert(t("Proposal dispatched to {email} successfully!").replace("{email}", deal.contactEmail));
+    } finally {
+      setIsSendingProposalEmail(false);
+    }
   };
 
   // 7. Share Link
@@ -1859,7 +1927,7 @@ export function ProposalContractSection({
                   </button>
 
                   <button
-                    onClick={handleSendEmail}
+                    onClick={handleOpenSendEmailModal}
                     className="p-1.5 bg-slate-200 dark:bg-zinc-800 hover:bg-slate-300 dark:hover:bg-zinc-700 text-slate-800 dark:text-zinc-200 rounded-lg cursor-pointer"
                     title={t("Send by Email")}
                   >
@@ -2241,6 +2309,74 @@ export function ProposalContractSection({
       )}
 
       {/* Revision Modal Popup */}
+      {/* Item 9: gönderen posta kutusu seçimi onay penceresi */}
+      {showSendEmailModal && activeProposal && (
+        <div className="fixed inset-0 z-55 flex items-center justify-center bg-black/60 backdrop-blur-xs">
+          <div className="w-full max-w-md bg-white dark:bg-zinc-900 rounded-xl p-5 shadow-2xl border border-slate-200 dark:border-zinc-800 animate-in zoom-in-95 duration-100">
+            <div className="flex items-center justify-between border-b pb-3">
+              <h3 className="font-extrabold text-slate-800 dark:text-zinc-150 text-sm flex items-center gap-1.5 font-sans">
+                <Send className="text-indigo-600 w-4 h-4" />
+                <span>{t("Send by Email")}</span>
+              </h3>
+              <button onClick={() => setShowSendEmailModal(false)} className="text-slate-400 hover:text-slate-600">
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            <div className="py-4 space-y-3 font-sans text-xs">
+              <div className="text-slate-500 dark:text-zinc-400">
+                {t("Proposal")} #{activeProposal.proposalNumber} → <span className="font-semibold text-slate-700 dark:text-zinc-200">{deal.contactEmail}</span>
+              </div>
+
+              {!isLoadingSenders && senderOptions.length === 0 && (
+                <div className="flex items-start gap-2 p-2.5 bg-amber-50 dark:bg-amber-950/20 border border-amber-200 dark:border-amber-900/40 rounded-lg text-amber-700 dark:text-amber-400">
+                  <AlertTriangle className="w-3.5 h-3.5 mt-0.5 flex-shrink-0" />
+                  <span className="text-[11px] leading-relaxed">
+                    {t("No mailbox is connected. Connect an Organization or Personal mailbox in Settings to send email from here.")}
+                  </span>
+                </div>
+              )}
+
+              <div>
+                <label className="block text-[9px] uppercase font-bold text-slate-400 mb-1">{t("Send From *")}</label>
+                <select
+                  required
+                  value={selectedSender}
+                  onChange={(e) => setSelectedSender(e.target.value as "organization" | "personal" | "")}
+                  disabled={isLoadingSenders || senderOptions.length === 0}
+                  className="w-full bg-white dark:bg-zinc-800 border border-slate-200 dark:border-zinc-700 rounded p-1.5 text-xs text-slate-800 dark:text-zinc-200 focus:outline-none focus:border-indigo-500 disabled:opacity-50"
+                >
+                  {isLoadingSenders && <option value="">{t("Loading mailboxes...")}</option>}
+                  {!isLoadingSenders && senderOptions.length === 0 && <option value="">{t("No mailbox connected")}</option>}
+                  {senderOptions.map(opt => (
+                    <option key={opt.source} value={opt.source}>{opt.label} ({opt.email})</option>
+                  ))}
+                </select>
+              </div>
+            </div>
+
+            <div className="flex justify-end gap-2 border-t border-dashed border-slate-200 dark:border-zinc-800 pt-3">
+              <button
+                type="button"
+                onClick={() => setShowSendEmailModal(false)}
+                className="px-3.5 py-1.5 bg-slate-200 hover:bg-slate-300 dark:bg-zinc-800 dark:hover:bg-zinc-700 text-slate-700 dark:text-zinc-200 rounded font-semibold cursor-pointer text-xs"
+              >
+                {t("Cancel")}
+              </button>
+              <button
+                type="button"
+                onClick={handleSendEmail}
+                disabled={isSendingProposalEmail || isLoadingSenders || senderOptions.length === 0}
+                className="px-4.5 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded font-bold flex items-center gap-1.5 cursor-pointer shadow-sm disabled:opacity-50 disabled:cursor-not-allowed text-xs"
+              >
+                {isSendingProposalEmail ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Send className="w-3.5 h-3.5" />}
+                <span>{isSendingProposalEmail ? t("Sending...") : t("Send Email")}</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {showRevisionModal && activeProposal && (
         <div className="fixed inset-0 z-55 flex items-center justify-center bg-black/60 backdrop-blur-xs">
           <div className="w-full max-w-md bg-white dark:bg-zinc-900 rounded-xl p-5 shadow-2xl border border-slate-200 dark:border-zinc-800 animate-in zoom-in-95 duration-100">
