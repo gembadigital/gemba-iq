@@ -1032,11 +1032,41 @@ export default function DealManagementView({ initialTab = "dashboard", onNavigat
         const text = event.target?.result as string;
         if (!text) return;
 
-        const lines = text.split(/\r?\n/);
+        // Baştaki UTF-8 BOM karakterini (dışa aktarımın eklediği) temizle,
+        // yoksa ilk başlık hücresine sızıp delimiter tespitini bozabilir.
+        const cleanText = text.replace(/^﻿/, "");
+        const lines = cleanText.split(/\r?\n/);
         if (lines.length <= 1) {
           alert(t("CSV file is empty or only contains headers!"));
           return;
         }
+
+        // Item: Excel'de (özellikle TR bölgesel ayarlarıyla) açılıp kaydedilen
+        // CSV dosyaları virgül yerine noktalı virgül (;) ayracı kullanır — dışa
+        // aktardığımız dosya virgülle üretiliyor, ama kullanıcı Excel'de açıp
+        // kaydettikten sonra geri içe aktarmaya çalışınca dosya noktalı virgülle
+        // geliyordu. Sabit ',' varsayımı satırları hiç bölemediği için hiçbir
+        // satır "Company Name" alanına ulaşamıyor ve içe aktarım sessizce 0
+        // kayıt transfer ediyordu. Artık başlık satırına bakarak ayraç otomatik
+        // tespit ediliyor (hangisi daha sık geçiyorsa o kullanılıyor).
+        const headerLine = lines[0];
+        const semicolonCount = (headerLine.match(/;/g) || []).length;
+        const commaCount = (headerLine.match(/,/g) || []).length;
+        const delimiter = semicolonCount > commaCount ? ";" : ",";
+
+        // Excel'de elle tarih girildiğinde TR bölgesel ayarları gün.ay.yıl
+        // formatını kullanır (ör. 15.07.2026); uygulama ise ISO yyyy-mm-dd
+        // bekliyor. İkisini de kabul edip ISO'ya normalize ediyoruz.
+        const normalizeDate = (raw: string): string => {
+          const v = (raw || "").trim();
+          const ddmmyyyy = v.match(/^(\d{1,2})\.(\d{1,2})\.(\d{4})$/);
+          if (ddmmyyyy) {
+            const [, d, m, y] = ddmmyyyy;
+            return `${y}-${m.padStart(2, "0")}-${d.padStart(2, "0")}`;
+          }
+          if (/^\d{4}-\d{1,2}-\d{1,2}$/.test(v)) return v;
+          return v;
+        };
 
         const newDeals: Deal[] = [];
         for (let i = 1; i < lines.length; i++) {
@@ -1050,7 +1080,7 @@ export default function DealManagementView({ initialTab = "dashboard", onNavigat
             const char = line[c];
             if (char === '"') {
               inQuotes = !inQuotes;
-            } else if (char === ',' && !inQuotes) {
+            } else if (char === delimiter && !inQuotes) {
               values.push(current.trim().replace(/^"|"$/g, ''));
               current = "";
             } else {
@@ -1069,7 +1099,7 @@ export default function DealManagementView({ initialTab = "dashboard", onNavigat
               contactEmail: values[3] || "",
               contactPhone: values[4] || "",
               opportunityValue: Number(values[5]) || 0,
-              expectedCloseDate: values[6] || new Date().toISOString().split('T')[0],
+              expectedCloseDate: values[6] ? normalizeDate(values[6]) : new Date().toISOString().split('T')[0],
               opportunityScore: Number(values[7]) || 50,
               winProbability: Number(values[8]) || 50,
               currentStageDuration: 1,
