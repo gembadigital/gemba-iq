@@ -29,8 +29,32 @@ import EmailLeadDiscoveryView from "./EmailLeadDiscoveryView";
 import CompanyAutocomplete from "./CompanyAutocomplete";
 import { CrmDb } from "../lib/CrmDb";
 import { getActiveOrganizationId } from "../lib/tenantStorage";
+import { useOrganization } from "../lib/OrganizationContext";
 
 const LEAD_PROFILES_KEY = "crm_lead_profiles";
+
+// Builds a compact page-number list (e.g. 1, 2, 3, ..., 12) instead of one
+// button per page, which becomes an unusable long row once there are many
+// pages of records.
+function getCompactPageNumbers(currentPage: number, totalPages: number): (number | "...")[] {
+  if (totalPages <= 7) {
+    return Array.from({ length: totalPages }, (_, i) => i + 1);
+  }
+  const pages = new Set<number>([1, 2, 3, totalPages]);
+  pages.add(Math.max(1, currentPage - 1));
+  pages.add(currentPage);
+  pages.add(Math.min(totalPages, currentPage + 1));
+
+  const sorted = Array.from(pages).filter(p => p >= 1 && p <= totalPages).sort((a, b) => a - b);
+  const result: (number | "...")[] = [];
+  sorted.forEach((page, idx) => {
+    if (idx > 0 && page - sorted[idx - 1] > 1) {
+      result.push("...");
+    }
+    result.push(page);
+  });
+  return result;
+}
 
 interface LeadProfilesViewProps {
   onPushToMailMerge: (newRecs: Recipient[]) => void;
@@ -42,18 +66,19 @@ export default function LeadProfilesView({
   currentMailMergeCount
 }: LeadProfilesViewProps) {
   const { lang, t } = useLanguage();
+  const { actorName } = useOrganization();
   // Profiles Storage State
   const [profiles, setProfiles] = useState<LeadProfile[]>([]);
-  
+
   // Tab control: "leads-registry" vs "email-discovery" (Contacted List)
   const [currentActiveSubTab, setCurrentActiveSubTab] = useState<"leads-registry" | "email-discovery">("leads-registry");
-  
+
   // Interactive Filter States
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("");
   const [segmentFilter, setSegmentFilter] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
-  const [pageSize, setPageSize] = useState(15);
+  const [pageSize, setPageSize] = useState(50);
   
   // Custom interactive feedbacks
   const [toast, setToast] = useState<{ msg: string; type: "success" | "info" | "error" } | null>(null);
@@ -143,6 +168,7 @@ export default function LeadProfilesView({
       deliveryStatus: newProfile.deliveryStatus,
       openCount: newProfile.openCount,
       organization_id: getActiveOrganizationId() || undefined,
+      addedBy: actorName,
     };
 
     const updatedList = [...profiles, added];
@@ -428,7 +454,8 @@ export default function LeadProfilesView({
               customField1: custom1Idx !== -1 && row[custom1Idx] ? String(row[custom1Idx]).trim() : "",
               customField2: custom2Idx !== -1 && row[custom2Idx] ? String(row[custom2Idx]).trim() : "",
               deliveryStatus: deliveryIdx !== -1 && row[deliveryIdx] ? String(row[deliveryIdx]).trim() : "idle",
-              openCount: openIdx !== -1 && row[openIdx] ? Number(row[openIdx]) : 0
+              openCount: openIdx !== -1 && row[openIdx] ? Number(row[openIdx]) : 0,
+              addedBy: actorName
             });
           }
 
@@ -444,7 +471,8 @@ export default function LeadProfilesView({
                 ...updated[matchIndex],
                 ...rec,
                 id: updated[matchIndex].id, // Maintain internal ID
-                no: updated[matchIndex].no  // Maintain internal No sequency
+                no: updated[matchIndex].no,  // Maintain internal No sequency
+                addedBy: updated[matchIndex].addedBy || rec.addedBy // Keep original owner on re-import
               };
             } else {
               // Append new record
@@ -1050,9 +1078,9 @@ export default function LeadProfilesView({
         </div>
 
         {/* Dense Excel-Style Multi-Field Grid View */}
-        <div className="overflow-x-auto">
+        <div className="overflow-auto max-h-[calc(100vh-380px)] min-h-[240px]">
           <table className="w-full text-left border-collapse">
-            <thead>
+            <thead className="sticky top-0 z-10">
               <tr className="bg-[#FAF9F8] dark:bg-[#201f1e] text-[10px] font-bold text-slate-450 uppercase border-b border-[#EDEBE9] dark:border-[#323130] tracking-wider select-none">
                 <th className="p-3 w-10 text-center">
                   <input
@@ -1067,6 +1095,7 @@ export default function LeadProfilesView({
                 <th className="p-3">{t("Last Name")}</th>
                 <th className="p-3">{t("Email Address")}</th>
                 <th className="p-3">{t("Company")}</th>
+                <th className="p-3 whitespace-nowrap">{t("Added By")}</th>
                 <th className="p-3">{t("Department")}</th>
                 <th className="p-3">{t("Address")}</th>
                 <th className="p-3">{t("Industry")}</th>
@@ -1158,6 +1187,11 @@ export default function LeadProfilesView({
                         ) : (
                           <span>{p.company || "-"}</span>
                         )}
+                      </td>
+
+                      {/* Added By */}
+                      <td className="p-3 text-[11px] text-slate-500 whitespace-nowrap">
+                        {p.addedBy || "-"}
                       </td>
 
                       {/* Department */}
@@ -1398,7 +1432,7 @@ export default function LeadProfilesView({
                 })
               ) : (
                 <tr>
-                  <td colSpan={17} className="p-10 text-center text-slate-400">
+                  <td colSpan={18} className="p-10 text-center text-slate-400">
                     <Database className="w-12 h-12 text-slate-300 mx-auto mb-2.5 animate-pulse" />
                     <p className="font-semibold text-xs text-slate-500">{t("No lead profiles match your current search constraints.")}</p>
                     <p className="text-[10px] text-slate-405 mt-1">{t("Import an excel file or click \"Add Lead\" to build your database stack")}</p>
@@ -1430,35 +1464,39 @@ export default function LeadProfilesView({
                 {t("Previous")}
               </button>
               
-              {Array.from({ length: totalPages }).map((_, i) => {
-                const pageNum = i + 1;
-                return (
+              {getCompactPageNumbers(currentPage, totalPages).map((token, idx) =>
+                token === "..." ? (
+                  <span key={`ellipsis-${idx}`} className="px-1.5 text-slate-400 select-none">
+                    …
+                  </span>
+                ) : (
                   <button
-                    key={pageNum}
+                    key={token}
                     type="button"
-                    onClick={() => setCurrentPage(pageNum)}
+                    onClick={() => setCurrentPage(token as number)}
                     className={`px-3 py-1.5 rounded border font-semibold ${
-                      currentPage === pageNum
+                      currentPage === token
                         ? "bg-[#0078D4] border-[#0078D4] text-white"
                         : "border-[#EDEBE9] dark:border-[#323130] text-slate-650 hover:bg-slate-50 dark:hover:bg-[#252423] cursor-pointer"
                     }`}
                   >
-                    {pageNum}
+                    {token}
                   </button>
-                );
-              })}
+                )
+              )}
 
               <button
                 type="button"
                 disabled={currentPage === totalPages}
                 onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
-                className={`px-3 py-1.5 rounded border border-[#EDEBE9] dark:border-[#323130] text-slate-650 ${
+                title={t("Next")}
+                className={`px-3 py-1.5 rounded border border-[#EDEBE9] dark:border-[#323130] text-slate-650 font-bold ${
                   currentPage === totalPages
                     ? "opacity-50 cursor-not-allowed bg-slate-50 dark:bg-[#1b1a19]"
                     : "hover:bg-slate-50 dark:hover:bg-[#252423] cursor-pointer"
                 }`}
               >
-                {t("Next")}
+                {"»"}
               </button>
             </div>
           </div>

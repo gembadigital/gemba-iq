@@ -57,6 +57,34 @@ import CompanyDocumentsTab from "./company-tabs/CompanyDocumentsTab";
 import CompanyOpexTab from "./company-tabs/CompanyOpexTab";
 import CompanyRevenueTab from "./company-tabs/CompanyRevenueTab";
 import CompanyDetailView from "./CompanyDetailView";
+import { TargetAccount } from "../types";
+import { getActiveOrganizationId } from "../lib/tenantStorage";
+
+// Must match the key TargetAccountsView.tsx / AISalesAssistant.tsx read from.
+const TARGET_ACCOUNTS_KEY = "crm_target_accounts";
+
+// Builds a compact page-number list (e.g. 1, 2, 3, ..., 12) instead of one
+// button per page, which becomes an unusable long row once there are many
+// pages of records.
+function getCompactPageNumbers(currentPage: number, totalPages: number): (number | "...")[] {
+  if (totalPages <= 7) {
+    return Array.from({ length: totalPages }, (_, i) => i + 1);
+  }
+  const pages = new Set<number>([1, 2, 3, totalPages]);
+  pages.add(Math.max(1, currentPage - 1));
+  pages.add(currentPage);
+  pages.add(Math.min(totalPages, currentPage + 1));
+
+  const sorted = Array.from(pages).filter(p => p >= 1 && p <= totalPages).sort((a, b) => a - b);
+  const result: (number | "...")[] = [];
+  sorted.forEach((page, idx) => {
+    if (idx > 0 && page - sorted[idx - 1] > 1) {
+      result.push("...");
+    }
+    result.push(page);
+  });
+  return result;
+}
 
 // Interface definitions (exported for cross-component compatibility)
 export interface CustomFieldDefinition {
@@ -237,7 +265,7 @@ export default function CompaniesView() {
   const [sortOrder, setSortOrder] = useState<"asc" | "desc">("asc");
   
   const [currentPage, setCurrentPage] = useState(1);
-  const [itemsPerPage, setItemsPerPage] = useState(10);
+  const [itemsPerPage, setItemsPerPage] = useState(50);
   
   const [selectedCompanyIds, setSelectedCompanyIds] = useState<string[]>([]);
   const [bulkAction, setBulkAction] = useState("");
@@ -460,6 +488,43 @@ export default function CompaniesView() {
         }
         return c;
       }));
+      setSelectedCompanyIds([]);
+      setBulkAction("");
+    } else if (bulkAction === "target_accounts") {
+      const selectedCompanies = companies.filter(c => selectedCompanyIds.includes(c.id));
+      const existing = CrmDb.getKv<TargetAccount[]>(TARGET_ACCOUNTS_KEY, []);
+      const existingNames = new Set(existing.map(a => a.companyName.toLowerCase().trim()));
+
+      const newTargetAccounts: TargetAccount[] = selectedCompanies
+        .filter(c => !existingNames.has(c.name.toLowerCase().trim()))
+        .map((c, idx) => ({
+          id: `target_${Date.now()}_${idx}_${Math.floor(Math.random() * 1000)}`,
+          organization_id: getActiveOrganizationId() || undefined,
+          companyName: c.name,
+          websiteUrl: c.website || "",
+          industryTag: c.industry || "",
+          companySize: c.employeeCount ? String(c.employeeCount) : "",
+          locationMain: [c.billingCity, c.billingCountry].filter(Boolean).join(", "),
+          aiAnalysisSummary: "",
+          draftTemplates: "",
+          analysisSource: "Manual (Companies list)",
+          analysisDate: new Date().toISOString(),
+          riskScore: 0,
+          rawOutput: "",
+          no: existing.length + idx + 1,
+        }));
+
+      const skippedCount = selectedCompanies.length - newTargetAccounts.length;
+      if (newTargetAccounts.length > 0) {
+        CrmDb.setKv(TARGET_ACCOUNTS_KEY, [...existing, ...newTargetAccounts]);
+      }
+      alert(
+        skippedCount > 0
+          ? t("{added} companies moved to Target Accounts. {skipped} were already there.")
+              .replace("{added}", String(newTargetAccounts.length))
+              .replace("{skipped}", String(skippedCount))
+          : t("{count} companies moved to Target Accounts.").replace("{count}", String(newTargetAccounts.length))
+      );
       setSelectedCompanyIds([]);
       setBulkAction("");
     }
@@ -781,6 +846,7 @@ export default function CompaniesView() {
                   <option value="status:Active Customer">{t("Set Status: Active")}</option>
                   <option value="status:Prospect">{t("Set Status: Prospect")}</option>
                   <option value="owner:Atakan Zehir">{t("Assign Owner: Atakan")}</option>
+                  <option value="target_accounts">{t("Move to Target Accounts")}</option>
                 </select>
 
                 <button
@@ -891,7 +957,7 @@ export default function CompaniesView() {
 
           {/* Companies Grid Table */}
           <div className="bg-white dark:bg-[#131313] rounded-xl border border-slate-100 dark:border-zinc-900/80 shadow-[0_1px_3px_rgba(0,0,0,0.02)] overflow-hidden">
-            <div className="overflow-x-auto">
+            <div className="overflow-auto max-h-[calc(100vh-380px)] min-h-[240px]">
               <table className="w-full text-left border-collapse text-xs font-sans min-w-[900px]">
                 <thead>
                   <tr className="bg-slate-50 dark:bg-zinc-900/80 border-b border-slate-150 dark:border-zinc-850/80 text-[10px] uppercase font-black text-slate-450 dark:text-zinc-500 font-mono tracking-wider sticky top-0 z-10">
@@ -1047,27 +1113,34 @@ export default function CompaniesView() {
                   >
                     {t("Previous")}
                   </button>
-                  {[...Array(totalPages)].map((_, i) => (
-                    <button
-                      key={i}
-                      type="button"
-                      onClick={() => setCurrentPage(i + 1)}
-                      className={`px-2 py-1 rounded text-[11px] font-mono font-bold cursor-pointer ${
-                        currentPage === i + 1 
-                          ? "bg-indigo-600 text-white" 
-                          : "bg-white dark:bg-zinc-800 border border-slate-200 dark:border-zinc-700 text-slate-700 dark:text-zinc-300"
-                      }`}
-                    >
-                      {i + 1}
-                    </button>
-                  ))}
+                  {getCompactPageNumbers(currentPage, totalPages).map((token, idx) =>
+                    token === "..." ? (
+                      <span key={`ellipsis-${idx}`} className="px-1.5 text-slate-400 select-none text-[11px]">
+                        …
+                      </span>
+                    ) : (
+                      <button
+                        key={token}
+                        type="button"
+                        onClick={() => setCurrentPage(token as number)}
+                        className={`px-2 py-1 rounded text-[11px] font-mono font-bold cursor-pointer ${
+                          currentPage === token
+                            ? "bg-indigo-600 text-white"
+                            : "bg-white dark:bg-zinc-800 border border-slate-200 dark:border-zinc-700 text-slate-700 dark:text-zinc-300"
+                        }`}
+                      >
+                        {token}
+                      </button>
+                    )
+                  )}
                   <button
                     type="button"
                     disabled={currentPage === totalPages}
                     onClick={() => setCurrentPage(p => Math.min(p + 1, totalPages))}
+                    title={t("Next")}
                     className="px-2.5 py-1 bg-white dark:bg-zinc-800 border border-slate-200 dark:border-zinc-700 rounded text-[11px] disabled:opacity-50 cursor-pointer font-bold"
                   >
-                    {t("Next")}
+                    {"»"}
                   </button>
                 </div>
               </div>

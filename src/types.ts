@@ -97,6 +97,7 @@ export interface LeadProfile {
   deliveryStatus: string;
   openCount: number;
   isSelected?: boolean;
+  addedBy?: string; // Display name of the user who created/imported this lead record
 }
 
 export interface TargetAccount {
