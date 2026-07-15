@@ -2,6 +2,19 @@
   "rewrites": [
     { "source": "/auth/callback", "destination": "/api/auth/callback" },
     { "source": "/auth/callback/", "destination": "/api/auth/callback" },
+
+    { "source": "/api/mail/send", "destination": "/api/mail/[...action]?action=send" },
+    { "source": "/api/mail/draft", "destination": "/api/mail/[...action]?action=draft" },
+    { "source": "/api/mail/scan", "destination": "/api/mail/[...action]?action=scan" },
+
+    { "source": "/api/gemini/assist", "destination": "/api/gemini/[...action]?action=assist" },
+    { "source": "/api/gemini/company-search", "destination": "/api/gemini/[...action]?action=company-search" },
+    { "source": "/api/gemini/analyze-company", "destination": "/api/gemini/[...action]?action=analyze-company" },
+
+    { "source": "/api/organization/mailbox", "destination": "/api/organization/[...action]?action=mailbox" },
+    { "source": "/api/organization/members/role", "destination": "/api/organization/[...action]?action=members-role" },
+    { "source": "/api/organization/members/delete", "destination": "/api/organization/[...action]?action=members-delete" },
+
     { "source": "/((?!assets/|api/).*)", "destination": "/index.html" }
   ]
 }

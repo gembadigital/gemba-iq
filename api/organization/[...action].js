@@ -225,12 +225,15 @@ export async function membersDeleteHandler(request, response) {
 }
 
 export default async function handler(request, response) {
-  const segments = Array.isArray(request.query?.action)
-    ? request.query.action
-    : [request.query?.action].filter(Boolean);
+  // Vercel's zero-config file-system routing for [...bracket] dynamic
+  // functions only auto-populates req.query for Next.js projects. This is a
+  // Vite project, so the explicit rewrites in vercel.json set ?action=...
+  // themselves (see "/api/organization/mailbox" etc.) — action arrives as a
+  // plain string, not an array of path segments.
+  const action = Array.isArray(request.query?.action) ? request.query.action[0] : request.query?.action;
 
-  if (segments[0] === "mailbox") return mailboxHandler(request, response);
-  if (segments[0] === "members" && segments[1] === "role") return membersRoleHandler(request, response);
-  if (segments[0] === "members" && segments[1] === "delete") return membersDeleteHandler(request, response);
+  if (action === "mailbox") return mailboxHandler(request, response);
+  if (action === "members-role") return membersRoleHandler(request, response);
+  if (action === "members-delete") return membersDeleteHandler(request, response);
   return response.status(404).json({ error: "Unknown organization endpoint." });
 }
