@@ -45,7 +45,8 @@ import {
   Heart,
   BarChart2,
   Activity,
-  Award
+  Award,
+  Filter
 } from "lucide-react";
 
 // Sub-tabs modular components imports
