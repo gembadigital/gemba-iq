@@ -90,6 +90,24 @@ interface SalesDashboardProps {
   onSelectDeal?: (deal: Deal) => void;
 }
 
+// --- STAGE CLASSIFICATION HELPERS ---
+// Fırsat/süreç aşamaları (stage) tamamen kullanıcı tarafından özelleştirilebilir
+// (bkz. DealManagementView.tsx DEFAULT_STAGES ve "+ Özel Aşama" özelliği). Bu yüzden
+// bir fırsatın "kazanıldı" ya da "kaybedildi" olup olmadığını sabit İngilizce
+// "won"/"lost" string'i ile birebir karşılaştırarak anlayamayız — kullanıcılar bu
+// aşamaları genelde "Kapandı Kazanıldı" / "Kapandı Kaybedildi" gibi Türkçe isimlerle
+// değiştiriyor. Bu yardımcı fonksiyonlar hem İngilizce varsayılanları hem de yaygın
+// Türkçe varyantları, büyük/küçük harf duyarsız şekilde eşleştirir.
+export function isWonStage(stage?: string | null): boolean {
+  const s = (stage || "").toLowerCase();
+  return s === "won" || s.includes("kazan");
+}
+
+export function isLostStage(stage?: string | null): boolean {
+  const s = (stage || "").toLowerCase();
+  return s === "lost" || s.includes("kaybed") || s.includes("kayıp") || s.includes("kayip");
+}
+
 export default function SalesDashboardView({ deals, onSelectDeal }: SalesDashboardProps) {
   const { lang, t } = useLanguage();
 
@@ -114,7 +132,7 @@ export default function SalesDashboardView({ deals, onSelectDeal }: SalesDashboa
       const newComp = CrmDb.createCompany({ name: companyName });
       id = newComp.id;
     }
-    localStorage.setItem("active_company_detail_id", id);
+    CrmDb.setKv("active_company_detail_id", id);
     window.dispatchEvent(new CustomEvent("crm-navigate", { detail: { tab: "companies-registry" } }));
   };
 
@@ -147,30 +165,30 @@ export default function SalesDashboardView({ deals, onSelectDeal }: SalesDashboa
   // --- STATE FOR DRILL-DOWN MODALS ---
   const [activeDrillDown, setActiveDrillDown] = useState<"weighted" | "conversion" | "aging" | null>(null);
 
-  // --- AUTO ENRICH DEALS WITH FALLBACKS FOR ROBUST INTELLIGENCE ---
+  // --- ENRICH DEALS WITH HONEST (NON-FABRICATED) FALLBACKS ---
+  // Önceden burada eksik owner/region/businessUnit/industry alanları rastgele
+  // döndürülen SAHTE isim listelerinden (Sophia Loren, Hans Weber, Aegean, IoT
+  // Tech vb.) dolduruluyordu — bu, panodaki tüm kırılımların (bölge, iş birimi,
+  // satış temsilcisi bazlı) gerçek veriyle hiç ilgisi olmayan uydurma sonuçlar
+  // göstermesine yol açıyordu. Artık eksik alanlar nötr "Belirtilmemiş" etiketiyle
+  // işaretleniyor; hiçbir gerçek veri icat edilmiyor.
   const enrichedDeals = useMemo(() => {
-    return deals.map((d, index) => {
-      // Parse days
-      const days = typeof d.manDay === "number" ? d.manDay : parseInt(d.manDay || "", 10) || 15;
-      
-      // Seed fallback values for Power BI filters if missing from legacy deals
-      const regions = ["Marmara", "Aegean", "Europe", "North America", "Central Anatolia"];
-      const units = ["Opex Advisory", "IoT Tech", "Lean Academy", "Sustainability", "Digital Transformation"];
-      const owners = ["Atakan Zehir", "GP Admin", "Sophia Loren", "John Smith", "Hans Weber"];
-      const industries = ["Automotive", "Chemicals", "Electronics", "Manufacturing", "Energy", "FMCG"];
-      
+    const unspecified = lang === "TR" ? "Belirtilmemiş" : "Unspecified";
+    const unassigned = lang === "TR" ? "Atanmamış" : "Unassigned";
+    const generalSubject = lang === "TR" ? "Genel Danışmanlık" : "General Consultancy";
+    return deals.map((d) => {
+      const days = typeof d.manDay === "number" ? d.manDay : parseInt(d.manDay || "", 10) || 0;
       return {
         ...d,
-        owner: d.owner || owners[index % owners.length],
-        region: d.region || regions[index % regions.length],
-        businessUnit: d.businessUnit || units[index % units.length],
-        industry: d.industry || industries[index % industries.length],
-        contactSubject: d.contactSubject || d.dealName || "Consultancy Proposal",
-        createdDate: d.createdDate || "2026-01-15",
+        owner: d.owner || unassigned,
+        region: d.region || unspecified,
+        businessUnit: d.businessUnit || unspecified,
+        industry: d.industry || unspecified,
+        contactSubject: d.contactSubject || d.dealName || generalSubject,
         manDayNum: days,
       };
     });
-  }, [deals]);
+  }, [deals, lang]);
 
   // --- EXTRACT DISTINCT META LISTS FOR FILTER DRAWER ---
   const salespeople = useMemo(() => ["All", ...Array.from(new Set(enrichedDeals.map((d) => d.owner).filter(Boolean)))], [enrichedDeals]);
@@ -219,10 +237,9 @@ export default function SalesDashboardView({ deals, onSelectDeal }: SalesDashboa
 
       // Status filter mapper: Won / Lost / Pipeline
       if (filterStatus !== "All") {
-        const lowerStage = d.stage.toLowerCase();
-        if (filterStatus === "Won" && lowerStage !== "won") return false;
-        if (filterStatus === "Lost" && lowerStage !== "lost") return false;
-        if (filterStatus === "Pipeline" && (lowerStage === "won" || lowerStage === "lost")) return false;
+        if (filterStatus === "Won" && !isWonStage(d.stage)) return false;
+        if (filterStatus === "Lost" && !isLostStage(d.stage)) return false;
+        if (filterStatus === "Pipeline" && (isWonStage(d.stage) || isLostStage(d.stage))) return false;
       }
 
       return true;
@@ -295,10 +312,10 @@ export default function SalesDashboardView({ deals, onSelectDeal }: SalesDashboa
       totalSoldManDays += typeof d.manDay === "number" ? d.manDay : parseInt(d.manDay || "0", 10) || 15;
       totalAgingDays += d.currentStageDuration || 10;
 
-      if (d.stage.toLowerCase() === "won") {
+      if (isWonStage(d.stage)) {
         wonVal += d.opportunityValue;
         wonCount++;
-      } else if (d.stage.toLowerCase() === "lost") {
+      } else if (isLostStage(d.stage)) {
         lostVal += d.opportunityValue;
         lostCount++;
       }
@@ -306,12 +323,16 @@ export default function SalesDashboardView({ deals, onSelectDeal }: SalesDashboa
 
     const winRate = totalCount > 0 ? (wonCount / totalCount) * 100 : 0;
     const avgDealSize = totalCount > 0 ? totalVal / totalCount : 0;
-    
-    // Constant corporate SLA standard: Sales cycle on won opportunities usually average 42 days.
-    // Can decrease slightly under high win probabilities.
-    const avgSalesCycle = wonCount > 0 
-      ? Math.round(filteredDeals.filter(d => d.stage.toLowerCase() === "won").reduce((acc, curr) => acc + (curr.opportunityScore > 80 ? 30 : 48), 0) / wonCount)
-      : 42;
+
+    // Satış döngüsü süresi: sistemde fırsatın "oluşturulma tarihi" alanı tutulmadığı
+    // için gerçek kapanış süresi hesaplanamıyor. Önceden burada sabit 30/48/42 günlük
+    // uydurma değerler kullanılıyordu — bunun yerine kazanılan fırsatların GERÇEK
+    // "mevcut aşamada geçirdiği süre" (currentStageDuration) alanının ortalaması
+    // kullanılıyor; hiçbir sabit/icat sayı yok.
+    const wonDealsForCycle = filteredDeals.filter(d => isWonStage(d.stage));
+    const avgSalesCycle = wonDealsForCycle.length > 0
+      ? Math.round(wonDealsForCycle.reduce((acc, curr) => acc + (curr.currentStageDuration || 0), 0) / wonDealsForCycle.length)
+      : 0;
 
     const pipelineVal = totalVal - (wonVal + lostVal);
 
@@ -377,22 +398,27 @@ export default function SalesDashboardView({ deals, onSelectDeal }: SalesDashboa
       { name: "Lost", key: ["lost"] }
     ];
 
-    let lastValCount = filteredDeals.length;
-    return funnelStages.map((st, idx) => {
-      const dealsInStage = filteredDeals.filter(d => st.key.includes(d.stage.toLowerCase()));
-      const count = dealsInStage.reduce((acc, cur) => acc + 1, 0);
+    // "Won"/"Lost" aşamaları özelleştirilebilir olduğundan sabit string eşleşmesi
+    // yerine isWonStage/isLostStage yardımcıları kullanılıyor. Ayrıca önceden
+    // gerçek sayı 0 olduğunda devreye giren uydurma yüzde/adet/tutar (ör. "%90",
+    // "%40") tamamen kaldırıldı — gerçek sıfır artık dürüstçe sıfır gösteriliyor.
+    return funnelStages.map((st) => {
+      const dealsInStage = filteredDeals.filter(d => {
+        if (st.name === "Won") return isWonStage(d.stage);
+        if (st.name === "Lost") return isLostStage(d.stage);
+        return st.key.includes(d.stage.toLowerCase());
+      });
+      const count = dealsInStage.length;
       const totalValueObj = dealsInStage.reduce((acc, cur) => acc + cur.opportunityValue, 0);
-      
-      // Calculate realistic conversion rate
       const conversionRate = filteredDeals.length > 0 ? Math.round((count / filteredDeals.length) * 100) : 0;
       return {
         stageName: st.name,
-        count: count || (idx === 0 ? Math.round(filteredDeals.length * 0.9) : idx === 4 ? Math.round(filteredDeals.length * 0.4) : idx === 5 ? stats.wonCount : 0),
-        value: totalValueObj || (idx === 0 ? stats.totalVal * 0.9 : idx === 4 ? stats.totalVal * 0.4 : idx === 5 ? stats.wonVal : 0),
-        conversionRate: conversionRate || (idx === 0 ? 100 : idx === 1 ? 85 : idx === 2 ? 70 : idx === 3 ? 55 : idx === 4 ? 40 : idx === 5 ? Math.round(stats.winRate) : 10)
+        count,
+        value: totalValueObj,
+        conversionRate
       };
     });
-  }, [filteredDeals, stats]);
+  }, [filteredDeals]);
 
   // Aging categories
   const agingData = useMemo(() => {
@@ -427,83 +453,89 @@ export default function SalesDashboardView({ deals, onSelectDeal }: SalesDashboa
   }, [filteredDeals]);
 
   // Trend Chart data
+  // Önceden burada aylara sabit uydurma başlangıç değerleri (ör. Ocak: 140.000)
+  // atanıyor ve gerçek fırsat tutarları %20/%40 gibi keyfi katsayılarla küçültülerek
+  // ekleniyordu — grafikteki hiçbir sayı gerçek veriyle birebir örtüşmüyordu.
+  // Yıllık/çeyreklik görünümlerde de "2024 (Geçmiş)"/"2025 (Geçmiş)" gibi tamamen
+  // icat edilmiş geçmiş yıl verileri gösteriliyordu. Artık tüm değerler doğrudan
+  // filtrelenmiş gerçek fırsatların expectedCloseDate'inden hesaplanıyor; veri
+  // yoksa dürüstçe boş/sıfır gösteriliyor.
   const trendData = useMemo(() => {
-    // Aggregate by months
-    const periodsMap: { [key: string]: { proposal: number, won: number, lost: number } } = {
-      "Ocak": { proposal: 140000, won: 75050, lost: 0 },
-      "Şubat": { proposal: 220000, won: 0, lost: 45000 },
-      "Mart": { proposal: 310000, won: 180000, lost: 0 },
-      "Nisan": { proposal: 450000, won: 250000, lost: 80000 },
-      "Mayıs": { proposal: 290000, won: 120000, lost: 30000 },
-      "Haziran": { proposal: 520000, won: 340000, lost: 12000 },
+    const monthNames = ["Ocak", "Şubat", "Mart", "Nisan", "Mayıs", "Haziran", "Temmuz", "Ağustos", "Eylül", "Ekim", "Kasım", "Aralık"];
+
+    const getCloseDateInfo = (expectedCloseDate: string) => {
+      const parts = expectedCloseDate.split(".");
+      if (parts.length === 3) {
+        const month = parseInt(parts[1], 10);
+        const year = parseInt(parts[2], 10);
+        if (!isNaN(month) && !isNaN(year)) return { month, year, valid: true };
+      }
+      const dateObj = new Date(expectedCloseDate);
+      if (isNaN(dateObj.getTime())) return { month: 0, year: 0, valid: false };
+      return { month: dateObj.getMonth() + 1, year: dateObj.getFullYear(), valid: true };
     };
 
-    // Blend values over dynamic filtered items
-    filteredDeals.forEach((d) => {
-      // Find expected close month
-      const parts = d.expectedCloseDate.split(".");
-      let mStr = "";
-      if (parts.length === 3) {
-        const m = parseInt(parts[1], 10);
-        const months = ["Ocak", "Şubat", "Mart", "Nisan", "Mayıs", "Haziran", "Temmuz", "Ağustos", "Eylül", "Ekim", "Kasım", "Aralık"];
-        mStr = months[m - 1];
-      }
-      if (mStr && periodsMap[mStr]) {
-        periodsMap[mStr].proposal += d.opportunityValue * 0.2;
-        if (d.stage.toLowerCase() === "won") periodsMap[mStr].won += d.opportunityValue * 0.4;
-        if (d.stage.toLowerCase() === "lost") periodsMap[mStr].lost += d.opportunityValue * 0.4;
-      }
-    });
-
     if (trendPeriod === "Yearly") {
-      return [
-        { name: "2024 (Geçmiş)", proposal: 1200000, won: 890000, lost: 310000 },
-        { name: "2025 (Geçmiş)", proposal: 2100000, won: 1540000, lost: 420000 },
-        { name: "2026 (YTD)", proposal: stats.totalVal || 2400000, won: stats.wonVal || 1400000, lost: stats.lostVal || 200000 }
-      ];
-    } else if (trendPeriod === "Quarterly") {
-      return [
-        { name: "2026-Q1", proposal: 670000, won: 255050, lost: 45000 },
-        { name: "2026-Q2", proposal: stats.totalVal || 1260000, won: stats.wonVal || 710000, lost: stats.lostVal || 122000 }
-      ];
+      const byYear: { [key: string]: { proposal: number; won: number; lost: number } } = {};
+      filteredDeals.forEach((d) => {
+        const { year, valid } = getCloseDateInfo(d.expectedCloseDate);
+        if (!valid) return;
+        const key = String(year);
+        if (!byYear[key]) byYear[key] = { proposal: 0, won: 0, lost: 0 };
+        byYear[key].proposal += d.opportunityValue;
+        if (isWonStage(d.stage)) byYear[key].won += d.opportunityValue;
+        if (isLostStage(d.stage)) byYear[key].lost += d.opportunityValue;
+      });
+      return Object.keys(byYear).sort().map((year) => ({ name: year, ...byYear[year] }));
     }
 
-    return Object.keys(periodsMap).map(key => ({
-      name: key,
-      proposal: Math.round(periodsMap[key].proposal),
-      won: Math.round(periodsMap[key].won),
-      lost: Math.round(periodsMap[key].lost)
-    }));
-  }, [filteredDeals, trendPeriod, stats]);
+    if (trendPeriod === "Quarterly") {
+      const byQuarter: { [key: string]: { proposal: number; won: number; lost: number } } = {};
+      filteredDeals.forEach((d) => {
+        const { month, year, valid } = getCloseDateInfo(d.expectedCloseDate);
+        if (!valid) return;
+        const q = Math.ceil(month / 3);
+        const key = `${year}-Q${q}`;
+        if (!byQuarter[key]) byQuarter[key] = { proposal: 0, won: 0, lost: 0 };
+        byQuarter[key].proposal += d.opportunityValue;
+        if (isWonStage(d.stage)) byQuarter[key].won += d.opportunityValue;
+        if (isLostStage(d.stage)) byQuarter[key].lost += d.opportunityValue;
+      });
+      return Object.keys(byQuarter).sort().map((key) => ({ name: key, ...byQuarter[key] }));
+    }
+
+    const byMonth: { [key: string]: { proposal: number; won: number; lost: number } } = {};
+    monthNames.forEach((m) => { byMonth[m] = { proposal: 0, won: 0, lost: 0 }; });
+    filteredDeals.forEach((d) => {
+      const { month, valid } = getCloseDateInfo(d.expectedCloseDate);
+      if (!valid || month < 1 || month > 12) return;
+      const key = monthNames[month - 1];
+      byMonth[key].proposal += d.opportunityValue;
+      if (isWonStage(d.stage)) byMonth[key].won += d.opportunityValue;
+      if (isLostStage(d.stage)) byMonth[key].lost += d.opportunityValue;
+    });
+
+    return monthNames.map((m) => ({ name: m, ...byMonth[m] }));
+  }, [filteredDeals, trendPeriod]);
 
   // Topic bar chart data
+  // Önceden burada, gerçek konu listesi kısaysa 6 tane tamamen uydurma konu
+  // (OEE Tracking Setup, Muda Mapping Auditing vb.) ekleniyordu. Artık sadece
+  // gerçek fırsatlardan türetilen konular gösteriliyor; liste boşsa dürüstçe boş
+  // dönüyor (UI tarafında boş durum ele alınabilir).
   const topicsData = useMemo(() => {
     const counts: { [key: string]: { count: number, won: number, revenue: number } } = {};
     filteredDeals.forEach((d) => {
-      const topic = d.contactSubject || "Genel Danışmanlık";
+      const topic = d.contactSubject || (lang === "TR" ? "Genel Danışmanlık" : "General Consultancy");
       if (!counts[topic]) {
         counts[topic] = { count: 0, won: 0, revenue: 0 };
       }
       counts[topic].count++;
-      if (d.stage.toLowerCase() === "won") {
+      if (isWonStage(d.stage)) {
         counts[topic].won++;
         counts[topic].revenue += d.opportunityValue;
       }
     });
-
-    // Default topics for beauty if list is extremely small
-    const defaultTopics = [
-      { subject: "OEE Tracking Setup", count: 3, won: 2, revenue: 370000 },
-      { subject: "Lean Transformation Advisory", count: 4, won: 2, revenue: 450000 },
-      { subject: "Muda Mapping Auditing", count: 2, won: 1, revenue: 120000 },
-      { subject: "SMED Optimization", count: 2, won: 1, revenue: 75000 },
-      { subject: "5S Factory Audit", count: 3, won: 2, revenue: 180000 },
-      { subject: "Energy Efficiency Audit", count: 1, won: 0, revenue: 0 },
-    ];
-
-    if (Object.keys(counts).length === 0) {
-      return defaultTopics.slice(0, 5);
-    }
 
     return Object.keys(counts).map(key => ({
       subject: key,
@@ -511,7 +543,7 @@ export default function SalesDashboardView({ deals, onSelectDeal }: SalesDashboa
       won: counts[key].won,
       revenue: counts[key].revenue
     })).sort((a, b) => b.revenue - a.revenue).slice(0, 10);
-  }, [filteredDeals]);
+  }, [filteredDeals, lang]);
 
   // Recurse Leadboard database
   const leaderboardData = useMemo(() => {
@@ -549,14 +581,16 @@ export default function SalesDashboardView({ deals, onSelectDeal }: SalesDashboa
       const days = typeof d.manDay === "number" ? d.manDay : parseInt(d.manDay || "0", 10) || 12;
       salesRank[o].soldManDays += days;
 
-      if (d.stage.toLowerCase() === "won") {
+      if (isWonStage(d.stage)) {
         salesRank[o].wonValue += d.opportunityValue;
         salesRank[o].wonCount++;
         salesRank[o].newCustomers++; // Each won deal represents an acquired customer
       }
-      
-      // Simulate meetings count mapped to opex score
-      salesRank[o].meetings += d.meetings?.length || (d.opexScore > 85 ? 4 : d.opexScore > 70 ? 2 : 1);
+
+      // Gerçek toplantı (meetings) verisi sistemde henüz tutulmuyor; önceden
+      // burada opexScore'a göre uydurma bir sayı (1/2/4) simüle ediliyordu.
+      // Uydurma veri kaldırıldı — gerçek veri gelene kadar dürüstçe 0 gösteriliyor.
+      salesRank[o].meetings += 0;
     });
 
     return Object.values(salesRank).map((rep) => {
@@ -587,20 +621,21 @@ export default function SalesDashboardView({ deals, onSelectDeal }: SalesDashboa
         }
 
         if (closeMonthIdx === idx) {
-          if (d.stage.toLowerCase() !== "won" && d.stage.toLowerCase() !== "lost") {
+          if (!isWonStage(d.stage) && !isLostStage(d.stage)) {
             pipe += d.opportunityValue;
             weight += d.opportunityValue * ((d.winProbability || 50) / 100);
           }
         }
       });
 
-      // Include dummy data only so charts don't look blank when heavily filtered
-      const baseline = (idx === 5 ? 120000 : idx === 6 ? 340000 : idx === 7 ? 250000 : 0);
+      // Önceden grafik filtrelemede boş görünmesin diye belirli aylara sabit
+      // "dummy" (120.000 / 340.000 / 250.000) değerler ekleniyordu. Bu tamamen
+      // uydurma veriydi ve kaldırıldı — gerçek süreç yoksa ay gerçekten boş.
       result.push({
         month: m,
-        pipeline: pipe || baseline * 1.5,
-        weighted: weight || baseline * 0.75,
-        forecast: (weight || baseline * 0.75) * 1.15
+        pipeline: pipe,
+        weighted: weight,
+        forecast: weight * 1.15
       });
     });
 
@@ -944,10 +979,6 @@ export default function SalesDashboardView({ deals, onSelectDeal }: SalesDashboa
               {lang === "TR" ? "Kayıtlardaki aktif hacim" : "Active volume in registry"}
             </span>
           </div>
-          <div className="flex items-center gap-1 text-[11px] text-emerald-500 font-mono font-bold">
-            <TrendingUp className="w-3.5 h-3.5" />
-            <span>{lang === "TR" ? "öncekiye göre +14.2%" : "+14.2% vs prev"}</span>
-          </div>
         </div>
 
         {/* Card 2: Won Proposal Value */}
@@ -1008,10 +1039,6 @@ export default function SalesDashboardView({ deals, onSelectDeal }: SalesDashboa
               {lang === "TR" ? "Kazanılan adet oranı" : "Won count ratio"}
             </span>
           </div>
-          <div className="flex items-center gap-1 text-[11px] text-emerald-505 font-mono font-bold">
-            <TrendingUp className="w-3.5 h-3.5 text-emerald-500" />
-            <span className="text-emerald-500">{lang === "TR" ? "+%2.5 Hedef Farkı" : "+2.5% Target Diff"}</span>
-          </div>
         </div>
 
         {/* Card 5: Average Deal Size */}
@@ -1050,10 +1077,6 @@ export default function SalesDashboardView({ deals, onSelectDeal }: SalesDashboa
             <span className="block text-[10px] text-slate-400 mt-1">
               {lang === "TR" ? "Toplantıdan kazanıma" : "Meeting to Won stage"}
             </span>
-          </div>
-          <div className="flex items-center gap-1 text-[11px] text-emerald-500 font-mono font-bold">
-            <TrendingUp className="w-3.5 h-3.5" />
-            <span>{lang === "TR" ? "-3.4 Gün (Daha Hızlı)" : "-3.4 Days (Faster)"}</span>
           </div>
         </div>
 
@@ -1107,14 +1130,11 @@ export default function SalesDashboardView({ deals, onSelectDeal }: SalesDashboa
               </div>
             </div>
  
-            <div className="pt-3 border-t border-[#EDEBE9] dark:border-[#323130] flex justify-between items-center text-[10px] font-mono text-slate-500">
-              <span className="flex items-center gap-1 text-emerald-500 font-bold">
-                <TrendingUp className="w-3 h-3" /> {lang === "TR" ? "+%18 ağırlıklı öngörü" : "+18% weighted forecast"}
-              </span>
+            <div className="pt-3 border-t border-[#EDEBE9] dark:border-[#323130] flex justify-end items-center text-[10px] font-mono text-slate-500">
               <span>{lang === "TR" ? "Olasılığa dayalı" : "Based on probability"}</span>
             </div>
           </div>
- 
+
           {/* KPI 2 - PROPOSAL CONVERSION RATE */}
           <div className="bg-white dark:bg-[#1b1a19] border border-[#EDEBE9] dark:border-[#323130] rounded-2xl p-5 shadow-xs flex flex-col justify-between hover:border-emerald-500/80 transition-all cursor-pointer"
                onClick={() => setActiveDrillDown("conversion")}>
@@ -1288,10 +1308,10 @@ export default function SalesDashboardView({ deals, onSelectDeal }: SalesDashboa
             <div className="bg-white dark:bg-[#1b1a19] p-4 rounded-xl border border-slate-200/60 dark:border-zinc-800">
               <span className="text-[10px] font-extrabold uppercase tracking-widest text-slate-400 block mb-2">{lang === "TR" ? "Sektör Bazlı Dönüşüm" : "Conversion by Industry"}</span>
               <div className="space-y-2 mt-2">
-                {sectors.slice(1, 5).map((sec, i) => {
+                {sectors.slice(1, 5).map((sec) => {
                   const secDeals = filteredDeals.filter(d => d.industry === sec);
-                  const w = secDeals.filter(d => d.stage.toLowerCase() === "won").length;
-                  const score = secDeals.length > 0 ? Math.round((w / secDeals.length) * 100) : (45 - i * 8);
+                  const w = secDeals.filter(d => isWonStage(d.stage)).length;
+                  const score = secDeals.length > 0 ? Math.round((w / secDeals.length) * 100) : 0;
                   return (
                     <div key={sec} className="text-xs">
                       <div className="flex justify-between font-bold mb-1">
@@ -1331,8 +1351,8 @@ export default function SalesDashboardView({ deals, onSelectDeal }: SalesDashboa
             <div className="bg-white dark:bg-[#1b1a19] p-4 rounded-xl border border-slate-200/60 dark:border-zinc-800">
               <span className="text-[10px] font-extrabold uppercase tracking-widest text-slate-400 block mb-2">{lang === "TR" ? "Konu Bazlı Dönüşüm" : "Conversion by Subject"}</span>
               <div className="space-y-2 mt-2">
-                {topicsData.slice(0, 4).map((top, i) => {
-                  const rate = top.count > 0 ? Math.round((top.won / top.count) * 100) : (50 - i * 12);
+                {topicsData.slice(0, 4).map((top) => {
+                  const rate = top.count > 0 ? Math.round((top.won / top.count) * 100) : 0;
                   return (
                     <div key={top.subject} className="text-xs">
                       <div className="flex justify-between font-bold mb-1">
@@ -1633,45 +1653,13 @@ export default function SalesDashboardView({ deals, onSelectDeal }: SalesDashboa
             {/* Monthly */}
             <div className="p-3 bg-slate-50 dark:bg-zinc-900 border border-slate-200/50 dark:border-zinc-805/40 rounded-xl flex justify-between items-center">
               <div>
-                <span className="text-[10px] uppercase font-bold text-slate-400 block">{lang === "TR" ? "Aylık Kazanılan Logo" : "Monthly Logos Acquired"}</span>
+                <span className="text-[10px] uppercase font-bold text-slate-400 block">{lang === "TR" ? "Kazanılan Logo (Filtreli)" : "Logos Acquired (Filtered)"}</span>
                 <span className="text-xl font-black font-mono text-slate-800 dark:text-white">
                   {stats.wonCount} {lang === "TR" ? "Müşteri" : "Clients"}
                 </span>
               </div>
-              <div className="text-right text-[10px] text-emerald-500 font-mono font-bold">
-                <span className="bg-emerald-500/10 px-2 py-0.5 rounded flex items-center gap-0.5">
-                  <TrendingUp className="w-3 h-3" /> +100%
-                </span>
-              </div>
             </div>
 
-            {/* Quarterly */}
-            <div className="p-3 bg-slate-50 dark:bg-zinc-900 border border-slate-200/50 dark:border-zinc-805/40 rounded-xl flex justify-between items-center">
-              <div>
-                <span className="text-[10px] uppercase font-bold text-slate-400 block">{lang === "TR" ? "Çeyreklik Kazanılan Logo" : "Quarterly Logos Acquired"}</span>
-                <span className="text-xl font-black font-mono text-slate-800 dark:text-white">
-                  {stats.wonCount + 4} {lang === "TR" ? "Müşteri" : "Clients"}
-                </span>
-              </div>
-              <div className="text-right text-[10px] text-emerald-500 font-mono font-bold">
-                <span className="bg-emerald-500/10 px-2 py-0.5 rounded flex items-center gap-0.5">
-                  <TrendingUp className="w-3 h-3" /> +14.2%
-                </span>
-              </div>
-            </div>
-
-            {/* Yearly */}
-            <div className="p-3 bg-slate-[#FAF9F8] dark:bg-zinc-900 border border-slate-200/50 dark:border-zinc-805/40 rounded-xl flex justify-between items-center">
-              <div>
-                <span className="text-[10px] uppercase font-bold text-slate-400 block">{lang === "TR" ? "Yıllık Hedef (YTD)" : "Annual Target (YTD)"}</span>
-                <span className="text-xl font-black font-mono text-slate-800 dark:text-white">
-                  {stats.wonCount * 3 + 8} {lang === "TR" ? "Müşteri" : "Clients"}
-                </span>
-              </div>
-              <div className="text-right text-[10px] text-slate-400 font-mono">
-                <span>{lang === "TR" ? "Hedef:" : "Target:"} 25</span>
-              </div>
-            </div>
           </div>
         </div>
 
