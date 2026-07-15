@@ -309,8 +309,12 @@ export default function SalesDashboardView({ deals, onSelectDeal }: SalesDashboa
     filteredDeals.forEach((d) => {
       totalVal += d.opportunityValue;
       weightedVal += d.opportunityValue * ((d.winProbability || 50) / 100);
-      totalSoldManDays += typeof d.manDay === "number" ? d.manDay : parseInt(d.manDay || "0", 10) || 15;
-      totalAgingDays += d.currentStageDuration || 10;
+      // manDay kullanıcı tarafından elle girilen isteğe bağlı bir alan (çoğu fırsatta boş
+      // string). Önceden boş/geçersiz değerler sabit "15 gün" varsayımıyla dolduruluyor,
+      // bu da toplam "Satılan Adam-Gün" rakamını gerçekte teklif edilmemiş günlerle
+      // şişiriyordu. Artık gerçek veri yoksa dürüstçe 0 sayılıyor.
+      totalSoldManDays += typeof d.manDay === "number" ? d.manDay : parseInt(d.manDay || "0", 10) || 0;
+      totalAgingDays += d.currentStageDuration || 0;
 
       if (isWonStage(d.stage)) {
         wonVal += d.opportunityValue;
@@ -428,7 +432,7 @@ export default function SalesDashboardView({ deals, onSelectDeal }: SalesDashboa
     let cat91_plus_count = 0, cat91_plus_val = 0;
 
     filteredDeals.forEach((d) => {
-      const g = d.currentStageDuration || 15;
+      const g = d.currentStageDuration || 0;
       if (g <= 30) {
         cat0_30_count++;
         cat0_30_val += d.opportunityValue;
@@ -578,7 +582,7 @@ export default function SalesDashboardView({ deals, onSelectDeal }: SalesDashboa
       salesRank[o].proposalCount++;
       salesRank[o].proposalValue += d.opportunityValue;
       
-      const days = typeof d.manDay === "number" ? d.manDay : parseInt(d.manDay || "0", 10) || 12;
+      const days = typeof d.manDay === "number" ? d.manDay : parseInt(d.manDay || "0", 10) || 0;
       salesRank[o].soldManDays += days;
 
       if (isWonStage(d.stage)) {
@@ -1399,7 +1403,7 @@ export default function SalesDashboardView({ deals, onSelectDeal }: SalesDashboa
               </thead>
               <tbody className="divide-y divide-slate-100 dark:divide-zinc-800/50">
                 {filteredDeals.map((d) => {
-                  const age = d.currentStageDuration || 15;
+                  const age = d.currentStageDuration || 0;
                   const isStale = age > 60;
                   return (
                     <tr key={d.id} className="hover:bg-slate-50/50 dark:hover:bg-zinc-800/30">
@@ -1850,7 +1854,7 @@ export default function SalesDashboardView({ deals, onSelectDeal }: SalesDashboa
                     <span className="font-mono">{item.count} {t("Deals")} ({formatCur(item.value)})</span>
                   </div>
                   <div className="w-full bg-slate-100 dark:bg-zinc-800 h-2 rounded-full overflow-hidden">
-                    <div className="h-full rounded-full" style={{ backgroundColor: item.color, width: `${ratio || 10}%` }} />
+                    <div className="h-full rounded-full" style={{ backgroundColor: item.color, width: `${ratio}%` }} />
                   </div>
                 </div>
               );
