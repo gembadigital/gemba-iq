@@ -41,7 +41,9 @@ import {
   Send,
   Copy,
   Paperclip,
-  ArrowRight
+  ArrowRight,
+  Loader2,
+  AlertTriangle
 } from "lucide-react";
 import { convertCurrencyToTurkishWords, convertNumberToTurkishWords } from "./ContractManagerView";
 import { jsPDF } from "jspdf";
@@ -49,6 +51,10 @@ import Docxtemplater from "docxtemplater";
 import PizZip from "pizzip";
 import { CrmDb } from "../lib/CrmDb";
 import { useLanguage } from "../lib/LanguageContext";
+import { useOrganization } from "../lib/OrganizationContext";
+import { fetchOrganizationMailbox } from "../lib/organizationMailbox";
+import { fetchPersonalMailbox } from "../lib/personalMailbox";
+import { getSupabase } from "../lib/supabaseClient";
 
 // --- CORE INTERFACES ---
 interface ServiceCard {
@@ -447,6 +453,7 @@ export default function ServicesView({
   showSwitcher?: boolean; 
 }) {
   const { t } = useLanguage();
+  const { actorName } = useOrganization();
   const [activeTab, setActiveTab] = useState<"cards" | "wizard">(defaultTab);
 
   useEffect(() => {
@@ -642,6 +649,52 @@ export default function ServicesView({
   const [selectedEmailTemplateId, setSelectedEmailTemplateId] = useState<string>("temp-1");
   const [mailClientType, setMailClientType] = useState<"mailto" | "gmail" | "outlook" | "outlook-corp">("mailto");
 
+  // Item 20/21: Gönderim Yöntemi — "app" gerçek gönderim (Graph API üzerinden,
+  // PDF gerçekten ek olarak eklenir) veya "external" mevcut Outlook/Gmail'e
+  // devret akışı (kullanıcı manuel sürükle-bırak ile ekler). Kullanıcı ikisini
+  // de istedi ("ikisi de olabilir"), bu yüzden bir açılır menüyle seçilebilir.
+  const [emailSendMode, setEmailSendMode] = useState<"app" | "external">("app");
+  const [proposalSenderOptions, setProposalSenderOptions] = useState<{ source: "organization" | "personal"; label: string; email: string }[]>([]);
+  const [isLoadingProposalSenders, setIsLoadingProposalSenders] = useState(true);
+  const [selectedProposalSender, setSelectedProposalSender] = useState<"organization" | "personal" | "">("");
+  const [isSendingProposalEmail, setIsSendingProposalEmail] = useState(false);
+
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      setIsLoadingProposalSenders(true);
+      const [personalResult, orgResult] = await Promise.allSettled([
+        fetchPersonalMailbox(),
+        fetchOrganizationMailbox(),
+      ]);
+      if (cancelled) return;
+
+      // Item 21: varsayılan olarak kullanıcının kendi (kişisel) posta kutusu
+      // önce gelir; bağlı değilse kurumsal posta kutusuna düşer.
+      const options: { source: "organization" | "personal"; label: string; email: string }[] = [];
+      if (personalResult.status === "fulfilled" && personalResult.value.status === "Connected") {
+        options.push({
+          source: "personal",
+          label: t("My Personal Mailbox"),
+          email: personalResult.value.mailbox_address || "",
+        });
+      }
+      if (orgResult.status === "fulfilled" && orgResult.value.mailbox.status === "Connected") {
+        options.push({
+          source: "organization",
+          label: t("Organization Mailbox"),
+          email: orgResult.value.mailbox.mailbox_email || orgResult.value.mailbox.organizationMailbox || "",
+        });
+      }
+      setProposalSenderOptions(options);
+      setSelectedProposalSender(options[0]?.source || "");
+      setIsLoadingProposalSenders(false);
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [t]);
+
   // Editable fields for the compiled email template
   const [mailSubject, setMailSubject] = useState("");
   const [mailBody, setMailBody] = useState("");
@@ -776,7 +829,6 @@ export default function ServicesView({
       return c;
     }));
     setToastMessage(t("Default template saved successfully!"));
-    alert(t("Service defaults saved as template for future proposals."));
   };
   
   const filteredServiceCards = serviceCards.filter(c =>
@@ -2129,6 +2181,106 @@ export default function ServicesView({
     handlePrint();
   };
 
+  // Item 20/21: Real in-app proposal sending. Renders the live A4 preview
+  // (assemblyPaperRef) into an actual PDF binary via jsPDF, then sends it as
+  // a genuine Microsoft Graph attachment through the same /api/mail/send
+  // endpoint and sender-mailbox pattern already used in CompanyEmailsTab —
+  // no manual "download + drag into Outlook" step required.
+  const generateProposalPdfBase64 = async (): Promise<{ base64: string; filename: string } | null> => {
+    const sourceEl = assemblyPaperRef.current;
+    if (!sourceEl) return null;
+
+    const doc = new jsPDF({ unit: "pt", format: "a4" });
+    await new Promise<void>((resolve, reject) => {
+      try {
+        doc.html(sourceEl, {
+          callback: () => resolve(),
+          x: 20,
+          y: 20,
+          width: 555,
+          windowWidth: sourceEl.scrollWidth || 800,
+          html2canvas: { scale: 0.72, useCORS: true, backgroundColor: "#ffffff" },
+        });
+      } catch (err) {
+        reject(err);
+      }
+    });
+
+    const dataUri = doc.output("datauristring");
+    const base64 = dataUri.split(",")[1] || "";
+    const filename = `${clientShortName || "Teklif"}_${proposalNumber || "000"}.pdf`;
+    return { base64, filename };
+  };
+
+  const handleSendProposalEmailInApp = async () => {
+    if (!selectedProposalSender) {
+      alert("E-posta göndermeden önce Ayarlar sekmesinden bir Kurumsal veya Kişisel posta kutusu bağlayın.");
+      return;
+    }
+    if (!clientContactEmail || !mailSubject || !mailBody) {
+      alert("Lütfen alıcı e-postası, konu ve içerik alanlarını doldurun.");
+      return;
+    }
+
+    setIsSendingProposalEmail(true);
+    try {
+      const pdf = await generateProposalPdfBase64().catch(() => null);
+
+      const supabase = getSupabase();
+      const {
+        data: { session },
+      } = supabase ? await supabase.auth.getSession() : { data: { session: null } };
+
+      const response = await fetch("/api/mail/send", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          ...(session?.access_token ? { Authorization: `Bearer ${session.access_token}` } : {}),
+        },
+        body: JSON.stringify({
+          source: selectedProposalSender,
+          recipient: clientContactEmail,
+          subject: mailSubject,
+          body: mailBody.replace(/\n/g, "<br />"),
+          attachments: pdf ? [{ name: pdf.filename, contentType: "application/pdf", contentBytes: pdf.base64 }] : [],
+        }),
+      });
+      const payload = await response.json().catch(() => ({}));
+      if (!response.ok) {
+        alert(payload.error || "E-posta gönderilemedi.");
+        return;
+      }
+
+      // Save the proposal + push a card into the Deal Management Kanban
+      // board's "Teklif Gönderildi / Proposal Submitted" column (silent =
+      // skip the print dialog and external mail client, since we already
+      // sent for real).
+      handleCreateAndSaveProposal(true);
+
+      // Log into the matched company's email history, mirroring the pattern
+      // used in CompanyEmailsTab.tsx / OpportunityDrawerExtension.tsx.
+      const matchedCompanyId = matchingCompanies[0]?.id;
+      if (matchedCompanyId) {
+        CrmDb.createEmail({
+          companyId: matchedCompanyId,
+          recipient: clientContactEmail,
+          sender: payload.sender || proposalSenderOptions.find(o => o.source === selectedProposalSender)?.email || actorName,
+          subject: mailSubject,
+          body: mailBody,
+          isIncoming: false,
+          date: new Date().toISOString(),
+          attachments: pdf ? [pdf.filename] : undefined,
+        });
+      }
+
+      setToastMessage("Teklif e-postası başarıyla gönderildi!");
+    } catch (error) {
+      alert(error instanceof Error ? error.message : "E-posta gönderilemedi.");
+    } finally {
+      setIsSendingProposalEmail(false);
+    }
+  };
+
   return (
     <div className="w-full text-slate-700 dark:text-slate-300 antialiased font-sans flex flex-col space-y-6">
       
@@ -3259,8 +3411,18 @@ export default function ServicesView({
                       <Tag className="w-5 h-5 text-[#0078D4]" />
                       <span className="text-sm font-black uppercase text-slate-900 dark:text-white tracking-wider">Aşama 2: Ticari Opsiyon Alternatifleri (1-2-3)</span>
                     </div>
-                    <div className="text-[10.5px] text-[#0078D4] dark:text-blue-300 font-bold bg-blue-50 dark:bg-blue-950/20 px-2.5 py-1 rounded">
-                      Seçili olan opsiyonlar otomatik teklife eklenir
+                    <div className="flex items-center gap-2">
+                      <div className="text-[10.5px] text-[#0078D4] dark:text-blue-300 font-bold bg-blue-50 dark:bg-blue-950/20 px-2.5 py-1 rounded">
+                        Seçili olan opsiyonlar otomatik teklife eklenir
+                      </div>
+                      <button
+                        type="button"
+                        onClick={handleSaveServiceDefaults}
+                        className="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white text-[10.5px] font-black rounded flex items-center gap-1.5 shadow-sm transition-all cursor-pointer"
+                        title="Opsiyon 1-2-3 tablolarındaki mevcut satır ve fiyatları bu hizmet için varsayılan yapar; bir sonraki teklifte otomatik gelir."
+                      >
+                        <Save className="w-3.5 h-3.5" /> Kaydet (Varsayılan Yap)
+                      </button>
                     </div>
                   </div>
 
@@ -3664,72 +3826,88 @@ export default function ServicesView({
                     />
                   </div>
 
-                  {/* Mail Client Options */}
-                  <div className="space-y-2">
-                    <label className="text-[13px] font-semibold text-slate-700 dark:text-slate-300 block">E-Posta Gönderme Yöntemi</label>
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 w-full">
-                      <button
-                        type="button"
-                        onClick={() => setMailClientType("mailto")}
-                        className={`min-w-[140px] min-h-[56px] px-4 py-3 border rounded-md flex flex-col items-center justify-center text-center gap-1.5 transition-all text-[14px] font-semibold cursor-pointer ${
-                          mailClientType === "mailto" 
-                            ? "border-[#0078D4] bg-blue-50/50 dark:bg-blue-950/20 text-[#0078D4] dark:text-blue-400 font-semibold ring-1 ring-[#0078D4]" 
-                            : "border-[#EDEBE9] dark:border-[#323130] bg-white dark:bg-[#1b1a19] text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-zinc-800/40"
-                        }`}
-                      >
-                        <span className="text-base">💻</span>
-                        <span className="tracking-tight leading-none">Outlook (Masaüstü)</span>
-                      </button>
-                      
-                      <button
-                        type="button"
-                        onClick={() => setMailClientType("outlook-corp")}
-                        className={`min-w-[140px] min-h-[56px] px-4 py-3 border rounded-md flex flex-col items-center justify-center text-center gap-1.5 transition-all text-[14px] font-semibold cursor-pointer ${
-                          mailClientType === "outlook-corp" 
-                            ? "border-[#0078D4] bg-blue-50/50 dark:bg-blue-950/20 text-[#0078D4] dark:text-blue-400 font-semibold ring-1 ring-[#0078D4]" 
-                            : "border-[#EDEBE9] dark:border-[#323130] bg-white dark:bg-[#1b1a19] text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-zinc-800/40"
-                        }`}
-                      >
-                        <span className="text-base">🌐</span>
-                        <span className="tracking-tight leading-none">{t("Office 365")}</span>
-                      </button>
-                      
-                      <button
-                        type="button"
-                        onClick={() => setMailClientType("outlook")}
-                        className={`min-w-[140px] min-h-[56px] px-4 py-3 border rounded-md flex flex-col items-center justify-center text-center gap-1.5 transition-all text-[14px] font-semibold cursor-pointer ${
-                          mailClientType === "outlook" 
-                            ? "border-sky-600 bg-sky-50/50 dark:bg-sky-950/20 text-sky-700 dark:text-sky-400 font-semibold ring-1 ring-sky-600" 
-                            : "border-[#EDEBE9] dark:border-[#323130] bg-white dark:bg-[#1b1a19] text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-zinc-800/40"
-                        }`}
-                      >
-                        <span className="text-base">🌐</span>
-                        <span className="tracking-tight leading-none">{t("Outlook Live")}</span>
-                      </button>
-                      
-                      <button
-                        type="button"
-                        onClick={() => setMailClientType("gmail")}
-                        className={`min-w-[140px] min-h-[56px] px-4 py-3 border rounded-md flex flex-col items-center justify-center text-center gap-1.5 transition-all text-[14px] font-semibold cursor-pointer ${
-                          mailClientType === "gmail" 
-                            ? "border-orange-500 bg-orange-50/50 dark:bg-orange-950/20 text-orange-700 dark:text-orange-400 font-semibold ring-1 ring-orange-500" 
-                            : "border-[#EDEBE9] dark:border-[#323130] bg-white dark:bg-[#1b1a19] text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-zinc-800/40"
-                        }`}
-                      >
-                        <span className="text-base">🌐</span>
-                        <span className="tracking-tight leading-none">{t("Web Gmail")}</span>
-                      </button>
-                    </div>
+                  {/* Item 20a: Gönderim Yöntemi artık tek bir açılır menü — önceden yer
+                      kaplayan buton grid'i kaldırıldı. Item 20b: kullanıcı "ikisi de
+                      olabilir" dedi, bu yüzden hem gerçek uygulama-içi gönderim hem de
+                      harici posta istemcisine devretme seçeneği burada bir arada. */}
+                  <div className="space-y-1.5">
+                    <label className="text-[13px] font-semibold text-slate-700 dark:text-slate-300 block">Gönderim Yöntemi</label>
+                    <select
+                      value={emailSendMode}
+                      onChange={(e) => setEmailSendMode(e.target.value as "app" | "external")}
+                      className="w-full bg-slate-50 dark:bg-[#252423] border border-[#EDEBE9] dark:border-[#323130] rounded-md px-3 py-2 text-[14px] font-semibold text-slate-950 dark:text-white cursor-pointer focus:ring-1 focus:ring-[#0078D4] focus:border-[#0078D4] outline-none"
+                    >
+                      <option value="app">📧 Uygulama İçinden Gönder (Gerçek Gönderim, PDF Otomatik Ekli)</option>
+                      <option value="external">🌐 Harici Posta İstemcisine Aktar (Outlook / Gmail)</option>
+                    </select>
                   </div>
 
-                  {/* Mail Action Trigger */}
-                  <button
-                    type="button"
-                    onClick={handleOpenMailClient}
-                    className="w-full h-[52px] px-6 py-3.5 bg-[#0078D4] hover:bg-[#106ebe] text-white font-semibold rounded-md flex items-center justify-center gap-2 transition-colors cursor-pointer border border-[#005a9e] text-[14px]"
-                  >
-                    <Send className="w-4 h-4 text-blue-100" /> Müşteriye Gönder (Posta Kutunu Aç)
-                  </button>
+                  {emailSendMode === "app" ? (
+                    <div className="space-y-3">
+                      {!isLoadingProposalSenders && proposalSenderOptions.length === 0 && (
+                        <div className="flex items-start gap-2 p-2.5 bg-amber-50 dark:bg-amber-950/20 border border-amber-200 dark:border-amber-900/40 rounded-lg text-amber-700 dark:text-amber-400">
+                          <AlertTriangle className="w-3.5 h-3.5 mt-0.5 flex-shrink-0" />
+                          <span className="text-[11px] leading-relaxed">
+                            Bağlı bir posta kutusu yok. Buradan göndermek için Ayarlar'dan Kurumsal veya Kişisel posta kutunuzu bağlayın.
+                          </span>
+                        </div>
+                      )}
+
+                      <div className="space-y-1.5">
+                        <label className="text-[13px] font-semibold text-slate-700 dark:text-slate-300 block">Gönderen Posta Kutusu *</label>
+                        <select
+                          value={selectedProposalSender}
+                          onChange={(e) => setSelectedProposalSender(e.target.value as "organization" | "personal" | "")}
+                          disabled={isLoadingProposalSenders || proposalSenderOptions.length === 0}
+                          className="w-full bg-slate-50 dark:bg-[#252423] border border-[#EDEBE9] dark:border-[#323130] rounded-md px-3 py-2 text-[14px] font-normal text-slate-950 dark:text-white cursor-pointer focus:ring-1 focus:ring-[#0078D4] focus:border-[#0078D4] outline-none disabled:opacity-50"
+                        >
+                          {isLoadingProposalSenders && <option value="">Posta kutuları yükleniyor...</option>}
+                          {!isLoadingProposalSenders && proposalSenderOptions.length === 0 && <option value="">Bağlı posta kutusu yok</option>}
+                          {proposalSenderOptions.map(opt => (
+                            <option key={opt.source} value={opt.source}>{opt.label} ({opt.email})</option>
+                          ))}
+                        </select>
+                      </div>
+
+                      <button
+                        type="button"
+                        onClick={handleSendProposalEmailInApp}
+                        disabled={isSendingProposalEmail || isLoadingProposalSenders || proposalSenderOptions.length === 0}
+                        className="w-full h-[52px] px-6 py-3.5 bg-[#0078D4] hover:bg-[#106ebe] text-white font-semibold rounded-md flex items-center justify-center gap-2 transition-colors cursor-pointer border border-[#005a9e] text-[14px] disabled:opacity-50 disabled:cursor-not-allowed"
+                      >
+                        {isSendingProposalEmail ? (
+                          <Loader2 className="w-4 h-4 text-blue-100 animate-spin" />
+                        ) : (
+                          <Send className="w-4 h-4 text-blue-100" />
+                        )}
+                        <span>{isSendingProposalEmail ? "Gönderiliyor..." : "Teklifi Gönder (PDF Otomatik Ekli)"}</span>
+                      </button>
+                    </div>
+                  ) : (
+                    <div className="space-y-3">
+                      <div className="space-y-1.5">
+                        <label className="text-[13px] font-semibold text-slate-700 dark:text-slate-300 block">Posta İstemcisi</label>
+                        <select
+                          value={mailClientType}
+                          onChange={(e) => setMailClientType(e.target.value as "mailto" | "gmail" | "outlook" | "outlook-corp")}
+                          className="w-full bg-slate-50 dark:bg-[#252423] border border-[#EDEBE9] dark:border-[#323130] rounded-md px-3 py-2 text-[14px] font-normal text-slate-950 dark:text-white cursor-pointer focus:ring-1 focus:ring-[#0078D4] focus:border-[#0078D4] outline-none"
+                        >
+                          <option value="mailto">💻 Outlook (Masaüstü)</option>
+                          <option value="outlook-corp">🌐 {t("Office 365")}</option>
+                          <option value="outlook">🌐 {t("Outlook Live")}</option>
+                          <option value="gmail">🌐 {t("Web Gmail")}</option>
+                        </select>
+                      </div>
+
+                      <button
+                        type="button"
+                        onClick={handleOpenMailClient}
+                        className="w-full h-[52px] px-6 py-3.5 bg-[#0078D4] hover:bg-[#106ebe] text-white font-semibold rounded-md flex items-center justify-center gap-2 transition-colors cursor-pointer border border-[#005a9e] text-[14px]"
+                      >
+                        <Send className="w-4 h-4 text-blue-100" /> Müşteriye Gönder (Posta Kutunu Aç)
+                      </button>
+                    </div>
+                  )}
                 </div>
               )}
 
