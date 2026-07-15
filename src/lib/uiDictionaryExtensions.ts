@@ -193,6 +193,7 @@ export const uiDictionaryTR: Record<string, string> = {
   "Meetings Logged": "Kayıtlı Toplantılar",
   "Acquisition Logos": "Kazanılan Logolar",
   "Comparing Gross Pipeline Value against Weighted Revenue targets": "Brüt pipeline değeri ile ağırlıklı gelir hedeflerinin karşılaştırması",
+  "Opportunity Aging Categories": "Fırsat Yaşlanma Kategorileri",
   "Pipeline duration health profiling": "Pipeline süre sağlık profili",
   "Administrative checklists and action blockages tracker": "İdari kontrol listeleri ve aksiyon engelleri takibi",
   "Open Action Tasks": "Açık Aksiyon Görevleri",

@@ -608,73 +608,6 @@ export default function SalesDashboardView({ deals, onSelectDeal }: SalesDashboa
   }, [filteredDeals]);
 
   // Dynamic insights generator
-  const generatedInsights = useMemo(() => {
-    const list = [];
-    
-    // Insight 1
-    const forecastDiff = Math.abs(stats.weightedVal - stats.totalVal * 0.6);
-    list.push({
-      id: "ins-1",
-      title: lang === "TR" ? "Hacim ve Ağırlıklı Tahmin Artışı" : "Volume & Weighted Forecast Growth",
-      description: lang === "TR" 
-        ? `Bu ay ağırlıklı boru hattı hacmi %${stats.winRate > 0 ? Math.round(stats.winRate * 0.3 + 12) : 18} artarak ${formatCur(Math.round(stats.weightedVal))} seviyesine erişti.`
-        : `This month, weighted pipeline volume grew by ${stats.winRate > 0 ? Math.round(stats.winRate * 0.3 + 12) : 18}% to reach ${formatCur(Math.round(stats.weightedVal))}.`,
-      type: "success"
-    });
- 
-    // Insight 2
-    const topSectorDeals = filteredDeals.reduce((acc: { [key: string]: number }, cur) => {
-      acc[cur.industry] = (acc[cur.industry] || 0) + cur.opportunityValue;
-      return acc;
-    }, {});
-    const sortedSectors = Object.entries(topSectorDeals).sort((a, b) => (b[1] as number) - (a[1] as number));
-    const topSector = sortedSectors[0]?.[0] || "Otomotiv";
-    list.push({
-      id: "ins-2",
-      title: lang === "TR" ? "En Yüksek Gelir Üreten Sektör" : "Highest Revenue Sector",
-      description: lang === "TR"
-        ? `${topSector} sektörü, toplamda ${formatCur(Math.round((sortedSectors[0]?.[1] as number) || 450000))} ile en yüksek satış hacmini besleyen lokomotif alan konumundadır.`
-        : `The ${topSector} sector is the leading engine driving the highest sales volume, with a total of ${formatCur(Math.round((sortedSectors[0]?.[1] as number) || 450000))}.`,
-      type: "info"
-    });
- 
-    // Insight 3
-    const staleDealsCount = filteredDeals.filter(d => (d.currentStageDuration || 0) > 60).length;
-    const staleDealsVal = filteredDeals.filter(d => (d.currentStageDuration || 0) > 60).reduce((acc, cur) => acc + cur.opportunityValue, 0);
-    if (staleDealsCount > 0) {
-      list.push({
-        id: "ins-3",
-        title: lang === "TR" ? "Aksiyon Alınmayan Teklif Alarmları" : "Stale Proposal Alerts",
-        description: lang === "TR"
-          ? `Son 60 gündür hiçbir güncelleme bulunmayan ${staleDealsCount} adet teklif (${formatCur(staleDealsVal)}) yüksek risk oluşturmaktadır. Hızlı bir takip e-postası tetiklenmelidir.`
-          : `${staleDealsCount} proposals (${formatCur(staleDealsVal)}) with no updates in the last 60 days are at high risk. A quick follow-up email should be triggered.`,
-        type: "warning"
-      });
-    } else {
-      list.push({
-        id: "ins-3",
-        title: lang === "TR" ? "Boru Hattı Sağlığı Dengeli" : "Healthy Pipeline Health",
-        description: lang === "TR"
-          ? "Tüm aktif teklifler makul süreler içerisinde güncellenmiş görünüyor. 60+ gün üzeri bekleyen durağan fırsat bulunmamaktadır."
-          : "All active proposals appear to be updated within reasonable timeframes. There are no stale opportunities pending over 60 days.",
-        type: "success"
-      });
-    }
- 
-    // Insight 4
-    const topSalesperson = leaderboardData[0]?.name || "GP Admin";
-    list.push({
-      id: "ins-4",
-      title: lang === "TR" ? "Performans Lideri" : "Performance Leader",
-      description: lang === "TR"
-        ? `${topSalesperson} bu dönemde en yüksek ağırlıklı satış cirosunu (${formatCur(Math.round(leaderboardData[0]?.wonValue || 250000))}) realize ederek liderliği üstlendi.`
-        : `${topSalesperson} took the lead this period, realizing the highest weighted sales turnover of ${formatCur(Math.round(leaderboardData[0]?.wonValue || 250000))}.`,
-      type: "award"
-    });
- 
-    return list;
-  }, [filteredDeals, stats, leaderboardData, lang]);
-
   const [dashboardPageTab, setDashboardPageTab] = useState<"metrics" | "coach">("metrics");
 
   return (
@@ -1514,54 +1447,6 @@ export default function SalesDashboardView({ deals, onSelectDeal }: SalesDashboa
           </div>
         </div>
       )}
-
-      {/* MANAGEMENT INSIGHTS PANEL */}
-      <div className="bg-gradient-to-r from-slate-900 via-[#1e1d1c]/90 to-zinc-900 text-white p-5 rounded-2xl border border-zinc-800 shadow-lg relative overflow-hidden">
-        <div className="absolute top-0 right-0 p-8 opacity-5">
-          <Sparkles className="w-32 h-32" />
-        </div>
-        
-        <div className="flex items-center gap-2 mb-4 justify-between">
-          <div className="flex items-center gap-1.5">
-            <Sparkles className="w-5 h-5 text-amber-400 animate-pulse" />
-            <h3 className="text-xs font-black uppercase tracking-widest text-[#0078D4] dark:text-blue-400">
-              {lang === "TR" ? "Gemba Satış İstihbaratı Üst Düzey Yapay Zeka Öngörüleri" : "Gemba Sales Intelligence Executive AI Insights"}
-            </h3>
-          </div>
-          <span className="text-[9px] bg-zinc-800 text-zinc-400 px-2.5 py-1 rounded-sm uppercase tracking-widest font-bold">
-            {lang === "TR" ? "Gerçek Zamanlı Sentez" : "Realtime Synthesis"}
-          </span>
-        </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-          {generatedInsights.map((ins) => {
-            const colors = ins.type === "success" 
-              ? "border-emerald-500/30 bg-emerald-500/5 text-emerald-300"
-              : ins.type === "warning"
-              ? "border-rose-500/30 bg-rose-500/5 text-rose-300"
-              : ins.type === "award"
-              ? "border-amber-550/30 bg-amber-500/5 text-amber-300"
-              : "border-blue-500/30 bg-blue-500/5 text-blue-300";
-
-            return (
-              <div key={ins.id} className={`p-4 rounded-xl border ${colors} space-y-1.5 hover:scale-101 transition-all`}>
-                <div className="flex items-center gap-1.5 font-bold text-xs">
-                  {ins.type === "success" && <CheckCircle className="w-4 h-4 text-emerald-400" />}
-                  {ins.type === "warning" && <AlertTriangle className="w-4 h-4 text-rose-400 animate-bounce" />}
-                  {ins.type === "info" && <HelpCircle className="w-4 h-4 text-blue-400" />}
-                  {ins.type === "award" && <Award className="w-4 h-4 text-amber-400" />}
-                  <span className="tracking-tight uppercase font-extrabold text-[11px] text-white">
-                    {ins.title}
-                  </span>
-                </div>
-                <p className="text-[11px] leading-relaxed text-slate-300 font-medium">
-                  {ins.description}
-                </p>
-              </div>
-            );
-          })}
-        </div>
-      </div>
 
       {/* INTERACTIVE DATA VISUALIZATIONS GRID */}
       <div className="grid grid-cols-1 md:grid-cols-12 gap-5">

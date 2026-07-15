@@ -458,79 +458,79 @@ export default function SalesCoachAI({ deals }: SalesCoachAIProps) {
             <nav className="space-y-1 select-none">
               <button
                 onClick={() => setActiveSubmenu("assistant")}
-                className={`w-full flex items-center justify-between px-3 py-2.5 rounded-lg text-xs font-bold transition-all ${
+                className={`w-full flex items-center justify-start text-left px-3 py-2.5 rounded-lg text-xs font-bold transition-all ${
                   activeSubmenu === "assistant"
                     ? "bg-slate-100 dark:bg-zinc-800 text-rose-600 dark:text-rose-400 shadow-xs"
                     : "text-slate-600 dark:text-zinc-400 hover:bg-slate-50 dark:hover:bg-zinc-850"
                 }`}
               >
                 <div className="flex items-center gap-2.5">
-                  <Bot className="w-4 h-4" />
+                  <Bot className="w-4 h-4 flex-shrink-0" />
                   <span>{t("Sales Director Assistant")}</span>
                 </div>
-                {activeSubmenu === "assistant" && <ChevronRight className="w-3.5 h-3.5" />}
+                {activeSubmenu === "assistant" && <ChevronRight className="w-3.5 h-3.5 ml-auto flex-shrink-0" />}
               </button>
 
               <button
                 onClick={() => setActiveSubmenu("library")}
-                className={`w-full flex items-center justify-between px-3 py-2.5 rounded-lg text-xs font-bold transition-all ${
+                className={`w-full flex items-center justify-start text-left px-3 py-2.5 rounded-lg text-xs font-bold transition-all ${
                   activeSubmenu === "library"
                     ? "bg-slate-100 dark:bg-zinc-800 text-rose-600 dark:text-rose-400 shadow-xs"
                     : "text-slate-600 dark:text-zinc-400 hover:bg-slate-50 dark:hover:bg-zinc-850"
                 }`}
               >
                 <div className="flex items-center gap-2.5">
-                  <BookOpen className="w-4 h-4" />
+                  <BookOpen className="w-4 h-4 flex-shrink-0" />
                   <span>{t("Skill Library")}</span>
                 </div>
-                <span className="text-[10px] bg-amber-100 dark:bg-amber-950/50 text-amber-600 dark:text-amber-400 px-1.5 py-0.5 rounded-full font-mono">
+                <span className="text-[10px] bg-amber-100 dark:bg-amber-950/50 text-amber-600 dark:text-amber-400 px-1.5 py-0.5 rounded-full font-mono ml-auto flex-shrink-0">
                   {skills.length}
                 </span>
               </button>
 
               <button
                 onClick={() => setActiveSubmenu("history")}
-                className={`w-full flex items-center justify-between px-3 py-2.5 rounded-lg text-xs font-bold transition-all ${
+                className={`w-full flex items-center justify-start text-left px-3 py-2.5 rounded-lg text-xs font-bold transition-all ${
                   activeSubmenu === "history"
                     ? "bg-slate-100 dark:bg-zinc-800 text-rose-600 dark:text-rose-400 shadow-xs"
                     : "text-slate-600 dark:text-zinc-400 hover:bg-slate-50 dark:hover:bg-zinc-850"
                 }`}
               >
                 <div className="flex items-center gap-2.5">
-                  <History className="w-4 h-4" />
+                  <History className="w-4 h-4 flex-shrink-0" />
                   <span>{t("Recommendations History")}</span>
                 </div>
-                {activeSubmenu === "history" && <ChevronRight className="w-3.5 h-3.5" />}
+                {activeSubmenu === "history" && <ChevronRight className="w-3.5 h-3.5 ml-auto flex-shrink-0" />}
               </button>
 
               <button
                 onClick={() => setActiveSubmenu("knowledge")}
-                className={`w-full flex items-center justify-between px-3 py-2.5 rounded-lg text-xs font-bold transition-all ${
+                className={`w-full flex items-center justify-start text-left px-3 py-2.5 rounded-lg text-xs font-bold transition-all ${
                   activeSubmenu === "knowledge"
                     ? "bg-slate-100 dark:bg-zinc-800 text-rose-600 dark:text-rose-400 shadow-xs"
                     : "text-slate-600 dark:text-zinc-400 hover:bg-slate-50 dark:hover:bg-zinc-850"
                 }`}
               >
                 <div className="flex items-center gap-2.5">
-                  <FolderOpen className="w-4 h-4" />
+                  <FolderOpen className="w-4 h-4 flex-shrink-0" />
                   <span>{t("Knowledge Base")}</span>
                 </div>
-                {activeSubmenu === "knowledge" && <ChevronRight className="w-3.5 h-3.5" />}
+                {activeSubmenu === "knowledge" && <ChevronRight className="w-3.5 h-3.5 ml-auto flex-shrink-0" />}
               </button>
 
               <button
                 onClick={() => setActiveSubmenu("settings")}
-                className={`w-full flex items-center justify-between px-3 py-2.5 rounded-lg text-xs font-bold transition-all ${
+                className={`w-full flex items-center justify-start text-left px-3 py-2.5 rounded-lg text-xs font-bold transition-all ${
                   activeSubmenu === "settings"
                     ? "bg-slate-100 dark:bg-zinc-800 text-rose-600 dark:text-rose-400 shadow-xs"
                     : "text-slate-600 dark:text-zinc-400 hover:bg-slate-50 dark:hover:bg-zinc-850"
                 }`}
               >
                 <div className="flex items-center gap-2.5">
-                  <Settings className="w-4 h-4" />
+                  <Settings className="w-4 h-4 flex-shrink-0" />
                   <span>{t("AI Settings")}</span>
                 </div>
-                {activeSubmenu === "settings" && <ChevronRight className="w-3.5 h-3.5" />}
+                {activeSubmenu === "settings" && <ChevronRight className="w-3.5 h-3.5 ml-auto flex-shrink-0" />}
               </button>
             </nav>
           </div>
