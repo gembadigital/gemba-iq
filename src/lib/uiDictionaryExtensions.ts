@@ -1361,6 +1361,8 @@ export const uiDictionaryTR: Record<string, string> = {
   "Cover template saved locally (server error).": "Kapak şablonu yerel tarayıcıya kaydedildi (sunucu bağlantı hatası).",
   "Inner page template saved to server!": "İç sayfa şablonu başarıyla eklendi ve sunucuya kaydedildi!",
   "Inner page template saved locally (server error).": "İç sayfa şablonu yerel tarayıcıya kaydedildi (sunucu bağlantı hatası).",
+  "Cover template saved!": "Kapak şablonu kaydedildi!",
+  "Inner page template saved!": "İç sayfa şablonu kaydedildi!",
   "Terms saved permanently for all new proposals!": "Genel şartlar başarıyla kalıcı olarak sisteme kaydedildi!",
   "Create Proposal & Save to CRM": "Teklifi Oluştur & CRM'e Kaydet",
   "Desktop Outlook": "Masaüstü Outlook",

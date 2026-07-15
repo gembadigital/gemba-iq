@@ -494,14 +494,37 @@ export default function ServicesView({
     message?: string;
   }>({ isOpen: false, onConfirm: () => {} });
 
+  // Eski (kırık) sürümlerde kapak/sayfa görselleri gerçek veri yerine
+  // "/templates/cover_xxx.png" gibi hiçbir zaman diske yazılmamış statik bir
+  // yol string'i olarak kaydediliyordu (bkz. yükleme handler'larındaki not).
+  // Bu yardımcı, yalnızca gerçek base64 görsel verisini geçerli sayar; eski
+  // kırık kayıtları otomatik olarak "yüklenmemiş" durumuna geri döndürür ki
+  // kullanıcı görselin neden gözükmediğini anlayıp yeniden yükleyebilsin.
+  const isValidTemplateImageData = (v: unknown): v is string =>
+    typeof v === "string" && v.startsWith("data:image");
+
   // Store custom uploaded PNG template (cover.png) info per service Id
   const [uploadedCoverTemplates, setUploadedCoverTemplates] = useState<{[key: string]: {name: string, size: string, uploadedAt: string}}>(() => {
-    return CrmDb.getKv("crm_uploaded_cover_templates", {});
+    const meta = CrmDb.getKv<Record<string, { name: string; size: string; uploadedAt: string }>>("crm_uploaded_cover_templates", {});
+    const filtered: typeof meta = {};
+    Object.keys(meta).forEach(sid => {
+      if (isValidTemplateImageData(CrmDb.getKv<string | null>(`crm_png_template_cover_${sid}`, null))) {
+        filtered[sid] = meta[sid];
+      }
+    });
+    return filtered;
   });
 
   // Store custom uploaded PNG template (page.png) info per service Id
   const [uploadedPageTemplates, setUploadedPageTemplates] = useState<{[key: string]: {name: string, size: string, uploadedAt: string}}>(() => {
-    return CrmDb.getKv("crm_uploaded_page_templates", {});
+    const meta = CrmDb.getKv<Record<string, { name: string; size: string; uploadedAt: string }>>("crm_uploaded_page_templates", {});
+    const filtered: typeof meta = {};
+    Object.keys(meta).forEach(sid => {
+      if (isValidTemplateImageData(CrmDb.getKv<string | null>(`crm_png_template_page_${sid}`, null))) {
+        filtered[sid] = meta[sid];
+      }
+    });
+    return filtered;
   });
 
   const [inMemoryCoverTemplates, setInMemoryCoverTemplates] = useState<{[key: string]: string}>(() => {
@@ -509,7 +532,7 @@ export default function ServicesView({
     const parsed = CrmDb.getKv<Record<string, unknown>>("crm_uploaded_cover_templates", {});
     Object.keys(parsed).forEach(sid => {
       const content = CrmDb.getKv<string | null>(`crm_png_template_cover_${sid}`, null);
-      if (content) {
+      if (isValidTemplateImageData(content)) {
         loaded[sid] = content;
       }
     });
@@ -521,7 +544,7 @@ export default function ServicesView({
     const parsed = CrmDb.getKv<Record<string, unknown>>("crm_uploaded_page_templates", {});
     Object.keys(parsed).forEach(sid => {
       const content = CrmDb.getKv<string | null>(`crm_png_template_page_${sid}`, null);
-      if (content) {
+      if (isValidTemplateImageData(content)) {
         loaded[sid] = content;
       }
     });
@@ -530,47 +553,14 @@ export default function ServicesView({
 
   const activeEditCard = serviceCards.find(c => c.id === selectedEditCardId);
 
-  useEffect(() => {
-    // Sync templates with server-side persistent files on mount
-    fetch("/api/templates/list")
-      .then(res => {
-        if (!res.ok) throw new Error("Template sync error");
-        return res.json();
-      })
-      .then(data => {
-        if (data.covers && data.pages) {
-          const serverCovers: {[key: string]: string} = {};
-          const serverCoverMeta: {[key: string]: any} = {};
-          Object.keys(data.covers).forEach(sid => {
-            serverCovers[sid] = data.covers[sid].url;
-            serverCoverMeta[sid] = {
-              name: data.covers[sid].name,
-              size: data.covers[sid].size,
-              uploadedAt: data.covers[sid].uploadedAt
-            };
-          });
-
-          const serverPages: {[key: string]: string} = {};
-          const serverPageMeta: {[key: string]: any} = {};
-          Object.keys(data.pages).forEach(sid => {
-            serverPages[sid] = data.pages[sid].url;
-            serverPageMeta[sid] = {
-              name: data.pages[sid].name,
-              size: data.pages[sid].size,
-              uploadedAt: data.pages[sid].uploadedAt
-            };
-          });
-
-          setInMemoryCoverTemplates(prev => ({ ...serverCovers, ...prev }));
-          setUploadedCoverTemplates(prev => ({ ...serverCoverMeta, ...prev }));
-          setInMemoryPageTemplates(prev => ({ ...serverPages, ...prev }));
-          setUploadedPageTemplates(prev => ({ ...serverPageMeta, ...prev }));
-        }
-      })
-      .catch(err => {
-        console.warn("Failed to synchronize templates from server:", err);
-      });
-  }, []);
+  // Not: Kapak/Sayfa PNG şablonları artık doğrudan Supabase'e (CrmDb kvStore)
+  // base64 olarak kaydediliyor — bkz. uploadedCoverTemplates/inMemoryCoverTemplates
+  // initializer'ları yukarıda. Eskiden burada "/api/templates/list" adlı, yalnızca
+  // local Express dev sunucusunda var olan bir endpoint'ten senkronize ediliyordu;
+  // Vercel'de bu endpoint hiç var olmadığı için (statik dosya yolu diske hiç
+  // yazılmıyordu) yüklenen görseller "sisteme yüklendiği halde teklif şablonunda
+  // gözükmüyor" hatasına yol açıyordu. Artık gerçek görsel verisi kalıcı olarak
+  // Supabase'te saklandığından bu senkronizasyona ihtiyaç kalmadı.
 
   useEffect(() => {
     if (activeEditCard) {
@@ -2696,10 +2686,6 @@ export default function ServicesView({
                                   delete updatedMem[selectedEditCardId];
                                   setInMemoryCoverTemplates(updatedMem);
                                   CrmDb.setKv(`crm_png_template_cover_${selectedEditCardId}`, "");
-
-                                  // Delete from server
-                                  fetch(`/api/templates/cover/${selectedEditCardId}`, { method: "DELETE" })
-                                    .catch(err => console.warn("Failed to delete cover template from server:", err));
                                 }}
                                 className="text-red-600 hover:text-red-700 p-1 text-[10px] font-bold cursor-pointer transition-colors"
                               >
@@ -2735,48 +2721,29 @@ export default function ServicesView({
                                       uploadedAt: new Date().toLocaleDateString("tr-TR")
                                     };
 
-                                    // Upload to server
-                                    fetch(`/api/templates/cover/${selectedEditCardId}`, {
-                                      method: "POST",
-                                      headers: { "Content-Type": "application/json" },
-                                      body: JSON.stringify({
-                                        name: nextInfo.name,
-                                        size: nextInfo.size,
-                                        data: base64
-                                      })
-                                    })
-                                    .then(() => {
-                                      setInMemoryCoverTemplates(prev => ({
-                                        ...prev,
-                                        [selectedEditCardId]: `/templates/cover_${selectedEditCardId}.png`
-                                      }));
-                                      const updated = {
-                                        ...uploadedCoverTemplates,
-                                        [selectedEditCardId]: nextInfo
-                                      };
-                                      setUploadedCoverTemplates(updated);
-                                      CrmDb.setKv("crm_uploaded_cover_templates", updated);
-                                      CrmDb.setKv(`crm_png_template_cover_${selectedEditCardId}`, `/templates/cover_${selectedEditCardId}.png`);
-                                      setCoverUploadStatus({ type: "success", text: t("Cover template saved to server!") });
-                                      setTimeout(() => setCoverUploadStatus(null), 3000);
-                                    })
-                                    .catch(err => {
-                                      console.error("Failed to upload cover template to server:", err);
-                                      // Fallback to local storage
-                                      setInMemoryCoverTemplates(prev => ({
-                                        ...prev,
-                                        [selectedEditCardId]: base64
-                                      }));
-                                      const updated = {
-                                        ...uploadedCoverTemplates,
-                                        [selectedEditCardId]: nextInfo
-                                      };
-                                      setUploadedCoverTemplates(updated);
-                                      CrmDb.setKv("crm_uploaded_cover_templates", updated);
-                                      CrmDb.setKv(`crm_png_template_cover_${selectedEditCardId}`, base64);
-                                      setCoverUploadStatus({ type: "warning", text: t("Cover template saved locally (server error).") });
-                                      setTimeout(() => setCoverUploadStatus(null), 4000);
-                                    });
+                                    // Item: "Cover sisteme yüklendiği halde teklif şablonunda gözükmüyor"
+                                    // kök nedeni — görsel eskiden yalnızca local Express dev'de var olan
+                                    // /api/templates/* endpoint'ine POST edilip, o istek "başarılı" sayılarak
+                                    // (res.ok kontrolü yapılmadan) kırık bir statik dosya yoluna
+                                    // (/templates/cover_xxx.png) ayarlanıyordu. Production'da (Vercel) o
+                                    // dosya hiçbir zaman diske yazılmadığından teklif motoru arka plan
+                                    // görseli olarak bu yolu kullanmaya çalışınca hiçbir şey görünmüyordu.
+                                    // Artık gerçek base64 görsel verisi doğrudan CrmDb (Supabase) üzerinden
+                                    // kalıcı olarak saklanıyor — aynı organizasyondaki her kullanıcı ve
+                                    // teklif motoru için güvenilir şekilde erişilebilir.
+                                    setInMemoryCoverTemplates(prev => ({
+                                      ...prev,
+                                      [selectedEditCardId]: base64
+                                    }));
+                                    const updated = {
+                                      ...uploadedCoverTemplates,
+                                      [selectedEditCardId]: nextInfo
+                                    };
+                                    setUploadedCoverTemplates(updated);
+                                    CrmDb.setKv("crm_uploaded_cover_templates", updated);
+                                    CrmDb.setKv(`crm_png_template_cover_${selectedEditCardId}`, base64);
+                                    setCoverUploadStatus({ type: "success", text: t("Cover template saved!") });
+                                    setTimeout(() => setCoverUploadStatus(null), 3000);
                                   };
                                   reader.readAsDataURL(file);
                                 }
@@ -2818,10 +2785,6 @@ export default function ServicesView({
                                   delete updatedMem[selectedEditCardId];
                                   setInMemoryPageTemplates(updatedMem);
                                   CrmDb.setKv(`crm_png_template_page_${selectedEditCardId}`, "");
-
-                                  // Delete from server
-                                  fetch(`/api/templates/page/${selectedEditCardId}`, { method: "DELETE" })
-                                    .catch(err => console.warn("Failed to delete page template from server:", err));
                                 }}
                                 className="text-red-600 hover:text-red-700 p-1 text-[10px] font-bold cursor-pointer transition-colors"
                               >
@@ -2856,48 +2819,22 @@ export default function ServicesView({
                                       uploadedAt: new Date().toLocaleDateString("tr-TR")
                                     };
 
-                                    // Upload to server
-                                    fetch(`/api/templates/page/${selectedEditCardId}`, {
-                                      method: "POST",
-                                      headers: { "Content-Type": "application/json" },
-                                      body: JSON.stringify({
-                                        name: nextInfo.name,
-                                        size: nextInfo.size,
-                                        data: base64
-                                      })
-                                    })
-                                    .then(() => {
-                                      setInMemoryPageTemplates(prev => ({
-                                        ...prev,
-                                        [selectedEditCardId]: `/templates/page_${selectedEditCardId}.png`
-                                      }));
-                                      const updated = {
-                                        ...uploadedPageTemplates,
-                                        [selectedEditCardId]: nextInfo
-                                      };
-                                      setUploadedPageTemplates(updated);
-                                      CrmDb.setKv("crm_uploaded_page_templates", updated);
-                                      CrmDb.setKv(`crm_png_template_page_${selectedEditCardId}`, `/templates/page_${selectedEditCardId}.png`);
-                                      setPageUploadStatus({ type: "success", text: t("Inner page template saved to server!") });
-                                      setTimeout(() => setPageUploadStatus(null), 3000);
-                                    })
-                                    .catch(err => {
-                                      console.error("Failed to upload page template to server:", err);
-                                      // Fallback to local storage
-                                      setInMemoryPageTemplates(prev => ({
-                                        ...prev,
-                                        [selectedEditCardId]: base64
-                                      }));
-                                      const updated = {
-                                        ...uploadedPageTemplates,
-                                        [selectedEditCardId]: nextInfo
-                                      };
-                                      setUploadedPageTemplates(updated);
-                                      CrmDb.setKv("crm_uploaded_page_templates", updated);
-                                      CrmDb.setKv(`crm_png_template_page_${selectedEditCardId}`, base64);
-                                      setPageUploadStatus({ type: "warning", text: t("Inner page template saved locally (server error).") });
-                                      setTimeout(() => setPageUploadStatus(null), 4000);
-                                    });
+                                    // Aynı düzeltme: gerçek base64 görsel verisi doğrudan CrmDb
+                                    // (Supabase) üzerinden kalıcı olarak saklanıyor — bkz. kapak
+                                    // yükleme handler'ındaki açıklama.
+                                    setInMemoryPageTemplates(prev => ({
+                                      ...prev,
+                                      [selectedEditCardId]: base64
+                                    }));
+                                    const updated = {
+                                      ...uploadedPageTemplates,
+                                      [selectedEditCardId]: nextInfo
+                                    };
+                                    setUploadedPageTemplates(updated);
+                                    CrmDb.setKv("crm_uploaded_page_templates", updated);
+                                    CrmDb.setKv(`crm_png_template_page_${selectedEditCardId}`, base64);
+                                    setPageUploadStatus({ type: "success", text: t("Inner page template saved!") });
+                                    setTimeout(() => setPageUploadStatus(null), 3000);
                                   };
                                   reader.readAsDataURL(file);
                                 }
