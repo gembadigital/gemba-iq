@@ -99,7 +99,7 @@ app.get("/api/invitations/config", async (req, res) => {
 // API: Update organization member application role
 app.post("/api/organization/members/role", async (req, res) => {
   try {
-    const handler = (await import("./api/organization/members/role.js")).default;
+    const handler = (await import("./api/organization/[...action].js")).membersRoleHandler;
     await handler(req, res);
   } catch (error) {
     console.error("Organization role update handler failed:", error);
@@ -110,7 +110,7 @@ app.post("/api/organization/members/role", async (req, res) => {
 // API: Permanently delete a user (ADMIN only)
 app.post("/api/organization/members/delete", async (req, res) => {
   try {
-    const handler = (await import("./api/organization/members/delete.js")).default;
+    const handler = (await import("./api/organization/[...action].js")).membersDeleteHandler;
     await handler(req, res);
   } catch (error) {
     console.error("Organization member delete handler failed:", error);
@@ -121,7 +121,7 @@ app.post("/api/organization/members/delete", async (req, res) => {
 // API: Scan a connected mailbox (Organization or Personal) for Email Lead Discovery
 app.post("/api/mail/scan", async (req, res) => {
   try {
-    const handler = (await import("./api/mail/scan.js")).default;
+    const handler = (await import("./api/mail/[...action].js")).scanHandler;
     await handler(req, res);
   } catch (error) {
     console.error("Mail scan handler failed:", error);
@@ -132,7 +132,7 @@ app.post("/api/mail/scan", async (req, res) => {
 // API: Organization-scoped Microsoft 365 mailbox
 app.all("/api/organization/mailbox", async (req, res) => {
   try {
-    const handler = (await import("./api/organization/mailbox.js")).default;
+    const handler = (await import("./api/organization/[...action].js")).mailboxHandler;
     await handler(req, res);
   } catch (error) {
     console.error("Organization mailbox handler failed:", error);
@@ -386,25 +386,13 @@ app.post("/api/auth/validate-token", async (req, res) => {
 });
 
 // API: Proxy Send Mail via Microsoft Graph
-// We proxy this through Express to guarantee request reliability, handle headers cleanly, and log outcomes if required.
+// Delegates to api/mail/[...action].js so this route's logic (including the
+// "source": "personal" option) stays identical between local dev and Vercel
+// production instead of drifting apart as two separate implementations.
 app.post("/api/mail/send", async (req, res) => {
-  const { recipient, recipients, cc, bcc, subject, body, attachments } = req.body;
-  if (!(recipient || recipients) || !subject || !body) {
-    return res.status(400).json({ error: "Missing required mail parameters (recipient/recipients, subject, body)." });
-  }
-
   try {
-    const context = await getOrganizationMailboxForRequest(req, { requireConnected: true });
-    await sendGraphMailWithMailbox(context.adminClient, context.organizationId, context.mailbox, {
-      recipient,
-      recipients,
-      cc,
-      bcc,
-      subject,
-      body,
-      attachments,
-    });
-    res.json({ success: true, timestamp: new Date().toISOString() });
+    const handler = (await import("./api/mail/[...action].js")).sendHandler;
+    await handler(req, res);
   } catch (error: any) {
     console.error("Microsoft Graph mail sending failed:", error);
     res.status(error.status || 500).json({ error: error.message || "Unknown mail merge sending error." });
@@ -413,21 +401,9 @@ app.post("/api/mail/send", async (req, res) => {
 
 // API: Proxy Create Message Draft via Microsoft Graph
 app.post("/api/mail/draft", async (req, res) => {
-  const { recipient, subject, body, attachments } = req.body;
-  if (!recipient || !subject || !body) {
-    return res.status(400).json({ error: "Missing required mail parameters (recipient, subject, body)." });
-  }
-
   try {
-    const context = await getOrganizationMailboxForRequest(req, { requireConnected: true });
-    const data = await sendGraphMailWithMailbox(
-      context.adminClient,
-      context.organizationId,
-      context.mailbox,
-      { recipient, subject, body, attachments },
-      { draft: true }
-    );
-    res.json({ success: true, id: data.id, webLink: data.webLink, timestamp: new Date().toISOString() });
+    const handler = (await import("./api/mail/[...action].js")).draftHandler;
+    await handler(req, res);
   } catch (error: any) {
     console.error("Microsoft Graph draft creation failed:", error);
     res.status(error.status || 500).json({ error: error.message || "Unknown mail merge draft error." });
@@ -745,13 +721,13 @@ ${pastedContent}`;
 });
 
 // API: Gemini AI Strategy Assistant
-// Delegates to lib/server/geminiCore.js so this route's logic stays identical
-// between local dev (this Express route) and production (api/gemini/assist.js,
-// the actual Vercel serverless function that must exist for this path to work
-// when deployed).
+// Delegates to lib/server/geminiCore.js via the api/gemini/[...action].js
+// catch-all so this route's logic stays identical between local dev (this
+// Express route) and production (the actual Vercel serverless function that
+// must exist for this path to work when deployed).
 app.post("/api/gemini/assist", async (req, res) => {
   try {
-    const handler = (await import("./api/gemini/assist.js")).default;
+    const handler = (await import("./api/gemini/[...action].js")).assistHandler;
     await handler(req, res);
   } catch (error) {
     console.error("Gemini Assistant route error:", error);
@@ -760,12 +736,12 @@ app.post("/api/gemini/assist", async (req, res) => {
 });
 
 // API: Company Search — grounded in real Google Search results (no hallucinated companies).
-// Used by CompanyDiscoveryView.tsx's "Gemba Search" box. Delegates to
-// lib/server/geminiCore.js / api/gemini/company-search.js for the same reason
-// as /api/gemini/assist above.
+// Used by CompanyDiscoveryView.tsx's "Gemba Search" box. Delegates via the
+// same api/gemini/[...action].js catch-all for the same reason as
+// /api/gemini/assist above.
 app.post("/api/gemini/company-search", async (req, res) => {
   try {
-    const handler = (await import("./api/gemini/company-search.js")).default;
+    const handler = (await import("./api/gemini/[...action].js")).companySearchHandler;
     await handler(req, res);
   } catch (error) {
     console.error("Gemini Company Search route error:", error);
@@ -857,7 +833,7 @@ Target Channel Context: "${targetChannel || 'Lean Consulting Page'}"`;
   }
 });
 
-// API: Gemini AI Sales Assistant Company Screener (delegates to shared core; Vercel uses api/gemini/analyze-company.js)
+// API: Gemini AI Sales Assistant Company Screener (delegates to shared core; Vercel uses api/gemini/[...action].js)
 app.post("/api/gemini/analyze-company", async (req, res) => {
   try {
     const result = await runCompanyAnalysis({
