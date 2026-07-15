@@ -116,6 +116,9 @@ export default function EmailLeadDiscoveryView({
   const [discoveredLeads, setDiscoveredLeads] = useState<DiscoveredLead[]>([]);
   const [filteredOutLeads, setFilteredOutLeads] = useState<FilteredOutLead[]>([]);
 
+  // Row selection (checkboxes) for bulk CRM actions on a subset of leads
+  const [selectedLeadIds, setSelectedLeadIds] = useState<string[]>([]);
+
   // Show Toast Helper
   const triggerToast = (msg: string, type: "success" | "info" = "success") => {
     setToast({ message: msg, type });
@@ -624,6 +627,77 @@ export default function EmailLeadDiscoveryView({
     triggerToast(t("All {count} new leads transferred to Lead database!").replace("{count}", String(mappedLeads.length)));
   };
 
+  // Selection (checkbox) helpers — lets the user pick a subset of leads
+  // instead of only "add one" or "add every new lead".
+  const toggleLeadSelection = (id: string) => {
+    setSelectedLeadIds(prev => prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id]);
+  };
+
+  const getSelectedNewLeads = () => discoveredLeads.filter(l => selectedLeadIds.includes(l.id) && l.status === "new");
+
+  // Bulk action on just the checked rows → Master Leads
+  const handleBulkAddSelectedToLeads = () => {
+    const selected = getSelectedNewLeads();
+    if (selected.length === 0) {
+      triggerToast(t("No new leads to add."), "info");
+      return;
+    }
+    const mappedLeads: LeadProfile[] = selected.map((lead, index) => {
+      const nameParts = lead.name.split(" ");
+      const fName = nameParts[0] || "Unknown";
+      const lName = nameParts.slice(1).join(" ") || "Prospect";
+      return {
+        id: `lead_${Date.now()}_sel_${index}`,
+        no: index + 1,
+        firstName: fName,
+        lastName: lName,
+        email: lead.email,
+        company: lead.company,
+        department: lead.jobTitle,
+        address: `Email Discovery (${lead.sourceFolder})`,
+        industry: "B2B Prospect",
+        leadDemand: `Discovered from Email`,
+        leadStatus: "New",
+        leadSegment: lead.leadScore >= 90 ? "Hot Lead" : lead.leadScore >= 75 ? "Warm Lead" : "Cold",
+        customField1: `First Contact: ${lead.firstContactDate}`,
+        customField2: `Website: ${lead.website}`,
+        deliveryStatus: "idle",
+        openCount: 0,
+        addedBy: actorName
+      };
+    });
+    onAddLeadsToMaster(mappedLeads);
+    setDiscoveredLeads(prev => prev.map(item => selectedLeadIds.includes(item.id) ? { ...item, status: "added_leads" } : item));
+    setSelectedLeadIds([]);
+    triggerToast(t("{count} selected leads transferred to Lead database!").replace("{count}", String(mappedLeads.length)));
+  };
+
+  // Bulk action on just the checked rows → Companies (Müşteriler)
+  const handleBulkAddSelectedToCompanies = () => {
+    const selected = getSelectedNewLeads();
+    if (selected.length === 0) {
+      triggerToast(t("No new leads to add."), "info");
+      return;
+    }
+    selected.forEach(lead => onAddCompaniesToMaster?.(lead.company, lead.website, "Tech & Operations"));
+    setDiscoveredLeads(prev => prev.map(item => selectedLeadIds.includes(item.id) ? { ...item, status: "added_companies" } : item));
+    setSelectedLeadIds([]);
+    triggerToast(t("{count} companies added to Companies registry!").replace("{count}", String(selected.length)));
+  };
+
+  // Bulk action on just the checked rows → Target Accounts
+  const handleBulkAddSelectedToTargetAccounts = () => {
+    const selected = getSelectedNewLeads();
+    if (selected.length === 0) {
+      triggerToast(t("No new leads to add."), "info");
+      return;
+    }
+    selected.forEach(lead => onAddTargetAccount?.(lead.company, lead.website));
+    setDiscoveredLeads(prev => prev.map(item => selectedLeadIds.includes(item.id) ? { ...item, status: "added_target" } : item));
+    setSelectedLeadIds([]);
+    triggerToast(t("{count} companies added to Target Accounts!").replace("{count}", String(selected.length)));
+  };
+
   // Score badge helper
   const getScoreColor = (score: number) => {
     if (score >= 90) return "bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-950/40 dark:text-emerald-400 dark:border-emerald-900";
@@ -644,6 +718,17 @@ export default function EmailLeadDiscoveryView({
     
     return matchesSearch;
   });
+
+  const selectableLeadIds = filteredDiscoveredLeads.filter(l => l.status === "new").map(l => l.id);
+  const allVisibleSelected = selectableLeadIds.length > 0 && selectableLeadIds.every(id => selectedLeadIds.includes(id));
+
+  const toggleSelectAllVisible = () => {
+    if (allVisibleSelected) {
+      setSelectedLeadIds(prev => prev.filter(id => !selectableLeadIds.includes(id)));
+    } else {
+      setSelectedLeadIds(prev => Array.from(new Set([...prev, ...selectableLeadIds])));
+    }
+  };
 
   // Computed Dashboards Stats
   const newContactsCount = discoveredLeads.length;
@@ -1083,7 +1168,7 @@ export default function EmailLeadDiscoveryView({
               </button>
             </div>
 
-            {/* Bulk Button */}
+            {/* Bulk Button (acts on every "new" lead, ignoring selection) */}
             <button
               onClick={handleBulkAddToLeads}
               className="text-[11px] font-bold bg-indigo-650 hover:bg-indigo-600 text-white px-3 py-1.5 rounded-lg flex items-center gap-1 cursor-pointer transition-all shadow-sm"
@@ -1095,6 +1180,48 @@ export default function EmailLeadDiscoveryView({
           </div>
 
         </div>
+
+        {/* Selection Action Bar — appears once at least one row checkbox is ticked */}
+        {selectedLeadIds.length > 0 && (
+          <div className="px-5 py-3 border-b border-indigo-100 bg-indigo-50/60 dark:border-indigo-900/40 dark:bg-indigo-950/20 flex flex-wrap items-center justify-between gap-3">
+            <span className="text-[11px] font-bold text-indigo-700 dark:text-indigo-400">
+              {t("{count} leads selected").replace("{count}", String(selectedLeadIds.length))}
+            </span>
+            <div className="flex flex-wrap items-center gap-2">
+              <button
+                type="button"
+                onClick={handleBulkAddSelectedToLeads}
+                className="text-[10px] font-bold bg-indigo-650 hover:bg-indigo-600 text-white px-2.5 py-1.5 rounded-lg flex items-center gap-1 cursor-pointer transition-all"
+              >
+                <UserPlus className="w-3 h-3" />
+                <span>{t("Add Selected to Master Leads")}</span>
+              </button>
+              <button
+                type="button"
+                onClick={handleBulkAddSelectedToCompanies}
+                className="text-[10px] font-bold bg-emerald-600 hover:bg-emerald-500 text-white px-2.5 py-1.5 rounded-lg flex items-center gap-1 cursor-pointer transition-all"
+              >
+                <Building className="w-3 h-3" />
+                <span>{t("Add Selected to Customers")}</span>
+              </button>
+              <button
+                type="button"
+                onClick={handleBulkAddSelectedToTargetAccounts}
+                className="text-[10px] font-bold bg-sky-650 hover:bg-sky-600 text-white px-2.5 py-1.5 rounded-lg flex items-center gap-1 cursor-pointer transition-all"
+              >
+                <Target className="w-3 h-3" />
+                <span>{t("Add Selected to Target Accounts")}</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => setSelectedLeadIds([])}
+                className="text-[10px] font-semibold text-indigo-600 dark:text-indigo-400 px-2 py-1.5 rounded-lg cursor-pointer hover:underline"
+              >
+                {t("Clear Selection")}
+              </button>
+            </div>
+          </div>
+        )}
 
         {/* Lead Rows Table */}
         {filteredDiscoveredLeads.length === 0 ? (
@@ -1108,6 +1235,16 @@ export default function EmailLeadDiscoveryView({
             <table className="w-full border-collapse text-left text-xs">
               <thead>
                 <tr className="border-b border-slate-100 bg-slate-50 text-[10px] font-extrabold uppercase text-slate-400 tracking-wider dark:border-zinc-900 dark:bg-zinc-900/40">
+                  <th className="px-4 py-3 w-8">
+                    <input
+                      type="checkbox"
+                      checked={allVisibleSelected}
+                      onChange={toggleSelectAllVisible}
+                      disabled={selectableLeadIds.length === 0}
+                      title={t("Select all")}
+                      className="rounded border-slate-300 text-indigo-600 focus:ring-indigo-500 w-3.5 h-3.5 cursor-pointer accent-indigo-600 disabled:opacity-30"
+                    />
+                  </th>
                   <th className="px-5 py-3">{t("Contact")}</th>
                   <th className="px-5 py-3">{t("Company & Website")}</th>
                   <th className="px-5 py-3">{t("Suggested Company Card")}</th>
@@ -1121,7 +1258,21 @@ export default function EmailLeadDiscoveryView({
               <tbody className="divide-y divide-slate-100 dark:divide-zinc-900">
                 {filteredDiscoveredLeads.map((lead) => (
                   <tr key={lead.id} className="hover:bg-slate-50/50 transition-colors group dark:hover:bg-zinc-900/30">
-                    
+
+                    {/* Row checkbox */}
+                    <td className="px-4 py-4">
+                      {lead.status === "new" ? (
+                        <input
+                          type="checkbox"
+                          checked={selectedLeadIds.includes(lead.id)}
+                          onChange={() => toggleLeadSelection(lead.id)}
+                          className="rounded border-slate-300 text-indigo-600 focus:ring-indigo-500 w-3.5 h-3.5 cursor-pointer accent-indigo-600"
+                        />
+                      ) : (
+                        <span className="block w-3.5 h-3.5" />
+                      )}
+                    </td>
+
                     {/* Name & Title */}
                     <td className="px-5 py-4 w-96 max-w-sm">
                       <div className="space-y-1.5">
