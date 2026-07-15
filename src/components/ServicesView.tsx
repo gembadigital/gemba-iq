@@ -473,8 +473,11 @@ export default function ServicesView({
   const [editTerms, setEditTerms] = useState("");
   const [pastePrompt, setPastePrompt] = useState(false);
   const [isTableCollapsed, setIsTableCollapsed] = useState(false);
+  const [isCoverTextCollapsed, setIsCoverTextCollapsed] = useState(false);
   const [rawPastedHtml, setRawPastedHtml] = useState("");
   const [isAiConverting, setIsAiConverting] = useState(false);
+  const [coverUploadStatus, setCoverUploadStatus] = useState<{ type: "success" | "warning"; text: string } | null>(null);
+  const [pageUploadStatus, setPageUploadStatus] = useState<{ type: "success" | "warning"; text: string } | null>(null);
 
   // Custom stylish delete confirmation state
   const [confirmDeleteModal, setConfirmDeleteModal] = useState<{
@@ -2338,15 +2341,25 @@ export default function ServicesView({
                   <div className="flex items-center justify-between">
                     <label className="text-[11px] font-bold text-slate-500 dark:text-slate-400 flex items-center gap-1">
                       <Type className="w-3.5 h-3.5" />
-                      Varsayılan Giriş & Kapak Taslak Yazısı (Rich Text HTML)
+                      Varsayılan Giriş & Kapak Taslak Yazısı
                     </label>
+                    <button
+                      type="button"
+                      onClick={() => setIsCoverTextCollapsed(!isCoverTextCollapsed)}
+                      className="text-xs font-black bg-slate-100 hover:bg-slate-200 dark:bg-[#252423] dark:hover:bg-[#323130] text-slate-700 dark:text-slate-200 w-6 h-6 rounded flex items-center justify-center cursor-pointer border border-[#EDEBE9] dark:border-[#323130] transition-colors"
+                      title={isCoverTextCollapsed ? "Alanı Genişlet" : "Alanı Küçült / Gizle"}
+                    >
+                      {isCoverTextCollapsed ? "+" : "-"}
+                    </button>
                   </div>
-                  <textarea
-                    rows={4}
-                    value={editCoverPage}
-                    onChange={(e) => setEditCoverPage(e.target.value)}
-                    className="w-full bg-slate-50 dark:bg-[#252423] border border-[#EDEBE9] dark:border-[#323130] rounded p-2.5 text-xs font-mono focus:ring-1 focus:ring-[#0078D4] focus:outline-hidden"
-                  />
+                  {!isCoverTextCollapsed && (
+                    <textarea
+                      rows={4}
+                      value={editCoverPage}
+                      onChange={(e) => setEditCoverPage(e.target.value)}
+                      className="w-full bg-slate-50 dark:bg-[#252423] border border-[#EDEBE9] dark:border-[#323130] rounded p-2.5 text-xs leading-relaxed focus:ring-1 focus:ring-[#0078D4] focus:outline-hidden animate-fadeIn"
+                    />
+                  )}
                 </div>
 
                 {/* Activity & Content Table Rich Editor */}
@@ -2498,18 +2511,20 @@ export default function ServicesView({
                       <span className="text-[10px] bg-red-100 text-red-800 dark:bg-red-950/40 dark:text-red-300 font-semibold px-2 py-0.5 rounded uppercase tracking-wider">{t("A4 PNG Engine")}</span>
                     </div>
 
-                    <div className="p-3 bg-blue-50/40 dark:bg-blue-950/20 rounded border border-blue-100 dark:border-blue-900/30 text-[11px] text-blue-800 dark:text-blue-300 leading-relaxed flex items-start gap-2">
-                      <Info className="w-4 h-4 flex-shrink-0 mt-0.5" />
-                      <div>
-                        Yüklenen kapak ve iç sayfa şablonları, teklif çıktısında arka plan görseli olarak ölçeklendirilir. Bu hizmete özel yüklenmediğinde, yüklenen diğer kurumsal şablonlar varsayılan olarak kullanılır; eğer hiçbir şablon yüklenmemişse standart <strong>cover.png</strong> ve <strong>page.png</strong> kurumsal görselleri kullanılacaktır.
-                      </div>
-                    </div>
-
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       {/* 1. COVER PAGE PNG UPLOAD */}
                       <div className="space-y-2 p-3 bg-white dark:bg-[#1b1a19] rounded-md border border-[#EDEBE9] dark:border-[#323130]">
                         <span className="text-xs font-bold text-slate-700 dark:text-slate-300 block">1. Kapak Sayfa Şablonu (cover.png alternatifi)</span>
-                        
+                        {coverUploadStatus && (
+                          <span className={`text-[10px] font-bold px-2 py-1 rounded flex items-center gap-1 animate-fadeIn ${
+                            coverUploadStatus.type === "success"
+                              ? "bg-emerald-50 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-400"
+                              : "bg-amber-50 text-amber-700 dark:bg-amber-950/40 dark:text-amber-400"
+                          }`}>
+                            <Check className="w-3 h-3" /> {coverUploadStatus.text}
+                          </span>
+                        )}
+
                         {uploadedCoverTemplates[selectedEditCardId] ? (
                           <div className="space-y-2">
                             <div className="flex items-center justify-between bg-slate-50 dark:bg-[#252423] p-2 rounded border border-[#EDEBE9] dark:border-[#323130]">
@@ -2597,7 +2612,8 @@ export default function ServicesView({
                                       setUploadedCoverTemplates(updated);
                                       CrmDb.setKv("crm_uploaded_cover_templates", updated);
                                       CrmDb.setKv(`crm_png_template_cover_${selectedEditCardId}`, `/templates/cover_${selectedEditCardId}.png`);
-                                      alert(t("Cover template saved to server!"));
+                                      setCoverUploadStatus({ type: "success", text: t("Cover template saved to server!") });
+                                      setTimeout(() => setCoverUploadStatus(null), 3000);
                                     })
                                     .catch(err => {
                                       console.error("Failed to upload cover template to server:", err);
@@ -2613,7 +2629,8 @@ export default function ServicesView({
                                       setUploadedCoverTemplates(updated);
                                       CrmDb.setKv("crm_uploaded_cover_templates", updated);
                                       CrmDb.setKv(`crm_png_template_cover_${selectedEditCardId}`, base64);
-                                      alert(t("Cover template saved locally (server error)."));
+                                      setCoverUploadStatus({ type: "warning", text: t("Cover template saved locally (server error).") });
+                                      setTimeout(() => setCoverUploadStatus(null), 4000);
                                     });
                                   };
                                   reader.readAsDataURL(file);
@@ -2627,7 +2644,16 @@ export default function ServicesView({
                       {/* 2. INNER PAGE PNG UPLOAD */}
                       <div className="space-y-2 p-3 bg-white dark:bg-[#1b1a19] rounded-md border border-[#EDEBE9] dark:border-[#323130]">
                         <span className="text-xs font-bold text-slate-700 dark:text-slate-300 block">2. Standart İç Sayfa Şablonu (page.png alternatifi)</span>
-                        
+                        {pageUploadStatus && (
+                          <span className={`text-[10px] font-bold px-2 py-1 rounded flex items-center gap-1 animate-fadeIn ${
+                            pageUploadStatus.type === "success"
+                              ? "bg-emerald-50 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-400"
+                              : "bg-amber-50 text-amber-700 dark:bg-amber-950/40 dark:text-amber-400"
+                          }`}>
+                            <Check className="w-3 h-3" /> {pageUploadStatus.text}
+                          </span>
+                        )}
+
                         {uploadedPageTemplates[selectedEditCardId] ? (
                           <div className="space-y-2">
                             <div className="flex items-center justify-between bg-slate-50 dark:bg-[#252423] p-2 rounded border border-[#EDEBE9] dark:border-[#323130]">
@@ -2715,7 +2741,8 @@ export default function ServicesView({
                                       setUploadedPageTemplates(updated);
                                       CrmDb.setKv("crm_uploaded_page_templates", updated);
                                       CrmDb.setKv(`crm_png_template_page_${selectedEditCardId}`, `/templates/page_${selectedEditCardId}.png`);
-                                      alert(t("Inner page template saved to server!"));
+                                      setPageUploadStatus({ type: "success", text: t("Inner page template saved to server!") });
+                                      setTimeout(() => setPageUploadStatus(null), 3000);
                                     })
                                     .catch(err => {
                                       console.error("Failed to upload page template to server:", err);
@@ -2731,7 +2758,8 @@ export default function ServicesView({
                                       setUploadedPageTemplates(updated);
                                       CrmDb.setKv("crm_uploaded_page_templates", updated);
                                       CrmDb.setKv(`crm_png_template_page_${selectedEditCardId}`, base64);
-                                      alert(t("Inner page template saved locally (server error)."));
+                                      setPageUploadStatus({ type: "warning", text: t("Inner page template saved locally (server error).") });
+                                      setTimeout(() => setPageUploadStatus(null), 4000);
                                     });
                                   };
                                   reader.readAsDataURL(file);
