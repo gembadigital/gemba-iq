@@ -974,7 +974,12 @@ label,
 }
 
 /* 4. BUTTON SYSTEM */
-button[class*="px-"]:not(.tab-header):not([class*="p-1"]):not([class*="p-1.5"]):not([class*="p-2"]):not([class*="w-8"]),
+/* Item 6: "justify-start" içeren butonlar (ör. Yapay Zeka Satış Koçu sol menüsü)
+   bilinçli olarak sola yaslanmak istiyor — bu global "unified button" kuralı
+   justify-content:center !important ile onu eziyordu, bu yüzden hizalama
+   düzeltmeleri kalıcı olmuyordu. Artık justify-start/text-left taşıyan
+   butonlar bu zorlamadan muaf. */
+button[class*="px-"]:not(.tab-header):not([class*="p-1"]):not([class*="p-1.5"]):not([class*="p-2"]):not([class*="w-8"]):not([class*="justify-start"]),
 button.btn-primary-unified,
 button.unified-btn {
   height: 38px !important; /* Industrial height: 38px */
@@ -986,6 +991,14 @@ button.unified-btn {
   align-items: center !important;
   justify-content: center !important;
   gap: 8px !important;
+}
+
+button[class*="px-"][class*="justify-start"]:not(.tab-header) {
+  height: auto !important;
+  border-radius: 8px !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: flex-start !important;
 }
 
 /* Buttons color mapping to primary (#1E3A5F) */

@@ -2706,16 +2706,9 @@ export default function ServicesView({
                                 Kaldır
                               </button>
                             </div>
-                            {inMemoryCoverTemplates[selectedEditCardId] && (
-                              <div className="border border-slate-150 dark:border-zinc-800 rounded p-1.5 bg-slate-50/50 dark:bg-zinc-900/40 flex items-center justify-center">
-                                <img
-                                  src={inMemoryCoverTemplates[selectedEditCardId]}
-                                  alt="Cover Template Preview"
-                                  className="max-h-24 object-contain rounded border border-slate-200 dark:border-zinc-700 shadow-xs"
-                                  referrerPolicy="no-referrer"
-                                />
-                              </div>
-                            )}
+                            {/* Item 3: "Cover Template Preview" görseli kaldırıldı — production'da
+                                (Vercel) yüklenen PNG dosyaları kalıcı olarak servis edilmediği için
+                                önizleme her zaman kırık görsel ikonu olarak görünüyordu. */}
                           </div>
                         ) : (
                           <label className="group flex flex-col items-center justify-center py-4 border border-dashed border-[#EDEBE9] dark:border-[#323130] rounded cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-900/40">
@@ -2835,16 +2828,8 @@ export default function ServicesView({
                                 Kaldır
                               </button>
                             </div>
-                            {inMemoryPageTemplates[selectedEditCardId] && (
-                              <div className="border border-slate-150 dark:border-zinc-800 rounded p-1.5 bg-slate-50/50 dark:bg-zinc-900/40 flex items-center justify-center">
-                                <img
-                                  src={inMemoryPageTemplates[selectedEditCardId]}
-                                  alt="Page Template Preview"
-                                  className="max-h-24 object-contain rounded border border-slate-200 dark:border-zinc-700 shadow-xs"
-                                  referrerPolicy="no-referrer"
-                                />
-                              </div>
-                            )}
+                            {/* Item 3: "Page Template Preview" görseli kaldırıldı — aynı sebep:
+                                production'da kalıcı dosya servisi olmadığı için kırık görsel. */}
                           </div>
                         ) : (
                           <label className="group flex flex-col items-center justify-center py-4 border border-dashed border-[#EDEBE9] dark:border-[#323130] rounded cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-900/40">

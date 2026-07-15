@@ -566,6 +566,9 @@ export default function DealManagementView({ initialTab = "dashboard", onNavigat
     message?: string;
   }>({ isOpen: false, onConfirm: () => {} });
 
+  // Item 4: Fırsat panosu liste görünümü — tümünü seç + toplu sil için seçim state'i
+  const [selectedDealIds, setSelectedDealIds] = useState<string[]>([]);
+
   // Helper to update a deal inside the deals array and synchronize selectedDeal state
   const updateDealAndSelected = (updatedDeal: Deal) => {
     setDeals((prev) => prev.map((d) => (d.id === updatedDeal.id ? updatedDeal : d)));
@@ -1648,6 +1651,26 @@ export default function DealManagementView({ initialTab = "dashboard", onNavigat
     return 0;
   });
 
+  // Item 4: liste görünümü — tümünü seç / tek satır seç / toplu sil
+  const handleSelectAllDeals = (checked: boolean) => {
+    setSelectedDealIds(checked ? filteredDeals.map((d) => d.id) : []);
+  };
+  const handleSelectDealRow = (id: string, checked: boolean) => {
+    setSelectedDealIds((prev) => (checked ? [...prev, id] : prev.filter((x) => x !== id)));
+  };
+  const handleBulkDeleteDeals = () => {
+    if (selectedDealIds.length === 0) return;
+    setConfirmDeleteModal({
+      isOpen: true,
+      title: "Seçili Fırsatlar Silinecek",
+      message: `${selectedDealIds.length} fırsat kaydı geri dönüşüm kutusuna taşınsın mı?`,
+      onConfirm: () => {
+        setDeals((prev) => prev.filter((d) => !selectedDealIds.includes(d.id)));
+        setSelectedDealIds([]);
+      }
+    });
+  };
+
   // Switcher UI
   return (
     <div className="space-y-6">
@@ -1927,11 +1950,45 @@ export default function DealManagementView({ initialTab = "dashboard", onNavigat
           {dealViewStyle === "list" ? (
             /* BEAUTIFUL TABLE LIST VIEW */
             <div className="bg-white dark:bg-[#151515] rounded-xl border border-slate-100 dark:border-zinc-800/80 shadow-sm overflow-hidden select-none">
+              {/* Item 4: Toplu Seçim / Toplu Sil araç çubuğu */}
+              {selectedDealIds.length > 0 && (
+                <div className="flex items-center justify-between gap-3 px-4 py-2 bg-rose-50/60 dark:bg-rose-950/20 border-b border-rose-100 dark:border-rose-900/40">
+                  <span className="text-[11px] font-bold text-slate-600 dark:text-zinc-300">
+                    {selectedDealIds.length} {t("Deals Selected")}
+                  </span>
+                  <div className="flex items-center gap-2">
+                    <button
+                      type="button"
+                      onClick={() => setSelectedDealIds([])}
+                      className="px-2.5 py-1 text-[11px] font-bold text-slate-500 hover:text-slate-700 dark:text-zinc-400 dark:hover:text-zinc-200 cursor-pointer"
+                    >
+                      {t("Clear")}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={handleBulkDeleteDeals}
+                      className="px-3 py-1.5 bg-rose-600 hover:bg-rose-700 text-white rounded-lg text-[11px] font-bold flex items-center gap-1.5 cursor-pointer shadow-xs"
+                    >
+                      <Trash2 className="w-3.5 h-3.5" />
+                      {t("Delete Selected")}
+                    </button>
+                  </div>
+                </div>
+              )}
               <div className="overflow-x-auto">
                 <table className="w-full text-left border-collapse">
                   <thead>
                     <tr className="bg-slate-50 dark:bg-zinc-900 border-b border-slate-100 dark:border-zinc-800 text-[10px] uppercase tracking-wider font-mono font-bold text-slate-400 select-none">
-                      <th className="p-4">{t("Deal / Company")}</th>
+                      <th className="p-4 w-10">
+                        <input
+                          type="checkbox"
+                          checked={selectedDealIds.length === filteredDeals.length && filteredDeals.length > 0}
+                          onChange={(e) => handleSelectAllDeals(e.target.checked)}
+                          className="rounded cursor-pointer"
+                        />
+                      </th>
+                      <th className="p-4">{t("Deal")}</th>
+                      <th className="p-4">{t("Company")}</th>
                       <th className="p-4">{t("Quotation No")}</th>
                       <th className="p-4">{t("Amount")}</th>
                       <th className="p-4">{t("Status & Score")}</th>
@@ -1944,7 +2001,7 @@ export default function DealManagementView({ initialTab = "dashboard", onNavigat
                   <tbody className="divide-y divide-slate-100 dark:divide-zinc-800/50">
                     {filteredDeals.length === 0 ? (
                       <tr>
-                        <td colSpan={8} className="p-12 text-center text-slate-400 dark:text-zinc-500 font-sans">
+                        <td colSpan={10} className="p-12 text-center text-slate-400 dark:text-zinc-500 font-sans">
                           {t("No deals found matching current filters.")}
                         </td>
                       </tr>
@@ -1958,21 +2015,30 @@ export default function DealManagementView({ initialTab = "dashboard", onNavigat
                             setActiveDrawerTab("Overview");
                           }}
                         >
+                          <td className="p-4" onClick={(e) => e.stopPropagation()}>
+                            <input
+                              type="checkbox"
+                              checked={selectedDealIds.includes(deal.id)}
+                              onChange={(e) => handleSelectDealRow(deal.id, e.target.checked)}
+                              className="rounded cursor-pointer"
+                            />
+                          </td>
                           <td className="p-4">
                             <div className="font-bold text-xs text-green-700 dark:text-green-400">
                               {deal.dealName || `${deal.companyName} Project`}
                             </div>
                             <div className="text-[10px] text-slate-400 dark:text-zinc-500 font-sans mt-0.5 flex items-center gap-1.5 flex-wrap">
-                              <span 
-                                onClick={(e) => handleCompanyClick(e, deal.companyName, deal.companyId)}
-                                className="font-bold text-slate-600 dark:text-zinc-400 hover:text-indigo-600 dark:hover:text-indigo-400 hover:underline cursor-pointer flex items-center gap-1 shrink-0"
-                                title={t("Go to Company Detail")}
-                              >
-                                🏢 {deal.companyName}
-                              </span>
-                              <span>•</span>
                               <span>👤 {deal.contactPerson} {deal.industry ? `(${deal.industry})` : ''}</span>
                             </div>
+                          </td>
+                          <td className="p-4" onClick={(e) => e.stopPropagation()}>
+                            <span
+                              onClick={(e) => handleCompanyClick(e, deal.companyName, deal.companyId)}
+                              className="font-bold text-xs text-slate-700 dark:text-zinc-300 hover:text-indigo-600 dark:hover:text-indigo-400 hover:underline cursor-pointer flex items-center gap-1"
+                              title={t("Go to Company Detail")}
+                            >
+                              🏢 {deal.companyName}
+                            </span>
                           </td>
                           <td className="p-4">
                             <div className="font-bold text-xs text-slate-800 dark:text-zinc-200 flex items-center gap-1.5 font-mono">
