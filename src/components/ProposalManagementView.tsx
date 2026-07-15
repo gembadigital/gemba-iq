@@ -162,7 +162,15 @@ export default function ProposalManagementView() {
   const [isAiLoading, setIsAiLoading] = useState(false);
 
   const handleAddCompany = (company: Company) => {
-    setCompanies((prev) => [...prev, company]);
+    // Bu sayfadaki `companies` local state'i, sayfa ilk açıldığındaki bir
+    // anlık görüntü (snapshot) — arada başka bir ekrandan (Müşteriler,
+    // Fırsat Panosu vb.) yeni şirket eklenmiş olabilir. Eskiden burada
+    // sadece bu eski (stale) diziye ekleme yapılıyordu; birazdan çalışacak
+    // `useEffect`, CrmDb.saveCompanies(companies) ile TÜM şirket listesinin
+    // üzerine bu eski diziyi yazıyordu — yani aradaki yeni eklenen şirketler
+    // sessizce kaybolabiliyordu. Artık CrmDb'nin GÜNCEL halinden başlanıyor.
+    const fresh = CrmDb.getCompanies();
+    setCompanies(fresh.some((c) => c.id === company.id) ? fresh : [...fresh, company]);
   };
 
   const handleOpenCreateModal = () => {

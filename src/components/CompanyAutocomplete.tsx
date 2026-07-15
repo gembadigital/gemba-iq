@@ -89,8 +89,20 @@ export default function CompanyAutocomplete({
     onChange(company);
   };
 
-  const handleCreateCompanySubmit = (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleCreateCompanySubmit = (e?: React.FormEvent) => {
+    // Item: "Yeni müşteri ekleme sonrası hata verdi, https://gemba-iq.vercel.app/?
+    // adresine yönlendirdi" — kök neden: bu bileşen, çağıran ekranlardaki
+    // (ör. "Yeni Fırsat Kartı" / "Yeni Teklif") DIŞ <form onSubmit={...}>
+    // içine gömülü olarak kullanılıyor, ve bu "Yeni Şirket Oluştur" modalı da
+    // KENDİ <form onSubmit={...}> etiketini kullanıyordu. HTML'de iç içe
+    // <form> elemanları geçersizdir; native "submit" olayı iç formdan dış
+    // forma doğru DOM'da yukarı yayılır (bubbling) ve tarayıcı bazen dış
+    // formun varsayılan GET gönderimini de tetikliyordu — sayfa
+    // yenileniyor, adres çubuğuna "?" ekleniyor, hiçbir React hata
+    // sınırı (error boundary) yakalamadığı için ekranda hata mesajı bile
+    // görünmüyordu. Artık bu modal <form> değil; buton type="button" ile
+    // doğrudan bu fonksiyonu çağırıyor, iç içe form riski tamamen kalktı.
+    e?.preventDefault?.();
     if (!newCompanyForm.name) return;
 
     // Call database to create company (it will check duplicates and save)
@@ -216,7 +228,9 @@ export default function CompanyAutocomplete({
               </button>
             </div>
 
-            <form onSubmit={handleCreateCompanySubmit} className="p-4 space-y-4">
+            {/* Item: iç içe <form> riskinden kaçınmak için bu artık bir <form>
+                değil, düz bir <div> — bkz. handleCreateCompanySubmit üstündeki not. */}
+            <div className="p-4 space-y-4">
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
                   <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wide font-mono">{t("Company Name *")}</label>
@@ -225,6 +239,14 @@ export default function CompanyAutocomplete({
                     required
                     value={newCompanyForm.name}
                     onChange={(e) => setNewCompanyForm({ ...newCompanyForm, name: e.target.value })}
+                    onKeyDown={(e) => {
+                      // Artık gerçek bir <form> olmadığı için Enter tuşu
+                      // otomatik submit etmez — burada elle bağlıyoruz.
+                      if (e.key === "Enter") {
+                        e.preventDefault();
+                        handleCreateCompanySubmit();
+                      }
+                    }}
                     className="w-full p-2 border border-slate-200 dark:border-zinc-800 bg-slate-50 dark:bg-zinc-900 rounded outline-none text-xs mt-1 text-slate-800 dark:text-zinc-100 focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500"
                     placeholder={t("e.g. Acme Corporation")}
                   />
@@ -352,13 +374,14 @@ export default function CompanyAutocomplete({
                   {t("Cancel")}
                 </button>
                 <button
-                  type="submit"
+                  type="button"
+                  onClick={() => handleCreateCompanySubmit()}
                   className="px-4 py-2 bg-indigo-650 hover:bg-indigo-700 text-white text-xs font-bold rounded-xl shadow-md transition-all cursor-pointer"
                 >
                   {t("Create & Select Company")}
                 </button>
               </div>
-            </form>
+            </div>
           </div>
         </div>
       )}
