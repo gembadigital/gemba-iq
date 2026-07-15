@@ -35,7 +35,7 @@ interface OpexScores {
 
 export default function CompanyOpexTab({
   companyId,
-  lang: _langProp,
+  lang,
   companyName,
   onLogTimelineEvent
 }: CompanyOpexTabProps) {

@@ -11,7 +11,6 @@ import {
   AlertCircle,
   Plus,
   Clock,
-  Sparkles,
   Layers,
   CheckCircle,
   Trash2,
@@ -218,26 +217,6 @@ export default function CompanyTimelineTab({
     return items.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
   }, [activities, emails, documents, proposals, companyId, t]);
 
-  // Dynamic Contextual AI advice based on company's industry
-  const aiRecommendation = useMemo(() => {
-    if (industry === "Automotive") {
-      return {
-        focus: t("Molding & Assembly Flow (OEE)"),
-        text: t("Given high automotive tier-1 demands, prioritizing a SMED (Single Minute Exchange of Die) cycle is recommended to stabilize OEE targets above 85%. Value stream mapping indicates buffer inventory waits are the main source of Muda.")
-      };
-    } else if (industry === "Textiles") {
-      return {
-        focus: t("Scrap Minimization & Energy Audit"),
-        text: t("Yarn production displays a 3% raw material wastage pattern. A comprehensive air-leak audit (minimizing waste Muda) and cyclic yarn inspection project should be proposed to recover operational yields.")
-      };
-    } else {
-      return {
-        focus: t("Value Stream Mapping & Cell Layout"),
-        text: t("To enhance the product travel cycle, a transition towards custom Cellular Assembly units is advised. Digitized Andon visual indicators will assist operators in real-time speed stabilization.")
-      };
-    }
-  }, [industry, t]);
-
   const getTimelineIcon = (type: UnifiedTimelineItem["type"]) => {
     switch (type) {
       case "call":
@@ -440,43 +419,8 @@ export default function CompanyTimelineTab({
 
       </div>
 
-      {/* RIGHT: Contextual AI Smart recommendation & stats (4 columns) */}
+      {/* RIGHT: Activity stats (4 columns) */}
       <div className="lg:col-span-4 space-y-4">
-        
-        {/* AI Recommendations Panel */}
-        <div className="bg-gradient-to-br from-indigo-900 via-slate-900 to-indigo-950 text-white p-5 rounded-2xl shadow-xl space-y-4 border border-indigo-500/20 relative overflow-hidden">
-          <div className="absolute top-0 right-0 p-8 opacity-5 text-white shrink-0 pointer-events-none">
-            <Sparkles className="w-36 h-36" />
-          </div>
-
-          <div className="flex items-center gap-2">
-            <div className="p-1.5 bg-indigo-500/20 text-indigo-300 rounded-lg shrink-0">
-              <Sparkles className="w-4 h-4 animate-pulse" />
-            </div>
-            <div>
-              <span className="text-[10px] font-mono font-bold tracking-widest text-indigo-300 uppercase block">
-                Gemba partner AI
-              </span>
-              <h5 className="text-xs font-extrabold uppercase text-indigo-50 font-display mt-0.5">
-                {t("Corporate AI Wizard Insights")}
-              </h5>
-            </div>
-          </div>
-
-          <div className="bg-black/25 border border-indigo-500/15 p-3.5 rounded-xl space-y-2 text-xs">
-            <div className="text-indigo-300 font-extrabold uppercase font-mono tracking-wide text-[9px]">
-              {t("Strategic Focus Area:")}
-            </div>
-            <div className="font-bold text-white text-xs">{aiRecommendation.focus}</div>
-            <p className="text-slate-200 leading-relaxed font-sans mt-1 text-[11px]">
-              {aiRecommendation.text}
-            </p>
-          </div>
-
-          <p className="text-[9px] text-indigo-200/60 font-mono leading-tight">
-            * {t("Recommendation sets dynamically adjust based on headcount scaling, sector layout patterns, and operational indexes.")}
-          </p>
-        </div>
 
         {/* Operational Timeline Stats Card */}
         <div className="bg-white dark:bg-[#151515] p-5 rounded-xl border border-slate-100 dark:border-zinc-800/80 shadow-[0_1px_3px_rgba(0,0,0,0.02)] space-y-3">
