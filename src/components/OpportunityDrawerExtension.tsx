@@ -1539,6 +1539,22 @@ export function ProposalContractSection({
       return;
     }
 
+    const sendPayload = await sendResponse.json().catch(() => ({}));
+
+    if (deal.companyId) {
+      CrmDb.createEmail({
+        companyId: deal.companyId,
+        recipient: deal.contactEmail,
+        sender: sendPayload.sender || "",
+        subject: `${t("Proposal")} #${activeProposal.proposalNumber}`,
+        body,
+        isIncoming: false,
+        date: new Date().toISOString(),
+        dealId: deal.id,
+        proposalId: activeProposal.id,
+      });
+    }
+
     const logged = addAuditLog(
       deal,
       t("Proposal Email Dispatched"),

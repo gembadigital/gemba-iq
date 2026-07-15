@@ -1,7 +1,11 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { CrmDb, CrmEmail, CrmDocument } from "../../lib/CrmDb";
-import { Mail, Send, Trash2, Plus, Sparkles, Paperclip, ChevronRight, User, X } from "lucide-react";
+import { Mail, Send, Trash2, Plus, Sparkles, Paperclip, ChevronRight, User, X, Loader2, AlertTriangle } from "lucide-react";
 import { useLanguage } from "../../lib/LanguageContext";
+import { useOrganization } from "../../lib/OrganizationContext";
+import { fetchOrganizationMailbox } from "../../lib/organizationMailbox";
+import { fetchPersonalMailbox } from "../../lib/personalMailbox";
+import { getSupabase } from "../../lib/supabaseClient";
 
 interface CompanyEmailsTabProps {
   companyId: string;
@@ -10,6 +14,12 @@ interface CompanyEmailsTabProps {
   contactPersonName?: string;
   contactEmail?: string;
   onLogTimelineEvent?: (title: string, desc: string, type: string) => void;
+}
+
+interface SenderOption {
+  source: "organization" | "personal";
+  label: string;
+  email: string;
 }
 
 export default function CompanyEmailsTab({
@@ -21,10 +31,49 @@ export default function CompanyEmailsTab({
   onLogTimelineEvent
 }: CompanyEmailsTabProps) {
   const { t, lang } = useLanguage();
+  const { actorName } = useOrganization();
   const [emails, setEmails] = useState<CrmEmail[]>(() => CrmDb.getEmailsByCompany(companyId));
   const [documents] = useState<CrmDocument[]>(() => CrmDb.getDocumentsByCompany(companyId));
   const [isComposerOpen, setIsComposerOpen] = useState(false);
   const [selectedTemplate, setSelectedTemplate] = useState("");
+  const [senderOptions, setSenderOptions] = useState<SenderOption[]>([]);
+  const [isLoadingSenders, setIsLoadingSenders] = useState(true);
+  const [selectedSender, setSelectedSender] = useState<"organization" | "personal" | "">("");
+  const [isSending, setIsSending] = useState(false);
+
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      setIsLoadingSenders(true);
+      const [orgResult, personalResult] = await Promise.allSettled([
+        fetchOrganizationMailbox(),
+        fetchPersonalMailbox(),
+      ]);
+      if (cancelled) return;
+
+      const options: SenderOption[] = [];
+      if (orgResult.status === "fulfilled" && orgResult.value.mailbox.status === "Connected") {
+        options.push({
+          source: "organization",
+          label: t("Organization Mailbox"),
+          email: orgResult.value.mailbox.mailbox_email || orgResult.value.mailbox.organizationMailbox || "",
+        });
+      }
+      if (personalResult.status === "fulfilled" && personalResult.value.status === "Connected") {
+        options.push({
+          source: "personal",
+          label: t("My Personal Mailbox"),
+          email: personalResult.value.mailbox_address || "",
+        });
+      }
+      setSenderOptions(options);
+      setSelectedSender(options[0]?.source || "");
+      setIsLoadingSenders(false);
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [t]);
 
   // Composer Form State
   const [formState, setFormState] = useState({
@@ -81,42 +130,79 @@ export default function CompanyEmailsTab({
     }
   };
 
-  const handleSendEmail = (e: React.FormEvent) => {
+  const handleSendEmail = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!formState.recipient || !formState.subject || !formState.body) {
       alert(t("Please fill out all required fields!"));
       return;
     }
-
-    CrmDb.createEmail({
-      companyId,
-      recipient: formState.recipient,
-      sender: "atakan@gembapartner.com",
-      subject: formState.subject,
-      body: formState.body,
-      isIncoming: false,
-      date: new Date().toISOString(),
-      attachments: formState.attachmentName ? [formState.attachmentName] : undefined
-    });
-
-    if (onLogTimelineEvent) {
-      onLogTimelineEvent(
-        t("Email Sent"),
-        `Alıcı: ${formState.recipient} • Konu: ${formState.subject}`,
-        "email"
-      );
+    if (!selectedSender) {
+      alert(t("Connect an Organization or Personal mailbox in Settings before sending email."));
+      return;
     }
 
-    // Reset composer
-    setFormState({
-      recipient: contactEmail || `info@${companyName.toLowerCase().replace(/[^a-z0-9]/g, "")}.com`,
-      subject: "",
-      body: "",
-      attachmentName: ""
-    });
-    setSelectedTemplate("");
-    setIsComposerOpen(false);
-    reloadEmails();
+    setIsSending(true);
+    try {
+      const supabase = getSupabase();
+      const {
+        data: { session },
+      } = supabase ? await supabase.auth.getSession() : { data: { session: null } };
+
+      const response = await fetch("/api/mail/send", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          ...(session?.access_token ? { Authorization: `Bearer ${session.access_token}` } : {}),
+        },
+        body: JSON.stringify({
+          source: selectedSender,
+          recipient: formState.recipient,
+          subject: formState.subject,
+          body: formState.body.replace(/\n/g, "<br />"),
+          attachments: [],
+        }),
+      });
+      const payload = await response.json().catch(() => ({}));
+      if (!response.ok) {
+        alert(payload.error || t("Email could not be sent."));
+        return;
+      }
+
+      const senderOption = senderOptions.find(opt => opt.source === selectedSender);
+      CrmDb.createEmail({
+        companyId,
+        recipient: formState.recipient,
+        sender: payload.sender || senderOption?.email || actorName,
+        subject: formState.subject,
+        body: formState.body,
+        isIncoming: false,
+        date: new Date().toISOString(),
+        attachments: formState.attachmentName ? [formState.attachmentName] : undefined
+      });
+
+      if (onLogTimelineEvent) {
+        onLogTimelineEvent(
+          t("Email Sent"),
+          `Alıcı: ${formState.recipient} • Konu: ${formState.subject}`,
+          "email"
+        );
+      }
+
+      // Reset composer
+      setFormState({
+        recipient: contactEmail || `info@${companyName.toLowerCase().replace(/[^a-z0-9]/g, "")}.com`,
+        subject: "",
+        body: "",
+        attachmentName: ""
+      });
+      setSelectedTemplate("");
+      setIsComposerOpen(false);
+      reloadEmails();
+    } catch (error) {
+      alert(error instanceof Error ? error.message : t("Email could not be sent."));
+    } finally {
+      setIsSending(false);
+    }
   };
 
   return (
@@ -155,6 +241,32 @@ export default function CompanyEmailsTab({
             >
               <X className="w-4 h-4" />
             </button>
+          </div>
+
+          {!isLoadingSenders && senderOptions.length === 0 && (
+            <div className="flex items-start gap-2 p-2.5 bg-amber-50 dark:bg-amber-950/20 border border-amber-200 dark:border-amber-900/40 rounded-lg text-amber-700 dark:text-amber-400">
+              <AlertTriangle className="w-3.5 h-3.5 mt-0.5 flex-shrink-0" />
+              <span className="text-[11px] leading-relaxed">
+                {t("No mailbox is connected. Connect an Organization or Personal mailbox in Settings to send email from here.")}
+              </span>
+            </div>
+          )}
+
+          <div>
+            <label className="block text-[9px] uppercase font-bold text-slate-400 mb-1">{t("Send From *")}</label>
+            <select
+              required
+              value={selectedSender}
+              onChange={(e) => setSelectedSender(e.target.value as "organization" | "personal" | "")}
+              disabled={isLoadingSenders || senderOptions.length === 0}
+              className="w-full bg-white dark:bg-zinc-800 border border-slate-200 dark:border-zinc-700 rounded p-1.5 text-xs text-slate-800 dark:text-zinc-200 focus:outline-none focus:border-indigo-500 disabled:opacity-50"
+            >
+              {isLoadingSenders && <option value="">{t("Loading mailboxes...")}</option>}
+              {!isLoadingSenders && senderOptions.length === 0 && <option value="">{t("No mailbox connected")}</option>}
+              {senderOptions.map(opt => (
+                <option key={opt.source} value={opt.source}>{opt.label} ({opt.email})</option>
+              ))}
+            </select>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
@@ -232,10 +344,15 @@ export default function CompanyEmailsTab({
             </button>
             <button
               type="submit"
-              className="px-4.5 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded font-bold flex items-center gap-1.5 cursor-pointer shadow-sm"
+              disabled={isSending || isLoadingSenders || senderOptions.length === 0}
+              className="px-4.5 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded font-bold flex items-center gap-1.5 cursor-pointer shadow-sm disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              <Send className="w-3.5 h-3.5" />
-              <span>{t("Send Email")}</span>
+              {isSending ? (
+                <Loader2 className="w-3.5 h-3.5 animate-spin" />
+              ) : (
+                <Send className="w-3.5 h-3.5" />
+              )}
+              <span>{isSending ? t("Sending...") : t("Send Email")}</span>
             </button>
           </div>
         </form>
