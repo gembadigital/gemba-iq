@@ -123,12 +123,6 @@ export async function scanHandler(request, response) {
       listMicrosoftGraphMailMessages({ mailboxAddress, folder: "sentitems", top }),
     ]);
 
-    // TEMP DIAGNOSTIC (Mail.Read permission verification, remove after test):
-    // logs only sender addresses, not subjects/bodies.
-    console.log(
-      `[mail-scan-debug] mailbox=${mailboxAddress} inbox=${inboxMessages.length} sent=${sentMessages.length} senders=${JSON.stringify(inboxMessages.map((m) => m.from?.address).filter(Boolean))}`
-    );
-
     return response.status(200).json({
       mailboxAddress,
       messages: [...inboxMessages, ...sentMessages],
