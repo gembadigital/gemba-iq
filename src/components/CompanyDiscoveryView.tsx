@@ -549,6 +549,9 @@ You must output a raw valid JSON ARRAY strictly matching this structure without 
         body: JSON.stringify({ prompt: helperPrompt })
       });
 
+      if (!res.headers.get("content-type")?.includes("application/json")) {
+        throw new Error("Sunucu beklenmeyen bir yanıt döndürdü. Lütfen tekrar deneyin.");
+      }
       const data = await res.json();
       if (data.success && data.response) {
         const textResponse = data.response;
@@ -605,6 +608,9 @@ You must output a raw valid JSON ARRAY strictly matching this structure without 
         body: JSON.stringify({ query })
       });
 
+      if (!res.headers.get("content-type")?.includes("application/json")) {
+        throw new Error("Sunucu beklenmeyen bir yanıt döndürdü. Lütfen tekrar deneyin.");
+      }
       const data = await res.json();
       if (!res.ok || !data.success || !data.response) {
         throw new Error(data.error || "Arama isteği başarısız oldu.");
