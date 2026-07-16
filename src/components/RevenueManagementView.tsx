@@ -929,6 +929,7 @@ CRITICAL FORMATTING INSTRUCTIONS: Your response MUST be output as beautiful, pro
     let s = String(raw).trim();
     if (!s) return 0;
     s = s.replace(/[^\d.,-]/g, "");
+    if (!s) return 0;
     const lastComma = s.lastIndexOf(",");
     const lastDot = s.lastIndexOf(".");
     if (lastComma > -1 && lastDot > -1) {
@@ -943,6 +944,19 @@ CRITICAL FORMATTING INSTRUCTIONS: Your response MUST be output as beautiful, pro
         s = s.replace(",", ".");
       } else {
         s = s.replace(/,/g, "");
+      }
+    } else if (lastDot > -1) {
+      // Only dot(s) present — could be a real decimal point ("14.5") or a
+      // Turkish thousand separator with no decimals at all ("14.000" = 14000,
+      // not 14). Multiple dots, or a single dot followed by exactly 3
+      // digits, is never a genuine currency decimal (invoice totals don't
+      // carry 3 decimal places) — treat it as a thousands separator and
+      // strip it. This was the root cause of "14.000" (14.000 TL) being
+      // read as 14: parseFloat("14.000") === 14.
+      const dotCount = (s.match(/\./g) || []).length;
+      const decimals = s.length - lastDot - 1;
+      if (dotCount > 1 || decimals === 3) {
+        s = s.replace(/\./g, "");
       }
     }
     const n = parseFloat(s);
@@ -970,6 +984,17 @@ CRITICAL FORMATTING INSTRUCTIONS: Your response MUST be output as beautiful, pro
     if (!raw) return null;
     if (raw instanceof Date && !isNaN(raw.getTime())) {
       return excelDateToYMD(raw);
+    }
+    // A .csv export can leave a date column as a bare Excel serial number
+    // (e.g. 45852) instead of formatted text, if the source spreadsheet's
+    // date formatting wasn't preserved through the CSV save — SheetJS then
+    // reads that cell as a plain number rather than a Date. Recognize the
+    // plausible serial range (~1970-01-01 through ~2100) before falling
+    // through to string parsing, which would otherwise fail on it and
+    // silently drop the row's real date.
+    if (typeof raw === "number" && raw > 25569 && raw < 73050) {
+      const asDate = new Date(Math.round((raw - 25569) * 86400 * 1000));
+      if (!isNaN(asDate.getTime())) return excelDateToYMD(asDate);
     }
     const s = String(raw).trim();
     if (!s) return null;
@@ -1015,10 +1040,11 @@ CRITICAL FORMATTING INSTRUCTIONS: Your response MUST be output as beautiful, pro
 
       const rowKeys = Object.keys(rows[0] || {});
       const usedKeys = new Set<string>();
-      const findKey = (keywords: string[]): string | null => {
+      const findKey = (keywords: string[], exclude: string[] = []): string | null => {
         for (const k of rowKeys) {
           if (usedKeys.has(k)) continue;
           const lower = k.toLowerCase().trim();
+          if (exclude.length && exclude.some(ex => lower.includes(ex))) continue;
           if (keywords.some(kw => lower.includes(kw))) {
             usedKeys.add(k);
             return k;
@@ -1032,7 +1058,19 @@ CRITICAL FORMATTING INSTRUCTIONS: Your response MUST be output as beautiful, pro
       // column ("Genel Toplam", "Toplam KDV") that belongs to a more
       // specific field.
       const customerKey = findKey(["müşteri", "customer", "musteri", "firma", "unvan", "isim", "ad"]);
-      const dateKey = findKey(["düzenleme tarihi", "duzenleme tarihi", "fatura tarihi", "işlem tarihi", "islem tarihi", "tarih", "date"]);
+      // Invoice date: prefer an explicit "Fatura Tarihi" / "Düzenleme Tarihi" /
+      // "İşlem Tarihi" style header. Only fall back to a bare "tarih"/"date"
+      // match when none of those exist, and even then skip anything that
+      // reads like a "Dönem" (accounting period) column. Some exports carry
+      // BOTH a real per-row invoice date AND a period/summary date column —
+      // a plain keyword search has no way to prefer the former, and if the
+      // period column happens to come first (or has a header containing
+      // "tarih", e.g. "Dönem Tarihi"), every row silently collapses onto
+      // whatever single period value that column repeats — this was the
+      // root cause of an entire multi-month import landing in one month.
+      const dateKey =
+        findKey(["fatura tarihi", "düzenleme tarihi", "duzenleme tarihi", "işlem tarihi", "islem tarihi", "invoice date"]) ||
+        findKey(["tarih", "date"], ["dönem", "donem", "period"]);
       const daysKey = findKey(["gün", "gun", "days", "adam gün", "satılan adam gün", "sure", "süre", "adet", "miktar"]);
       const rateKey = findKey(["birim fiyat", "birim", "rate", "daily rate", "fiyat", "ücret", "ucret"]);
       const grandTotalKey = findKey(["genel toplam", "kdv dahil toplam", "kdv dahil", "grand total"]);
