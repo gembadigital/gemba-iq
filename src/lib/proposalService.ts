@@ -462,6 +462,41 @@ export async function sendProposalEmail(
     attachments?: string[];
   }
 ): Promise<Proposal> {
+  // Actually dispatch the email through the organization mailbox (Microsoft Graph)
+  // before touching any CRM state. Previously this function only recorded a "Sent"
+  // status/audit entry without ever calling the mail API, so the UI reported success
+  // even when nothing was delivered to the recipient.
+  const client = getSupabase();
+  const {
+    data: { session },
+  } = client ? await client.auth.getSession() : { data: { session: null } };
+
+  const sendResponse = await fetch("/api/mail/send", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      ...(session?.access_token ? { Authorization: `Bearer ${session.access_token}` } : {}),
+    },
+    body: JSON.stringify({
+      recipient: emailData.to,
+      cc: emailData.cc || undefined,
+      bcc: emailData.bcc || undefined,
+      subject: emailData.subject,
+      body: emailData.body,
+    }),
+  });
+
+  if (!sendResponse.ok) {
+    let message = "Mail could not be delivered to the recipient.";
+    try {
+      const payload = await sendResponse.json();
+      message = payload?.error || message;
+    } catch {
+      // ignore body parse failures, fall back to default message
+    }
+    throw new Error(message);
+  }
+
   const updated = await setProposalApprovalStatus(proposal, "Sent");
 
   if (proposal.dealId) {

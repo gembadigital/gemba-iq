@@ -41,7 +41,6 @@ import {
   Send,
   Copy,
   Paperclip,
-  ArrowRight,
   Loader2,
   AlertTriangle
 } from "lucide-react";
@@ -90,11 +89,9 @@ const DEFAULT_SERVICE_CARDS: ServiceCard[] = [
     name: "YALIN ÜRETİM DÖNÜŞÜM PROJESİ",
     category: "PROJE",
     code: "201",
-    defaultCoverPage: `
-      <h1 style="font-size: 28px; font-weight: 800; color: #1e293b; margin-bottom: 12px; line-height: 1.2; text-transform: uppercase;">YALIN ÜRETİM DÖNÜŞÜM PROJESİ</h1>
-      <h3 style="font-size: 16px; font-weight: 600; color: #0078D4; margin-bottom: 24px;">Gemba Operasyonel Mükemmellik & İşbirlikçi Dönüşüm Programı</h3>
-      <p style="font-size: 12px; color: #64748b; line-height: 1.6; margin-bottom: 16px;">Bu çalışma, firma süreçlerindeki israfları tespit etmek, değer akışını optimize etmek ve sürekli iyileştirme kültürü (Kaizen) yerleştirmek amacıyla tasarlanmıştır.</p>
-    `,
+    defaultCoverPage: `YALIN ÜRETİM DÖNÜŞÜM PROJESİ
+Gemba Operasyonel Mükemmellik & İşbirlikçi Dönüşüm Programı
+Bu çalışma, firma süreçlerindeki israfları tespit etmek, değer akışını optimize etmek ve sürekli iyileştirme kültürü (Kaizen) yerleştirmek amacıyla tasarlanmıştır.`,
     activityTableHtml: `
       <table style="border-collapse: collapse; width: 100%; border: 1px solid #cbd5e1; font-family: sans-serif; font-size: 11px;">
         <thead>
@@ -140,11 +137,9 @@ const DEFAULT_SERVICE_CARDS: ServiceCard[] = [
     name: "OPEX ASSESSMENT (OPERASYONEL MÜKEMMELLİK)",
     category: "ANALİZ",
     code: "101",
-    defaultCoverPage: `
-      <h1 style="font-size: 28px; font-weight: 800; color: #107C41; margin-bottom: 12px; line-height: 1.2; text-transform: uppercase;">OPEX ASSESSMENT</h1>
-      <h3 style="font-size: 16px; font-weight: 600; color: #107C41; margin-bottom: 24px;">Operasyonel Olgunluk Seviyesi Belirleme Raporu</h3>
-      <p style="font-size: 12px; color: #64748b; line-height: 1.6; margin-bottom: 16px;">İşletmenizin yalın yönetim, verimlilik ve kalite parametreleri altında global iyi uygulamalara göre kıyaslama (benchmarking) ve analiz çalışması teklifidir.</p>
-    `,
+    defaultCoverPage: `OPEX ASSESSMENT
+Operasyonel Olgunluk Seviyesi Belirleme Raporu
+İşletmenizin yalın yönetim, verimlilik ve kalite parametreleri altında global iyi uygulamalara göre kıyaslama (benchmarking) ve analiz çalışması teklifidir.`,
     activityTableHtml: `
       <table style="border-collapse: collapse; width: 100%; border: 1px solid #cbd5e1; font-family: sans-serif; font-size: 11px;">
         <thead>
@@ -177,10 +172,8 @@ const DEFAULT_SERVICE_CARDS: ServiceCard[] = [
     name: "LEAN LOGISTICS ASSESSMENT",
     category: "ANALİZ",
     code: "102",
-    defaultCoverPage: `
-      <h1 style="font-size: 28px; font-weight: 800; color: #1e293b; margin-bottom: 12px; text-transform: uppercase;">LEAN LOGISTICS ASSESSMENT</h1>
-      <h3 style="font-size: 16px; font-weight: 600; color: #b45309; margin-bottom: 24px;">Lojistik Depolama ve İç Akış Süreçleri Tasarımı</h3>
-    `,
+    defaultCoverPage: `LEAN LOGISTICS ASSESSMENT
+Lojistik Depolama ve İç Akış Süreçleri Tasarımı`,
     activityTableHtml: `
       <table style="border-collapse: collapse; width: 100%; border: 1px solid #cbd5e1; font-family: sans-serif; font-size: 11px;">
         <thead>
@@ -207,7 +200,7 @@ const DEFAULT_SERVICE_CARDS: ServiceCard[] = [
     name: "OFIS OPEX ASSESSMENT",
     category: "ANALİZ",
     code: "103",
-    defaultCoverPage: "<h1>OFİS OPERASYONEL MÜKEMMELLİK DEĞERLENDİRMESİ</h1>",
+    defaultCoverPage: "OFİS OPERASYONEL MÜKEMMELLİK DEĞERLENDİRMESİ",
     activityTableHtml: "<table><tr><td>Ofis süreçlerinde israf ve dijital olgunluk endeksi ölçümü.</td></tr></table>",
     defaultTermsAndConditions: "1. Peşin ödemeli çalışmadır. KDV dahil değildir."
   },
@@ -216,7 +209,7 @@ const DEFAULT_SERVICE_CARDS: ServiceCard[] = [
     name: "TPM UYGULAMA (TOPLAM VERİMLİ BAKIM)",
     category: "PROJE",
     code: "202",
-    defaultCoverPage: "<h1>OPEX VE TPM (TOPLAM VERİMLİ BAKIM) PROJESİ</h1>",
+    defaultCoverPage: "OPEX VE TPM (TOPLAM VERİMLİ BAKIM) PROJESİ",
     activityTableHtml: "<table><tr><td>Otonom bakım ve arıza giderme yöntemleri kurulumu.</td></tr></table>",
     defaultTermsAndConditions: "1. Aylık hakediş usulü fatura edilir. Net vadeli ödeme alınır."
   },
@@ -225,7 +218,7 @@ const DEFAULT_SERVICE_CARDS: ServiceCard[] = [
     name: "YALIN TEDARİK ZİNCİRİ YÖNETİMİ",
     category: "PROJE",
     code: "203",
-    defaultCoverPage: "<h1>YALIN TEDARİK ZİNCİRİ VE KANBAN ENTEGRASYONU</h1>",
+    defaultCoverPage: "YALIN TEDARİK ZİNCİRİ VE KANBAN ENTEGRASYONU",
     activityTableHtml: "<table><tr><td>Çekme sistemi altyapısı ve süpermarket süreç tasarımı.</td></tr></table>",
     defaultTermsAndConditions: "1. Proje başlangıcında %50, kalanı kapanışta havale ile ödenir."
   },
@@ -234,7 +227,7 @@ const DEFAULT_SERVICE_CARDS: ServiceCard[] = [
     name: "YERLEŞİM PLANLAMA / LAYOUT TASARIMI",
     category: "PROJE",
     code: "204",
-    defaultCoverPage: "<h1>YERLEŞİM PLANLAMA & FABRİKA YOL HARİTASI</h1>",
+    defaultCoverPage: "YERLEŞİM PLANLAMA & FABRİKA YOL HARİTASI",
     activityTableHtml: "<table><tr><td>Spagetti diyagramı analizi ve tesis içi malzeme akış simülasyonu.</td></tr></table>",
     defaultTermsAndConditions: "1. Tasarım onayı sonrası %100 tahsilat ile tamamlanır."
   },
@@ -243,7 +236,7 @@ const DEFAULT_SERVICE_CARDS: ServiceCard[] = [
     name: "PROBLEM ÇÖZME ÇALIŞMALARI (A3 & 8D)",
     category: "KOÇLUK",
     code: "301",
-    defaultCoverPage: "<h1>PROBLEM ÇÖZME VE KÖK NEDEN ANALİZ KOÇLUĞU</h1>",
+    defaultCoverPage: "PROBLEM ÇÖZME VE KÖK NEDEN ANALİZ KOÇLUĞU",
     activityTableHtml: "<table><tr><td>Saha ekiplerine yönelik 5 Neden ve Balık Kılçığı mentörlüğü.</td></tr></table>",
     defaultTermsAndConditions: "1. Eğitim kiti teslimiyle havale vadeli faturalandırılır."
   },
@@ -252,7 +245,7 @@ const DEFAULT_SERVICE_CARDS: ServiceCard[] = [
     name: "LİDERLİK ÇALIŞMALARI VE SAHA YÖNETİMİ",
     category: "KOÇLUK",
     code: "302",
-    defaultCoverPage: "<h1>LİDERLİK GELİŞİM PROGRAMI VE MENTÖRLÜK</h1>",
+    defaultCoverPage: "LİDERLİK GELİŞİM PROGRAMI VE MENTÖRLÜK",
     activityTableHtml: "<table><tr><td>Mavi ve beyaz yaka liderleri için günlük yönetim sistemleri.</td></tr></table>",
     defaultTermsAndConditions: "1. Aylık periyotlar halinde fatura edilir. KDV hariçtir."
   },
@@ -261,7 +254,7 @@ const DEFAULT_SERVICE_CARDS: ServiceCard[] = [
     name: "OFİS KAIZEN DESTEKLERİ",
     category: "PROJE",
     code: "205",
-    defaultCoverPage: "<h1>HİZMET VE OFİS SÜREÇLERİNDE KAIZEN DESTEKLERİ</h1>",
+    defaultCoverPage: "HİZMET VE OFİS SÜREÇLERİNDE KAIZEN DESTEKLERİ",
     activityTableHtml: "<table><tr><td>Bilgi akış haritalama (makro-mikro) ve onay darboğazları tespiti.</td></tr></table>",
     defaultTermsAndConditions: "1. Sipariş kaydında %50, kalanı atölye bitiminde ödenir."
   }
@@ -450,7 +443,7 @@ export default function ServicesView({
   showSwitcher = false 
 }: { 
   defaultTab?: "cards" | "wizard"; 
-  showSwitcher?: boolean; 
+  showSwitcher?: boolean;
 }) {
   const { t } = useLanguage();
   const { actorName } = useOrganization();
@@ -480,7 +473,6 @@ export default function ServicesView({
   const [editTerms, setEditTerms] = useState("");
   const [pastePrompt, setPastePrompt] = useState(false);
   const [isTableCollapsed, setIsTableCollapsed] = useState(false);
-  const [isCoverTextCollapsed, setIsCoverTextCollapsed] = useState(false);
   const [rawPastedHtml, setRawPastedHtml] = useState("");
   const [isAiConverting, setIsAiConverting] = useState(false);
   const [coverUploadStatus, setCoverUploadStatus] = useState<{ type: "success" | "warning"; text: string } | null>(null);
@@ -786,7 +778,6 @@ export default function ServicesView({
   );
   
   const [selectedCardId, setSelectedCardId] = useState<string>(serviceCards[0]?.id || "yalin-uretim");
-  const [showAttachmentHelper, setShowAttachmentHelper] = useState(false);
   const [serviceFilterQuery, setServiceFilterQuery] = useState("");
   const [toastMessage, setToastMessage] = useState<string | null>(null);
 
@@ -1117,7 +1108,7 @@ export default function ServicesView({
       name: "YENİ HİZMET TANIMI",
       category: "PROJE",
       code: "999",
-      defaultCoverPage: "<h1>YENİ TEKLİF BAŞLIĞI</h1><p>Giriş içeriği...</p>",
+      defaultCoverPage: "YENİ TEKLİF BAŞLIĞI\nGiriş içeriği...",
       activityTableHtml: "<table><tr><td>Yeni tablo satırı kopyalayın...</td></tr></table>",
       defaultTermsAndConditions: "1. KDV Dahil Değildir.\n2. Havale vadeli ödenir."
     };
@@ -1794,28 +1785,13 @@ export default function ServicesView({
     });
   };
 
-  const fallbackCopyText = (text: string) => {
-    try {
-      const textArea = document.createElement("textarea");
-      textArea.value = text;
-      textArea.style.position = "fixed";
-      textArea.style.top = "0";
-      textArea.style.left = "0";
-      textArea.style.opacity = "0";
-      document.body.appendChild(textArea);
-      textArea.focus();
-      textArea.select();
-      document.execCommand("copy");
-      document.body.removeChild(textArea);
-    } catch (err) {
-      // ignore silently in browser
-    }
-  };
-
-  const handleCreateAndSaveProposal = (silent = false) => {
+  // Builds the Proposal + Deal records and writes them into CrmDb. Shared by
+  // the plain "Save" action and the real e-mail send action below, so both
+  // paths persist exactly the same data instead of duplicating this logic.
+  const buildAndPersistProposal = (): { newProposal: any; newDeal: any } | null => {
     if (!clientTitle.trim()) {
       alert(t("Please fill in the Client Legal Name field!"));
-      return;
+      return null;
     }
 
     const proposalId = "prop-" + Date.now();
@@ -1957,61 +1933,64 @@ export default function ServicesView({
     dealsList.unshift(newDeal);
     CrmDb.saveDeals(dealsList);
 
+    return { newProposal, newDeal };
+  };
+
+  // Plain "Save" action — just persists the proposal/opportunity. This used
+  // to ALSO force-open the browser print dialog and try to auto-launch a
+  // mailto:/webmail window on every save (even from the "Create Proposal &
+  // Save to CRM" button, which has nothing to do with sending mail), which is
+  // what caused the page to appear to hang: a `mailto:` link opened via
+  // `target="_self"` navigates the current tab itself, and browsers with no
+  // default mail handler configured show a blocking native prompt while the
+  // SPA underneath sits frozen. None of that popup/navigation juggling
+  // happens here anymore — saving is just saving.
+  const handleCreateAndSaveProposal = (silent = false) => {
+    const result = buildAndPersistProposal();
+    if (!result) return;
     if (!silent) {
-      // Step 5 trigger: Save database AND open print PDF immediately!
       setToastMessage(t("Proposal and opportunity saved!"));
-      
-      // Auto open PDF print/save setup
-      handlePrint();
-
-      // Open email drafting in parallel!
-      const toEmail = clientContactEmail || "ornek@firma.com";
-      const encodedSubject = encodeURIComponent(mailSubject);
-      const encodedBody = encodeURIComponent(mailBody);
-
-      let finalLink = "";
-      if (mailClientType === "mailto") {
-        finalLink = `mailto:${toEmail}?subject=${encodedSubject}&body=${encodedBody}`;
-      } else if (mailClientType === "gmail") {
-        finalLink = `https://mail.google.com/mail/?view=cm&fs=1&to=${toEmail}&su=${encodedSubject}&body=${encodedBody}`;
-      } else if (mailClientType === "outlook") {
-        finalLink = `https://outlook.live.com/mail/0/deeplink/compose?to=${toEmail}&subject=${encodedSubject}&body=${encodedBody}`;
-      } else if (mailClientType === "outlook-corp") {
-        finalLink = `https://outlook.office.com/mail/deeplink/compose?to=${toEmail}&subject=${encodedSubject}&body=${encodedBody}`;
-      }
-
-      // Try copying email text
-      let doneCopy = false;
-      if (typeof navigator !== "undefined" && navigator.clipboard && typeof navigator.clipboard.writeText === "function") {
-        navigator.clipboard.writeText(mailBody)
-          .then(() => { doneCopy = true; })
-          .catch(() => {
-            fallbackCopyText(mailBody);
-          });
-      } else {
-        fallbackCopyText(mailBody);
-      }
-
-      // Open mail window reliably
-      if (mailClientType === "mailto") {
-        const anchor = document.createElement("a");
-        anchor.href = finalLink;
-        anchor.target = "_self";
-        document.body.appendChild(anchor);
-        anchor.click();
-        document.body.removeChild(anchor);
-      } else {
-        window.open(finalLink, "_blank");
-      }
-
-      // Open visual assistant overlay explaining exactly how to attach PDF
-      setShowAttachmentHelper(true);
     }
   };
 
+  // Opens the user's chosen external mail client (Outlook desktop/web, Gmail)
+  // with the recipient/subject/body pre-filled, as an alternative to the
+  // real in-app send above — kept because the user asked for both options
+  // ("ikisi de olabilir"). This intentionally does NOT auto-trigger a print
+  // dialog or navigate the tab on every save the way the old combined
+  // handler used to (see buildAndPersistProposal/handleCreateAndSaveProposal
+  // comments) — it only runs when this button is explicitly clicked, saves
+  // silently first, then opens exactly one new mail composition window/tab.
   const handleOpenMailClient = () => {
-    // Delegates to high-performance combined action to trigger save + pdf generation + composition!
-    handleCreateAndSaveProposal(false);
+    handleCreateAndSaveProposal(true);
+
+    const toEmail = clientContactEmail || "ornek@firma.com";
+    const encodedSubject = encodeURIComponent(mailSubject);
+    const encodedBody = encodeURIComponent(mailBody);
+
+    let finalLink = "";
+    if (mailClientType === "mailto") {
+      finalLink = `mailto:${toEmail}?subject=${encodedSubject}&body=${encodedBody}`;
+    } else if (mailClientType === "gmail") {
+      finalLink = `https://mail.google.com/mail/?view=cm&fs=1&to=${toEmail}&su=${encodedSubject}&body=${encodedBody}`;
+    } else if (mailClientType === "outlook") {
+      finalLink = `https://outlook.live.com/mail/0/deeplink/compose?to=${toEmail}&subject=${encodedSubject}&body=${encodedBody}`;
+    } else if (mailClientType === "outlook-corp") {
+      finalLink = `https://outlook.office.com/mail/deeplink/compose?to=${toEmail}&subject=${encodedSubject}&body=${encodedBody}`;
+    }
+
+    if (mailClientType === "mailto") {
+      const anchor = document.createElement("a");
+      anchor.href = finalLink;
+      anchor.target = "_self";
+      document.body.appendChild(anchor);
+      anchor.click();
+      document.body.removeChild(anchor);
+    } else {
+      window.open(finalLink, "_blank");
+    }
+
+    setToastMessage("Teklif kaydedildi. Lütfen indirdiğiniz PDF'i açılan e-postaya elle ekleyin.");
   };
 
   // Sync draft assembled proposal text on step completion (Now step 4 is the preview stage)
@@ -2480,28 +2459,20 @@ export default function ServicesView({
 
                 {/* Default Cover Text */}
                 <div className="space-y-1.5">
-                  <div className="flex items-center justify-between">
-                    <label className="text-[11px] font-bold text-slate-500 dark:text-slate-400 flex items-center gap-1">
-                      <Type className="w-3.5 h-3.5" />
-                      Varsayılan Giriş & Kapak Taslak Yazısı
-                    </label>
-                    <button
-                      type="button"
-                      onClick={() => setIsCoverTextCollapsed(!isCoverTextCollapsed)}
-                      className="text-xs font-black bg-slate-100 hover:bg-slate-200 dark:bg-[#252423] dark:hover:bg-[#323130] text-slate-700 dark:text-slate-200 w-6 h-6 rounded flex items-center justify-center cursor-pointer border border-[#EDEBE9] dark:border-[#323130] transition-colors"
-                      title={isCoverTextCollapsed ? "Alanı Genişlet" : "Alanı Küçült / Gizle"}
-                    >
-                      {isCoverTextCollapsed ? "+" : "-"}
-                    </button>
-                  </div>
-                  {!isCoverTextCollapsed && (
-                    <textarea
-                      rows={4}
-                      value={editCoverPage}
-                      onChange={(e) => setEditCoverPage(e.target.value)}
-                      className="w-full bg-slate-50 dark:bg-[#252423] border border-[#EDEBE9] dark:border-[#323130] rounded p-2.5 text-xs leading-relaxed focus:ring-1 focus:ring-[#0078D4] focus:outline-hidden animate-fadeIn"
-                    />
-                  )}
+                  <label className="text-[11px] font-bold text-slate-500 dark:text-slate-400 flex items-center gap-1">
+                    <Type className="w-3.5 h-3.5" />
+                    Varsayılan Giriş & Kapak Taslak Yazısı (Düz Metin)
+                  </label>
+                  <textarea
+                    rows={4}
+                    value={editCoverPage}
+                    onChange={(e) => setEditCoverPage(e.target.value)}
+                    placeholder={"BAŞLIK SATIRI (BÜYÜK HARF)\nAçıklama metnini normal harflerle buraya yazın."}
+                    className="w-full bg-slate-50 dark:bg-[#252423] border border-[#EDEBE9] dark:border-[#323130] rounded p-2.5 text-xs focus:ring-1 focus:ring-[#0078D4] focus:outline-hidden"
+                  />
+                  <p className="text-[10px] text-slate-450 dark:text-slate-500">
+                    HTML etiketi yazmanıza gerek yok. Tamamı BÜYÜK HARFLE yazılan satırlar otomatik olarak başlık gibi gösterilir, diğer satırlar normal paragraf olur.
+                  </p>
                 </div>
 
                 {/* Activity & Content Table Rich Editor */}
@@ -3961,97 +3932,6 @@ export default function ServicesView({
             </div>
             )}
 
-          </div>
-        </div>
-      )}
-
-      {showAttachmentHelper && (
-        <div className="fixed inset-0 z-[250] bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4">
-          <div className="w-full max-w-2xl bg-white dark:bg-[#1b1a19] rounded-2xl border border-slate-200 dark:border-zinc-800 shadow-2xl overflow-hidden animate-in fade-in zoom-in-95 duration-200">
-            {/* Header */}
-            <div className="bg-gradient-to-r from-blue-600 via-indigo-600 to-blue-700 p-6 text-white">
-              <div className="flex items-center gap-3">
-                <div className="p-2 bg-white/10 rounded-xl">
-                  <Paperclip className="w-6 h-6 text-white" />
-                </div>
-                <div>
-                  <h3 className="text-lg font-black tracking-tight text-white select-none">
-                     {t("Email Attachment Helper")}
-                  </h3>
-                  <p className="text-xs opacity-90 select-none">
-                    Teklif PDF'inizi e-postanızla eşleştirme yönergesi
-                  </p>
-                </div>
-              </div>
-            </div>
-
-            {/* Steps Body */}
-            <div className="p-6 space-y-6">
-              <div className="p-4 bg-blue-50/50 dark:bg-blue-950/20 border border-blue-200/50 dark:border-blue-900/30 rounded-xl">
-                <p className="text-xs text-slate-700 dark:text-slate-300 leading-relaxed font-semibold">
-                  ℹ️ **Neden Bu Ekranı Görüyorsunuz?** Güvenlik protokolleri sebebiyle, web siteleri sizin rızanız olmadan yerel bilgisayarınızdaki bir dosyayı e-posta istemcilerine otomatik ekleyemez (attach yapamaz). Bu yüzden, size en hızlı ve pratik iş akışını sunuyoruz:
-                </p>
-              </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                {/* Step 1 */}
-                <div className="p-4 rounded-xl border border-slate-100 dark:border-zinc-800/80 bg-slate-50/50 dark:bg-zinc-900/30 flex flex-col space-y-2">
-                  <div className="flex items-center gap-2">
-                    <span className="w-6 h-6 rounded-full bg-blue-600 text-white font-mono text-xs font-black flex items-center justify-center">1</span>
-                    <h4 className="text-xs font-black text-slate-800 dark:text-slate-100">Yazdır & İndir</h4>
-                  </div>
-                  <p className="text-[11px] text-slate-500 dark:text-slate-400 leading-relaxed">
-                    Yazdırma paneli otomatik açılmıştır. <strong>Hedef</strong> kısmından <strong>PDF Olarak Kaydet</strong> seçerek bilgisayarınıza indirin.
-                  </p>
-                </div>
-
-                {/* Step 2 */}
-                <div className="p-4 rounded-xl border border-slate-100 dark:border-zinc-800/80 bg-slate-50/50 dark:bg-zinc-900/30 flex flex-col space-y-2">
-                  <div className="flex items-center gap-2">
-                    <span className="w-6 h-6 rounded-full bg-blue-600 text-white font-mono text-xs font-black flex items-center justify-center">2</span>
-                    <h4 className="text-xs font-black text-slate-800 dark:text-slate-100">Posta Kutusu Kontrolü</h4>
-                  </div>
-                  <p className="text-[11px] text-slate-500 dark:text-slate-400 leading-relaxed">
-                    Arka planda seçtiğiniz e-posta istemcisi ({mailClientType === "mailto" ? t("Desktop Outlook") : mailClientType === "gmail" ? t("Web Gmail") : mailClientType === "outlook-corp" ? t("Office 365 Corporate Web") : t("Personal Web Outlook")}) {t("Your selected email client opened in the background with recipient, subject, and body.")}
-                  </p>
-                </div>
-
-                {/* Step 3 */}
-                <div className="p-4 rounded-xl border border-teal-100 dark:border-teal-900/30 bg-teal-50/20 dark:bg-teal-950/10 flex flex-col space-y-2">
-                  <div className="flex items-center gap-2">
-                    <span className="w-6 h-6 rounded-full bg-teal-600 text-white font-mono text-xs font-black flex items-center justify-center">3</span>
-                    <h4 className="text-xs font-black text-teal-800 dark:text-teal-200">Sürükle & Bırak (Ek)</h4>
-                  </div>
-                  <p className="text-[11px] text-slate-600 dark:text-slate-300 leading-relaxed font-medium">
-                    Bilgisayarınıza inen <strong>{clientShortName}_{proposalNumber}.pdf</strong> dosyasını fareyle tutup açılan e-posta gövdesine sürükleyip bırakarak (drag-and-drop) ekleyin ve gönderin.
-                  </p>
-                </div>
-              </div>
-
-              {/* Clipboard highlight info */}
-              <div className="flex items-center gap-2 text-xs font-bold text-slate-500 dark:text-slate-400 border-t border-slate-100 dark:border-zinc-800/80 pt-4">
-                <span className="p-1.5 bg-slate-100 dark:bg-zinc-800 rounded">💡 Bilgi</span>
-                <span>E-posta metni kolaylık olması açısından bilgisayar pano hafızanıza (Ctrl+V) da yedeklendi!</span>
-              </div>
-            </div>
-
-            {/* Footer buttons */}
-            <div className="bg-slate-50 dark:bg-zinc-900/40 px-6 py-4 border-t border-slate-100 dark:border-zinc-800/80 flex items-center justify-end gap-3">
-              <button
-                type="button"
-                onClick={() => handlePrint()}
-                className="px-4 py-2 bg-slate-200 hover:bg-slate-300 dark:bg-zinc-800 dark:hover:bg-zinc-700 text-slate-700 dark:text-slate-200 text-xs font-bold rounded-lg transition-all"
-              >
-                PDF Tekrar Yazdır
-              </button>
-              <button
-                type="button"
-                onClick={() => setShowAttachmentHelper(false)}
-                className="px-5 py-2 bg-blue-600 hover:bg-blue-700 text-white text-xs font-black rounded-lg shadow-sm transition-all flex items-center gap-1.5"
-              >
-                Anladım, Kapat <ArrowRight className="w-3.5 h-3.5" />
-              </button>
-            </div>
           </div>
         </div>
       )}

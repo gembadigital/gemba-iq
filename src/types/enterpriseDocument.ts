@@ -24,6 +24,7 @@ export interface EnterpriseDocument {
   file_size: number;
   storage_path: string;
   folder: DocumentFolderKey;
+  folder_id?: string | null;
   version: number;
   document_group_id: string;
   tags: string[];
@@ -34,9 +35,24 @@ export interface EnterpriseDocument {
   uploader_name?: string | null;
 }
 
+// A user-created (sub)folder inside a top-level document category.
+// parent_folder_id is null for a folder created at the category root, and
+// points at another DocumentFolder for a folder nested inside a folder.
+export interface DocumentFolder {
+  id: string;
+  organization_id: string;
+  category: DocumentFolderKey;
+  parent_folder_id: string | null;
+  name: string;
+  created_by: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
 export interface DocumentUploadInput {
   file: File;
   folder: DocumentFolderKey;
+  folderId?: string | null;
   companyId?: string;
   dealId?: string;
   proposalId?: string;
@@ -47,6 +63,7 @@ export interface DocumentUploadInput {
 
 export interface DocumentListFilters {
   folder?: DocumentFolderKey;
+  folderId?: string | null;
   companyId?: string;
   dealId?: string;
   proposalId?: string;

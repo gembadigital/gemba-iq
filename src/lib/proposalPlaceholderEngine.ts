@@ -2,6 +2,7 @@ import type { Proposal } from "../types/proposal";
 import type { Company } from "../components/CompaniesView";
 import type { Deal } from "../components/DealManagementView";
 import type { Contact } from "./CrmDb";
+import { formatSystemNumber } from "./currencyHelper";
 
 export const PROPOSAL_PLACEHOLDERS = [
   "{{company_name}}",
@@ -46,9 +47,9 @@ export function buildPlaceholderMap(ctx: PlaceholderContext): Record<string, str
     "{{proposal_date}}": proposal.date || "",
     "{{owner}}": proposal.owner || "",
     "{{currency}}": proposal.currency || "",
-    "{{grand_total}}": `${proposal.currency || ""} ${(proposal.grandTotal || 0).toLocaleString()}`,
-    "{{total_budget}}": `${proposal.currency || ""} ${(proposal.totalBudget || 0).toLocaleString()}`,
-    "{{taxes}}": `${proposal.currency || ""} ${(proposal.taxes || 0).toLocaleString()}`,
+    "{{grand_total}}": `${proposal.currency || ""} ${formatSystemNumber((proposal.grandTotal || 0))}`,
+    "{{total_budget}}": `${proposal.currency || ""} ${formatSystemNumber((proposal.totalBudget || 0))}`,
+    "{{taxes}}": `${proposal.currency || ""} ${formatSystemNumber((proposal.taxes || 0))}`,
     "{{current_version}}": proposal.currentVersion || "V1",
     "{{deal_name}}": deal?.dealName || deal?.companyName || "",
     "{{description}}": proposal.description || "",

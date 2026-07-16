@@ -8,6 +8,7 @@ import {
   validateUploadFile,
 } from "./documentConstants";
 import type {
+  DocumentFolder,
   DocumentFolderKey,
   DocumentListFilters,
   DocumentUploadInput,
@@ -56,6 +57,10 @@ function applyFilters(documents: EnterpriseDocument[], filters: DocumentListFilt
 
   if (filters.folder) {
     result = result.filter((doc) => doc.folder === filters.folder);
+  }
+  if (filters.folderId !== undefined) {
+    // null/undefined folderId means "the root of this category" (no subfolder)
+    result = result.filter((doc) => (doc.folder_id || null) === filters.folderId);
   }
   if (filters.companyId) {
     result = result.filter((doc) => doc.company_id === filters.companyId);
@@ -224,6 +229,7 @@ export async function uploadDocument(
     file_size: input.file.size,
     storage_path: storagePath,
     folder: input.folder,
+    folder_id: input.folderId || null,
     version,
     document_group_id: documentGroupId,
     tags: input.tags || [],
@@ -245,6 +251,7 @@ export async function uploadBlobDocument(params: {
   blob: Blob;
   filename: string;
   folder: DocumentFolderKey;
+  folderId?: string | null;
   companyId?: string;
   dealId?: string;
   proposalId?: string;
@@ -257,12 +264,121 @@ export async function uploadBlobDocument(params: {
   return uploadDocument({
     file,
     folder: params.folder,
+    folderId: params.folderId,
     companyId: params.companyId,
     dealId: params.dealId,
     proposalId: params.proposalId,
     tags: params.tags,
     description: params.description,
   });
+}
+
+// ---------------------------------------------------------------------------
+// Folders (arbitrarily-nested subfolders inside each top-level category)
+// ---------------------------------------------------------------------------
+
+/**
+ * Lists the subfolders directly inside `parentFolderId` (or the category
+ * root when `parentFolderId` is null) for the given top-level category.
+ */
+export async function listFolders(
+  category: DocumentFolderKey,
+  parentFolderId: string | null = null
+): Promise<DocumentFolder[]> {
+  const client = await requireClient();
+  const organizationId = await requireOrgId();
+
+  let query = client
+    .from("document_folders")
+    .select("*")
+    .eq("organization_id", organizationId)
+    .eq("category", category)
+    .order("name", { ascending: true });
+
+  query = parentFolderId ? query.eq("parent_folder_id", parentFolderId) : query.is("parent_folder_id", null);
+
+  const { data, error } = await query;
+  if (error) {
+    throw new Error(error.message);
+  }
+
+  return (data as DocumentFolder[]) || [];
+}
+
+/**
+ * Creates a folder inside the given category. Pass `parentFolderId` to
+ * create a folder *inside another folder* (arbitrary nesting).
+ */
+export async function createFolder(
+  category: DocumentFolderKey,
+  name: string,
+  parentFolderId: string | null = null
+): Promise<DocumentFolder> {
+  const trimmed = name.trim();
+  if (!trimmed) {
+    throw new Error("Folder name is required.");
+  }
+
+  const client = await requireClient();
+  const organizationId = await requireOrgId();
+  const userId = await requireUserId();
+
+  const { data, error } = await client
+    .from("document_folders")
+    .insert({
+      organization_id: organizationId,
+      category,
+      parent_folder_id: parentFolderId,
+      name: trimmed,
+      created_by: userId,
+    })
+    .select("*")
+    .single();
+
+  if (error) {
+    if (error.code === "23505") {
+      throw new Error("A folder with this name already exists here.");
+    }
+    throw new Error(error.message);
+  }
+
+  return data as DocumentFolder;
+}
+
+export async function renameFolder(folderId: string, newName: string): Promise<DocumentFolder> {
+  const trimmed = newName.trim();
+  if (!trimmed) {
+    throw new Error("Folder name is required.");
+  }
+
+  const client = await requireClient();
+  const { data, error } = await client
+    .from("document_folders")
+    .update({ name: trimmed })
+    .eq("id", folderId)
+    .select("*")
+    .single();
+
+  if (error) {
+    if (error.code === "23505") {
+      throw new Error("A folder with this name already exists here.");
+    }
+    throw new Error(error.message);
+  }
+
+  return data as DocumentFolder;
+}
+
+/**
+ * Deletes a folder. Subfolders cascade (see migration), and documents that
+ * were inside it fall back to the category root (folder_id set to null).
+ */
+export async function deleteFolder(folderId: string): Promise<void> {
+  const client = await requireClient();
+  const { error } = await client.from("document_folders").delete().eq("id", folderId);
+  if (error) {
+    throw new Error(error.message);
+  }
 }
 
 export async function getSignedDownloadUrl(document: EnterpriseDocument, expiresIn = 3600): Promise<string> {
@@ -364,7 +480,9 @@ export async function moveDocument(documentId: string, targetFolder: DocumentFol
 
   const { data, error } = await client
     .from("documents")
-    .update({ folder: targetFolder, storage_path: newPath })
+    // Moving to a different top-level category invalidates any subfolder
+    // selection from the old category's folder tree.
+    .update({ folder: targetFolder, folder_id: null, storage_path: newPath })
     .eq("id", documentId)
     .select("*")
     .single();

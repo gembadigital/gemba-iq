@@ -1,6 +1,7 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
+import { createPortal } from "react-dom";
 import { useLanguage } from "../lib/LanguageContext";
-import { getSystemCurrency } from "../lib/currencyHelper";
+import { getSystemCurrency, formatSystemNumber } from "../lib/currencyHelper";
 import {
   DollarSign,
   Search,
@@ -579,6 +580,17 @@ export default function DealManagementView({ initialTab = "dashboard", onNavigat
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [activeStageMenu, setActiveStageMenu] = useState<string | null>(null);
   const [formMode, setFormMode] = useState<"create" | "edit">("create");
+
+  // The stage "..." dropdown used to be positioned with plain CSS
+  // (absolute, inside the scrollable kanban column). Because the board is
+  // wrapped in an overflow-x-auto/overflow-y-auto scroll container, that
+  // absolutely-positioned menu could end up clipped outside the visible
+  // scroll area — it "opened" (state flipped) but the container itself
+  // never actually became visible on screen. Rendering it through a portal
+  // anchored to the button's real screen position sidesteps any ancestor
+  // overflow/stacking-context clipping entirely.
+  const stageMenuBtnRefs = useRef<Record<string, HTMLButtonElement | null>>({});
+  const [stageMenuPos, setStageMenuPos] = useState<{ top: number; left: number } | null>(null);
 
   // Email sending error state (Simulated/API token errors)
   const [emailSendError, setEmailSendError] = useState<{
@@ -1640,12 +1652,20 @@ export default function DealManagementView({ initialTab = "dashboard", onNavigat
     const valTotal = activeDeals.reduce((sum, d) => sum + d.opportunityValue, 0);
     const forecastVal = activeDeals.reduce((sum, d) => sum + d.opportunityValue * (d.winProbability / 100), 0) +
                         wonDeals.reduce((sum, d) => sum + d.opportunityValue, 0);
+    // Total man-days proposed across all still-open opportunities — the
+    // "Duration" field entered per deal (deal.manDay). Free-text field, so
+    // parse defensively and skip anything that isn't a real number.
+    const totalManDays = activeDeals.reduce((sum, d) => {
+      const parsed = parseFloat(String(d.manDay || "").replace(",", "."));
+      return sum + (Number.isFinite(parsed) ? parsed : 0);
+    }, 0);
 
     return {
       pipelineValue: valTotal,
       forecastValue: forecastVal,
       activeCount: activeDeals.length,
-      wonCount: wonDeals.length
+      wonCount: wonDeals.length,
+      totalManDays
     };
   };
 
@@ -1781,7 +1801,7 @@ export default function DealManagementView({ initialTab = "dashboard", onNavigat
               <span className="text-[10px] font-bold text-slate-400 tracking-wider font-mono">
                 {t("ACTIVE PIPELINE VALUE")}
               </span>
-              <div className="text-xl font-bold text-slate-800 dark:text-zinc-100 mt-1">{getSystemCurrency().symbol}{stats.pipelineValue.toLocaleString()}</div>
+              <div className="text-xl font-bold text-slate-800 dark:text-zinc-100 mt-1">{getSystemCurrency().symbol}{formatSystemNumber(stats.pipelineValue)}</div>
               <span className="text-[9px] text-zinc-400 font-mono mt-0.5">
                 {t("Sum of {count} open deals").replace("{count}", String(stats.activeCount))}
               </span>
@@ -1791,7 +1811,7 @@ export default function DealManagementView({ initialTab = "dashboard", onNavigat
               <span className="text-[10px] font-bold text-slate-400 tracking-wider font-mono">
                 {t("WEIGHTED REVENUE FORECAST")}
               </span>
-              <div className="text-xl font-bold text-green-600 dark:text-green-400 mt-1">{getSystemCurrency().symbol}{Math.floor(stats.forecastValue).toLocaleString()}</div>
+              <div className="text-xl font-bold text-green-600 dark:text-green-400 mt-1">{getSystemCurrency().symbol}{formatSystemNumber(Math.floor(stats.forecastValue))}</div>
               <span className="text-[9px] text-zinc-400 font-mono mt-0.5">
                 {t("Adjusted by win probabilities")}
               </span>
@@ -1811,13 +1831,13 @@ export default function DealManagementView({ initialTab = "dashboard", onNavigat
 
             <div className="bg-white dark:bg-[#151515] p-3.5 rounded-xl border border-slate-100 dark:border-zinc-800/80 shadow-[0_1px_2px_rgba(0,0,0,0.01)] flex flex-col justify-between">
               <span className="text-[10px] font-bold text-slate-400 tracking-wider font-mono">
-                {t("CRM STAGE MILESTONES")}
+                {t("TOTAL PROPOSED MAN-DAYS")}
               </span>
               <div className="text-xl font-bold text-indigo-500 mt-1">
-                {t("{count} phases").replace("{count}", String(activeStages.length))}
+                {t("{count} days").replace("{count}", formatSystemNumber(Math.round(stats.totalManDays)))}
               </div>
               <span className="text-[9px] text-zinc-400 font-mono mt-0.5">
-                {t("Drag & drop to reorder columns")}
+                {t("Sum of {count} open deals").replace("{count}", String(stats.activeCount))}
               </span>
             </div>
           </div>
@@ -2087,7 +2107,7 @@ export default function DealManagementView({ initialTab = "dashboard", onNavigat
                           </td>
                           <td className="p-4">
                             <div className="font-bold text-xs text-slate-800 dark:text-zinc-200">
-                              {getSystemCurrency().symbol}{(deal.opportunityValue || 0).toLocaleString()}
+                              {getSystemCurrency().symbol}{formatSystemNumber((deal.opportunityValue || 0))}
                             </div>
                             <div className="text-[10px] text-slate-400 font-mono mt-0.5">
                               Opex Score: <span className="text-orange-500 font-bold">{deal.opexScore}</span>
@@ -2296,27 +2316,43 @@ export default function DealManagementView({ initialTab = "dashboard", onNavigat
                           <div className="relative">
                             <button
                               type="button"
+                              ref={(el) => { stageMenuBtnRefs.current[stage] = el; }}
                               onClick={(e) => {
                                 e.stopPropagation();
-                                setActiveStageMenu(activeStageMenu === stage ? null : stage);
+                                if (activeStageMenu === stage) {
+                                  setActiveStageMenu(null);
+                                  setStageMenuPos(null);
+                                  return;
+                                }
+                                const rect = e.currentTarget.getBoundingClientRect();
+                                setStageMenuPos({ top: rect.bottom + 4, left: rect.right - 192 /* w-48 */ });
+                                setActiveStageMenu(stage);
                               }}
                               className="p-1 hover:bg-white dark:hover:bg-zinc-800 rounded transition-colors text-slate-400 hover:text-slate-655 cursor-pointer"
                             >
                               <MoreVertical className="w-3.5 h-3.5" />
                             </button>
-                            
-                            {activeStageMenu === stage && (
+
+                            {/* Rendered through a portal to document.body so the menu can
+                                never be clipped by the kanban board's horizontal/vertical
+                                scroll containers — it's positioned in fixed/viewport
+                                coordinates from the button's real screen position. */}
+                            {activeStageMenu === stage && stageMenuPos && createPortal(
                               <>
                                 {/* Backdrop to dismiss */}
-                                <div className="fixed inset-0 z-40" onClick={(e) => { e.stopPropagation(); setActiveStageMenu(null); }} />
-                                
-                                {/* Dropdown Container - Float on top of all boards */}
-                                <div className="absolute right-0 top-6 bg-white dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 rounded-lg shadow-xl py-1 w-48 z-50 text-left animate-in fade-in duration-100">
+                                <div className="fixed inset-0 z-[9998]" onClick={(e) => { e.stopPropagation(); setActiveStageMenu(null); setStageMenuPos(null); }} />
+
+                                {/* Dropdown Container - Float on top of everything, viewport-anchored */}
+                                <div
+                                  style={{ position: "fixed", top: stageMenuPos.top, left: Math.max(8, stageMenuPos.left) }}
+                                  className="bg-white dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 rounded-lg shadow-xl py-1 w-48 z-[9999] text-left animate-in fade-in duration-100"
+                                >
                                   <button
                                     type="button"
                                     onClick={() => {
                                       toggleCollapseStage(stage);
                                       setActiveStageMenu(null);
+                                      setStageMenuPos(null);
                                     }}
                                     className="w-full text-left px-3 py-1.5 text-xs text-slate-700 dark:text-zinc-300 hover:bg-slate-50 dark:hover:bg-zinc-800 flex items-center gap-1.5 cursor-pointer"
                                   >
@@ -2328,6 +2364,7 @@ export default function DealManagementView({ initialTab = "dashboard", onNavigat
                                       setIsAddingDescPopup({ stage });
                                       setNewStageDescInput(descText);
                                       setActiveStageMenu(null);
+                                      setStageMenuPos(null);
                                     }}
                                     className="w-full text-left px-3 py-1.5 text-xs text-slate-700 dark:text-zinc-300 hover:bg-slate-50 dark:hover:bg-zinc-800 flex items-center gap-1.5 cursor-pointer"
                                   >
@@ -2344,6 +2381,7 @@ export default function DealManagementView({ initialTab = "dashboard", onNavigat
                                         setStageMetadata(p => ({ ...p, [stName]: { collapsed: false, description: "Milestone" } }));
                                       }
                                       setActiveStageMenu(null);
+                                      setStageMenuPos(null);
                                     }}
                                     className="w-full text-left px-3 py-1.5 text-xs text-slate-700 dark:text-zinc-300 hover:bg-slate-50 dark:hover:bg-zinc-800 flex items-center gap-1.5 cursor-pointer"
                                   >
@@ -2355,6 +2393,7 @@ export default function DealManagementView({ initialTab = "dashboard", onNavigat
                                       setIsRenamingStagePopup(stage);
                                       setRenameStageInput(stage);
                                       setActiveStageMenu(null);
+                                      setStageMenuPos(null);
                                     }}
                                     className="w-full text-left px-3 py-1.5 text-xs text-[#0078D4] dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-950/20 flex items-center gap-1.5 cursor-pointer font-bold"
                                   >
@@ -2366,13 +2405,15 @@ export default function DealManagementView({ initialTab = "dashboard", onNavigat
                                     onClick={() => {
                                       handleDeleteStage(stage);
                                       setActiveStageMenu(null);
+                                      setStageMenuPos(null);
                                     }}
                                     className="w-full text-left px-3 py-1.5 text-xs text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-955/20 flex items-center gap-1.5 cursor-pointer"
                                   >
                                     <span>{t("Delete Stage")}</span>
                                   </button>
                                 </div>
-                              </>
+                              </>,
+                              document.body
                             )}
                           </div>
                         </div>
@@ -2497,7 +2538,7 @@ export default function DealManagementView({ initialTab = "dashboard", onNavigat
                                       <span className="block text-[9px] text-slate-400 uppercase font-mono font-bold">
                                         {t("OPPORTUNITY VALUE")}
                                       </span>
-                                      <span className="text-sm font-extrabold text-slate-755 dark:text-zinc-150">{getSystemCurrency().symbol}{(deal.opportunityValue || 0).toLocaleString()}</span>
+                                      <span className="text-sm font-extrabold text-slate-755 dark:text-zinc-150">{getSystemCurrency().symbol}{formatSystemNumber((deal.opportunityValue || 0))}</span>
                                     </div>
                                     <div className="text-right">
                                       <span className="block text-[9px] text-slate-400 uppercase font-mono font-bold">
@@ -2576,7 +2617,7 @@ export default function DealManagementView({ initialTab = "dashboard", onNavigat
 
                       <div className="mt-4 pt-3 border-t border-slate-205 dark:border-zinc-800 flex justify-between text-[11px] font-bold text-slate-500">
                         <span>{t("Total Value:")}</span>
-                        <span className="text-slate-850 dark:text-zinc-200">{getSystemCurrency().symbol}{stageValueSum.toLocaleString()}</span>
+                        <span className="text-slate-850 dark:text-zinc-200">{getSystemCurrency().symbol}{formatSystemNumber(stageValueSum)}</span>
                       </div>
                     </div>
                   );

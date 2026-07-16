@@ -5,6 +5,7 @@ import { Company } from "./CompaniesView";
 import CompanyAutocomplete from "./CompanyAutocomplete";
 import { useLanguage } from "../lib/LanguageContext";
 import { CrmDb } from "../lib/CrmDb";
+import { formatSystemNumber } from "../lib/currencyHelper";
 
 interface ProposalFormModalProps {
   isOpen: boolean;
@@ -444,7 +445,7 @@ export default function ProposalFormModal({
         },
       ],
       createdBy: initialProposal?.createdBy || owner,
-      lastUpdate: new Date().toLocaleString(),
+      lastUpdate: new Date().toISOString(),
       coverPage,
       methodology,
       projectPlan,
@@ -955,7 +956,7 @@ export default function ProposalFormModal({
                       <div className="flex items-center justify-between pt-1 border-t border-dashed dark:border-zinc-800">
                         <span className="text-[10px] text-slate-400">{t("Option Estimator Sum:")}</span>
                         <span className="font-extrabold text-xs text-slate-800 dark:text-zinc-100">
-                          {currency} {budgetTotal.toLocaleString()}
+                          {currency} {formatSystemNumber(budgetTotal)}
                         </span>
                       </div>
                     </div>
@@ -971,9 +972,9 @@ export default function ProposalFormModal({
               <div>
                 <span className="blog text-[9px] text-emerald-700 font-bold uppercase">{t("Dynamic Financial Rollup Summary")}</span>
                 <div className="flex flex-wrap gap-4 text-xs font-bold text-slate-700 dark:text-zinc-200 mt-0.5">
-                  <span>{t("Subtotal:")} {currency} {calculateOverallTotal().toLocaleString()}</span>
+                  <span>{t("Subtotal:")} {currency} {formatSystemNumber(calculateOverallTotal())}</span>
                   <span className="text-slate-400">|</span>
-                  <span>{t("VAT (20%):")} {currency} {(calculateOverallTotal() * 0.2).toLocaleString()}</span>
+                  <span>{t("VAT (20%):")} {currency} {formatSystemNumber((calculateOverallTotal() * 0.2))}</span>
                 </div>
               </div>
             </div>
@@ -981,7 +982,7 @@ export default function ProposalFormModal({
             <div className="bg-emerald-600/10 px-4 py-2 rounded-lg text-right border border-emerald-500/20 shadow-xs shrink-0">
               <span className="block text-[9px] text-emerald-700 font-bold">{t("GRAND TOTAL OFFER")}</span>
               <span className="text-lg font-bold text-emerald-600 dark:text-emerald-400">
-                {currency} {(calculateOverallTotal() * 1.2).toLocaleString()}
+                {currency} {formatSystemNumber((calculateOverallTotal() * 1.2))}
               </span>
             </div>
           </div>

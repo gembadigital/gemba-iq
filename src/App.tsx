@@ -23,9 +23,10 @@ import GlobalSearchBar from "./components/GlobalSearchBar";
 import { useLanguage } from "./lib/LanguageContext";
 import { useAuth } from "./lib/AuthContext";
 import { useOrganization } from "./lib/OrganizationContext";
+import { CrmDb } from "./lib/CrmDb";
+import type { TaskNotification } from "./components/TasksView";
 import { getDisplayInitials } from "./lib/authHelpers";
 import { useOrganizationMailboxController } from "./lib/useOrganizationMailboxController";
-import { CrmDb } from "./lib/CrmDb";
 import { useNavigate } from "react-router-dom";
 const logoImage = "https://lh3.googleusercontent.com/d/13bNnthJU4LIICB4iiF1a4GH1PEn05MBx";
 // Must exactly match the key used in AdministrationCenter.tsx and currencyHelper.ts.
@@ -199,13 +200,68 @@ export default function App() {
     return () => clearInterval(interval);
   }, [logoUrl]);
   
-  // Custom mock notifications list to power interactive notification badge/dropdown
-  const [notifications, setNotifications] = useState<Array<{ id: string; textKey: string; timeKey: string; read: boolean }>>([
-    { id: "1", textKey: "Banu Kaya created a new B2B proposal.", timeKey: "5 minutes ago", read: false },
-    { id: "2", textKey: "Gemini AI Sales Coach completed analysis.", timeKey: "15 minutes ago", read: false },
-    { id: "3", textKey: "Exchange Online email server connection established.", timeKey: "1 hour ago", read: true },
-    { id: "4", textKey: "Tavily deep search engine integration activated.", timeKey: "2 hours ago", read: true }
-  ]);
+  // Real notification bell, sourced from the task assignment/reminder engine
+  // (TasksView.tsx / CrmDb) rather than a hardcoded mock list. Only the
+  // notifications addressed to the signed-in user's own account e-mail are
+  // shown here — e.g. "you were just assigned a task" or a due-date/overdue
+  // reminder for a task that belongs to them.
+  const buildBellNotifications = (): Array<{ id: string; textKey: string; timeKey: string; read: boolean }> => {
+    const myEmail = (actorEmail || "").trim().toLowerCase();
+    if (!myEmail) return [];
+    const describe = (n: TaskNotification): string => {
+      switch (n.type) {
+        case "assigned":
+          return `Size yeni bir görev atandı: "${n.taskTitle}"`;
+        case "due_soon":
+          return `"${n.taskTitle}" görevinin bitiş tarihi yaklaşıyor.`;
+        case "overdue":
+          return `"${n.taskTitle}" görevi gecikti.`;
+        case "escalation":
+          return `"${n.taskTitle}" görevi için eskalasyon bildirimi.`;
+        case "daily_summary":
+        default:
+          return n.subject || `"${n.taskTitle}" ile ilgili bildirim.`;
+      }
+    };
+    return CrmDb.getTaskNotifications()
+      .filter((n) => (n.recipientEmail || "").trim().toLowerCase() === myEmail)
+      .sort((a, b) => (a.createdAt < b.createdAt ? 1 : -1))
+      .slice(0, 25)
+      .map((n) => ({ id: n.id, textKey: describe(n), timeKey: n.createdAt, read: n.isRead }));
+  };
+
+  const [notifications, setNotifications] = useState<Array<{ id: string; textKey: string; timeKey: string; read: boolean }>>(
+    () => buildBellNotifications()
+  );
+
+  // Re-sync the bell from CrmDb: on the periodic re-hydration below (so
+  // task assignments made in another session while this one stays open
+  // eventually show up here too), and immediately whenever the dropdown
+  // is opened.
+  const refreshBellNotifications = () => setNotifications(buildBellNotifications());
+
+  useEffect(() => {
+    const intervalId = window.setInterval(() => {
+      CrmDb.hydrateFromSupabase()
+        .then(() => refreshBellNotifications())
+        .catch(() => {
+          // Non-fatal: keep showing whatever was last loaded.
+        });
+    }, 3 * 60 * 1000);
+    return () => window.clearInterval(intervalId);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [actorEmail]);
+
+  // Persists read/unread state back to the shared task-notification store so
+  // it's consistent with the Tasks page's own notification list.
+  const persistBellReadState = (updateFn: (n: TaskNotification) => TaskNotification) => {
+    const myEmail = (actorEmail || "").trim().toLowerCase();
+    const all = CrmDb.getTaskNotifications();
+    const next = all.map((n) =>
+      (n.recipientEmail || "").trim().toLowerCase() === myEmail ? updateFn(n) : n
+    );
+    CrmDb.saveTaskNotifications(next);
+  };
 
   // Navigation State
   const [activeTab, setActiveTab] = useState<ActiveTab>(getInitialActiveTab);
@@ -1143,14 +1199,16 @@ export default function App() {
               <button
                 type="button"
                 onClick={() => {
-                  setIsNotificationsOpen(!isNotificationsOpen);
+                  const opening = !isNotificationsOpen;
+                  setIsNotificationsOpen(opening);
                   setIsUserDropdownOpen(false);
                   setIsLangDropdownOpen(false);
                   setIsSettingsDropdownOpen(false);
+                  if (opening) refreshBellNotifications();
                 }}
                 className={`p-2 rounded-lg border transition-all cursor-pointer relative ${
-                  isNotificationsOpen 
-                    ? "bg-slate-100 dark:bg-zinc-800 border-indigo-200 dark:border-zinc-700 text-indigo-650 dark:text-zinc-150" 
+                  isNotificationsOpen
+                    ? "bg-slate-100 dark:bg-zinc-800 border-indigo-200 dark:border-zinc-700 text-indigo-650 dark:text-zinc-150"
                     : "bg-white dark:bg-[#141414] hover:bg-slate-50 dark:hover:bg-zinc-800 text-slate-700 dark:text-zinc-350 border-slate-200 dark:border-zinc-800 shadow-[0_1px_2px_rgba(0,0,0,0.01)]"
                 }`}
                 title={t("Notifications")}
@@ -1171,6 +1229,7 @@ export default function App() {
                         <button
                           onClick={() => {
                             setNotifications(notifications.map(n => ({ ...n, read: true })));
+                            persistBellReadState((n) => ({ ...n, isRead: true }));
                           }}
                           className="text-[10px] text-indigo-600 dark:text-indigo-400 hover:underline font-semibold cursor-pointer"
                         >
@@ -1179,11 +1238,21 @@ export default function App() {
                       )}
                     </div>
                     <div className="max-h-72 overflow-y-auto">
+                      {notifications.length === 0 && (
+                        <div className="px-4 py-6 text-center">
+                          <span className="text-[11px] text-slate-400 dark:text-zinc-500">
+                            {t("No new notifications.")}
+                          </span>
+                        </div>
+                      )}
                       {notifications.map((n) => (
                         <div
                           key={n.id}
                           onClick={() => {
                             setNotifications(notifications.map(item => item.id === n.id ? { ...item, read: true } : item));
+                            persistBellReadState((item) => item.id === n.id ? { ...item, isRead: true } : item);
+                            setIsNotificationsOpen(false);
+                            setActiveTab("todo-list");
                           }}
                           className={`px-4 py-3 border-b border-slate-50 dark:border-zinc-805/50 last:border-0 hover:bg-slate-50 dark:hover:bg-zinc-800/30 cursor-pointer transition-all flex items-start gap-2 ${
                             !n.read ? "bg-indigo-50/20 dark:bg-indigo-950/10 font-medium" : ""
@@ -1192,9 +1261,9 @@ export default function App() {
                           <span className={`w-1.5 h-1.5 rounded-full mt-1.5 shrink-0 ${!n.read ? "bg-indigo-550" : "bg-transparent"}`} />
                           <div className="flex-1 min-w-0">
                             <p className="text-xs text-slate-700 dark:text-zinc-300 leading-relaxed font-sans text-left">
-                              {t(n.textKey)}
+                              {n.textKey}
                             </p>
-                            <span className="text-[9px] text-slate-400 dark:text-zinc-500 font-mono block mt-1 text-left">{t(n.timeKey)}</span>
+                            <span className="text-[9px] text-slate-400 dark:text-zinc-500 font-mono block mt-1 text-left">{n.timeKey}</span>
                           </div>
                         </div>
                       ))}

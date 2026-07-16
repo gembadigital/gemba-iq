@@ -55,7 +55,9 @@ export default function SendingProgressView({
   const [isPlaying, setIsPlaying] = useState(false);
   const [campaignStarted, setCampaignStarted] = useState(false);
   const [campaignFinished, setCampaignFinished] = useState(false);
-  const [sendMode, setSendMode] = useState<"send" | "draft">("draft");
+  // Draft creation is not supported by the Phase 1 Organization Mailbox Mail.Send
+  // integration, so direct sending is the only supported mode.
+  const [sendMode] = useState<"send">("send");
   const [deliveryTiming, setDeliveryTiming] = useState<"now" | "scheduled">("now");
   const [currentRunDateTime, setCurrentRunDateTime] = useState(() => {
     const now = new Date();
@@ -312,7 +314,7 @@ export default function SendingProgressView({
               mergedBody += `\n\n<img src="${originHost}/api/track?meta=${trackingUrl}" width="1" height="1" alt="" style="display:none;" />`;
             }
 
-            const endpoint = sendMode === "draft" ? "/api/mail/draft" : "/api/mail/send";
+            const endpoint = "/api/mail/send";
             const supabase = getSupabase();
             const {
               data: { session: authSession },
@@ -868,42 +870,12 @@ export default function SendingProgressView({
                     <span className="text-[10px] uppercase font-bold text-slate-400 tracking-wide block">
                       {t("Outlook Exchange API Mode")}
                     </span>
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                      <label className={`flex items-start gap-3 p-3 rounded-lg border cursor-pointer transition-all ${
-                        sendMode === "draft"
-                          ? "border-[#0078D4] bg-[#0078D4]/5 dark:bg-[#0078D4]/10"
-                          : "border-[#EDEBE9] bg-white hover:bg-slate-50 dark:border-[#323130] dark:bg-[#11100f]"
-                      }`}>
-                        <input
-                          type="radio"
-                          name="sendMode"
-                          checked={sendMode === "draft"}
-                          onChange={() => setSendMode("draft")}
-                          className="mt-0.5 text-[#0078D4] focus:ring-[#0078D4] w-3.5 h-3.5"
-                        />
-                        <div>
-                          <span className="text-xs font-bold text-slate-800 dark:text-slate-100 block">{t("Create Outlook Drafts (Recommended)")}</span>
-<span className="text-[10px] text-slate-500 dark:text-slate-400 block mt-0.5 font-normal">{t("Saves directly to Outlook Drafts folder. Safest method, easy manual verification.")}</span>
-                        </div>
-                      </label>
-
-                      <label className={`flex items-start gap-3 p-3 rounded-lg border cursor-pointer transition-all ${
-                        sendMode === "send"
-                          ? "border-[#0078D4] bg-[#0078D4]/5 dark:bg-[#0078D4]/10"
-                          : "border-[#EDEBE9] bg-white hover:bg-slate-50 dark:border-[#323130] dark:bg-[#11100f]"
-                      }`}>
-                        <input
-                          type="radio"
-                          name="sendMode"
-                          checked={sendMode === "send"}
-                          onChange={() => setSendMode("send")}
-                          className="mt-0.5 text-[#0078D4] focus:ring-[#0078D4] w-3.5 h-3.5"
-                        />
-                        <div>
-                          <span className="text-xs font-bold text-slate-800 dark:text-slate-100 block">{t("Send Directly (Mail.Send Required)")}</span>
-<span className="text-[10px] text-slate-500 dark:text-slate-400 block mt-0.5 font-normal">{t("Instantly dispatches from Exchange server directly to inbox lines.")}</span>
-                        </div>
-                      </label>
+                    <div className="flex items-start gap-3 p-3 rounded-lg border border-[#0078D4] bg-[#0078D4]/5 dark:bg-[#0078D4]/10">
+                      <Mail className="w-4 h-4 text-[#0078D4] mt-0.5 flex-shrink-0" />
+                      <div>
+                        <span className="text-xs font-bold text-slate-800 dark:text-slate-100 block">{t("Send Directly (Mail.Send Required)")}</span>
+                        <span className="text-[10px] text-slate-500 dark:text-slate-400 block mt-0.5 font-normal">{t("Instantly dispatches from Exchange server directly to inbox lines.")}</span>
+                      </div>
                     </div>
                   </div>
                 )}
@@ -1443,9 +1415,9 @@ export default function SendingProgressView({
                                 : "bg-emerald-50 text-emerald-800 dark:bg-emerald-950/20 dark:text-emerald-400 border-emerald-250/20"
                             }`}>
                               <CheckCircle2 className={`w-3 h-3 ${session?.isSandbox ? "text-amber-500" : "text-emerald-500"}`} />
-                              {session?.isSandbox 
-? (sendMode === "draft" ? t("SIM DRAFTED") : t("SIM SUCCESS")) 
-: (sendMode === "draft" ? t("Drafted") : t("Success"))}
+                              {session?.isSandbox
+? t("SIM SUCCESS")
+: t("Success")}
                             </span>
                           )}
                           {rec.status === "failed" && (
@@ -1460,8 +1432,6 @@ export default function SendingProgressView({
                             <span className="text-[11px] text-slate-400 flex items-center gap-1">
                               {session?.isSandbox ? (
 <span className="text-amber-600 dark:text-amber-400 font-semibold">{t("[Demo Simulator] Simulated Row Complete")}</span>
-                              ) : sendMode === "draft" ? (
-                                t("Saved to your Outlook Drafts folder")
                               ) : trackingService !== "none" ? (
                                 <>
                                   <Radio className="w-3 h-3 text-indigo-500 animate-ping" />

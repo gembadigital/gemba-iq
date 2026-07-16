@@ -42,6 +42,7 @@ import { jsPDF } from "jspdf";
 import { useOrganization } from "../lib/OrganizationContext";
 import { fetchOrganizationMailbox } from "../lib/organizationMailbox";
 import { fetchPersonalMailbox } from "../lib/personalMailbox";
+import { formatSystemNumber } from "../lib/currencyHelper";
 
 // Types used in this extension
 export interface OpexNote {
@@ -1369,11 +1370,11 @@ export function ProposalContractSection({
       doc.text(`FINANCIAL COMMERCIAL QUOTE:`, 15, y);
       doc.setFont("Helvetica", "normal");
       y += 5;
-      doc.text(`Total Base Budget: ${prop.currency || "₺"}${prop.totalBudget.toLocaleString()}`, 20, y);
+      doc.text(`Total Base Budget: ${prop.currency || "₺"}${formatSystemNumber(prop.totalBudget)}`, 20, y);
       y += 5;
-      doc.text(`Discount Applied: ${prop.currency || "₺"}${(prop as any).discount || 0}`, 20, y);
+      doc.text(`Discount Applied: ${prop.currency || "₺"}${formatSystemNumber((prop as any).discount || 0)}`, 20, y);
       y += 5;
-      doc.text(`Grand Total Amount (Inc Taxes): ${prop.currency || "₺"}${prop.grandTotal.toLocaleString()}`, 20, y);
+      doc.text(`Grand Total Amount (Inc Taxes): ${prop.currency || "₺"}${formatSystemNumber(prop.grandTotal)}`, 20, y);
 
       doc.save(`Proposal_${prop.proposalNumber}_${prop.currentVersion}.pdf`);
 
@@ -1432,7 +1433,7 @@ export function ProposalContractSection({
           grandTotal: Math.round(revAmount - revDiscount + (revAmount * 0.2)),
           status: "Revision Requested",
           versions: [...propToUpdate.versions, newVerObj],
-          lastUpdate: new Date().toLocaleString()
+          lastUpdate: new Date().toISOString()
         };
         (nextProposal as any).discount = revDiscount;
 
@@ -1477,7 +1478,7 @@ export function ProposalContractSection({
         proposalNumber: formattedNum,
         proposalSubject: `${prop.proposalSubject} (Duplicated)`,
         date: new Date().toLocaleDateString("tr-TR"),
-        lastUpdate: new Date().toLocaleString(),
+        lastUpdate: new Date().toISOString(),
         status: "Draft"
       };
 
@@ -1850,13 +1851,13 @@ export function ProposalContractSection({
               <div>
                 <span className="block text-[8px] font-bold text-slate-400 uppercase tracking-wide font-mono">Total Amount</span>
                 <span className="font-extrabold text-slate-900 dark:text-white text-xs">
-                  {activeProposal.currency || "₺"}{activeProposal.grandTotal.toLocaleString()}
+                  {activeProposal.currency || "₺"}{formatSystemNumber(activeProposal.grandTotal)}
                 </span>
               </div>
               <div>
                 <span className="block text-[8px] font-bold text-slate-400 uppercase tracking-wide font-mono">Discount Applied</span>
                 <span className="font-semibold text-slate-750 dark:text-zinc-200">
-                  {activeProposal.currency || "₺"}{ ((activeProposal as any).discount || 0).toLocaleString() }
+                  {activeProposal.currency || "₺"}{ formatSystemNumber(((activeProposal as any).discount || 0)) }
                 </span>
               </div>
               <div>
@@ -1995,7 +1996,7 @@ export function ProposalContractSection({
 
                     <div className="text-right text-[10px] font-mono text-slate-400 shrink-0 space-y-0.5">
                       <span className="block font-bold text-slate-800 dark:text-zinc-100">
-                        {activeProposal.currency || "₺"}{ver.grandTotal.toLocaleString()}
+                        {activeProposal.currency || "₺"}{formatSystemNumber(ver.grandTotal)}
                       </span>
                       <span className="block">{new Date(ver.date).toLocaleDateString("tr-TR")} | By: {ver.owner || "GP"}</span>
                     </div>
@@ -2198,19 +2199,19 @@ export function ProposalContractSection({
                       <div className="bg-zinc-50 p-4 rounded-lg space-y-2.5 font-sans">
                         <div className="flex justify-between text-xs text-zinc-600">
                           <span>Base Proposal Budget:</span>
-                          <span className="font-mono font-semibold">{activeProposal.currency || "₺"}{activeProposal.totalBudget.toLocaleString()}</span>
+                          <span className="font-mono font-semibold">{activeProposal.currency || "₺"}{formatSystemNumber(activeProposal.totalBudget)}</span>
                         </div>
                         <div className="flex justify-between text-xs text-zinc-600">
                           <span>Discount Applied:</span>
-                          <span className="font-mono font-semibold">-{activeProposal.currency || "₺"}{ ((activeProposal as any).discount || 0).toLocaleString() }</span>
+                          <span className="font-mono font-semibold">-{activeProposal.currency || "₺"}{ formatSystemNumber(((activeProposal as any).discount || 0)) }</span>
                         </div>
                         <div className="flex justify-between text-xs text-zinc-600">
                           <span>Taxes (VAT 20%):</span>
-                          <span className="font-mono font-semibold">{activeProposal.currency || "₺"}{activeProposal.taxes.toLocaleString()}</span>
+                          <span className="font-mono font-semibold">{activeProposal.currency || "₺"}{formatSystemNumber(activeProposal.taxes)}</span>
                         </div>
                         <div className="flex justify-between text-xs font-bold text-zinc-900 border-t pt-2.5">
                           <span>GRAND TOTAL DUE AMOUNT:</span>
-                          <span className="font-mono">{activeProposal.currency || "₺"}{activeProposal.grandTotal.toLocaleString()}</span>
+                          <span className="font-mono">{activeProposal.currency || "₺"}{formatSystemNumber(activeProposal.grandTotal)}</span>
                         </div>
                       </div>
                     </div>
@@ -2265,7 +2266,7 @@ export function ProposalContractSection({
                   return (
                     <div className="space-y-2">
                       <p><strong>Subject:</strong> {ver.subject}</p>
-                      <p><strong>Grand Total:</strong> {activeProposal.currency || "₺"}{ver.grandTotal.toLocaleString()}</p>
+                      <p><strong>Grand Total:</strong> {activeProposal.currency || "₺"}{formatSystemNumber(ver.grandTotal)}</p>
                       <p><strong>Services Included:</strong></p>
                       <ul className="list-disc pl-4 space-y-0.5 text-[10px]">
                         {ver.services.map((s, idx) => <li key={idx}>{s}</li>)}
@@ -2284,7 +2285,7 @@ export function ProposalContractSection({
                   return (
                     <div className="space-y-2">
                       <p><strong>Subject:</strong> {ver.subject}</p>
-                      <p><strong>Grand Total:</strong> {activeProposal.currency || "₺"}{ver.grandTotal.toLocaleString()}</p>
+                      <p><strong>Grand Total:</strong> {activeProposal.currency || "₺"}{formatSystemNumber(ver.grandTotal)}</p>
                       <p><strong>Services Included:</strong></p>
                       <ul className="list-disc pl-4 space-y-0.5 text-[10px]">
                         {ver.services.map((s, idx) => <li key={idx}>{s}</li>)}

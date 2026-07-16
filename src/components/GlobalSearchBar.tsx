@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from "react";
 import { Search, Building, Briefcase, FileText, Users, Layers, Mail, Paperclip, X } from "lucide-react";
 import { CrmDb } from "../lib/CrmDb";
 import { useLanguage } from "../lib/LanguageContext";
+import { formatSystemNumber } from "../lib/currencyHelper";
 
 interface SearchResult {
   id: string;
@@ -70,7 +71,7 @@ export default function GlobalSearchBar() {
         matches.push({
           id: `deal-${d.id}`,
           title: d.dealName || `${d.companyName} ${t("Deal")}`,
-          subtitle: `${t("Deal")} • ${d.companyName} • ${(d.opportunityValue || 0).toLocaleString()} TL • ${d.stage}`,
+          subtitle: `${t("Deal")} • ${d.companyName} • ${formatSystemNumber((d.opportunityValue || 0))} TL • ${d.stage}`,
           type: "deal",
           tab: "deal-management",
           targetId: d.id
@@ -232,7 +233,7 @@ export default function GlobalSearchBar() {
   return (
     <div className="relative w-full max-w-xs md:max-w-md" ref={containerRef}>
       <div className="relative flex items-center">
-        <Search className="absolute left-3 w-4 h-4 text-slate-400 pointer-events-none" />
+        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none" />
         <input
           type="text"
           placeholder={t("Global search (Company, Deal, Proposal, Contact...)")}
@@ -247,7 +248,7 @@ export default function GlobalSearchBar() {
         {query && (
           <button
             onClick={() => setQuery("")}
-            className="absolute right-2.5 p-1 rounded-full hover:bg-slate-200 dark:hover:bg-zinc-800 text-slate-400 hover:text-slate-600 transition-colors cursor-pointer"
+            className="absolute right-2.5 top-1/2 -translate-y-1/2 p-1 rounded-full hover:bg-slate-200 dark:hover:bg-zinc-800 text-slate-400 hover:text-slate-600 transition-colors cursor-pointer"
           >
             <X className="w-3 h-3" />
           </button>

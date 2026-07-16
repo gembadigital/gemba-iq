@@ -40,17 +40,19 @@ export interface ProjectAssignment {
 
 export interface Invoice {
   id: string;
-  invoiceNumber: string;
+  invoiceNumber: string; // auto-generated on import — no invoice-code column is required from the source file
   customerName: string;
-  invoiceDate: string;
-  month: string; // "2026-06"
-  amount: number;
+  invoiceDate: string; // real date parsed from the imported file's date column when present ("Düzenleme Tarihi" or similar)
+  month: string; // "2026-06" — derived from invoiceDate, not from whichever month/range happened to be selected at import time
+  amount: number; // canonical revenue basis = pre-VAT subtotal ("Ara Toplam" / "Fatura Toplamı")
   deliveredDays: number;
-  serviceType: string;
+  serviceType: string; // legacy/manual field kept for backward compatibility with older imports and the manual entry form; the Methodology / Service Line Margins chart no longer relies on this — it sources service lines from accepted Proposals instead
   status: "Paid" | "Outstanding";
   unitPrice?: number;
   vatRate?: number; // VAT % (KDV, e.g. 20)
   vatAmount?: number; // Computed KDV Bedeli
+  grandTotal?: number; // VAT-included total ("Genel Toplam" / "KDV Dahil Toplam")
+  consultantNames?: string[]; // Consultant name(s) recorded directly on this invoice row (e.g. the "Kategori"/"Danışman" column). Multiple names on one row (e.g. "Faik Çakır +Güray Yurdakul") share the delivered days evenly. Used to match the real Consultant Master daily cost for an exact (non-estimated) margin.
 }
 
 export const INITIAL_CONSULTANTS: Consultant[] = [

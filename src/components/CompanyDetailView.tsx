@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { Company, CustomFieldDefinition } from "./CompaniesView";
 import { useLanguage } from "../lib/LanguageContext";
-import { getSystemCurrency } from "../lib/currencyHelper";
+import { getSystemCurrency, formatSystemNumber } from "../lib/currencyHelper";
 import { CrmDb } from "../lib/CrmDb";
 import {
   Building,
@@ -322,7 +322,7 @@ export default function CompanyDetailView({
                         <td className="p-3 font-mono font-bold">{deal.winProbability || 50}%</td>
                         <td className="p-3 font-mono text-slate-500">{deal.expectedCloseDate}</td>
                         <td className="p-3 text-right pr-4 font-extrabold text-slate-800 dark:text-zinc-100 font-mono">
-                          {getSystemCurrency().symbol}{(deal.opportunityValue || 0).toLocaleString()}
+                          {getSystemCurrency().symbol}{formatSystemNumber((deal.opportunityValue || 0))}
                         </td>
                       </tr>
                     ))}

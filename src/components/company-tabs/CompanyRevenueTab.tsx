@@ -1,6 +1,6 @@
 import React, { useState, useMemo } from "react";
 import { CrmDb, CrmDocument } from "../../lib/CrmDb";
-import { getSystemCurrency } from "../../lib/currencyHelper";
+import { getSystemCurrency, formatSystemNumber } from "../../lib/currencyHelper";
 import {
   ResponsiveContainer,
   AreaChart,
@@ -112,7 +112,7 @@ export default function CompanyRevenueTab({
     if (onLogTimelineEvent) {
       onLogTimelineEvent(
         lang === "TR" ? "Fatura Tahsil Edildi" : "Milestone Invoice Collected",
-        `${milestone} ödemesi olan ${getSystemCurrency().symbol}${amount.toLocaleString()} tutar tahsil edildi ve faturası düzenlendi.`,
+        `${milestone} ödemesi olan ${getSystemCurrency().symbol}${formatSystemNumber(amount)} tutar tahsil edildi ve faturası düzenlendi.`,
         "opex"
       );
     }
@@ -145,7 +145,7 @@ export default function CompanyRevenueTab({
     if (onLogTimelineEvent) {
       onLogTimelineEvent(
         lang === "TR" ? "Yeni Hakediş Eklediniz" : "New Billing Milestone Created",
-        `${newMilestone.milestone} - ${getSystemCurrency().symbol}${newMilestone.amount.toLocaleString()}`,
+        `${newMilestone.milestone} - ${getSystemCurrency().symbol}${formatSystemNumber(newMilestone.amount)}`,
         "system"
       );
     }
@@ -194,7 +194,7 @@ export default function CompanyRevenueTab({
               <DollarSign className="w-4 h-4 text-emerald-500" />
             </div>
             <div className="text-base font-extrabold text-slate-850 dark:text-white font-mono">
-              {getSystemCurrency().symbol}{metrics.signedValue.toLocaleString()}
+              {getSystemCurrency().symbol}{formatSystemNumber(metrics.signedValue)}
             </div>
             <p className="text-[9px] text-emerald-500 font-mono">✓ {lang === "TR" ? "Onaylı Taahhütler" : "Closed-Won Contract"}</p>
           </div>
@@ -205,7 +205,7 @@ export default function CompanyRevenueTab({
               <TrendingUp className="w-4 h-4 text-indigo-500" />
             </div>
             <div className="text-base font-extrabold text-slate-850 dark:text-white font-mono">
-              {getSystemCurrency().symbol}{metrics.pipelineValue.toLocaleString()}
+              {getSystemCurrency().symbol}{formatSystemNumber(metrics.pipelineValue)}
             </div>
             <p className="text-[9px] text-indigo-500 font-mono">★ {metrics.activeDealsCount} {lang === "TR" ? "Aktif Fırsat" : "Deals in Pipeline"}</p>
           </div>
@@ -216,7 +216,7 @@ export default function CompanyRevenueTab({
               <Sparkles className="w-4 h-4 text-amber-500 animate-pulse" />
             </div>
             <div className="text-base font-extrabold text-slate-850 dark:text-white font-mono">
-              {getSystemCurrency().symbol}{metrics.weightedPipeline.toLocaleString()}
+              {getSystemCurrency().symbol}{formatSystemNumber(metrics.weightedPipeline)}
             </div>
             <p className="text-[9px] text-amber-500 font-mono">⚡ {lang === "TR" ? "Olasılık Bazlı Tahmin" : "Adjusted Probability"}</p>
           </div>
@@ -328,7 +328,7 @@ export default function CompanyRevenueTab({
                   <tr key={bill.id} className="hover:bg-slate-50/50 dark:hover:bg-zinc-900/30 transition-colors">
                     <td className="p-3 pl-4 font-semibold text-slate-800 dark:text-zinc-200">{bill.milestone}</td>
                     <td className="p-3 font-mono text-slate-550 dark:text-zinc-400">{bill.date}</td>
-                    <td className="p-3 font-extrabold text-slate-800 dark:text-zinc-100 font-mono">{getSystemCurrency().symbol}{bill.amount.toLocaleString()}</td>
+                    <td className="p-3 font-extrabold text-slate-800 dark:text-zinc-100 font-mono">{getSystemCurrency().symbol}{formatSystemNumber(bill.amount)}</td>
                     <td className="p-3">
                       <span className={`inline-block px-2 py-0.5 rounded-full text-[9px] font-mono font-bold uppercase ${
                         bill.status === "Paid" 

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useLanguage } from "../lib/LanguageContext";
-import { getSystemCurrency } from "../lib/currencyHelper";
+import { getSystemCurrency, formatSystemNumber } from "../lib/currencyHelper";
 import {
   FileText,
   Search,
@@ -254,7 +254,7 @@ export default function ProposalManagementView() {
       totalBudget: ver.totalBudget,
       taxes: ver.taxes,
       grandTotal: ver.grandTotal,
-      lastUpdate: new Date().toLocaleString()
+      lastUpdate: new Date().toISOString()
     };
 
     setProposals((prev) => prev.map((p) => (p.id === proposal.id ? restoredProposal : p)));
@@ -561,7 +561,7 @@ export default function ProposalManagementView() {
             {t("TOTAL PROPOSALS VALUE")}
           </span>
           <div className="font-mono text-lg font-black text-slate-800 dark:text-zinc-200">
-            {getSystemCurrency().symbol} {sumForCurrency(getSystemCurrency().symbol).toLocaleString()}
+            {getSystemCurrency().symbol} {formatSystemNumber(sumForCurrency(getSystemCurrency().symbol))}
           </div>
         </div>
 
@@ -571,7 +571,7 @@ export default function ProposalManagementView() {
             {t("PENDING APPROVAL VALUE")}
           </span>
           <div className="font-mono text-lg font-black text-amber-600 dark:text-amber-450">
-            {getSystemCurrency().symbol} {sumForCurrency(getSystemCurrency().symbol, ["Sent", "Under Evaluation", "Revision Requested", "Draft"]).toLocaleString()}
+            {getSystemCurrency().symbol} {formatSystemNumber(sumForCurrency(getSystemCurrency().symbol, ["Sent", "Under Evaluation", "Revision Requested", "Draft"]))}
           </div>
         </div>
 
@@ -581,7 +581,7 @@ export default function ProposalManagementView() {
             {t("WON PROPOSALS VALUE")}
           </span>
           <div className="font-mono text-lg font-black text-green-600 dark:text-green-400">
-            {getSystemCurrency().symbol} {sumForCurrency(getSystemCurrency().symbol, "Accepted").toLocaleString()}
+            {getSystemCurrency().symbol} {formatSystemNumber(sumForCurrency(getSystemCurrency().symbol, "Accepted"))}
           </div>
         </div>
 
@@ -591,7 +591,7 @@ export default function ProposalManagementView() {
             {t("LOST PROPOSALS VALUE")}
           </span>
           <div className="font-mono text-lg font-black text-red-600 dark:text-red-400">
-            {getSystemCurrency().symbol} {sumForCurrency(getSystemCurrency().symbol, "Rejected").toLocaleString()}
+            {getSystemCurrency().symbol} {formatSystemNumber(sumForCurrency(getSystemCurrency().symbol, "Rejected"))}
           </div>
         </div>
 
@@ -727,7 +727,7 @@ export default function ProposalManagementView() {
               <tr className="bg-slate-50 dark:bg-black/15 text-slate-450 uppercase font-mono tracking-wider border-b border-slate-150 dark:border-zinc-800 text-[9px] font-extrabold">
                 <th className="p-3 text-center">{t("Seq")}</th>
                 <th className="p-3">{t("Ref Code")}</th>
-                <th className="p-3">{t("Company")}</th>
+                <th className="p-3 min-w-[220px]">{t("Company")}</th>
                 <th className="p-3">{t("Proposal Subject")}</th>
                 <th className="p-3">{t("Owner / Creator")}</th>
                 <th className="p-3 text-center">{t("Status")}</th>
@@ -753,8 +753,8 @@ export default function ProposalManagementView() {
                   >
                     <td className="p-3 text-center font-mono text-slate-400 text-[10px]">{p.sequenceNo}</td>
                     <td className="p-3 font-mono font-bold text-slate-700 dark:text-zinc-300">{p.proposalNumber}</td>
-                    <td className="p-3">
-                      <div 
+                    <td className="p-3 min-w-[220px]">
+                      <div
                         onClick={(e) => handleCompanyClick(e, p.companyName, p.companyId)}
                         className="flex items-center gap-1.5 cursor-pointer hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors group"
                         title={t("Click to view Company details")}
@@ -806,7 +806,7 @@ export default function ProposalManagementView() {
                       </div>
                     </td>
                     <td className="p-3 text-right font-mono font-extrabold text-slate-800 dark:text-zinc-100">
-                      {p.currency} {p.grandTotal.toLocaleString()}
+                      {p.currency} {formatSystemNumber(p.grandTotal)}
                     </td>
                     <td className="p-3 text-center" onClick={(e) => e.stopPropagation()}>
                       <div className="flex items-center justify-center gap-2">
@@ -1182,10 +1182,10 @@ export default function ProposalManagementView() {
                           return (
                             <tr key={key} className="border-b border-slate-100 dark:border-zinc-800/60 hover:bg-slate-50/50 dark:hover:bg-zinc-800/20 transition-colors">
                               <td className="p-3 font-bold text-slate-800 dark:text-zinc-100">{key}</td>
-                              <td className="p-3 text-right font-semibold text-slate-700 dark:text-zinc-300">{opt.manDays.toLocaleString()} Days</td>
-                              <td className="p-3 text-right text-slate-700 dark:text-zinc-300">{viewingProposalDoc.currency} {opt.dailyRate.toLocaleString()}</td>
-                              <td className="p-3 text-right text-slate-700 dark:text-zinc-300">{viewingProposalDoc.currency} {opt.expenses.toLocaleString()}</td>
-                              <td className="p-3 text-right font-extrabold text-emerald-600 dark:text-emerald-400">{viewingProposalDoc.currency} {total.toLocaleString()}</td>
+                              <td className="p-3 text-right font-semibold text-slate-700 dark:text-zinc-300">{formatSystemNumber(opt.manDays)} Days</td>
+                              <td className="p-3 text-right text-slate-700 dark:text-zinc-300">{viewingProposalDoc.currency} {formatSystemNumber(opt.dailyRate)}</td>
+                              <td className="p-3 text-right text-slate-700 dark:text-zinc-300">{viewingProposalDoc.currency} {formatSystemNumber(opt.expenses)}</td>
+                              <td className="p-3 text-right font-extrabold text-emerald-600 dark:text-emerald-400">{viewingProposalDoc.currency} {formatSystemNumber(total)}</td>
                             </tr>
                           );
                         })}
@@ -1196,10 +1196,10 @@ export default function ProposalManagementView() {
 
                 {/* Calculations Card */}
                 <div className="bg-emerald-50/30 dark:bg-[#111] p-4 rounded-xl border border-emerald-100 select-none text-right font-mono space-y-1">
-                  <p className="text-xs text-slate-500">{t("Proposal Net Subtotal:")} {viewingProposalDoc.currency} {viewingProposalDoc.totalBudget.toLocaleString()}</p>
-                  <p className="text-xs text-slate-500">{t("VAT surcharge (20%):")} {viewingProposalDoc.currency} {viewingProposalDoc.taxes.toLocaleString()}</p>
+                  <p className="text-xs text-slate-500">{t("Proposal Net Subtotal:")} {viewingProposalDoc.currency} {formatSystemNumber(viewingProposalDoc.totalBudget)}</p>
+                  <p className="text-xs text-slate-500">{t("VAT surcharge (20%):")} {viewingProposalDoc.currency} {formatSystemNumber(viewingProposalDoc.taxes)}</p>
                   <h4 className="text-sm font-bold text-emerald-600 dark:text-emerald-400">
-                    {t("Grand Total Proposal Offer:")} {viewingProposalDoc.currency} {viewingProposalDoc.grandTotal.toLocaleString()}
+                    {t("Grand Total Proposal Offer:")} {viewingProposalDoc.currency} {formatSystemNumber(viewingProposalDoc.grandTotal)}
                   </h4>
                 </div>
 
@@ -1705,7 +1705,7 @@ export default function ProposalManagementView() {
                           <div className="flex items-center justify-between border-b border-slate-100 dark:border-zinc-800 pb-1.5">
                             <span className="font-bold text-slate-800 dark:text-zinc-150 text-[11px]">{key}</span>
                             <span className="font-mono text-emerald-600 dark:text-emerald-400 font-extrabold text-xs">
-                              {selectedProposalForDetail.currency} {totalCost.toLocaleString()}
+                              {selectedProposalForDetail.currency} {formatSystemNumber(totalCost)}
                             </span>
                           </div>
 
@@ -1734,19 +1734,19 @@ export default function ProposalManagementView() {
                   <div className="flex justify-between text-[11px] text-slate-500">
                     <span>{t("Subtotal (Net)")}:</span>
                     <span className="font-mono font-bold text-slate-700 dark:text-zinc-300">
-                      {selectedProposalForDetail.currency} {selectedProposalForDetail.totalBudget.toLocaleString()}
+                      {selectedProposalForDetail.currency} {formatSystemNumber(selectedProposalForDetail.totalBudget)}
                     </span>
                   </div>
                   <div className="flex justify-between text-[11px] text-slate-500">
                     <span>{t("VAT (20%)")}:</span>
                     <span className="font-mono font-bold text-slate-700 dark:text-zinc-300">
-                      {selectedProposalForDetail.currency} {selectedProposalForDetail.taxes.toLocaleString()}
+                      {selectedProposalForDetail.currency} {formatSystemNumber(selectedProposalForDetail.taxes)}
                     </span>
                   </div>
                   <div className="flex justify-between text-xs font-black text-slate-800 dark:text-zinc-150 pt-1.5 border-t border-slate-200 dark:border-zinc-800">
                     <span>{t("GRAND TOTAL OFFER")}:</span>
                     <span className="font-mono text-emerald-600 dark:text-emerald-400 text-sm">
-                      {selectedProposalForDetail.currency} {selectedProposalForDetail.grandTotal.toLocaleString()}
+                      {selectedProposalForDetail.currency} {formatSystemNumber(selectedProposalForDetail.grandTotal)}
                     </span>
                   </div>
                 </div>

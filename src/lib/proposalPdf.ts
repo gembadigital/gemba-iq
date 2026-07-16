@@ -1,5 +1,6 @@
 import { jsPDF } from "jspdf";
 import type { Proposal } from "../types/proposal";
+import { formatSystemNumber } from "./currencyHelper";
 
 function buildProposalPdf(prop: Proposal, lang: string): jsPDF {
   const doc = new jsPDF({
@@ -159,7 +160,7 @@ function buildProposalPdf(prop: Proposal, lang: string): jsPDF {
     doc.text("-", marginX + 45, y + 5.5);
     doc.text("-", marginX + 85, y + 5.5);
     doc.text("-", marginX + 125, y + 5.5);
-    doc.text(`${prop.currency} ${prop.totalBudget.toLocaleString()}`, marginX + 155, y + 5.5);
+    doc.text(`${prop.currency} ${formatSystemNumber(prop.totalBudget)}`, marginX + 155, y + 5.5);
     y = y + 8;
   } else {
     optionsList.forEach(([key, opt], idx) => {
@@ -174,10 +175,10 @@ function buildProposalPdf(prop: Proposal, lang: string): jsPDF {
       doc.text(safeStr(key), marginX + 3, y + 5);
       doc.setFont("Helvetica", "normal");
       doc.text(`${opt.manDays} ${isTR ? "Gun" : "Days"}`, marginX + 45, y + 5);
-      doc.text(`${prop.currency} ${opt.dailyRate.toLocaleString()}`, marginX + 85, y + 5);
-      doc.text(`${prop.currency} ${opt.expenses.toLocaleString()}`, marginX + 125, y + 5);
+      doc.text(`${prop.currency} ${formatSystemNumber(opt.dailyRate)}`, marginX + 85, y + 5);
+      doc.text(`${prop.currency} ${formatSystemNumber(opt.expenses)}`, marginX + 125, y + 5);
       doc.setFont("Helvetica", "bold");
-      doc.text(`${prop.currency} ${optCost.toLocaleString()}`, marginX + 155, y + 5);
+      doc.text(`${prop.currency} ${formatSystemNumber(optCost)}`, marginX + 155, y + 5);
       y = y + 7.5;
     });
   }
@@ -191,14 +192,14 @@ function buildProposalPdf(prop: Proposal, lang: string): jsPDF {
   doc.setFontSize(7.5);
   doc.setTextColor(textLight[0], textLight[1], textLight[2]);
   doc.text(`${isTR ? "Ara Toplam" : "Subtotal Net"}:`, marginX + 103, y + 5.5);
-  doc.text(`${prop.currency} ${prop.totalBudget.toLocaleString()}`, marginX + 175, y + 5.5, { align: "right" });
+  doc.text(`${prop.currency} ${formatSystemNumber(prop.totalBudget)}`, marginX + 175, y + 5.5, { align: "right" });
   doc.text(`${isTR ? "KDV (%20)" : "VAT Surcharge (20%)"}:`, marginX + 103, y + 10.5);
-  doc.text(`${prop.currency} ${prop.taxes.toLocaleString()}`, marginX + 175, y + 10.5, { align: "right" });
+  doc.text(`${prop.currency} ${formatSystemNumber(prop.taxes)}`, marginX + 175, y + 10.5, { align: "right" });
   doc.setFont("Helvetica", "bold");
   doc.setFontSize(8.5);
   doc.setTextColor(accentColor[0], accentColor[1], accentColor[2]);
   doc.text(`${isTR ? "GENEL TOPLAM" : "GRAND TOTAL OFFER"}:`, marginX + 103, y + 16);
-  doc.text(`${prop.currency} ${prop.grandTotal.toLocaleString()}`, marginX + 175, y + 16, { align: "right" });
+  doc.text(`${prop.currency} ${formatSystemNumber(prop.grandTotal)}`, marginX + 175, y + 16, { align: "right" });
 
   y = y + 26;
   doc.setFont("Helvetica", "bold");
@@ -252,4 +253,14 @@ export function generateProposalPdfBlobUrl(prop: Proposal, lang: string): string
     console.error("PDF generation error:", err);
     return "";
   }
+}
+
+// Returns just the base64 payload (no "data:application/pdf;filename=...;base64,"
+// prefix) so it can be sent straight to Microsoft Graph as a fileAttachment's
+// contentBytes — used to actually attach a real PDF to outbound proposal
+// e-mails instead of only offering a manual local download.
+export function generateProposalPdfBase64(prop: Proposal, lang: string): string {
+  const dataUri = buildProposalPdf(prop, lang).output("datauristring");
+  const commaIdx = dataUri.indexOf(",");
+  return commaIdx === -1 ? dataUri : dataUri.slice(commaIdx + 1);
 }

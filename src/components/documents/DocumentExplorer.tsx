@@ -1,12 +1,15 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
+  ChevronRight,
   Copy,
   Download,
   File,
   FileImage,
   FileText,
   Folder,
+  FolderPlus,
   History,
+  Home,
   Loader2,
   MoveRight,
   Pencil,
@@ -28,16 +31,20 @@ import {
 } from "../../lib/documentConstants";
 import {
   copyDocument,
+  createFolder,
   deleteDocument,
+  deleteFolder,
   getDocumentVersions,
   getSignedDownloadUrl,
   listDocuments,
+  listFolders,
   moveDocument,
   renameDocument,
   uploadDocument,
   uploadDocumentVersion,
 } from "../../lib/enterpriseDocumentService";
 import type {
+  DocumentFolder,
   DocumentFolderKey,
   DocumentListFilters,
   EnterpriseDocument,
@@ -87,6 +94,18 @@ export default function DocumentExplorer({
   const [actionModal, setActionModal] = useState<"rename" | "move" | null>(null);
   const [actionError, setActionError] = useState<string | null>(null);
 
+  // Nested subfolder browsing within the current top-level category.
+  // folderPath is the breadcrumb trail; the last entry (or null, at the
+  // category root) is the folder whose contents are currently shown.
+  const [folderPath, setFolderPath] = useState<DocumentFolder[]>([]);
+  const [subfolders, setSubfolders] = useState<DocumentFolder[]>([]);
+  const [foldersLoading, setFoldersLoading] = useState(false);
+  const [newFolderName, setNewFolderName] = useState("");
+  const [showNewFolderModal, setShowNewFolderModal] = useState(false);
+  const [folderError, setFolderError] = useState<string | null>(null);
+
+  const currentFolderId = folderPath.length > 0 ? folderPath[folderPath.length - 1].id : null;
+
   const companies = useMemo(() => {
     if (companyId) return [];
     return CrmDb.getCompanies();
@@ -104,6 +123,7 @@ export default function DocumentExplorer({
   const filters = useMemo<DocumentListFilters>(
     () => ({
       folder: selectedFolder,
+      folderId: currentFolderId,
       companyId: companyId || companyFilter || undefined,
       search,
       extension: typeFilter || undefined,
@@ -112,8 +132,56 @@ export default function DocumentExplorer({
       sortBy,
       sortDir,
     }),
-    [selectedFolder, companyId, companyFilter, search, typeFilter, uploaderFilter, tagFilter, sortBy, sortDir]
+    [selectedFolder, currentFolderId, companyId, companyFilter, search, typeFilter, uploaderFilter, tagFilter, sortBy, sortDir]
   );
+
+  // Reset the folder breadcrumb whenever the top-level category changes.
+  useEffect(() => {
+    setFolderPath([]);
+  }, [selectedFolder]);
+
+  const loadFolders = useCallback(async () => {
+    setFoldersLoading(true);
+    try {
+      const data = await listFolders(selectedFolder, currentFolderId);
+      setSubfolders(data);
+    } catch (err) {
+      setFolderError(err instanceof Error ? err.message : t("Failed to load folders."));
+    } finally {
+      setFoldersLoading(false);
+    }
+  }, [selectedFolder, currentFolderId, t]);
+
+  useEffect(() => {
+    void loadFolders();
+  }, [loadFolders]);
+
+  const handleCreateFolder = async () => {
+    if (!newFolderName.trim()) return;
+    setFolderError(null);
+    try {
+      await createFolder(selectedFolder, newFolderName.trim(), currentFolderId);
+      setNewFolderName("");
+      setShowNewFolderModal(false);
+      await loadFolders();
+    } catch (err) {
+      setFolderError(err instanceof Error ? err.message : t("Failed to create folder."));
+    }
+  };
+
+  const handleDeleteFolder = async (folder: DocumentFolder) => {
+    if (!window.confirm(t("Delete this folder? Documents inside it will move to the category root.").replace("{name}", folder.name))) {
+      return;
+    }
+    setFolderError(null);
+    try {
+      await deleteFolder(folder.id);
+      await loadFolders();
+      await loadDocuments();
+    } catch (err) {
+      setFolderError(err instanceof Error ? err.message : t("Failed to delete folder."));
+    }
+  };
 
   const uploaders = useMemo(
     () => [...new Set(documents.map((doc) => doc.uploader_id))],
@@ -188,6 +256,7 @@ export default function DocumentExplorer({
           {
             file,
             folder: selectedFolder,
+            folderId: currentFolderId,
             companyId,
             tags: companyId ? ["company"] : [],
             description: companyName ? `${companyName} document` : undefined,
@@ -499,6 +568,79 @@ export default function DocumentExplorer({
             </div>
           )}
 
+          {folderError && (
+            <div className="mb-4 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">
+              {folderError}
+            </div>
+          )}
+
+          {/* Breadcrumb + New Folder */}
+          <div className="mb-3 flex items-center justify-between gap-2 flex-wrap">
+            <div className="flex items-center gap-1 text-xs text-slate-500 flex-wrap">
+              <button
+                type="button"
+                onClick={() => setFolderPath([])}
+                className={`inline-flex items-center gap-1 px-2 py-1 rounded-lg hover:bg-slate-100 dark:hover:bg-zinc-800 ${
+                  folderPath.length === 0 ? "font-bold text-slate-800 dark:text-zinc-100" : ""
+                }`}
+              >
+                <Home className="w-3.5 h-3.5" />
+                {folderLabel(selectedFolder, lang)}
+              </button>
+              {folderPath.map((folder, idx) => (
+                <React.Fragment key={folder.id}>
+                  <ChevronRight className="w-3.5 h-3.5 text-slate-300" />
+                  <button
+                    type="button"
+                    onClick={() => setFolderPath(folderPath.slice(0, idx + 1))}
+                    className={`px-2 py-1 rounded-lg hover:bg-slate-100 dark:hover:bg-zinc-800 truncate max-w-[160px] ${
+                      idx === folderPath.length - 1 ? "font-bold text-slate-800 dark:text-zinc-100" : ""
+                    }`}
+                  >
+                    {folder.name}
+                  </button>
+                </React.Fragment>
+              ))}
+            </div>
+            <button
+              type="button"
+              onClick={() => setShowNewFolderModal(true)}
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-slate-200 dark:border-zinc-700 text-xs font-semibold text-slate-600 dark:text-zinc-300 hover:bg-slate-50 dark:hover:bg-zinc-900"
+            >
+              <FolderPlus className="w-3.5 h-3.5" />
+              {t("New Folder")}
+            </button>
+          </div>
+
+          {/* Subfolders inside the current folder (or category root) */}
+          {(foldersLoading || subfolders.length > 0) && (
+            <div className="mb-4 grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-2">
+              {subfolders.map((folder) => (
+                <div
+                  key={folder.id}
+                  className="group relative rounded-xl border border-slate-200 dark:border-zinc-800 hover:border-[#1E3A5F] hover:bg-[#1E3A5F]/5 transition-colors"
+                >
+                  <button
+                    type="button"
+                    onClick={() => setFolderPath([...folderPath, folder])}
+                    className="w-full flex items-center gap-2 px-3 py-2.5 text-left"
+                  >
+                    <Folder className="w-4 h-4 shrink-0 text-[#1E3A5F]" />
+                    <span className="text-sm font-medium truncate text-slate-700 dark:text-zinc-200">{folder.name}</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => void handleDeleteFolder(folder)}
+                    title={t("Delete")}
+                    className="absolute top-1.5 right-1.5 opacity-0 group-hover:opacity-100 p-1 rounded-lg text-slate-400 hover:text-rose-600 hover:bg-white dark:hover:bg-zinc-900 transition-opacity"
+                  >
+                    <Trash2 className="w-3.5 h-3.5" />
+                  </button>
+                </div>
+              ))}
+            </div>
+          )}
+
           {loading ? (
             <div className="flex items-center justify-center py-16 text-slate-500">
               <Loader2 className="w-5 h-5 animate-spin mr-2" />
@@ -731,6 +873,51 @@ export default function DocumentExplorer({
                 className="px-4 py-2 rounded-xl bg-[#1E3A5F] text-white text-sm font-semibold"
               >
                 {t("Save")}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {showNewFolderModal && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <div className="w-full max-w-md rounded-2xl bg-white dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 p-5 space-y-4">
+            <h3 className="font-bold text-slate-900 dark:text-zinc-100">{t("New Folder")}</h3>
+            <p className="text-xs text-slate-500">
+              {folderPath.length > 0
+                ? t("Creates a folder inside \"{name}\".").replace("{name}", folderPath[folderPath.length - 1].name)
+                : t("Creates a folder at the root of \"{category}\".").replace("{category}", folderLabel(selectedFolder, lang))}
+            </p>
+            <input
+              autoFocus
+              value={newFolderName}
+              onChange={(e) => setNewFolderName(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter") void handleCreateFolder();
+              }}
+              placeholder={t("Folder name")}
+              className="w-full rounded-xl border border-slate-200 dark:border-zinc-700 px-3 py-2 text-sm bg-white dark:bg-zinc-900"
+            />
+            {folderError && <p className="text-xs text-rose-600">{folderError}</p>}
+            <div className="flex justify-end gap-2">
+              <button
+                type="button"
+                onClick={() => {
+                  setShowNewFolderModal(false);
+                  setNewFolderName("");
+                  setFolderError(null);
+                }}
+                className="px-4 py-2 rounded-xl border text-sm"
+              >
+                {t("Cancel")}
+              </button>
+              <button
+                type="button"
+                onClick={() => void handleCreateFolder()}
+                disabled={!newFolderName.trim()}
+                className="px-4 py-2 rounded-xl bg-[#1E3A5F] text-white text-sm font-semibold disabled:opacity-50"
+              >
+                {t("Create")}
               </button>
             </div>
           </div>

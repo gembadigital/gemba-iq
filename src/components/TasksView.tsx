@@ -1,6 +1,10 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { useLanguage } from "../lib/LanguageContext";
+import { useOrganization } from "../lib/OrganizationContext";
+import { getSupabase } from "../lib/supabaseClient";
 import { CrmDb } from "../lib/CrmDb";
+import { fetchOrganizationDirectory } from "../lib/invitationService";
+import type { OrganizationDirectoryMember } from "../types/organization";
 import { 
   CheckSquare, 
   CheckCircle, 
@@ -54,15 +58,23 @@ export interface Task {
   description: string;
   status: string; // column id
   assignee: string;
+  // Real email address for the assignee. Reminder/escalation emails can only
+  // be actually delivered when this is set — without it, notifications are
+  // honestly marked "skipped" rather than faked as sent.
+  assigneeEmail?: string;
   dueDate: string;
   priority: "Low" | "Medium" | "High";
 }
+
+// How often the reminder engine automatically re-scans tasks while the
+// board is open, in addition to re-scanning whenever the task list changes.
+const NOTIFICATION_ENGINE_INTERVAL_MINUTES = 20;
 
 export interface TaskNotification {
   id: string;
   taskId: string;
   taskTitle: string;
-  type: "due_soon" | "overdue" | "escalation" | "daily_summary";
+  type: "due_soon" | "overdue" | "escalation" | "daily_summary" | "assigned";
   recipientName: string;
   recipientRole: string;
   recipientEmail: string;
@@ -70,7 +82,11 @@ export interface TaskNotification {
   bodyHtml: string;
   createdAt: string;
   isRead: boolean;
-  status: "sent" | "failed";
+  // "sent" = actually delivered via the organization mailbox.
+  // "skipped" = no real recipient email was configured, so nothing was sent.
+  // "failed" = a send was attempted but the mail API returned an error.
+  status: "sent" | "failed" | "skipped";
+  errorNote?: string;
   triggerKey: string; // to avoid duplicate notifications
 }
 
@@ -88,18 +104,24 @@ export interface NotificationSettings {
   escalationRules: {
     day1Enabled: boolean;
     day1Recipient: string;
+    day1RecipientEmail: string;
     day1Role: string;
     day3Enabled: boolean;
     day3Recipient: string;
+    day3RecipientEmail: string;
     day3Role: string;
     day7Enabled: boolean;
     day7Recipient: string;
+    day7RecipientEmail: string;
     day7Role: string;
     day14Enabled: boolean;
     day14Recipient: string;
+    day14RecipientEmail: string;
     day14Role: string;
   };
   emailTemplates: {
+    assignedSubject: string;
+    assignedTemplate: string;
     dueSoonSubject: string;
     dueSoonTemplate: string;
     overdueSubject: string;
@@ -111,6 +133,49 @@ export interface NotificationSettings {
   };
   dailySummarySchedule: string;
 }
+
+const ASSIGNED_TASK_EMAIL_TEMPLATE = `<div style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; max-width: 600px; margin: 0 auto; padding: 25px; border: 1px solid #E1DFDD; border-radius: 8px; background-color: #ffffff; color: #323130;">
+  <div style="text-align: center; margin-bottom: 25px; border-bottom: 3px solid #0078D4; padding-bottom: 15px;">
+    <img src="{{logoUrl}}" alt="{{companyName}} Logo" style="max-height: 48px; margin-bottom: 10px; display: inline-block;" onerror="this.style.opacity='0';" />
+    <h2 style="color: #0078D4; margin: 0; font-size: 22px; font-weight: 800; letter-spacing: -0.5px;">Yeni Görev Atandı</h2>
+  </div>
+
+  <p style="font-size: 14px; line-height: 1.6; color: #201f1e;">Sayın <strong>{{recipientName}}</strong>,</p>
+  <p style="font-size: 14px; line-height: 1.6; color: #201f1e;"><strong>{{assignerName}}</strong> tarafından size yeni bir görev atandı. Detaylar aşağıdadır:</p>
+
+  <div style="background-color: #FAF9F8; border-left: 4px solid #0078D4; padding: 16px; margin: 20px 0; border-radius: 4px; box-shadow: inset 0 1px 3px rgba(0,0,0,0.02);">
+    <table style="width: 100%; border-collapse: collapse; font-size: 13px; line-height: 1.8;">
+      <tr>
+        <td style="padding: 6px 0; color: #605e5c; font-weight: bold; width: 120px;">Görev Adı:</td>
+        <td style="padding: 6px 0; color: #201f1e; font-weight: 600;">{{taskTitle}}</td>
+      </tr>
+      <tr>
+        <td style="padding: 6px 0; color: #605e5c; font-weight: bold;">Açıklama:</td>
+        <td style="padding: 6px 0; color: #201f1e;">{{description}}</td>
+      </tr>
+      <tr>
+        <td style="padding: 6px 0; color: #605e5c; font-weight: bold;">Son Teslim:</td>
+        <td style="padding: 6px 0; color: #a80000; font-weight: bold;">{{dueDate}}</td>
+      </tr>
+      <tr>
+        <td style="padding: 6px 0; color: #605e5c; font-weight: bold;">Öncelik:</td>
+        <td style="padding: 6px 0; color: #201f1e;"><span style="background-color: #FDE7E9; color: #A80000; padding: 3px 8px; border-radius: 4px; font-weight: bold; font-size: 11px; text-transform: uppercase;">{{priority}}</span></td>
+      </tr>
+      <tr>
+        <td style="padding: 6px 0; color: #605e5c; font-weight: bold;">Atayan:</td>
+        <td style="padding: 6px 0; color: #201f1e;">{{assignerName}}</td>
+      </tr>
+    </table>
+  </div>
+
+  <div style="text-align: center; margin: 30px 0 20px;">
+    <a href="{{taskLink}}" style="background-color: #0078D4; color: #ffffff; padding: 12px 24px; text-decoration: none; border-radius: 6px; font-weight: bold; font-size: 13px; display: inline-block; box-shadow: 0 4px 6px rgba(0,120,212,0.15);">Görevi Sistemde Görüntüle</a>
+  </div>
+
+  <p style="font-size: 11px; color: #8A8886; text-align: center; margin-top: 40px; border-top: 1px solid #EDEBE9; padding-top: 15px;">
+    Gemba IQ | Görev Yöneticisi tarafından gönderilmiştir.
+  </p>
+</div>`;
 
 const DEFAULT_NOTIFICATION_SETTINGS: NotificationSettings = {
   reminderIntervals: {
@@ -125,19 +190,25 @@ const DEFAULT_NOTIFICATION_SETTINGS: NotificationSettings = {
   },
   escalationRules: {
     day1Enabled: true,
-    day1Recipient: "Ahmet Yılmaz (Görev Sahibi)",
+    day1Recipient: "",
+    day1RecipientEmail: "",
     day1Role: "Task Owner",
     day3Enabled: true,
-    day3Recipient: "Murat Güven (Takım Lideri)",
+    day3Recipient: "",
+    day3RecipientEmail: "",
     day3Role: "Team Leader",
     day7Enabled: true,
-    day7Recipient: "Selin Şen (Departman Müdürü)",
+    day7Recipient: "",
+    day7RecipientEmail: "",
     day7Role: "Department Manager",
     day14Enabled: true,
-    day14Recipient: "Can Özkan (Genel Müdür)",
+    day14Recipient: "",
+    day14RecipientEmail: "",
     day14Role: "Executive Manager",
   },
   emailTemplates: {
+    assignedSubject: "Gemba IQ Task: {{taskTitle}}",
+    assignedTemplate: ASSIGNED_TASK_EMAIL_TEMPLATE,
     dueSoonSubject: "Hatırlatma: '{{taskTitle}}' Görevinin Bitiş Tarihi Yaklaşıyor!",
     dueSoonTemplate: `<div style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; max-width: 600px; margin: 0 auto; padding: 25px; border: 1px solid #E1DFDD; border-radius: 8px; background-color: #ffffff; color: #323130;">
   <div style="text-align: center; margin-bottom: 25px; border-bottom: 3px solid #0078D4; padding-bottom: 15px;">
@@ -174,7 +245,7 @@ const DEFAULT_NOTIFICATION_SETTINGS: NotificationSettings = {
   </div>
   
   <p style="font-size: 11px; color: #8A8886; text-align: center; margin-top: 40px; border-top: 1px solid #EDEBE9; padding-top: 15px;">
-    Bu e-posta {{companyName}} CRM Otomasyon Motoru tarafından otomatik olarak üretilmiştir. © 2026. Tüm hakları saklıdır.
+    Gemba IQ | Görev Yöneticisi tarafından gönderilmiştir.
   </p>
 </div>`,
 
@@ -215,7 +286,7 @@ const DEFAULT_NOTIFICATION_SETTINGS: NotificationSettings = {
   </div>
   
   <p style="font-size: 11px; color: #8A8886; text-align: center; margin-top: 40px; border-top: 1px solid #EDEBE9; padding-top: 15px;">
-    Bu e-posta {{companyName}} CRM Otomasyon Motoru tarafından otomatik olarak üretilmiştir. © 2026. Tüm hakları saklıdır.
+    Gemba IQ | Görev Yöneticisi tarafından gönderilmiştir.
   </p>
 </div>`,
 
@@ -260,7 +331,7 @@ const DEFAULT_NOTIFICATION_SETTINGS: NotificationSettings = {
   </div>
   
   <p style="font-size: 11px; color: #8a8886; text-align: center; margin-top: 40px; border-top: 1px solid #EDEBE9; padding-top: 15px;">
-    Bu e-posta {{companyName}} CRM Otomasyon Motoru tarafından otomatik olarak üretilmiştir. © 2026. Tüm hakları saklıdır.
+    Gemba IQ | Görev Yöneticisi tarafından gönderilmiştir.
   </p>
 </div>`,
     logoUrl: "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=120&auto=format&fit=crop&q=60&ixlib=rb-4.0.3",
@@ -286,6 +357,27 @@ const DEFAULT_COLUMNS: TaskColumn[] = [
 
 export default function TasksView() {
   const { lang, t } = useLanguage();
+  const { actorEmail, actorName } = useOrganization();
+
+  // Real organization members (name/email/role), used to populate the
+  // assignee picker so tasks can be assigned to an actual account instead
+  // of a free-text name with a hand-typed email. Any member (ADMIN or USER)
+  // can be picked in either direction.
+  const [orgMembers, setOrgMembers] = useState<OrganizationDirectoryMember[]>([]);
+  useEffect(() => {
+    let cancelled = false;
+    fetchOrganizationDirectory()
+      .then((dir) => {
+        if (!cancelled) setOrgMembers(dir.members || []);
+      })
+      .catch(() => {
+        // Non-fatal: the assignee picker just falls back to the legacy
+        // free-text name list if the directory can't be loaded.
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
   // --- STATE PERSISTENCE ---
   const [columns, setColumns] = useState<TaskColumn[]>(() => {
     const saved = CrmDb.getTaskColumns();
@@ -345,6 +437,7 @@ export default function TasksView() {
   const [newTitle, setNewTitle] = useState("");
   const [newDescription, setNewDescription] = useState("");
   const [newAssignee, setNewAssignee] = useState("");
+  const [newAssigneeEmail, setNewAssigneeEmail] = useState("");
   const [newDueDate, setNewDueDate] = useState("2026-06-25");
   const [newPriority, setNewPriority] = useState<"Low" | "Medium" | "High">("Medium");
   const [newStatus, setNewStatus] = useState("not_started");
@@ -358,8 +451,6 @@ export default function TasksView() {
 
   const [notifications, setNotifications] = useState<TaskNotification[]>(() => CrmDb.getTaskNotifications());
 
-  const [simulatedDate, setSimulatedDate] = useState<string>("2026-06-20");
-  const [isSimulatedDateActive, setIsSimulatedDateActive] = useState<boolean>(false);
   const [toastMessage, setToastMessage] = useState<{ text: string; type: "success" | "error" | "info" } | null>(null);
   const [activeNotificationItem, setActiveNotificationItem] = useState<TaskNotification | null>(null);
   const [notificationTypeFilter, setNotificationTypeFilter] = useState<string>("All");
@@ -373,10 +464,9 @@ export default function TasksView() {
     }, 4500);
   };
 
+  // Always the real system date. There is no simulated/fake "as of" date —
+  // the reminder engine only ever evaluates against actual current time.
   const getEffectiveToday = () => {
-    if (isSimulatedDateActive) {
-      return simulatedDate;
-    }
     return new Date().toISOString().split("T")[0];
   };
 
@@ -398,7 +488,107 @@ export default function TasksView() {
     return result;
   };
 
-  const runNotificationEngine = (manual = false) => {
+  // Actually dispatches a reminder/escalation email through the organization
+  // mailbox (Microsoft Graph via /api/mail/send). If no real recipient email
+  // is configured (task assignee email or escalation recipient email), the
+  // notification is honestly marked "skipped" instead of being logged as a
+  // fake "sent" success — this was the source of the reminder simulation.
+  const dispatchNotificationEmail = async (notif: TaskNotification): Promise<TaskNotification> => {
+    if (!notif.recipientEmail || !notif.recipientEmail.includes("@")) {
+      return { ...notif, status: "skipped" };
+    }
+    try {
+      const supabase = getSupabase();
+      const {
+        data: { session },
+      } = supabase ? await supabase.auth.getSession() : { data: { session: null } };
+
+      const res = await fetch("/api/mail/send", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          ...(session?.access_token ? { Authorization: `Bearer ${session.access_token}` } : {}),
+        },
+        body: JSON.stringify({
+          recipient: notif.recipientEmail,
+          subject: notif.subject,
+          body: notif.bodyHtml,
+        }),
+      });
+
+      if (!res.ok) {
+        const payload = await res.json().catch(() => ({}));
+        return { ...notif, status: "failed", errorNote: payload?.error || "Mail delivery failed." };
+      }
+      return { ...notif, status: "sent" };
+    } catch (err) {
+      return {
+        ...notif,
+        status: "failed",
+        errorNote: err instanceof Error ? err.message : "Network error while sending mail.",
+      };
+    }
+  };
+
+  // Fires immediately when a task is created with an assignee, or when an
+  // existing task's assignee changes (reassignment). This is separate from
+  // the due/overdue/escalation reminder engine below — it's the "you were
+  // just given a task" notice, sent to the real account email so it also
+  // shows up in that person's notification bell the next time they sign in.
+  const dispatchAssignmentNotification = async (task: Task, isReassignment: boolean) => {
+    if (!task.assigneeEmail || !task.assigneeEmail.includes("@")) return;
+
+    const compiledSubject = notificationSettings.emailTemplates.assignedSubject.replace(
+      /{{taskTitle}}/g,
+      task.title
+    );
+
+    const variables = {
+      recipientName: task.assignee || "Sorumlu Kişi",
+      assignerName: actorName || "Bir kullanıcı",
+      taskTitle: task.title,
+      description: task.description || "-",
+      dueDate: task.dueDate,
+      priority: task.priority,
+      companyName: notificationSettings.emailTemplates.companyName,
+      logoUrl: notificationSettings.emailTemplates.logoUrl,
+      taskLink: `${window.location.origin}/#tasks/${task.id}`,
+    };
+
+    const compiledBody = compileEmailTemplate(notificationSettings.emailTemplates.assignedTemplate, variables);
+
+    const notif: TaskNotification = {
+      id: `notif-${Date.now()}-${Math.random().toString(36).substr(2, 5)}`,
+      taskId: task.id,
+      taskTitle: task.title,
+      type: "assigned",
+      recipientName: task.assignee || "Sorumlu Kişi",
+      recipientRole: "Assignee",
+      recipientEmail: task.assigneeEmail,
+      subject: compiledSubject,
+      bodyHtml: compiledBody,
+      createdAt: new Date().toISOString().replace("T", " ").slice(0, 16),
+      isRead: false,
+      status: "sent",
+      triggerKey: `${task.id}-assigned-${task.assigneeEmail}-${Date.now()}`,
+    };
+
+    const dispatched = await dispatchNotificationEmail(notif);
+    setNotifications(prev => [dispatched, ...prev]);
+
+    if (dispatched.status === "sent") {
+      showToast(
+        isReassignment
+          ? `Görev yeniden atandı ve ${task.assigneeEmail} adresine bilgilendirme e-postası gönderildi.`
+          : `Görev atandı ve ${task.assigneeEmail} adresine bilgilendirme e-postası gönderildi.`,
+        "success"
+      );
+    } else if (dispatched.status === "failed") {
+      showToast(`Görev ataması kaydedildi ancak bildirim e-postası gönderilemedi: ${dispatched.errorNote || "Bilinmeyen hata"}`, "error");
+    }
+  };
+
+  const runNotificationEngine = async (manual = false) => {
     const today = getEffectiveToday();
     const newAlerts: TaskNotification[] = [];
     let detectedCount = 0;
@@ -438,7 +628,7 @@ export default function TasksView() {
               type: "due_soon",
               recipientName: task.assignee || "Sorumlu Kişi",
               recipientRole: "Task Owner",
-              recipientEmail: `${String(task.assignee || "user").toLowerCase().replace(/\s+/g, "").replace(/[^a-zA-Z0-9]/g, "")}@sirket.com`,
+              recipientEmail: task.assigneeEmail || "",
               subject: compiledSubject,
               bodyHtml: compiledBody,
               createdAt: `${today} 09:00`,
@@ -476,7 +666,7 @@ export default function TasksView() {
               type: "due_soon",
               recipientName: task.assignee || "Sorumlu Kişi",
               recipientRole: "Task Owner",
-              recipientEmail: `${String(task.assignee || "user").toLowerCase().replace(/\s+/g, "").replace(/[^a-zA-Z0-9]/g, "")}@sirket.com`,
+              recipientEmail: task.assigneeEmail || "",
               subject: compiledSubject,
               bodyHtml: compiledBody,
               createdAt: `${today} 09:00`,
@@ -522,7 +712,7 @@ export default function TasksView() {
                 type: "overdue",
                 recipientName: task.assignee || "Sorumlu Kişi",
                 recipientRole: "Task Owner",
-                recipientEmail: `${String(task.assignee || "user").toLowerCase().replace(/\s+/g, "").replace(/[^a-zA-Z0-9]/g, "")}@sirket.com`,
+                recipientEmail: task.assigneeEmail || "",
                 subject: compiledSubject,
                 bodyHtml: compiledBody,
                 createdAt: `${today} 09:00`,
@@ -564,7 +754,7 @@ export default function TasksView() {
                 type: "escalation",
                 recipientName: variables.recipientName,
                 recipientRole: variables.recipientRole,
-                recipientEmail: "owner@company.com",
+                recipientEmail: notificationSettings.escalationRules.day1RecipientEmail || "",
                 subject: compiledSubject,
                 bodyHtml: compiledBody,
                 createdAt: `${today} 09:12`,
@@ -606,7 +796,7 @@ export default function TasksView() {
                 type: "overdue",
                 recipientName: task.assignee || "Sorumlu Kişi",
                 recipientRole: "Task Owner",
-                recipientEmail: `${String(task.assignee || "user").toLowerCase().replace(/\s+/g, "").replace(/[^a-zA-Z0-9]/g, "")}@sirket.com`,
+                recipientEmail: task.assigneeEmail || "",
                 subject: compiledSubject,
                 bodyHtml: compiledBody,
                 createdAt: `${today} 09:00`,
@@ -648,7 +838,7 @@ export default function TasksView() {
                 type: "escalation",
                 recipientName: variables.recipientName,
                 recipientRole: variables.recipientRole,
-                recipientEmail: "teamlead@company.com",
+                recipientEmail: notificationSettings.escalationRules.day3RecipientEmail || "",
                 subject: compiledSubject,
                 bodyHtml: compiledBody,
                 createdAt: `${today} 09:12`,
@@ -690,7 +880,7 @@ export default function TasksView() {
                 type: "overdue",
                 recipientName: task.assignee || "Sorumlu Kişi",
                 recipientRole: "Task Owner",
-                recipientEmail: `${String(task.assignee || "user").toLowerCase().replace(/\s+/g, "").replace(/[^a-zA-Z0-9]/g, "")}@sirket.com`,
+                recipientEmail: task.assigneeEmail || "",
                 subject: compiledSubject,
                 bodyHtml: compiledBody,
                 createdAt: `${today} 09:00`,
@@ -732,7 +922,7 @@ export default function TasksView() {
                 type: "escalation",
                 recipientName: variables.recipientName,
                 recipientRole: variables.recipientRole,
-                recipientEmail: "deptmgr@company.com",
+                recipientEmail: notificationSettings.escalationRules.day7RecipientEmail || "",
                 subject: compiledSubject,
                 bodyHtml: compiledBody,
                 createdAt: `${today} 09:12`,
@@ -776,7 +966,7 @@ export default function TasksView() {
                 type: "escalation",
                 recipientName: variables.recipientName,
                 recipientRole: variables.recipientRole,
-                recipientEmail: "exec@company.com",
+                recipientEmail: notificationSettings.escalationRules.day14RecipientEmail || "",
                 subject: compiledSubject,
                 bodyHtml: compiledBody,
                 createdAt: `${today} 09:12`,
@@ -816,7 +1006,7 @@ export default function TasksView() {
               type: "overdue",
               recipientName: task.assignee || "Sorumlu Kişi",
               recipientRole: "Task Owner",
-              recipientEmail: `${String(task.assignee || "user").toLowerCase().replace(/\s+/g, "").replace(/[^a-zA-Z0-9]/g, "")}@sirket.com`,
+              recipientEmail: task.assigneeEmail || "",
               subject: compiledSubject,
               bodyHtml: compiledBody,
               createdAt: `${today} 09:00`,
@@ -831,9 +1021,18 @@ export default function TasksView() {
     });
 
     if (newAlerts.length > 0) {
-      setNotifications(prev => [...newAlerts, ...prev]);
+      // Actually dispatch each alert as a real email (or honestly mark it
+      // "skipped" when no recipient email is configured) before recording it.
+      const dispatched = await Promise.all(newAlerts.map(dispatchNotificationEmail));
+      setNotifications(prev => [...dispatched, ...prev]);
       if (manual) {
-        showToast(`${newAlerts.length} adet yeni e-posta uyarısı ve sistem bildirimi üretildi!`, "success");
+        const sentCount = dispatched.filter(n => n.status === "sent").length;
+        const skippedCount = dispatched.filter(n => n.status === "skipped").length;
+        const failedCount = dispatched.filter(n => n.status === "failed").length;
+        showToast(
+          `${dispatched.length} bildirim tetiklendi — ${sentCount} gönderildi, ${skippedCount} e-posta adresi olmadığı için atlandı, ${failedCount} başarısız oldu.`,
+          failedCount > 0 ? "error" : "success"
+        );
       }
     } else {
       if (manual) {
@@ -842,7 +1041,7 @@ export default function TasksView() {
     }
   };
 
-  const executeDailySummarySimulation = () => {
+  const executeDailySummary = async () => {
     const today = getEffectiveToday();
     const activeTasksCount = tasks.filter(t => t.status !== "completed").length;
     const overduesCount = tasks.filter(t => t.status !== "completed" && countDaysDiff(t.dueDate, today) < 0).length;
@@ -882,7 +1081,7 @@ export default function TasksView() {
       type: "daily_summary",
       recipientName: "Sistem Yöneticisi",
       recipientRole: "Administrator",
-      recipientEmail: "admin@sirket.com",
+      recipientEmail: actorEmail || "",
       subject: `[Özet Rapor] ${today} Günlük Görev ve Gecikme Durumu`,
       bodyHtml: builtHtml,
       createdAt: `${today} ${notificationSettings.dailySummarySchedule}`,
@@ -891,14 +1090,38 @@ export default function TasksView() {
       triggerKey
     };
 
-    setNotifications(prev => [summaryNotif, ...prev]);
-    showToast(`Günlük Özet E-postası başarıyla derlendi ve alıcılara gönderildi! (Tarih: ${today})`, "success");
+    const dispatched = await dispatchNotificationEmail(summaryNotif);
+    setNotifications(prev => [dispatched, ...prev]);
+    if (dispatched.status === "sent") {
+      showToast(`Günlük özet e-postası ${dispatched.recipientEmail} adresine gönderildi. (Tarih: ${today})`, "success");
+    } else if (dispatched.status === "skipped") {
+      showToast("Günlük özet gönderilemedi: geçerli bir e-posta adresi bulunamadı.", "error");
+    } else {
+      showToast(`Günlük özet gönderilemedi: ${dispatched.errorNote || "Bilinmeyen hata"}`, "error");
+    }
   };
 
-  // Automated silent execution hook
+  // Automated silent execution: re-check on task changes, and also on a
+  // real wall-clock interval so due/overdue reminders fire even if the task
+  // list itself hasn't changed (e.g. a task simply became overdue overnight
+  // while the tab stayed open). No fake/simulated date is ever used here.
   useEffect(() => {
-    runNotificationEngine(false);
-  }, [tasks, simulatedDate, isSimulatedDateActive]);
+    void runNotificationEngine(false);
+  }, [tasks]);
+
+  // Keep a ref to the latest engine closure so the interval below always
+  // scans against current tasks/settings without resetting on every change.
+  const runNotificationEngineRef = useRef(runNotificationEngine);
+  useEffect(() => {
+    runNotificationEngineRef.current = runNotificationEngine;
+  });
+
+  useEffect(() => {
+    const intervalId = window.setInterval(() => {
+      void runNotificationEngineRef.current(false);
+    }, NOTIFICATION_ENGINE_INTERVAL_MINUTES * 60 * 1000);
+    return () => window.clearInterval(intervalId);
+  }, []);
 
   useEffect(() => {
     CrmDb.saveNotificationSettings(notificationSettings);
@@ -931,7 +1154,11 @@ export default function TasksView() {
     setAddTaskColumnId(colId || columns[0]?.id || "not_started");
     setNewTitle("");
     setNewDescription("");
-    setNewAssignee(crmUsers[0] || "");
+    // No default assignee — the previous behavior of auto-selecting the
+    // first CRM user silently assigned every new task to whoever happened
+    // to be first in the list. The person must now pick one explicitly.
+    setNewAssignee("");
+    setNewAssigneeEmail("");
     setNewDueDate(new Date(Date.now() + 5 * 86450000).toISOString().split('T')[0]);
     setNewPriority("Medium");
     setIsAddModalOpen(true);
@@ -947,12 +1174,17 @@ export default function TasksView() {
       description: newDescription,
       status: addTaskColumnId,
       assignee: newAssignee,
+      assigneeEmail: newAssigneeEmail.trim() || undefined,
       dueDate: newDueDate,
       priority: newPriority
     };
 
     setTasks(prev => [...prev, newTask]);
     setIsAddModalOpen(false);
+
+    if (newTask.assigneeEmail) {
+      void dispatchAssignmentNotification(newTask, false);
+    }
   };
 
   const handleOpenEditTask = (task: Task) => {
@@ -960,6 +1192,7 @@ export default function TasksView() {
     setNewTitle(task.title);
     setNewDescription(task.description);
     setNewAssignee(task.assignee);
+    setNewAssigneeEmail(task.assigneeEmail || "");
     setNewDueDate(task.dueDate);
     setNewPriority(task.priority);
     setNewStatus(task.status);
@@ -970,18 +1203,32 @@ export default function TasksView() {
     e.preventDefault();
     if (!selectedTask || !newTitle.trim()) return;
 
-    setTasks(prev => prev.map(t => t.id === selectedTask.id ? {
-      ...t,
+    const nextAssigneeEmail = newAssigneeEmail.trim() || undefined;
+    const isReassignment =
+      (nextAssigneeEmail || "") !== (selectedTask.assigneeEmail || "") && Boolean(nextAssigneeEmail);
+
+    const updatedTask: Task = {
+      ...selectedTask,
       title: newTitle,
       description: newDescription,
       assignee: newAssignee,
+      assigneeEmail: nextAssigneeEmail,
       dueDate: newDueDate,
       priority: newPriority,
       status: newStatus
-    } : t));
+    };
+
+    setTasks(prev => prev.map(t => t.id === selectedTask.id ? updatedTask : t));
 
     setIsEditModalOpen(false);
     setSelectedTask(null);
+
+    // Only notify when the assignee's e-mail actually changed (a real
+    // reassignment) — editing the due date or priority shouldn't spam a
+    // "you were assigned" e-mail to someone who already had the task.
+    if (isReassignment) {
+      void dispatchAssignmentNotification(updatedTask, true);
+    }
   };
 
   const handleDeleteTask = (taskId: string) => {
@@ -1236,42 +1483,16 @@ export default function TasksView() {
              </button>
            </div>
 
-           {/* SIMULATOR BAR */}
+           {/* Reminder engine status bar (real system date — no simulation) */}
            <div className="flex flex-wrap items-center gap-3 bg-[#FAF8F5] dark:bg-[#201f1e] px-3.5 py-2 rounded-lg border border-indigo-100 dark:border-indigo-900/40">
              <span className="text-[11px] font-bold text-slate-500 dark:text-slate-400 flex items-center gap-1.5">
                <Calendar className="w-3.5 h-3.5 text-indigo-500" />
-               Simülasyon Günü:
+               Bugün: {getEffectiveToday()}
              </span>
              <div className="flex items-center gap-2 flex-wrap">
-               <input
-                 type="date"
-                 value={simulatedDate}
-                 onChange={(e) => {
-                   setSimulatedDate(e.target.value);
-                   setIsSimulatedDateActive(true);
-                   showToast(`Simülasyon tarihi ${e.target.value} olarak güncellendi! Yeni bildirim ve eskalasyonlar sorgulandı.`, "info");
-                 }}
-                 className="px-2 py-1 bg-white dark:bg-[#1b1a19] text-xs border border-slate-200 dark:border-[#323130] rounded focus:outline-hidden text-slate-800 dark:text-slate-100 font-bold font-sans"
-               />
-               <button
-                 type="button"
-                 onClick={() => {
-                   setIsSimulatedDateActive(!isSimulatedDateActive);
-                   showToast(
-                     isSimulatedDateActive 
-                       ? "Gerçek sistem zamanına dönüldü."
-                       : `Tarih simülasyonu devrede: ${simulatedDate}`, 
-                     "info"
-                   );
-                 }}
-                 className={`px-2.5 py-1 text-[11px] font-bold rounded transition-all cursor-pointer ${
-                   isSimulatedDateActive 
-                     ? "bg-indigo-600 hover:bg-indigo-700 text-white shadow-sm"
-                     : "bg-slate-200 hover:bg-slate-300 dark:bg-[#323130] dark:hover:bg-[#424140] text-slate-700 dark:text-slate-300"
-                 }`}
-               >
-                 {isSimulatedDateActive ? "Simülatör Açık" : "Sür"}
-               </button>
+               <span className="text-[10px] text-slate-450 dark:text-slate-500">
+                 Otomatik tarama {NOTIFICATION_ENGINE_INTERVAL_MINUTES} dakikada bir çalışır ve gerçek e-posta gönderir.
+               </span>
                <button
                  type="button"
                  onClick={() => runNotificationEngine(true)}
@@ -1279,7 +1500,7 @@ export default function TasksView() {
                  className="p-1 px-2 text-indigo-600 hover:text-indigo-800 bg-indigo-50 hover:bg-indigo-100 dark:bg-slate-800 dark:hover:bg-slate-700 dark:text-indigo-400 rounded text-[11px] font-bold flex items-center gap-1 cursor-pointer transition-all border border-indigo-100/40"
                >
                  <RefreshCw className="w-3 h-3" />
-                 Alarmları Tara
+                 Şimdi Tara
                </button>
              </div>
            </div>
@@ -1681,10 +1902,10 @@ export default function TasksView() {
             <div>
               <h2 className="text-sm font-bold text-slate-800 dark:text-slate-100 flex items-center gap-2 font-sans uppercase tracking-wider">
                 <Bell className="w-4 h-4 text-amber-500" />
-                Sistem Bildirim Merkezi ve E-Posta Simülatörü
+                Sistem Bildirim Merkezi
               </h2>
               <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
-                Engine tarafından tetiklenen tüm yaklaşan gün, gecikme ve departman eskalasyon e-postalarını buradan izleyin ve simüle edin.
+                Hatırlatma motoru tarafından tetiklenen tüm yaklaşan gün, gecikme ve departman eskalasyon e-postalarını ve gönderim durumlarını buradan izleyin.
               </p>
             </div>
             <div className="flex items-center gap-2 flex-wrap pb-1 sm:pb-0">
@@ -1736,6 +1957,17 @@ export default function TasksView() {
                 </button>
                 <button
                   type="button"
+                  onClick={() => setNotificationTypeFilter("assigned")}
+                  className={`px-2.5 py-1 text-[11px] font-bold rounded transition-all cursor-pointer ${
+                    notificationTypeFilter === "assigned"
+                      ? "bg-indigo-600 text-white"
+                      : "text-slate-600 dark:text-slate-400 hover:bg-slate-100"
+                  }`}
+                >
+                  Görev Ataması ({notifications.filter(n => n.type === "assigned").length})
+                </button>
+                <button
+                  type="button"
                   onClick={() => setNotificationTypeFilter("due_soon")}
                   className={`px-2.5 py-1 text-[11px] font-bold rounded transition-all cursor-pointer ${
                     notificationTypeFilter === "due_soon"
@@ -1780,7 +2012,7 @@ export default function TasksView() {
               <Bell className="w-12 h-12 text-slate-300 dark:text-[#323130] mx-auto opacity-70 mb-3" />
               <span className="block text-sm font-bold text-slate-600 dark:text-slate-300">Henüz alarm üretilmedi</span>
               <span className="block text-xs mt-1">
-                "Alarmları Tara" butonuyla veya simülasyon tarihini ya da görev vadelerini değiştirerek bildirimlerin üretilmesini sağlayabilirsiniz.
+                "Şimdi Tara" butonuyla manuel bir tarama başlatabilir veya sistem otomatik taramasının ({NOTIFICATION_ENGINE_INTERVAL_MINUTES} dakikada bir) tetiklemesini bekleyebilirsiniz.
               </span>
             </div>
           ) : (
@@ -1790,15 +2022,17 @@ export default function TasksView() {
                 .slice()
                 .reverse()
                 .map(n => {
-                  const badgeColor = 
-                    n.type === "due_soon" 
-                      ? "bg-amber-50 dark:bg-amber-955 text-amber-600 dark:text-amber-400 border border-amber-200/50" 
+                  const badgeColor =
+                    n.type === "assigned"
+                      ? "bg-indigo-50 dark:bg-indigo-955 text-indigo-600 dark:text-indigo-400 border border-indigo-200/50"
+                      : n.type === "due_soon"
+                      ? "bg-amber-50 dark:bg-amber-955 text-amber-600 dark:text-amber-400 border border-amber-200/50"
                       : n.type === "overdue"
                       ? "bg-rose-50 dark:bg-rose-955 text-rose-600 dark:text-rose-400 border border-rose-200/50"
                       : "bg-purple-50 dark:bg-purple-955 text-purple-600 dark:text-purple-400 border border-purple-200/50";
-                    
-                  const typeLabel = 
-                    n.type === "due_soon" ? "Yaklaşan" : n.type === "overdue" ? "Gecikme" : "Eskalasyon";
+
+                  const typeLabel =
+                    n.type === "assigned" ? "Görev Ataması" : n.type === "due_soon" ? "Yaklaşan" : n.type === "overdue" ? "Gecikme" : "Eskalasyon";
 
                   return (
                     <div 
@@ -1811,6 +2045,18 @@ export default function TasksView() {
                         <div className="flex flex-wrap items-center gap-2">
                           <span className={`text-[9px] uppercase font-bold px-1.5 py-0.25 rounded ${badgeColor}`}>
                             {typeLabel}
+                          </span>
+                          <span
+                            className={`text-[9px] uppercase font-bold px-1.5 py-0.25 rounded border ${
+                              n.status === "sent"
+                                ? "bg-emerald-50 dark:bg-emerald-955 text-emerald-600 dark:text-emerald-400 border-emerald-200/50"
+                                : n.status === "skipped"
+                                ? "bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 border-slate-200/50"
+                                : "bg-rose-50 dark:bg-rose-955 text-rose-600 dark:text-rose-400 border-rose-200/50"
+                            }`}
+                            title={n.errorNote || (n.status === "skipped" ? "Gerçek bir e-posta adresi tanımlı olmadığı için gönderilmedi." : undefined)}
+                          >
+                            {n.status === "sent" ? "Gönderildi" : n.status === "skipped" ? "Atlandı" : "Başarısız"}
                           </span>
                           <span className="text-[10px] text-slate-400 dark:text-slate-500 font-mono">
                             {n.createdAt}
@@ -1845,7 +2091,7 @@ export default function TasksView() {
                           onClick={() => setActiveNotificationItem(n)}
                           className="px-2.5 py-1 text-[10px] font-bold bg-[#0078D4] hover:bg-[#005a9e] text-white rounded cursor-pointer"
                         >
-                          HTML Sablonu Simüle Et
+                          E-postayı Önizle
                         </button>
                         <button
                           type="button"
@@ -2114,7 +2360,7 @@ export default function TasksView() {
                   />
                 </div>
                 {notificationSettings.escalationRules.day1Enabled && (
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3 pt-1">
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-3 pt-1">
                     <div>
                       <label className="text-[10px] uppercase font-bold text-slate-505 dark:text-slate-400 block mb-1">Eskalasyon Alıcısı / Görevli Ismi</label>
                       <input
@@ -2129,6 +2375,23 @@ export default function TasksView() {
                         }}
                         className="w-full px-2.5 py-1.5 bg-white dark:bg-[#1b1a19] border border-slate-200 dark:border-[#323130] rounded text-xs"
                       />
+                    </div>
+                    <div>
+                      <label className="text-[10px] uppercase font-bold text-slate-505 dark:text-slate-400 block mb-1">Gerçek E-posta Adresi</label>
+                      <input
+                        type="email"
+                        value={notificationSettings.escalationRules.day1RecipientEmail}
+                        placeholder="ornek@sirket.com"
+                        onChange={(e) => {
+                          const updated = {
+                            ...notificationSettings,
+                            escalationRules: { ...notificationSettings.escalationRules, day1RecipientEmail: e.target.value }
+                          };
+                          setNotificationSettings(updated);
+                        }}
+                        className="w-full px-2.5 py-1.5 bg-white dark:bg-[#1b1a19] border border-slate-200 dark:border-[#323130] rounded text-xs"
+                      />
+                      <p className="text-[9px] text-slate-450 mt-0.5">Boş bırakılırsa bu eskalasyon e-postası gönderilmez.</p>
                     </div>
                     <div>
                       <label className="text-[10px] uppercase font-bold text-slate-505 dark:text-slate-400 block mb-1">Organizasyonel Rolü</label>
@@ -2170,7 +2433,7 @@ export default function TasksView() {
                   />
                 </div>
                 {notificationSettings.escalationRules.day3Enabled && (
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3 pt-1">
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-3 pt-1">
                     <div>
                       <label className="text-[10px] uppercase font-bold text-slate-505 dark:text-slate-400 block mb-1">Eskalasyon Alıcısı / Görevli Ismi</label>
                       <input
@@ -2185,6 +2448,23 @@ export default function TasksView() {
                         }}
                         className="w-full px-2.5 py-1.5 bg-white dark:bg-[#1b1a19] border border-slate-200 dark:border-[#323130] rounded text-xs"
                       />
+                    </div>
+                    <div>
+                      <label className="text-[10px] uppercase font-bold text-slate-505 dark:text-slate-400 block mb-1">Gerçek E-posta Adresi</label>
+                      <input
+                        type="email"
+                        value={notificationSettings.escalationRules.day3RecipientEmail}
+                        placeholder="ornek@sirket.com"
+                        onChange={(e) => {
+                          const updated = {
+                            ...notificationSettings,
+                            escalationRules: { ...notificationSettings.escalationRules, day3RecipientEmail: e.target.value }
+                          };
+                          setNotificationSettings(updated);
+                        }}
+                        className="w-full px-2.5 py-1.5 bg-white dark:bg-[#1b1a19] border border-slate-200 dark:border-[#323130] rounded text-xs"
+                      />
+                      <p className="text-[9px] text-slate-450 mt-0.5">Boş bırakılırsa bu eskalasyon e-postası gönderilmez.</p>
                     </div>
                     <div>
                       <label className="text-[10px] uppercase font-bold text-slate-505 dark:text-slate-400 block mb-1">Organizasyonel Rolü</label>
@@ -2226,7 +2506,7 @@ export default function TasksView() {
                   />
                 </div>
                 {notificationSettings.escalationRules.day7Enabled && (
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3 pt-1">
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-3 pt-1">
                     <div>
                       <label className="text-[10px] uppercase font-bold text-slate-505 dark:text-slate-400 block mb-1">Eskalasyon Alıcısı / Görevli Ismi</label>
                       <input
@@ -2241,6 +2521,23 @@ export default function TasksView() {
                         }}
                         className="w-full px-2.5 py-1.5 bg-white dark:bg-[#1b1a19] border border-slate-200 dark:border-[#323130] rounded text-xs"
                       />
+                    </div>
+                    <div>
+                      <label className="text-[10px] uppercase font-bold text-slate-505 dark:text-slate-400 block mb-1">Gerçek E-posta Adresi</label>
+                      <input
+                        type="email"
+                        value={notificationSettings.escalationRules.day7RecipientEmail}
+                        placeholder="ornek@sirket.com"
+                        onChange={(e) => {
+                          const updated = {
+                            ...notificationSettings,
+                            escalationRules: { ...notificationSettings.escalationRules, day7RecipientEmail: e.target.value }
+                          };
+                          setNotificationSettings(updated);
+                        }}
+                        className="w-full px-2.5 py-1.5 bg-white dark:bg-[#1b1a19] border border-slate-200 dark:border-[#323130] rounded text-xs"
+                      />
+                      <p className="text-[9px] text-slate-450 mt-0.5">Boş bırakılırsa bu eskalasyon e-postası gönderilmez.</p>
                     </div>
                     <div>
                       <label className="text-[10px] uppercase font-bold text-slate-505 dark:text-slate-400 block mb-1">Organizasyonel Rolü</label>
@@ -2538,15 +2835,52 @@ export default function TasksView() {
                   </div>
                   <select
                     value={newAssignee}
-                    onChange={(e) => setNewAssignee(e.target.value)}
+                    onChange={(e) => {
+                      const name = e.target.value;
+                      setNewAssignee(name);
+                      // Auto-fill the real account e-mail when a directory
+                      // member is picked, so assignment notifications and
+                      // reminders always have somewhere real to go. Works
+                      // both ways — a USER can pick an ADMIN and vice versa.
+                      const member = orgMembers.find((m) => (m.full_name?.trim() || m.email) === name);
+                      if (member) setNewAssigneeEmail(member.email);
+                    }}
                     className="w-full px-3 py-2 bg-slate-50 dark:bg-[#252423] border border-[#EDEBE9] dark:border-[#323130] rounded text-xs text-slate-800 dark:text-slate-200 focus:outline-hidden"
                   >
-                    {crmUsers.map((user) => (
-                      <option key={user} value={user}>
-                        {user}
-                      </option>
-                    ))}
+                    <option value="">-- Sorumlu Seçiniz --</option>
+                    {orgMembers.length > 0 && (
+                      <optgroup label="Organizasyon Üyeleri">
+                        {orgMembers.map((m) => (
+                          <option key={m.user_id} value={m.full_name?.trim() || m.email}>
+                            {(m.full_name?.trim() || m.email)} · {m.role === "ADMIN" ? "Yönetici" : "Kullanıcı"}
+                          </option>
+                        ))}
+                      </optgroup>
+                    )}
+                    {crmUsers.filter((u) => !orgMembers.some((m) => (m.full_name?.trim() || m.email) === u)).length > 0 && (
+                      <optgroup label="Kayıtlı İsimler (hesapsız)">
+                        {crmUsers
+                          .filter((u) => !orgMembers.some((m) => (m.full_name?.trim() || m.email) === u))
+                          .map((user) => (
+                            <option key={user} value={user}>
+                              {user}
+                            </option>
+                          ))}
+                      </optgroup>
+                    )}
                   </select>
+                  <input
+                    type="email"
+                    value={newAssigneeEmail}
+                    onChange={(e) => setNewAssigneeEmail(e.target.value)}
+                    placeholder="Sorumlunun gerçek e-posta adresi (atama ve hatırlatma göndermek için)"
+                    className="w-full mt-1.5 px-3 py-2 bg-slate-50 dark:bg-[#252423] border border-[#EDEBE9] dark:border-[#323130] rounded text-xs text-slate-800 dark:text-slate-200 focus:outline-hidden"
+                  />
+                  {newAssigneeEmail && (
+                    <p className="text-[10px] text-slate-450 dark:text-zinc-500 mt-1">
+                      Görev kaydedildiğinde bu adrese "Gemba IQ Task: {newTitle || "..."}" konulu bir bilgilendirme e-postası gönderilecek.
+                    </p>
+                  )}
                 </div>
 
                 <div className="space-y-1">
@@ -2701,15 +3035,52 @@ export default function TasksView() {
                   </div>
                   <select
                     value={newAssignee}
-                    onChange={(e) => setNewAssignee(e.target.value)}
+                    onChange={(e) => {
+                      const name = e.target.value;
+                      setNewAssignee(name);
+                      // Auto-fill the real account e-mail when a directory
+                      // member is picked, so assignment notifications and
+                      // reminders always have somewhere real to go. Works
+                      // both ways — a USER can pick an ADMIN and vice versa.
+                      const member = orgMembers.find((m) => (m.full_name?.trim() || m.email) === name);
+                      if (member) setNewAssigneeEmail(member.email);
+                    }}
                     className="w-full px-3 py-2 bg-slate-50 dark:bg-[#252423] border border-[#EDEBE9] dark:border-[#323130] rounded text-xs text-slate-800 dark:text-slate-200 focus:outline-hidden"
                   >
-                    {crmUsers.map((user) => (
-                      <option key={user} value={user}>
-                        {user}
-                      </option>
-                    ))}
+                    <option value="">-- Sorumlu Seçiniz --</option>
+                    {orgMembers.length > 0 && (
+                      <optgroup label="Organizasyon Üyeleri">
+                        {orgMembers.map((m) => (
+                          <option key={m.user_id} value={m.full_name?.trim() || m.email}>
+                            {(m.full_name?.trim() || m.email)} · {m.role === "ADMIN" ? "Yönetici" : "Kullanıcı"}
+                          </option>
+                        ))}
+                      </optgroup>
+                    )}
+                    {crmUsers.filter((u) => !orgMembers.some((m) => (m.full_name?.trim() || m.email) === u)).length > 0 && (
+                      <optgroup label="Kayıtlı İsimler (hesapsız)">
+                        {crmUsers
+                          .filter((u) => !orgMembers.some((m) => (m.full_name?.trim() || m.email) === u))
+                          .map((user) => (
+                            <option key={user} value={user}>
+                              {user}
+                            </option>
+                          ))}
+                      </optgroup>
+                    )}
                   </select>
+                  <input
+                    type="email"
+                    value={newAssigneeEmail}
+                    onChange={(e) => setNewAssigneeEmail(e.target.value)}
+                    placeholder="Sorumlunun gerçek e-posta adresi (atama ve hatırlatma göndermek için)"
+                    className="w-full mt-1.5 px-3 py-2 bg-slate-50 dark:bg-[#252423] border border-[#EDEBE9] dark:border-[#323130] rounded text-xs text-slate-800 dark:text-slate-200 focus:outline-hidden"
+                  />
+                  {newAssigneeEmail && (
+                    <p className="text-[10px] text-slate-450 dark:text-zinc-500 mt-1">
+                      Görev kaydedildiğinde bu adrese "Gemba IQ Task: {newTitle || "..."}" konulu bir bilgilendirme e-postası gönderilecek.
+                    </p>
+                  )}
                 </div>
 
                 <div className="space-y-1">
@@ -2928,7 +3299,7 @@ export default function TasksView() {
         </div>
       )}
 
-      {/* SIMULATED EMAIL MODAL FOR ACTIVE NOTIFICATION ITEM */}
+      {/* EMAIL PREVIEW MODAL FOR ACTIVE NOTIFICATION ITEM */}
       {activeNotificationItem && (
         <div className="fixed inset-0 bg-black/75 dark:bg-black/90 backdrop-blur-xs flex items-center justify-center z-50 p-4 animate-in fade-in duration-200">
           <div className="bg-[#FAF9F8] dark:bg-[#1f1e1d] w-full max-w-2xl rounded-xl border border-[#EDEBE9] dark:border-[#323130] shadow-2xl overflow-hidden flex flex-col max-h-[90vh]">
@@ -2939,7 +3310,7 @@ export default function TasksView() {
                 <div className="w-2.5 h-2.5 rounded-full bg-amber-500" />
                 <div className="w-2.5 h-2.5 rounded-full bg-emerald-500" />
                 <span className="text-xs font-bold text-slate-500 dark:text-slate-400 font-mono ml-2">
-                  E-Posta Simülatörü - Görüntüleyici
+                  E-Posta Önizleyici
                 </span>
               </div>
               <button
@@ -2955,7 +3326,7 @@ export default function TasksView() {
             <div className="bg-white dark:bg-[#1b1a19] px-6 py-4 border-b border-[#EDEBE9] dark:border-[#323130] text-xs space-y-2 flex-shrink-0">
               <div className="flex items-center">
                 <span className="w-16 font-bold text-slate-405 dark:text-slate-500">Kimden:</span>
-                <span className="text-slate-700 dark:text-slate-300 font-medium">CRM Automation Engine &lt;automation@sirket.com&gt;</span>
+                <span className="text-slate-700 dark:text-slate-300 font-medium">Organizasyon Posta Kutusu (Ayarlar &gt; Paylaşılan Posta Kutuları)</span>
               </div>
               <div className="flex items-center">
                 <span className="w-16 font-bold text-slate-405 dark:text-slate-500">Kime:</span>
@@ -2982,7 +3353,11 @@ export default function TasksView() {
             {/* Footer actions */}
             <div className="px-5 py-3.5 bg-slate-50 dark:bg-zinc-900 border-t border-[#EDEBE9] dark:border-[#323130] flex justify-between items-center flex-shrink-0">
               <span className="text-[10px] text-slate-450 dark:text-slate-500 uppercase tracking-widest font-bold">
-                * Bu e-posta gerçek SMTP ile gönderilmemiştir. E-posta simülatörüdür.
+                {activeNotificationItem.status === "sent"
+                  ? `* Bu e-posta ${activeNotificationItem.recipientEmail} adresine gerçekten gönderildi.`
+                  : activeNotificationItem.status === "skipped"
+                  ? "* Gönderilmedi: bu alıcı için tanımlı bir e-posta adresi yok."
+                  : `* Gönderilemedi: ${activeNotificationItem.errorNote || "bilinmeyen hata"}`}
               </span>
               <button
                 type="button"
