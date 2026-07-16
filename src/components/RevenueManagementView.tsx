@@ -104,6 +104,11 @@ export default function RevenueManagementView() {
     CrmDb.getKv<string[]>(REVENUE_IMPORT_LOGS_KEY, [])
   );
 
+  // Row selection for the invoice registry table, so a bad/duplicate import
+  // batch (e.g. one that landed with the wrong month or a mis-parsed amount)
+  // can be cleaned up in bulk instead of one row at a time.
+  const [selectedInvoiceIds, setSelectedInvoiceIds] = useState<Set<string>>(new Set());
+
   const [selectedMonth, setSelectedMonth] = useState<string>("2026-06");
   const [isRangeMode, setIsRangeMode] = useState<boolean>(false);
   const [rangeStart, setRangeStart] = useState<string>("2026-01");
@@ -140,6 +145,15 @@ export default function RevenueManagementView() {
     }
     return monthString === selectedMonth;
   };
+
+  // The invoice registry table only ever shows (and lets "select all" act
+  // on) the currently selected period's rows — kept as one memo so the
+  // header checkbox's "is everything visible selected?" check and the
+  // table body render off the exact same list.
+  const visibleInvoices = useMemo(
+    () => invoices.filter(i => isInSelectedPeriod(i.month)),
+    [invoices, isRangeMode, rangeStart, rangeEnd, selectedMonth]
+  );
 
   const isAssignmentActiveInMonth = (a: ProjectAssignment, m: string) => {
     const startM = a.startDate ? a.startDate.substring(0, 7) : a.month;
@@ -851,8 +865,50 @@ CRITICAL FORMATTING INSTRUCTIONS: Your response MUST be output as beautiful, pro
   const handleDeleteInvoice = (id: string) => {
     if (confirm(t("Are you sure you want to delete this invoice?"))) {
       setInvoices(prev => prev.filter(inv => inv.id !== id));
+      setSelectedInvoiceIds(prev => {
+        if (!prev.has(id)) return prev;
+        const next = new Set(prev);
+        next.delete(id);
+        return next;
+      });
       const logMsg = `${new Date().toLocaleTimeString()} - ${t("Invoice deleted (ID: {id}).").replace("{id}", id)}`;
       setImportLogs(prev => [logMsg, ...prev]);
+    }
+  };
+
+  const toggleInvoiceSelection = (id: string) => {
+    setSelectedInvoiceIds(prev => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  };
+
+  // "Select all" only ever acts on the rows currently visible in the table
+  // (the selected period's invoices) — not the entire, possibly multi-year,
+  // invoice history — so a bulk delete can't silently wipe out data the
+  // person isn't looking at.
+  const toggleSelectAllInvoices = (visibleIds: string[]) => {
+    setSelectedInvoiceIds(prev => {
+      const allSelected = visibleIds.length > 0 && visibleIds.every(id => prev.has(id));
+      if (allSelected) {
+        const next = new Set(prev);
+        visibleIds.forEach(id => next.delete(id));
+        return next;
+      }
+      return new Set([...prev, ...visibleIds]);
+    });
+  };
+
+  const handleDeleteSelectedInvoices = () => {
+    const count = selectedInvoiceIds.size;
+    if (count === 0) return;
+    if (confirm(t("Delete {count} selected invoices? This cannot be undone.").replace("{count}", String(count)))) {
+      setInvoices(prev => prev.filter(inv => !selectedInvoiceIds.has(inv.id)));
+      const logMsg = `${new Date().toLocaleTimeString()} - ${t("{count} invoices deleted in bulk.").replace("{count}", String(count))}`;
+      setImportLogs(prev => [logMsg, ...prev]);
+      setSelectedInvoiceIds(new Set());
     }
   };
 
@@ -2703,13 +2759,37 @@ CRITICAL FORMATTING INSTRUCTIONS: Your response MUST be output as beautiful, pro
 
                 {/* Invoices tabular layout */}
                 <div className="space-y-2 pt-4">
-                  <span className="text-[10px] uppercase font-bold text-slate-400 font-mono tracking-widest block">
-                    {t("Invoiced accounts database registry:")}
-                  </span>
+                  <div className="flex items-center justify-between flex-wrap gap-2">
+                    <span className="text-[10px] uppercase font-bold text-slate-400 font-mono tracking-widest block">
+                      {t("Invoiced accounts database registry:")}
+                    </span>
+                    {selectedInvoiceIds.size > 0 && (
+                      <button
+                        type="button"
+                        onClick={handleDeleteSelectedInvoices}
+                        className="flex items-center gap-1.5 px-2.5 py-1 text-[10px] font-bold text-rose-650 bg-rose-50 dark:bg-rose-950/25 hover:bg-rose-100 dark:hover:bg-rose-950/40 rounded transition-all cursor-pointer"
+                      >
+                        <Trash className="w-3 h-3" />
+                        {t("Delete Selected ({count})").replace("{count}", String(selectedInvoiceIds.size))}
+                      </button>
+                    )}
+                  </div>
                   <div className="overflow-x-auto w-full border border-slate-150 dark:border-zinc-800 rounded-xl">
                     <table className="w-full text-left text-xs font-sans min-w-[1150px]">
                       <thead>
                         <tr className="bg-slate-50 dark:bg-zinc-900 border-b border-slate-150 dark:border-zinc-800 font-bold text-slate-450 text-[10px] uppercase">
+                          <th className="py-2.5 px-3 w-8">
+                            <input
+                              type="checkbox"
+                              className="cursor-pointer"
+                              checked={
+                                visibleInvoices.length > 0 &&
+                                visibleInvoices.every(inv => selectedInvoiceIds.has(inv.id))
+                              }
+                              onChange={() => toggleSelectAllInvoices(visibleInvoices.map(inv => inv.id))}
+                              title={t("Select All")}
+                            />
+                          </th>
                           <th className="py-2.5 px-3">{t("Invoice Code")}</th>
                           <th className="py-2.5 text-left">{t("Customer Name")}</th>
                           <th className="py-2.5 text-left">{t("Consultant")}</th>
@@ -2725,15 +2805,27 @@ CRITICAL FORMATTING INSTRUCTIONS: Your response MUST be output as beautiful, pro
                         </tr>
                       </thead>
                       <tbody className="divide-y divide-slate-100 dark:divide-zinc-850">
-                        {invoices.filter(i => isInSelectedPeriod(i.month)).map((inv) => {
+                        {visibleInvoices.map((inv) => {
                           const days = inv.deliveredDays || 0;
                           const unitPrice = inv.unitPrice || (days > 0 ? Math.round(inv.amount / days) : 0);
                           const vatRate = inv.vatRate !== undefined ? inv.vatRate : 20;
                           const vatAmount = inv.vatAmount !== undefined ? inv.vatAmount : Math.round(inv.amount * (vatRate / 100));
                           const grandTotal = inv.grandTotal !== undefined && inv.grandTotal > 0 ? inv.grandTotal : inv.amount + vatAmount;
+                          const isSelected = selectedInvoiceIds.has(inv.id);
 
                           return (
-                            <tr key={inv.id} className="hover:bg-slate-50/50 text-slate-800 dark:text-zinc-200">
+                            <tr
+                              key={inv.id}
+                              className={`hover:bg-slate-50/50 dark:hover:bg-zinc-900/60 text-slate-800 dark:text-zinc-200 ${isSelected ? "bg-blue-50/40 dark:bg-blue-955/10" : ""}`}
+                            >
+                              <td className="py-2.5 px-3">
+                                <input
+                                  type="checkbox"
+                                  className="cursor-pointer"
+                                  checked={isSelected}
+                                  onChange={() => toggleInvoiceSelection(inv.id)}
+                                />
+                              </td>
                               <td className="py-2.5 px-3 font-mono font-bold text-slate-700">{inv.invoiceNumber}</td>
                               <td className="py-2.5 font-extrabold text-slate-800 dark:text-zinc-150">{inv.customerName}</td>
                               <td className="py-2.5 text-slate-600 dark:text-zinc-400">{inv.consultantNames && inv.consultantNames.length > 0 ? inv.consultantNames.join(" + ") : "-"}</td>
