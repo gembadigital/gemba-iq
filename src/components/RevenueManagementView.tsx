@@ -560,9 +560,9 @@ export default function RevenueManagementView() {
     });
 
     const NO_MATCH_LABEL = t("No Matching Accepted Proposal");
-    const lineMap: { [label: string]: { revenue: number; days: number; cost: number; anyEstimated: boolean } } = {};
+    const lineMap: { [label: string]: { revenue: number; days: number; cost: number; anyEstimated: boolean; plannedDays: number } } = {};
     const addToLine = (label: string, revenue: number, days: number, cost: number, estimated: boolean) => {
-      if (!lineMap[label]) lineMap[label] = { revenue: 0, days: 0, cost: 0, anyEstimated: false };
+      if (!lineMap[label]) lineMap[label] = { revenue: 0, days: 0, cost: 0, anyEstimated: false, plannedDays: 0 };
       lineMap[label].revenue += revenue;
       lineMap[label].days += days;
       lineMap[label].cost += cost;
@@ -587,18 +587,66 @@ export default function RevenueManagementView() {
       });
     });
 
+    // Planned capacity (allocated assignment days) per service line, for the
+    // same period, keyed by the assignment's own controlled serviceType
+    // enum. This only lines up with a "realized" bucket above when the
+    // accepted proposal's service label happens to use the same wording —
+    // when it doesn't, the planned days still surface as their own
+    // planned-only line rather than being silently dropped, so a project
+    // that's been staffed but not yet invoiced is still visible here.
+    assignments.filter(a => isAssignmentInSelectedPeriod(a)).forEach(a => {
+      const label = a.serviceType;
+      if (!lineMap[label]) lineMap[label] = { revenue: 0, days: 0, cost: 0, anyEstimated: false, plannedDays: 0 };
+      lineMap[label].plannedDays += getAllocatedDaysForPeriod(a);
+    });
+
     return Object.entries(lineMap)
-      .map(([name, v]) => ({
-        name,
-        revenue: v.revenue,
-        days: Math.round(v.days),
-        margin: v.revenue > 0 ? ((v.revenue - v.cost) / v.revenue) * 100 : 0,
-        avgRate: v.days > 0 ? v.revenue / v.days : 0,
-        costEstimated: v.anyEstimated
-      }))
-      .filter(v => v.days > 0 || v.revenue > 0)
+      .map(([name, v]) => {
+        const realizedDays = Math.round(v.days);
+        const plannedDays = Math.round(v.plannedDays);
+        return {
+          name,
+          revenue: v.revenue,
+          days: realizedDays,
+          margin: v.revenue > 0 ? ((v.revenue - v.cost) / v.revenue) * 100 : 0,
+          avgRate: v.days > 0 ? v.revenue / v.days : 0,
+          costEstimated: v.anyEstimated,
+          plannedDays,
+          capacityGapDays: Math.max(0, plannedDays - realizedDays),
+          realizationRate: plannedDays > 0 ? Math.round((realizedDays / plannedDays) * 100) : (realizedDays > 0 ? 100 : 0)
+        };
+      })
+      .filter(v => v.days > 0 || v.revenue > 0 || v.plannedDays > 0)
       .sort((a, b) => b.revenue - a.revenue);
   }, [invoices, assignments, consultants, proposals, blendedAvgDailyCost, selectedMonth, isRangeMode, rangeStart, rangeEnd, lang]);
+
+  // Monthly time-series of planned vs. realized man-days across the
+  // selected period, for the capacity chart under the service-line margins
+  // card. "Planned" sums each active assignment's raw allocatedDays for
+  // that specific month (matching the same logic already used by the
+  // forecast calculator below); "realized" sums delivered days on invoices
+  // actually dated in that month. The gap between the two is the lost
+  // capacity — staffed/allocated time that never turned into billed work.
+  const monthlyCapacityData = useMemo(() => {
+    return dynamicMonths
+      .filter(m => isInSelectedPeriod(m))
+      .map(m => {
+        const plannedDays = assignments
+          .filter(a => isAssignmentActiveInMonth(a, m))
+          .reduce((sum, a) => sum + a.allocatedDays, 0);
+        const realizedDays = invoices
+          .filter(i => i.month === m)
+          .reduce((sum, i) => sum + i.deliveredDays, 0);
+        const lostDays = Math.max(0, plannedDays - realizedDays);
+        return {
+          month: m,
+          plannedDays,
+          realizedDays,
+          lostDays,
+          realizationRate: plannedDays > 0 ? Math.round((realizedDays / plannedDays) * 100) : (realizedDays > 0 ? 100 : 0)
+        };
+      });
+  }, [dynamicMonths, assignments, invoices, selectedMonth, isRangeMode, rangeStart, rangeEnd]);
 
   // 3 & 6 Month Forecast calculator
   const forecasts = useMemo(() => {
@@ -1802,6 +1850,18 @@ CRITICAL FORMATTING INSTRUCTIONS: Your response MUST be output as beautiful, pro
                                 {t("Margin: {amount}").replace("{amount}", `${sp.costEstimated ? "~" : ""}${sp.margin.toFixed(0)}%`)}
                               </span>
                             </div>
+                            <div className="flex justify-between text-[10px] font-mono mt-0.5">
+                              <span className="text-slate-450 dark:text-zinc-500">
+                                {t("Planned: {days} days").replace("{days}", String(sp.plannedDays))}
+                                {" · "}
+                                {t("Realization: {rate}%").replace("{rate}", String(sp.realizationRate))}
+                              </span>
+                              {sp.capacityGapDays > 0 && (
+                                <span className="text-amber-600 dark:text-amber-500 font-bold">
+                                  {t("Lost Capacity: {days} days").replace("{days}", String(sp.capacityGapDays))}
+                                </span>
+                              )}
+                            </div>
                           </div>
                         </div>
                       );
@@ -1819,6 +1879,62 @@ CRITICAL FORMATTING INSTRUCTIONS: Your response MUST be output as beautiful, pro
               </div>
             </div>
 
+          </div>
+
+          {/* SECTION 9b - PLANNED VS REALIZED MAN-DAYS CAPACITY CHART */}
+          <div className="bg-white dark:bg-[#151515] p-6 rounded-xl border border-slate-200/50 dark:border-zinc-800 shadow-sm">
+            <div className="mb-4">
+              <h3 className="text-sm font-extrabold text-slate-850 dark:text-zinc-100 flex items-center gap-1.5">
+                <BarChart2 className="w-4.5 h-4.5 text-sky-500" />
+                <span>{t("Planned vs. Realized Man-Days")}</span>
+              </h3>
+              <span className="text-[10px] text-slate-400 font-sans">
+                {t("Planned = allocated assignment days for the selected month(s). Realized = delivered days actually invoiced. The gap is lost capacity — staffed time that never turned into billed work.")}
+              </span>
+            </div>
+
+            {monthlyCapacityData.some(d => d.plannedDays > 0 || d.realizedDays > 0) ? (
+              <>
+                <div className="h-64 font-sans text-xs">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <ComposedChart data={monthlyCapacityData} margin={{ top: 8, right: 8, left: 0, bottom: 0 }}>
+                      <CartesianGrid strokeDasharray="3 3" stroke="#EDEBE9" opacity={0.4} />
+                      <XAxis dataKey="month" fontSize={10} tickLine={false} />
+                      <YAxis fontSize={10} tickLine={false} label={{ value: t("Days"), angle: -90, position: "insideLeft", fontSize: 10 }} />
+                      <Tooltip formatter={(val: any, key: any) => [`${val} ${t("Days")}`, key]} />
+                      <Legend wrapperStyle={{ fontSize: "10px" }} />
+                      <Bar dataKey="realizedDays" name={t("Realized Man-Days")} stackId="capacity" fill="#0078D4" radius={[0, 0, 0, 0]} />
+                      <Bar dataKey="lostDays" name={t("Lost Capacity")} stackId="capacity" fill="#F59E0B" fillOpacity={0.55} radius={[3, 3, 0, 0]} />
+                      <Line type="monotone" dataKey="plannedDays" name={t("Planned Man-Days")} stroke="#10B981" strokeWidth={2.5} dot={{ r: 3 }} />
+                    </ComposedChart>
+                  </ResponsiveContainer>
+                </div>
+                <div className="grid grid-cols-3 gap-3 mt-4 pt-4 border-t border-slate-100 dark:border-zinc-800">
+                  <div className="text-center">
+                    <div className="text-[10px] uppercase font-bold text-slate-400 font-mono">{t("Total Planned")}</div>
+                    <div className="text-lg font-extrabold text-emerald-600 dark:text-emerald-400 font-mono">
+                      {monthlyCapacityData.reduce((s, d) => s + d.plannedDays, 0)} {t("Days")}
+                    </div>
+                  </div>
+                  <div className="text-center">
+                    <div className="text-[10px] uppercase font-bold text-slate-400 font-mono">{t("Total Realized")}</div>
+                    <div className="text-lg font-extrabold text-[#0078D4] dark:text-sky-400 font-mono">
+                      {monthlyCapacityData.reduce((s, d) => s + d.realizedDays, 0)} {t("Days")}
+                    </div>
+                  </div>
+                  <div className="text-center">
+                    <div className="text-[10px] uppercase font-bold text-slate-400 font-mono">{t("Lost Capacity")}</div>
+                    <div className="text-lg font-extrabold text-amber-600 dark:text-amber-500 font-mono">
+                      {monthlyCapacityData.reduce((s, d) => s + d.lostDays, 0)} {t("Days")}
+                    </div>
+                  </div>
+                </div>
+              </>
+            ) : (
+              <div className="h-52 flex items-center justify-center text-slate-400 font-mono text-xs text-center px-4">
+                {t("No invoices were found for this period.")}
+              </div>
+            )}
           </div>
 
           {/* CONSULTANTS MARGIN RATES & STAFF SUMMARY */}
