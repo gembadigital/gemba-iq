@@ -9,7 +9,6 @@ import {
   GembaLensObservation,
 } from "../lib/gembaLensDb";
 import {
-  Search,
   Building,
   ArrowLeft,
   Target,
@@ -169,6 +168,103 @@ function getProgram(score: number): ProgramConfig {
   return PROGRAMS.find((p) => score >= p.min && score <= p.max) || PROGRAMS[PROGRAMS.length - 1];
 }
 
+// ─── SEKTÖREL ÜRÜN MALİYET MODELLEMESİ (verbatim from source app) ──────────
+// Girilen sektör/ürün grubu serbest metnine göre (anahtar kelime eşleşmesi),
+// tesisin tipik maliyet yapısını (malzeme/işçilik/enerji/bakım/genel gider)
+// ciro yüzdesi olarak tahmin eder. Kullanıcı bu oranları elle de düzenleyebilir.
+interface SectorCostStructure {
+  title: string;
+  malzeme: number;
+  iscilik: number;
+  enerji: number;
+  bakim: number;
+  genel: number;
+}
+
+function getSectorCostStructure(sectorStr: string, productStr: string): SectorCostStructure {
+  const sec = (sectorStr || "").toLowerCase();
+  const prod = (productStr || "").toLowerCase();
+
+  if (sec.includes("oto") || sec.includes("tasit") || sec.includes("parca") || prod.includes("oto") || prod.includes("yedek")) {
+    return { title: "Otomotiv Yan Sanayi & Yedek Parça", malzeme: 55, iscilik: 15, enerji: 8, bakim: 7, genel: 15 };
+  } else if (sec.includes("gida") || sec.includes("icecek") || sec.includes("unlu") || prod.includes("gida") || prod.includes("ambalaj")) {
+    return { title: "Gıda, İçecek & Ambalaj", malzeme: 60, iscilik: 12, enerji: 10, bakim: 6, genel: 12 };
+  } else if (sec.includes("mobilya") || sec.includes("ahsap") || prod.includes("mobilya") || prod.includes("kabin") || prod.includes("panel")) {
+    return { title: "Mobilya & Ahşap İşleme", malzeme: 50, iscilik: 20, enerji: 6, bakim: 5, genel: 19 };
+  } else if (sec.includes("plastik") || sec.includes("enjeksiyon") || prod.includes("plastik") || prod.includes("kalip")) {
+    return { title: "Plastik Enjeksiyon ve Kalıplama", malzeme: 45, iscilik: 15, enerji: 20, bakim: 8, genel: 12 };
+  } else if (sec.includes("tekstil") || sec.includes("konfeksiyon") || prod.includes("kumas") || prod.includes("dikim")) {
+    return { title: "Tekstil & Hazır Giyim Sanayi", malzeme: 40, iscilik: 30, enerji: 10, bakim: 4, genel: 16 };
+  } else if (sec.includes("maden") || sec.includes("mermer") || sec.includes("tas") || sec.includes("kaya") || prod.includes("maden") || prod.includes("mermer") || prod.includes("blok")) {
+    return { title: "Madencilik, Mermer & Taş Ocakçılığı", malzeme: 20, iscilik: 18, enerji: 32, bakim: 18, genel: 12 };
+  } else if (sec.includes("cimento") || sec.includes("cam") || sec.includes("seramik") || sec.includes("tugla") || prod.includes("cimento") || prod.includes("cam") || prod.includes("seramik")) {
+    return { title: "Çimento, Cam & Seramik Sanayi", malzeme: 30, iscilik: 15, enerji: 35, bakim: 12, genel: 8 };
+  } else if (sec.includes("kimya") || sec.includes("boya") || sec.includes("petrol") || sec.includes("ilac") || prod.includes("kimya") || prod.includes("boya")) {
+    return { title: "Kimya, Boya & Petrol Ürünleri", malzeme: 65, iscilik: 10, enerji: 12, bakim: 5, genel: 8 };
+  }
+  return { title: "Metal, Makine ve Genel Endüstriyel İmalat", malzeme: 50, iscilik: 18, enerji: 10, bakim: 7, genel: 15 };
+}
+
+// ─── KAYIP KATEGORİLERİ VE ÖNERİLEN YALIN ARAÇLAR (verbatim from RoiAnalyzer.tsx) ───
+// totalCopqPool, saha girdilerine göre 6 ana kayıp kovasına dağıtılır; her kovanın
+// hizmet çalışmasıyla ne kadar (sabit oran) azaltılabileceği ve hangi yalın aracın
+// bunu sağladığı burada tanımlıdır — "kayıpları maliyet modeline göre dizip, hizmet
+// çalışmasının bunları ne kadar azaltacağını hesaplama" kısmı budur.
+interface LossBucketDef {
+  key: "durus" | "kalite" | "mesai" | "hurda" | "iscilik" | "kapasite";
+  label: string;
+  reductionRatio: number; // hedef/mevcut (ör. 0.75 = %25 azaltım)
+  tool: string;
+  desc: string;
+}
+const LOSS_BUCKETS: LossBucketDef[] = [
+  { key: "durus", label: "Duruşlar", reductionRatio: 0.75, tool: "SMED & TPM", desc: "Sürekli İyileştirme ile Arıza & Model Değişimi" },
+  { key: "kalite", label: "Kalite", reductionRatio: 0.75, tool: "Poka-Yoke & Kalite Kaizen", desc: "Tamir ve Hatalı Parça Üretim Yükü" },
+  { key: "mesai", label: "Fazla Mesai", reductionRatio: 0.65, tool: "Hat Dengeleme & Standart İş", desc: "Dengesiz Vardiya & Yoğun Mesai Yükü" },
+  { key: "hurda", label: "Hurda", reductionRatio: 0.80, tool: "Süreç Kontrol & Standardizasyon", desc: "Hatalı Malzeme ve Toz/Sıvı Fireleri" },
+  { key: "iscilik", label: "İşçilik", reductionRatio: 0.75, tool: "5S & Standart İş", desc: "Mavi Yaka Verimsizlik ve Hazırlık Kaybı" },
+  { key: "kapasite", label: "Kapasite", reductionRatio: 0.70, tool: "OEE Takip & Darboğaz Çözümü", desc: "Ekipman Doyum & Kullanım Kaybı" },
+];
+
+// 12 fırsat kategorisi, 3 gruba ayrılır; her biri bir kayıp kovasından (base) pay
+// alır ve olgunluk puanına göre daralan/genişleyen bir min%-max% aralığı uygular.
+interface OpportunityCategoryDef {
+  key: string;
+  label: string;
+  base: LossBucketDef["key"];
+  defaultMin: number;
+  defaultMax: number;
+}
+const OPPORTUNITY_GROUPS: { group: string; items: OpportunityCategoryDef[] }[] = [
+  {
+    group: "Doğrudan Maliyet Azaltma",
+    items: [
+      { key: "sc", label: "Hurda Maliyeti", base: "kalite", defaultMin: 15, defaultMax: 50 },
+      { key: "fm", label: "Fire & Malzeme Kayıpları", base: "hurda", defaultMin: 12, defaultMax: 45 },
+      { key: "mes", label: "Fazla Mesai Azaltımı", base: "mesai", defaultMin: 15, defaultMax: 50 },
+      { key: "yi", label: "Yeniden İşleme (Rework)", base: "kalite", defaultMin: 10, defaultMax: 40 },
+      { key: "ov", label: "Operasyonel Verimsizlik", base: "iscilik", defaultMin: 10, defaultMax: 45 },
+    ],
+  },
+  {
+    group: "Kapasite Yaratma",
+    items: [
+      { key: "setup", label: "Setup Süreleri (SMED)", base: "durus", defaultMin: 15, defaultMax: 55 },
+      { key: "pd", label: "Plansız Duruşların Önlenmesi", base: "kapasite", defaultMin: 10, defaultMax: 45 },
+      { key: "oee", label: "OEE İyileştirmesi", base: "kapasite", defaultMin: 15, defaultMax: 55 },
+      { key: "opv", label: "Operatör Verimliliği", base: "iscilik", defaultMin: 12, defaultMax: 50 },
+    ],
+  },
+  {
+    group: "Stratejik Operasyonel Kazanç",
+    items: [
+      { key: "lt", label: "Lead Time (Sipariş Çevrimi)", base: "kapasite", defaultMin: 10, defaultMax: 40 },
+      { key: "wip", label: "WIP (Yarı Mamul) Azaltımı", base: "kapasite", defaultMin: 10, defaultMax: 40 },
+      { key: "sp", label: "Sevkiyat Performansı", base: "kapasite", defaultMin: 10, defaultMax: 30 },
+    ],
+  },
+];
+
 // ─── FORMATTING HELPERS ──────────────────────────────────────────────────
 function parseNum(v: string | undefined): number {
   if (!v) return 0;
@@ -189,9 +285,8 @@ export default function GembaLensView({ onNavigateToTab }: GembaLensViewProps) {
   const { t } = useLanguage();
 
   const [companies, setCompanies] = useState<Company[]>([]);
-  const [search, setSearch] = useState("");
   const [selectedCompanyId, setSelectedCompanyId] = useState<string | null>(null);
-  const [activeSection, setActiveSection] = useState<"data" | "scoring" | "results" | "findings" | "chat">("data");
+  const [activeSection, setActiveSection] = useState<"data" | "cost" | "scoring" | "results" | "findings" | "chat">("data");
 
   const [op, setOp] = useState<GembaLensOperationData | null>(null);
   const [observations, setObservations] = useState<GembaLensObservation[]>([]);
@@ -206,6 +301,11 @@ export default function GembaLensView({ onNavigateToTab }: GembaLensViewProps) {
   const [chatInput, setChatInput] = useState("");
   const [chatLoading, setChatLoading] = useState(false);
   const [chatError, setChatError] = useState<string | null>(null);
+
+  // Tracks whether the user has manually edited the sector cost-structure
+  // ratios this session, so the sector auto-fill effect below stops
+  // overwriting their edits. Reset whenever a different company is loaded.
+  const [costPropTouched, setCostPropTouched] = useState(false);
 
   useEffect(() => {
     setCompanies(CrmDb.getCompanies());
@@ -223,6 +323,7 @@ export default function GembaLensView({ onNavigateToTab }: GembaLensViewProps) {
     setObservations(GembaLensDb.getObservations(selectedCompanyId));
     setActiveSection("data");
     setStatusMsg(null);
+    setCostPropTouched(false);
   }, [selectedCompanyId]);
 
   const selectedCompany = useMemo(
@@ -230,20 +331,58 @@ export default function GembaLensView({ onNavigateToTab }: GembaLensViewProps) {
     [companies, selectedCompanyId]
   );
 
-  const filteredCompanies = useMemo(() => {
-    const q = search.trim().toLowerCase();
-    if (!q) return companies;
-    return companies.filter(
-      (c) => c.name.toLowerCase().includes(q) || (c.industry || "").toLowerCase().includes(q)
-    );
-  }, [companies, search]);
-
   const totalScore = useMemo(() => {
     if (!op) return 0;
     return Object.values(op.scores).reduce((sum, v) => sum + (v || 0), 0);
   }, [op]);
 
   const program = useMemo(() => getProgram(totalScore), [totalScore]);
+
+  const sectorCostStructure = useMemo(
+    () => (op ? getSectorCostStructure(op.sektor, op.urunGrubu) : getSectorCostStructure("", "")),
+    [op?.sektor, op?.urunGrubu]
+  );
+
+  // Auto-fill cost proportions from the sector benchmark whenever sector/product
+  // changes (matches source app's useEffect — 0.9 scaling on the 5 cost buckets
+  // leaves room for a fixed 10% profit margin, i.e. malzeme+iscilik+enerji+
+  // bakim+genel+kar = 100%). Only overwrites while the user hasn't already
+  // customized the figures this session (tracked via costPropTouched).
+  useEffect(() => {
+    if (!op || costPropTouched) return;
+    const structure = sectorCostStructure;
+    const scaled = (v: number) => (Math.round(v * 0.9 * 10) / 10).toString();
+    setOp((prev) =>
+      prev
+        ? {
+            ...prev,
+            costPropMaterial: scaled(structure.malzeme),
+            costPropLabor: scaled(structure.iscilik),
+            costPropEnergy: scaled(structure.enerji),
+            costPropMaintenance: scaled(structure.bakim),
+            costPropOverhead: scaled(structure.genel),
+            costPropProfit: "10",
+          }
+        : prev
+    );
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [sectorCostStructure]);
+
+  const handleResetCostStructure = () => {
+    if (!op) return;
+    const structure = sectorCostStructure;
+    const scaled = (v: number) => (Math.round(v * 0.9 * 10) / 10).toString();
+    setOp({
+      ...op,
+      costPropMaterial: scaled(structure.malzeme),
+      costPropLabor: scaled(structure.iscilik),
+      costPropEnergy: scaled(structure.enerji),
+      costPropMaintenance: scaled(structure.bakim),
+      costPropOverhead: scaled(structure.genel),
+      costPropProfit: "10",
+    });
+    setCostPropTouched(false);
+  };
 
   // ─── FINANCIAL ENGINE (see file header for source-fidelity notes) ───────
   const calc = useMemo(() => {
@@ -279,8 +418,134 @@ export default function GembaLensView({ onNavigateToTab }: GembaLensViewProps) {
       Math.round(setupLaborLoss + setupOpportunityLoss * 0.6) +
       Math.round(inefficiencyLaborLoss + inefficiencyOverheadLoss * 0.5);
 
-    const opportunityMin = Math.round(totalLossExpected * 0.2);
-    const opportunityMax = Math.round(totalLossExpected * 0.3);
+    // ─── Sektörel ürün maliyet yapısı (₺) ────────────────────────────────
+    const scrapRateNum = Number(op.scrapRate) || 0;
+    const reworkRateNum = Number(op.reworkRate) || 0;
+    const overtimeRateNum = Number(op.overtimeRate) || 0;
+    const oeeNum = Number(op.oee) || 0;
+
+    const materialCostTL = turnoverNum * ((Number(op.costPropMaterial) || 0) / 100);
+    const laborCostTL = turnoverNum * ((Number(op.costPropLabor) || 0) / 100);
+    const energyCostTL = turnoverNum * ((Number(op.costPropEnergy) || 0) / 100);
+    const maintenanceCostTL = turnoverNum * ((Number(op.costPropMaintenance) || 0) / 100);
+    const overheadCostTL = turnoverNum * ((Number(op.costPropOverhead) || 0) / 100);
+    const operatingProfitTL = turnoverNum * ((Number(op.costPropProfit) || 0) / 100);
+    const costStructureSumPct =
+      Math.round(
+        ((Number(op.costPropMaterial) || 0) +
+          (Number(op.costPropLabor) || 0) +
+          (Number(op.costPropEnergy) || 0) +
+          (Number(op.costPropMaintenance) || 0) +
+          (Number(op.costPropOverhead) || 0) +
+          (Number(op.costPropProfit) || 0)) *
+          10
+      ) / 10;
+
+    // ─── Kayıpları maliyet modeline göre 6 kovaya dağıtma (verbatim) ──────
+    const totalCopqPool = totalLossExpected;
+    const w1 = Math.max(15, 35 - (oeeNum > 0 ? oeeNum * 0.3 : 20)); // Duruşlar
+    const w2 = Math.max(10, Math.min(30, reworkRateNum * 2.5)); // Kalite
+    const w3 = Math.max(5, Math.min(30, overtimeRateNum * 1.5)); // Fazla Mesai
+    const w4 = Math.max(10, Math.min(25, scrapRateNum * 3.5)); // Hurda
+    const w5 = Math.max(10, Math.min(25, (plannedEffNum - actualEffNum) * 1.2)); // İşçilik
+    const w6 = Math.max(15, 40 - (oeeNum > 0 ? oeeNum * 0.35 : 20)); // Kapasite
+    const sumW = w1 + w2 + w3 + w4 + w5 + w6;
+
+    const lossDurus = Math.round(totalCopqPool * (w1 / sumW));
+    const lossKalite = Math.round(totalCopqPool * (w2 / sumW));
+    const lossMesai = Math.round(totalCopqPool * (w3 / sumW));
+    const lossHurda = Math.round(totalCopqPool * (w4 / sumW));
+    const lossIscilik = Math.round(totalCopqPool * (w5 / sumW));
+    const lossKapasite = totalCopqPool - (lossDurus + lossKalite + lossMesai + lossHurda + lossIscilik);
+
+    const lossByBucket: Record<LossBucketDef["key"], number> = {
+      durus: lossDurus,
+      kalite: lossKalite,
+      mesai: lossMesai,
+      hurda: lossHurda,
+      iscilik: lossIscilik,
+      kapasite: lossKapasite,
+    };
+
+    // Hizmet çalışmasının her kovayı ne kadar azaltacağı (sabit oranlar + isimli yalın araç)
+    const lossReductionTable = LOSS_BUCKETS.map((bucket) => {
+      const current = lossByBucket[bucket.key];
+      const target = Math.round(current * bucket.reductionRatio);
+      return {
+        ...bucket,
+        current,
+        target,
+        saving: current - target,
+        reductionPercent: Math.round((1 - bucket.reductionRatio) * 100),
+      };
+    });
+
+    // Olgunluk puanına göre daralan/genişleyen fırsat aralığı
+    const scorePct = Math.round((totalScore / 51) * 100);
+    const getAdjustedRatios = (defaultMin: number, defaultMax: number) => {
+      let minVal = defaultMin;
+      let maxVal = defaultMax;
+      if (scorePct <= 20) {
+        minVal = defaultMin + 10;
+        maxVal = defaultMax - 10;
+        if (maxVal < minVal + 15) maxVal = minVal + 15;
+      } else if (scorePct <= 30) {
+        minVal = defaultMin + 5;
+        maxVal = defaultMax - 15;
+        if (maxVal < minVal + 15) maxVal = minVal + 15;
+      } else {
+        minVal = defaultMin;
+        maxVal = defaultMin + 10;
+      }
+      const spread = maxVal - minVal;
+      if (spread < 10) maxVal = minVal + 10;
+      if (spread > 50) maxVal = minVal + 50;
+      return { minPct: minVal, maxPct: maxVal };
+    };
+
+    // 12 fırsat kategorisi: ham (raw) min/max hesapla, sonra toplamı Option-4
+    // hedefine (totalCopqPool'un %20-30'u) tam oturacak şekilde ölçekle.
+    const rawCategories = OPPORTUNITY_GROUPS.flatMap((g) =>
+      g.items.map((item) => {
+        const ratio = getAdjustedRatios(item.defaultMin, item.defaultMax);
+        const base = lossByBucket[item.base];
+        return {
+          ...item,
+          group: g.group,
+          ratio,
+          rawMin: base * (ratio.minPct / 100),
+          rawMax: base * (ratio.maxPct / 100),
+        };
+      })
+    );
+
+    const rawTotalMin = rawCategories.reduce((s, c) => s + c.rawMin, 0);
+    const rawTotalMax = rawCategories.reduce((s, c) => s + c.rawMax, 0);
+    const opportunityMin = Math.round(totalCopqPool * 0.2);
+    const opportunityMax = Math.round(totalCopqPool * 0.3);
+    const scaleMin = rawTotalMin > 0 ? opportunityMin / rawTotalMin : 0.2;
+    const scaleMax = rawTotalMax > 0 ? opportunityMax / rawTotalMax : 0.3;
+
+    const opportunityCategories = rawCategories.map((c) => ({
+      key: c.key,
+      label: c.label,
+      group: c.group,
+      minPct: c.ratio.minPct,
+      maxPct: c.ratio.maxPct,
+      min: Math.round(c.rawMin * scaleMin),
+      max: Math.round(c.rawMax * scaleMax),
+    }));
+
+    const opportunityByGroup = OPPORTUNITY_GROUPS.map((g) => {
+      const items = opportunityCategories.filter((c) => c.group === g.group);
+      return {
+        group: g.group,
+        items,
+        min: items.reduce((s, i) => s + i.min, 0),
+        max: items.reduce((s, i) => s + i.max, 0),
+      };
+    });
+
     const annualSaving = Math.round((opportunityMin + opportunityMax) / 2);
 
     // Daily consulting rate: same volume-discount tiers/floor as source app,
@@ -311,8 +576,17 @@ export default function GembaLensView({ onNavigateToTab }: GembaLensViewProps) {
       investmentNeed,
       paybackMonths,
       roiPercent,
+      materialCostTL,
+      laborCostTL,
+      energyCostTL,
+      maintenanceCostTL,
+      overheadCostTL,
+      operatingProfitTL,
+      costStructureSumPct,
+      lossReductionTable,
+      opportunityByGroup,
     };
-  }, [op, selectedCompany, program, dailyRate]);
+  }, [op, selectedCompany, program, dailyRate, totalScore]);
 
   // ─── ACTIONS ──────────────────────────────────────────────────────────
   const handleScoreChange = (criterionNo: number, value: number) => {
@@ -382,7 +656,13 @@ export default function GembaLensView({ onNavigateToTab }: GembaLensViewProps) {
     const deals = CrmDb.getDeals();
     const existing = deals.find((d) => d.companyId === selectedCompanyId && d.leadSource === "Gemba Lens Saha Tespiti");
 
-    const description = `Gemba Lens saha tespiti sonucu: "${program.op1.name}" önerildi (${program.op1.ag} adam gün/yıl). Olgunluk puanı: ${totalScore}/51 (${program.levelLabel}). Tahmini yıllık kazanım: ${fmtTL(calc.annualSaving)}, tahmini yıllık yatırım: ${fmtTL(calc.investmentNeed)}.`;
+    const topLossLines = calc.lossReductionTable
+      .slice()
+      .sort((a, b) => b.saving - a.saving)
+      .slice(0, 3)
+      .map((r) => `${r.label} (${r.tool}): ${fmtTL(r.saving)}/yıl`)
+      .join("; ");
+    const description = `Gemba Lens saha tespiti sonucu: "${program.op1.name}" önerildi (${program.op1.ag} adam gün/yıl). Olgunluk puanı: ${totalScore}/51 (${program.levelLabel}). Sektör: ${sectorCostStructure.title}. Tahmini yıllık kazanım: ${fmtTL(calc.annualSaving)}, tahmini yıllık yatırım: ${fmtTL(calc.investmentNeed)}. En büyük kayıp azaltım fırsatları: ${topLossLines}.`;
 
     const deal: Deal = {
       id: existing?.id || `deal-gembalens-${selectedCompanyId}`,
@@ -445,10 +725,13 @@ export default function GembaLensView({ onNavigateToTab }: GembaLensViewProps) {
 
     const context = [
       `Şirket: ${selectedCompany?.name} (${selectedCompany?.industry || "-"})`,
+      `Sektör Benchmarkı: ${sectorCostStructure.title}`,
+      `Maliyet Yapısı: Malzeme %${op.costPropMaterial}, İşçilik %${op.costPropLabor}, Enerji %${op.costPropEnergy}, Bakım %${op.costPropMaintenance}, Genel Gider %${op.costPropOverhead}, Kar %${op.costPropProfit}`,
       `Olgunluk Puanı: ${totalScore}/51 — ${program.levelLabel}`,
       `Önerilen Paket: ${program.op1.name} (${program.op1.ag} adam gün/yıl)`,
       `Yıllık Ciro: ${fmtTL(calc.turnoverNum)}`,
       `Tahmini Kalitesizlik Maliyeti: ${fmtTL(calc.copqLossMin)} - ${fmtTL(calc.copqLossMax)}`,
+      `Kayıp Dağılımı (mevcut → hedef, yalın araç): ${calc.lossReductionTable.map((r) => `${r.label} ${fmtTL(r.current)}→${fmtTL(r.target)} (${r.tool})`).join("; ")}`,
       `İyileştirme Fırsat Havuzu: ${fmtTL(calc.opportunityMin)} - ${fmtTL(calc.opportunityMax)}`,
       `Tahmini Yıllık Net Kazanım: ${fmtTL(calc.annualSaving)}`,
       `Tahmini Yıllık Yatırım: ${fmtTL(calc.investmentNeed)}`,
@@ -476,7 +759,7 @@ export default function GembaLensView({ onNavigateToTab }: GembaLensViewProps) {
     }
   };
 
-  // ─── RENDER: COMPANY LIST ────────────────────────────────────────────
+  // ─── RENDER: COMPANY SELECTOR (dropdown, not a card grid) ────────────
   if (!selectedCompanyId) {
     return (
       <div className="space-y-5">
@@ -492,53 +775,28 @@ export default function GembaLensView({ onNavigateToTab }: GembaLensViewProps) {
           </div>
         </div>
 
-        <div className="bg-white dark:bg-zinc-900 rounded-xl border border-slate-200 dark:border-zinc-800 p-4">
-          <div className="relative mb-4">
-            <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
-            <input
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              placeholder={t("Search companies...")}
-              className="w-full pl-9 pr-3 py-2 text-sm border border-slate-200 dark:border-zinc-700 rounded-lg bg-white dark:bg-zinc-800 dark:text-zinc-100"
-            />
+        <div className="bg-white dark:bg-zinc-900 rounded-xl border border-slate-200 dark:border-zinc-800 p-5 max-w-xl">
+          <label className="block text-xs font-semibold text-slate-500 dark:text-zinc-400 mb-2">{t("Select a company")}</label>
+          <div className="relative">
+            <Building className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
+            <select
+              value=""
+              onChange={(e) => e.target.value && setSelectedCompanyId(e.target.value)}
+              className="w-full pl-9 pr-3 py-2.5 text-sm border border-slate-200 dark:border-zinc-700 rounded-lg bg-white dark:bg-zinc-800 dark:text-zinc-100 appearance-none"
+            >
+              <option value="" disabled>
+                {companies.length === 0 ? t("No companies found. Add companies first from Customers.") : t("Search companies...")}
+              </option>
+              {companies.map((c) => (
+                <option key={c.id} value={c.id}>
+                  {c.name}
+                  {assessedIds.has(c.id)
+                    ? ` — ${t("Assessed")}${typeof c.healthScore === "number" ? ` (${c.healthScore}/100)` : ""}`
+                    : ` — ${t("Not assessed yet")}`}
+                </option>
+              ))}
+            </select>
           </div>
-
-          {filteredCompanies.length === 0 ? (
-            <div className="text-center py-10 text-sm text-slate-400">
-              {t("No companies found. Add companies first from Customers.")}
-            </div>
-          ) : (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-              {filteredCompanies.map((c) => {
-                const assessed = assessedIds.has(c.id);
-                return (
-                  <button
-                    key={c.id}
-                    onClick={() => setSelectedCompanyId(c.id)}
-                    className="text-left p-4 rounded-lg border border-slate-200 dark:border-zinc-700 hover:border-emerald-400 hover:shadow-sm transition-all bg-white dark:bg-zinc-800"
-                  >
-                    <div className="flex items-start justify-between gap-2 mb-2">
-                      <div className="flex items-center gap-2 min-w-0">
-                        <Building className="w-4 h-4 text-slate-400 flex-shrink-0" />
-                        <span className="font-semibold text-sm text-slate-900 dark:text-zinc-100 truncate">{c.name}</span>
-                      </div>
-                    </div>
-                    <div className="text-xs text-slate-500 dark:text-zinc-400 mb-2 truncate">{c.industry}</div>
-                    {assessed ? (
-                      <span className="inline-flex items-center gap-1 text-xs font-medium text-emerald-700 bg-emerald-50 dark:bg-emerald-950 dark:text-emerald-400 px-2 py-0.5 rounded-full">
-                        <CheckCircle2 className="w-3 h-3" /> {t("Assessed")}
-                        {typeof c.healthScore === "number" ? ` · ${c.healthScore}/100` : ""}
-                      </span>
-                    ) : (
-                      <span className="inline-flex items-center gap-1 text-xs font-medium text-slate-500 bg-slate-100 dark:bg-zinc-700 dark:text-zinc-300 px-2 py-0.5 rounded-full">
-                        {t("Not assessed yet")}
-                      </span>
-                    )}
-                  </button>
-                );
-              })}
-            </div>
-          )}
         </div>
       </div>
     );
@@ -549,6 +807,7 @@ export default function GembaLensView({ onNavigateToTab }: GembaLensViewProps) {
 
   const TABS: { id: typeof activeSection; label: string; icon: React.ReactNode }[] = [
     { id: "data", label: t("Field Data"), icon: <Layers className="w-4 h-4" /> },
+    { id: "cost", label: t("Cost Structure"), icon: <Coins className="w-4 h-4" /> },
     { id: "scoring", label: t("Maturity Scoring"), icon: <Gauge className="w-4 h-4" /> },
     { id: "results", label: t("Results & Proposal"), icon: <TrendingUp className="w-4 h-4" /> },
     { id: "findings", label: t("Field Findings"), icon: <ClipboardCheck className="w-4 h-4" /> },
@@ -621,7 +880,98 @@ export default function GembaLensView({ onNavigateToTab }: GembaLensViewProps) {
             <Field label={t("Setup Frequency (per week)")} value={op.setupFrequency} onChange={(v) => setOp({ ...op, setupFrequency: v })} />
             <Field label={t("Setup Duration (minutes)")} value={op.setupDuration} onChange={(v) => setOp({ ...op, setupDuration: v })} />
             <Field label={t("Operators Affected by Setup")} value={op.affectedOpsSetup} onChange={(v) => setOp({ ...op, affectedOpsSetup: v })} />
+            <Field label={t("OEE (%)")} value={op.oee} onChange={(v) => setOp({ ...op, oee: v })} />
             <Field label={t("Daily Consulting Rate (₺)")} value={String(dailyRate)} onChange={(v) => setDailyRate(Number(v.replace(/\D/g, "")) || 0)} />
+          </div>
+          <button
+            onClick={handleSaveOperation}
+            className="inline-flex items-center gap-2 px-4 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-semibold rounded-lg"
+          >
+            <Save className="w-4 h-4" /> {t("Save Field Data")}
+          </button>
+        </div>
+      )}
+
+      {/* SECTOR-BASED PRODUCT COST STRUCTURE */}
+      {activeSection === "cost" && (
+        <div className="space-y-4">
+          <div className="bg-white dark:bg-zinc-900 rounded-xl border border-slate-200 dark:border-zinc-800 p-5">
+            <div className="flex items-center gap-2 mb-4">
+              <Coins className="w-5 h-5 text-emerald-600" />
+              <h3 className="font-bold text-slate-900 dark:text-zinc-100">{t("Sector-Based Product Cost Structure")}</h3>
+            </div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
+              <Field label={t("Sector")} value={op.sektor} onChange={(v) => { setOp({ ...op, sektor: v }); setCostPropTouched(false); }} placeholder={t("e.g. Automotive, Food, Textile...")} />
+              <Field label={t("Product Group")} value={op.urunGrubu} onChange={(v) => { setOp({ ...op, urunGrubu: v }); setCostPropTouched(false); }} placeholder={t("e.g. auto parts, packaging...")} />
+            </div>
+            <div className="flex items-center justify-between gap-3 mb-3 flex-wrap">
+              <p className="text-sm text-slate-500 dark:text-zinc-400">
+                {t("Matched sector benchmark")}: <strong className="text-slate-800 dark:text-zinc-200">{sectorCostStructure.title}</strong>
+              </p>
+              <button
+                onClick={handleResetCostStructure}
+                className="text-xs font-semibold text-emerald-700 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-900 bg-white dark:bg-zinc-800 hover:bg-emerald-50 dark:hover:bg-emerald-950 px-3 py-1.5 rounded-lg"
+              >
+                {t("Reset to Sector Defaults")}
+              </button>
+            </div>
+            {calc.costStructureSumPct !== 100 && (
+              <div className="mb-3 text-xs bg-amber-50 dark:bg-amber-950 text-amber-700 dark:text-amber-400 rounded-lg px-3 py-2">
+                {t("Cost ratios currently sum to")} <strong>%{calc.costStructureSumPct}</strong> — {t("aim for %100 for full budget accuracy.")}
+              </div>
+            )}
+            <div className="overflow-hidden border border-slate-200 dark:border-zinc-800 rounded-lg">
+              <table className="w-full text-left text-sm">
+                <thead>
+                  <tr className="bg-slate-50 dark:bg-zinc-800 border-b border-slate-200 dark:border-zinc-700">
+                    <th className="p-2.5 font-semibold text-slate-600 dark:text-zinc-300">{t("Cost Item")}</th>
+                    <th className="p-2.5 font-semibold text-slate-600 dark:text-zinc-300 text-center">{t("Ratio (%)")}</th>
+                    <th className="p-2.5 font-semibold text-slate-600 dark:text-zinc-300 text-right">{t("Amount (₺)")}</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-100 dark:divide-zinc-800">
+                  {[
+                    { label: t("Direct Material"), key: "costPropMaterial" as const, amount: calc.materialCostTL },
+                    { label: t("Direct Labor"), key: "costPropLabor" as const, amount: calc.laborCostTL },
+                    { label: t("Energy"), key: "costPropEnergy" as const, amount: calc.energyCostTL },
+                    { label: t("Maintenance"), key: "costPropMaintenance" as const, amount: calc.maintenanceCostTL },
+                    { label: t("Overhead"), key: "costPropOverhead" as const, amount: calc.overheadCostTL },
+                  ].map((row) => (
+                    <tr key={row.key}>
+                      <td className="p-2.5 font-medium text-slate-800 dark:text-zinc-200">{row.label}</td>
+                      <td className="p-2.5 text-center">
+                        <input
+                          type="number"
+                          step="0.1"
+                          value={op[row.key]}
+                          onChange={(e) => { setOp({ ...op, [row.key]: e.target.value }); setCostPropTouched(true); }}
+                          className="w-20 text-center border border-slate-200 dark:border-zinc-700 rounded-md py-1 bg-white dark:bg-zinc-800 dark:text-zinc-100"
+                        />
+                      </td>
+                      <td className="p-2.5 text-right font-semibold text-slate-700 dark:text-zinc-300">{fmtTL(row.amount)}</td>
+                    </tr>
+                  ))}
+                  <tr className="bg-emerald-50/50 dark:bg-emerald-950/30">
+                    <td className="p-2.5 font-semibold text-emerald-800 dark:text-emerald-400">{t("Operating Profit (Est.)")}</td>
+                    <td className="p-2.5 text-center">
+                      <input
+                        type="number"
+                        step="0.1"
+                        value={op.costPropProfit}
+                        onChange={(e) => { setOp({ ...op, costPropProfit: e.target.value }); setCostPropTouched(true); }}
+                        className="w-20 text-center border border-slate-200 dark:border-zinc-700 rounded-md py-1 bg-white dark:bg-zinc-800 dark:text-zinc-100"
+                      />
+                    </td>
+                    <td className="p-2.5 text-right font-semibold text-emerald-700 dark:text-emerald-400">{fmtTL(calc.operatingProfitTL)}</td>
+                  </tr>
+                  <tr className="bg-slate-50 dark:bg-zinc-800 font-bold">
+                    <td className="p-2.5 text-slate-900 dark:text-zinc-100">{t("Total (Revenue)")}</td>
+                    <td className="p-2.5 text-center text-slate-900 dark:text-zinc-100">%{calc.costStructureSumPct}</td>
+                    <td className="p-2.5 text-right text-slate-900 dark:text-zinc-100">{fmtTL(calc.turnoverNum)}</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
           </div>
           <button
             onClick={handleSaveOperation}
@@ -709,6 +1059,92 @@ export default function GembaLensView({ onNavigateToTab }: GembaLensViewProps) {
             <StatCard icon={<Coins className="w-4 h-4" />} label={t("Estimated Annual Investment")} value={fmtTL(calc.investmentNeed)} />
             <StatCard icon={<TrendingUp className="w-4 h-4" />} label={t("Return on Investment")} value={`%${calc.roiPercent}`} />
             <StatCard icon={<Gauge className="w-4 h-4" />} label={t("Payback Period")} value={`${calc.paybackMonths} ${t("months")}`} />
+          </div>
+
+          <div className="bg-white dark:bg-zinc-900 rounded-xl border border-slate-200 dark:border-zinc-800 p-5">
+            <div className="flex items-center gap-2 mb-1">
+              <Layers className="w-5 h-5 text-emerald-600" />
+              <h3 className="font-bold text-slate-900 dark:text-zinc-100">{t("Loss Reduction by Category")}</h3>
+            </div>
+            <p className="text-sm text-slate-500 dark:text-zinc-400 mb-4">
+              {t("Total quality-loss pool distributed across 6 categories based on your field inputs, with the expected reduction and lean tool for each.")}
+            </p>
+            <div className="overflow-x-auto">
+              <table className="w-full text-left text-sm min-w-[560px]">
+                <thead>
+                  <tr className="bg-slate-50 dark:bg-zinc-800 border-b border-slate-200 dark:border-zinc-700">
+                    <th className="p-2.5 font-semibold text-slate-600 dark:text-zinc-300">{t("Category")}</th>
+                    <th className="p-2.5 font-semibold text-slate-600 dark:text-zinc-300 text-right">{t("Current Annual Cost")}</th>
+                    <th className="p-2.5 font-semibold text-slate-600 dark:text-zinc-300 text-right">{t("Target After Service")}</th>
+                    <th className="p-2.5 font-semibold text-slate-600 dark:text-zinc-300 text-center">{t("Reduction")}</th>
+                    <th className="p-2.5 font-semibold text-slate-600 dark:text-zinc-300">{t("Lean Tool")}</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-100 dark:divide-zinc-800">
+                  {calc.lossReductionTable.map((row) => (
+                    <tr key={row.key}>
+                      <td className="p-2.5">
+                        <div className="font-semibold text-slate-800 dark:text-zinc-200">{row.label}</div>
+                        <div className="text-xs text-slate-400">{row.desc}</div>
+                      </td>
+                      <td className="p-2.5 text-right font-medium text-slate-700 dark:text-zinc-300">{fmtTL(row.current)}</td>
+                      <td className="p-2.5 text-right font-medium text-emerald-700 dark:text-emerald-400">{fmtTL(row.target)}</td>
+                      <td className="p-2.5 text-center">
+                        <span className="text-xs font-bold text-emerald-700 bg-emerald-50 dark:bg-emerald-950 dark:text-emerald-400 px-2 py-0.5 rounded-full">
+                          -%{row.reductionPercent}
+                        </span>
+                      </td>
+                      <td className="p-2.5 text-xs text-slate-500 dark:text-zinc-400">{row.tool}</td>
+                    </tr>
+                  ))}
+                  <tr className="bg-slate-50 dark:bg-zinc-800 font-bold">
+                    <td className="p-2.5 text-slate-900 dark:text-zinc-100">{t("Total")}</td>
+                    <td className="p-2.5 text-right text-slate-900 dark:text-zinc-100">{fmtTL(calc.totalLossExpected)}</td>
+                    <td className="p-2.5 text-right text-emerald-700 dark:text-emerald-400">
+                      {fmtTL(calc.lossReductionTable.reduce((s, r) => s + r.target, 0))}
+                    </td>
+                    <td colSpan={2} />
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <div className="bg-white dark:bg-zinc-900 rounded-xl border border-slate-200 dark:border-zinc-800 p-5">
+            <div className="flex items-center gap-2 mb-1">
+              <TrendingUp className="w-5 h-5 text-emerald-600" />
+              <h3 className="font-bold text-slate-900 dark:text-zinc-100">{t("Improvement Opportunity Pool by Category")}</h3>
+            </div>
+            <p className="text-sm text-slate-500 dark:text-zinc-400 mb-4">
+              {t("The same total opportunity pool, broken down into 12 named categories across 3 improvement groups.")}
+            </p>
+            <div className="space-y-4">
+              {calc.opportunityByGroup.map((group) => (
+                <div key={group.group}>
+                  <div className="flex items-center justify-between mb-2">
+                    <h4 className="text-sm font-bold text-slate-800 dark:text-zinc-200">{group.group}</h4>
+                    <span className="text-xs font-semibold text-slate-500 dark:text-zinc-400">
+                      {fmtTL(group.min)} - {fmtTL(group.max)}
+                    </span>
+                  </div>
+                  <div className="overflow-hidden border border-slate-100 dark:border-zinc-800 rounded-lg">
+                    <table className="w-full text-left text-xs">
+                      <tbody className="divide-y divide-slate-100 dark:divide-zinc-800">
+                        {group.items.map((item) => (
+                          <tr key={item.key}>
+                            <td className="p-2 text-slate-700 dark:text-zinc-300 font-medium">{item.label}</td>
+                            <td className="p-2 text-slate-400 text-center">%{item.minPct}-%{item.maxPct}</td>
+                            <td className="p-2 text-right text-slate-800 dark:text-zinc-200 font-semibold">
+                              {fmtTL(item.min)} - {fmtTL(item.max)}
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              ))}
+            </div>
           </div>
 
           <div className="bg-white dark:bg-zinc-900 rounded-xl border border-slate-200 dark:border-zinc-800 p-5">

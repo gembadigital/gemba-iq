@@ -35,6 +35,9 @@ export interface GembaLensAssessment {
 
 export interface GembaLensOperationData {
   companyId: string;
+  // Sektörel ürün maliyet modellemesi girdileri
+  sektor: string;
+  urunGrubu: string;
   // Temel saha girdileri
   setupMachineCount: string;
   annualVolume: string;
@@ -122,6 +125,8 @@ const KEYS = {
 };
 
 const DEFAULT_OPERATION_FIELDS: Omit<GembaLensOperationData, "companyId" | "scores" | "chatMessages"> = {
+  sektor: "",
+  urunGrubu: "",
   setupMachineCount: "5",
   annualVolume: "500.000",
   productionUnit: "Adet",
