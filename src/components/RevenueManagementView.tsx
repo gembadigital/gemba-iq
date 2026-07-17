@@ -648,6 +648,18 @@ export default function RevenueManagementView() {
       });
   }, [dynamicMonths, assignments, invoices, selectedMonth, isRangeMode, rangeStart, rangeEnd]);
 
+  // Aggregate planned-vs-realized totals for the selected period, used by
+  // the top-of-section capacity comparison chart (as opposed to
+  // monthlyCapacityData's per-month breakdown, used by the trend chart
+  // further down).
+  const capacitySummary = useMemo(() => {
+    const totalPlanned = monthlyCapacityData.reduce((s, d) => s + d.plannedDays, 0);
+    const totalRealized = monthlyCapacityData.reduce((s, d) => s + d.realizedDays, 0);
+    const totalLost = monthlyCapacityData.reduce((s, d) => s + d.lostDays, 0);
+    const rate = totalPlanned > 0 ? Math.round((totalRealized / totalPlanned) * 100) : (totalRealized > 0 ? 100 : 0);
+    return { totalPlanned, totalRealized, totalLost, rate };
+  }, [monthlyCapacityData]);
+
   // 3 & 6 Month Forecast calculator
   const forecasts = useMemo(() => {
     const baseMonth = isRangeMode ? rangeEnd : selectedMonth;
@@ -1794,7 +1806,7 @@ CRITICAL FORMATTING INSTRUCTIONS: Your response MUST be output as beautiful, pro
               </div>
             </div>
 
-            {/* SECTION 9 - SERVICE TYPE PROFITABILITY */}
+            {/* SECTION 9 - PLANNED VS REALIZED CAPACITY + SERVICE LINE DETAIL */}
             <div className="lg:col-span-6 bg-white dark:bg-[#151515] p-6 rounded-xl border border-slate-200/50 dark:border-zinc-800 shadow-sm relative">
               <div className="flex items-center justify-between mb-4">
                 <div>
@@ -1802,70 +1814,66 @@ CRITICAL FORMATTING INSTRUCTIONS: Your response MUST be output as beautiful, pro
                     <Layers className="w-4.5 h-4.5 text-sky-500" />
                     <span>{t("Methodology / Service Line Margins Share")}</span>
                   </h3>
-                  <span className="text-[10px] text-slate-400 font-sans">{t("Based on imported invoices, attributed to each customer's Accepted proposal(s) in Proposal Management. Customers with no matching accepted proposal are grouped separately below.")}</span>
+                  <span className="text-[10px] text-slate-400 font-sans">{t("Planned capacity (allocated assignment man-days) vs. actually sold/realized man-days, for the selected month(s). Per-service-line revenue and margin detail is listed below.")}</span>
                 </div>
               </div>
 
-              {serviceProfitability.length > 0 ? (
+              {capacitySummary.totalPlanned > 0 || capacitySummary.totalRealized > 0 ? (
                 <div className="grid grid-cols-1 md:grid-cols-12 gap-4 items-center">
                   <div className="md:col-span-6 h-52 font-sans text-xs">
                     <ResponsiveContainer width="100%" height="100%">
-                      <PieChart>
-                        <Pie
-                          data={serviceProfitability}
-                          nameKey="name"
-                          dataKey="revenue"
-                          cx="50%"
-                          cy="50%"
-                          outerRadius={70}
-                          innerRadius={40}
-                          paddingAngle={2}
-                          label={({ percent }) => `${(percent * 100).toFixed(0)}%`}
-                        >
-                          {serviceProfitability.map((entry, idx) => (
-                            <Cell key={`cell-${idx}`} fill={["#0078D4", "#10B981", "#F59E0B", "#EC4899", "#8B5CF6", "#06B6D4"][idx % 6]} />
-                          ))}
-                        </Pie>
-                        <Tooltip formatter={(val) => `${formatSystemNumber(val)} TL`} />
-                      </PieChart>
+                      <BarChart
+                        data={[
+                          { name: t("Planned Man-Days"), days: capacitySummary.totalPlanned },
+                          { name: t("Realized Man-Days"), days: capacitySummary.totalRealized }
+                        ]}
+                        margin={{ top: 16, right: 8, left: 0, bottom: 0 }}
+                      >
+                        <CartesianGrid strokeDasharray="3 3" stroke="#EDEBE9" opacity={0.4} vertical={false} />
+                        <XAxis dataKey="name" fontSize={10} tickLine={false} />
+                        <YAxis fontSize={10} tickLine={false} />
+                        <Tooltip formatter={(val: any) => `${val} ${t("Days")}`} />
+                        <Bar dataKey="days" radius={[4, 4, 0, 0]}>
+                          <Cell fill="#10B981" />
+                          <Cell fill="#0078D4" />
+                        </Bar>
+                      </BarChart>
                     </ResponsiveContainer>
                   </div>
                   <div className="md:col-span-6 space-y-2.5">
-                    {serviceProfitability.map((sp, idx) => {
-                      const color = ["#0078D4", "#10B981", "#F59E0B", "#EC4899", "#8B5CF6", "#06B6D4"][idx % 6];
-                      return (
-                        <div key={sp.name} className="flex items-start gap-2 text-xs">
-                          <span className="w-2.5 h-2.5 rounded-full mt-1 shrink-0" style={{ backgroundColor: color }} />
-                          <div className="flex-1">
-                            <div className="flex justify-between font-bold text-slate-800 dark:text-slate-200">
-                              <span>{sp.name}</span>
-                              <span className="font-mono">{formatSystemNumber(sp.revenue)} TL</span>
-                            </div>
-                            <div className="flex justify-between text-[10px] text-zinc-400 font-mono mt-0.5">
-                              <span>{t("Delivered: {days} days").replace("{days}", String(sp.days))}</span>
-                              <span
-                                className="text-emerald-500 font-bold"
-                                title={sp.costEstimated ? t("Estimated cost basis (no matching assignment record for this customer).") : undefined}
-                              >
-                                {t("Margin: {amount}").replace("{amount}", `${sp.costEstimated ? "~" : ""}${sp.margin.toFixed(0)}%`)}
-                              </span>
-                            </div>
-                            <div className="flex justify-between text-[10px] font-mono mt-0.5">
-                              <span className="text-slate-450 dark:text-zinc-500">
-                                {t("Planned: {days} days").replace("{days}", String(sp.plannedDays))}
-                                {" · "}
-                                {t("Realization: {rate}%").replace("{rate}", String(sp.realizationRate))}
-                              </span>
-                              {sp.capacityGapDays > 0 && (
-                                <span className="text-amber-600 dark:text-amber-500 font-bold">
-                                  {t("Lost Capacity: {days} days").replace("{days}", String(sp.capacityGapDays))}
-                                </span>
-                              )}
-                            </div>
+                    <div className="flex items-start gap-2 text-xs">
+                      <span className="w-2.5 h-2.5 rounded-full mt-1 shrink-0" style={{ backgroundColor: "#10B981" }} />
+                      <div className="flex-1">
+                        <div className="flex justify-between font-bold text-slate-800 dark:text-slate-200">
+                          <span>{t("Planned Man-Days")}</span>
+                          <span className="font-mono">{capacitySummary.totalPlanned} {t("Days")}</span>
+                        </div>
+                        <div className="text-[10px] text-zinc-400 font-mono mt-0.5">100%</div>
+                      </div>
+                    </div>
+                    <div className="flex items-start gap-2 text-xs">
+                      <span className="w-2.5 h-2.5 rounded-full mt-1 shrink-0" style={{ backgroundColor: "#0078D4" }} />
+                      <div className="flex-1">
+                        <div className="flex justify-between font-bold text-slate-800 dark:text-slate-200">
+                          <span>{t("Realized Man-Days")}</span>
+                          <span className="font-mono">{capacitySummary.totalRealized} {t("Days")}</span>
+                        </div>
+                        <div className="text-[10px] text-zinc-400 font-mono mt-0.5">
+                          {t("Realization: {rate}%").replace("{rate}", String(capacitySummary.rate))}
+                        </div>
+                      </div>
+                    </div>
+                    {capacitySummary.totalLost > 0 && (
+                      <div className="flex items-start gap-2 text-xs">
+                        <span className="w-2.5 h-2.5 rounded-full mt-1 shrink-0" style={{ backgroundColor: "#F59E0B" }} />
+                        <div className="flex-1">
+                          <div className="flex justify-between font-bold text-amber-600 dark:text-amber-500">
+                            <span>{t("Lost Capacity")}</span>
+                            <span className="font-mono">{capacitySummary.totalLost} {t("Days")}</span>
                           </div>
                         </div>
-                      );
-                    })}
+                      </div>
+                    )}
                   </div>
                 </div>
               ) : (
@@ -1874,8 +1882,51 @@ CRITICAL FORMATTING INSTRUCTIONS: Your response MUST be output as beautiful, pro
                 </div>
               )}
 
+              {serviceProfitability.length > 0 && (
+                <div className="mt-5 pt-4 border-t border-slate-100 dark:border-zinc-800 space-y-2.5">
+                  <span className="text-[10px] uppercase font-bold text-slate-400 font-mono tracking-widest block">
+                    {t("Service Line Detail (Revenue & Margin)")}
+                  </span>
+                  {serviceProfitability.map((sp, idx) => {
+                    const color = ["#0078D4", "#10B981", "#F59E0B", "#EC4899", "#8B5CF6", "#06B6D4"][idx % 6];
+                    return (
+                      <div key={sp.name} className="flex items-start gap-2 text-xs">
+                        <span className="w-2.5 h-2.5 rounded-full mt-1 shrink-0" style={{ backgroundColor: color }} />
+                        <div className="flex-1">
+                          <div className="flex justify-between font-bold text-slate-800 dark:text-slate-200">
+                            <span>{sp.name}</span>
+                            <span className="font-mono">{formatSystemNumber(sp.revenue)} TL</span>
+                          </div>
+                          <div className="flex justify-between text-[10px] text-zinc-400 font-mono mt-0.5">
+                            <span>{t("Delivered: {days} days").replace("{days}", String(sp.days))}</span>
+                            <span
+                              className="text-emerald-500 font-bold"
+                              title={sp.costEstimated ? t("Estimated cost basis (no matching assignment record for this customer).") : undefined}
+                            >
+                              {t("Margin: {amount}").replace("{amount}", `${sp.costEstimated ? "~" : ""}${sp.margin.toFixed(0)}%`)}
+                            </span>
+                          </div>
+                          <div className="flex justify-between text-[10px] font-mono mt-0.5">
+                            <span className="text-slate-450 dark:text-zinc-500">
+                              {t("Planned: {days} days").replace("{days}", String(sp.plannedDays))}
+                              {" · "}
+                              {t("Realization: {rate}%").replace("{rate}", String(sp.realizationRate))}
+                            </span>
+                            {sp.capacityGapDays > 0 && (
+                              <span className="text-amber-600 dark:text-amber-500 font-bold">
+                                {t("Lost Capacity: {days} days").replace("{days}", String(sp.capacityGapDays))}
+                              </span>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+
               <div className="mt-4 pt-3 border-t border-slate-100 dark:border-zinc-800 text-[10px] text-slate-500 leading-relaxed">
-                <strong>{t("Analysis Explanation:")}</strong> {t("This proportional pie diagram displays the exact billing volume across strategic consulting disciplines. Strong service lines with high delivery margins are critical to off-setting resource benchmark costs.")}
+                <strong>{t("Analysis Explanation:")}</strong> {t("Planned man-days come from staffed project assignments for the period; realized man-days come from actually invoiced, delivered work. The gap between the two is lost capacity — time that was allocated but never converted into billed delivery.")}
               </div>
             </div>
 
