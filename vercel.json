@@ -10,6 +10,7 @@
     { "source": "/api/gemini/assist", "destination": "/api/gemini/[...action]?action=assist" },
     { "source": "/api/gemini/company-search", "destination": "/api/gemini/[...action]?action=company-search" },
     { "source": "/api/gemini/analyze-company", "destination": "/api/gemini/[...action]?action=analyze-company" },
+    { "source": "/api/gemini/gemba-lens-chat", "destination": "/api/gemini/[...action]?action=gemba-lens-chat" },
 
     { "source": "/api/organization/mailbox", "destination": "/api/organization/[...action]?action=mailbox" },
     { "source": "/api/organization/members/role", "destination": "/api/organization/[...action]?action=members-role" },

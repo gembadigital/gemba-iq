@@ -1,11 +1,11 @@
 import { runCompanyAnalysis } from "../../lib/server/analyzeCompanyCore.js";
-import { runGeminiAssist, runGeminiCompanySearch } from "../../lib/server/geminiCore.js";
+import { runGeminiAssist, runGeminiCompanySearch, runGembaLensChat } from "../../lib/server/geminiCore.js";
 
 // Consolidated into a single Vercel catch-all route (covers
-// /api/gemini/analyze-company, /api/gemini/assist, /api/gemini/company-search)
-// to stay under the Hobby plan's 12 Serverless Functions per deployment
-// limit — each separate file under api/ used to count as its own function.
-// Frontend URLs are unchanged.
+// /api/gemini/analyze-company, /api/gemini/assist, /api/gemini/company-search,
+// /api/gemini/gemba-lens-chat) to stay under the Hobby plan's 12 Serverless
+// Functions per deployment limit — each separate file under api/ used to
+// count as its own function. Frontend URLs are unchanged.
 
 export async function analyzeCompanyHandler(request, response) {
   response.setHeader("Content-Type", "application/json");
@@ -71,10 +71,29 @@ export async function companySearchHandler(request, response) {
   }
 }
 
+export async function gembaLensChatHandler(request, response) {
+  response.setHeader("Content-Type", "application/json");
+
+  if (request.method !== "POST") {
+    response.setHeader("Allow", "POST");
+    return response.status(405).json({ error: "Method not allowed" });
+  }
+
+  try {
+    const { message, history, context } = request.body || {};
+    const result = await runGembaLensChat({ message, history, context });
+    return response.status(result.status).json(result.body);
+  } catch (error) {
+    console.error("gemba-lens-chat handler error:", error);
+    return response.status(500).json({ error: error.message || "Saha AI Danışmanı şu anda yanıt veremiyor." });
+  }
+}
+
 export default async function handler(request, response) {
   const action = Array.isArray(request.query?.action) ? request.query.action[0] : request.query?.action;
   if (action === "analyze-company") return analyzeCompanyHandler(request, response);
   if (action === "assist") return assistHandler(request, response);
   if (action === "company-search") return companySearchHandler(request, response);
+  if (action === "gemba-lens-chat") return gembaLensChatHandler(request, response);
   return response.status(404).json({ error: "Unknown gemini endpoint." });
 }
