@@ -5,6 +5,8 @@ import { getSupabase } from "../lib/supabaseClient";
 import { CrmDb } from "../lib/CrmDb";
 import { fetchOrganizationDirectory } from "../lib/invitationService";
 import type { OrganizationDirectoryMember } from "../types/organization";
+import { fetchPersonalMailbox } from "../lib/personalMailbox";
+import { fetchOrganizationMailbox } from "../lib/organizationMailbox";
 import { 
   CheckSquare, 
   CheckCircle, 
@@ -340,13 +342,12 @@ const DEFAULT_NOTIFICATION_SETTINGS: NotificationSettings = {
   dailySummarySchedule: "09:00",
 };
 
-const DEFAULT_CRM_USERS = [
-  "Ahmet Yılmaz",
-  "GP",
-  "Elif Demir",
-  "Can Özkan",
-  "Zeynep Kaya"
-];
+// Legacy demo/placeholder names that used to ship as a hardcoded fallback
+// for the "accountless" assignee list. These were never real accounts (no
+// email), so tasks assigned to them silently skipped notification emails.
+// Kept here only so we can self-heal any organization whose persisted
+// crmUsers list still contains them from before this fix.
+const LEGACY_DEMO_NAMES = new Set(["Ahmet Yılmaz", "GP", "Elif Demir", "Can Özkan", "Zeynep Kaya"]);
 
 const DEFAULT_COLUMNS: TaskColumn[] = [
   { id: "not_started", title: "Not Started" },
@@ -371,13 +372,45 @@ export default function TasksView() {
         if (!cancelled) setOrgMembers(dir.members || []);
       })
       .catch(() => {
-        // Non-fatal: the assignee picker just falls back to the legacy
-        // free-text name list if the directory can't be loaded.
+        // Non-fatal: if the directory can't be loaded, the assignee picker
+        // is simply empty until it succeeds — it never falls back to
+        // free-text names.
       });
     return () => {
       cancelled = true;
     };
   }, []);
+
+  // Which mailbox actually delivers task notification e-mails. Mirrors the
+  // Proposal Management sender logic: prefer the signed-in user's own
+  // connected Personal Mailbox, fall back to the shared Organization
+  // Mailbox, and if neither is connected, sends are honestly marked
+  // "skipped" instead of silently failing against an unconfigured mailbox
+  // (which is what happened before — dispatchNotificationEmail always
+  // called /api/mail/send with no `source`, which defaults to the
+  // Organization Mailbox even when only a Personal Mailbox was connected).
+  const [mailSenderSource, setMailSenderSource] = useState<"personal" | "organization" | null>(null);
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      const [personalResult, orgResult] = await Promise.allSettled([
+        fetchPersonalMailbox(),
+        fetchOrganizationMailbox(),
+      ]);
+      if (cancelled) return;
+      if (personalResult.status === "fulfilled" && personalResult.value.status === "Connected") {
+        setMailSenderSource("personal");
+      } else if (orgResult.status === "fulfilled" && orgResult.value.mailbox.status === "Connected") {
+        setMailSenderSource("organization");
+      } else {
+        setMailSenderSource(null);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
   // --- STATE PERSISTENCE ---
   const [columns, setColumns] = useState<TaskColumn[]>(() => {
     const saved = CrmDb.getTaskColumns();
@@ -385,11 +418,6 @@ export default function TasksView() {
   });
 
   const [tasks, setTasks] = useState<Task[]>(() => CrmDb.getTasks());
-
-  const [crmUsers, setCrmUsers] = useState<string[]>(() => {
-    const saved = CrmDb.getCrmUsers();
-    return saved.length > 0 ? saved : DEFAULT_CRM_USERS;
-  });
 
   const [activeView, setActiveView] = useState<"kanban" | "list">("kanban");
   const [searchTerm, setSearchTerm] = useState("");
@@ -405,8 +433,6 @@ export default function TasksView() {
   }>({ isOpen: false, onConfirm: () => {} });
 
   const [isFullScreen, setIsFullScreen] = useState(false);
-  const [isAssigneeModalOpen, setIsAssigneeModalOpen] = useState(false);
-  const [newAssigneeNameInput, setNewAssigneeNameInput] = useState("");
 
   // Save changes
   useEffect(() => {
@@ -417,9 +443,19 @@ export default function TasksView() {
     CrmDb.saveTasks(tasks);
   }, [tasks]);
 
+  // One-time self-heal: assignees are now always picked from real
+  // organization accounts (see orgMembers below), so the old accountless
+  // free-text "crmUsers" name list is no longer read or offered anywhere
+  // in this view. Any legacy demo/placeholder names an earlier version of
+  // the app persisted (e.g. "Ahmet Yılmaz", "Elif Demir") are stripped out
+  // here so they stop showing up if this data is ever read elsewhere.
   useEffect(() => {
-    CrmDb.saveCrmUsers(crmUsers);
-  }, [crmUsers]);
+    const saved = CrmDb.getCrmUsers();
+    const cleaned = saved.filter((u) => !LEGACY_DEMO_NAMES.has(u));
+    if (cleaned.length !== saved.length) {
+      CrmDb.saveCrmUsers(cleaned);
+    }
+  }, []);
 
   // --- COLUMN MENUS STATE ---
   const [activeColumnMenu, setActiveColumnMenu] = useState<string | null>(null);
@@ -488,14 +524,25 @@ export default function TasksView() {
     return result;
   };
 
-  // Actually dispatches a reminder/escalation email through the organization
-  // mailbox (Microsoft Graph via /api/mail/send). If no real recipient email
-  // is configured (task assignee email or escalation recipient email), the
-  // notification is honestly marked "skipped" instead of being logged as a
-  // fake "sent" success — this was the source of the reminder simulation.
+  // Actually dispatches a reminder/escalation email through whichever real
+  // mailbox is connected (Microsoft Graph via /api/mail/send — personal
+  // preferred, organization as fallback; see mailSenderSource above). If no
+  // real recipient email is configured (task assignee email or escalation
+  // recipient email), OR no mailbox is connected at all, the notification is
+  // honestly marked "skipped" instead of being logged as a fake "sent"
+  // success, or silently failing against an unconfigured Organization
+  // Mailbox — this was the source of the reminder simulation, and later of
+  // task-assignment emails never actually going out.
   const dispatchNotificationEmail = async (notif: TaskNotification): Promise<TaskNotification> => {
     if (!notif.recipientEmail || !notif.recipientEmail.includes("@")) {
       return { ...notif, status: "skipped" };
+    }
+    if (!mailSenderSource) {
+      return {
+        ...notif,
+        status: "failed",
+        errorNote: "Bağlı bir posta kutusu yok (Kişisel veya Kurumsal Microsoft 365 mailbox bağlantısı gerekli).",
+      };
     }
     try {
       const supabase = getSupabase();
@@ -513,6 +560,7 @@ export default function TasksView() {
           recipient: notif.recipientEmail,
           subject: notif.subject,
           body: notif.bodyHtml,
+          source: mailSenderSource,
         }),
       });
 
@@ -1375,17 +1423,6 @@ export default function TasksView() {
                )}
              </button>
 
-             {/* Dynamic Assignees Manager button */}
-             <button
-               type="button"
-               onClick={() => setIsAssigneeModalOpen(true)}
-               className="bg-slate-100 dark:bg-[#252423] hover:bg-slate-200 dark:hover:bg-[#323130] text-slate-700 dark:text-slate-300 border border-[#EDEBE9] dark:border-[#323130] px-3 py-2 rounded text-xs font-bold font-sans flex items-center gap-1.5 shadow-2xs transition-all cursor-pointer"
-               title="Sorumlu Kişi Listesini Yönet"
-             >
-               <User className="w-4 h-4 text-[#0078D4]" />
-               Sorumluları Yönet
-             </button>
-
              {/* XLS Export button */}
              <button
                type="button"
@@ -1552,9 +1589,12 @@ export default function TasksView() {
               className="pl-9 pr-3 py-2 w-full bg-slate-50 dark:bg-[#252423] border border-[#EDEBE9] dark:border-[#323130] rounded text-xs text-slate-800 dark:text-slate-200 focus:outline-hidden"
             >
               <option value="All">Tüm Sorumlular</option>
-              {crmUsers.map(u => (
-                <option key={u} value={u}>{u}</option>
-              ))}
+              {orgMembers.map((m) => {
+                const name = m.full_name?.trim() || m.email;
+                return (
+                  <option key={m.user_id} value={name}>{name}</option>
+                );
+              })}
             </select>
           </div>
         </div>
@@ -2821,18 +2861,9 @@ export default function TasksView() {
               {/* Due Date & Assignee Grid */}
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div className="space-y-1">
-                  <div className="flex items-center justify-between">
-                    <label className="text-xs font-bold text-slate-600 dark:text-slate-400 uppercase tracking-wider block">
-                      Sorumlu (Assignee)
-                    </label>
-                    <button
-                      type="button"
-                      onClick={() => setIsAssigneeModalOpen(true)}
-                      className="text-[10px] text-[#0078D4] hover:underline font-bold"
-                    >
-                      + İsim Ekle/Çıkar
-                    </button>
-                  </div>
+                  <label className="text-xs font-bold text-slate-600 dark:text-slate-400 uppercase tracking-wider block">
+                    Sorumlu (Assignee)
+                  </label>
                   <select
                     value={newAssignee}
                     onChange={(e) => {
@@ -2843,42 +2874,25 @@ export default function TasksView() {
                       // reminders always have somewhere real to go. Works
                       // both ways — a USER can pick an ADMIN and vice versa.
                       const member = orgMembers.find((m) => (m.full_name?.trim() || m.email) === name);
-                      if (member) setNewAssigneeEmail(member.email);
+                      setNewAssigneeEmail(member ? member.email : "");
                     }}
                     className="w-full px-3 py-2 bg-slate-50 dark:bg-[#252423] border border-[#EDEBE9] dark:border-[#323130] rounded text-xs text-slate-800 dark:text-slate-200 focus:outline-hidden"
                   >
                     <option value="">-- Sorumlu Seçiniz --</option>
-                    {orgMembers.length > 0 && (
-                      <optgroup label="Organizasyon Üyeleri">
-                        {orgMembers.map((m) => (
-                          <option key={m.user_id} value={m.full_name?.trim() || m.email}>
-                            {(m.full_name?.trim() || m.email)} · {m.role === "ADMIN" ? "Yönetici" : "Kullanıcı"}
-                          </option>
-                        ))}
-                      </optgroup>
-                    )}
-                    {crmUsers.filter((u) => !orgMembers.some((m) => (m.full_name?.trim() || m.email) === u)).length > 0 && (
-                      <optgroup label="Kayıtlı İsimler (hesapsız)">
-                        {crmUsers
-                          .filter((u) => !orgMembers.some((m) => (m.full_name?.trim() || m.email) === u))
-                          .map((user) => (
-                            <option key={user} value={user}>
-                              {user}
-                            </option>
-                          ))}
-                      </optgroup>
-                    )}
+                    {orgMembers.map((m) => (
+                      <option key={m.user_id} value={m.full_name?.trim() || m.email}>
+                        {(m.full_name?.trim() || m.email)} · {m.role === "ADMIN" ? "Yönetici" : "Kullanıcı"}
+                      </option>
+                    ))}
                   </select>
-                  <input
-                    type="email"
-                    value={newAssigneeEmail}
-                    onChange={(e) => setNewAssigneeEmail(e.target.value)}
-                    placeholder="Sorumlunun gerçek e-posta adresi (atama ve hatırlatma göndermek için)"
-                    className="w-full mt-1.5 px-3 py-2 bg-slate-50 dark:bg-[#252423] border border-[#EDEBE9] dark:border-[#323130] rounded text-xs text-slate-800 dark:text-slate-200 focus:outline-hidden"
-                  />
+                  {orgMembers.length === 0 && (
+                    <p className="text-[10px] text-slate-450 dark:text-zinc-500 mt-1">
+                      Organizasyonda kayıtlı hesap bulunamadı. Sorumlu atayabilmek için önce Admin ayarlarından kullanıcı ekleyin.
+                    </p>
+                  )}
                   {newAssigneeEmail && (
                     <p className="text-[10px] text-slate-450 dark:text-zinc-500 mt-1">
-                      Görev kaydedildiğinde bu adrese "Gemba IQ Task: {newTitle || "..."}" konulu bir bilgilendirme e-postası gönderilecek.
+                      Görev kaydedildiğinde {newAssigneeEmail} adresine "Gemba IQ Task: {newTitle || "..."}" konulu bir bilgilendirme e-postası gönderilecek.
                     </p>
                   )}
                 </div>
@@ -3021,18 +3035,9 @@ export default function TasksView() {
               {/* Due Date & Assignee Grid */}
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div className="space-y-1">
-                  <div className="flex items-center justify-between">
-                    <label className="text-xs font-bold text-slate-600 dark:text-slate-400 uppercase tracking-wider block">
-                      Sorumlu (Assignee)
-                    </label>
-                    <button
-                      type="button"
-                      onClick={() => setIsAssigneeModalOpen(true)}
-                      className="text-[10px] text-[#0078D4] hover:underline font-bold"
-                    >
-                      + İsim Ekle/Çıkar
-                    </button>
-                  </div>
+                  <label className="text-xs font-bold text-slate-600 dark:text-slate-400 uppercase tracking-wider block">
+                    Sorumlu (Assignee)
+                  </label>
                   <select
                     value={newAssignee}
                     onChange={(e) => {
@@ -3043,42 +3048,25 @@ export default function TasksView() {
                       // reminders always have somewhere real to go. Works
                       // both ways — a USER can pick an ADMIN and vice versa.
                       const member = orgMembers.find((m) => (m.full_name?.trim() || m.email) === name);
-                      if (member) setNewAssigneeEmail(member.email);
+                      setNewAssigneeEmail(member ? member.email : "");
                     }}
                     className="w-full px-3 py-2 bg-slate-50 dark:bg-[#252423] border border-[#EDEBE9] dark:border-[#323130] rounded text-xs text-slate-800 dark:text-slate-200 focus:outline-hidden"
                   >
                     <option value="">-- Sorumlu Seçiniz --</option>
-                    {orgMembers.length > 0 && (
-                      <optgroup label="Organizasyon Üyeleri">
-                        {orgMembers.map((m) => (
-                          <option key={m.user_id} value={m.full_name?.trim() || m.email}>
-                            {(m.full_name?.trim() || m.email)} · {m.role === "ADMIN" ? "Yönetici" : "Kullanıcı"}
-                          </option>
-                        ))}
-                      </optgroup>
-                    )}
-                    {crmUsers.filter((u) => !orgMembers.some((m) => (m.full_name?.trim() || m.email) === u)).length > 0 && (
-                      <optgroup label="Kayıtlı İsimler (hesapsız)">
-                        {crmUsers
-                          .filter((u) => !orgMembers.some((m) => (m.full_name?.trim() || m.email) === u))
-                          .map((user) => (
-                            <option key={user} value={user}>
-                              {user}
-                            </option>
-                          ))}
-                      </optgroup>
-                    )}
+                    {orgMembers.map((m) => (
+                      <option key={m.user_id} value={m.full_name?.trim() || m.email}>
+                        {(m.full_name?.trim() || m.email)} · {m.role === "ADMIN" ? "Yönetici" : "Kullanıcı"}
+                      </option>
+                    ))}
                   </select>
-                  <input
-                    type="email"
-                    value={newAssigneeEmail}
-                    onChange={(e) => setNewAssigneeEmail(e.target.value)}
-                    placeholder="Sorumlunun gerçek e-posta adresi (atama ve hatırlatma göndermek için)"
-                    className="w-full mt-1.5 px-3 py-2 bg-slate-50 dark:bg-[#252423] border border-[#EDEBE9] dark:border-[#323130] rounded text-xs text-slate-800 dark:text-slate-200 focus:outline-hidden"
-                  />
+                  {orgMembers.length === 0 && (
+                    <p className="text-[10px] text-slate-450 dark:text-zinc-500 mt-1">
+                      Organizasyonda kayıtlı hesap bulunamadı. Sorumlu atayabilmek için önce Admin ayarlarından kullanıcı ekleyin.
+                    </p>
+                  )}
                   {newAssigneeEmail && (
                     <p className="text-[10px] text-slate-450 dark:text-zinc-500 mt-1">
-                      Görev kaydedildiğinde bu adrese "Gemba IQ Task: {newTitle || "..."}" konulu bir bilgilendirme e-postası gönderilecek.
+                      Görev kaydedildiğinde {newAssigneeEmail} adresine "Gemba IQ Task: {newTitle || "..."}" konulu bir bilgilendirme e-postası gönderilecek.
                     </p>
                   )}
                 </div>
@@ -3175,126 +3163,6 @@ export default function TasksView() {
                 </div>
               </div>
             </form>
-          </div>
-        </div>
-      )}
-
-      {/* MANAGE ASSIGNEES MODAL */}
-      {isAssigneeModalOpen && (
-        <div className="fixed inset-0 bg-black/60 dark:bg-black/85 backdrop-blur-xs flex items-center justify-center z-50 p-4">
-          <div className="bg-white dark:bg-[#1b1a19] w-full max-w-md rounded-lg border border-[#EDEBE9] dark:border-[#323130] shadow-2xl overflow-hidden animate-in fade-in zoom-in-95 duration-150">
-            {/* Header */}
-            <div className="px-5 py-4 border-b border-[#EDEBE9] dark:border-[#323130] bg-[#FAF9F8] dark:bg-[#201f1e] flex items-center justify-between">
-              <h3 className="font-bold text-slate-900 dark:text-slate-100 text-sm flex items-center gap-1.5">
-                <User className="w-4 h-4 text-[#0078D4]" />
-                Sorumlu Listesini Yönet
-              </h3>
-              <button
-                type="button"
-                onClick={() => {
-                  setIsAssigneeModalOpen(false);
-                  setNewAssigneeNameInput("");
-                }}
-                className="p-1 rounded hover:bg-slate-200 dark:hover:bg-[#252423] text-slate-550 dark:text-slate-400 cursor-pointer"
-              >
-                <X className="w-4 h-4" />
-              </button>
-            </div>
-
-            {/* Content */}
-            <div className="p-5 space-y-4">
-              {/* Add New Assignee Form */}
-              <div className="space-y-1.5">
-                <label className="text-xs font-bold text-slate-600 dark:text-slate-400 uppercase tracking-wider block">
-                  Yeni Sorumlu Ekle
-                </label>
-                <div className="flex gap-2">
-                  <input
-                    type="text"
-                    placeholder="Örn: Ahmet Yılmaz"
-                    value={newAssigneeNameInput}
-                    onChange={(e) => setNewAssigneeNameInput(e.target.value)}
-                    className="flex-1 px-3 py-2 bg-slate-50 dark:bg-[#252423] border border-[#EDEBE9] dark:border-[#323130] rounded text-xs text-slate-800 dark:text-slate-200 focus:outline-[#0078D4]"
-                    onKeyDown={(e) => {
-                      if (e.key === "Enter") {
-                        e.preventDefault();
-                        if (newAssigneeNameInput.trim()) {
-                          const name = newAssigneeNameInput.trim();
-                          if (!crmUsers.includes(name)) {
-                            setCrmUsers([...crmUsers, name]);
-                          }
-                          setNewAssigneeNameInput("");
-                        }
-                      }
-                    }}
-                  />
-                  <button
-                    type="button"
-                    onClick={() => {
-                      if (newAssigneeNameInput.trim()) {
-                        const name = newAssigneeNameInput.trim();
-                        if (!crmUsers.includes(name)) {
-                          setCrmUsers([...crmUsers, name]);
-                        }
-                        setNewAssigneeNameInput("");
-                      }
-                    }}
-                    className="px-4 py-2 bg-[#0078D4] hover:bg-[#005a9e] text-white rounded text-xs font-bold transition-all cursor-pointer"
-                  >
-                    Ekle
-                  </button>
-                </div>
-              </div>
-
-              {/* Assignee list with custom delete buttons */}
-              <div className="space-y-1.5">
-                <label className="text-xs font-bold text-slate-600 dark:text-slate-400 uppercase tracking-wider block">
-                  Kayıtlı Sorumlular ({crmUsers.length})
-                </label>
-                <div className="max-h-60 overflow-y-auto border border-[#EDEBE9] dark:border-[#323130] rounded divide-y divide-[#EDEBE9] dark:divide-[#323130] scrollbar-thin">
-                  {crmUsers.length === 0 ? (
-                    <div className="p-4 text-center text-xs text-slate-400">
-                      Kayıtlı sorumlu bulunmamaktadır.
-                    </div>
-                  ) : (
-                    crmUsers.map((user) => (
-                      <div key={user} className="px-3 py-2.5 flex items-center justify-between text-xs hover:bg-slate-50 dark:hover:bg-zinc-800/40 transition-colors">
-                        <span className="font-medium text-slate-800 dark:text-slate-200">{user}</span>
-                        <button
-                          type="button"
-                          onClick={() => {
-                            setCrmUsers(crmUsers.filter(u => u !== user));
-                          }}
-                          className="text-rose-500 hover:text-rose-700 p-1 rounded hover:bg-rose-50 dark:hover:bg-rose-950/20 transition-colors cursor-pointer"
-                          title="Sorumluyu Listeden Çıkar"
-                        >
-                          <Trash2 className="w-3.5 h-3.5" />
-                        </button>
-                      </div>
-                    ))
-                  )}
-                </div>
-              </div>
-
-              {/* Tips */}
-              <p className="text-[10px] text-slate-400 dark:text-slate-500 leading-normal">
-                * Listeden çıkarılan sorumlular mevcut görevlerden silinmez ancak yeni görev ataması yaparken seçenek olarak görünmez.
-              </p>
-            </div>
-
-            {/* Footer */}
-            <div className="px-5 py-3.5 bg-slate-50 dark:bg-zinc-900 border-t border-[#EDEBE9] dark:border-[#323130] flex justify-end">
-              <button
-                type="button"
-                onClick={() => {
-                  setIsAssigneeModalOpen(false);
-                  setNewAssigneeNameInput("");
-                }}
-                className="px-4 py-2 bg-[#0078D4] hover:bg-[#005a9e] text-white rounded text-xs font-bold transition-all cursor-pointer"
-              >
-                Kapat
-              </button>
-            </div>
           </div>
         </div>
       )}
