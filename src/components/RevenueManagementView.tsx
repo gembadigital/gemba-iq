@@ -18,7 +18,8 @@ import {
   Line,
   PieChart,
   Pie,
-  Cell
+  Cell,
+  LabelList
 } from "recharts";
 import {
   Users,
@@ -47,7 +48,9 @@ import {
   PiggyBank,
   Percent,
   TrendingUp as TrendUp,
-  Info
+  Info,
+  LayoutDashboard,
+  Database
 } from "lucide-react";
 import { formatSystemNumber } from "../lib/currencyHelper";
 import {
@@ -660,6 +663,55 @@ export default function RevenueManagementView() {
     return { totalPlanned, totalRealized, totalLost, rate };
   }, [monthlyCapacityData]);
 
+  // When on, extends the monthly capacity chart with every remaining month
+  // through the end of the year (after whichever month the selected
+  // period currently ends on), sourced from ongoing/staffed project
+  // assignments (getAllocatedDaysForPeriod's underlying isAssignmentActiveInMonth
+  // check) — these months have no invoices yet, so they're flagged
+  // isForecast and only ever show a planned-days projection, never a
+  // realized or lost-capacity bar (which would be a claim about something
+  // that hasn't happened yet).
+  const [showYearEndForecast, setShowYearEndForecast] = useState(false);
+
+  const monthlyCapacityChartData = useMemo(() => {
+    const base = monthlyCapacityData.map(d => ({ ...d, isForecast: false }));
+    let extended = base;
+
+    if (showYearEndForecast && base.length > 0) {
+      const lastMonth = base[base.length - 1].month;
+      const lastYear = parseInt(lastMonth.split("-")[0], 10);
+      const lastMonthNum = parseInt(lastMonth.split("-")[1], 10);
+
+      const forecastMonths: typeof base = [];
+      for (let m = lastMonthNum + 1; m <= 12; m++) {
+        const mStr = `${lastYear}-${m < 10 ? "0" + m : m}`;
+        if (base.some(b => b.month === mStr)) continue;
+        const plannedDays = assignments
+          .filter(a => isAssignmentActiveInMonth(a, mStr))
+          .reduce((sum, a) => sum + a.allocatedDays, 0);
+        forecastMonths.push({
+          month: mStr,
+          plannedDays,
+          realizedDays: 0,
+          lostDays: 0,
+          realizationRate: 0,
+          isForecast: true
+        });
+      }
+      extended = [...base, ...forecastMonths];
+    }
+
+    // Running cumulative of realized man-days across the chart, in
+    // chronological order. Forecast months add nothing to it (realizedDays
+    // is 0 for them, since they haven't happened yet) — the line simply
+    // holds flat until real invoices land.
+    let running = 0;
+    return extended.map(d => {
+      running += d.realizedDays;
+      return { ...d, cumulativeRealizedDays: running };
+    });
+  }, [monthlyCapacityData, showYearEndForecast, assignments]);
+
   // 3 & 6 Month Forecast calculator
   const forecasts = useMemo(() => {
     const baseMonth = isRangeMode ? rangeEnd : selectedMonth;
@@ -961,6 +1013,77 @@ CRITICAL FORMATTING INSTRUCTIONS: Your response MUST be output as beautiful, pro
     });
   };
 
+  // Per-row invoice editing — lets the person fix a bad import (e.g. a
+  // "tevkifat" fraction the auto-parser missed, or any other misread
+  // column) without deleting and re-uploading the whole file. VAT amount
+  // and grand total are always derived from amount × vatRate rather than
+  // separately editable, so they can never drift out of sync with a
+  // corrected rate.
+  const [editingInvoiceId, setEditingInvoiceId] = useState<string | null>(null);
+  const [editInvoiceForm, setEditInvoiceForm] = useState({
+    customerName: "",
+    invoiceDate: "",
+    deliveredDays: "",
+    unitPrice: "",
+    amount: "",
+    vatRate: "",
+    consultantNames: "",
+    tevkifatFraction: ""
+  });
+
+  const handleOpenEditInvoice = (inv: Invoice) => {
+    setEditingInvoiceId(inv.id);
+    setEditInvoiceForm({
+      customerName: inv.customerName,
+      invoiceDate: inv.invoiceDate || "",
+      deliveredDays: String(inv.deliveredDays ?? 0),
+      unitPrice: String(inv.unitPrice ?? 0),
+      amount: String(inv.amount ?? 0),
+      vatRate: String(inv.vatRate ?? 20),
+      consultantNames: (inv.consultantNames || []).join(", "),
+      tevkifatFraction: inv.tevkifatFraction || ""
+    });
+  };
+
+  const handleSaveInvoiceEdit = () => {
+    if (!editingInvoiceId) return;
+
+    const amount = parseFloat(editInvoiceForm.amount.replace(",", ".")) || 0;
+    const vatRate = parseFloat(editInvoiceForm.vatRate.replace(",", ".")) || 0;
+    const deliveredDays = parseFloat(editInvoiceForm.deliveredDays.replace(",", ".")) || 0;
+    const unitPrice = parseFloat(editInvoiceForm.unitPrice.replace(",", ".")) || 0;
+    const vatAmount = Math.round(amount * (vatRate / 100));
+    const grandTotal = amount + vatAmount;
+    const invoiceDate = editInvoiceForm.invoiceDate.trim();
+    const month = invoiceDate ? invoiceDate.substring(0, 7) : undefined;
+    const consultantNames = editInvoiceForm.consultantNames
+      .split(",")
+      .map(s => s.trim())
+      .filter(Boolean);
+
+    setInvoices(prev => prev.map(inv => {
+      if (inv.id !== editingInvoiceId) return inv;
+      return {
+        ...inv,
+        customerName: editInvoiceForm.customerName.trim() || inv.customerName,
+        invoiceDate: invoiceDate || inv.invoiceDate,
+        month: month || inv.month,
+        deliveredDays,
+        unitPrice,
+        amount,
+        vatRate,
+        vatAmount,
+        grandTotal,
+        consultantNames,
+        tevkifatFraction: editInvoiceForm.tevkifatFraction.trim() || undefined
+      };
+    }));
+
+    const logMsg = `${new Date().toLocaleTimeString()} - ${t("Invoice edited (ID: {id}).").replace("{id}", editingInvoiceId)}`;
+    setImportLogs(prev => [logMsg, ...prev]);
+    setEditingInvoiceId(null);
+  };
+
   const handleDeleteSelectedInvoices = () => {
     const count = selectedInvoiceIds.size;
     if (count === 0) return;
@@ -1192,6 +1315,7 @@ CRITICAL FORMATTING INSTRUCTIONS: Your response MUST be output as beautiful, pro
       const grandTotalKey = findKey(["genel toplam", "kdv dahil toplam", "kdv dahil", "grand total"]);
       const vatRateKey = findKey(["kdv oranı", "kdv orani", "kdv oran", "vat rate"]);
       const vatAmountKey = findKey(["toplam kdv", "kdv tutarı", "kdv tutari", "vat amount"]);
+      const tevkifatKey = findKey(["tevkifat"]);
       const consultantKey = findKey(["danışman", "danisman", "consultant", "personel", "sorumlu", "kategori"]);
       const serviceTypeKey = findKey(["hizmet türü", "hizmet turu", "hizmet hattı", "hizmet hatti", "metodoloji", "methodology", "service type", "servis"]);
       const subtotalKey = findKey(["ara toplam", "fatura toplamı", "fatura toplami", "net toplam", "toplam tutar", "fatura bedeli", "fatura tutarı", "subtotal", "toplam", "amount", "bedel", "tutar"]);
@@ -1215,7 +1339,32 @@ CRITICAL FORMATTING INSTRUCTIONS: Your response MUST be output as beautiful, pro
         }
 
         const rawVatRate = vatRateKey ? parseLocaleNumber(row[vatRateKey]) : 20;
-        const vatRate = rawVatRate > 0 && rawVatRate < 1 ? rawVatRate * 100 : (rawVatRate || 20);
+        let vatRate = rawVatRate > 0 && rawVatRate < 1 ? rawVatRate * 100 : (rawVatRate || 20);
+
+        // Tevkifat (partial VAT withholding) — common on consultancy/service
+        // invoices in Turkey. A dedicated "Tevkifat" column typically carries
+        // a fraction like "9/10", meaning the buyer withholds 9 parts of the
+        // calculated KDV and only 1/10 is actually invoiced/collected by the
+        // seller. Applying this to vatRate BEFORE computing the default
+        // vatAmount below is what turns a raw 20% base rate into the real,
+        // effectively-invoiced rate (e.g. 20% × 1/10 = 2%) — without it,
+        // every tevkifatlı customer's KDV showed at the full pre-withholding
+        // rate (20% instead of 2%).
+        let tevkifatFraction: string | undefined;
+        if (tevkifatKey) {
+          const rawTevkifat = String(row[tevkifatKey] ?? "").trim();
+          const fracMatch = rawTevkifat.match(/(\d+)\s*\/\s*(\d+)/);
+          if (fracMatch) {
+            const withheld = parseFloat(fracMatch[1]);
+            const denom = parseFloat(fracMatch[2]);
+            if (denom > 0) {
+              const payableFraction = Math.max(0, Math.min(1, (denom - withheld) / denom));
+              vatRate = Math.round(vatRate * payableFraction * 100) / 100;
+              tevkifatFraction = `${fracMatch[1]}/${fracMatch[2]}`;
+            }
+          }
+        }
+
         let vatAmount = vatAmountKey ? parseLocaleNumber(row[vatAmountKey]) : Math.round(subtotal * (vatRate / 100));
 
         if (grandTotal === 0 && subtotal > 0) {
@@ -1265,7 +1414,8 @@ CRITICAL FORMATTING INSTRUCTIONS: Your response MUST be output as beautiful, pro
           vatRate: vatRate || 20,
           vatAmount,
           grandTotal,
-          consultantNames
+          consultantNames,
+          tevkifatFraction
         });
         addedCount++;
       }
@@ -1571,29 +1721,37 @@ CRITICAL FORMATTING INSTRUCTIONS: Your response MUST be output as beautiful, pro
               </div>
             )}
           </div>
+        </div>
+      </div>
 
-          <div className="flex items-center gap-1 bg-slate-105/40 dark:bg-zinc-900 rounded-lg p-1">
-            <button
-              onClick={() => setActiveTab("dashboard")}
-              className={`px-4 py-2 text-[13px] font-bold rounded-md transition-all cursor-pointer ${
-                activeTab === "dashboard"
-                  ? "bg-white dark:bg-zinc-800 text-[#0078D4] dark:text-sky-400 shadow-xs"
-                  : "text-slate-500 hover:text-slate-700 dark:text-zinc-400"
-              }`}
-            >
-              {t("📊 Executive Dashboard")}
-            </button>
-            <button
-              onClick={() => setActiveTab("data")}
-              className={`px-4 py-2 text-[13px] font-bold rounded-md transition-all cursor-pointer ${
-                activeTab === "data"
-                  ? "bg-white dark:bg-zinc-800 text-emerald-600 dark:text-emerald-400 shadow-xs"
-                  : "text-slate-500 hover:text-slate-700 dark:text-zinc-400"
-              }`}
-            >
-              {t("🗄️ Operations & Data Input")}
-            </button>
-          </div>
+      {/* ROOT TAB BAR — moved out of the header's date-range control row
+          (where it was a small, easy-to-miss toggle) into its own
+          full-width tab strip directly under the page header, matching
+          the tab bar pattern used elsewhere in the app (e.g. Tasks). */}
+      <div className="flex items-center bg-white dark:bg-[#151515] p-1.5 rounded-xl border border-slate-200/60 dark:border-zinc-800 shadow-sm">
+        <div className="flex flex-wrap items-center gap-1.5 bg-slate-100 dark:bg-[#1f1e1d] p-1 rounded-lg w-full">
+          <button
+            onClick={() => setActiveTab("dashboard")}
+            className={`flex-1 min-w-[180px] px-4 py-2.5 text-[13px] font-bold rounded-md transition-all cursor-pointer flex items-center justify-center gap-2 ${
+              activeTab === "dashboard"
+                ? "bg-white dark:bg-zinc-800 text-[#0078D4] dark:text-sky-400 shadow-xs"
+                : "text-slate-500 hover:text-slate-700 dark:text-zinc-400"
+            }`}
+          >
+            <LayoutDashboard className="w-4 h-4" />
+            {t("📊 Executive Dashboard")}
+          </button>
+          <button
+            onClick={() => setActiveTab("data")}
+            className={`flex-1 min-w-[180px] px-4 py-2.5 text-[13px] font-bold rounded-md transition-all cursor-pointer flex items-center justify-center gap-2 ${
+              activeTab === "data"
+                ? "bg-white dark:bg-zinc-800 text-emerald-600 dark:text-emerald-400 shadow-xs"
+                : "text-slate-500 hover:text-slate-700 dark:text-zinc-400"
+            }`}
+          >
+            <Database className="w-4 h-4" />
+            {t("🗄️ Operations & Data Input")}
+          </button>
         </div>
       </div>
 
@@ -1686,17 +1844,70 @@ CRITICAL FORMATTING INSTRUCTIONS: Your response MUST be output as beautiful, pro
                 </div>
               </div>
 
-              <div className="h-64 mt-2 font-sans text-xs">
+              {/* Horizontal layout: consultants on the Y axis (category),
+                  day counts on the X axis (numeric) — capacity and
+                  allocated days as grouped bars. Capacity utilization (%)
+                  is a fundamentally different unit (a ratio, not a day
+                  count) so it's no longer plotted as a third bar sharing
+                  the days axis (which made it visually meaningless at
+                  these scales); instead each allocated-days bar is
+                  color-coded by utilization and carries its own % label. */}
+              <div
+                className="mt-2 font-sans text-xs"
+                style={{ height: Math.max(256, workloadBarData.length * 42) }}
+              >
                 <ResponsiveContainer width="100%" height="100%">
-                  <BarChart data={workloadBarData} margin={{ top: 10, right: 10, left: 0, bottom: 5 }}>
-                    <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#E4E4E7" />
-                    <XAxis dataKey="name" tick={{ fill: '#71717A', fontSize: 10 }} axisLine={false} tickLine={false} />
-                    <YAxis label={{ value: t('Days'), angle: -90, position: 'insideLeft', offset: 10, style: { textAnchor: 'middle', fill: '#71717A', fontSize: 10 } }} tick={{ fill: '#71717A', fontSize: 10 }} axisLine={false} tickLine={false} />
-                    <Tooltip cursor={{ fill: 'rgba(0,120,212,0.03)' }} contentStyle={{ borderRadius: '8px', border: '1px solid #ECEEEF' }} formatter={(val, name) => [val, name === "utilization" ? t("Utilization %") : name]} />
+                  <BarChart
+                    data={workloadBarData}
+                    layout="vertical"
+                    margin={{ top: 10, right: 32, left: 10, bottom: 5 }}
+                    barGap={4}
+                  >
+                    <CartesianGrid strokeDasharray="3 3" horizontal={false} stroke="#E4E4E7" />
+                    <XAxis
+                      type="number"
+                      label={{ value: t('Days'), position: 'insideBottom', offset: -3, style: { fill: '#71717A', fontSize: 10 } }}
+                      tick={{ fill: '#71717A', fontSize: 10 }}
+                      axisLine={false}
+                      tickLine={false}
+                    />
+                    <YAxis
+                      dataKey="name"
+                      type="category"
+                      width={110}
+                      tick={{ fill: '#71717A', fontSize: 10 }}
+                      axisLine={false}
+                      tickLine={false}
+                    />
+                    <Tooltip
+                      cursor={{ fill: 'rgba(0,120,212,0.03)' }}
+                      contentStyle={{ borderRadius: '8px', border: '1px solid #ECEEEF' }}
+                      formatter={(val: any, _name: any, entry: any) => {
+                        const key = entry?.dataKey;
+                        if (key === "capacityDays") return [`${val} ${t("Days")}`, t("Capacity (Days)")];
+                        if (key === "allocatedDays") {
+                          const utilization = entry?.payload?.utilization ?? 0;
+                          return [`${val} ${t("Days")} (${utilization}% ${t("Utilization Rate (%)")})`, t("Allocated (Days)")];
+                        }
+                        return [val, key];
+                      }}
+                    />
                     <Legend iconSize={8} iconType="circle" wrapperStyle={{ fontSize: 11, marginTop: 10 }} />
-                    <Bar dataKey="capacityDays" name={t("Capacity (Days)")} fill="#0078D4" radius={[4, 4, 0, 0]} maxBarSize={40} />
-                    <Bar dataKey="allocatedDays" name={t("Allocated (Days)")} fill="#10B981" radius={[4, 4, 0, 0]} maxBarSize={40} />
-                    <Bar dataKey="utilization" name={t("Utilization Rate (%)")} fill="#F59E0B" radius={[4, 4, 0, 0]} maxBarSize={40} />
+                    <Bar dataKey="capacityDays" name={t("Capacity (Days)")} fill="#0078D4" radius={[0, 4, 4, 0]} maxBarSize={16} opacity={0.35} />
+                    <Bar dataKey="allocatedDays" name={t("Allocated (Days)")} radius={[0, 4, 4, 0]} maxBarSize={16}>
+                      {workloadBarData.map((entry, idx) => (
+                        <Cell
+                          key={`workload-cell-${idx}`}
+                          fill={entry.utilization > 100 ? "#EF4444" : entry.utilization >= 80 ? "#10B981" : "#F59E0B"}
+                        />
+                      ))}
+                      <LabelList
+                        dataKey="utilization"
+                        position="right"
+                        formatter={(val: number) => `${val}%`}
+                        style={{ fontSize: 10, fontWeight: 700, fill: '#52525B' }}
+                      />
+                    </Bar>
                   </BarChart>
                 </ResponsiveContainer>
               </div>
@@ -1720,7 +1931,22 @@ CRITICAL FORMATTING INSTRUCTIONS: Your response MUST be output as beautiful, pro
                       <XAxis dataKey="month" tick={{ fill: '#71717A', fontSize: 9 }} tickLine={false} axisLine={false} />
                       <YAxis yAxisId="left" tickFormatter={(val) => `${(val / 1000)}k`} tick={{ fill: '#0078D4', fontSize: 9 }} tickLine={false} axisLine={false} />
                       <YAxis yAxisId="right" orientation="right" tick={{ fill: '#EF4444', fontSize: 9 }} tickLine={false} axisLine={false} />
-                      <Tooltip contentStyle={{ borderRadius: '8px', border: '1px solid #ECEEEF' }} formatter={(val, name) => [name === "revenue" ? `${formatSystemNumber(val)} TL` : `${val} ${t("Days")}`, name === "revenue" ? t("Revenue") : name === "plannedDays" ? t("Allocated Days") : t("Capacity Days")]} />
+                      <Tooltip
+                        contentStyle={{ borderRadius: '8px', border: '1px solid #ECEEEF' }}
+                        formatter={(val: any, _name: any, entry: any) => {
+                          // recharts passes the human-readable, already-translated
+                          // `name` prop of the Bar/Line here (e.g. "Gelir Tahmini
+                          // (TL)") — NOT the raw dataKey ("revenue") — so matching
+                          // against literal keys like `name === "revenue"` never
+                          // succeeded and every row fell through to the same
+                          // "Capacity Days" label. Match on the real dataKey via
+                          // `entry.dataKey` instead.
+                          const key = entry?.dataKey;
+                          if (key === "revenue") return [`${formatSystemNumber(val)} TL`, t("Revenue Forecast (TL)")];
+                          if (key === "plannedDays") return [`${val} ${t("Days")}`, t("Planned (Days)")];
+                          return [`${val} ${t("Days")}`, t("Capacity (Days)")];
+                        }}
+                      />
                       <Legend iconSize={8} iconType="circle" wrapperStyle={{ fontSize: 10, marginTop: 10 }} />
                       <Bar yAxisId="left" dataKey="revenue" name={t("Revenue Forecast (TL)")} fill="#0078D4" radius={[3, 3, 0, 0]} opacity={0.85} maxBarSize={30} />
                       <Line yAxisId="right" type="monotone" dataKey="capacityDays" name={t("Capacity (Days)")} stroke="#EF4444" strokeWidth={2} dot={{ r: 3 }} />
@@ -1934,32 +2160,91 @@ CRITICAL FORMATTING INSTRUCTIONS: Your response MUST be output as beautiful, pro
 
           {/* SECTION 9b - PLANNED VS REALIZED MAN-DAYS CAPACITY CHART */}
           <div className="bg-white dark:bg-[#151515] p-6 rounded-xl border border-slate-200/50 dark:border-zinc-800 shadow-sm">
-            <div className="mb-4">
-              <h3 className="text-sm font-extrabold text-slate-850 dark:text-zinc-100 flex items-center gap-1.5">
-                <BarChart2 className="w-4.5 h-4.5 text-sky-500" />
-                <span>{t("Planned vs. Realized Man-Days")}</span>
-              </h3>
-              <span className="text-[10px] text-slate-400 font-sans">
-                {t("Planned = allocated assignment days for the selected month(s). Realized = delivered days actually invoiced. The gap is lost capacity — staffed time that never turned into billed work.")}
-              </span>
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-4">
+              <div>
+                <h3 className="text-sm font-extrabold text-slate-850 dark:text-zinc-100 flex items-center gap-1.5">
+                  <BarChart2 className="w-4.5 h-4.5 text-sky-500" />
+                  <span>{t("Planned vs. Realized Man-Days")}</span>
+                </h3>
+                <span className="text-[10px] text-slate-400 font-sans">
+                  {t("Planned = allocated assignment days for the selected month(s). Realized = delivered days actually invoiced. The gap is lost capacity — staffed time that never turned into billed work.")}
+                </span>
+              </div>
+              <label className="flex items-center gap-1.5 text-[11px] font-bold text-slate-600 dark:text-zinc-300 select-none cursor-pointer bg-slate-50 dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 rounded-lg px-2.5 py-1.5 whitespace-nowrap">
+                <input
+                  type="checkbox"
+                  checked={showYearEndForecast}
+                  onChange={(e) => setShowYearEndForecast(e.target.checked)}
+                  className="w-3.5 h-3.5 rounded border-slate-300 text-[#0078D4] focus:ring-[#0078D4] cursor-pointer"
+                />
+                {t("Project remaining months to year-end")}
+              </label>
             </div>
 
             {monthlyCapacityData.some(d => d.plannedDays > 0 || d.realizedDays > 0) ? (
               <>
                 <div className="h-64 font-sans text-xs">
                   <ResponsiveContainer width="100%" height="100%">
-                    <ComposedChart data={monthlyCapacityData} margin={{ top: 8, right: 8, left: 0, bottom: 0 }}>
+                    <ComposedChart data={monthlyCapacityChartData} margin={{ top: 8, right: 8, left: 0, bottom: 0 }}>
                       <CartesianGrid strokeDasharray="3 3" stroke="#EDEBE9" opacity={0.4} />
                       <XAxis dataKey="month" fontSize={10} tickLine={false} />
-                      <YAxis fontSize={10} tickLine={false} label={{ value: t("Days"), angle: -90, position: "insideLeft", fontSize: 10 }} />
-                      <Tooltip formatter={(val: any, key: any) => [`${val} ${t("Days")}`, key]} />
+                      <YAxis yAxisId="left" fontSize={10} tickLine={false} label={{ value: t("Days"), angle: -90, position: "insideLeft", fontSize: 10 }} />
+                      <YAxis yAxisId="right" orientation="right" fontSize={10} tickLine={false} label={{ value: t("Cumulative Realized (Days)"), angle: 90, position: "insideRight", fontSize: 9 }} />
+                      <Tooltip
+                        formatter={(val: any, _key: any, entry: any) => {
+                          const key = entry?.dataKey;
+                          const forecastSuffix = entry?.payload?.isForecast ? ` (${t("Forecast")})` : "";
+                          const label =
+                            key === "realizedDays" ? t("Realized Man-Days") :
+                            key === "lostDays" ? t("Lost Capacity") :
+                            key === "cumulativeRealizedDays" ? t("Cumulative Realized (Days)") :
+                            t("Planned Man-Days");
+                          return [`${val} ${t("Days")}${forecastSuffix}`, label];
+                        }}
+                      />
                       <Legend wrapperStyle={{ fontSize: "10px" }} />
-                      <Bar dataKey="realizedDays" name={t("Realized Man-Days")} stackId="capacity" fill="#0078D4" radius={[0, 0, 0, 0]} />
-                      <Bar dataKey="lostDays" name={t("Lost Capacity")} stackId="capacity" fill="#F59E0B" fillOpacity={0.55} radius={[3, 3, 0, 0]} />
-                      <Line type="monotone" dataKey="plannedDays" name={t("Planned Man-Days")} stroke="#10B981" strokeWidth={2.5} dot={{ r: 3 }} />
+                      <Bar yAxisId="left" dataKey="realizedDays" name={t("Realized Man-Days")} stackId="capacity" fill="#0078D4" radius={[0, 0, 0, 0]} />
+                      <Bar yAxisId="left" dataKey="lostDays" name={t("Lost Capacity")} stackId="capacity" fill="#F59E0B" fillOpacity={0.55} radius={[3, 3, 0, 0]} />
+                      <Line
+                        yAxisId="left"
+                        type="monotone"
+                        dataKey="plannedDays"
+                        name={t("Planned Man-Days")}
+                        stroke="#10B981"
+                        strokeWidth={2.5}
+                        dot={(props: any) => {
+                          const { cx, cy, payload, index } = props;
+                          return (
+                            <circle
+                              key={`planned-dot-${index}`}
+                              cx={cx}
+                              cy={cy}
+                              r={3}
+                              fill={payload.isForecast ? "#FFFFFF" : "#10B981"}
+                              stroke="#10B981"
+                              strokeWidth={payload.isForecast ? 2 : 1}
+                            />
+                          );
+                        }}
+                      />
+                      <Line
+                        yAxisId="right"
+                        type="monotone"
+                        dataKey="cumulativeRealizedDays"
+                        name={t("Cumulative Realized (Days)")}
+                        stroke="#8B5CF6"
+                        strokeWidth={2}
+                        dot={{ r: 2.5 }}
+                      />
                     </ComposedChart>
                   </ResponsiveContainer>
                 </div>
+                {showYearEndForecast && (
+                  <p className="text-[10px] text-slate-400 font-sans mt-1.5 flex items-center gap-1">
+                    <Info className="w-3 h-3 text-sky-500" />
+                    {t("Months after the selected period are projected from ongoing/staffed project assignments only — no realized or lost-capacity figures exist for them yet.")}
+                  </p>
+                )}
                 <div className="grid grid-cols-3 gap-3 mt-4 pt-4 border-t border-slate-100 dark:border-zinc-800">
                   <div className="text-center">
                     <div className="text-[10px] uppercase font-bold text-slate-400 font-mono">{t("Total Planned")}</div>
@@ -3001,18 +3286,33 @@ CRITICAL FORMATTING INSTRUCTIONS: Your response MUST be output as beautiful, pro
                               <td className="py-2.5 text-center font-mono font-bold text-slate-700 dark:text-zinc-300">{days} {t("Days")}</td>
                               <td className="py-2.5 text-right font-mono text-slate-600 dark:text-zinc-400">{formatSystemNumber(unitPrice)} TL</td>
                               <td className="py-2.5 text-right font-mono font-bold text-slate-800 dark:text-zinc-200">{formatSystemNumber(inv.amount)} TL</td>
-                              <td className="py-2.5 text-center font-mono text-amber-600">%{vatRate}</td>
+                              <td className="py-2.5 text-center font-mono text-amber-600">
+                                %{vatRate}
+                                {inv.tevkifatFraction && (
+                                  <span className="block text-[9px] text-slate-400 font-sans">{t("Tevkifat")} {inv.tevkifatFraction}</span>
+                                )}
+                              </td>
                               <td className="py-2.5 text-right font-mono text-slate-600 dark:text-zinc-400">{formatSystemNumber(vatAmount)} TL</td>
                               <td className="py-2.5 text-right font-mono font-extrabold text-[#0078D4] dark:text-sky-400">{formatSystemNumber(grandTotal)} TL</td>
                               <td className="py-2.5 text-right px-3">
-                                <button
-                                  type="button"
-                                  onClick={() => handleDeleteInvoice(inv.id)}
-                                  className="p-1 text-rose-650 hover:bg-rose-50 dark:hover:bg-rose-950/35 rounded transition-all cursor-pointer inline-flex items-center"
-                                  title={t("Delete Invoice")}
-                                >
-                                  <Trash className="w-3.5 h-3.5" />
-                                </button>
+                                <div className="flex items-center justify-end gap-1">
+                                  <button
+                                    type="button"
+                                    onClick={() => handleOpenEditInvoice(inv)}
+                                    className="p-1 text-[#0078D4] hover:bg-sky-50 dark:hover:bg-sky-950/35 rounded transition-all cursor-pointer inline-flex items-center"
+                                    title={t("Edit Invoice")}
+                                  >
+                                    <Edit className="w-3.5 h-3.5" />
+                                  </button>
+                                  <button
+                                    type="button"
+                                    onClick={() => handleDeleteInvoice(inv.id)}
+                                    className="p-1 text-rose-650 hover:bg-rose-50 dark:hover:bg-rose-950/35 rounded transition-all cursor-pointer inline-flex items-center"
+                                    title={t("Delete Invoice")}
+                                  >
+                                    <Trash className="w-3.5 h-3.5" />
+                                  </button>
+                                </div>
                               </td>
                             </tr>
                           );
@@ -3032,6 +3332,149 @@ CRITICAL FORMATTING INSTRUCTIONS: Your response MUST be output as beautiful, pro
 
           </div>
 
+        </div>
+      )}
+
+      {/* EDIT INVOICE MODAL */}
+      {editingInvoiceId && (
+        <div className="fixed inset-0 bg-black/60 dark:bg-black/85 backdrop-blur-xs flex items-center justify-center z-50 p-4">
+          <div className="bg-white dark:bg-[#1b1a19] w-full max-w-lg rounded-lg border border-[#EDEBE9] dark:border-[#323130] shadow-2xl overflow-hidden animate-in fade-in zoom-in-95 duration-150">
+            <div className="px-5 py-4 border-b border-[#EDEBE9] dark:border-[#323130] bg-[#FAF9F8] dark:bg-[#201f1e] flex items-center justify-between">
+              <h3 className="font-bold text-slate-900 dark:text-slate-100 text-sm flex items-center gap-1.5">
+                <Edit className="w-4 h-4 text-[#0078D4]" />
+                {t("Edit Invoice")}
+              </h3>
+              <button
+                type="button"
+                onClick={() => setEditingInvoiceId(null)}
+                className="p-1 rounded hover:bg-slate-200 dark:hover:bg-[#252423] text-slate-550 dark:text-slate-400 cursor-pointer"
+              >
+                <Trash className="w-4 h-4 rotate-45" />
+              </button>
+            </div>
+
+            <div className="p-5 space-y-3.5 max-h-[70vh] overflow-y-auto">
+              <div className="grid grid-cols-2 gap-3">
+                <div className="col-span-2 space-y-1">
+                  <label className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">{t("Customer Name")}</label>
+                  <input
+                    type="text"
+                    value={editInvoiceForm.customerName}
+                    onChange={(e) => setEditInvoiceForm(f => ({ ...f, customerName: e.target.value }))}
+                    className="w-full px-3 py-2 bg-slate-50 dark:bg-[#252423] border border-[#EDEBE9] dark:border-[#323130] rounded text-xs text-slate-800 dark:text-slate-200 focus:outline-hidden"
+                  />
+                </div>
+                <div className="space-y-1">
+                  <label className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">{t("Date")}</label>
+                  <input
+                    type="date"
+                    value={editInvoiceForm.invoiceDate}
+                    onChange={(e) => setEditInvoiceForm(f => ({ ...f, invoiceDate: e.target.value }))}
+                    className="w-full px-3 py-2 bg-slate-50 dark:bg-[#252423] border border-[#EDEBE9] dark:border-[#323130] rounded text-xs text-slate-800 dark:text-slate-200 focus:outline-hidden"
+                  />
+                </div>
+                <div className="space-y-1">
+                  <label className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">{t("Delivered Days")}</label>
+                  <input
+                    type="text"
+                    inputMode="decimal"
+                    value={editInvoiceForm.deliveredDays}
+                    onChange={(e) => setEditInvoiceForm(f => ({ ...f, deliveredDays: e.target.value }))}
+                    className="w-full px-3 py-2 bg-slate-50 dark:bg-[#252423] border border-[#EDEBE9] dark:border-[#323130] rounded text-xs text-slate-800 dark:text-slate-200 focus:outline-hidden"
+                  />
+                </div>
+                <div className="space-y-1">
+                  <label className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">{t("Unit Price")}</label>
+                  <input
+                    type="text"
+                    inputMode="decimal"
+                    value={editInvoiceForm.unitPrice}
+                    onChange={(e) => setEditInvoiceForm(f => ({ ...f, unitPrice: e.target.value }))}
+                    className="w-full px-3 py-2 bg-slate-50 dark:bg-[#252423] border border-[#EDEBE9] dark:border-[#323130] rounded text-xs text-slate-800 dark:text-slate-200 focus:outline-hidden"
+                  />
+                </div>
+                <div className="space-y-1">
+                  <label className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">{t("Invoice Total")} ({t("Subtotal")})</label>
+                  <input
+                    type="text"
+                    inputMode="decimal"
+                    value={editInvoiceForm.amount}
+                    onChange={(e) => setEditInvoiceForm(f => ({ ...f, amount: e.target.value }))}
+                    className="w-full px-3 py-2 bg-slate-50 dark:bg-[#252423] border border-[#EDEBE9] dark:border-[#323130] rounded text-xs text-slate-800 dark:text-slate-200 focus:outline-hidden"
+                  />
+                </div>
+                <div className="space-y-1">
+                  <label className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">{t("VAT Rate")} (%)</label>
+                  <input
+                    type="text"
+                    inputMode="decimal"
+                    value={editInvoiceForm.vatRate}
+                    onChange={(e) => setEditInvoiceForm(f => ({ ...f, vatRate: e.target.value }))}
+                    className="w-full px-3 py-2 bg-slate-50 dark:bg-[#252423] border border-[#EDEBE9] dark:border-[#323130] rounded text-xs text-slate-800 dark:text-slate-200 focus:outline-hidden"
+                  />
+                </div>
+                <div className="space-y-1">
+                  <label className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">{t("Tevkifat")} ({t("optional, e.g. 9/10")})</label>
+                  <input
+                    type="text"
+                    placeholder="9/10"
+                    value={editInvoiceForm.tevkifatFraction}
+                    onChange={(e) => setEditInvoiceForm(f => ({ ...f, tevkifatFraction: e.target.value }))}
+                    className="w-full px-3 py-2 bg-slate-50 dark:bg-[#252423] border border-[#EDEBE9] dark:border-[#323130] rounded text-xs text-slate-800 dark:text-slate-200 focus:outline-hidden"
+                  />
+                </div>
+                <div className="col-span-2 space-y-1">
+                  <label className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">{t("Consultant")} ({t("comma-separated")})</label>
+                  <input
+                    type="text"
+                    value={editInvoiceForm.consultantNames}
+                    onChange={(e) => setEditInvoiceForm(f => ({ ...f, consultantNames: e.target.value }))}
+                    className="w-full px-3 py-2 bg-slate-50 dark:bg-[#252423] border border-[#EDEBE9] dark:border-[#323130] rounded text-xs text-slate-800 dark:text-slate-200 focus:outline-hidden"
+                  />
+                </div>
+              </div>
+
+              {/* Live recomputed VAT amount / grand total preview — these
+                  are never directly editable, they always derive from
+                  amount × vatRate so they can't silently drift out of
+                  sync with a corrected rate. */}
+              {(() => {
+                const previewAmount = parseFloat(editInvoiceForm.amount.replace(",", ".")) || 0;
+                const previewVatRate = parseFloat(editInvoiceForm.vatRate.replace(",", ".")) || 0;
+                const previewVatAmount = Math.round(previewAmount * (previewVatRate / 100));
+                const previewGrandTotal = previewAmount + previewVatAmount;
+                return (
+                  <div className="grid grid-cols-2 gap-3 pt-1">
+                    <div className="bg-slate-50 dark:bg-zinc-900 border border-slate-150 dark:border-zinc-800 rounded p-2.5 text-center">
+                      <div className="text-[9px] uppercase font-bold text-slate-400 font-mono">{t("VAT Amount")}</div>
+                      <div className="text-sm font-extrabold text-amber-600 font-mono mt-0.5">{formatSystemNumber(previewVatAmount)} TL</div>
+                    </div>
+                    <div className="bg-slate-50 dark:bg-zinc-900 border border-slate-150 dark:border-zinc-800 rounded p-2.5 text-center">
+                      <div className="text-[9px] uppercase font-bold text-slate-400 font-mono">{t("Total with VAT")}</div>
+                      <div className="text-sm font-extrabold text-[#0078D4] dark:text-sky-400 font-mono mt-0.5">{formatSystemNumber(previewGrandTotal)} TL</div>
+                    </div>
+                  </div>
+                );
+              })()}
+            </div>
+
+            <div className="px-5 py-3.5 bg-slate-50 dark:bg-zinc-900 border-t border-[#EDEBE9] dark:border-[#323130] flex justify-end gap-2">
+              <button
+                type="button"
+                onClick={() => setEditingInvoiceId(null)}
+                className="px-4 py-2 bg-slate-150 hover:bg-slate-200 dark:bg-zinc-800 dark:hover:bg-zinc-700 text-slate-700 dark:text-slate-200 rounded text-xs font-bold transition-all cursor-pointer"
+              >
+                {t("Cancel")}
+              </button>
+              <button
+                type="button"
+                onClick={handleSaveInvoiceEdit}
+                className="px-4 py-2 bg-[#0078D4] hover:bg-[#005a9e] text-white rounded text-xs font-bold transition-all cursor-pointer"
+              >
+                {t("Save")}
+              </button>
+            </div>
+          </div>
         </div>
       )}
 

@@ -53,6 +53,7 @@ export interface Invoice {
   vatAmount?: number; // Computed KDV Bedeli
   grandTotal?: number; // VAT-included total ("Genel Toplam" / "KDV Dahil Toplam")
   consultantNames?: string[]; // Consultant name(s) recorded directly on this invoice row (e.g. the "Kategori"/"Danışman" column). Multiple names on one row (e.g. "Faik Çakır +Güray Yurdakul") share the delivered days evenly. Used to match the real Consultant Master daily cost for an exact (non-estimated) margin.
+  tevkifatFraction?: string; // Partial VAT withholding fraction read from a dedicated "Tevkifat" column (e.g. "9/10" — buyer withholds 9/10 of the calculated KDV, seller only invoices the remaining 1/10). When present, vatRate already reflects this (e.g. 20% base × 1/10 payable = 2%). Kept as raw text so it can be shown/edited on the invoice row.
 }
 
 export const INITIAL_CONSULTANTS: Consultant[] = [
