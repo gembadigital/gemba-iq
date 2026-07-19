@@ -446,7 +446,7 @@ export default function ServicesView({
   showSwitcher?: boolean;
 }) {
   const { t } = useLanguage();
-  const { actorName } = useOrganization();
+  const { actorName, actorEmail } = useOrganization();
   const [activeTab, setActiveTab] = useState<"cards" | "wizard">(defaultTab);
 
   useEffect(() => {
@@ -577,14 +577,6 @@ export default function ServicesView({
   const [proposalDate, setProposalDate] = useState(new Date().toISOString().split('T')[0]);
   const [assignedPm, setAssignedPm] = useState("");
 
-  // Default "Sorumlu Kişi" (our internal PM) to the logged-in user's name
-  // once it's available, unless the rep has already typed something in.
-  useEffect(() => {
-    if (actorName) {
-      setAssignedPm((prev) => prev || actorName);
-    }
-  }, [actorName]);
-
   // Sync clientShortName from clientTitle unless manually edited
   useEffect(() => {
     if (!isShortNameManuallyEdited && clientTitle) {
@@ -607,10 +599,16 @@ export default function ServicesView({
     }
   }, [clientTitle, isShortNameManuallyEdited]);
 
-  // Client-side contact info — blank until a company is selected (see the
-  // company dropdown handler below, which pulls the real recorded contact).
+  // "Müşteri İlgili Kişi" — the logged-in user's own name/email (the rep
+  // preparing this proposal), not a customer-side contact. Populated from
+  // the real session profile once available; the rep can still edit it.
   const [clientContactPerson, setClientContactPerson] = useState("");
   const [clientContactEmail, setClientContactEmail] = useState("");
+
+  useEffect(() => {
+    if (actorName) setClientContactPerson((prev) => prev || actorName);
+    if (actorEmail) setClientContactEmail((prev) => prev || actorEmail);
+  }, [actorName, actorEmail]);
 
   // Integrated Email Draft Templates
   const [emailTemplates, setEmailTemplates] = useState<{ id: string; name: string; subject: string; body: string }[]>(() => {
@@ -2970,21 +2968,12 @@ export default function ServicesView({
                                     setClientTitle(c.name);
                                     const parts = [c.billingAddress, c.billingDistrict, c.billingCity, c.billingCountry].filter(Boolean);
                                     setClientAddress(parts.join(", "));
-                                    // Company objects have no contactName/contactPerson/contactEmail
-                                    // fields (see Company interface in CompaniesView.tsx) — those
-                                    // previously always evaluated to undefined, so this always fell
-                                    // through to a hardcoded personal name/email. The real recorded
-                                    // contact lives in Şirket Detayı > Kişiler (CrmDb Contact
-                                    // records); fall back to the customFields bag, then leave blank.
-                                    const realContacts = CrmDb.getContactsByCompany(c.id);
-                                    const primaryContact = realContacts[0];
-                                    if (primaryContact) {
-                                      setClientContactPerson(`${primaryContact.firstName} ${primaryContact.lastName}`.trim());
-                                      setClientContactEmail(primaryContact.email || "");
-                                    } else {
-                                      setClientContactPerson(c.customFields?.contactName || "");
-                                      setClientContactEmail(c.customFields?.contactEmail || "");
-                                    }
+                                    // "Sorumlu Kişi" comes from the customer's own card — the Account
+                                    // Owner field (Hesap Temsilcisi) recorded on that company record.
+                                    // "Müşteri İlgili Kişi" is NOT company-specific — it's the logged-in
+                                    // user's own name/email (see the actorName/actorEmail effect above),
+                                    // so it's intentionally left untouched here.
+                                    setAssignedPm(c.accountOwner || "");
                                     setShowCompaniesDropdown(false);
                                   }}
                                   className="w-full text-left px-3 py-2 text-xs hover:bg-slate-100 dark:hover:bg-zinc-800 text-slate-800 dark:text-slate-200 block"
