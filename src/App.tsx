@@ -273,6 +273,7 @@ export default function App() {
   const [leadsMenuExpanded, setLeadsMenuExpanded] = useState<boolean>(true);
   const [campaignMenuExpanded, setCampaignMenuExpanded] = useState<boolean>(true);
   const [sidebarCollapsed, setSidebarCollapsed] = useState<boolean>(() => {
+    if (typeof window !== "undefined" && window.innerWidth < 1024) return true;
     return localStorage.getItem("sidebar-collapsed") === "true";
   });
   
@@ -331,6 +332,23 @@ export default function App() {
     document.documentElement.classList.remove("notion-layout", "fluent-layout");
     document.documentElement.classList.add("saas-layout");
     localStorage.setItem("layout-theme", "saas");
+  }, []);
+
+  // Responsive: tablet/telefon ekranlarında sabit 300px genişlikteki
+  // sidebar'ı otomatik olarak ikon rayına (80px) daraltır. Kullanıcı
+  // bildirimi: "tablet ve telefonda container kaymalarının önüne geçmek
+  // gerekiyor" — 300px'lik sabit sidebar dar ekranlarda ana içeriği
+  // sıkıştırıp yatay taşmaya (kayma) neden oluyordu. Sadece küçük ekrana
+  // geçişte otomatik daraltır; kullanıcı isterse elle tekrar genişletebilir
+  // (mevcut btn-collapse-sidebar toggle'ı bu davranışı ezmeye devam eder).
+  useEffect(() => {
+    const applyResponsiveSidebar = () => {
+      if (window.innerWidth < 1024) {
+        setSidebarCollapsed(true);
+      }
+    };
+    window.addEventListener("resize", applyResponsiveSidebar);
+    return () => window.removeEventListener("resize", applyResponsiveSidebar);
   }, []);
 
   // Listen to custom navigation events from search / autocomplete
@@ -1182,19 +1200,19 @@ export default function App() {
       }`}>
         
         {/* COMPACT ENTERPRISE TOP HEADER BAR */}
-        <div className={`h-[72px] min-h-[72px] border-b sticky top-0 z-40 px-6 flex items-center justify-between gap-4 backdrop-blur-md ${
+        <div className={`h-[72px] min-h-[72px] border-b sticky top-0 z-40 px-3 sm:px-6 flex items-center justify-between gap-2 sm:gap-4 backdrop-blur-md ${
           layoutTheme === "saas"
             ? "bg-[#FAFAFA]/90 dark:bg-[#09090b]/90 border-slate-200/50 dark:border-zinc-800/50 shadow-[0_1px_2px_rgba(0,0,0,0.015)]"
-            : layoutTheme === "notion" 
-            ? "bg-white/90 dark:bg-[#191919]/90 border-[#1f1f1f]/10 dark:border-white/10" 
+            : layoutTheme === "notion"
+            ? "bg-white/90 dark:bg-[#191919]/90 border-[#1f1f1f]/10 dark:border-white/10"
             : "bg-white/90 dark:bg-[#1b1a19]/90 border-[#EDEBE9] dark:border-[#323130] shadow-xs"
         }`}>
-          {/* LEFT AREA: Breadcrumbs */}
-          <div className="flex items-center gap-3 shrink-0">
-            <div className="flex items-center gap-1.5 text-xs text-slate-500 dark:text-zinc-400 font-sans select-none">
-              <span className="font-semibold text-slate-450 dark:text-zinc-500">{breadcrumbs.parent}</span>
-              <span className="text-slate-300 dark:text-zinc-700">/</span>
-              <span className="font-bold text-slate-800 dark:text-zinc-250">{breadcrumbs.child}</span>
+          {/* LEFT AREA: Breadcrumbs — dar ekranlarda taşmaması için shrink+truncate */}
+          <div className="flex items-center gap-3 shrink min-w-0">
+            <div className="flex items-center gap-1.5 text-xs text-slate-500 dark:text-zinc-400 font-sans select-none min-w-0">
+              <span className="hidden sm:inline font-semibold text-slate-450 dark:text-zinc-500 truncate max-w-[160px]">{breadcrumbs.parent}</span>
+              <span className="hidden sm:inline text-slate-300 dark:text-zinc-700">/</span>
+              <span className="font-bold text-slate-800 dark:text-zinc-250 truncate">{breadcrumbs.child}</span>
             </div>
           </div>
 

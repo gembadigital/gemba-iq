@@ -1183,5 +1183,75 @@ h3, .card-title, [class*="text-lg"]:not(p):not(span):not(td):not(h1):not(h2) {
   background: #94a3b8;
 }
 
+/* ==========================================================================
+   RESPONSIVE / TABLET & MOBILE SAFETY LAYER
+   Kullanıcı bildirimi: "tablet ve telefonda container kaymalarının önüne
+   geçmek gerekiyor". Bu katman, her sayfayı tek tek düzenlemek yerine tüm
+   uygulamaya global olarak uygulanan bir güvenlik ağı:
+   1) Sayfanın kendisi asla yatay kayamaz/taşamaz (hard overflow-x guard).
+   2) Sabit sütunlu grid'ler (grid-cols-3/4/5/6/7/12) tablet ve telefonda
+      otomatik olarak daha az sütuna iniyor, böylece kartlar sıkışıp
+      taşmak yerine düzgünce alt alta/yan yana yerleşiyor.
+   3) Geniş tablolar artık TÜM SAYFAYI yatay kaydırmak yerine sadece kendi
+      içinde yatay kaydırılıyor (klasik "responsive table" deseni).
+   4) Sayfa iç boşlukları küçük ekranlarda daralıyor.
+   ========================================================================== */
+
+html, body, #root {
+  max-width: 100vw;
+  overflow-x: hidden;
+}
+
+@media (max-width: 1024px) {
+  /* Tablet: 3/4/5/6/7/12 sütunlu grid'ler 2 sütuna iner */
+  .grid-cols-3,
+  .grid-cols-4,
+  .grid-cols-5,
+  .grid-cols-6,
+  .grid-cols-7,
+  .grid-cols-12 {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  }
+
+  main > div,
+  .enterprise-page-container,
+  [class*="p-6"]:not(button):not(input),
+  [class*="p-8"]:not(button):not(input) {
+    padding: 16px !important;
+  }
+}
+
+@media (max-width: 640px) {
+  /* Telefon: tüm sabit sütunlu grid'ler tek sütuna iner */
+  [class*="grid-cols-"] {
+    grid-template-columns: 1fr !important;
+  }
+
+  main > div,
+  .enterprise-page-container,
+  [class*="p-6"]:not(button):not(input),
+  [class*="p-8"]:not(button):not(input) {
+    padding: 12px !important;
+  }
+
+  .grid {
+    gap: 12px !important;
+  }
+}
+
+@media (max-width: 768px) {
+  /* Responsive table deseni: tablo artık sayfayı değil, sadece kendini
+     yatay kaydırıyor (thead/tbody/tr kendi table display rollerini
+     UA stylesheet'inden korur, sadece dış <table> block+scroll olur). */
+  table {
+    display: block !important;
+    width: auto !important;
+    min-width: 100% !important;
+    max-width: 100% !important;
+    overflow-x: auto !important;
+    -webkit-overflow-scrolling: touch !important;
+  }
+}
+
 
 
