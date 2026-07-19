@@ -319,13 +319,32 @@ export default function ProposalFormModal({
     setShowAddCompanyInline(false);
   };
 
-  // Sync contact details if existing company selected
+  // Sync contact details if existing company selected.
+  // Prefer the company's real recorded contact(s) (Şirket Detayı > Kişiler /
+  // CompanyContactsTab — the actual CRM source of truth for "müşteri sorumlusu")
+  // over the free-form customFields bag, which is almost never populated for a
+  // saved company. Previously this fell straight through to a fabricated
+  // "<Company> Representative" name and a dummy "contact@gembapartner.com"
+  // email whenever customFields was empty — silently sending real proposals
+  // out with a fake contact identity instead of the actual recorded person.
   useEffect(() => {
-    if (selectedCompanyId) {
+    if (selectedCompanyId && !selectedContactId) {
       const comp = companies.find((c) => c.id === selectedCompanyId);
-      if (comp && !selectedContactId) {
-        setContactPerson(comp.customFields?.contactName || comp.name + " Representative");
-        setContactEmail(comp.customFields?.contactEmail || "contact@gembapartner.com");
+      if (comp) {
+        const realContacts = CrmDb.getContactsByCompany(selectedCompanyId);
+        const primaryContact = realContacts[0];
+        if (primaryContact) {
+          setContactPerson(`${primaryContact.firstName} ${primaryContact.lastName}`.trim());
+          setContactEmail(primaryContact.email || "");
+        } else if (comp.customFields?.contactName || comp.customFields?.contactEmail) {
+          setContactPerson(comp.customFields?.contactName || "");
+          setContactEmail(comp.customFields?.contactEmail || "");
+        } else {
+          // No contact recorded anywhere for this company — leave blank rather
+          // than inventing one, so the rep notices and fills in the real person.
+          setContactPerson("");
+          setContactEmail("");
+        }
       }
     }
   }, [selectedCompanyId, companies, selectedContactId]);
