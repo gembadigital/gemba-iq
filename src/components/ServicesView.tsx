@@ -46,6 +46,7 @@ import {
 } from "lucide-react";
 import { convertCurrencyToTurkishWords, convertNumberToTurkishWords } from "./ContractManagerView";
 import { jsPDF } from "jspdf";
+import html2canvas from "html2canvas";
 import Docxtemplater from "docxtemplater";
 import PizZip from "pizzip";
 import { CrmDb } from "../lib/CrmDb";
@@ -2220,30 +2221,84 @@ export default function ServicesView({
   // a genuine Microsoft Graph attachment through the same /api/mail/send
   // endpoint and sender-mailbox pattern already used in CompanyEmailsTab —
   // no manual "download + drag into Outlook" step required.
+  // NOTE: this used to call jsPDF's built-in doc.html() helper. That method
+  // renders the source element inside a hidden iframe using its own bundled
+  // html2canvas pass, and in practice its callback would sometimes never
+  // fire at all for this specific A4 assembly (complex nested tables,
+  // Tailwind utility classes, dynamic letterhead colors) — the await below
+  // it would then hang forever, silently freezing whatever screen/button
+  // triggered it (both "PDF İndir", the in-app send, and the external mail
+  // client hand-off all await this function). No PDF ever came out and no
+  // error was ever shown, because the promise never resolved OR rejected.
+  //
+  // Fix: capture the element directly with html2canvas (already a project
+  // dependency) into a single canvas, then slice that canvas into A4-page-
+  // height chunks and place each slice on its own PDF page with addImage —
+  // a much more reliable, widely-used pattern than jsPDF's own .html().
+  // A hard 25s timeout via Promise.race guarantees this function ALWAYS
+  // settles (resolves to null on failure/timeout instead of hanging), so
+  // calling code (loading spinners, "Gönderiliyor..." states) can never get
+  // stuck indefinitely again.
   const generateProposalPdfBase64 = async (): Promise<{ base64: string; filename: string } | null> => {
     const sourceEl = assemblyPaperRef.current;
     if (!sourceEl) return null;
 
-    const doc = new jsPDF({ unit: "pt", format: "a4" });
-    await new Promise<void>((resolve, reject) => {
-      try {
-        doc.html(sourceEl, {
-          callback: () => resolve(),
-          x: 20,
-          y: 20,
-          width: 555,
-          windowWidth: sourceEl.scrollWidth || 800,
-          html2canvas: { scale: 0.72, useCORS: true, backgroundColor: "#ffffff" },
-        });
-      } catch (err) {
-        reject(err);
-      }
-    });
+    const renderPdf = async (): Promise<{ base64: string; filename: string }> => {
+      const canvas = await html2canvas(sourceEl, {
+        scale: 2,
+        useCORS: true,
+        backgroundColor: "#ffffff",
+        logging: false,
+      });
 
-    const dataUri = doc.output("datauristring");
-    const base64 = dataUri.split(",")[1] || "";
-    const filename = `${clientShortName || "Teklif"}_${proposalNumber || "000"}.pdf`;
-    return { base64, filename };
+      const pdf = new jsPDF({ unit: "pt", format: "a4" });
+      const pageWidthPt = pdf.internal.pageSize.getWidth();
+      const pageHeightPt = pdf.internal.pageSize.getHeight();
+
+      // Canvas pixels per PDF point (horizontal), used to convert the
+      // vertical page height into a matching pixel slice height so each
+      // page covers exactly one A4 page's worth of content.
+      const pxPerPt = canvas.width / pageWidthPt;
+      const pageHeightPx = Math.max(1, Math.floor(pageHeightPt * pxPerPt));
+
+      const pageCanvas = document.createElement("canvas");
+      pageCanvas.width = canvas.width;
+      const pageCtx = pageCanvas.getContext("2d");
+
+      let renderedPx = 0;
+      let pageIndex = 0;
+      while (renderedPx < canvas.height) {
+        const sliceHeightPx = Math.min(pageHeightPx, canvas.height - renderedPx);
+        pageCanvas.height = sliceHeightPx;
+        pageCtx?.clearRect(0, 0, pageCanvas.width, sliceHeightPx);
+        pageCtx?.drawImage(
+          canvas,
+          0, renderedPx, canvas.width, sliceHeightPx,
+          0, 0, canvas.width, sliceHeightPx
+        );
+        const sliceDataUrl = pageCanvas.toDataURL("image/jpeg", 0.92);
+        const sliceHeightPt = sliceHeightPx / pxPerPt;
+        if (pageIndex > 0) pdf.addPage();
+        pdf.addImage(sliceDataUrl, "JPEG", 0, 0, pageWidthPt, sliceHeightPt);
+        renderedPx += sliceHeightPx;
+        pageIndex++;
+      }
+
+      const dataUri = pdf.output("datauristring");
+      const base64 = dataUri.split(",")[1] || "";
+      const filename = `${clientShortName || "Teklif"}_${proposalNumber || "000"}.pdf`;
+      return { base64, filename };
+    };
+
+    try {
+      const timeout = new Promise<null>((resolve) => {
+        setTimeout(() => resolve(null), 25000);
+      });
+      return await Promise.race([renderPdf(), timeout]);
+    } catch (err) {
+      console.error("PDF render failed:", err);
+      return null;
+    }
   };
 
   // Saves a base64 PDF payload to the user's device as a real file download.
@@ -2300,7 +2355,15 @@ export default function ServicesView({
 
     setIsSendingProposalEmail(true);
     try {
+      // This button explicitly promises "PDF Otomatik Ekli" (PDF auto-
+      // attached) — if PDF generation fails or times out, abort instead of
+      // silently sending an email with no attachment and still reporting
+      // success (that was the previous, confusing behavior).
       const pdf = await generateProposalPdfBase64().catch(() => null);
+      if (!pdf) {
+        alert("Teklif PDF'i oluşturulamadı, bu yüzden e-posta gönderilmedi. Lütfen A4 önizlemenin tam yüklendiğinden emin olup tekrar deneyin.");
+        return;
+      }
 
       const supabase = getSupabase();
       const {
@@ -2318,7 +2381,7 @@ export default function ServicesView({
           recipient: clientContactEmail,
           subject: mailSubject,
           body: mailBody.replace(/\n/g, "<br />"),
-          attachments: pdf ? [{ name: pdf.filename, contentType: "application/pdf", contentBytes: pdf.base64 }] : [],
+          attachments: [{ name: pdf.filename, contentType: "application/pdf", contentBytes: pdf.base64 }],
         }),
       });
       const payload = await response.json().catch(() => ({}));
