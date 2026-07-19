@@ -764,7 +764,7 @@ export default function App() {
                 <img
                   src="/logos/Giqlogo.png"
                   alt="Gemba IQ"
-                  className="h-[40px] w-auto object-contain shrink-0"
+                  className={`w-auto object-contain shrink-0 ${sidebarCollapsed ? "h-[34px]" : "h-[26px]"}`}
                 />
               )}
               {!sidebarCollapsed && (
