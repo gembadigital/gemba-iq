@@ -599,16 +599,19 @@ export default function ServicesView({
     }
   }, [clientTitle, isShortNameManuallyEdited]);
 
-  // "Müşteri İlgili Kişi" — the logged-in user's own name/email (the rep
+  // "Müşteri İlgili Kişi" — the logged-in user's own name (the rep
   // preparing this proposal), not a customer-side contact. Populated from
   // the real session profile once available; the rep can still edit it.
+  // "Müşteri E-posta Adresi" is the actual SEND-TO address (see placeholder
+  // "to: yetkili@firma.com") — it must be the customer's own email, so it
+  // is populated from the selected company's registered contact instead
+  // (see the company dropdown handler below), never from the logged-in user.
   const [clientContactPerson, setClientContactPerson] = useState("");
   const [clientContactEmail, setClientContactEmail] = useState("");
 
   useEffect(() => {
     if (actorName) setClientContactPerson((prev) => prev || actorName);
-    if (actorEmail) setClientContactEmail((prev) => prev || actorEmail);
-  }, [actorName, actorEmail]);
+  }, [actorName]);
 
   // Integrated Email Draft Templates
   const [emailTemplates, setEmailTemplates] = useState<{ id: string; name: string; subject: string; body: string }[]>(() => {
@@ -3062,12 +3065,19 @@ export default function ServicesView({
                                     setClientTitle(c.name);
                                     const parts = [c.billingAddress, c.billingDistrict, c.billingCity, c.billingCountry].filter(Boolean);
                                     setClientAddress(parts.join(", "));
-                                    // "Sorumlu Kişi" comes from the customer's own card — the Account
-                                    // Owner field (Hesap Temsilcisi) recorded on that company record.
+                                    // "Sorumlu Kişi" and "Müşteri E-posta Adresi" both come from the
+                                    // customer's own card — the company's registered contact person
+                                    // (Sirket Detayi > Kisiler). Falls back to the company's Hesap
+                                    // Temsilcisi (Account Owner) for the name if no contact is on file.
                                     // "Müşteri İlgili Kişi" is NOT company-specific — it's the logged-in
-                                    // user's own name/email (see the actorName/actorEmail effect above),
-                                    // so it's intentionally left untouched here.
-                                    setAssignedPm(c.accountOwner || "");
+                                    // user's own name (see the actorName effect above), so it's
+                                    // intentionally left untouched here.
+                                    const primaryContact = CrmDb.getContactsByCompany(c.id)[0];
+                                    const contactFullName = primaryContact
+                                      ? `${primaryContact.firstName} ${primaryContact.lastName}`.trim()
+                                      : "";
+                                    setAssignedPm(contactFullName || c.accountOwner || "");
+                                    setClientContactEmail(primaryContact?.email || "");
                                     setShowCompaniesDropdown(false);
                                   }}
                                   className="w-full text-left px-3 py-2 text-xs hover:bg-slate-100 dark:hover:bg-zinc-800 text-slate-800 dark:text-slate-200 block"
