@@ -1,5 +1,13 @@
 import React, { useState, useEffect, useRef } from "react";
-const logoImage = "https://lh3.googleusercontent.com/d/13bNnthJU4LIICB4iiF1a4GH1PEn05MBx";
+// Was a hardcoded external Google Drive link (lh3.googleusercontent.com).
+// That domain doesn't reliably serve CORS headers for hotlinked embedding,
+// so when html2canvas tried to fetch it while rendering the A4 assembly to
+// a PDF, the fetch could stall/hang with no built-in timeout — this is the
+// root cause of the proposal PDF generation appearing to freeze/loop
+// forever (see generateProposalPdfBase64 below). Using a same-origin local
+// asset removes that network/CORS dependency entirely and matches the logo
+// already used for the favicon and sidebar.
+const logoImage = "/logos/Giqlogo.png";
 import { 
   FileText, 
   FileSignature, 
@@ -2245,10 +2253,16 @@ export default function ServicesView({
 
     const renderPdf = async (): Promise<{ base64: string; filename: string }> => {
       const canvas = await html2canvas(sourceEl, {
-        scale: 2,
+        scale: 1.5,
         useCORS: true,
         backgroundColor: "#ffffff",
         logging: false,
+        // Without this, html2canvas waits indefinitely (no default timeout)
+        // for every <img>/background-image it needs to embed. A single slow
+        // or CORS-blocked image (e.g. an externally-hosted logo) would hang
+        // the whole render forever. 8s per image is generous but bounded —
+        // a timed-out image is just skipped instead of stalling the PDF.
+        imageTimeout: 8000,
       });
 
       const pdf = new jsPDF({ unit: "pt", format: "a4" });
