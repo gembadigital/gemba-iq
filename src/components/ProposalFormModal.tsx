@@ -116,10 +116,39 @@ export default function ProposalFormModal({
         setOwner(initialProposal.owner);
         setDescription(initialProposal.description || "");
         setSelectedServices(initialProposal.services || []);
-        setOptions(initialProposal.options);
-        
+
+        // initialProposal.options may only contain keys for options that
+        // were actually ACTIVE when the proposal was created (the "Teklif
+        // Oluştur" wizard in ServicesView.tsx only writes e.g. "Option 3"
+        // into the saved record if that option was toggled on — an inactive
+        // option is simply absent, not stored with zeros). This modal's own
+        // activeOptions state always tracks all four "Option 1".."Option 4"
+        // keys though, so toggling/reading the total for an option that
+        // wasn't in the saved record used to read options[key] as
+        // undefined and crash ("Cannot read properties of undefined
+        // (reading 'manDays')") the moment that option's checkbox was
+        // touched — and, before it ever got that far, it also meant that
+        // option's budget fields could never be edited at all (its edit
+        // card only renders for keys present in `options`). Normalizing to
+        // always include all four keys (defaulting missing ones to zero)
+        // fixes both: the crash, and the "can't edit/save option amounts"
+        // symptom.
+        const normalizedOptions: { [key: string]: ProposalOption } = {
+          "Option 1": defaultOption(),
+          "Option 2": defaultOption(),
+          "Option 3": defaultOption(),
+          "Option 4": defaultOption(),
+          ...initialProposal.options,
+        };
+        setOptions(normalizedOptions);
+
         // Active options
-        const active: { [key: string]: boolean } = {};
+        const active: { [key: string]: boolean } = {
+          "Option 1": false,
+          "Option 2": false,
+          "Option 3": false,
+          "Option 4": false,
+        };
         Object.keys(initialProposal.options).forEach((key) => {
           const opt = initialProposal.options[key];
           active[key] = opt.manDays > 0 || opt.dailyRate > 0 || opt.training || opt.consulting || opt.workshop;
@@ -128,22 +157,35 @@ export default function ProposalFormModal({
         if (!active["Option 1"]) active["Option 1"] = true;
         setActiveOptions(active);
 
-        // Load templates from current version or pre-populated
+        // Load templates from current version or pre-populated. NOTE: for
+        // an EXISTING proposal (this branch), if methodology/projectPlan/
+        // timeline/coverPage were never actually populated (e.g. proposals
+        // created by the ServicesView wizard, which has its own richer,
+        // differently-shaped content model and doesn't fill these specific
+        // fields), we now leave them BLANK instead of silently injecting
+        // PRE_POPULATED_TEMPLATES' generic boilerplate text. That
+        // boilerplate has nothing to do with the real proposal and was
+        // exactly the "kart ile ilgisiz bilgiler" (unrelated info on the
+        // card) users were seeing — showing an empty field is honest about
+        // what data actually exists; the PRE_POPULATED_TEMPLATES starter
+        // text is still used below, but only for genuinely NEW proposals
+        // (see the `else` branch), where a helpful starting template makes
+        // sense.
         if (initialProposal.versions && initialProposal.versions.length > 0) {
           const latestVer = initialProposal.versions.find(v => v.version === initialProposal.currentVersion) || initialProposal.versions[0];
-          setCoverPage(initialProposal.coverPage || latestVer.coverPage || initialProposal.proposalSubject || PRE_POPULATED_TEMPLATES["Default"].coverPage);
-          setMethodology(initialProposal.methodology || latestVer.methodology || PRE_POPULATED_TEMPLATES["Default"].methodology);
-          setProjectPlan(initialProposal.projectPlan || latestVer.projectPlan || PRE_POPULATED_TEMPLATES["Default"].projectPlan);
-          setTimeline(initialProposal.timeline || latestVer.timeline || PRE_POPULATED_TEMPLATES["Default"].timeline);
-          setTerms(initialProposal.terms || latestVer.terms || PRE_POPULATED_TEMPLATES["Default"].terms);
+          setCoverPage(initialProposal.coverPage || latestVer.coverPage || initialProposal.proposalSubject || "");
+          setMethodology(initialProposal.methodology || latestVer.methodology || "");
+          setProjectPlan(initialProposal.projectPlan || latestVer.projectPlan || "");
+          setTimeline(initialProposal.timeline || latestVer.timeline || "");
+          setTerms(initialProposal.terms || latestVer.terms || "");
           setCoverImage(initialProposal.coverImage || latestVer.coverImage || "");
           setPageImage(initialProposal.pageImage || latestVer.pageImage || "");
         } else {
-          setCoverPage(initialProposal.coverPage || initialProposal.proposalSubject || PRE_POPULATED_TEMPLATES["Default"].coverPage);
-          setMethodology(initialProposal.methodology || PRE_POPULATED_TEMPLATES["Default"].methodology);
-          setProjectPlan(initialProposal.projectPlan || PRE_POPULATED_TEMPLATES["Default"].projectPlan);
-          setTimeline(initialProposal.timeline || PRE_POPULATED_TEMPLATES["Default"].timeline);
-          setTerms(initialProposal.terms || PRE_POPULATED_TEMPLATES["Default"].terms);
+          setCoverPage(initialProposal.coverPage || initialProposal.proposalSubject || "");
+          setMethodology(initialProposal.methodology || "");
+          setProjectPlan(initialProposal.projectPlan || "");
+          setTimeline(initialProposal.timeline || "");
+          setTerms(initialProposal.terms || "");
           setCoverImage(initialProposal.coverImage || "");
           setPageImage(initialProposal.pageImage || "");
         }

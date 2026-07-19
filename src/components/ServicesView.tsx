@@ -2429,6 +2429,9 @@ export default function ServicesView({
         body: JSON.stringify({
           source: selectedProposalSender,
           recipient: clientContactEmail,
+          // Sistem/organizasyon kaydı için teklif e-postasının bir kopyası
+          // her zaman info@gembapartner.com'a CC olarak gider.
+          cc: "info@gembapartner.com",
           subject: mailSubject,
           body: mailBody.replace(/\n/g, "<br />"),
           attachments: [{ name: pdf.filename, contentType: "application/pdf", contentBytes: pdf.base64 }],
