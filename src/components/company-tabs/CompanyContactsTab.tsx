@@ -2,10 +2,6 @@ import React, { useState } from "react";
 import { CrmDb, Contact } from "../../lib/CrmDb";
 import { Plus, Trash2, Edit2, Mail, Phone, Users, X, Check, Search, User } from "lucide-react";
 import { useLanguage } from "../../lib/LanguageContext";
-import { getActiveOrganizationId } from "../../lib/tenantStorage";
-import type { LeadProfile } from "../../types";
-
-const LEAD_PROFILES_KEY = "crm_lead_profiles";
 
 interface CompanyContactsTabProps {
   companyId: string;
@@ -74,16 +70,37 @@ export default function CompanyContactsTab({
       return;
     }
 
+    // Şirket kartındaki sorumlu/personel kaydı, kişi rehberi olarak
+    // kullanılan Aday Profilleri listesine de otomatik senkronize edilir
+    // (ekleme ve düzenleme her ikisinde de) — email varsa dedupe edip
+    // eksik alanları tamamlar, yoksa yeni kayıt açar.
+    try {
+      const companyInfo = CrmDb.getCompanyById(companyId);
+      CrmDb.upsertLeadProfile({
+        firstName: formState.firstName,
+        lastName: formState.lastName,
+        email: formState.email,
+        company: companyInfo?.name || "",
+        department: formState.department,
+        industry: companyInfo?.industry || "",
+        address: companyInfo
+          ? `${companyInfo.billingAddress || ""}, ${companyInfo.billingCity || ""}, ${companyInfo.billingCountry || ""}`.replace(/^,\s*|,\s*$/g, "")
+          : "",
+      });
+    } catch (err) {
+      console.error("Auto sync to Lead database failed:", err);
+    }
+
     if (editingContactId) {
       // Edit in CrmDb
       const list = CrmDb.getContacts();
-      const updated = list.map(c => 
-        c.id === editingContactId 
-          ? { ...c, ...formState } 
+      const updated = list.map(c =>
+        c.id === editingContactId
+          ? { ...c, ...formState }
           : c
       );
       CrmDb.saveContacts(updated);
-      
+
       if (onLogTimelineEvent) {
         onLogTimelineEvent(
           t("Contact Updated"),
@@ -103,48 +120,7 @@ export default function CompanyContactsTab({
         leadStatus: formState.leadStatus,
         leadSegment: formState.leadSegment
       });
-      
-      // Automatically add to the active organization's shared lead registry.
-      try {
-        const leads = CrmDb.getKv<LeadProfile[]>(LEAD_PROFILES_KEY, []);
-        
-        const companyInfo = CrmDb.getCompanyById(companyId);
-        const companyName = companyInfo ? companyInfo.name : "";
-        const industry = companyInfo ? companyInfo.industry : "";
-        const address = companyInfo ? `${companyInfo.billingAddress || ""}, ${companyInfo.billingCity || ""}, ${companyInfo.billingCountry || ""}`.replace(/^,\s*|,\s*$/g, '') : "";
 
-        // Check if a lead with same email or same first and last name already exists
-        const exists = formState.email 
-          ? leads.some((l: any) => l.email && l.email.toLowerCase() === formState.email.trim().toLowerCase())
-          : leads.some((l: any) => l.firstName?.toLowerCase() === formState.firstName.trim().toLowerCase() && l.lastName?.toLowerCase() === formState.lastName.trim().toLowerCase());
-
-        if (!exists) {
-          const newLead = {
-            id: `lead_${Date.now()}_${Math.floor(Math.random() * 1000)}`,
-            no: leads.length + 1,
-            firstName: formState.firstName.trim(),
-            lastName: formState.lastName.trim(),
-            email: formState.email.trim(),
-            company: companyName,
-            department: formState.department.trim(),
-            address: address,
-            industry: industry,
-            leadDemand: "",
-            leadStatus: "New",
-            leadSegment: "Cold",
-            customField1: "",
-            customField2: "",
-            deliveryStatus: "idle",
-            openCount: 0,
-            organization_id: getActiveOrganizationId() || undefined,
-          };
-          leads.push(newLead);
-          CrmDb.setKv(LEAD_PROFILES_KEY, leads);
-        }
-      } catch (err) {
-        console.error("Auto sync to Lead database failed:", err);
-      }
-      
       if (onLogTimelineEvent) {
         onLogTimelineEvent(
           t("New Contact Added"),

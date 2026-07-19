@@ -1275,6 +1275,21 @@ export default function DealManagementView({ initialTab = "dashboard", onNavigat
       setDeals((prev) => [...prev, newD]);
     }
 
+    // Fırsat/Süreç Yönetimi formundaki sorumlu kişi (contactPerson +
+    // contactEmail) de kişi rehberi olan Aday Profilleri'ne senkronize
+    // edilir — email varsa dedupe edip eksik alanları tamamlar.
+    if (dealFormState.contactEmail && dealFormState.contactEmail.trim()) {
+      try {
+        CrmDb.upsertLeadProfile({
+          fullName: dealFormState.contactPerson,
+          email: dealFormState.contactEmail,
+          company: dealFormState.companyName,
+        });
+      } catch (err) {
+        console.error("Auto sync to Lead database failed:", err);
+      }
+    }
+
     setIsAddModalOpen(false);
   };
 

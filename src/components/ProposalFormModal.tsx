@@ -455,6 +455,22 @@ export default function ProposalFormModal({
       pageImage,
     };
 
+    // Teklif Oluştur/Düzenle formundaki sorumlu kişi (contactPerson +
+    // contactEmail) — mevcut bir Contact'tan seçilmiş ya da doğrudan
+    // yazılmış yeni bir isim/email olsun — kişi rehberi olan Aday
+    // Profilleri'ne de senkronize edilir.
+    if (contactEmail && contactEmail.trim()) {
+      try {
+        CrmDb.upsertLeadProfile({
+          fullName: contactPerson,
+          email: contactEmail,
+          company: company.name,
+        });
+      } catch (err) {
+        console.error("Auto sync to Lead database failed:", err);
+      }
+    }
+
     onSave(proposalData);
   };
 

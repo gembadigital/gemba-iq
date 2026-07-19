@@ -2,7 +2,8 @@ import { Company } from "../components/CompaniesView";
 import { Deal, ProjectRecord } from "../components/DealManagementView";
 import type { Task, TaskColumn, TaskNotification, NotificationSettings } from "../components/TasksView";
 import { Proposal } from "../types/proposal";
-import { getTenantActorName } from "./tenantStorage";
+import type { LeadProfile } from "../types";
+import { getTenantActorName, getActiveOrganizationId } from "./tenantStorage";
 import {
   type CrmSnapshot,
   type OrgAuxiliaryData,
@@ -120,6 +121,14 @@ const cache: CrmCache = {
 function persistSoon(fn: () => Promise<void>) {
   void fn().catch((err) => console.error("CRM persist failed:", err));
 }
+
+// Aday Profilleri (Lead Profiles) sayfasının kullandığı tek merkezi
+// kişi/rehber listesi. Şirket kartı (sorumlu/personel), Hedef Müşteri,
+// Fırsat ve Süreç Yönetimi, Teklif Yönetimi/Oluştur gibi uygulamanın her
+// köşesinde bir isim+email girildiğinde CrmDb.upsertLeadProfile() ile
+// buraya da otomatik kaydediliyor — kullanıcı bunu "kişi listemiz" olarak
+// yönetmek istedi.
+const LEAD_PROFILES_KEY = "crm_lead_profiles";
 
 function syncAuxiliaryFromCache() {
   cache.auxiliary.emails = cache.emails;
@@ -396,6 +405,77 @@ export const CrmDb = {
     contacts.push(newContact);
     this.saveContacts(contacts);
     return newContact;
+  },
+
+  // Uygulamanın herhangi bir yerinde (şirket kartı sorumlu/personel,
+  // Hedef Müşteri, Fırsat/Teklif kişi alanları) bir isim+email girildiğinde
+  // çağrılır; e-posta zaten Aday Profilleri'nde varsa kaydı ezmeden eksik
+  // alanları (şirket/departman/adres/sektör) tamamlar, yoksa yeni bir
+  // kayıt olarak ekler. Geçersiz/boş e-posta veya isimsiz girişlerde
+  // sessizce hiçbir şey yapmaz (null döner).
+  upsertLeadProfile(input: {
+    firstName?: string;
+    lastName?: string;
+    fullName?: string;
+    email: string | undefined;
+    company?: string;
+    department?: string;
+    industry?: string;
+    address?: string;
+  }): LeadProfile | null {
+    const email = (input.email || "").trim();
+    if (!email || !email.includes("@")) return null;
+
+    let firstName = (input.firstName || "").trim();
+    let lastName = (input.lastName || "").trim();
+    if (!firstName && !lastName && input.fullName) {
+      const words = input.fullName.trim().split(/\s+/).filter(Boolean);
+      firstName = words[0] || "";
+      lastName = words.slice(1).join(" ");
+    }
+    if (!firstName && !lastName) return null;
+
+    const leads = CrmDb.getKv<LeadProfile[]>(LEAD_PROFILES_KEY, []);
+    const idx = leads.findIndex((l) => (l.email || "").trim().toLowerCase() === email.toLowerCase());
+
+    if (idx >= 0) {
+      const existing = leads[idx];
+      const merged: LeadProfile = {
+        ...existing,
+        firstName: existing.firstName || firstName,
+        lastName: existing.lastName || lastName,
+        company: existing.company || input.company || "",
+        department: existing.department || input.department || "",
+        industry: existing.industry || input.industry || "",
+        address: existing.address || input.address || "",
+      };
+      leads[idx] = merged;
+      CrmDb.setKv(LEAD_PROFILES_KEY, leads);
+      return merged;
+    }
+
+    const newLead: LeadProfile = {
+      id: `lead_${Date.now()}_${Math.floor(Math.random() * 1000)}`,
+      organization_id: getActiveOrganizationId() || undefined,
+      no: leads.length + 1,
+      firstName,
+      lastName,
+      email,
+      company: input.company || "",
+      department: input.department || "",
+      address: input.address || "",
+      industry: input.industry || "",
+      leadDemand: "",
+      leadStatus: "New",
+      leadSegment: "Cold",
+      customField1: "",
+      customField2: "",
+      deliveryStatus: "idle",
+      openCount: 0,
+    };
+    leads.push(newLead);
+    this.setKv(LEAD_PROFILES_KEY, leads);
+    return newLead;
   },
 
   getDeals(): Deal[] {

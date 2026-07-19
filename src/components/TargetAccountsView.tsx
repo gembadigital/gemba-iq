@@ -168,7 +168,25 @@ export default function TargetAccountsView({
 
     const updatedList = [...accounts, added];
     updateAccountsAndPersist(updatedList);
-    
+
+    // Kullanıcının gerçekten girdiği bir sorumlu e-postası varsa (otomatik
+    // üretilen "opex@..." yer tutucu değil) kişi rehberi olan Aday
+    // Profilleri'ne de senkronize et.
+    if (newAccount.contactEmail.trim()) {
+      try {
+        CrmDb.upsertLeadProfile({
+          firstName: newAccount.contactName.trim(),
+          lastName: newAccount.contactSurname.trim(),
+          email: newAccount.contactEmail.trim(),
+          company: added.companyName,
+          department: newAccount.department.trim(),
+          industry: added.industryTag,
+        });
+      } catch (err) {
+        console.error("Auto sync to Lead database failed:", err);
+      }
+    }
+
     // Clear inputs and close accordion
     setNewAccount({
       companyName: "",
@@ -213,6 +231,25 @@ export default function TargetAccountsView({
 
     const updated = accounts.map(a => a.id === editForm.id ? editForm : a);
     updateAccountsAndPersist(updated);
+
+    // Yer tutucu "opex@..." otomatik e-postasını değil, gerçekten girilmiş
+    // bir sorumlu e-postasını Aday Profilleri kişi rehberine senkronize et.
+    const autoFallbackEmail = `opex@${editForm.companyName.toLowerCase().replace(/[^a-z0-9]/g, "")}.com`;
+    if (editForm.contactEmail && editForm.contactEmail.trim() && editForm.contactEmail.trim() !== autoFallbackEmail) {
+      try {
+        CrmDb.upsertLeadProfile({
+          firstName: editForm.contactName,
+          lastName: editForm.contactSurname,
+          email: editForm.contactEmail,
+          company: editForm.companyName,
+          department: editForm.department,
+          industry: editForm.industryTag,
+        });
+      } catch (err) {
+        console.error("Auto sync to Lead database failed:", err);
+      }
+    }
+
     setEditingAccountId(null);
     setEditForm(null);
     triggerToast(t("Target account details updated successfully."), "success");
