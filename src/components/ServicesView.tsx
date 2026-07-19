@@ -54,7 +54,16 @@ import {
 } from "lucide-react";
 import { convertCurrencyToTurkishWords, convertNumberToTurkishWords } from "./ContractManagerView";
 import { jsPDF } from "jspdf";
-import html2canvas from "html2canvas";
+// html2canvas-pro (not the plain "html2canvas" package) — this app's CSS is
+// built with Tailwind v4, whose default color palette is defined using
+// modern oklch() color functions. Plain html2canvas 1.4.1 cannot parse
+// oklch()/lab()/lch()/color-mix() and throws when it hits them while
+// resolving computed styles, which is virtually every element here (badges,
+// borders, backgrounds all use Tailwind's default palette) — this is what
+// was actually breaking real proposal PDFs (e.g. "Vakko"), not just the
+// earlier external-logo timeout. html2canvas-pro is a maintained,
+// API-compatible fork that adds support for these color functions.
+import html2canvas from "html2canvas-pro";
 import Docxtemplater from "docxtemplater";
 import PizZip from "pizzip";
 import { CrmDb } from "../lib/CrmDb";
