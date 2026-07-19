@@ -650,8 +650,14 @@ You must output a raw valid JSON ARRAY strictly matching this structure without 
       // generateWithRetry) — hepsi tükendiğinde kullanıcıya çiğ JSON hata metni
       // yerine anlaşılır bir mesaj + tekrar dene imkanı göster.
       const isOverloaded = /UNAVAILABLE|high demand|503|overloaded/i.test(rawMessage);
+      // Distinguish a permanent server-config problem (missing GEMINI_API_KEY) from a
+      // transient overload — these need very different user actions (fix env var + redeploy
+      // vs. just retry), and the raw server error was previously shown verbatim either way.
+      const isMissingKey = /GEMINI_API_KEY is not configured/i.test(rawMessage);
       setGoogleSearchError(
-        isOverloaded
+        isMissingKey
+          ? "Yapay zeka arama servisi yapılandırılmamış: sunucuda GEMINI_API_KEY tanımlı değil. Bu geçici bir hata değildir — tekrar denemek sonucu değiştirmez. Yönetici Paneli > 8. Sistem Sağlığı bölümünden durumu doğrulayabilir, düzeltmek için Vercel Project Settings > Environment Variables üzerinden anahtar eklenip yeniden dağıtım (redeploy) yapılmalıdır."
+          : isOverloaded
           ? "Yapay zeka arama servisi şu anda çok yoğun. Sistem birkaç kez otomatik tekrar denedi ancak başarılı olamadı. Lütfen bir dakika sonra tekrar deneyin."
           : rawMessage || "Arama başarısız oldu. Lütfen tekrar deneyin."
       );

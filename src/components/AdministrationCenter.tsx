@@ -814,22 +814,66 @@ export default function AdministrationCenter({
     alert("Üretken AI Talimatı (Prompt Template) başarıyla kaydedildi!");
   };
 
-  // 8. Integration Health Telemetry
-  const [healthStatus, setHealthStatus] = useState({
-    graphApi: "🟢 ÇALIŞIYOR (SUCCESS)",
-    geminiApi: "🟢 ÇALIŞIYOR (120 RPM)",
-    tavilyApi: "🟢 BAĞLI (Simülasyon Fallback)",
-    cronSync: "🟢 ÇALIŞIYOR"
-  });
+  // 8. Integration Health Telemetry — real status pulled from /api/config (no more hardcoded fake "green")
+  const [integrationHealth, setIntegrationHealth] = useState<{
+    hasGeminiKey: boolean | null;
+    hasGraphCredentials: boolean | null;
+    hasTavilyKey: boolean | null;
+    lastChecked: string | null;
+    error: boolean;
+  }>({ hasGeminiKey: null, hasGraphCredentials: null, hasTavilyKey: null, lastChecked: null, error: false });
   const [isRefreshingHealth, setIsRefreshingHealth] = useState(false);
 
-  const handleRefreshHealth = () => {
+  const fetchIntegrationHealth = async (silent?: boolean) => {
     setIsRefreshingHealth(true);
-    setTimeout(() => {
+    try {
+      const res = await fetch("/api/config");
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      const data = await res.json();
+      setIntegrationHealth({
+        hasGeminiKey: Boolean(data.hasGeminiKey),
+        hasGraphCredentials: Boolean(data.hasClientKeys),
+        hasTavilyKey: Boolean(data.hasTavilyKey),
+        lastChecked: new Date().toLocaleTimeString(),
+        error: false,
+      });
+      if (!silent) {
+        const missing: string[] = [];
+        if (!data.hasGeminiKey) missing.push("Gemini API Key");
+        if (!data.hasClientKeys) missing.push("Microsoft Graph (Azure)");
+        if (!data.hasTavilyKey) missing.push("Tavily API Key");
+        alert(
+          missing.length === 0
+            ? "Tüm entegrasyonlar sunucu tarafında yapılandırılmış görünüyor."
+            : `Eksik yapılandırma tespit edildi: ${missing.join(", ")}. Bu servisler Vercel Environment Variables üzerinden ayarlanmalı.`
+        );
+        addAuditLog(
+          actorName,
+          "Sistem Sağlığı Kontrolü",
+          missing.length === 0
+            ? "Tüm sistem servisleri ve harici API anahtarları sunucuda yapılandırılmış olarak doğrulandı."
+            : `Eksik yapılandırma: ${missing.join(", ")}.`,
+          "Sistem Sağlığı",
+          missing.length === 0 ? "Success" : "Warning"
+        );
+      }
+    } catch (e) {
+      setIntegrationHealth(prev => ({ ...prev, error: true, lastChecked: new Date().toLocaleTimeString() }));
+      if (!silent) {
+        alert("Sistem sağlığı bilgisi alınamadı. /api/config uç noktasına erişilemedi.");
+      }
+    } finally {
       setIsRefreshingHealth(false);
-      alert("Tüm entegrasyonlar ve API servisleri başarıyla doğrulandı. Sistem sağlığı: %100");
-      addAuditLog(actorName, "Sistem Sağlığı Kontrolü", "Tüm sistem servisleri ve harici API'ler başarıyla test edildi.", "Sistem Sağlığı");
-    }, 800);
+    }
+  };
+
+  useEffect(() => {
+    fetchIntegrationHealth(true);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  const handleRefreshHealth = () => {
+    fetchIntegrationHealth(false);
   };
 
   const organizationMailboxCard = (
@@ -2103,8 +2147,18 @@ export default function AdministrationCenter({
                 </div>
                 <div className="flex items-center justify-between text-[11px] pt-1">
                   <span className="text-slate-500">{L("Kimlik Tanımı:", "Identity:")}</span>
-                  <span className="text-slate-600 dark:text-slate-300 font-mono font-bold">{aiApiKeyName} ✅</span>
+                  <span className="text-slate-600 dark:text-slate-300 font-mono font-bold">
+                    {aiApiKeyName} {integrationHealth.hasGeminiKey === null ? "…" : integrationHealth.hasGeminiKey ? "✅" : "❌"}
+                  </span>
                 </div>
+                {integrationHealth.hasGeminiKey === false && (
+                  <div className="text-[10px] text-rose-600 font-bold pt-0.5">
+                    {L(
+                      "GEMINI_API_KEY sunucuda tanımlı değil. Şirket Arama bu nedenle çalışmıyor — Vercel Environment Variables üzerinden eklenip yeniden dağıtım (redeploy) yapılmalı.",
+                      "GEMINI_API_KEY is not set on the server. Company Search will not work until it's added under Vercel Environment Variables and redeployed."
+                    )}
+                  </div>
+                )}
               </div>
 
               {/* Prompt template modifiers */}
@@ -2171,10 +2225,25 @@ export default function AdministrationCenter({
           {/* ==================== SECTION 8: SYSTEM HEALTH ==================== */}
           {activeSubTab === "systemhealth" && (
             <div className="space-y-6 animate-in fade-in duration-100">
-              <div className="border-b border-slate-100 dark:border-zinc-800 pb-4 text-left">
-                <h3 className="text-lg font-bold text-slate-800 dark:text-zinc-150">
-                  {L("8. Sistem ve Entegrasyon Sağlığı Gösterge Paneli", "8. System & Integration Health Dashboard")}
-                </h3>
+              <div className="border-b border-slate-100 dark:border-zinc-800 pb-4 text-left flex items-center justify-between gap-3">
+                <div>
+                  <h3 className="text-lg font-bold text-slate-800 dark:text-zinc-150">
+                    {L("8. Sistem ve Entegrasyon Sağlığı Gösterge Paneli", "8. System & Integration Health Dashboard")}
+                  </h3>
+                  {integrationHealth.lastChecked && (
+                    <p className="text-[10px] text-slate-400 font-mono mt-0.5">
+                      {L("Son kontrol:", "Last checked:")} {integrationHealth.lastChecked}
+                    </p>
+                  )}
+                </div>
+                <button
+                  type="button"
+                  onClick={handleRefreshHealth}
+                  disabled={isRefreshingHealth}
+                  className="p-1.5 px-3 bg-white hover:bg-slate-50 border border-slate-200 dark:bg-[#1f1f1e] dark:border-zinc-800 rounded-lg text-[10px] font-bold text-slate-700 dark:text-zinc-300 font-mono transition-all disabled:opacity-50"
+                >
+                  {isRefreshingHealth ? L("Kontrol Ediliyor…", "Checking…") : L("Şimdi Kontrol Et", "Check Now")}
+                </button>
               </div>
 
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
@@ -2217,37 +2286,51 @@ export default function AdministrationCenter({
                 <div className="space-y-2.5">
                   <div className="flex items-center justify-between p-3 bg-slate-50/60 dark:bg-zinc-900 border border-slate-150 rounded-xl text-xs">
                     <span className="font-bold text-slate-700 dark:text-zinc-300">
-                      {L("Microsoft Graph API Durumu (Azure AD):", "Microsoft Graph API Status (Azure AD):")}
+                      {L("Microsoft Graph API Kimlik Bilgileri (Azure AD):", "Microsoft Graph API Credentials (Azure AD):")}
                     </span>
-                    <span className="text-emerald-600 font-bold flex items-center gap-1 font-mono uppercase">
-                      {L("🟢 ÇALIŞIYOR", "🟢 RUNNING")}
-                    </span>
+                    {integrationHealth.hasGraphCredentials === null ? (
+                      <span className="text-slate-400 font-bold font-mono uppercase">{L("KONTROL EDİLİYOR…", "CHECKING…")}</span>
+                    ) : integrationHealth.hasGraphCredentials ? (
+                      <span className="text-emerald-600 font-bold flex items-center gap-1 font-mono uppercase">{L("🟢 YAPILANDIRILMIŞ", "🟢 CONFIGURED")}</span>
+                    ) : (
+                      <span className="text-rose-600 font-bold flex items-center gap-1 font-mono uppercase">{L("🔴 EKSİK", "🔴 MISSING")}</span>
+                    )}
                   </div>
 
                   <div className="flex items-center justify-between p-3 bg-slate-50/60 dark:bg-zinc-900 border border-slate-150 rounded-xl text-xs">
                     <span className="font-bold text-slate-700 dark:text-zinc-300">
-                      {L("Google Gemini Üretken Yapay Zeka Kapasitesi:", "Google Gemini Generative AI Capacity:")}
+                      {L("Google Gemini API Anahtarı (GEMINI_API_KEY):", "Google Gemini API Key (GEMINI_API_KEY):")}
                     </span>
-                    <span className="text-emerald-600 font-bold flex items-center gap-1 font-mono uppercase">
-                      {L("🟢 ÇALIŞIYOR (120 RPM)", "🟢 RUNNING (120 RPM)")}
-                    </span>
+                    {integrationHealth.hasGeminiKey === null ? (
+                      <span className="text-slate-400 font-bold font-mono uppercase">{L("KONTROL EDİLİYOR…", "CHECKING…")}</span>
+                    ) : integrationHealth.hasGeminiKey ? (
+                      <span className="text-emerald-600 font-bold flex items-center gap-1 font-mono uppercase">{L("🟢 YAPILANDIRILMIŞ", "🟢 CONFIGURED")}</span>
+                    ) : (
+                      <span className="text-rose-600 font-bold flex items-center gap-1 font-mono uppercase">{L("🔴 EKSİK", "🔴 MISSING")}</span>
+                    )}
                   </div>
 
                   <div className="flex items-center justify-between p-3 bg-slate-50/60 dark:bg-zinc-900 border border-slate-150 rounded-xl text-xs">
                     <span className="font-bold text-slate-700 dark:text-zinc-300">
-                      {L("Tavily Arama Motoru API Entegrasyonu:", "Tavily Search Engine API Integration:")}
+                      {L("Tavily Arama Motoru API Anahtarı:", "Tavily Search Engine API Key:")}
                     </span>
-                    <span className="text-amber-600 font-bold flex items-center gap-1 font-mono uppercase">
-                      {L("🟢 BAĞLI (Simülasyon Yedek)", "🟢 CONNECTED (Simulation Fallback)")}
-                    </span>
+                    {integrationHealth.hasTavilyKey === null ? (
+                      <span className="text-slate-400 font-bold font-mono uppercase">{L("KONTROL EDİLİYOR…", "CHECKING…")}</span>
+                    ) : integrationHealth.hasTavilyKey ? (
+                      <span className="text-emerald-600 font-bold flex items-center gap-1 font-mono uppercase">{L("🟢 YAPILANDIRILMIŞ", "🟢 CONFIGURED")}</span>
+                    ) : (
+                      <span className="text-amber-600 font-bold flex items-center gap-1 font-mono uppercase">{L("🟡 EKSİK (opsiyonel)", "🟡 MISSING (optional)")}</span>
+                    )}
                   </div>
 
                   <div className="flex items-center justify-between p-3 bg-slate-50/60 dark:bg-zinc-900 border border-slate-150 rounded-xl text-xs">
                     <span className="font-bold text-slate-700 dark:text-zinc-300">
-                      {L("Masaüstü E-posta Senkronizasyonu (Cron daemon):", "Desktop Email Sync (Cron daemon):")}
+                      {L("Organizasyon Posta Kutusu Bağlantısı:", "Organization Mailbox Connection:")}
                     </span>
-                    <span className="text-emerald-600 font-bold flex items-center gap-1 font-mono uppercase">
-                      {L("🟢 ÇALIŞIYOR", "🟢 RUNNING")}
+                    <span className={`font-bold flex items-center gap-1 font-mono uppercase ${
+                      organizationMailbox?.status === "Connected" ? "text-emerald-600" : "text-rose-600"
+                    }`}>
+                      {organizationMailbox?.status === "Connected" ? L("🟢 BAĞLI", "🟢 CONNECTED") : L("🔴 BAĞLI DEĞİL", "🔴 NOT CONNECTED")}
                     </span>
                   </div>
                 </div>
@@ -2256,11 +2339,11 @@ export default function AdministrationCenter({
               {/* System Error metrics */}
               <div className="p-4 rounded-xl bg-slate-50/50 border border-slate-200 dark:bg-neutral-900 text-xs text-slate-700 dark:text-zinc-300">
                 <strong className="block font-bold text-slate-800 dark:text-zinc-200 uppercase font-mono tracking-wider text-[10px] mb-1">
-                  {L("⏱️ OPERASYONEL ARIZA VE ÇAKIŞMALAR", "⏱️ OPERATIONAL FAILURES AND CONFLICTS")}
+                  {L("ℹ️ NASIL OKUNUR", "ℹ️ HOW TO READ THIS")}
                 </strong>
                 {L(
-                  "Son 48 saat içinde hiçbir kritik kesinti veya veri tabanı çöküşü saptanmamıştır. 1 adet Microsoft Graph e-posta okuma yetki aşımı log (Yetki Yok) olarak başarıyla yakalanıp e-posta detayı günlüğüne raporlanmıştır.",
-                  "No critical outages or database crashes detected in the last 48 hours. One Microsoft Graph email read permission exceeded log (No Permission) was successfully captured and reported to the email detail log."
+                  "Yukarıdaki durumlar Vercel sunucu ortam değişkenlerinin (Environment Variables) gerçekten tanımlı olup olmadığını gösterir — API'lerin fiilen yanıt verdiğini garanti etmez (örn. geçersiz bir anahtar da 'YAPILANDIRILMIŞ' görünebilir). 'EKSİK' görünen bir servis Vercel Project Settings → Environment Variables üzerinden eklenip yeniden dağıtılmalıdır. Posta kutusu bağlı görünse bile e-posta gönderimi başarısız olabilir; asıl hatayı görmek için Organizasyon Posta Kutusu kartındaki 'Test' butonunu kullanın.",
+                  "The statuses above show whether the Vercel server environment variables are actually set — they do not guarantee the APIs are actively responding (e.g. an invalid key can still show as 'CONFIGURED'). A service shown as 'MISSING' must be added under Vercel Project Settings → Environment Variables and redeployed. Even if the mailbox shows as connected, sending mail can still fail — use the 'Test' button on the Organization Mailbox card to see the real underlying error."
                 )}
               </div>
             </div>
