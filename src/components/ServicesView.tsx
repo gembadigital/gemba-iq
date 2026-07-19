@@ -2192,7 +2192,21 @@ export default function ServicesView({
       .replace(/width:\s*210mm/gi, "width: 100%")
       .replace(/height:\s*297mm/gi, "")
       .replace(/box-shadow:[^;"]+/gi, "")
-      .replace(/margin-bottom:[^;"]+/gi, "margin-bottom: 20px");
+      .replace(/margin-bottom:[^;"]+/gi, "margin-bottom: 20px")
+      // Word's HTML import doesn't support background-size at all, so the
+      // cover/page CSS "background-image: url(...); background-size: 100%
+      // 100%;" trick (which stretches a real image, or our 1x1 blank
+      // placeholder cover.png/page.png, to fill the A4 page in a browser or
+      // in the PDF/html2canvas render) shows up in Word as a tiny,
+      // unscaled image tiled/anchored in a corner — exactly the "small
+      // cover png / page png with small text on top of it" artifact.
+      // Word cannot faithfully reproduce this full-bleed background design
+      // regardless (that's what the PDF export is for); stripping both
+      // properties here means Word just shows a clean white page with the
+      // real text/table content at its correct size, instead of a broken
+      // thumbnail image with content crammed around it.
+      .replace(/background-image:\s*url\([^)]*\);?/gi, "")
+      .replace(/background-size:[^;"]+;?/gi, "");
 
     const docContent = `
       <html xmlns:o="urn:schemas-microsoft-com:office:office"
@@ -2272,6 +2286,19 @@ export default function ServicesView({
         // the whole render forever. 8s per image is generous but bounded —
         // a timed-out image is just skipped instead of stalling the PDF.
         imageTimeout: 8000,
+        // Without explicit width/height/windowWidth/windowHeight, html2canvas
+        // sizes its internal capture viewport to the CURRENT browser window,
+        // not the full (much taller) multi-page A4 assembly. That's why a
+        // multi-page proposal only ever downloaded roughly one screen's
+        // worth of the first page: everything beyond the visible window
+        // height was simply never captured, not just mis-sliced afterward.
+        // Passing the element's real full scroll size forces html2canvas to
+        // render the entire document regardless of what's currently
+        // scrolled into view or how tall the browser window is.
+        width: sourceEl.scrollWidth,
+        height: sourceEl.scrollHeight,
+        windowWidth: sourceEl.scrollWidth,
+        windowHeight: sourceEl.scrollHeight,
       });
 
       const pdf = new jsPDF({ unit: "pt", format: "a4" });
