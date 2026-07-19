@@ -33,7 +33,7 @@ import { PROPOSAL_PLACEHOLDERS } from "../lib/proposalPlaceholderEngine";
 import ProposalFormModal from "./ProposalFormModal";
 import { Company } from "./CompaniesView";
 import { CrmDb } from "../lib/CrmDb";
-import { generateProposalPdfBlobUrl } from "../lib/proposalPdf";
+import { generateProposalPdfBlobUrl, generateProposalPdfBlob } from "../lib/proposalPdf";
 import {
   createEnterpriseProposal,
   createProposalRevision,
@@ -395,6 +395,22 @@ export default function ProposalManagementView() {
     document.body.appendChild(a);
     a.click();
     document.body.removeChild(a);
+  };
+
+  // Direct PDF download for a saved proposal \u2014 previously the list only
+  // offered a Word (.doc) download; the user asked for PDF to be available
+  // directly instead of Word where possible. Uses the same jsPDF renderer
+  // already wired to the detail drawer's inline preview (generateProposalPdfBlobUrl).
+  const handleDownloadPdf = (proposal: Proposal) => {
+    const blob = generateProposalPdfBlob(proposal, lang);
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `Teklif_${proposal.proposalNumber}.pdf`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
   };
 
   const handleSetApproval = async (
@@ -847,6 +863,15 @@ export default function ProposalManagementView() {
                           <Send className="w-3.5 h-3.5" />
                         </button>
  
+                        {/* Download PDF (primary format — user asked for PDF over Word where possible) */}
+                        <button
+                          onClick={() => handleDownloadPdf(p)}
+                          className="p-1.5 hover:bg-emerald-50 text-emerald-700 dark:hover:bg-emerald-955/20 rounded cursor-pointer"
+                          title="Teklifi PDF olarak indir"
+                        >
+                          <FileText className="w-3.5 h-3.5" />
+                        </button>
+
                         {/* Download Word Doc */}
                         <button
                           onClick={() => handleDownloadWordDoc(p)}
@@ -855,7 +880,7 @@ export default function ProposalManagementView() {
                         >
                           <Download className="w-3.5 h-3.5" />
                         </button>
- 
+
                         {/* Live document rendering Preview */}
                         <button
                           onClick={() => setViewingProposalDoc(p)}

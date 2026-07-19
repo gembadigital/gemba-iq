@@ -650,6 +650,7 @@ export default function ServicesView({
   const [isLoadingProposalSenders, setIsLoadingProposalSenders] = useState(true);
   const [selectedProposalSender, setSelectedProposalSender] = useState<"organization" | "personal" | "">("");
   const [isSendingProposalEmail, setIsSendingProposalEmail] = useState(false);
+  const [isExportingPdf, setIsExportingPdf] = useState(false);
 
   useEffect(() => {
     let cancelled = false;
@@ -1854,6 +1855,27 @@ export default function ServicesView({
       };
     }
 
+    // The saved record previously stored only generic template metadata
+    // (selectedService?.name and a hardcoded "Sistem tarafından otomatik
+    // üretilen teklif" description) no matter what the rep actually typed
+    // into the wizard's options/pricing — so Teklif Yönetimi's Word/PDF
+    // export always looked unrelated to the real proposal content. Pull
+    // the real, user-edited option names/descriptions/terms instead.
+    const realServicesList: string[] = [];
+    if (option1Active && option1Name.trim()) realServicesList.push(option1Name.trim());
+    if (option2Active && option2Name.trim()) realServicesList.push(option2Name.trim());
+    if (option3Active && option3Name.trim()) realServicesList.push(option3Name.trim());
+    if (realServicesList.length === 0 && selectedService?.name) {
+      realServicesList.push(selectedService.name);
+    }
+
+    const realDescription =
+      (option1Active && option1Desc.trim()) ||
+      (option2Active && option2Desc.trim()) ||
+      (option3Active && option3Desc.trim()) ||
+      mailSubject.trim() ||
+      `${clientTitle} için hazırlanan teklif.`;
+
     const newProposal = {
       id: proposalId,
       sequenceNo: cleanSeq,
@@ -1862,13 +1884,15 @@ export default function ServicesView({
       companyName: clientTitle,
       contactPerson: clientContactPerson,
       contactEmail: clientContactEmail,
-      proposalSubject: selectedService?.name || "Yalın Dönüşüm Hizmet Şablona",
+      proposalSubject: mailSubject.trim() || selectedService?.name || "Yalın Dönüşüm Hizmet Şablona",
       date: proposalDate,
       currency: "₺" as const,
       owner: assignedPm,
-      description: "Sistem tarafından otomatik üretilen teklif",
+      description: realDescription,
       status: "Draft",
-      services: [selectedService?.name || "Yalın Danışmanlık Projesi"],
+      services: realServicesList,
+      terms: wizardTermsAndConditions || "",
+      coverPage: wizardCoverPage || "",
       options: mappedOptions,
       totalBudget: totalBudget,
       taxes: taxes,
@@ -1881,10 +1905,10 @@ export default function ServicesView({
           reason: "İlk oluşturma",
           changes: "Teklif Sihirbazı (Proposal Wizard) ile otomatik oluşturuldu.",
           owner: assignedPm,
-          subject: selectedService?.name || "Yalın Dönüşüm Hizmeti",
+          subject: mailSubject.trim() || selectedService?.name || "Yalın Dönüşüm Hizmeti",
           currency: "₺",
           options: mappedOptions,
-          services: [selectedService?.name || "Yalın Dönüşüm Hizmeti"],
+          services: realServicesList,
           totalBudget: totalBudget,
           taxes: taxes,
           grandTotal: grandTotal
@@ -1971,8 +1995,32 @@ export default function ServicesView({
   // handler used to (see buildAndPersistProposal/handleCreateAndSaveProposal
   // comments) — it only runs when this button is explicitly clicked, saves
   // silently first, then opens exactly one new mail composition window/tab.
-  const handleOpenMailClient = () => {
+  //
+  // Previously this told the user "indirdiğiniz PDF'i elle ekleyin" without
+  // ever actually generating/downloading a PDF anywhere in this flow — the
+  // user had to separately remember to click "PDF İndir" first. It also
+  // relied on a mailto: link (default option) requiring a registered
+  // desktop mail app; with none configured, the click silently does
+  // nothing and no error is shown. We can't force an OS-level mail app to
+  // exist, but we CAN make sure the real PDF is always downloaded here, so
+  // the flow degrades to "PDF is on your device, attach it yourself" even
+  // if the external client never opens.
+  const handleOpenMailClient = async () => {
     handleCreateAndSaveProposal(true);
+
+    setIsExportingPdf(true);
+    let pdfDownloaded = false;
+    try {
+      const pdf = await generateProposalPdfBase64();
+      if (pdf) {
+        triggerBase64FileDownload(pdf.base64, pdf.filename, "application/pdf");
+        pdfDownloaded = true;
+      }
+    } catch (err) {
+      console.error("PDF export failed:", err);
+    } finally {
+      setIsExportingPdf(false);
+    }
 
     const toEmail = clientContactEmail || "ornek@firma.com";
     const encodedSubject = encodeURIComponent(mailSubject);
@@ -2000,7 +2048,15 @@ export default function ServicesView({
       window.open(finalLink, "_blank");
     }
 
-    setToastMessage("Teklif kaydedildi. Lütfen indirdiğiniz PDF'i açılan e-postaya elle ekleyin.");
+    if (pdfDownloaded) {
+      setToastMessage(
+        mailClientType === "mailto"
+          ? "Teklif kaydedildi ve PDF indirildi. E-posta uygulamanız açılmadıysa (varsayılan masaüstü mail istemcisi tanımlı değilse), indirilen PDF'i doğrudan Gmail/Outlook Web üzerinden elle gönderebilirsiniz."
+          : "Teklif kaydedildi ve PDF indirildi. Lütfen indirilen PDF'i açılan e-postaya elle ekleyin."
+      );
+    } else {
+      setToastMessage("Teklif kaydedildi, ancak PDF oluşturulamadı. Lütfen önizlemeyi kontrol edip 'PDF İndir' ile tekrar deneyin.");
+    }
   };
 
   // Sync draft assembled proposal text on step completion (Now step 4 is the preview stage)
@@ -2156,10 +2212,6 @@ export default function ServicesView({
     document.body.removeChild(link);
   };
 
-  const handleExportPDF = () => {
-    handlePrint();
-  };
-
   // Item 20/21: Real in-app proposal sending. Renders the live A4 preview
   // (assemblyPaperRef) into an actual PDF binary via jsPDF, then sends it as
   // a genuine Microsoft Graph attachment through the same /api/mail/send
@@ -2189,6 +2241,48 @@ export default function ServicesView({
     const base64 = dataUri.split(",")[1] || "";
     const filename = `${clientShortName || "Teklif"}_${proposalNumber || "000"}.pdf`;
     return { base64, filename };
+  };
+
+  // Saves a base64 PDF payload to the user's device as a real file download.
+  const triggerBase64FileDownload = (base64: string, filename: string, mimeType: string) => {
+    const byteChars = atob(base64);
+    const byteNumbers = new Array(byteChars.length);
+    for (let i = 0; i < byteChars.length; i++) byteNumbers[i] = byteChars.charCodeAt(i);
+    const byteArray = new Uint8Array(byteNumbers);
+    const blob = new Blob([byteArray], { type: mimeType });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = filename;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+  };
+
+  // "PDF İndir" previously just called handlePrint(), which opens a popup
+  // window and relies on the browser's native print dialog (auto-closed
+  // after 500ms) to actually produce a file — if the popup was blocked, or
+  // the user didn't finish the "Save as PDF" flow in that half-second
+  // window, nothing was ever saved and there was no error shown. This now
+  // reuses the same reliable jsPDF renderer already proven for the in-app
+  // e-mail attachment (generateProposalPdfBase64) to download a real PDF
+  // file directly, with no popup or print dialog involved.
+  const handleExportPDF = async () => {
+    setIsExportingPdf(true);
+    try {
+      const pdf = await generateProposalPdfBase64();
+      if (!pdf) {
+        alert("PDF oluşturulamadı. Lütfen önizleme yüklendikten sonra tekrar deneyin.");
+        return;
+      }
+      triggerBase64FileDownload(pdf.base64, pdf.filename, "application/pdf");
+    } catch (err) {
+      console.error("PDF export failed:", err);
+      alert("PDF oluşturulurken bir hata oluştu. Lütfen tekrar deneyin.");
+    } finally {
+      setIsExportingPdf(false);
+    }
   };
 
   const handleSendProposalEmailInApp = async () => {
@@ -3863,10 +3957,16 @@ export default function ServicesView({
                     <button
                       type="button"
                       onClick={handleExportPDF}
-                      className="bg-[#107C41] hover:bg-emerald-700 text-white px-3 py-1.5 rounded text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5"
+                      disabled={isExportingPdf}
+                      className="bg-[#107C41] hover:bg-emerald-700 text-white px-3 py-1.5 rounded text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5 disabled:opacity-50 disabled:cursor-not-allowed"
                       title="Sayfa sınırlarına sığdırılmış A4 PDF çıktısı hazırlar"
                     >
-                      <FileText className="w-3.5 h-3.5" /> PDF İndir (.pdf)
+                      {isExportingPdf ? (
+                        <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                      ) : (
+                        <FileText className="w-3.5 h-3.5" />
+                      )}
+                      {isExportingPdf ? "Hazırlanıyor…" : "PDF İndir (.pdf)"}
                     </button>
                   </div>
                 )}
