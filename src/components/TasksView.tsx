@@ -336,7 +336,12 @@ const DEFAULT_NOTIFICATION_SETTINGS: NotificationSettings = {
     Gemba IQ | Görev Yöneticisi tarafından gönderilmiştir.
   </p>
 </div>`,
-    logoUrl: "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=120&auto=format&fit=crop&q=60&ixlib=rb-4.0.3",
+    // Must be a full, public URL (not a relative path) — these emails are
+    // opened in the recipient's own mail client (Outlook, Gmail, etc.),
+    // which fetches the image straight from the internet, not from this
+    // app's origin. Was a generic Unsplash stock photo (an unrelated
+    // purple/orange gradient graphic); now the app's real Gemba logo asset.
+    logoUrl: "https://gemba-iq.vercel.app/logos/Gdogo5.png",
     companyName: "GEMBA GROUP CRM",
   },
   dailySummarySchedule: "09:00",
@@ -485,6 +490,23 @@ export default function TasksView() {
     return CrmDb.getNotificationSettings() ?? DEFAULT_NOTIFICATION_SETTINGS;
   });
 
+  // One-time migration: orgs that already had notification settings saved
+  // (e.g. before this fix) have the old generic Unsplash stock-photo logoUrl
+  // persisted in their record — changing DEFAULT_NOTIFICATION_SETTINGS above
+  // only affects orgs that have never saved settings at all. Detect and
+  // silently correct the stale saved value so everyone gets the real Gemba
+  // logo in task emails without having to manually revisit Settings.
+  useEffect(() => {
+    const staleLogoUrl = "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=120&auto=format&fit=crop&q=60&ixlib=rb-4.0.3";
+    if (notificationSettings.emailTemplates.logoUrl === staleLogoUrl) {
+      setNotificationSettings(prev => ({
+        ...prev,
+        emailTemplates: { ...prev.emailTemplates, logoUrl: DEFAULT_NOTIFICATION_SETTINGS.emailTemplates.logoUrl },
+      }));
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   const [notifications, setNotifications] = useState<TaskNotification[]>(() => CrmDb.getTaskNotifications());
 
   const [toastMessage, setToastMessage] = useState<{ text: string; type: "success" | "error" | "info" } | null>(null);
@@ -578,13 +600,30 @@ export default function TasksView() {
     }
   };
 
+  // Resolves the real address to send a task notification to. Prefers the
+  // task's own stored assigneeEmail, but falls back to a live lookup against
+  // the organization directory (orgMembers — the same registered-account
+  // list the "Sorumlu" picker's auto-fill uses) by matching the assignee's
+  // name. This covers tasks that were created/assigned before that auto-
+  // fill existed (or any other path that left assigneeEmail blank): the
+  // named person can still be a real, currently registered user with a
+  // valid email visible in Admin > Settings, even though this one task
+  // record never captured it.
+  const resolveAssigneeEmail = (name?: string, storedEmail?: string): string => {
+    if (storedEmail && storedEmail.includes("@")) return storedEmail;
+    if (!name) return "";
+    const member = orgMembers.find((m) => (m.full_name?.trim() || m.email) === name);
+    return member?.email || "";
+  };
+
   // Fires immediately when a task is created with an assignee, or when an
   // existing task's assignee changes (reassignment). This is separate from
   // the due/overdue/escalation reminder engine below — it's the "you were
   // just given a task" notice, sent to the real account email so it also
   // shows up in that person's notification bell the next time they sign in.
   const dispatchAssignmentNotification = async (task: Task, isReassignment: boolean) => {
-    if (!task.assigneeEmail || !task.assigneeEmail.includes("@")) return;
+    const resolvedEmail = resolveAssigneeEmail(task.assignee, task.assigneeEmail);
+    if (!resolvedEmail) return;
 
     const compiledSubject = notificationSettings.emailTemplates.assignedSubject.replace(
       /{{taskTitle}}/g,
@@ -612,13 +651,13 @@ export default function TasksView() {
       type: "assigned",
       recipientName: task.assignee || "Sorumlu Kişi",
       recipientRole: "Assignee",
-      recipientEmail: task.assigneeEmail,
+      recipientEmail: resolvedEmail,
       subject: compiledSubject,
       bodyHtml: compiledBody,
       createdAt: new Date().toISOString().replace("T", " ").slice(0, 16),
       isRead: false,
       status: "sent",
-      triggerKey: `${task.id}-assigned-${task.assigneeEmail}-${Date.now()}`,
+      triggerKey: `${task.id}-assigned-${resolvedEmail}-${Date.now()}`,
     };
 
     const dispatched = await dispatchNotificationEmail(notif);
@@ -627,8 +666,8 @@ export default function TasksView() {
     if (dispatched.status === "sent") {
       showToast(
         isReassignment
-          ? `Görev yeniden atandı ve ${task.assigneeEmail} adresine bilgilendirme e-postası gönderildi.`
-          : `Görev atandı ve ${task.assigneeEmail} adresine bilgilendirme e-postası gönderildi.`,
+          ? `Görev yeniden atandı ve ${resolvedEmail} adresine bilgilendirme e-postası gönderildi.`
+          : `Görev atandı ve ${resolvedEmail} adresine bilgilendirme e-postası gönderildi.`,
         "success"
       );
     } else if (dispatched.status === "failed") {
@@ -676,7 +715,7 @@ export default function TasksView() {
               type: "due_soon",
               recipientName: task.assignee || "Sorumlu Kişi",
               recipientRole: "Task Owner",
-              recipientEmail: task.assigneeEmail || "",
+              recipientEmail: resolveAssigneeEmail(task.assignee, task.assigneeEmail),
               subject: compiledSubject,
               bodyHtml: compiledBody,
               createdAt: `${today} 09:00`,
@@ -714,7 +753,7 @@ export default function TasksView() {
               type: "due_soon",
               recipientName: task.assignee || "Sorumlu Kişi",
               recipientRole: "Task Owner",
-              recipientEmail: task.assigneeEmail || "",
+              recipientEmail: resolveAssigneeEmail(task.assignee, task.assigneeEmail),
               subject: compiledSubject,
               bodyHtml: compiledBody,
               createdAt: `${today} 09:00`,
@@ -760,7 +799,7 @@ export default function TasksView() {
                 type: "overdue",
                 recipientName: task.assignee || "Sorumlu Kişi",
                 recipientRole: "Task Owner",
-                recipientEmail: task.assigneeEmail || "",
+                recipientEmail: resolveAssigneeEmail(task.assignee, task.assigneeEmail),
                 subject: compiledSubject,
                 bodyHtml: compiledBody,
                 createdAt: `${today} 09:00`,
@@ -844,7 +883,7 @@ export default function TasksView() {
                 type: "overdue",
                 recipientName: task.assignee || "Sorumlu Kişi",
                 recipientRole: "Task Owner",
-                recipientEmail: task.assigneeEmail || "",
+                recipientEmail: resolveAssigneeEmail(task.assignee, task.assigneeEmail),
                 subject: compiledSubject,
                 bodyHtml: compiledBody,
                 createdAt: `${today} 09:00`,
@@ -928,7 +967,7 @@ export default function TasksView() {
                 type: "overdue",
                 recipientName: task.assignee || "Sorumlu Kişi",
                 recipientRole: "Task Owner",
-                recipientEmail: task.assigneeEmail || "",
+                recipientEmail: resolveAssigneeEmail(task.assignee, task.assigneeEmail),
                 subject: compiledSubject,
                 bodyHtml: compiledBody,
                 createdAt: `${today} 09:00`,
@@ -1054,7 +1093,7 @@ export default function TasksView() {
               type: "overdue",
               recipientName: task.assignee || "Sorumlu Kişi",
               recipientRole: "Task Owner",
-              recipientEmail: task.assigneeEmail || "",
+              recipientEmail: resolveAssigneeEmail(task.assignee, task.assigneeEmail),
               subject: compiledSubject,
               bodyHtml: compiledBody,
               createdAt: `${today} 09:00`,
@@ -1240,7 +1279,7 @@ export default function TasksView() {
     setNewTitle(task.title);
     setNewDescription(task.description);
     setNewAssignee(task.assignee);
-    setNewAssigneeEmail(task.assigneeEmail || "");
+    setNewAssigneeEmail(resolveAssigneeEmail(task.assignee, task.assigneeEmail));
     setNewDueDate(task.dueDate);
     setNewPriority(task.priority);
     setNewStatus(task.status);
