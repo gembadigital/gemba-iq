@@ -567,12 +567,23 @@ export default function ServicesView({
 
   // --- WIZARD FORM STATE ---
   const [wizardStep, setWizardStep] = useState<1 | 2 | 3 | 4 | 5 | 6>(1);
-  const [clientTitle, setClientTitle] = useState("Vakko Tekstil ve Hazır Giyim A.Ş.");
-  const [clientShortName, setClientShortName] = useState("VakkoTekstil");
+  // Wizard opens blank — these previously defaulted to a leftover demo
+  // company ("Vakko Tekstil...") and a hardcoded fake PM name, which showed
+  // up pre-filled every time the wizard was freshly opened.
+  const [clientTitle, setClientTitle] = useState("");
+  const [clientShortName, setClientShortName] = useState("");
   const [isShortNameManuallyEdited, setIsShortNameManuallyEdited] = useState(false);
-  const [clientAddress, setClientAddress] = useState("Koza Mahallesi, Sanayi Caddesi No:116, Esenyurt/İstanbul");
+  const [clientAddress, setClientAddress] = useState("");
   const [proposalDate, setProposalDate] = useState(new Date().toISOString().split('T')[0]);
-  const [assignedPm, setAssignedPm] = useState("Ahmet Kutsi");
+  const [assignedPm, setAssignedPm] = useState("");
+
+  // Default "Sorumlu Kişi" (our internal PM) to the logged-in user's name
+  // once it's available, unless the rep has already typed something in.
+  useEffect(() => {
+    if (actorName) {
+      setAssignedPm((prev) => prev || actorName);
+    }
+  }, [actorName]);
 
   // Sync clientShortName from clientTitle unless manually edited
   useEffect(() => {
@@ -596,9 +607,10 @@ export default function ServicesView({
     }
   }, [clientTitle, isShortNameManuallyEdited]);
 
-  // Client's internal contact info
-  const [clientContactPerson, setClientContactPerson] = useState("Atakan Zehir");
-  const [clientContactEmail, setClientContactEmail] = useState("atakan.zehir@gmail.com");
+  // Client-side contact info — blank until a company is selected (see the
+  // company dropdown handler below, which pulls the real recorded contact).
+  const [clientContactPerson, setClientContactPerson] = useState("");
+  const [clientContactEmail, setClientContactEmail] = useState("");
 
   // Integrated Email Draft Templates
   const [emailTemplates, setEmailTemplates] = useState<{ id: string; name: string; subject: string; body: string }[]>(() => {
@@ -2958,15 +2970,20 @@ export default function ServicesView({
                                     setClientTitle(c.name);
                                     const parts = [c.billingAddress, c.billingDistrict, c.billingCity, c.billingCountry].filter(Boolean);
                                     setClientAddress(parts.join(", "));
-                                    if (c.contactName || c.contactPerson) {
-                                      setClientContactPerson(c.contactName || c.contactPerson);
+                                    // Company objects have no contactName/contactPerson/contactEmail
+                                    // fields (see Company interface in CompaniesView.tsx) — those
+                                    // previously always evaluated to undefined, so this always fell
+                                    // through to a hardcoded personal name/email. The real recorded
+                                    // contact lives in Şirket Detayı > Kişiler (CrmDb Contact
+                                    // records); fall back to the customFields bag, then leave blank.
+                                    const realContacts = CrmDb.getContactsByCompany(c.id);
+                                    const primaryContact = realContacts[0];
+                                    if (primaryContact) {
+                                      setClientContactPerson(`${primaryContact.firstName} ${primaryContact.lastName}`.trim());
+                                      setClientContactEmail(primaryContact.email || "");
                                     } else {
-                                      setClientContactPerson("Atakan Zehir");
-                                    }
-                                    if (c.contactEmail) {
-                                      setClientContactEmail(c.contactEmail);
-                                    } else {
-                                      setClientContactEmail("atakan.zehir@gmail.com");
+                                      setClientContactPerson(c.customFields?.contactName || "");
+                                      setClientContactEmail(c.customFields?.contactEmail || "");
                                     }
                                     setShowCompaniesDropdown(false);
                                   }}
