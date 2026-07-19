@@ -2020,6 +2020,7 @@ export const uiDictionaryTR: Record<string, string> = {
   "No findings recorded yet.": "Henüz bulgu kaydedilmedi.",
   "AI Field Advisor": "Yapay Zeka Saha Danışmanı",
   "Ask about this assessment...": "Bu değerlendirme hakkında sorun...",
+  "Menu": "Menü",
   "Select a company": "Bir şirket seçin",
   "Cost Structure": "Maliyet Yapısı",
   "Sector-Based Product Cost Structure": "Sektöre Göre Ürün Maliyet Yapısı",

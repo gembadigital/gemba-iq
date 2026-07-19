@@ -77,7 +77,8 @@ import {
   ShieldCheck,
   Sliders,
   Bell,
-  Globe
+  Globe,
+  Menu
 } from "lucide-react";
 
 const ACTIVE_TAB_STORAGE_KEY = "gemba_iq_active_tab";
@@ -273,9 +274,14 @@ export default function App() {
   const [leadsMenuExpanded, setLeadsMenuExpanded] = useState<boolean>(true);
   const [campaignMenuExpanded, setCampaignMenuExpanded] = useState<boolean>(true);
   const [sidebarCollapsed, setSidebarCollapsed] = useState<boolean>(() => {
-    if (typeof window !== "undefined" && window.innerWidth < 1024) return true;
     return localStorage.getItem("sidebar-collapsed") === "true";
   });
+  // Mobil/tablet hamburger navigasyonu: <1024px ekranlarda sidebar artık
+  // layout'u itmiyor, ekranın dışında (off-canvas) duruyor ve hamburger
+  // butonuyla açılan bir overlay çekmece (drawer) oluyor. Böylece dikey/
+  // yatay (landscape) döndürmede de her zaman aynı, öngörülebilir şekilde
+  // davranıyor — genişliğe göre, yöne göre değil.
+  const [mobileMenuOpen, setMobileMenuOpen] = useState<boolean>(false);
   
   // Settings Panel Model and Tavily Key States
   const [isSettingsOpen, setIsSettingsOpen] = useState<boolean>(false);
@@ -334,22 +340,34 @@ export default function App() {
     localStorage.setItem("layout-theme", "saas");
   }, []);
 
-  // Responsive: tablet/telefon ekranlarında sabit 300px genişlikteki
-  // sidebar'ı otomatik olarak ikon rayına (80px) daraltır. Kullanıcı
-  // bildirimi: "tablet ve telefonda container kaymalarının önüne geçmek
-  // gerekiyor" — 300px'lik sabit sidebar dar ekranlarda ana içeriği
-  // sıkıştırıp yatay taşmaya (kayma) neden oluyordu. Sadece küçük ekrana
-  // geçişte otomatik daraltır; kullanıcı isterse elle tekrar genişletebilir
-  // (mevcut btn-collapse-sidebar toggle'ı bu davranışı ezmeye devam eder).
+  // Mobil çekmece: ekran 1024px'in üzerine çıkarsa (masaüstüne dönüldüyse
+  // veya telefon çok geniş bir yatay moda döndüyse) açık kalmış olabilecek
+  // hamburger menüyü otomatik kapatır.
   useEffect(() => {
-    const applyResponsiveSidebar = () => {
-      if (window.innerWidth < 1024) {
-        setSidebarCollapsed(true);
+    const closeOnDesktop = () => {
+      if (window.innerWidth >= 1024) {
+        setMobileMenuOpen(false);
       }
     };
-    window.addEventListener("resize", applyResponsiveSidebar);
-    return () => window.removeEventListener("resize", applyResponsiveSidebar);
+    window.addEventListener("resize", closeOnDesktop);
+    return () => window.removeEventListener("resize", closeOnDesktop);
   }, []);
+
+  // Çekmece açıkken arka planın kaymasını (scroll) engeller ve Escape ile
+  // kapatılabilmesini sağlar — standart mobil navigasyon davranışı.
+  useEffect(() => {
+    if (!mobileMenuOpen) return;
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    const handleEscape = (e: KeyboardEvent) => {
+      if (e.key === "Escape") setMobileMenuOpen(false);
+    };
+    window.addEventListener("keydown", handleEscape);
+    return () => {
+      document.body.style.overflow = previousOverflow;
+      window.removeEventListener("keydown", handleEscape);
+    };
+  }, [mobileMenuOpen]);
 
   // Listen to custom navigation events from search / autocomplete
   useEffect(() => {
@@ -546,6 +564,11 @@ export default function App() {
     
     const handleButtonClick = () => {
       if (disabled) return;
+      // Bir sayfaya gerçekten gidildiğinde mobil hamburger çekmecesini
+      // otomatik kapat (alt menü başlıklarının aç/kapa tıklaması bu
+      // fonksiyonu değil kendi onClick'ini kullanıyor, o yüzden burada
+      // sadece gerçek navigasyon tıklamaları kapanmayı tetikler).
+      setMobileMenuOpen(false);
       if (onClick) {
         onClick();
       } else {
@@ -705,38 +728,62 @@ export default function App() {
   return (
     <div className={`min-h-screen flex transition-colors duration-300 ${isNotionMode ? "bg-white dark:bg-[#191919] font-sans text-[#37352f] dark:text-[#dfdfde]" : "bg-[#F3F2F1] dark:bg-[#11100f]"}`}>
       
-      {/* Dynamic Left Sidebar UI Navigation */}
-      <aside 
-        className={`flex min-h-screen flex-col justify-between overflow-hidden flex-shrink-0 z-30 transition-all duration-300 ${
-          sidebarCollapsed ? "w-[80px]" : "w-[300px]"
-        } ${
-          isNotionMode 
-            ? "border-r border-[#1f1f1f]/10 dark:border-white/10 text-[#37352f] dark:text-[#dfdfde]" 
+      {/* Mobil/tablet hamburger çekmecesi için arka plan örtüsü (<1024px).
+          Sadece çekmece açıkken render edilir; tıklanınca kapatır. */}
+      {mobileMenuOpen && (
+        <div
+          className="fixed inset-0 z-45 bg-black/40 lg:hidden"
+          onClick={() => setMobileMenuOpen(false)}
+          aria-hidden="true"
+        />
+      )}
+
+      {/* Dynamic Left Sidebar UI Navigation — <1024px'de sabit (fixed)
+          off-canvas çekmece, ≥1024px'de normal statik sidebar */}
+      <aside
+        className={`flex min-h-screen flex-col justify-between overflow-hidden flex-shrink-0 z-50 transition-transform duration-300 ease-out
+          fixed inset-y-0 left-0 lg:relative lg:inset-auto
+          ${mobileMenuOpen ? "translate-x-0" : "-translate-x-full"} lg:translate-x-0
+          w-[280px] ${sidebarCollapsed ? "lg:w-[80px]" : "lg:w-[300px]"} ${
+          isNotionMode
+            ? "border-r border-[#1f1f1f]/10 dark:border-white/10 text-[#37352f] dark:text-[#dfdfde]"
             : "border-r border-[#EDEBE9] dark:border-[#323130] text-slate-700 dark:text-slate-300"
         }`}
         style={{ backgroundColor: darkMode ? (isNotionMode ? '#191919' : '#201f1e') : '#f3f2f1' }}
       >
         <div className={`flex min-h-0 flex-1 flex-col overflow-hidden ${sidebarCollapsed ? "py-2 px-0" : "py-[12px] px-0"}`}>
-          {/* Main Launcher App Branding Header */}
-          <a
-            href="https://gemba-iq.vercel.app/"
-            className={`flex pb-[12px] mb-[12px] select-none border-b no-underline ${isNotionMode ? "border-[#1f1f1f]/10 dark:border-white/10" : "border-[#EDEBE9] dark:border-[#323130]"} ${sidebarCollapsed ? "justify-center items-center px-2" : "items-center justify-start gap-3 px-6"}`}
-          >
-            {isNotionMode ? (
-              <span className="text-2xl" role="img" aria-label="Notion icon">🧠</span>
-            ) : (
-              <img
-                src="/logos/Giqlogo.png"
-                alt="Gemba IQ"
-                className="h-[40px] w-auto object-contain shrink-0"
-              />
-            )}
-            {!sidebarCollapsed && (
-              <h2 className="text-[24px] font-semibold text-slate-800 dark:text-slate-100 font-display tracking-tight uppercase leading-none">
-                GEMBA IQ
-              </h2>
-            )}
-          </a>
+          {/* Main Launcher App Branding Header + mobil kapatma butonu */}
+          <div className={`flex items-center justify-between pb-[12px] mb-[12px] border-b ${isNotionMode ? "border-[#1f1f1f]/10 dark:border-white/10" : "border-[#EDEBE9] dark:border-[#323130]"} ${sidebarCollapsed ? "px-2" : "px-6"}`}>
+            <a
+              href="https://gemba-iq.vercel.app/"
+              className={`flex min-w-0 flex-1 select-none no-underline ${sidebarCollapsed ? "justify-center items-center" : "items-center justify-start gap-3"}`}
+            >
+              {isNotionMode ? (
+                <span className="text-2xl" role="img" aria-label="Notion icon">🧠</span>
+              ) : (
+                <img
+                  src="/logos/Giqlogo.png"
+                  alt="Gemba IQ"
+                  className="h-[40px] w-auto object-contain shrink-0"
+                />
+              )}
+              {!sidebarCollapsed && (
+                <h2 className="text-[24px] font-semibold text-slate-800 dark:text-slate-100 font-display tracking-tight uppercase leading-none truncate">
+                  GEMBA IQ
+                </h2>
+              )}
+            </a>
+            <button
+              type="button"
+              id="btn-mobile-menu-close"
+              onClick={() => setMobileMenuOpen(false)}
+              className="lg:hidden shrink-0 ml-2 p-1.5 rounded-lg text-slate-500 dark:text-slate-400 hover:bg-slate-200/60 dark:hover:bg-zinc-800/60 cursor-pointer"
+              aria-label={t("Close")}
+              title={t("Close")}
+            >
+              <X className="w-5 h-5" />
+            </button>
+          </div>
 
           {/* Navigation Action Buttons list */}
           <nav className="flex min-h-0 flex-1 flex-col gap-[20px] overflow-x-hidden overflow-y-auto">
@@ -1207,8 +1254,18 @@ export default function App() {
             ? "bg-white/90 dark:bg-[#191919]/90 border-[#1f1f1f]/10 dark:border-white/10"
             : "bg-white/90 dark:bg-[#1b1a19]/90 border-[#EDEBE9] dark:border-[#323130] shadow-xs"
         }`}>
-          {/* LEFT AREA: Breadcrumbs — dar ekranlarda taşmaması için shrink+truncate */}
+          {/* LEFT AREA: Hamburger (mobil/tablet, <1024px) + Breadcrumbs */}
           <div className="flex items-center gap-3 shrink min-w-0">
+            <button
+              type="button"
+              id="btn-mobile-menu-toggle"
+              onClick={() => setMobileMenuOpen(true)}
+              className="lg:hidden shrink-0 p-2 -ml-1 rounded-lg border bg-white dark:bg-[#141414] border-slate-200 dark:border-zinc-800 text-slate-700 dark:text-zinc-300 cursor-pointer"
+              title={t("Menu")}
+              aria-label={t("Menu")}
+            >
+              <Menu className="w-5 h-5" />
+            </button>
             <div className="flex items-center gap-1.5 text-xs text-slate-500 dark:text-zinc-400 font-sans select-none min-w-0">
               <span className="hidden sm:inline font-semibold text-slate-450 dark:text-zinc-500 truncate max-w-[160px]">{breadcrumbs.parent}</span>
               <span className="hidden sm:inline text-slate-300 dark:text-zinc-700">/</span>
