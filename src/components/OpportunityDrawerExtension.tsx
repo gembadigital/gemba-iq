@@ -35,7 +35,7 @@ import {
   Undo,
   Loader2
 } from "lucide-react";
-import { Proposal, ProposalVersion, ProposalOption } from "../types/proposal";
+import { Proposal, ProposalOption } from "../types/proposal";
 import { CrmDb } from "../lib/CrmDb";
 import { Deal } from "./DealManagementView";
 import { jsPDF } from "jspdf";
@@ -43,6 +43,24 @@ import { useOrganization } from "../lib/OrganizationContext";
 import { fetchOrganizationMailbox } from "../lib/organizationMailbox";
 import { fetchPersonalMailbox } from "../lib/personalMailbox";
 import { formatSystemNumber } from "../lib/currencyHelper";
+// Item: fırsat çekmecesindeki teklif revizyon/PDF/e-posta mantığı, Teklif
+// Yönetimi'nin (ProposalManagementView.tsx) kullandığı kanıtlanmış paylaşımlı
+// fonksiyonlardan tamamen bağımsız, kendi başına daha zayıf/eksik bir kopyaydı
+// (ör. PDF gerçek teklif içeriğini/marka kimliğini yansıtmıyordu, e-posta hiç
+// ek dosya göndermiyordu, ve en önemlisi buradan yapılan revizyon/silme/kurtar
+// işlemleri yalnızca yerel CrmDb önbelleğine yazılıyordu — Supabase'e hiç
+// senkronize edilmiyordu, bu yüzden bu değişiklikler Teklif Yönetimi'nin
+// denetim kaydında/zaman çizelgesinde hiç görünmüyordu ve sayfa yenilenince
+// kaybolma riski taşıyordu). Artık aynı paylaşımlı proposalService
+// fonksiyonlarını kullanıyor.
+import { useProposalPdfCapture } from "../lib/useProposalPdfCapture";
+import {
+  createProposalRevision,
+  persistProposalWithEnterpriseData,
+  sendProposalEmail as sendProposalEmailShared,
+  setProposalApprovalStatus,
+  updateEnterpriseProposal,
+} from "../lib/proposalService";
 
 // Types used in this extension
 export interface OpexNote {
@@ -1171,6 +1189,8 @@ export function ProposalContractSection({
   readOnly = false
 }: ProposalContractProps) {
   const { actorName } = useOrganization();
+  const { capture: capturePdf, captureNode: pdfCaptureNode } = useProposalPdfCapture(t, formatSystemNumber);
+  const [isGeneratingPdf, setIsGeneratingPdf] = useState(false);
   const [proposals, setProposals] = useState<Proposal[]>([]);
   const [selectedProposalId, setSelectedProposalId] = useState<string>("");
   const [activeProposal, setActiveProposal] = useState<Proposal | null>(null);
@@ -1320,63 +1340,70 @@ export function ProposalContractSection({
   };
 
   // 2. Download Real PDF
-  const handleDownloadPDF = (prop: Proposal) => {
+  // Uses the shared off-screen letterhead capture (same real branded PDF as
+  // Teklif Yönetimi's "Yazdır"/download), instead of the old hand-drawn
+  // jsPDF renderer that had no knowledge of the proposal's real content,
+  // letterhead colors, or uploaded cover/page images. Falls back to the old
+  // renderer only if the capture fails, so downloads never silently break.
+  const handleDownloadPDF = async (prop: Proposal) => {
+    setIsGeneratingPdf(true);
     try {
-      const doc = new jsPDF({ orientation: "portrait", unit: "mm", format: "a4" });
-      
-      // Elegant Header
-      doc.setFillColor("#0f172a");
-      doc.rect(0, 0, 210, 8, "F");
-
-      doc.setTextColor("#0f172a");
-      doc.setFont("Helvetica", "bold");
-      doc.setFontSize(14);
-      doc.text("GEMBA PARTNER OPERATIONAL EXCELLENCE B2B PORTAL", 15, 18);
-      
-      doc.setFont("Helvetica", "normal");
-      doc.setFontSize(8);
-      doc.setTextColor("#64748b");
-      doc.text(`Official Proposal Documentation - Sync v10`, 15, 23);
-      doc.line(15, 25, 195, 25);
-
-      // Proposal Details
-      doc.setTextColor("#1e293b");
-      doc.setFontSize(11);
-      doc.setFont("Helvetica", "bold");
-      doc.text(`PROPOSAL NUMBER: #${prop.proposalNumber}`, 15, 33);
-      doc.text(`SUBJECT: ${prop.proposalSubject || "Lean Transformation"}`, 15, 39);
-
-      doc.setFont("Helvetica", "normal");
-      doc.setFontSize(9);
-      doc.text(`Prepared For: ${prop.companyName}`, 15, 47);
-      doc.text(`Attention: ${prop.contactPerson} (${prop.contactEmail || "N/A"})`, 15, 52);
-      doc.text(`Proposal Date: ${prop.date}`, 15, 57);
-      doc.text(`Prepared By: ${prop.owner || "Gemba Partner Advisor"}`, 15, 62);
-      doc.text(`Current Version: ${prop.currentVersion}`, 15, 67);
-
-      // Service lines
-      doc.setFont("Helvetica", "bold");
-      doc.text(`SERVICES INCLUDED:`, 15, 75);
-      doc.setFont("Helvetica", "normal");
-      let y = 80;
-      prop.services.forEach((s) => {
-        doc.text(`- ${s}`, 20, y);
+      const captured = await capturePdf(prop).catch(() => null);
+      if (captured) {
+        const url = URL.createObjectURL(captured.blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = captured.filename;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+      } else {
+        // Fallback: legacy simple text-only PDF, only if real capture fails
+        const doc = new jsPDF({ orientation: "portrait", unit: "mm", format: "a4" });
+        doc.setFillColor("#0f172a");
+        doc.rect(0, 0, 210, 8, "F");
+        doc.setTextColor("#0f172a");
+        doc.setFont("Helvetica", "bold");
+        doc.setFontSize(14);
+        doc.text("GEMBA PARTNER OPERATIONAL EXCELLENCE B2B PORTAL", 15, 18);
+        doc.setFont("Helvetica", "normal");
+        doc.setFontSize(8);
+        doc.setTextColor("#64748b");
+        doc.text(`Official Proposal Documentation`, 15, 23);
+        doc.line(15, 25, 195, 25);
+        doc.setTextColor("#1e293b");
+        doc.setFontSize(11);
+        doc.setFont("Helvetica", "bold");
+        doc.text(`PROPOSAL NUMBER: #${prop.proposalNumber}`, 15, 33);
+        doc.text(`SUBJECT: ${prop.proposalSubject || "Lean Transformation"}`, 15, 39);
+        doc.setFont("Helvetica", "normal");
+        doc.setFontSize(9);
+        doc.text(`Prepared For: ${prop.companyName}`, 15, 47);
+        doc.text(`Attention: ${prop.contactPerson} (${prop.contactEmail || "N/A"})`, 15, 52);
+        doc.text(`Proposal Date: ${prop.date}`, 15, 57);
+        doc.text(`Prepared By: ${prop.owner || "Gemba Partner Advisor"}`, 15, 62);
+        doc.text(`Current Version: ${prop.currentVersion}`, 15, 67);
+        doc.setFont("Helvetica", "bold");
+        doc.text(`SERVICES INCLUDED:`, 15, 75);
+        doc.setFont("Helvetica", "normal");
+        let y = 80;
+        prop.services.forEach((s) => {
+          doc.text(`- ${s}`, 20, y);
+          y += 5;
+        });
         y += 5;
-      });
-
-      // Pricing & totals
-      y += 5;
-      doc.setFont("Helvetica", "bold");
-      doc.text(`FINANCIAL COMMERCIAL QUOTE:`, 15, y);
-      doc.setFont("Helvetica", "normal");
-      y += 5;
-      doc.text(`Total Base Budget: ${prop.currency || "₺"}${formatSystemNumber(prop.totalBudget)}`, 20, y);
-      y += 5;
-      doc.text(`Discount Applied: ${prop.currency || "₺"}${formatSystemNumber((prop as any).discount || 0)}`, 20, y);
-      y += 5;
-      doc.text(`Grand Total Amount (Inc Taxes): ${prop.currency || "₺"}${formatSystemNumber(prop.grandTotal)}`, 20, y);
-
-      doc.save(`Proposal_${prop.proposalNumber}_${prop.currentVersion}.pdf`);
+        doc.setFont("Helvetica", "bold");
+        doc.text(`FINANCIAL COMMERCIAL QUOTE:`, 15, y);
+        doc.setFont("Helvetica", "normal");
+        y += 5;
+        doc.text(`Total Base Budget: ${prop.currency || "₺"}${formatSystemNumber(prop.totalBudget)}`, 20, y);
+        y += 5;
+        doc.text(`Discount Applied: ${prop.currency || "₺"}${formatSystemNumber((prop as any).discount || 0)}`, 20, y);
+        y += 5;
+        doc.text(`Grand Total Amount (Inc Taxes): ${prop.currency || "₺"}${formatSystemNumber(prop.grandTotal)}`, 20, y);
+        doc.save(`Proposal_${prop.proposalNumber}_${prop.currentVersion}.pdf`);
+      }
 
       // Add Audit
       const updated = addAuditLog(deal, t("Proposal PDF Downloaded"), prop.proposalNumber);
@@ -1384,6 +1411,8 @@ export function ProposalContractSection({
     } catch (err) {
       console.error(err);
       alert("Error generating PDF document download.");
+    } finally {
+      setIsGeneratingPdf(false);
     }
   };
 
@@ -1397,75 +1426,62 @@ export function ProposalContractSection({
     setShowRevisionModal(true);
   };
 
-  const handleSaveRevision = () => {
+  // Routed through the shared proposalService functions (same as Teklif
+  // Yönetimi) instead of the drawer's own local-only logic, which never
+  // synced these changes to Supabase — see explanatory comment on the
+  // imports above.
+  const handleSaveRevision = async () => {
     if (!activeProposal) return;
     try {
-      const savedList = CrmDb.getProposals();
-      const propIdx = savedList.findIndex(p => p.id === activeProposal.id);
-      
-      if (propIdx > -1) {
-        const propToUpdate = savedList[propIdx];
-        const currentVerNum = parseInt(propToUpdate.currentVersion.replace("V", "")) || 1;
-        const nextVerStr = `V${currentVerNum + 1}`;
+      const currentVerNum = parseInt(activeProposal.currentVersion.replace("V", "")) || 1;
 
-        // Create new version object
-        const newVerObj: ProposalVersion = {
-          version: nextVerStr,
-          date: new Date().toISOString(),
-          reason: revReason || "Client revision scope request",
-          changes: revNotes || "Pricing or discount adjusted.",
-          owner: propToUpdate.owner,
-          subject: propToUpdate.proposalSubject,
-          currency: propToUpdate.currency,
-          options: { ...propToUpdate.options },
-          services: [...propToUpdate.services],
-          totalBudget: revAmount,
-          taxes: Math.round(revAmount * 0.2),
-          grandTotal: Math.round(revAmount - revDiscount + (revAmount * 0.2))
-        };
+      const revised = await createProposalRevision(
+        activeProposal,
+        revReason || "Client revision scope request",
+        revNotes || "Pricing or discount adjusted."
+      );
 
-        // Update the main proposal object
-        const nextProposal: Proposal = {
-          ...propToUpdate,
-          currentVersion: nextVerStr,
-          totalBudget: revAmount,
-          taxes: Math.round(revAmount * 0.2),
-          grandTotal: Math.round(revAmount - revDiscount + (revAmount * 0.2)),
-          status: "Revision Requested",
-          versions: [...propToUpdate.versions, newVerObj],
-          lastUpdate: new Date().toISOString()
-        };
-        (nextProposal as any).discount = revDiscount;
+      const finalTotalBudget = revAmount;
+      const finalTaxes = Math.round(revAmount * 0.2);
+      const finalGrandTotal = Math.round(revAmount - revDiscount + revAmount * 0.2);
+      const nextProposal: Proposal = {
+        ...revised,
+        totalBudget: finalTotalBudget,
+        taxes: finalTaxes,
+        grandTotal: finalGrandTotal,
+      };
+      (nextProposal as any).discount = revDiscount;
 
-        savedList[propIdx] = nextProposal;
-        saveProposalsToStorage(savedList);
-        setActiveProposal(nextProposal);
+      await updateEnterpriseProposal(nextProposal);
+      loadProposals();
+      setActiveProposal(nextProposal);
 
-        // Sync back to opportunity value!
-        const nextDeal = {
-          ...deal,
-          opportunityValue: nextProposal.grandTotal,
-          proposalNumber: nextProposal.proposalNumber
-        };
-        const logged = addAuditLog(
-          nextDeal,
-          t("Proposal Revision Created"),
-          `V${currentVerNum}`,
-          nextVerStr
-        );
-        onUpdateDeal(logged);
-        setShowRevisionModal(false);
-        alert(t("Successfully created new proposal revision!"));
-      }
-    } catch (_) {}
+      // Sync back to opportunity value!
+      const nextDeal = {
+        ...deal,
+        opportunityValue: nextProposal.grandTotal,
+        proposalNumber: nextProposal.proposalNumber
+      };
+      const logged = addAuditLog(
+        nextDeal,
+        t("Proposal Revision Created"),
+        `V${currentVerNum}`,
+        nextProposal.currentVersion
+      );
+      onUpdateDeal(logged);
+      setShowRevisionModal(false);
+      alert(t("Successfully created new proposal revision!"));
+    } catch (err) {
+      console.error(err);
+    }
   };
 
   // 4. Duplicate Proposal
-  const handleDuplicateProposal = (prop: Proposal) => {
+  const handleDuplicateProposal = async (prop: Proposal) => {
     try {
       const savedList = CrmDb.getProposals();
       const nextSeq = savedList.length > 0 ? Math.max(...savedList.map((p) => p.sequenceNo)) + 1 : 101;
-      
+
       const now = new Date();
       const yy = String(now.getFullYear()).slice(-2);
       const mm = String(now.getMonth() + 1).padStart(2, '0');
@@ -1482,8 +1498,7 @@ export function ProposalContractSection({
         status: "Draft"
       };
 
-      const newList = [duplicated, ...savedList];
-      saveProposalsToStorage(newList);
+      await persistProposalWithEnterpriseData(duplicated);
       loadProposals();
 
       const logged = addAuditLog(
@@ -1494,24 +1509,19 @@ export function ProposalContractSection({
       );
       onUpdateDeal(logged);
       alert(t("Proposal duplicated successfully!"));
-    } catch (_) {}
+    } catch (err) {
+      console.error(err);
+    }
   };
 
   // 5. Delete Proposal (SOFT DELETE)
-  const handleDeleteProposal = (prop: Proposal) => {
+  const handleDeleteProposal = async (prop: Proposal) => {
     const msg = t("Are you sure you want to soft-delete this proposal?\nProposal No: #{number}\n(Admins will be able to recover this proposal.)")
       .replace("{number}", prop.proposalNumber);
     if (window.confirm(msg)) {
       try {
-        const savedList = CrmDb.getProposals();
-        const updated = savedList.map(p => {
-          if (p.id === prop.id) {
-            return { ...p, isDeleted: true };
-          }
-          return p;
-        });
-
-        saveProposalsToStorage(updated);
+        const updated: Proposal = { ...prop, isDeleted: true };
+        await persistProposalWithEnterpriseData(updated);
         loadProposals();
 
         const logged = addAuditLog(
@@ -1522,22 +1532,20 @@ export function ProposalContractSection({
         );
         onUpdateDeal(logged);
         alert(t("Proposal soft-deleted successfully."));
-      } catch (_) {}
+      } catch (err) {
+        console.error(err);
+      }
     }
   };
 
   // Recover proposal (Admin Only feature)
-  const handleRecoverProposal = (propId: string) => {
+  const handleRecoverProposal = async (propId: string) => {
     try {
       const savedList = CrmDb.getProposals();
-      const updated = savedList.map(p => {
-        if (p.id === propId) {
-          return { ...p, isDeleted: false };
-        }
-        return p;
-      });
-
-      saveProposalsToStorage(updated);
+      const target = savedList.find((p) => p.id === propId);
+      if (!target) return;
+      const updated: Proposal = { ...target, isDeleted: false };
+      await persistProposalWithEnterpriseData(updated);
       loadProposals();
 
       const logged = addAuditLog(
@@ -1548,7 +1556,9 @@ export function ProposalContractSection({
       );
       onUpdateDeal(logged);
       alert(t("Proposal successfully recovered!"));
-    } catch (_) {}
+    } catch (err) {
+      console.error(err);
+    }
   };
 
   // 6. Send Email Dispatch — item 9: artık doğrudan göndermek yerine önce
@@ -1578,39 +1588,27 @@ export function ProposalContractSection({
 
     setIsSendingProposalEmail(true);
     try {
-      const supabase = getSupabase();
-      const {
-        data: { session },
-      } = supabase ? await supabase.auth.getSession() : { data: { session: null } };
+      // Attach the real branded letterhead PDF (same one "İndir" produces),
+      // instead of the old drawer behavior of sending with no attachment.
+      const captured = await capturePdf(activeProposal).catch(() => null);
+      const attachments = captured
+        ? [{ name: captured.filename, contentType: "application/pdf", contentBytes: captured.base64 }]
+        : [];
 
-      const sendResponse = await fetch("/api/mail/send", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          ...(session?.access_token ? { Authorization: `Bearer ${session.access_token}` } : {}),
-        },
-        body: JSON.stringify({
-          source: selectedSender,
-          recipient: deal.contactEmail,
-          subject: `${t("Proposal")} #${activeProposal.proposalNumber}`,
-          body: body.replace(/\n/g, "<br />"),
-          attachments: [],
-        }),
+      const updatedProposal = await sendProposalEmailShared(activeProposal, {
+        to: deal.contactEmail,
+        subject: `${t("Proposal")} #${activeProposal.proposalNumber}`,
+        body: body.replace(/\n/g, "<br />"),
+        attachments,
+        source: selectedSender,
       });
-
-      if (!sendResponse.ok) {
-        const payload = await sendResponse.json().catch(() => ({}));
-        alert(payload.error || t("Proposal email could not be sent."));
-        return;
-      }
-
-      const sendPayload = await sendResponse.json().catch(() => ({}));
+      loadProposals();
 
       if (deal.companyId) {
         CrmDb.createEmail({
           companyId: deal.companyId,
           recipient: deal.contactEmail,
-          sender: sendPayload.sender || senderOptions.find(o => o.source === selectedSender)?.email || actorName,
+          sender: senderOptions.find(o => o.source === selectedSender)?.email || actorName,
           subject: `${t("Proposal")} #${activeProposal.proposalNumber}`,
           body,
           isIncoming: false,
@@ -1620,8 +1618,17 @@ export function ProposalContractSection({
         });
       }
 
+      // sendProposalEmailShared already advances the deal stage to
+      // "Proposal Submitted" in Supabase/CrmDb when the proposal is linked
+      // to this deal — mirror that here so the drawer's own onUpdateDeal
+      // call doesn't stomp it back to the stale local stage.
+      const nextDeal = {
+        ...deal,
+        stage: activeProposal.dealId === deal.id ? "Proposal Submitted" : deal.stage,
+        proposalNumber: updatedProposal.proposalNumber,
+      };
       const logged = addAuditLog(
-        deal,
+        nextDeal,
         t("Proposal Email Dispatched"),
         undefined,
         activeProposal.proposalNumber
@@ -1629,6 +1636,9 @@ export function ProposalContractSection({
       onUpdateDeal(logged);
       setShowSendEmailModal(false);
       alert(t("Proposal dispatched to {email} successfully!").replace("{email}", deal.contactEmail));
+    } catch (err) {
+      console.error(err);
+      alert((err as Error)?.message || t("Proposal email could not be sent."));
     } finally {
       setIsSendingProposalEmail(false);
     }
@@ -1645,7 +1655,7 @@ export function ProposalContractSection({
   };
 
   // 8. Convert to Contract
-  const handleConvertToContract = () => {
+  const handleConvertToContract = async () => {
     if (!activeProposal) return;
     const msg = t("Convert this proposal to an official contract and update Opportunity Stage to 'Won'?");
     if (window.confirm(msg)) {
@@ -1658,19 +1668,16 @@ export function ProposalContractSection({
         contractSubject: activeProposal.proposalSubject,
         contractDate: new Date().toISOString().split("T")[0]
       };
-      
-      // Update proposal status
+
+      // Update proposal status through the shared approval-status function
+      // (maps to "Accepted" and syncs to Supabase), instead of the old
+      // local-only CrmDb write.
       try {
-        const savedList = CrmDb.getProposals();
-        const updated = savedList.map(p => {
-          if (p.id === activeProposal.id) {
-            return { ...p, status: "Accepted" as any };
-          }
-          return p;
-        });
-        saveProposalsToStorage(updated);
+        await setProposalApprovalStatus(activeProposal, "Approved");
         loadProposals();
-      } catch (_) {}
+      } catch (err) {
+        console.error(err);
+      }
 
       const logged = addAuditLog(
         nextDeal,
@@ -2457,6 +2464,7 @@ export function ProposalContractSection({
         </div>
       )}
 
+      {pdfCaptureNode}
     </div>
   );
 }

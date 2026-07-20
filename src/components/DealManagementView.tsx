@@ -497,6 +497,26 @@ export default function DealManagementView({ initialTab = "dashboard", onNavigat
     window.dispatchEvent(new CustomEvent("crm-navigate", { detail: { tab: "companies-registry" } }));
   };
 
+  // Teklif No'yu tıklanabilir yapar: fırsat listesindeki basit metin yerine
+  // gerçek teklife (Teklif Yönetimi) tek tıkla gidilir — kullanıcı isteği
+  // üzerine, teklif çekmecesindeki zayıf kopya mantık yerine tek gerçek
+  // kaynağa (proposalService/ProposalManagementView) yönlendirme.
+  const handleProposalClick = (e: React.MouseEvent, proposalNumber: string, dealId?: string) => {
+    e.stopPropagation();
+    if (!proposalNumber) return;
+    const allProposals = CrmDb.getProposals();
+    const matched =
+      (dealId && allProposals.find((p) => p.dealId === dealId && p.proposalNumber === proposalNumber)) ||
+      allProposals.find((p) => p.proposalNumber === proposalNumber);
+    if (!matched) {
+      alert(t("Could not find the linked proposal record."));
+      return;
+    }
+    window.dispatchEvent(
+      new CustomEvent("crm-navigate", { detail: { tab: "proposal-management", id: matched.id, type: "proposal" } })
+    );
+  };
+
   // Navigation tabs of B2B CRM (Deals Board vs Companies Page)
   const [activeModuleTab, setActiveModuleTab] = useState<"dashboard" | "board">(initialTab as any);
 
@@ -2140,13 +2160,17 @@ export default function DealManagementView({ initialTab = "dashboard", onNavigat
                               🏢 {deal.companyName}
                             </span>
                           </td>
-                          <td className="p-4">
+                          <td className="p-4" onClick={(e) => e.stopPropagation()}>
                             <div className="font-bold text-xs text-slate-800 dark:text-zinc-200 flex items-center gap-1.5 font-mono">
                               {deal.proposalNumber ? (
-                                <>
+                                <span
+                                  onClick={(e) => handleProposalClick(e, deal.proposalNumber!, deal.id)}
+                                  className="flex items-center gap-1.5 hover:text-indigo-600 dark:hover:text-indigo-400 hover:underline cursor-pointer"
+                                  title={t("Go to Proposal")}
+                                >
                                   <span className="text-emerald-600 dark:text-emerald-400 text-[10px]">📄</span>
                                   <span>{deal.proposalNumber}</span>
-                                </>
+                                </span>
                               ) : (
                                 <span className="text-slate-455 italic font-sans font-normal">—</span>
                               )}

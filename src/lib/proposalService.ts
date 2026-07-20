@@ -467,6 +467,12 @@ export async function sendProposalEmail(
     // attachments (Word export isn't generated here) — kept separate so
     // they're never silently passed to the mail API as fake attachments.
     attachmentNotes?: string[];
+    // Which connected mailbox to send from (Organization vs. the signed-in
+    // user's own Personal mailbox) — optional, omit to use the server's
+    // default. Needed so callers like the Fırsat drawer's sender picker
+    // (Organization/Personal mailbox selection) can route through this
+    // shared function instead of building their own separate fetch call.
+    source?: "organization" | "personal";
   }
 ): Promise<Proposal> {
   // Actually dispatch the email through the organization mailbox (Microsoft Graph)
@@ -494,6 +500,7 @@ export async function sendProposalEmail(
       subject: emailData.subject,
       body: emailData.body,
       attachments: emailData.attachments || [],
+      source: emailData.source || undefined,
     }),
   });
 
