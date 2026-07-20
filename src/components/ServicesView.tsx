@@ -1897,11 +1897,26 @@ export default function ServicesView({
       mailSubject.trim() ||
       `${clientTitle} için hazırlanan teklif.`;
 
+    // Item: "hedef şirket adı comp-1784497556047 yazıyor" — kök neden, bu
+    // kayıt her zaman "comp-" + Date.now() ile UYDURMA bir companyId
+    // üretiyordu; bu ID hiçbir zaman gerçek bir CrmDb Company kaydına
+    // karşılık gelmiyordu. Teklif Yönetimi > Düzenle formu (Company
+    // Autocomplete) bu ID ile eşleşen bir şirket bulamayınca, ekranda
+    // düz metin olarak ID'nin kendisini gösteriyordu. Artık CrmDb.
+    // createCompany kullanılıyor: isim zaten kayıtlıysa GERÇEK mevcut
+    // şirketi buluyor (dedupe isme göre), yoksa yeni gerçek bir şirket
+    // kaydı oluşturuyor - companyId her zaman gerçek bir Company'ye
+    // işaret ediyor, böylece şirkete bağlı diğer bilgiler de (adres,
+    // sektör, ilgili kişiler vs.) düzgün şekilde otomatik gelebiliyor.
+    const linkedCompany = clientTitle.trim()
+      ? CrmDb.createCompany({ name: clientTitle.trim(), billingAddress: clientAddress || "" })
+      : null;
+
     const newProposal = {
       id: proposalId,
       sequenceNo: cleanSeq,
       proposalNumber: proposalNumber,
-      companyId: "comp-" + Date.now(),
+      companyId: linkedCompany?.id || "comp-" + Date.now(),
       companyName: clientTitle,
       contactPerson: clientContactPerson,
       contactEmail: clientContactEmail,
@@ -1914,6 +1929,15 @@ export default function ServicesView({
       services: realServicesList,
       terms: wizardTermsAndConditions || "",
       coverPage: wizardCoverPage || "",
+      // Item: "her ne kadar şablon coverpng ve page.png yüklü olsa da pdf
+      // görüntüsü yeşil başka bir şablon çıkıyor" — kök neden, kaydedilen
+      // teklif kaydı hiçbir zaman gerçek kapak/sayfa görsellerini
+      // içermiyordu (yalnızca sihirbazın kendi ekran state'inde vardı).
+      // Teklif Yönetimi'nin PDF/e-posta/önizleme akışları bu yüzden hep
+      // varsayılan (bazen uyumsuz/yeşil) şablona düşüyordu. Artık gerçek
+      // kullanılan görsel, kayıtla birlikte kalıcı olarak saklanıyor.
+      coverImage: inMemoryCoverTemplates[selectedCardId] || Object.values(inMemoryCoverTemplates)[0] || undefined,
+      pageImage: inMemoryPageTemplates[selectedCardId] || Object.values(inMemoryPageTemplates)[0] || undefined,
       options: mappedOptions,
       totalBudget: totalBudget,
       taxes: taxes,
@@ -1950,6 +1974,7 @@ export default function ServicesView({
     const newDeal: any = {
       id: "deal-" + Date.now(),
       dealName: `${clientTitle} - ${selectedService?.name || "Yalın Danışmanlık"} Projesi`,
+      companyId: linkedCompany?.id || undefined,
       companyName: clientTitle,
       contactPerson: clientContactPerson,
       contactEmail: clientContactEmail,

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { useLanguage } from "../lib/LanguageContext";
 import { getSystemCurrency, formatSystemNumber } from "../lib/currencyHelper";
 import {
@@ -34,6 +34,7 @@ import ProposalFormModal from "./ProposalFormModal";
 import { Company } from "./CompaniesView";
 import { CrmDb } from "../lib/CrmDb";
 import { generateProposalPdfBlobUrl, generateProposalPdfBlob } from "../lib/proposalPdf";
+import { renderElementToPdfBase64, base64ToBlob } from "../lib/htmlToPdf";
 import {
   createEnterpriseProposal,
   createProposalRevision,
@@ -49,6 +50,186 @@ import {
   storeProposalPdf,
   updateEnterpriseProposal,
 } from "../lib/proposalService";
+
+// Extracted from the "B2B Letterhead Preview" modal so the exact same
+// styled A4 HTML/CSS document (the thing "Yazdır"/window.print() shows) can
+// also be captured off-screen via html2canvas-pro for the "PDF İndir"
+// download and the e-mail PDF attachment — instead of those two falling
+// back to a completely separate, hand-drawn jsPDF renderer (proposalPdf.ts)
+// that has no knowledge of the proposal's real content, letterhead colors,
+// or uploaded cover/page images (root cause of "pdf görüntüsü yeşil başka
+// bir şablon çıkıyor" and the image distortion complaints).
+function ProposalLetterheadBody({
+  doc,
+  t,
+  formatSystemNumber,
+}: {
+  doc: Proposal;
+  t: (s: string) => string;
+  formatSystemNumber: (n: number) => string;
+}) {
+  return (
+    <div className="bg-white dark:bg-zinc-900 border border-slate-200 rounded-lg p-10 max-w-4xl mx-auto shadow space-y-6 text-sm text-slate-800 dark:text-zinc-200 leading-relaxed font-sans relative">
+
+      {/* Custom Page Letterhead Header if present */}
+      {doc.pageImage && (
+        <div className="absolute top-4 right-4 max-h-12 overflow-hidden opacity-80">
+          <img src={doc.pageImage} alt="page letterhead" referrerPolicy="no-referrer" className="h-10 object-contain" />
+        </div>
+      )}
+
+      {/* Cover Image or Standard Header */}
+      {doc.coverImage ? (
+        <div className="border-b pb-5 flex flex-col items-center justify-center gap-2">
+          <img src={doc.coverImage} alt="cover letterhead" referrerPolicy="no-referrer" className="max-h-48 object-contain" />
+          <div className="text-center text-[10px] text-slate-450 font-mono mt-2">
+            <p>{t("Date:")} {doc.date} | {t("Ref:")} PROP-{doc.proposalNumber} | {t("Status:")} {doc.status}</p>
+          </div>
+        </div>
+      ) : (
+        /* Header Logo */
+        <div className="border-b pb-5 flex justify-between items-start">
+          <div>
+            <h3 className="font-black text-emerald-600 tracking-widest text-lg">GEMBA PARTNER</h3>
+            <p className="text-[10px] text-slate-400 uppercase font-mono tracking-wider mt-0.5">{t("Lean Operations & Strategy Advisory Group")}</p>
+          </div>
+          <div className="text-right text-[10px] text-slate-450 font-mono">
+            <p>{t("Date:")} {doc.date}</p>
+            <p>{t("Ref:")} PROP-{doc.proposalNumber}</p>
+            <p>{t("Status:")} {doc.status}</p>
+          </div>
+        </div>
+      )}
+
+      {/* Custom Headline / Cover Text */}
+      {doc.coverPage && (
+        <div className="bg-slate-50 dark:bg-zinc-850 p-4 rounded-xl border-l-4 border-l-purple-600 text-center">
+          <h2 className="text-md font-extrabold text-purple-800 dark:text-purple-400 font-mono">
+            {doc.coverPage}
+          </h2>
+        </div>
+      )}
+
+      {/* Cover Headline */}
+      <div className="text-center py-4 space-y-1">
+        <h1 className="text-lg font-black tracking-tight text-slate-900 dark:text-zinc-100 uppercase font-mono">
+          {doc.proposalSubject}
+        </h1>
+        <p className="text-[11px] text-slate-450 uppercase font-mono tracking-wider">
+          {t("Prepared For:")} <strong>{doc.companyName}</strong> | {t("Attn:")} {doc.contactPerson}
+        </p>
+      </div>
+
+      {/* Description */}
+      <div className="space-y-2 border-l-4 border-l-emerald-500 pl-4 bg-slate-50 dark:bg-black/10 py-2">
+        <h4 className="font-mono text-[10px] text-slate-450 uppercase font-bold tracking-wider">{t("1. Opportunity Focus Statement")}</h4>
+        <p className="text-xs italic text-slate-600 dark:text-zinc-350">{doc.description || t("Field walkthrough on bottleneck areas.")}</p>
+      </div>
+
+      {/* Methodology (Render HTML tables securely) */}
+      {doc.methodology && (
+        <div className="space-y-2">
+          <h4 className="font-mono text-[10px] text-slate-450 uppercase font-bold tracking-wider">{t("2. Lean Methodology & Structural Approach")}</h4>
+          <div className="text-xs text-slate-700 dark:text-zinc-300 border dark:border-zinc-800 p-4 rounded-xl bg-slate-50/50 dark:bg-zinc-900/40 overflow-x-auto prose dark:prose-invert max-w-none" dangerouslySetInnerHTML={{ __html: doc.methodology }} />
+        </div>
+      )}
+
+      {/* Project Plan (Render HTML tables securely) */}
+      {doc.projectPlan && (
+        <div className="space-y-2">
+          <h4 className="font-mono text-[10px] text-slate-450 uppercase font-bold tracking-wider">{t("3. Phase-by-Phase Project Plan")}</h4>
+          <div className="text-xs text-slate-700 dark:text-zinc-300 border dark:border-zinc-800 p-4 rounded-xl bg-slate-50/50 dark:bg-zinc-900/40 overflow-x-auto prose dark:prose-invert max-w-none" dangerouslySetInnerHTML={{ __html: doc.projectPlan }} />
+        </div>
+      )}
+
+      {/* Timeline (Render HTML tables securely) */}
+      {doc.timeline && (
+        <div className="space-y-2">
+          <h4 className="font-mono text-[10px] text-slate-450 uppercase font-bold tracking-wider">{t("4. Timeline & Sprints Milestones")}</h4>
+          <div className="text-xs text-slate-700 dark:text-zinc-300 border dark:border-zinc-800 p-4 rounded-xl bg-slate-50/50 dark:bg-zinc-900/40 overflow-x-auto prose dark:prose-invert max-w-none" dangerouslySetInnerHTML={{ __html: doc.timeline }} />
+        </div>
+      )}
+
+      {/* Services Grid */}
+      <div className="space-y-2">
+        <h4 className="font-mono text-[10px] text-slate-450 uppercase font-bold tracking-wider">{t("5. Services Involved")}</h4>
+        <div className="grid grid-cols-2 gap-2">
+          {(doc.services || []).map((s) => (
+            <div key={s} className="bg-zinc-50 dark:bg-zinc-800 px-3 py-1.5 rounded-lg border border-slate-100 dark:border-zinc-700 text-xs text-slate-700 dark:text-zinc-300">
+              ✓ {s}
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* Options and budgets table */}
+      <div className="space-y-3">
+        <h4 className="font-mono text-[10px] text-slate-450 uppercase font-bold tracking-wider">{t("6. Pricing Packages Options")}</h4>
+        <div className="overflow-x-auto w-full border border-slate-200 dark:border-zinc-800 rounded-xl">
+          <table className="w-full text-xs table-auto border-collapse min-w-[650px]">
+            <thead>
+              <tr className="bg-slate-50 dark:bg-zinc-850 border-b text-[10px] font-mono text-slate-450 uppercase">
+                <th className="p-3 text-left font-bold">{t("Selection")}</th>
+                <th className="p-3 text-right font-bold">{t("Man-Days")}</th>
+                <th className="p-3 text-right font-bold">{t("Daily Rate")}</th>
+                <th className="p-3 text-right font-bold">{t("Expenses Allowance")}</th>
+                <th className="p-3 text-right font-bold">{t("Option Est")}</th>
+              </tr>
+            </thead>
+            <tbody>
+              {Object.keys(doc.options).map((key) => {
+                const opt = doc.options[key];
+                const total = opt.manDays * opt.dailyRate + opt.expenses;
+                return (
+                  <tr key={key} className="border-b border-slate-100 dark:border-zinc-800/60 hover:bg-slate-50/50 dark:hover:bg-zinc-800/20 transition-colors">
+                    <td className="p-3 font-bold text-slate-800 dark:text-zinc-100">{key}</td>
+                    <td className="p-3 text-right font-semibold text-slate-700 dark:text-zinc-300">{formatSystemNumber(opt.manDays)} Days</td>
+                    <td className="p-3 text-right text-slate-700 dark:text-zinc-300">{doc.currency} {formatSystemNumber(opt.dailyRate)}</td>
+                    <td className="p-3 text-right text-slate-700 dark:text-zinc-300">{doc.currency} {formatSystemNumber(opt.expenses)}</td>
+                    <td className="p-3 text-right font-extrabold text-emerald-600 dark:text-emerald-400">{doc.currency} {formatSystemNumber(total)}</td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      {/* Calculations Card */}
+      <div className="bg-emerald-50/30 dark:bg-[#111] p-4 rounded-xl border border-emerald-100 select-none text-right font-mono space-y-1">
+        <p className="text-xs text-slate-500">{t("Proposal Net Subtotal:")} {doc.currency} {formatSystemNumber(doc.totalBudget)}</p>
+        <p className="text-xs text-slate-500">{t("VAT surcharge (20%):")} {doc.currency} {formatSystemNumber(doc.taxes)}</p>
+        <h4 className="text-sm font-bold text-emerald-600 dark:text-emerald-400">
+          {t("Grand Total Proposal Offer:")} {doc.currency} {formatSystemNumber(doc.grandTotal)}
+        </h4>
+      </div>
+
+      {/* Terms and Conditions */}
+      {doc.terms && (
+        <div className="space-y-2">
+          <h4 className="font-mono text-[10px] text-slate-450 uppercase font-bold tracking-wider">{t("7. Terms, Conditions & Scope Protections")}</h4>
+          <div className="text-xs text-slate-700 dark:text-zinc-300 border dark:border-zinc-800 p-4 rounded-xl bg-slate-50/50 dark:bg-zinc-900/40 overflow-x-auto prose dark:prose-invert max-w-none" dangerouslySetInnerHTML={{ __html: doc.terms }} />
+        </div>
+      )}
+
+      {/* Sign lines */}
+      <div className="grid grid-cols-2 gap-4 pt-10 text-xs border-t">
+        <div className="space-y-4">
+          <h4 className="font-mono text-[10px] text-slate-450 uppercase font-bold tracking-wider">{t("8. Authorization & Signatures")}</h4>
+          <p className="text-slate-400 font-mono text-[9px] uppercase">{t("Advisor Authorization")}</p>
+          <div className="h-10 border-b border-dashed"></div>
+          <p><strong>{t("Gemba Partner Officer")}</strong></p>
+        </div>
+        <div className="space-y-4 pt-[24px]">
+          <p className="text-slate-400 font-mono text-[9px] uppercase">{t("Client Representative")}</p>
+          <div className="h-10 border-b border-dashed"></div>
+          <p><strong>{t("{company} authorized representative").replace("{company}", doc.companyName)}</strong></p>
+        </div>
+      </div>
+
+    </div>
+  );
+}
 
 export default function ProposalManagementView() {
   const { lang, t } = useLanguage();
@@ -102,6 +283,11 @@ export default function ProposalManagementView() {
 
   // Document Viewer States
   const [viewingProposalDoc, setViewingProposalDoc] = useState<Proposal | null>(null);
+
+  // Off-screen html2canvas-pro capture target — see ProposalLetterheadBody /
+  // captureProposalPdf below.
+  const [pdfCaptureProposal, setPdfCaptureProposal] = useState<Proposal | null>(null);
+  const pdfCaptureRef = useRef<HTMLDivElement>(null);
 
   // Selected proposal for full detail & PDF view
   const [selectedProposalForDetail, setSelectedProposalForDetail] = useState<Proposal | null>(null);
@@ -317,18 +503,41 @@ export default function ProposalManagementView() {
   };
 
   // Dispatch email logic
+  const [isDispatchingEmail, setIsDispatchingEmail] = useState(false);
   const handleDispatchEmail = async () => {
     if (!sendingProposal) return;
+    setIsDispatchingEmail(true);
 
     try {
+      // Item: "PDF ekle" was checked in this drawer but no real file was
+      // ever attached — attachments were passed as plain filename strings
+      // (no contentBytes), which sendProposalEmail() never even forwarded
+      // to /api/mail/send, and which the Graph mail service's
+      // normalizeAttachments() silently drops anyway (it filters out any
+      // attachment without .contentBytes). Build a REAL PDF attachment
+      // object here, matching the "Yazdır" letterhead document.
+      const fileAttachments: Array<{ name: string; contentType: string; contentBytes: string }> = [];
+      if (attachPdf) {
+        const captured = await captureProposalPdf(sendingProposal).catch(() => null);
+        if (captured) {
+          fileAttachments.push({
+            name: `Proposal_${sendingProposal.proposalNumber}_${sendingProposal.currentVersion}.pdf`,
+            contentType: "application/pdf",
+            contentBytes: captured.base64,
+          });
+        } else {
+          alert(t("PDF could not be generated for attachment; sending without a PDF attached."));
+        }
+      }
+
       const updated = await sendProposalEmail(sendingProposal, {
         to: emailTo,
         cc: emailCC,
         bcc: emailBCC,
         subject: emailSubject,
         body: emailBody,
-        attachments: [
-          ...(attachPdf ? [`Proposal_${sendingProposal.proposalNumber}_${sendingProposal.currentVersion}.pdf`] : []),
+        attachments: fileAttachments,
+        attachmentNotes: [
           ...(attachWord ? [`Proposal_${sendingProposal.proposalNumber}_${sendingProposal.currentVersion}.docx`] : []),
           ...attachCustom,
         ],
@@ -339,6 +548,8 @@ export default function ProposalManagementView() {
       setSendingProposal(null);
     } catch (error: unknown) {
       alert(t("Error dispatching Outlook message: {error}").replace("{error}", error instanceof Error ? error.message : t("Unknown error")));
+    } finally {
+      setIsDispatchingEmail(false);
     }
   };
 
@@ -397,12 +608,46 @@ export default function ProposalManagementView() {
     document.body.removeChild(a);
   };
 
+  // Renders the given proposal into the hidden off-screen container above
+  // and captures it with html2canvas-pro, producing a PDF that visually
+  // matches the real "B2B Letterhead Preview" / "Yazd\u0131r" document (real
+  // content, real letterhead colors, real uploaded cover/page images) \u2014
+  // instead of the old jsPDF-drawn generateProposalPdfBlob(), which draws a
+  // completely generic document with a hardcoded green accent color and no
+  // awareness of uploaded templates at all.
+  const captureProposalPdf = async (
+    proposal: Proposal
+  ): Promise<{ base64: string; blob: Blob; filename: string } | null> => {
+    const filename = `Teklif_${proposal.proposalNumber}.pdf`;
+    setPdfCaptureProposal(proposal);
+    try {
+      // Let React commit the render before we read the DOM. Two rAFs is
+      // enough for layout + paint; the embedded images are base64 data URIs
+      // so there's no network round-trip to wait for.
+      await new Promise<void>((resolve) => {
+        requestAnimationFrame(() => requestAnimationFrame(() => resolve()));
+      });
+      const el = pdfCaptureRef.current;
+      if (!el) return null;
+      const result = await renderElementToPdfBase64(el, filename);
+      if (!result) return null;
+      return { base64: result.base64, blob: base64ToBlob(result.base64, "application/pdf"), filename: result.filename };
+    } catch (err) {
+      console.error("captureProposalPdf failed:", err);
+      return null;
+    } finally {
+      setPdfCaptureProposal(null);
+    }
+  };
+
   // Direct PDF download for a saved proposal \u2014 previously the list only
   // offered a Word (.doc) download; the user asked for PDF to be available
-  // directly instead of Word where possible. Uses the same jsPDF renderer
-  // already wired to the detail drawer's inline preview (generateProposalPdfBlobUrl).
-  const handleDownloadPdf = (proposal: Proposal) => {
-    const blob = generateProposalPdfBlob(proposal, lang);
+  // directly instead of Word where possible. Tries the real HTML/CSS
+  // letterhead capture first (matches "Yazd\u0131r"); falls back to the old
+  // jsPDF renderer only if that capture fails, so download never breaks.
+  const handleDownloadPdf = async (proposal: Proposal) => {
+    const captured = await captureProposalPdf(proposal).catch(() => null);
+    const blob = captured?.blob || generateProposalPdfBlob(proposal, lang);
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;
@@ -1093,170 +1338,25 @@ export default function ProposalManagementView() {
 
             {/* Simulated letterhead viewport */}
             <div className="flex-1 overflow-y-auto p-8 bg-zinc-50 dark:bg-zinc-950 font-serif">
-              <div className="bg-white dark:bg-zinc-900 border border-slate-200 rounded-lg p-10 max-w-4xl mx-auto shadow space-y-6 text-sm text-slate-800 dark:text-zinc-200 leading-relaxed font-sans relative">
-                
-                {/* Custom Page Letterhead Header if present */}
-                {viewingProposalDoc.pageImage && (
-                  <div className="absolute top-4 right-4 max-h-12 overflow-hidden opacity-80">
-                    <img src={viewingProposalDoc.pageImage} alt="page letterhead" referrerPolicy="no-referrer" className="h-10 object-contain" />
-                  </div>
-                )}
-
-                {/* Cover Image or Standard Header */}
-                {viewingProposalDoc.coverImage ? (
-                  <div className="border-b pb-5 flex flex-col items-center justify-center gap-2">
-                    <img src={viewingProposalDoc.coverImage} alt="cover letterhead" referrerPolicy="no-referrer" className="max-h-48 object-contain" />
-                    <div className="text-center text-[10px] text-slate-450 font-mono mt-2">
-                      <p>{t("Date:")} {viewingProposalDoc.date} | {t("Ref:")} PROP-{viewingProposalDoc.proposalNumber} | {t("Status:")} {viewingProposalDoc.status}</p>
-                    </div>
-                  </div>
-                ) : (
-                  /* Header Logo */
-                  <div className="border-b pb-5 flex justify-between items-start">
-                    <div>
-                      <h3 className="font-black text-emerald-600 tracking-widest text-lg">GEMBA PARTNER</h3>
-                      <p className="text-[10px] text-slate-400 uppercase font-mono tracking-wider mt-0.5">{t("Lean Operations & Strategy Advisory Group")}</p>
-                    </div>
-                    <div className="text-right text-[10px] text-slate-450 font-mono">
-                      <p>{t("Date:")} {viewingProposalDoc.date}</p>
-                      <p>{t("Ref:")} PROP-{viewingProposalDoc.proposalNumber}</p>
-                      <p>{t("Status:")} {viewingProposalDoc.status}</p>
-                    </div>
-                  </div>
-                )}
-
-                {/* Custom Headline / Cover Text */}
-                {viewingProposalDoc.coverPage && (
-                  <div className="bg-slate-50 dark:bg-zinc-850 p-4 rounded-xl border-l-4 border-l-purple-600 text-center">
-                    <h2 className="text-md font-extrabold text-purple-800 dark:text-purple-400 font-mono">
-                      {viewingProposalDoc.coverPage}
-                    </h2>
-                  </div>
-                )}
-
-                {/* Cover Headline */}
-                <div className="text-center py-4 space-y-1">
-                  <h1 className="text-lg font-black tracking-tight text-slate-900 dark:text-zinc-100 uppercase font-mono">
-                    {viewingProposalDoc.proposalSubject}
-                  </h1>
-                  <p className="text-[11px] text-slate-450 uppercase font-mono tracking-wider">
-                    {t("Prepared For:")} <strong>{viewingProposalDoc.companyName}</strong> | {t("Attn:")} {viewingProposalDoc.contactPerson}
-                  </p>
-                </div>
-
-                {/* Description */}
-                <div className="space-y-2 border-l-4 border-l-emerald-500 pl-4 bg-slate-50 dark:bg-black/10 py-2">
-                  <h4 className="font-mono text-[10px] text-slate-450 uppercase font-bold tracking-wider">{t("1. Opportunity Focus Statement")}</h4>
-                  <p className="text-xs italic text-slate-600 dark:text-zinc-350">{viewingProposalDoc.description || t("Field walkthrough on bottleneck areas.")}</p>
-                </div>
-
-                {/* Methodology (Render HTML tables securely) */}
-                {viewingProposalDoc.methodology && (
-                  <div className="space-y-2">
-                    <h4 className="font-mono text-[10px] text-slate-450 uppercase font-bold tracking-wider">{t("2. Lean Methodology & Structural Approach")}</h4>
-                    <div className="text-xs text-slate-700 dark:text-zinc-300 border dark:border-zinc-800 p-4 rounded-xl bg-slate-50/50 dark:bg-zinc-900/40 overflow-x-auto prose dark:prose-invert max-w-none" dangerouslySetInnerHTML={{ __html: viewingProposalDoc.methodology }} />
-                  </div>
-                )}
-
-                {/* Project Plan (Render HTML tables securely) */}
-                {viewingProposalDoc.projectPlan && (
-                  <div className="space-y-2">
-                    <h4 className="font-mono text-[10px] text-slate-450 uppercase font-bold tracking-wider">{t("3. Phase-by-Phase Project Plan")}</h4>
-                    <div className="text-xs text-slate-700 dark:text-zinc-300 border dark:border-zinc-800 p-4 rounded-xl bg-slate-50/50 dark:bg-zinc-900/40 overflow-x-auto prose dark:prose-invert max-w-none" dangerouslySetInnerHTML={{ __html: viewingProposalDoc.projectPlan }} />
-                  </div>
-                )}
-
-                {/* Timeline (Render HTML tables securely) */}
-                {viewingProposalDoc.timeline && (
-                  <div className="space-y-2">
-                    <h4 className="font-mono text-[10px] text-slate-450 uppercase font-bold tracking-wider">{t("4. Timeline & Sprints Milestones")}</h4>
-                    <div className="text-xs text-slate-700 dark:text-zinc-300 border dark:border-zinc-800 p-4 rounded-xl bg-slate-50/50 dark:bg-zinc-900/40 overflow-x-auto prose dark:prose-invert max-w-none" dangerouslySetInnerHTML={{ __html: viewingProposalDoc.timeline }} />
-                  </div>
-                )}
-
-                {/* Services Grid */}
-                <div className="space-y-2">
-                  <h4 className="font-mono text-[10px] text-slate-450 uppercase font-bold tracking-wider">{t("5. Services Involved")}</h4>
-                  <div className="grid grid-cols-2 gap-2">
-                    {(viewingProposalDoc.services || []).map((s) => (
-                      <div key={s} className="bg-zinc-50 dark:bg-zinc-800 px-3 py-1.5 rounded-lg border border-slate-100 dark:border-zinc-700 text-xs text-slate-700 dark:text-zinc-300">
-                        ✓ {s}
-                      </div>
-                    ))}
-                  </div>
-                </div>
-
-                {/* Options and budgets table */}
-                <div className="space-y-3">
-                  <h4 className="font-mono text-[10px] text-slate-450 uppercase font-bold tracking-wider">{t("6. Pricing Packages Options")}</h4>
-                  <div className="overflow-x-auto w-full border border-slate-200 dark:border-zinc-800 rounded-xl">
-                    <table className="w-full text-xs table-auto border-collapse min-w-[650px]">
-                      <thead>
-                        <tr className="bg-slate-50 dark:bg-zinc-850 border-b text-[10px] font-mono text-slate-450 uppercase">
-                          <th className="p-3 text-left font-bold">{t("Selection")}</th>
-                          <th className="p-3 text-right font-bold">{t("Man-Days")}</th>
-                          <th className="p-3 text-right font-bold">{t("Daily Rate")}</th>
-                          <th className="p-3 text-right font-bold">{t("Expenses Allowance")}</th>
-                          <th className="p-3 text-right font-bold">{t("Option Est")}</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {Object.keys(viewingProposalDoc.options).map((key) => {
-                          const opt = viewingProposalDoc.options[key];
-                          const total = opt.manDays * opt.dailyRate + opt.expenses;
-                          return (
-                            <tr key={key} className="border-b border-slate-100 dark:border-zinc-800/60 hover:bg-slate-50/50 dark:hover:bg-zinc-800/20 transition-colors">
-                              <td className="p-3 font-bold text-slate-800 dark:text-zinc-100">{key}</td>
-                              <td className="p-3 text-right font-semibold text-slate-700 dark:text-zinc-300">{formatSystemNumber(opt.manDays)} Days</td>
-                              <td className="p-3 text-right text-slate-700 dark:text-zinc-300">{viewingProposalDoc.currency} {formatSystemNumber(opt.dailyRate)}</td>
-                              <td className="p-3 text-right text-slate-700 dark:text-zinc-300">{viewingProposalDoc.currency} {formatSystemNumber(opt.expenses)}</td>
-                              <td className="p-3 text-right font-extrabold text-emerald-600 dark:text-emerald-400">{viewingProposalDoc.currency} {formatSystemNumber(total)}</td>
-                            </tr>
-                          );
-                        })}
-                      </tbody>
-                    </table>
-                  </div>
-                </div>
-
-                {/* Calculations Card */}
-                <div className="bg-emerald-50/30 dark:bg-[#111] p-4 rounded-xl border border-emerald-100 select-none text-right font-mono space-y-1">
-                  <p className="text-xs text-slate-500">{t("Proposal Net Subtotal:")} {viewingProposalDoc.currency} {formatSystemNumber(viewingProposalDoc.totalBudget)}</p>
-                  <p className="text-xs text-slate-500">{t("VAT surcharge (20%):")} {viewingProposalDoc.currency} {formatSystemNumber(viewingProposalDoc.taxes)}</p>
-                  <h4 className="text-sm font-bold text-emerald-600 dark:text-emerald-400">
-                    {t("Grand Total Proposal Offer:")} {viewingProposalDoc.currency} {formatSystemNumber(viewingProposalDoc.grandTotal)}
-                  </h4>
-                </div>
-
-                {/* Terms and Conditions */}
-                {viewingProposalDoc.terms && (
-                  <div className="space-y-2">
-                    <h4 className="font-mono text-[10px] text-slate-450 uppercase font-bold tracking-wider">{t("7. Terms, Conditions & Scope Protections")}</h4>
-                    <div className="text-xs text-slate-700 dark:text-zinc-300 border dark:border-zinc-800 p-4 rounded-xl bg-slate-50/50 dark:bg-zinc-900/40 overflow-x-auto prose dark:prose-invert max-w-none" dangerouslySetInnerHTML={{ __html: viewingProposalDoc.terms }} />
-                  </div>
-                )}
-
-                {/* Sign lines */}
-                <div className="grid grid-cols-2 gap-4 pt-10 text-xs border-t">
-                  <div className="space-y-4">
-                    <h4 className="font-mono text-[10px] text-slate-450 uppercase font-bold tracking-wider">{t("8. Authorization & Signatures")}</h4>
-                    <p className="text-slate-400 font-mono text-[9px] uppercase">{t("Advisor Authorization")}</p>
-                    <div className="h-10 border-b border-dashed"></div>
-                    <p><strong>{t("Gemba Partner Officer")}</strong></p>
-                  </div>
-                  <div className="space-y-4 pt-[24px]">
-                    <p className="text-slate-400 font-mono text-[9px] uppercase">{t("Client Representative")}</p>
-                    <div className="h-10 border-b border-dashed"></div>
-                    <p><strong>{t("{company} authorized representative").replace("{company}", viewingProposalDoc.companyName)}</strong></p>
-                  </div>
-                </div>
-
-              </div>
+              <ProposalLetterheadBody doc={viewingProposalDoc} t={t} formatSystemNumber={formatSystemNumber} />
             </div>
 
           </div>
         </div>
       )}
+
+      {/* Hidden off-screen render target used to capture the exact same
+          styled A4 document (via html2canvas-pro, see captureProposalPdf
+          below) for "PDF İndir" and the e-mail PDF attachment — so both
+          match the "Yazdır"/print reference instead of the old disconnected
+          jsPDF renderer. */}
+      <div style={{ position: "fixed", left: "-9999px", top: 0, width: "820px", zIndex: -1, pointerEvents: "none" }} aria-hidden="true">
+        {pdfCaptureProposal && (
+          <div ref={pdfCaptureRef} className="bg-white p-2 font-serif" style={{ width: "820px" }}>
+            <ProposalLetterheadBody doc={pdfCaptureProposal} t={t} formatSystemNumber={formatSystemNumber} />
+          </div>
+        )}
+      </div>
 
       {/* OUTLOOK EMAIL DISPATCH AND CRM SYNC DRAWER */}
       {sendingProposal && (
@@ -1393,9 +1493,11 @@ export default function ProposalManagementView() {
               </button>
               <button
                 onClick={handleDispatchEmail}
-                className="px-5 py-1.5 bg-blue-600 hover:bg-blue-700 text-white rounded font-extrabold flex items-center gap-1 cursor-pointer transition-all shadow"
+                disabled={isDispatchingEmail}
+                className="px-5 py-1.5 bg-blue-600 hover:bg-blue-700 text-white rounded font-extrabold flex items-center gap-1 cursor-pointer transition-all shadow disabled:opacity-60 disabled:cursor-not-allowed"
               >
-                <Mail className="w-3.5 h-3.5" /> {t("Dispatch Mail & Sync B2B Pipeline")}
+                <Mail className="w-3.5 h-3.5" />
+                {isDispatchingEmail ? t("Generating PDF & Sending...") : t("Dispatch Mail & Sync B2B Pipeline")}
               </button>
             </div>
 

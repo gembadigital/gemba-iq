@@ -459,13 +459,23 @@ export async function sendProposalEmail(
     bcc?: string;
     subject: string;
     body: string;
-    attachments?: string[];
+    // Real file attachments (name/contentType/base64 contentBytes) — these
+    // are what actually get delivered via Microsoft Graph.
+    attachments?: Array<{ name: string; contentType: string; contentBytes: string }>;
+    // Purely informational labels (e.g. "Proposal_x.docx") for items that
+    // are mentioned in the audit/timeline log but aren't real file
+    // attachments (Word export isn't generated here) — kept separate so
+    // they're never silently passed to the mail API as fake attachments.
+    attachmentNotes?: string[];
   }
 ): Promise<Proposal> {
   // Actually dispatch the email through the organization mailbox (Microsoft Graph)
   // before touching any CRM state. Previously this function only recorded a "Sent"
   // status/audit entry without ever calling the mail API, so the UI reported success
-  // even when nothing was delivered to the recipient.
+  // even when nothing was delivered to the recipient. It also never forwarded
+  // `attachments` to the request body at all — a real PDF attachment built by
+  // the caller was silently dropped even before reaching the Graph mail
+  // service's own contentBytes filter.
   const client = getSupabase();
   const {
     data: { session },
@@ -483,6 +493,7 @@ export async function sendProposalEmail(
       bcc: emailData.bcc || undefined,
       subject: emailData.subject,
       body: emailData.body,
+      attachments: emailData.attachments || [],
     }),
   });
 
@@ -516,7 +527,10 @@ export async function sendProposalEmail(
             date: new Date().toLocaleString(),
             subject: emailData.subject,
             body: emailData.body.replace(/<[^>]*>/g, ""),
-            attachments: emailData.attachments,
+            attachments: [
+              ...(emailData.attachments || []).map((a) => a.name),
+              ...(emailData.attachmentNotes || []),
+            ],
           },
         ],
       };

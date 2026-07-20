@@ -823,12 +823,33 @@ export default function DealManagementView({ initialTab = "dashboard", onNavigat
     e.preventDefault();
   };
 
+  // Item: "fırsat yönetiminde teklif kazanıldı kanban kutusuna atılıdığında
+  // teklifin yönetiminde teklifin otomatik olarak burada kazanıldı olarak
+  // gözükmesi gerekir" — Deal (Fırsat) ve Proposal (Teklif) ayrı kayıtlar
+  // olarak yalnızca proposalNumber ile gevşek bağlı; bir fırsat "Won"
+  // aşamasına taşındığında bağlı teklifin durumu hiçbir zaman otomatik
+  // güncellenmiyordu. Bu yardımcı, proposalNumber eşleşen Proposal kaydını
+  // bulup status'unu "Accepted" yapıyor (Teklif Yönetimi'nde "Kazanıldı
+  // (Kabul Edildi)" olarak gösteriliyor — bkz. ProposalManagementView.tsx
+  // getStatusLabel()).
+  const syncProposalStatusOnDealStageChange = (proposalNumber: string | undefined, newStage: string) => {
+    if (!proposalNumber || !proposalNumber.trim() || newStage !== "Won") return;
+    const proposals = CrmDb.getProposals();
+    const idx = proposals.findIndex((p: any) => p.proposalNumber === proposalNumber);
+    if (idx === -1 || proposals[idx].status === "Accepted") return;
+    const updated = [...proposals];
+    updated[idx] = { ...updated[idx], status: "Accepted", lastUpdate: new Date().toISOString() };
+    CrmDb.saveProposals(updated);
+  };
+
   const handleDealDropOnStage = (e: React.DragEvent, targetStage: string) => {
     e.preventDefault();
     const dealId = e.dataTransfer.getData("text/deal-card-id");
     if (!dealId) return;
     const deal = deals.find((d) => d.id === dealId);
     if (!deal || deal.stage === targetStage) return;
+
+    syncProposalStatusOnDealStageChange(deal.proposalNumber, targetStage);
 
     // Direct move with update probability
     setDeals((prev) => {
@@ -1212,6 +1233,7 @@ export default function DealManagementView({ initialTab = "dashboard", onNavigat
           return d;
         })
       );
+      syncProposalStatusOnDealStageChange(dealFormState.proposalNumber, dealFormState.stage);
       // Update selected deal in drawer if matching
       if (selectedDeal?.id === editingDealId) {
         setSelectedDeal(prev => prev ? {
