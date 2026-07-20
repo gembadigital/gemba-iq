@@ -16,6 +16,33 @@ import {
   persistTasks,
 } from "./crmSupabaseService";
 
+// Item 5: "Müşteri sayfasına mükerrer müşteri eklendiğinde, TR karakter
+// örnek: Çelikel, CELiKEL, otomatik tamamlama yaparak, mükerrer olup
+// olmadığını uyar." Plain `.toLowerCase()` is not enough because Turkish
+// diacritics (Ç/Ş/Ğ/Ü/Ö) are distinct Unicode letters from their ASCII
+// counterparts (Ç !== C even after lowercasing), and the dotted/dotless
+// İ/I/ı/i pair behaves inconsistently under the default (non-Turkish)
+// locale's toLowerCase(). This maps every Turkish letter variant to a
+// single ASCII base letter before lowercasing, so "Çelikel" and "CELiKEL"
+// both normalize to the same "celikel" key and can be compared reliably.
+const TR_CHAR_FOLD_MAP: Record<string, string> = {
+  ç: "c", Ç: "c",
+  ğ: "g", Ğ: "g",
+  ı: "i", I: "i", İ: "i", i: "i",
+  ö: "o", Ö: "o",
+  ş: "s", Ş: "s",
+  ü: "u", Ü: "u",
+};
+
+export function normalizeTrKey(input: string | undefined | null): string {
+  return (input || "")
+    .split("")
+    .map((ch) => TR_CHAR_FOLD_MAP[ch] ?? ch.toLowerCase())
+    .join("")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
 export interface Contact {
   id: string;
   organization_id?: string;
@@ -316,9 +343,8 @@ export const CrmDb = {
 
   createCompany(companyData: Partial<Company>): Company {
     const companies = this.getCompanies();
-    const existing = companies.find(
-      (c) => c.name && c.name.toLowerCase().trim() === (companyData.name || "").toLowerCase().trim()
-    );
+    const targetKey = normalizeTrKey(companyData.name);
+    const existing = companies.find((c) => c.name && normalizeTrKey(c.name) === targetKey);
     if (existing) return existing;
 
     const newCompany: Company = {
@@ -345,6 +371,9 @@ export const CrmDb = {
       annualRevenueCurrency: companyData.annualRevenueCurrency || "₺",
       productionType: companyData.productionType || "",
       squareMeter: companyData.squareMeter || "",
+      productionCapacity: companyData.productionCapacity || "",
+      isoCertifications: companyData.isoCertifications || [],
+      isoCertificationOther: companyData.isoCertificationOther || "",
       digitalInfrastructure: companyData.digitalInfrastructure || "",
       customFields: companyData.customFields || {},
     };
@@ -728,10 +757,24 @@ export const CrmDb = {
     if (!query) return [];
     const companies = this.getCompanies();
     const cleanQuery = query.toLowerCase().trim();
+    const normalizedQuery = normalizeTrKey(query);
     return companies.filter(
       (c) =>
         c.name.toLowerCase().includes(cleanQuery) ||
+        normalizeTrKey(c.name).includes(normalizedQuery) ||
         (c.website && c.website.toLowerCase().includes(cleanQuery))
+    );
+  },
+
+  // Item 5: "mükerrer olup olmadığını uyar" — returns existing companies
+  // whose name normalizes (Turkish-character/case-insensitive) to the same
+  // key as the given name, so the "Add/Edit Company" form can warn the user
+  // before they create a duplicate record like "Çelikel" vs "CELiKEL".
+  findPossibleDuplicateCompanies(name: string, excludeId?: string): Company[] {
+    const key = normalizeTrKey(name);
+    if (!key) return [];
+    return this.getCompanies().filter(
+      (c) => c.id !== excludeId && normalizeTrKey(c.name) === key
     );
   },
 };

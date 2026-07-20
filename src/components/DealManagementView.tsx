@@ -1221,6 +1221,7 @@ export default function DealManagementView({ initialTab = "dashboard", onNavigat
 
     if (formMode === "edit" && editingDealId) {
       // Edit mode
+      const previousStage = deals.find((d) => d.id === editingDealId)?.stage;
       setDeals((prev) =>
         prev.map((d) => {
           if (d.id === editingDealId) {
@@ -1233,7 +1234,19 @@ export default function DealManagementView({ initialTab = "dashboard", onNavigat
           return d;
         })
       );
-      syncProposalStatusOnDealStageChange(dealFormState.proposalNumber, dealFormState.stage);
+      // Item 4: "yanlışlıkla kabul edilen teklif için düzeltme yapılamıyor,
+      // kabul şekilde kalıyor" — kök neden bu satırdaydı. Bu fonksiyon
+      // eskiden HER form kaydında (aşama değişse de değişmese de)
+      // çağrılıyordu; fırsat zaten "Won" aşamasındayken kullanıcı teklifin
+      // durumunu Teklif Yönetimi'nden elle "Kabul Edildi" dışına çekse
+      // bile, fırsatla ilgisiz herhangi bir alanı düzenleyip kaydettiğinde
+      // bu senkron tekrar devreye girip durumu sessizce "Accepted"a geri
+      // çeviriyordu. Artık yalnızca aşama GERÇEKTEN "Won" DEĞİL iken
+      // "Won"a geçtiğinde tetikleniyor — zaten Won olan bir fırsatın
+      // yeniden kaydedilmesi bir daha teklif durumunu ezmiyor.
+      if (previousStage !== "Won" && dealFormState.stage === "Won") {
+        syncProposalStatusOnDealStageChange(dealFormState.proposalNumber, dealFormState.stage);
+      }
       // Update selected deal in drawer if matching
       if (selectedDeal?.id === editingDealId) {
         setSelectedDeal(prev => prev ? {

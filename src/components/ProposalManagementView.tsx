@@ -1619,6 +1619,27 @@ export default function ProposalManagementView() {
                     {t("Reject")}
                   </button>
                 )}
+                {/* Item 4: "yanlışlıkla kabul edilen teklif için düzeltme
+                    yapılamıyor, kabul şekilde kalıyor" — Approve/Reject
+                    butonları yalnızca TEK yönlü ilerlemeye izin veriyordu;
+                    bir teklif yanlışlıkla "Approved" (Kabul Edildi) yapılınca
+                    onu Taslağa geri döndürecek hiçbir kontrol yoktu. Bu buton
+                    o düzeltme yolunu açıyor. */}
+                {(selectedProposalForDetail.approvalStatus === "Approved" ||
+                  selectedProposalForDetail.approvalStatus === "Rejected") && (
+                  <button
+                    onClick={() => {
+                      if (confirm(t("Revert this proposal's status back to Draft?"))) {
+                        void handleSetApproval(selectedProposalForDetail, "Draft");
+                      }
+                    }}
+                    className="bg-slate-600 hover:bg-slate-700 text-white p-2 px-3 rounded-lg font-extrabold text-[11px] flex items-center gap-1.5 cursor-pointer"
+                    title={t("Revert this proposal's status back to Draft")}
+                  >
+                    <RefreshCw className="w-3.5 h-3.5" />
+                    {t("Revert to Draft")}
+                  </button>
+                )}
                 <button
                   onClick={() => handleOpenSendPanel(selectedProposalForDetail)}
                   className="bg-blue-600 hover:bg-blue-700 text-white p-2 px-3 rounded-lg font-extrabold text-[11px] flex items-center gap-1.5 cursor-pointer"

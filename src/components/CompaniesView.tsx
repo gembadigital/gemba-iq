@@ -55,7 +55,6 @@ import CompanyContactsTab from "./company-tabs/CompanyContactsTab";
 import CompanyTimelineTab from "./company-tabs/CompanyTimelineTab";
 import CompanyEmailsTab from "./company-tabs/CompanyEmailsTab";
 import CompanyDocumentsTab from "./company-tabs/CompanyDocumentsTab";
-import CompanyOpexTab from "./company-tabs/CompanyOpexTab";
 import CompanyRevenueTab from "./company-tabs/CompanyRevenueTab";
 import CompanyDetailView from "./CompanyDetailView";
 import { TargetAccount } from "../types";
@@ -116,6 +115,9 @@ export interface Company {
   shift: string; // 1 Shift, 2 Shifts, 3 Shifts
   productionType?: string;
   squareMeter?: string;
+  productionCapacity?: string; // Üretim Kapasitesi
+  isoCertifications?: string[]; // Sahip Olunan Belgeler: ISO 9001, TS16949, ISO 14001, AS 9100, Diğer
+  isoCertificationOther?: string; // Free text when "Diğer" is selected
   digitalInfrastructure: string;
   description?: string;
   managementTeam?: string;
@@ -381,6 +383,14 @@ export default function CompaniesView() {
   };
 
   // Sort & Filter logic
+  // Item 5: "mükerrer müşteri eklendiğinde ... otomatik tamamlama yaparak,
+  // mükerrer olup olmadığını uyar" — live Turkish-character/case-insensitive
+  // duplicate check against the name currently typed in the Add/Edit form.
+  const possibleDuplicateCompanies = useMemo(() => {
+    if (!isFormOpen || !formState.name || !formState.name.trim()) return [];
+    return CrmDb.findPossibleDuplicateCompanies(formState.name, editingCompany?.id);
+  }, [isFormOpen, formState.name, editingCompany?.id, companies]);
+
   const filteredCompanies = useMemo(() => {
     let result = [...companies];
 
@@ -1251,6 +1261,15 @@ export default function CompaniesView() {
                     onChange={(e) => setFormState({ ...formState, name: e.target.value })}
                     className="w-full bg-white dark:bg-zinc-800 border border-slate-200 dark:border-zinc-700 rounded p-1.5 focus:outline-none"
                   />
+                  {possibleDuplicateCompanies.length > 0 && (
+                    <div className="mt-1.5 p-2 bg-amber-50 dark:bg-amber-950/20 border border-amber-200 dark:border-amber-900/40 rounded-lg flex items-start gap-1.5">
+                      <AlertCircle className="w-3.5 h-3.5 text-amber-600 dark:text-amber-400 shrink-0 mt-0.5" />
+                      <span className="text-[10px] text-amber-700 dark:text-amber-400 leading-snug">
+                        {t("Possible duplicate: a company with a very similar name already exists")}: {" "}
+                        <strong>{possibleDuplicateCompanies.map((c) => c.name).join(", ")}</strong>
+                      </span>
+                    </div>
+                  )}
                 </div>
 
                 <div>

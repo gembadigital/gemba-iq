@@ -16,7 +16,7 @@ import {
   Trash2,
   Mail,
   Paperclip,
-  Award,
+  CalendarClock,
   ArrowLeft,
   X,
   FileCheck2
@@ -28,7 +28,7 @@ import CompanyContactsTab from "./company-tabs/CompanyContactsTab";
 import CompanyTimelineTab from "./company-tabs/CompanyTimelineTab";
 import CompanyEmailsTab from "./company-tabs/CompanyEmailsTab";
 import CompanyDocumentsTab from "./company-tabs/CompanyDocumentsTab";
-import CompanyOpexTab from "./company-tabs/CompanyOpexTab";
+import CompanyMeetingsTab from "./company-tabs/CompanyMeetingsTab";
 import CompanyRevenueTab from "./company-tabs/CompanyRevenueTab";
 
 export interface CompanyDetailViewProps {
@@ -228,7 +228,7 @@ export default function CompanyDetailView({
           { id: "proposals", label: t("Proposals"), icon: <FileCheck2 className="w-3.5 h-3.5" /> },
           { id: "emails", label: t("Emails Hub"), icon: <Mail className="w-3.5 h-3.5" /> },
           { id: "documents", label: t("Documents"), icon: <Paperclip className="w-3.5 h-3.5" /> },
-          { id: "opex", label: t("Lean Opex Matrix"), icon: <Award className="w-3.5 h-3.5" /> },
+          { id: "meetings", label: t("Meetings"), icon: <CalendarClock className="w-3.5 h-3.5" /> },
           { id: "revenue", label: t("Revenue Ledger"), icon: <DollarSign className="w-3.5 h-3.5" /> },
           { id: "audit", label: t("Audit Log History"), icon: <Layers className="w-3.5 h-3.5" /> }
         ].map((tab) => {
@@ -408,15 +408,14 @@ export default function CompanyDetailView({
           />
         )}
 
-        {/* Tab 8: Lean Opex Matrix */}
-        {detailTab === "opex" && (
-          <CompanyOpexTab
+        {/* Tab 8: Meetings (Toplantılar) — replaces the old Lean Opex Matrix
+            score section per user request (item 1). */}
+        {detailTab === "meetings" && (
+          <CompanyMeetingsTab
             companyId={company.id}
             lang={lang}
             companyName={company.name}
             onLogTimelineEvent={handleLogTimelineDirect}
-            company={company}
-            onUpdateCompany={handleUpdateCompanyDirect}
           />
         )}
 
