@@ -1,7 +1,10 @@
-import React, { useState } from "react";
-import { CalendarClock, Plus, Trash2, Users } from "lucide-react";
+import React, { useEffect, useState } from "react";
+import { CalendarClock, ExternalLink, Plus, Trash2, Users } from "lucide-react";
 import { useLanguage } from "../../lib/LanguageContext";
+import { useOrganization } from "../../lib/OrganizationContext";
 import { CrmDb } from "../../lib/CrmDb";
+import { fetchPersonalMailbox } from "../../lib/personalMailbox";
+import { createPersonalCalendarEvent, deletePersonalCalendarEvent } from "../../lib/personalCalendar";
 
 // Item 1: "Müşteriler sayfası, müşteriler kartında opex puanı kısmını
 // kaldır. bunun yerine. Toplantı segmesi ekle. tarih eklensin ve toplantı
@@ -9,13 +12,24 @@ import { CrmDb } from "../../lib/CrmDb";
 // (CompanyOpexTab) with a simple meeting log: date + meeting minutes
 // (tutanak), stored per-company via CrmDb's generic KV store (same
 // persistence pattern the old Opex tab used).
+//
+// Outlook Calendar sync: "microsoft graph ile bağlantı outlook calendera
+// bağlanabilmesi lazım... kullanıcının email hesabı ile takvime bağlama...
+// şirketlerle yapılan toplantılar burada kayıt altına alınsın." — when the
+// signed-in user has a Personal Mailbox connected (Settings > My Account),
+// saving a meeting here also creates a matching event on that user's own
+// Outlook calendar (push-only, best-effort — the meeting log itself always
+// succeeds even if the calendar call fails or no mailbox is connected).
 
 export interface CompanyMeeting {
   id: string;
   date: string; // yyyy-mm-dd
+  time: string; // HH:mm
   notes: string; // tutanak
   createdAt: string;
   createdBy: string;
+  graphEventId?: string; // Outlook Calendar event id, if synced
+  calendarSyncStatus?: "synced" | "failed" | "skipped";
 }
 
 interface CompanyMeetingsTabProps {
@@ -27,41 +41,83 @@ interface CompanyMeetingsTabProps {
 
 export default function CompanyMeetingsTab({
   companyId,
+  companyName,
   onLogTimelineEvent,
 }: CompanyMeetingsTabProps) {
   const { t } = useLanguage();
+  const { actorName } = useOrganization();
   const meetingsKey = `crm_company_meetings_${companyId}`;
 
   const [meetings, setMeetings] = useState<CompanyMeeting[]>(() =>
     CrmDb.getKv<CompanyMeeting[]>(meetingsKey, [])
   );
   const [newDate, setNewDate] = useState<string>(() => new Date().toISOString().slice(0, 10));
+  const [newTime, setNewTime] = useState<string>("10:00");
   const [newNotes, setNewNotes] = useState("");
+  const [isSaving, setIsSaving] = useState(false);
+  const [mailboxConnected, setMailboxConnected] = useState<boolean | null>(null);
+
+  useEffect(() => {
+    fetchPersonalMailbox()
+      .then((mailbox) => setMailboxConnected(mailbox.status === "Connected"))
+      .catch(() => setMailboxConnected(false));
+  }, []);
 
   const persist = (updated: CompanyMeeting[]) => {
     setMeetings(updated);
     CrmDb.setKv(meetingsKey, updated);
   };
 
-  const handleAddMeeting = () => {
+  const handleAddMeeting = async () => {
     if (!newDate || !newNotes.trim()) return;
-    const meeting: CompanyMeeting = {
+    setIsSaving(true);
+
+    const baseMeeting: CompanyMeeting = {
       id: `meeting-${Date.now()}`,
       date: newDate,
+      time: newTime || "10:00",
       notes: newNotes.trim(),
       createdAt: new Date().toISOString(),
-      createdBy: "Atakan Zehir",
+      createdBy: actorName || "Gemba Partner",
+      calendarSyncStatus: "skipped",
     };
+
+    let meeting = baseMeeting;
+    if (mailboxConnected) {
+      try {
+        const start = `${newDate}T${newTime || "10:00"}:00`;
+        const endDate = new Date(`${start}`);
+        endDate.setHours(endDate.getHours() + 1);
+        const end = endDate.toISOString().slice(0, 19);
+        const result = await createPersonalCalendarEvent({
+          subject: `${t("Meeting")}: ${companyName}`,
+          body: newNotes.trim().replace(/\n/g, "<br />"),
+          start,
+          end,
+        });
+        meeting = { ...baseMeeting, graphEventId: result.eventId, calendarSyncStatus: "synced" };
+      } catch (err) {
+        console.error(err);
+        meeting = { ...baseMeeting, calendarSyncStatus: "failed" };
+      }
+    }
+
     const updated = [meeting, ...meetings].sort((a, b) => (a.date < b.date ? 1 : -1));
     persist(updated);
     if (onLogTimelineEvent) {
       onLogTimelineEvent(t("Meeting Logged"), `${newDate}: ${newNotes.trim().slice(0, 120)}`, "meeting");
     }
     setNewNotes("");
+    setIsSaving(false);
   };
 
   const handleDeleteMeeting = (id: string) => {
+    const target = meetings.find((m) => m.id === id);
     persist(meetings.filter((m) => m.id !== id));
+    if (target?.graphEventId) {
+      // Best-effort — don't block the local delete on the Graph call.
+      deletePersonalCalendarEvent(target.graphEventId).catch((err) => console.error(err));
+    }
   };
 
   return (
@@ -76,16 +132,29 @@ export default function CompanyMeetingsTab({
             </h4>
           </div>
 
-          <div className="space-y-1">
-            <label className="block text-[10px] uppercase font-bold text-slate-400 dark:text-zinc-500 font-mono">
-              {t("Meeting Date")}
-            </label>
-            <input
-              type="date"
-              value={newDate}
-              onChange={(e) => setNewDate(e.target.value)}
-              className="w-full p-1.5 bg-white dark:bg-zinc-800 border border-slate-205 dark:border-zinc-700 rounded text-xs text-slate-800 dark:text-zinc-200 focus:outline-none"
-            />
+          <div className="grid grid-cols-2 gap-3">
+            <div className="space-y-1">
+              <label className="block text-[10px] uppercase font-bold text-slate-400 dark:text-zinc-500 font-mono">
+                {t("Meeting Date")}
+              </label>
+              <input
+                type="date"
+                value={newDate}
+                onChange={(e) => setNewDate(e.target.value)}
+                className="w-full p-1.5 bg-white dark:bg-zinc-800 border border-slate-205 dark:border-zinc-700 rounded text-xs text-slate-800 dark:text-zinc-200 focus:outline-none"
+              />
+            </div>
+            <div className="space-y-1">
+              <label className="block text-[10px] uppercase font-bold text-slate-400 dark:text-zinc-500 font-mono">
+                {t("Meeting Time")}
+              </label>
+              <input
+                type="time"
+                value={newTime}
+                onChange={(e) => setNewTime(e.target.value)}
+                className="w-full p-1.5 bg-white dark:bg-zinc-800 border border-slate-205 dark:border-zinc-700 rounded text-xs text-slate-800 dark:text-zinc-200 focus:outline-none"
+              />
+            </div>
           </div>
 
           <div className="space-y-1">
@@ -100,14 +169,25 @@ export default function CompanyMeetingsTab({
             />
           </div>
 
+          {mailboxConnected === false && (
+            <p className="text-[10px] text-amber-600 dark:text-amber-400 leading-snug">
+              {t("Outlook Calendar sync is off — connect your Personal Mailbox in Settings > My Account to also add meetings to your Outlook calendar.")}
+            </p>
+          )}
+          {mailboxConnected === true && (
+            <p className="text-[10px] text-emerald-600 dark:text-emerald-400 leading-snug">
+              {t("This meeting will also be added to your connected Outlook calendar.")}
+            </p>
+          )}
+
           <button
             type="button"
             onClick={handleAddMeeting}
-            disabled={!newDate || !newNotes.trim()}
+            disabled={!newDate || !newNotes.trim() || isSaving}
             className="w-full py-2 bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed text-white rounded-lg font-bold flex items-center justify-center gap-1.5 cursor-pointer transition-colors"
           >
             <Plus className="w-3.5 h-3.5" />
-            {t("Save Meeting")}
+            {isSaving ? t("Saving...") : t("Save Meeting")}
           </button>
         </div>
       </div>
@@ -135,8 +215,14 @@ export default function CompanyMeetingsTab({
                   className="p-3 bg-slate-50/50 dark:bg-zinc-900/40 border border-slate-100 dark:border-zinc-800/50 rounded-lg space-y-1.5 group"
                 >
                   <div className="flex items-center justify-between gap-2">
-                    <span className="font-mono font-extrabold text-indigo-600 dark:text-indigo-400 text-[11px]">
-                      {m.date}
+                    <span className="font-mono font-extrabold text-indigo-600 dark:text-indigo-400 text-[11px] flex items-center gap-1.5">
+                      {m.date} {m.time ? `· ${m.time}` : ""}
+                      {m.calendarSyncStatus === "synced" && (
+                        <ExternalLink
+                          className="w-3 h-3 text-emerald-500"
+                          aria-label={t("Synced to Outlook Calendar")}
+                        />
+                      )}
                     </span>
                     <button
                       type="button"
@@ -150,6 +236,7 @@ export default function CompanyMeetingsTab({
                   <p className="text-slate-700 dark:text-zinc-300 leading-relaxed whitespace-pre-wrap text-[11px]">
                     {m.notes}
                   </p>
+                  <p className="text-[9px] text-slate-400 dark:text-zinc-500 font-mono">{m.createdBy}</p>
                 </div>
               ))}
             </div>
