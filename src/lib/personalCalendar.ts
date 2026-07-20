@@ -37,17 +37,23 @@ async function getAccessToken(): Promise<string> {
 // connected yet, or if the Azure app registration is missing the
 // Calendars.ReadWrite permission — callers should treat this as best-effort
 // and not block the underlying CRM action (e.g. saving a meeting log) on it.
+//
+// Routed through /api/user/mailbox (action: "calendar-create") instead of
+// its own /api/user/calendar endpoint — Vercel's Hobby plan caps a
+// deployment at 12 Serverless Functions, and this project was already at
+// that cap, so a standalone calendar route made the deploy fail with
+// "exceeded_serverless_functions_per_deployment". See api/user/mailbox.js.
 export async function createPersonalCalendarEvent(
   input: CreateCalendarEventInput
 ): Promise<CreateCalendarEventResult> {
   const accessToken = await getAccessToken();
-  const response = await fetch("/api/user/calendar", {
+  const response = await fetch("/api/user/mailbox", {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
       Authorization: `Bearer ${accessToken}`,
     },
-    body: JSON.stringify(input),
+    body: JSON.stringify({ action: "calendar-create", ...input }),
   });
   const payload = await response.json();
   if (!response.ok) {
@@ -58,7 +64,7 @@ export async function createPersonalCalendarEvent(
 
 export async function deletePersonalCalendarEvent(eventId: string): Promise<void> {
   const accessToken = await getAccessToken();
-  const response = await fetch(`/api/user/calendar?eventId=${encodeURIComponent(eventId)}`, {
+  const response = await fetch(`/api/user/mailbox?eventId=${encodeURIComponent(eventId)}`, {
     method: "DELETE",
     headers: { Authorization: `Bearer ${accessToken}` },
   });
