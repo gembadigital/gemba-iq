@@ -1,11 +1,29 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { CrmDb, CrmEmail, CrmDocument } from "../../lib/CrmDb";
-import { Mail, Send, Trash2, Plus, Sparkles, Paperclip, ChevronRight, User, X, Loader2, AlertTriangle } from "lucide-react";
+import { Mail, Send, Trash2, Plus, Sparkles, Paperclip, ChevronRight, User, X, Loader2, AlertTriangle, Upload, FileText } from "lucide-react";
 import { useLanguage } from "../../lib/LanguageContext";
 import { useOrganization } from "../../lib/OrganizationContext";
 import { fetchOrganizationMailbox } from "../../lib/organizationMailbox";
 import { fetchPersonalMailbox } from "../../lib/personalMailbox";
+import { fetchOrganizationDirectory } from "../../lib/invitationService";
+import type { OrganizationDirectoryMember } from "../../types/organization";
 import { getSupabase } from "../../lib/supabaseClient";
+
+// Reads a browser File into the {name, contentType, contentBytes} shape the
+// mail API (Microsoft Graph fileAttachment) expects — contentBytes is raw
+// base64, no "data:...;base64," prefix.
+function readFileAsAttachment(file: File): Promise<{ name: string; contentType: string; contentBytes: string }> {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => {
+      const result = String(reader.result || "");
+      const base64 = result.split(",")[1] || "";
+      resolve({ name: file.name, contentType: file.type || "application/octet-stream", contentBytes: base64 });
+    };
+    reader.onerror = () => reject(reader.error || new Error("File read failed."));
+    reader.readAsDataURL(file);
+  });
+}
 
 interface CompanyEmailsTabProps {
   companyId: string;
@@ -40,6 +58,13 @@ export default function CompanyEmailsTab({
   const [isLoadingSenders, setIsLoadingSenders] = useState(true);
   const [selectedSender, setSelectedSender] = useState<"organization" | "personal" | "">("");
   const [isSending, setIsSending] = useState(false);
+  // "muhakkak bcc olarak sistem e-posta adresine gönderilmeli" — every email
+  // sent from this composer is always BCC'd to the connected Organization
+  // Mailbox address, regardless of which mailbox (Organization or Personal)
+  // was actually chosen to send from. This is not user-editable; it's a
+  // fixed audit/record-keeping copy.
+  const [systemBccEmail, setSystemBccEmail] = useState("");
+  const [orgMembers, setOrgMembers] = useState<OrganizationDirectoryMember[]>([]);
 
   useEffect(() => {
     let cancelled = false;
@@ -53,11 +78,13 @@ export default function CompanyEmailsTab({
 
       const options: SenderOption[] = [];
       if (orgResult.status === "fulfilled" && orgResult.value.mailbox.status === "Connected") {
+        const orgEmail = orgResult.value.mailbox.mailbox_email || orgResult.value.mailbox.organizationMailbox || "";
         options.push({
           source: "organization",
           label: t("Organization Mailbox"),
-          email: orgResult.value.mailbox.mailbox_email || orgResult.value.mailbox.organizationMailbox || "",
+          email: orgEmail,
         });
+        setSystemBccEmail(orgEmail);
       }
       if (personalResult.status === "fulfilled" && personalResult.value.status === "Connected") {
         options.push({
@@ -75,13 +102,46 @@ export default function CompanyEmailsTab({
     };
   }, [t]);
 
+  useEffect(() => {
+    let cancelled = false;
+    fetchOrganizationDirectory()
+      .then((dir) => {
+        if (!cancelled) setOrgMembers(dir.members || []);
+      })
+      .catch(() => {
+        // Non-fatal: CC quick-add list just stays empty.
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
   // Composer Form State
   const [formState, setFormState] = useState({
     recipient: contactEmail || `info@${companyName.toLowerCase().replace(/[^a-z0-9]/g, "")}.com`,
+    cc: "",
     subject: "",
     body: "",
     attachmentName: ""
   });
+  const [uploadedFiles, setUploadedFiles] = useState<{ name: string; contentType: string; contentBytes: string }[]>([]);
+  const [isDragOver, setIsDragOver] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const handleFilesSelected = async (fileList: FileList | null) => {
+    if (!fileList || fileList.length === 0) return;
+    const files = Array.from(fileList);
+    try {
+      const read = await Promise.all(files.map(readFileAsAttachment));
+      setUploadedFiles((prev) => [...prev, ...read]);
+    } catch (err) {
+      alert(err instanceof Error ? err.message : t("File could not be read."));
+    }
+  };
+
+  const handleRemoveUploadedFile = (index: number) => {
+    setUploadedFiles((prev) => prev.filter((_, i) => i !== index));
+  };
 
   const reloadEmails = () => {
     setEmails(CrmDb.getEmailsByCompany(companyId));
@@ -157,9 +217,11 @@ export default function CompanyEmailsTab({
         body: JSON.stringify({
           source: selectedSender,
           recipient: formState.recipient,
+          cc: formState.cc.trim() || undefined,
+          bcc: systemBccEmail || undefined,
           subject: formState.subject,
           body: formState.body.replace(/\n/g, "<br />"),
-          attachments: [],
+          attachments: uploadedFiles,
         }),
       });
       const payload = await response.json().catch(() => ({}));
@@ -169,6 +231,10 @@ export default function CompanyEmailsTab({
       }
 
       const senderOption = senderOptions.find(opt => opt.source === selectedSender);
+      const attachmentLabels = [
+        ...uploadedFiles.map((f) => f.name),
+        ...(formState.attachmentName ? [formState.attachmentName] : []),
+      ];
       CrmDb.createEmail({
         companyId,
         recipient: formState.recipient,
@@ -177,7 +243,7 @@ export default function CompanyEmailsTab({
         body: formState.body,
         isIncoming: false,
         date: new Date().toISOString(),
-        attachments: formState.attachmentName ? [formState.attachmentName] : undefined
+        attachments: attachmentLabels.length > 0 ? attachmentLabels : undefined
       });
 
       if (onLogTimelineEvent) {
@@ -191,10 +257,12 @@ export default function CompanyEmailsTab({
       // Reset composer
       setFormState({
         recipient: contactEmail || `info@${companyName.toLowerCase().replace(/[^a-z0-9]/g, "")}.com`,
+        cc: "",
         subject: "",
         body: "",
         attachmentName: ""
       });
+      setUploadedFiles([]);
       setSelectedTemplate("");
       setIsComposerOpen(false);
       reloadEmails();
@@ -296,6 +364,44 @@ export default function CompanyEmailsTab({
           </div>
 
           <div>
+            <label className="block text-[9px] uppercase font-bold text-slate-400 mb-1">{t("CC (Optional)")}</label>
+            <input
+              type="text"
+              placeholder={t("name@company.com, another@company.com")}
+              value={formState.cc}
+              onChange={(e) => setFormState({ ...formState, cc: e.target.value })}
+              className="w-full bg-white dark:bg-zinc-800 border border-slate-200 dark:border-zinc-700 rounded p-1.5 text-xs text-slate-800 dark:text-zinc-200 focus:outline-none focus:border-indigo-500"
+            />
+            {orgMembers.length > 0 && (
+              <div className="flex flex-wrap gap-1.5 mt-1.5">
+                {orgMembers
+                  .filter((m) => m.email)
+                  .map((m) => (
+                    <button
+                      key={m.user_id}
+                      type="button"
+                      onClick={() => {
+                        const existing = formState.cc.split(",").map((s) => s.trim()).filter(Boolean);
+                        if (existing.includes(m.email)) return;
+                        const next = [...existing, m.email].join(", ");
+                        setFormState({ ...formState, cc: next });
+                      }}
+                      className="px-2 py-0.5 bg-slate-100 dark:bg-zinc-800 hover:bg-indigo-100 dark:hover:bg-indigo-950/30 border border-slate-200 dark:border-zinc-700 rounded-full text-[10px] text-slate-600 dark:text-zinc-300 cursor-pointer transition-colors"
+                      title={m.email}
+                    >
+                      + {m.full_name?.trim() || m.email}
+                    </button>
+                  ))}
+              </div>
+            )}
+            {systemBccEmail && (
+              <p className="text-[9px] text-slate-400 mt-1.5">
+                {t("A record copy (BCC) will automatically be sent to the system mailbox: {email}").replace("{email}", systemBccEmail)}
+              </p>
+            )}
+          </div>
+
+          <div>
             <label className="block text-[9px] uppercase font-bold text-slate-400 mb-1">{t("Subject *")}</label>
             <input
               type="text"
@@ -319,19 +425,84 @@ export default function CompanyEmailsTab({
 
           <div>
             <label className="block text-[9px] uppercase font-bold text-slate-400 mb-1 flex items-center gap-1">
-              <Paperclip className="w-3 h-3" />
-              <span>{t("Attach Company Document Reference")}</span>
+              <Upload className="w-3 h-3" />
+              <span>{t("Attach File")}</span>
             </label>
-            <select
-              value={formState.attachmentName}
-              onChange={(e) => setFormState({ ...formState, attachmentName: e.target.value })}
-              className="w-full bg-white dark:bg-zinc-800 border border-slate-200 dark:border-zinc-700 rounded p-1.5 text-xs text-slate-800 dark:text-zinc-200 focus:outline-none"
+            <div
+              onClick={() => fileInputRef.current?.click()}
+              onDragOver={(e) => {
+                e.preventDefault();
+                setIsDragOver(true);
+              }}
+              onDragLeave={() => setIsDragOver(false)}
+              onDrop={(e) => {
+                e.preventDefault();
+                setIsDragOver(false);
+                handleFilesSelected(e.dataTransfer.files);
+              }}
+              className={`w-full border-2 border-dashed rounded-lg p-3 text-center cursor-pointer transition-colors ${
+                isDragOver
+                  ? "border-indigo-500 bg-indigo-50 dark:bg-indigo-950/20"
+                  : "border-slate-200 dark:border-zinc-700 hover:border-indigo-300 dark:hover:border-indigo-800"
+              }`}
             >
-              <option value="">{t("-- No Attachment --")}</option>
-              {documents.map(doc => (
-                <option key={doc.id} value={doc.name}>{doc.name} ({doc.size})</option>
-              ))}
-            </select>
+              <input
+                ref={fileInputRef}
+                type="file"
+                multiple
+                className="hidden"
+                onChange={(e) => {
+                  handleFilesSelected(e.target.files);
+                  e.target.value = "";
+                }}
+              />
+              <span className="text-[11px] text-slate-500 dark:text-zinc-400">
+                {t("Click to browse or drag & drop files here")}
+              </span>
+            </div>
+
+            {uploadedFiles.length > 0 && (
+              <div className="flex flex-wrap gap-1.5 mt-2">
+                {uploadedFiles.map((f, i) => (
+                  <span
+                    key={`${f.name}-${i}`}
+                    className="inline-flex items-center gap-1 px-2 py-0.5 bg-indigo-50 dark:bg-indigo-950/20 border border-indigo-150 dark:border-indigo-900/40 text-[10px] font-bold text-indigo-700 dark:text-indigo-300 rounded"
+                  >
+                    <FileText className="w-3 h-3" />
+                    {f.name}
+                    <button
+                      type="button"
+                      onClick={() => handleRemoveUploadedFile(i)}
+                      className="ml-0.5 hover:text-rose-500"
+                    >
+                      <X className="w-3 h-3" />
+                    </button>
+                  </span>
+                ))}
+              </div>
+            )}
+
+            {documents.length > 0 && (
+              <div className="mt-2">
+                <label className="block text-[9px] uppercase font-bold text-slate-400 mb-1 flex items-center gap-1">
+                  <Paperclip className="w-3 h-3" />
+                  <span>{t("Attach Company Document Reference")}</span>
+                </label>
+                <select
+                  value={formState.attachmentName}
+                  onChange={(e) => setFormState({ ...formState, attachmentName: e.target.value })}
+                  className="w-full bg-white dark:bg-zinc-800 border border-slate-200 dark:border-zinc-700 rounded p-1.5 text-xs text-slate-800 dark:text-zinc-200 focus:outline-none"
+                >
+                  <option value="">{t("-- No Attachment --")}</option>
+                  {documents.map(doc => (
+                    <option key={doc.id} value={doc.name}>{doc.name} ({doc.size})</option>
+                  ))}
+                </select>
+                <p className="text-[9px] text-slate-400 mt-1">
+                  {t("Note: this is a reference note only and is not attached as a real file — use the upload area above to send an actual attachment.")}
+                </p>
+              </div>
+            )}
           </div>
 
           <div className="flex justify-end gap-2 border-t border-dashed border-slate-200 dark:border-zinc-800 pt-3">
