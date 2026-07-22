@@ -914,6 +914,38 @@ export default function ManagementPLView() {
 
   const kdvSummary = useMemo(() => computeKdvSummary(invoices, selectedMonth), [invoices, selectedMonth]);
 
+  // Diagnostic snapshot of the raw source data behind the "Danışman
+  // Maliyetleri" figures, scoped to whatever period is currently selected.
+  // Added because ₺0 consultant costs were repeatedly reported even after
+  // fixing the Active-only filter and adding the invoice-based cost source
+  // — this makes the two remaining silent failure modes visible instead of
+  // guessed at: (1) a matching invoice whose "Teslim Edilen Gün" field is
+  // 0/blank, which zeroes the cost regardless of a correct name match, and
+  // (2) a consultant name on an invoice that doesn't exactly match any name
+  // in the Danışman Master list (typo, extra space, Turkish-character
+  // difference), which silently drops that invoice from the calculation.
+  const diagnostics = useMemo(() => {
+    const periodMonths = Array.from(new Set(periods.flatMap((p) => p.months)));
+    const invoicesInPeriod = revenueInvoices.filter((inv) => periodMonths.includes(inv.month));
+    const invoicesWithNames = invoicesInPeriod.filter((inv) => (inv.consultantNames || []).some((n) => n && n.trim()));
+    const invoicesWithNamesNoDays = invoicesWithNames.filter((inv) => !inv.deliveredDays || inv.deliveredDays <= 0);
+    const assignmentsInPeriod = assignments.filter((a) => periodMonths.includes(a.month));
+    const masterNames = new Set(consultants.map((c) => c.name.trim().toLowerCase()));
+    const invoiceNamesSet = new Set<string>();
+    invoicesWithNames.forEach((inv) => (inv.consultantNames || []).forEach((n) => n && n.trim() && invoiceNamesSet.add(n.trim())));
+    const unmatchedNames = Array.from(invoiceNamesSet).filter((n) => !masterNames.has(n.toLowerCase()));
+    return {
+      consultantCount: consultants.length,
+      assignmentCount: assignments.length,
+      assignmentsInPeriodCount: assignmentsInPeriod.length,
+      invoiceCount: revenueInvoices.length,
+      invoicesInPeriodCount: invoicesInPeriod.length,
+      invoicesWithNamesCount: invoicesWithNames.length,
+      invoicesWithNamesNoDaysCount: invoicesWithNamesNoDays.length,
+      unmatchedNames,
+    };
+  }, [periods, revenueInvoices, assignments, consultants]);
+
   if (!pinOk) {
     return (
       <div className="flex items-center justify-center min-h-[70vh] px-4">
@@ -1086,6 +1118,41 @@ export default function ManagementPLView() {
                     ))}
                   </div>
                 </div>
+              )}
+            </div>
+
+            <div className="rounded-xl border border-amber-200 dark:border-amber-900/40 bg-amber-50/60 dark:bg-amber-950/20 px-4 py-3 text-[12px] text-amber-900 dark:text-amber-200 space-y-1.5">
+              <p className="font-semibold flex items-center gap-1.5">
+                <Info className="w-3.5 h-3.5 shrink-0" />
+                Veri Kontrolü — {periods.map((p) => p.shortLabel).join(", ")}
+              </p>
+              <p className="leading-relaxed">
+                Danışman Master listesi: <b>{diagnostics.consultantCount}</b> kayıtlı · Danışman Atamaları:{" "}
+                <b>{diagnostics.assignmentCount}</b> toplam, <b>{diagnostics.assignmentsInPeriodCount}</b> tanesi seçili
+                dönemde · Gelir Yönetimi Faturaları: <b>{diagnostics.invoiceCount}</b> toplam,{" "}
+                <b>{diagnostics.invoicesInPeriodCount}</b> tanesi seçili dönemde, <b>{diagnostics.invoicesWithNamesCount}</b>{" "}
+                tanesinde danışman adı etiketi var.
+              </p>
+              {diagnostics.invoicesWithNamesNoDaysCount > 0 && (
+                <p className="leading-relaxed text-rose-700 dark:text-rose-300">
+                  ⚠ <b>{diagnostics.invoicesWithNamesNoDaysCount}</b> faturada danışman adı etiketlenmiş ama "Teslim Edilen
+                  Gün" alanı 0/boş — gün sayısı olmadan maliyet 0 ₺ hesaplanır. Gelir Yönetimi → ilgili faturayı düzenle
+                  ekranından gün sayısını girin.
+                </p>
+              )}
+              {diagnostics.unmatchedNames.length > 0 && (
+                <p className="leading-relaxed text-rose-700 dark:text-rose-300">
+                  ⚠ Faturalarda geçen ama Danışman Master listesiyle birebir eşleşmeyen adlar:{" "}
+                  <b>{diagnostics.unmatchedNames.join(", ")}</b>. Yazım farkı (fazladan boşluk, farklı karakter) eşleşmeyi
+                  engeller — Master listedeki adla birebir aynı olmalı.
+                </p>
+              )}
+              {diagnostics.invoicesWithNamesCount === 0 && diagnostics.assignmentsInPeriodCount === 0 && (
+                <p className="leading-relaxed text-rose-700 dark:text-rose-300">
+                  ⚠ Seçili dönemde ne danışman atama kaydı ne de danışman adı etiketli fatura bulunuyor — maliyetin ₺0
+                  görünmesinin sebebi budur. Gelir Yönetimi'nde ilgili ay için faturanın "Danışman" kolonu dolu mu ve ay
+                  etiketi doğru mu kontrol edin.
+                </p>
               )}
             </div>
 
