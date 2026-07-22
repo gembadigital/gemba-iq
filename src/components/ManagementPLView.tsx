@@ -55,6 +55,18 @@ import {
 
 const PIN_CODE = "1234";
 
+// Shared sticky-first-column styling for the P/L table. Needs an explicit
+// solid background + z-index + a fixed width identical on every header/body
+// cell — sticky positioning combined with border-collapse silently fails to
+// paint an opaque background in some browsers, which let the scrolling
+// period columns visually bleed through the frozen "Kalem" column. Table
+// below therefore also uses border-separate instead of border-collapse.
+const STICKY_COL_WIDTH = 236;
+// Deliberately excludes background color — callers must always pass an
+// explicit solid bg-* class alongside this (never leave it to inherit),
+// otherwise the sticky column can render see-through over scrolled content.
+const STICKY_CELL_CLASS = "sticky left-0 z-10 shadow-[4px_0_6px_-4px_rgba(0,0,0,0.12)] dark:shadow-[4px_0_6px_-4px_rgba(0,0,0,0.5)] align-middle";
+
 // Must match RevenueManagementView.tsx's REVENUE_INVOICES_KEY — this is the
 // real, already-imported sales invoice ledger from Revenue Management. The
 // Management P/L "Gerçekleşen" revenue figures are pulled from here
@@ -212,7 +224,7 @@ function EditableAmountCell({ value, onSave }: { value: number; onSave: (v: numb
             setEditing(false);
           }
         }}
-        className="w-24 text-right rounded border border-indigo-300 dark:border-indigo-600 bg-white dark:bg-zinc-900 px-1.5 py-0.5 text-[12.5px] focus:outline-none focus:ring-2 focus:ring-indigo-400"
+        className="w-24 text-right rounded border border-indigo-300 dark:border-indigo-600 bg-white dark:bg-zinc-900 px-1.5 py-0.5 text-[11.5px] focus:outline-none focus:ring-2 focus:ring-indigo-400 appearance-none"
       />
     );
   }
@@ -221,7 +233,7 @@ function EditableAmountCell({ value, onSave }: { value: number; onSave: (v: numb
     <button
       type="button"
       onClick={() => setEditing(true)}
-      className="text-right w-full hover:bg-indigo-50 dark:hover:bg-indigo-950/30 rounded px-1.5 py-0.5 transition-colors"
+      className="text-right w-full bg-transparent border-0 shadow-none appearance-none hover:bg-indigo-50 dark:hover:bg-indigo-950/30 rounded px-1.5 py-0.5 transition-colors text-inherit"
       title="Düzenlemek için tıklayın"
     >
       {formatTRY(value)}
@@ -249,27 +261,30 @@ function PLTableRow({
   const hasChildren = !!row.children?.length;
   const isOpen = expanded.has(row.key);
 
+  let rowBgClass = "bg-white dark:bg-zinc-900";
   let rowClasses = "hover:bg-slate-50 dark:hover:bg-zinc-900/40 transition-colors";
   if (row.isTotal) {
     const overallActual = row.values.reduce((s, v) => s + v.actual, 0);
     if (row.tone === "final") {
-      rowClasses =
-        (overallActual >= 0 ? "bg-emerald-50 dark:bg-emerald-950/30" : "bg-rose-50 dark:bg-rose-950/30") +
-        " font-bold border-y border-emerald-100 dark:border-emerald-900/40";
+      rowBgClass = overallActual >= 0 ? "bg-emerald-50 dark:bg-emerald-950" : "bg-rose-50 dark:bg-rose-950";
+      rowClasses = rowBgClass + " font-bold border-y border-emerald-100 dark:border-emerald-900";
     } else if (row.tone === "profit") {
-      rowClasses =
-        (overallActual >= 0 ? "bg-emerald-50/70 dark:bg-emerald-950/20" : "bg-rose-50/70 dark:bg-rose-950/20") +
-        " font-semibold";
+      rowBgClass = overallActual >= 0 ? "bg-emerald-50 dark:bg-emerald-950" : "bg-rose-50 dark:bg-rose-950";
+      rowClasses = rowBgClass + " font-semibold";
     } else {
-      rowClasses = "bg-indigo-50/60 dark:bg-indigo-950/20 font-semibold";
+      rowBgClass = "bg-indigo-50 dark:bg-indigo-950";
+      rowClasses = rowBgClass + " font-semibold";
     }
   }
 
   return (
     <>
       <tr className={rowClasses}>
-        <td className="py-2.5 pr-3 sticky left-0 bg-white dark:bg-zinc-900" style={{ paddingLeft: `${16 + depth * 20}px` }}>
-          <div className="flex items-center gap-1.5 min-w-[220px]">
+        <td
+          className={`py-2 pr-3 align-middle ${STICKY_CELL_CLASS} ${rowBgClass}`}
+          style={{ paddingLeft: `${14 + depth * 18}px`, width: STICKY_COL_WIDTH, minWidth: STICKY_COL_WIDTH, maxWidth: STICKY_COL_WIDTH }}
+        >
+          <div className="flex items-center gap-1.5">
             {hasChildren ? (
               <button
                 type="button"
@@ -282,14 +297,14 @@ function PLTableRow({
               <span className="w-4 h-4 shrink-0" />
             )}
             <span
-              className={`${row.isTotal ? "text-[14px]" : "text-[13px]"} ${
+              className={`leading-snug ${row.isTotal ? "text-[13px]" : "text-[12px]"} ${
                 row.tone === "expense" && !row.isTotal ? "text-orange-700 dark:text-orange-400" : "text-slate-700 dark:text-zinc-200"
               } ${hasChildren && !row.isTotal ? "font-semibold" : ""}`}
             >
               {row.label}
             </span>
             {row.onNavigate && (
-              <button type="button" onClick={row.onNavigate} className="ml-1 text-[11px] text-indigo-600 hover:underline shrink-0">
+              <button type="button" onClick={row.onNavigate} className="ml-1 text-[10.5px] text-indigo-600 hover:underline shrink-0">
                 Düzenle →
               </button>
             )}
@@ -304,29 +319,29 @@ function PLTableRow({
           const net = netSalesValues[i];
           return (
             <React.Fragment key={period.key}>
-              <td className="py-2.5 pr-2 pl-3 text-right text-[13px] tabular-nums border-l border-slate-100 dark:border-zinc-800/60">
+              <td className="py-2 pr-2 pl-3 text-right align-middle text-[12px] tabular-nums border-l border-slate-100 dark:border-zinc-800/60 whitespace-nowrap">
                 {editable ? <EditableAmountCell value={plan} onSave={editable.onSave} /> : <span className="px-1.5">{formatTRY(plan)}</span>}
               </td>
               {showPercent && (
-                <td className="py-2.5 pr-4 text-right text-[11.5px] text-slate-400 dark:text-zinc-500 tabular-nums">
+                <td className="py-2 pr-4 text-right align-middle text-[10.5px] text-slate-400 dark:text-zinc-500 tabular-nums whitespace-nowrap">
                   {formatPercentOfNet(plan, net.plan)}
                 </td>
               )}
-              <td className="py-2.5 pr-2 text-right text-[13px] tabular-nums font-medium">{formatTRY(actual)}</td>
+              <td className="py-2 pr-2 text-right align-middle text-[12px] tabular-nums font-medium whitespace-nowrap">{formatTRY(actual)}</td>
               {showPercent && (
-                <td className="py-2.5 pr-4 text-right text-[11.5px] text-slate-400 dark:text-zinc-500 tabular-nums">
+                <td className="py-2 pr-4 text-right align-middle text-[10.5px] text-slate-400 dark:text-zinc-500 tabular-nums whitespace-nowrap">
                   {formatPercentOfNet(actual, net.actual)}
                 </td>
               )}
               <td
-                className={`py-2.5 pr-2 text-right text-[13px] tabular-nums font-medium ${
+                className={`py-2 pr-2 text-right align-middle text-[12px] tabular-nums font-medium whitespace-nowrap ${
                   favorable ? "text-emerald-600 dark:text-emerald-400" : "text-rose-600 dark:text-rose-400"
                 }`}
               >
                 {formatVarianceAmount(variance)}
               </td>
               {showPercent && (
-                <td className={`py-2.5 pr-4 text-right text-[12px] tabular-nums ${favorable ? "text-emerald-500" : "text-rose-500"}`}>
+                <td className={`py-2 pr-4 text-right align-middle text-[11px] tabular-nums whitespace-nowrap ${favorable ? "text-emerald-500" : "text-rose-500"}`}>
                   {variancePct === null ? "—" : `${variancePct > 0 ? "+" : ""}${variancePct.toFixed(1)}%`}
                 </td>
               )}
@@ -999,32 +1014,40 @@ export default function ManagementPLView() {
             </div>
 
             <div className="overflow-x-auto rounded-xl border border-slate-200 dark:border-zinc-800">
-              <table className="w-full border-collapse min-w-[860px]">
+              <table className="w-full border-separate border-spacing-0 min-w-[860px]">
                 <thead>
                   {periods.length > 1 && (
-                    <tr className="text-[11px] text-slate-500 dark:text-zinc-400 border-b border-slate-200 dark:border-zinc-800">
-                      <th className="py-1.5 pl-4 sticky left-0 bg-white dark:bg-zinc-900" />
+                    <tr className="text-[10.5px] text-slate-500 dark:text-zinc-400">
+                      <th
+                        className={`py-1.5 pl-4 border-b border-slate-200 dark:border-zinc-800 bg-slate-50 dark:bg-zinc-800/60 ${STICKY_CELL_CLASS}`}
+                        style={{ width: STICKY_COL_WIDTH, minWidth: STICKY_COL_WIDTH, maxWidth: STICKY_COL_WIDTH }}
+                      />
                       {periods.map((p) => (
                         <th
                           key={p.key}
                           colSpan={showPercent ? 6 : 3}
-                          className="py-1.5 text-center font-semibold border-l border-slate-200 dark:border-zinc-800"
+                          className="py-1.5 text-center font-semibold border-l border-b border-slate-200 dark:border-zinc-800 bg-slate-50 dark:bg-zinc-800/60"
                         >
                           {p.shortLabel}
                         </th>
                       ))}
                     </tr>
                   )}
-                  <tr className="text-[11px] uppercase tracking-wide text-slate-400 dark:text-zinc-500 border-b border-slate-200 dark:border-zinc-800">
-                    <th className="text-left py-2.5 pl-4 font-semibold sticky left-0 bg-white dark:bg-zinc-900">Kalem</th>
+                  <tr className="text-[10.5px] uppercase tracking-wide text-slate-400 dark:text-zinc-500">
+                    <th
+                      className={`text-left py-2 pl-4 font-semibold border-b border-slate-200 dark:border-zinc-800 bg-slate-50 dark:bg-zinc-800/60 ${STICKY_CELL_CLASS}`}
+                      style={{ width: STICKY_COL_WIDTH, minWidth: STICKY_COL_WIDTH, maxWidth: STICKY_COL_WIDTH }}
+                    >
+                      Kalem
+                    </th>
                     {periods.map((p) => (
                       <React.Fragment key={p.key}>
-                        <th className="text-right py-2.5 pr-2 pl-3 font-semibold border-l border-slate-100 dark:border-zinc-800/60">Plan (₺)</th>
-                        {showPercent && <th className="text-right py-2.5 pr-4 font-semibold">Plan %</th>}
-                        <th className="text-right py-2.5 pr-2 font-semibold">Gerçekleşen (₺)</th>
-                        {showPercent && <th className="text-right py-2.5 pr-4 font-semibold">Gerçekleşen %</th>}
-                        <th className="text-right py-2.5 pr-2 font-semibold">Fark (₺)</th>
-                        {showPercent && <th className="text-right py-2.5 pr-4 font-semibold">Fark %</th>}
+                        <th className="text-right py-2 pr-2 pl-3 font-semibold border-l border-b border-slate-100 dark:border-zinc-800/60 whitespace-nowrap">Plan (₺)</th>
+                        {showPercent && <th className="text-right py-2 pr-4 font-semibold border-b border-slate-100 dark:border-zinc-800/60 whitespace-nowrap">Plan %</th>}
+                        <th className="text-right py-2 pr-2 font-semibold border-b border-slate-100 dark:border-zinc-800/60 whitespace-nowrap">Gerçekleşen (₺)</th>
+                        {showPercent && <th className="text-right py-2 pr-4 font-semibold border-b border-slate-100 dark:border-zinc-800/60 whitespace-nowrap">Gerçekleşen %</th>}
+                        <th className="text-right py-2 pr-2 font-semibold border-b border-slate-100 dark:border-zinc-800/60 whitespace-nowrap">Fark (₺)</th>
+                        {showPercent && <th className="text-right py-2 pr-4 font-semibold border-b border-slate-100 dark:border-zinc-800/60 whitespace-nowrap">Fark %</th>}
                       </React.Fragment>
                     ))}
                   </tr>
