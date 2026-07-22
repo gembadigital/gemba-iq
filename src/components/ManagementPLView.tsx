@@ -12,9 +12,18 @@ import {
 } from "lucide-react";
 import { CrmDb } from "../lib/CrmDb";
 import { uploadBlobDocument, getSignedDownloadUrl } from "../lib/enterpriseDocumentService";
-import { Consultant, ProjectAssignment, INITIAL_CONSULTANTS, INITIAL_ASSIGNMENTS } from "../data/revenueData";
+import {
+  Consultant,
+  ProjectAssignment,
+  Invoice as RevenueInvoice,
+  INITIAL_CONSULTANTS,
+  INITIAL_ASSIGNMENTS,
+  INITIAL_INVOICES as REVENUE_INITIAL_INVOICES,
+} from "../data/revenueData";
 import {
   PLGroupKey,
+  PLPeriodMode,
+  PLPeriod,
   RecurringCostEntry,
   categoriesForGroup,
   groupLabel,
@@ -27,6 +36,8 @@ import {
   PLInvoiceCategoryKey,
   computeVatAmount,
   computeKdvSummary,
+  mapServiceTypeToRevenueCategory,
+  buildPeriods,
   generateMonthOptions,
   formatMonthLabel,
   formatTRY,
@@ -38,112 +49,136 @@ import {
   PL_INVOICES_KEY,
   revenueRowKey,
   expenseRowKey,
-  getCategoryPlan,
+  getCategoryPlanForMonths,
+  getConsultantPlanForMonths,
 } from "../data/managementPlData";
 
 const PIN_CODE = "1234";
 
+// Must match RevenueManagementView.tsx's REVENUE_INVOICES_KEY — this is the
+// real, already-imported sales invoice ledger from Revenue Management. The
+// Management P/L "Gerçekleşen" revenue figures are pulled from here
+// automatically (mapped by serviceType), plus anything manually uploaded in
+// the Fatura Yükleme tab for categories Revenue Management doesn't cover
+// (e.g. Yazılım Geliri).
+const REVENUE_MANAGEMENT_INVOICES_KEY = "crm_revenue_invoices";
+
 // ---------------------------------------------------------------------------
 // Seed / demo data — mirrors the exact example given when this page was
-// specified (Haziran 2026: Net Satış Geliri Plan 1.500.000, Gerçekleşen
-// 1.650.000). Replaced organically as the user edits plans / uploads real
-// invoices; both are just KV-backed state with these as the fallback.
+// specified (Haziran 2026: Net Satış Geliri Plan 1.500.000). Gerçekleşen for
+// that month now comes from Revenue Management's own seeded invoices, so no
+// separate seed invoice is needed here any more.
 // ---------------------------------------------------------------------------
 
 const DEFAULT_CATEGORY_PLANS: Record<string, Record<string, number>> = {
   [revenueRowKey("consulting")]: { "2026-06": 1_500_000 },
 };
 
-const DEFAULT_SEED_INVOICES: PLInvoiceRecord[] = [
-  {
-    id: "pl-inv-seed-1",
-    fileName: "Örnek Fatura - Haziran 2026.pdf",
-    uploadedAt: "2026-06-28T00:00:00.000Z",
-    month: "2026-06",
-    amount: 1_650_000,
-    vatRate: 20,
-    tevkifatEnabled: false,
-    tevkifatFraction: "",
-    vatAmount: 330_000,
-    direction: "revenue",
-    category: "consulting",
-    description: "Örnek veri — gerçek faturalarınızı yükleyerek bunun yerine geçirin.",
-  },
-];
-
 // ---------------------------------------------------------------------------
-// Pure calculation helpers
+// Pure calculation helpers (all operate over an arbitrary list of months, so
+// they work identically for a single month, a multi-month range, or a
+// 3-month quarter bucket)
 // ---------------------------------------------------------------------------
 
-function computeConsultantActualCost(
+function computeConsultantActualCostForMonths(
   assignments: ProjectAssignment[],
   consultants: Consultant[],
   consultantId: string,
-  month: string
+  months: string[]
 ): number {
   const consultant = consultants.find((c) => c.id === consultantId);
   return assignments
-    .filter((a) => a.consultantId === consultantId && a.month === month)
+    .filter((a) => a.consultantId === consultantId && months.includes(a.month))
     .reduce((sum, a) => sum + a.allocatedDays * (a.consultantDailyRate ?? consultant?.dailyCost ?? 0), 0);
 }
 
-function computeCategoryActualFromInvoices(
-  invoices: PLInvoiceRecord[],
-  category: string,
-  direction: "revenue" | "expense",
-  month: string
+function computeRevenueActualForCategory(
+  revenueInvoices: RevenueInvoice[],
+  plInvoices: PLInvoiceRecord[],
+  categoryKey: string,
+  months: string[]
 ): number {
-  return invoices
-    .filter((i) => i.category === category && i.direction === direction && i.month === month)
-    .reduce((sum, i) => sum + i.amount, 0);
+  const fromSystem = revenueInvoices
+    .filter((inv) => months.includes(inv.month) && mapServiceTypeToRevenueCategory(inv.serviceType) === categoryKey)
+    .reduce((s, inv) => s + inv.amount, 0);
+  const fromUploads = plInvoices
+    .filter((i) => months.includes(i.month) && i.direction === "revenue" && i.category === categoryKey)
+    .reduce((s, i) => s + i.amount, 0);
+  return fromSystem + fromUploads;
+}
+
+function computeExpenseActualForCategory(plInvoices: PLInvoiceRecord[], categoryKey: string, months: string[]): number {
+  return plInvoices
+    .filter((i) => months.includes(i.month) && i.direction === "expense" && i.category === categoryKey)
+    .reduce((s, i) => s + i.amount, 0);
+}
+
+interface PLValue {
+  plan: number;
+  actual: number;
 }
 
 interface PLRow {
   key: string;
   label: string;
-  plan: number;
-  actual: number;
+  values: PLValue[]; // aligned index-for-index with the active `periods` array
   tone?: "revenue" | "expense" | "profit" | "final";
   isTotal?: boolean;
   children?: PLRow[];
-  editable?: { onSave: (v: number) => void };
+  getEditable?: (periodIndex: number) => { onSave: (v: number) => void } | undefined;
   onNavigate?: () => void;
+}
+
+function sumValues(rows: PLRow[], periodCount: number): PLValue[] {
+  return Array.from({ length: periodCount }, (_, i) =>
+    rows.reduce((s, r) => ({ plan: s.plan + r.values[i].plan, actual: s.actual + r.values[i].actual }), { plan: 0, actual: 0 })
+  );
 }
 
 function buildRecurringGroupRows(
   entries: RecurringCostEntry[],
   groupKey: PLGroupKey,
-  month: string
-): { rows: PLRow[]; planTotal: number; actualTotal: number } {
+  periods: PLPeriod[]
+): { rows: PLRow[]; totals: PLValue[] } {
   const cats = categoriesForGroup(groupKey);
   const rows: PLRow[] = cats.map((cat) => {
-    const catEntries = entries.filter(
-      (e) => e.groupKey === groupKey && e.categoryKey === cat.key && entryAppliesToMonth(e, month)
-    );
-    const plan = catEntries.reduce((s, e) => s + e.amountPlan, 0);
-    const actual = catEntries.reduce((s, e) => s + e.amountActual, 0);
+    const catEntries = entries.filter((e) => e.groupKey === groupKey && e.categoryKey === cat.key);
+    const values: PLValue[] = periods.map((p) => {
+      let plan = 0;
+      let actual = 0;
+      p.months.forEach((month) => {
+        catEntries
+          .filter((e) => entryAppliesToMonth(e, month))
+          .forEach((e) => {
+            plan += e.amountPlan;
+            actual += e.amountActual;
+          });
+      });
+      return { plan, actual };
+    });
+    const relevantEntries = catEntries.filter((e) => periods.some((p) => p.months.some((m) => entryAppliesToMonth(e, m))));
     const children: PLRow[] | undefined =
-      catEntries.length > 0
-        ? catEntries.map((e) => ({
+      relevantEntries.length > 0
+        ? relevantEntries.map((e) => ({
             key: `entry:${e.id}`,
             label: entryDisplayLabel(e),
-            plan: e.amountPlan,
-            actual: e.amountActual,
             tone: "expense" as const,
+            values: periods.map((p) => {
+              let plan = 0;
+              let actual = 0;
+              p.months.forEach((month) => {
+                if (entryAppliesToMonth(e, month)) {
+                  plan += e.amountPlan;
+                  actual += e.amountActual;
+                }
+              });
+              return { plan, actual };
+            }),
           }))
         : undefined;
-    return {
-      key: `${groupKey}:${cat.key}`,
-      label: cat.label,
-      plan,
-      actual,
-      tone: "expense" as const,
-      children,
-    };
+    return { key: `${groupKey}:${cat.key}`, label: cat.label, tone: "expense" as const, values, children };
   });
-  const planTotal = rows.reduce((s, r) => s + r.plan, 0);
-  const actualTotal = rows.reduce((s, r) => s + r.actual, 0);
-  return { rows, planTotal, actualTotal };
+  return { rows, totals: sumValues(rows, periods.length) };
 }
 
 // ---------------------------------------------------------------------------
@@ -177,7 +212,7 @@ function EditableAmountCell({ value, onSave }: { value: number; onSave: (v: numb
             setEditing(false);
           }
         }}
-        className="w-28 text-right rounded border border-indigo-300 dark:border-indigo-600 bg-white dark:bg-zinc-900 px-1.5 py-0.5 text-[13px] focus:outline-none focus:ring-2 focus:ring-indigo-400"
+        className="w-24 text-right rounded border border-indigo-300 dark:border-indigo-600 bg-white dark:bg-zinc-900 px-1.5 py-0.5 text-[12.5px] focus:outline-none focus:ring-2 focus:ring-indigo-400"
       />
     );
   }
@@ -199,31 +234,31 @@ function PLTableRow({
   depth,
   expanded,
   onToggle,
-  netSalesPlan,
-  netSalesActual,
+  periods,
+  netSalesValues,
+  showPercent,
 }: {
   row: PLRow;
   depth: number;
   expanded: Set<string>;
   onToggle: (key: string) => void;
-  netSalesPlan: number;
-  netSalesActual: number;
+  periods: PLPeriod[];
+  netSalesValues: PLValue[];
+  showPercent: boolean;
 }) {
   const hasChildren = !!row.children?.length;
   const isOpen = expanded.has(row.key);
-  const variance = row.actual - row.plan;
-  const variancePct = row.plan !== 0 ? (variance / Math.abs(row.plan)) * 100 : null;
-  const favorable = row.tone === "expense" ? variance <= 0 : variance >= 0;
 
   let rowClasses = "hover:bg-slate-50 dark:hover:bg-zinc-900/40 transition-colors";
   if (row.isTotal) {
+    const overallActual = row.values.reduce((s, v) => s + v.actual, 0);
     if (row.tone === "final") {
       rowClasses =
-        (row.actual >= 0 ? "bg-emerald-50 dark:bg-emerald-950/30" : "bg-rose-50 dark:bg-rose-950/30") +
+        (overallActual >= 0 ? "bg-emerald-50 dark:bg-emerald-950/30" : "bg-rose-50 dark:bg-rose-950/30") +
         " font-bold border-y border-emerald-100 dark:border-emerald-900/40";
     } else if (row.tone === "profit") {
       rowClasses =
-        (row.actual >= 0 ? "bg-emerald-50/70 dark:bg-emerald-950/20" : "bg-rose-50/70 dark:bg-rose-950/20") +
+        (overallActual >= 0 ? "bg-emerald-50/70 dark:bg-emerald-950/20" : "bg-rose-50/70 dark:bg-rose-950/20") +
         " font-semibold";
     } else {
       rowClasses = "bg-indigo-50/60 dark:bg-indigo-950/20 font-semibold";
@@ -233,8 +268,8 @@ function PLTableRow({
   return (
     <>
       <tr className={rowClasses}>
-        <td className="py-2.5 pr-3" style={{ paddingLeft: `${16 + depth * 20}px` }}>
-          <div className="flex items-center gap-1.5">
+        <td className="py-2.5 pr-3 sticky left-0 bg-white dark:bg-zinc-900" style={{ paddingLeft: `${16 + depth * 20}px` }}>
+          <div className="flex items-center gap-1.5 min-w-[220px]">
             {hasChildren ? (
               <button
                 type="button"
@@ -260,34 +295,44 @@ function PLTableRow({
             )}
           </div>
         </td>
-        <td className="py-2.5 pr-2 text-right text-[13px] tabular-nums">
-          {row.editable ? (
-            <EditableAmountCell value={row.plan} onSave={row.editable.onSave} />
-          ) : (
-            <span className="px-1.5">{formatTRY(row.plan)}</span>
-          )}
-        </td>
-        <td className="py-2.5 pr-4 text-right text-[11.5px] text-slate-400 dark:text-zinc-500 tabular-nums">
-          {formatPercentOfNet(row.plan, netSalesPlan)}
-        </td>
-        <td className="py-2.5 pr-2 text-right text-[13px] tabular-nums font-medium">{formatTRY(row.actual)}</td>
-        <td className="py-2.5 pr-4 text-right text-[11.5px] text-slate-400 dark:text-zinc-500 tabular-nums">
-          {formatPercentOfNet(row.actual, netSalesActual)}
-        </td>
-        <td
-          className={`py-2.5 pr-2 text-right text-[13px] tabular-nums font-medium ${
-            favorable ? "text-emerald-600 dark:text-emerald-400" : "text-rose-600 dark:text-rose-400"
-          }`}
-        >
-          {formatVarianceAmount(variance)}
-        </td>
-        <td
-          className={`py-2.5 pr-4 text-right text-[12px] tabular-nums ${
-            favorable ? "text-emerald-500" : "text-rose-500"
-          }`}
-        >
-          {variancePct === null ? "—" : `${variancePct > 0 ? "+" : ""}${variancePct.toFixed(1)}%`}
-        </td>
+        {periods.map((period, i) => {
+          const { plan, actual } = row.values[i];
+          const variance = actual - plan;
+          const variancePct = plan !== 0 ? (variance / Math.abs(plan)) * 100 : null;
+          const favorable = row.tone === "expense" ? variance <= 0 : variance >= 0;
+          const editable = row.getEditable?.(i);
+          const net = netSalesValues[i];
+          return (
+            <React.Fragment key={period.key}>
+              <td className="py-2.5 pr-2 pl-3 text-right text-[13px] tabular-nums border-l border-slate-100 dark:border-zinc-800/60">
+                {editable ? <EditableAmountCell value={plan} onSave={editable.onSave} /> : <span className="px-1.5">{formatTRY(plan)}</span>}
+              </td>
+              {showPercent && (
+                <td className="py-2.5 pr-4 text-right text-[11.5px] text-slate-400 dark:text-zinc-500 tabular-nums">
+                  {formatPercentOfNet(plan, net.plan)}
+                </td>
+              )}
+              <td className="py-2.5 pr-2 text-right text-[13px] tabular-nums font-medium">{formatTRY(actual)}</td>
+              {showPercent && (
+                <td className="py-2.5 pr-4 text-right text-[11.5px] text-slate-400 dark:text-zinc-500 tabular-nums">
+                  {formatPercentOfNet(actual, net.actual)}
+                </td>
+              )}
+              <td
+                className={`py-2.5 pr-2 text-right text-[13px] tabular-nums font-medium ${
+                  favorable ? "text-emerald-600 dark:text-emerald-400" : "text-rose-600 dark:text-rose-400"
+                }`}
+              >
+                {formatVarianceAmount(variance)}
+              </td>
+              {showPercent && (
+                <td className={`py-2.5 pr-4 text-right text-[12px] tabular-nums ${favorable ? "text-emerald-500" : "text-rose-500"}`}>
+                  {variancePct === null ? "—" : `${variancePct > 0 ? "+" : ""}${variancePct.toFixed(1)}%`}
+                </td>
+              )}
+            </React.Fragment>
+          );
+        })}
       </tr>
       {hasChildren &&
         isOpen &&
@@ -298,8 +343,9 @@ function PLTableRow({
             depth={depth + 1}
             expanded={expanded}
             onToggle={onToggle}
-            netSalesPlan={netSalesPlan}
-            netSalesActual={netSalesActual}
+            periods={periods}
+            netSalesValues={netSalesValues}
+            showPercent={showPercent}
           />
         ))}
     </>
@@ -468,12 +514,19 @@ export default function ManagementPLView() {
   const [selectedMonth, setSelectedMonth] = useState("2026-06");
   const [activeSection, setActiveSection] = useState<PLSection>("pl");
 
+  const [periodMode, setPeriodMode] = useState<PLPeriodMode>("single");
+  const [rangeStart, setRangeStart] = useState("2026-06");
+  const [rangeEnd, setRangeEnd] = useState("2026-08");
+  const [quarterYear, setQuarterYear] = useState(2026);
+  const [quarterIndex, setQuarterIndex] = useState(2);
+
   const [consultants, setConsultants] = useState<Consultant[]>(INITIAL_CONSULTANTS);
   const [assignments, setAssignments] = useState<ProjectAssignment[]>(INITIAL_ASSIGNMENTS);
+  const [revenueInvoices, setRevenueInvoices] = useState<RevenueInvoice[]>(REVENUE_INITIAL_INVOICES);
   const [categoryPlans, setCategoryPlans] = useState<Record<string, Record<string, number>>>(DEFAULT_CATEGORY_PLANS);
   const [consultantPlans, setConsultantPlans] = useState<Record<string, Record<string, number>>>({});
   const [recurringEntries, setRecurringEntries] = useState<RecurringCostEntry[]>([]);
-  const [invoices, setInvoices] = useState<PLInvoiceRecord[]>(DEFAULT_SEED_INVOICES);
+  const [invoices, setInvoices] = useState<PLInvoiceRecord[]>([]);
 
   const [expandedRows, setExpandedRows] = useState<Set<string>>(
     new Set(["revenue-group", "variable-opex-group", "fixed-group", "financing-group", "tax-group"])
@@ -484,10 +537,11 @@ export default function ManagementPLView() {
   useEffect(() => {
     setConsultants(CrmDb.getKv<Consultant[]>("crm_revenue_consultants", INITIAL_CONSULTANTS));
     setAssignments(CrmDb.getKv<ProjectAssignment[]>("crm_revenue_assignments", INITIAL_ASSIGNMENTS));
+    setRevenueInvoices(CrmDb.getKv<RevenueInvoice[]>(REVENUE_MANAGEMENT_INVOICES_KEY, REVENUE_INITIAL_INVOICES));
     setCategoryPlans(CrmDb.getKv(PL_CATEGORY_PLANS_KEY, DEFAULT_CATEGORY_PLANS));
     setConsultantPlans(CrmDb.getKv(PL_CONSULTANT_PLANS_KEY, {}));
     setRecurringEntries(CrmDb.getKv(PL_RECURRING_ENTRIES_KEY, []));
-    setInvoices(CrmDb.getKv(PL_INVOICES_KEY, DEFAULT_SEED_INVOICES));
+    setInvoices(CrmDb.getKv(PL_INVOICES_KEY, []));
   }, []);
 
   function toggleRow(key: string) {
@@ -508,17 +562,17 @@ export default function ManagementPLView() {
     }
   }
 
-  function updateCategoryPlan(rowKey: string, value: number) {
+  function updateCategoryPlan(rowKey: string, month: string, value: number) {
     setCategoryPlans((prev) => {
-      const next = { ...prev, [rowKey]: { ...(prev[rowKey] || {}), [selectedMonth]: value } };
+      const next = { ...prev, [rowKey]: { ...(prev[rowKey] || {}), [month]: value } };
       CrmDb.setKv(PL_CATEGORY_PLANS_KEY, next);
       return next;
     });
   }
 
-  function updateConsultantPlan(consultantId: string, value: number) {
+  function updateConsultantPlan(consultantId: string, month: string, value: number) {
     setConsultantPlans((prev) => {
-      const next = { ...prev, [consultantId]: { ...(prev[consultantId] || {}), [selectedMonth]: value } };
+      const next = { ...prev, [consultantId]: { ...(prev[consultantId] || {}), [month]: value } };
       CrmDb.setKv(PL_CONSULTANT_PLANS_KEY, next);
       return next;
     });
@@ -632,133 +686,140 @@ export default function ManagementPLView() {
     }
   }
 
+  const periods = useMemo(
+    () => buildPeriods(periodMode, selectedMonth, rangeStart, rangeEnd, quarterYear, quarterIndex),
+    [periodMode, selectedMonth, rangeStart, rangeEnd, quarterYear, quarterIndex]
+  );
+  const showPercent = periods.length === 1;
+
   const plData = useMemo(() => {
     const revenueChildren: PLRow[] = REVENUE_CATEGORIES.map((cat) => {
       const rowKey = revenueRowKey(cat.key);
       return {
         key: rowKey,
         label: cat.label,
-        plan: getCategoryPlan(categoryPlans, rowKey, selectedMonth),
-        actual: computeCategoryActualFromInvoices(invoices, cat.key, "revenue", selectedMonth),
         tone: "revenue" as const,
-        editable: { onSave: (v: number) => updateCategoryPlan(rowKey, v) },
+        values: periods.map((p) => ({
+          plan: getCategoryPlanForMonths(categoryPlans, rowKey, p.months),
+          actual: computeRevenueActualForCategory(revenueInvoices, invoices, cat.key, p.months),
+        })),
+        getEditable: (i: number) =>
+          periods[i].months.length === 1 ? { onSave: (v: number) => updateCategoryPlan(rowKey, periods[i].months[0], v) } : undefined,
       };
     });
-    const netSalesPlan = revenueChildren.reduce((s, r) => s + r.plan, 0);
-    const netSalesActual = revenueChildren.reduce((s, r) => s + r.actual, 0);
+    const netSalesValues = sumValues(revenueChildren, periods.length);
 
     const consultantChildren: PLRow[] = consultants
       .filter((c) => c.status === "Active")
       .map((c) => ({
         key: `consultant:${c.id}`,
         label: c.name,
-        plan: consultantPlans[c.id]?.[selectedMonth] ?? 0,
-        actual: computeConsultantActualCost(assignments, consultants, c.id, selectedMonth),
         tone: "expense" as const,
-        editable: { onSave: (v: number) => updateConsultantPlan(c.id, v) },
+        values: periods.map((p) => ({
+          plan: getConsultantPlanForMonths(consultantPlans, c.id, p.months),
+          actual: computeConsultantActualCostForMonths(assignments, consultants, c.id, p.months),
+        })),
+        getEditable: (i: number) =>
+          periods[i].months.length === 1 ? { onSave: (v: number) => updateConsultantPlan(c.id, periods[i].months[0], v) } : undefined,
       }));
-    const consultantsPlanTotal = consultantChildren.reduce((s, r) => s + r.plan, 0);
-    const consultantsActualTotal = consultantChildren.reduce((s, r) => s + r.actual, 0);
+    const consultantsTotals = sumValues(consultantChildren, periods.length);
 
     const otherProjectExpenseChildren: PLRow[] = PROJECT_EXPENSE_CATEGORIES.map((cat) => {
       const rowKey = expenseRowKey(cat.key);
       return {
         key: rowKey,
         label: cat.label,
-        plan: getCategoryPlan(categoryPlans, rowKey, selectedMonth),
-        actual: computeCategoryActualFromInvoices(invoices, cat.key, "expense", selectedMonth),
         tone: "expense" as const,
-        editable: { onSave: (v: number) => updateCategoryPlan(rowKey, v) },
+        values: periods.map((p) => ({
+          plan: getCategoryPlanForMonths(categoryPlans, rowKey, p.months),
+          actual: computeExpenseActualForCategory(invoices, cat.key, p.months),
+        })),
+        getEditable: (i: number) =>
+          periods[i].months.length === 1 ? { onSave: (v: number) => updateCategoryPlan(rowKey, periods[i].months[0], v) } : undefined,
       };
     });
-    const otherProjectExpensePlanTotal = otherProjectExpenseChildren.reduce((s, r) => s + r.plan, 0);
-    const otherProjectExpenseActualTotal = otherProjectExpenseChildren.reduce((s, r) => s + r.actual, 0);
+    const otherProjectExpenseTotals = sumValues(otherProjectExpenseChildren, periods.length);
 
-    const variableOpexPlan = consultantsPlanTotal + otherProjectExpensePlanTotal;
-    const variableOpexActual = consultantsActualTotal + otherProjectExpenseActualTotal;
+    const variableOpexValues: PLValue[] = periods.map((_, i) => ({
+      plan: consultantsTotals[i].plan + otherProjectExpenseTotals[i].plan,
+      actual: consultantsTotals[i].actual + otherProjectExpenseTotals[i].actual,
+    }));
 
-    const grossProfitPlan = netSalesPlan - variableOpexPlan;
-    const grossProfitActual = netSalesActual - variableOpexActual;
+    const grossProfitValues: PLValue[] = periods.map((_, i) => ({
+      plan: netSalesValues[i].plan - variableOpexValues[i].plan,
+      actual: netSalesValues[i].actual - variableOpexValues[i].actual,
+    }));
 
-    const fixedGroup = buildRecurringGroupRows(recurringEntries, "fixed", selectedMonth);
-    const operatingProfitPlan = grossProfitPlan - fixedGroup.planTotal;
-    const operatingProfitActual = grossProfitActual - fixedGroup.actualTotal;
+    const fixedGroup = buildRecurringGroupRows(recurringEntries, "fixed", periods);
+    const operatingProfitValues: PLValue[] = periods.map((_, i) => ({
+      plan: grossProfitValues[i].plan - fixedGroup.totals[i].plan,
+      actual: grossProfitValues[i].actual - fixedGroup.totals[i].actual,
+    }));
 
-    const financingGroup = buildRecurringGroupRows(recurringEntries, "financing", selectedMonth);
-    const taxGroup = buildRecurringGroupRows(recurringEntries, "tax", selectedMonth);
+    const financingGroup = buildRecurringGroupRows(recurringEntries, "financing", periods);
+    const taxGroup = buildRecurringGroupRows(recurringEntries, "tax", periods);
 
-    const netProfitPlan = operatingProfitPlan - financingGroup.planTotal - taxGroup.planTotal;
-    const netProfitActual = operatingProfitActual - financingGroup.actualTotal - taxGroup.actualTotal;
+    const netProfitValues: PLValue[] = periods.map((_, i) => ({
+      plan: operatingProfitValues[i].plan - financingGroup.totals[i].plan - taxGroup.totals[i].plan,
+      actual: operatingProfitValues[i].actual - financingGroup.totals[i].actual - taxGroup.totals[i].actual,
+    }));
 
     const rows: PLRow[] = [
-      {
-        key: "revenue-group",
-        label: "NET SATIŞ GELİRLERİ",
-        plan: netSalesPlan,
-        actual: netSalesActual,
-        tone: "revenue",
-        children: revenueChildren,
-      },
-      { key: "net-sales-total", label: "TOPLAM NET SATIŞ", plan: netSalesPlan, actual: netSalesActual, tone: "profit", isTotal: true },
+      { key: "revenue-group", label: "NET SATIŞ GELİRLERİ", tone: "revenue", values: netSalesValues, children: revenueChildren },
+      { key: "net-sales-total", label: "TOPLAM NET SATIŞ", tone: "profit", isTotal: true, values: netSalesValues },
       {
         key: "variable-opex-group",
         label: "DEĞİŞKEN OPERASYON GİDERLERİ (Direkt Proje Maliyetleri)",
-        plan: variableOpexPlan,
-        actual: variableOpexActual,
         tone: "expense",
+        values: variableOpexValues,
         children: [
           {
             key: "consultants-group",
             label: "Danışman Maliyetleri",
-            plan: consultantsPlanTotal,
-            actual: consultantsActualTotal,
             tone: "expense",
+            values: consultantsTotals,
             children: consultantChildren,
           },
           {
             key: "other-project-expense-group",
             label: "Diğer Proje Giderleri",
-            plan: otherProjectExpensePlanTotal,
-            actual: otherProjectExpenseActualTotal,
             tone: "expense",
+            values: otherProjectExpenseTotals,
             children: otherProjectExpenseChildren,
           },
         ],
       },
-      { key: "gross-profit", label: "BRÜT KAR", plan: grossProfitPlan, actual: grossProfitActual, tone: "profit", isTotal: true },
+      { key: "gross-profit", label: "BRÜT KAR", tone: "profit", isTotal: true, values: grossProfitValues },
       {
         key: "fixed-group",
         label: groupLabel("fixed"),
-        plan: fixedGroup.planTotal,
-        actual: fixedGroup.actualTotal,
         tone: "expense",
+        values: fixedGroup.totals,
         children: fixedGroup.rows,
         onNavigate: () => setActiveSection("fixed"),
       },
-      { key: "operating-profit", label: "FAALİYET KARI", plan: operatingProfitPlan, actual: operatingProfitActual, tone: "profit", isTotal: true },
+      { key: "operating-profit", label: "FAALİYET KARI", tone: "profit", isTotal: true, values: operatingProfitValues },
       {
         key: "financing-group",
         label: groupLabel("financing"),
-        plan: financingGroup.planTotal,
-        actual: financingGroup.actualTotal,
         tone: "expense",
+        values: financingGroup.totals,
         children: financingGroup.rows,
         onNavigate: () => setActiveSection("financing"),
       },
       {
         key: "tax-group",
         label: groupLabel("tax"),
-        plan: taxGroup.planTotal,
-        actual: taxGroup.actualTotal,
         tone: "expense",
+        values: taxGroup.totals,
         children: taxGroup.rows,
         onNavigate: () => setActiveSection("tax"),
       },
-      { key: "net-profit", label: "NET KAR", plan: netProfitPlan, actual: netProfitActual, tone: "final", isTotal: true },
+      { key: "net-profit", label: "NET KAR", tone: "final", isTotal: true, values: netProfitValues },
     ];
 
-    return { rows, netSalesPlan, netSalesActual };
-  }, [categoryPlans, consultantPlans, consultants, assignments, invoices, recurringEntries, selectedMonth]);
+    return { rows, netSalesValues };
+  }, [categoryPlans, consultantPlans, consultants, assignments, invoices, revenueInvoices, recurringEntries, periods]);
 
   const kdvSummary = useMemo(() => computeKdvSummary(invoices, selectedMonth), [invoices, selectedMonth]);
 
@@ -808,7 +869,7 @@ export default function ManagementPLView() {
             Yönetim P/L <span className="text-slate-400 dark:text-zinc-500 font-medium text-[14px]">(Management P/L)</span>
           </h1>
           <p className="text-[12.5px] text-slate-400 dark:text-zinc-500 mt-0.5">
-            Planlanan vs. Gerçekleşen — {formatMonthLabel(selectedMonth)}
+            Fatura Yükleme &amp; KDV Yönetimi ayı: {formatMonthLabel(selectedMonth)}
           </p>
         </div>
         <div className="flex items-center gap-2">
@@ -855,33 +916,135 @@ export default function ManagementPLView() {
 
       <div className="rounded-2xl border border-slate-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 p-5">
         {activeSection === "pl" && (
-          <div className="overflow-x-auto rounded-xl border border-slate-200 dark:border-zinc-800">
-            <table className="w-full border-collapse min-w-[860px]">
-              <thead>
-                <tr className="text-[11px] uppercase tracking-wide text-slate-400 dark:text-zinc-500 border-b border-slate-200 dark:border-zinc-800">
-                  <th className="text-left py-2.5 pl-4 font-semibold">Kalem</th>
-                  <th className="text-right py-2.5 pr-2 font-semibold">Plan (₺)</th>
-                  <th className="text-right py-2.5 pr-4 font-semibold">Plan %</th>
-                  <th className="text-right py-2.5 pr-2 font-semibold">Gerçekleşen (₺)</th>
-                  <th className="text-right py-2.5 pr-4 font-semibold">Gerçekleşen %</th>
-                  <th className="text-right py-2.5 pr-2 font-semibold">Fark (₺)</th>
-                  <th className="text-right py-2.5 pr-4 font-semibold">Fark %</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-100 dark:divide-zinc-800/60">
-                {plData.rows.map((row) => (
-                  <PLTableRow
-                    key={row.key}
-                    row={row}
-                    depth={0}
-                    expanded={expandedRows}
-                    onToggle={toggleRow}
-                    netSalesPlan={plData.netSalesPlan}
-                    netSalesActual={plData.netSalesActual}
-                  />
+          <div className="space-y-4">
+            <div className="flex flex-wrap items-center gap-3">
+              <div className="flex items-center gap-1 rounded-lg border border-slate-200 dark:border-zinc-700 p-1">
+                {(["single", "range", "quarter"] as PLPeriodMode[]).map((mode) => (
+                  <button
+                    key={mode}
+                    type="button"
+                    onClick={() => setPeriodMode(mode)}
+                    className={`px-3 py-1.5 rounded-md text-[12.5px] font-medium transition-colors ${
+                      periodMode === mode
+                        ? "bg-indigo-600 text-white"
+                        : "text-slate-500 dark:text-zinc-400 hover:bg-slate-100 dark:hover:bg-zinc-800"
+                    }`}
+                  >
+                    {mode === "single" ? "Tek Ay" : mode === "range" ? "Aralık (Ay Ay)" : "Çeyrek"}
+                  </button>
                 ))}
-              </tbody>
-            </table>
+              </div>
+
+              {periodMode === "single" && (
+                <p className="text-[12px] text-slate-400 dark:text-zinc-500">
+                  Üstteki ay seçimi kullanılıyor: <span className="font-medium text-slate-500 dark:text-zinc-400">{formatMonthLabel(selectedMonth)}</span>
+                </p>
+              )}
+
+              {periodMode === "range" && (
+                <div className="flex items-center gap-2 text-[12.5px]">
+                  <span className="text-slate-400 dark:text-zinc-500">Başlangıç</span>
+                  <select
+                    value={rangeStart}
+                    onChange={(e) => setRangeStart(e.target.value)}
+                    className="rounded-lg border border-slate-200 dark:border-zinc-700 bg-white dark:bg-zinc-900 px-2 py-1.5"
+                  >
+                    {monthOptions.map((m) => (
+                      <option key={m} value={m}>
+                        {formatMonthLabel(m)}
+                      </option>
+                    ))}
+                  </select>
+                  <span className="text-slate-400 dark:text-zinc-500">Bitiş</span>
+                  <select
+                    value={rangeEnd}
+                    onChange={(e) => setRangeEnd(e.target.value)}
+                    className="rounded-lg border border-slate-200 dark:border-zinc-700 bg-white dark:bg-zinc-900 px-2 py-1.5"
+                  >
+                    {monthOptions.map((m) => (
+                      <option key={m} value={m}>
+                        {formatMonthLabel(m)}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              )}
+
+              {periodMode === "quarter" && (
+                <div className="flex items-center gap-2 text-[12.5px]">
+                  <input
+                    type="number"
+                    value={quarterYear}
+                    onChange={(e) => setQuarterYear(parseInt(e.target.value, 10) || quarterYear)}
+                    className="w-20 rounded-lg border border-slate-200 dark:border-zinc-700 bg-white dark:bg-zinc-900 px-2 py-1.5"
+                  />
+                  <div className="flex items-center gap-1">
+                    {[1, 2, 3, 4].map((q) => (
+                      <button
+                        key={q}
+                        type="button"
+                        onClick={() => setQuarterIndex(q)}
+                        className={`px-2.5 py-1.5 rounded-md text-[12.5px] font-medium transition-colors ${
+                          quarterIndex === q
+                            ? "bg-indigo-600 text-white"
+                            : "border border-slate-200 dark:border-zinc-700 text-slate-500 dark:text-zinc-400 hover:bg-slate-50 dark:hover:bg-zinc-800"
+                        }`}
+                      >
+                        Ç{q}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+
+            <div className="overflow-x-auto rounded-xl border border-slate-200 dark:border-zinc-800">
+              <table className="w-full border-collapse min-w-[860px]">
+                <thead>
+                  {periods.length > 1 && (
+                    <tr className="text-[11px] text-slate-500 dark:text-zinc-400 border-b border-slate-200 dark:border-zinc-800">
+                      <th className="py-1.5 pl-4 sticky left-0 bg-white dark:bg-zinc-900" />
+                      {periods.map((p) => (
+                        <th
+                          key={p.key}
+                          colSpan={showPercent ? 6 : 3}
+                          className="py-1.5 text-center font-semibold border-l border-slate-200 dark:border-zinc-800"
+                        >
+                          {p.shortLabel}
+                        </th>
+                      ))}
+                    </tr>
+                  )}
+                  <tr className="text-[11px] uppercase tracking-wide text-slate-400 dark:text-zinc-500 border-b border-slate-200 dark:border-zinc-800">
+                    <th className="text-left py-2.5 pl-4 font-semibold sticky left-0 bg-white dark:bg-zinc-900">Kalem</th>
+                    {periods.map((p) => (
+                      <React.Fragment key={p.key}>
+                        <th className="text-right py-2.5 pr-2 pl-3 font-semibold border-l border-slate-100 dark:border-zinc-800/60">Plan (₺)</th>
+                        {showPercent && <th className="text-right py-2.5 pr-4 font-semibold">Plan %</th>}
+                        <th className="text-right py-2.5 pr-2 font-semibold">Gerçekleşen (₺)</th>
+                        {showPercent && <th className="text-right py-2.5 pr-4 font-semibold">Gerçekleşen %</th>}
+                        <th className="text-right py-2.5 pr-2 font-semibold">Fark (₺)</th>
+                        {showPercent && <th className="text-right py-2.5 pr-4 font-semibold">Fark %</th>}
+                      </React.Fragment>
+                    ))}
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-100 dark:divide-zinc-800/60">
+                  {plData.rows.map((row) => (
+                    <PLTableRow
+                      key={row.key}
+                      row={row}
+                      depth={0}
+                      expanded={expandedRows}
+                      onToggle={toggleRow}
+                      periods={periods}
+                      netSalesValues={plData.netSalesValues}
+                      showPercent={showPercent}
+                    />
+                  ))}
+                </tbody>
+              </table>
+            </div>
           </div>
         )}
 
@@ -920,6 +1083,14 @@ export default function ManagementPLView() {
 
         {activeSection === "invoices" && (
           <div className="space-y-4">
+            <div className="rounded-xl border border-sky-200 dark:border-sky-900/40 bg-sky-50/60 dark:bg-sky-950/20 p-3 flex items-start gap-2.5">
+              <Info className="w-4 h-4 text-sky-600 mt-0.5 shrink-0" />
+              <p className="text-[12px] text-sky-800 dark:text-sky-300 leading-relaxed">
+                Danışmanlık/Eğitim satış gelirleri ve danışman maliyetleri, Gelir Yönetimi'nde kayıtlı gerçek fatura ve atama
+                verilerinden otomatik çekiliyor. Bu panel yalnızca buradaki sistemin kapsamadığı kalemler için: Yazılım/Diğer
+                Hizmet gelirleri ve Ulaşım/Konaklama/Organizasyon/Yazılım proje giderleri.
+              </p>
+            </div>
             <div
               onClick={() => invoiceFileInputRef.current?.click()}
               onDragOver={(e) => e.preventDefault()}

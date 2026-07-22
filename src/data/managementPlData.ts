@@ -113,6 +113,19 @@ export const PROJECT_EXPENSE_CATEGORIES: { key: PLProjectExpenseCategoryKey; lab
 
 export type PLInvoiceCategoryKey = PLRevenueCategoryKey | PLProjectExpenseCategoryKey;
 
+// Maps a Revenue Management Invoice's free-text serviceType (Yamazumi, MTM,
+// OEE, Lean Manufacturing, Capacity Planning, Training, Workshop,
+// Assessment, Other, ...) onto one of the 4 Management P/L revenue
+// categories, so real sales invoices already recorded in Revenue Management
+// can feed the P/L table's "Gerçekleşen" column automatically.
+export function mapServiceTypeToRevenueCategory(serviceType: string | undefined): PLRevenueCategoryKey {
+  const t = (serviceType || "").toLowerCase();
+  if (t.includes("training") || t.includes("workshop") || t.includes("eğitim") || t.includes("egitim")) return "training";
+  if (t.includes("software") || t.includes("yazılım") || t.includes("yazilim")) return "software";
+  if (t.includes("other") || t.includes("diğer") || t.includes("diger")) return "other_service";
+  return "consulting";
+}
+
 export const ALL_INVOICE_CATEGORIES: { key: PLInvoiceCategoryKey; label: string; direction: "revenue" | "expense" }[] = [
   ...REVENUE_CATEGORIES.map((c) => ({ ...c, direction: "revenue" as const })),
   ...PROJECT_EXPENSE_CATEGORIES.map((c) => ({ ...c, direction: "expense" as const })),
@@ -197,6 +210,89 @@ export function formatMonthLabel(month: string): string {
   return `${MONTH_LABELS_TR[idx] || m} ${y}`;
 }
 
+export function formatMonthLabelShort(month: string): string {
+  const [y, m] = month.split("-");
+  const idx = parseInt(m, 10) - 1;
+  return `${(MONTH_LABELS_TR[idx] || m).slice(0, 3)} ${y.slice(2)}`;
+}
+
+// ---------------------------------------------------------------------------
+// Reporting periods — a "period" is a labeled bucket of one or more months.
+// Used so the P/L table can show either a single month, several months
+// side-by-side ("ay ay ayrı"), or one aggregated quarter.
+// ---------------------------------------------------------------------------
+
+export type PLPeriodMode = "single" | "range" | "quarter";
+
+export interface PLPeriod {
+  key: string;
+  label: string;
+  shortLabel: string;
+  months: string[];
+}
+
+export function monthsBetween(start: string, end: string): string[] {
+  const [sy, sm] = start.split("-").map((v) => parseInt(v, 10));
+  const [ey, em] = end.split("-").map((v) => parseInt(v, 10));
+  const months: string[] = [];
+  let y = sy;
+  let m = sm;
+  let guard = 0;
+  const startIdx = sy * 12 + sm;
+  const endIdx = ey * 12 + em;
+  if (endIdx < startIdx) return [start];
+  while (y * 12 + m <= endIdx && guard < 60) {
+    months.push(`${y}-${String(m).padStart(2, "0")}`);
+    m += 1;
+    if (m > 12) {
+      m = 1;
+      y += 1;
+    }
+    guard += 1;
+  }
+  return months;
+}
+
+export function quarterMonths(year: number, quarterIndex: number): string[] {
+  const startMonth = (quarterIndex - 1) * 3 + 1;
+  return [0, 1, 2].map((i) => `${year}-${String(startMonth + i).padStart(2, "0")}`);
+}
+
+export function buildPeriods(
+  mode: PLPeriodMode,
+  selectedMonth: string,
+  rangeStart: string,
+  rangeEnd: string,
+  quarterYear: number,
+  quarterIndex: number
+): PLPeriod[] {
+  if (mode === "quarter") {
+    const months = quarterMonths(quarterYear, quarterIndex);
+    return [
+      {
+        key: `${quarterYear}-Q${quarterIndex}`,
+        label: `Ç${quarterIndex} ${quarterYear} (${formatMonthLabel(months[0])} – ${formatMonthLabel(months[2])})`,
+        shortLabel: `Ç${quarterIndex} ${quarterYear}`,
+        months,
+      },
+    ];
+  }
+  if (mode === "range") {
+    const months = monthsBetween(rangeStart, rangeEnd);
+    const periods: PLPeriod[] = months.map((m) => ({
+      key: m,
+      label: formatMonthLabel(m),
+      shortLabel: formatMonthLabelShort(m),
+      months: [m],
+    }));
+    if (periods.length > 1) {
+      periods.push({ key: "range-total", label: "Toplam", shortLabel: "Toplam", months });
+    }
+    return periods;
+  }
+  return [{ key: selectedMonth, label: formatMonthLabel(selectedMonth), shortLabel: formatMonthLabelShort(selectedMonth), months: [selectedMonth] }];
+}
+
 // ---------------------------------------------------------------------------
 // Currency / number formatting (always TRY on this page, regardless of the
 // organization's configurable display currency elsewhere in the app)
@@ -235,4 +331,12 @@ export function expenseRowKey(categoryKey: string): string {
 
 export function getCategoryPlan(plans: Record<string, Record<string, number>>, rowKey: string, month: string): number {
   return plans[rowKey]?.[month] ?? 0;
+}
+
+export function getCategoryPlanForMonths(plans: Record<string, Record<string, number>>, rowKey: string, months: string[]): number {
+  return months.reduce((s, m) => s + getCategoryPlan(plans, rowKey, m), 0);
+}
+
+export function getConsultantPlanForMonths(plans: Record<string, Record<string, number>>, consultantId: string, months: string[]): number {
+  return months.reduce((s, m) => s + (plans[consultantId]?.[m] ?? 0), 0);
 }
