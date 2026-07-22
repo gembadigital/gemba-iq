@@ -544,7 +544,15 @@ export default function ManagementPLView() {
   const [invoices, setInvoices] = useState<PLInvoiceRecord[]>([]);
 
   const [expandedRows, setExpandedRows] = useState<Set<string>>(
-    new Set(["revenue-group", "variable-opex-group", "fixed-group", "financing-group", "tax-group"])
+    new Set([
+      "revenue-group",
+      "variable-opex-group",
+      "consultants-group",
+      "other-project-expense-group",
+      "fixed-group",
+      "financing-group",
+      "tax-group",
+    ])
   );
 
   const invoiceFileInputRef = useRef<HTMLInputElement>(null);
@@ -724,19 +732,45 @@ export default function ManagementPLView() {
     });
     const netSalesValues = sumValues(revenueChildren, periods.length);
 
-    const consultantChildren: PLRow[] = consultants
-      .filter((c) => c.status === "Active")
-      .map((c) => ({
-        key: `consultant:${c.id}`,
-        label: c.name,
-        tone: "expense" as const,
-        values: periods.map((p) => ({
-          plan: getConsultantPlanForMonths(consultantPlans, c.id, p.months),
-          actual: computeConsultantActualCostForMonths(assignments, consultants, c.id, p.months),
-        })),
-        getEditable: (i: number) =>
-          periods[i].months.length === 1 ? { onSave: (v: number) => updateConsultantPlan(c.id, periods[i].months[0], v) } : undefined,
-      }));
+    // Union of every registered consultant (master list, so an Active
+    // consultant with no assignment yet still shows a 0 row to plan against)
+    // AND every consultantId actually referenced by an assignment in this
+    // period — this second part matters because an assignment can point at
+    // a consultant who is marked "Inactive" or was otherwise excluded from
+    // an active-only filter, which previously made their real logged cost
+    // silently disappear from both the line item and the category total.
+    const relevantConsultantIds = Array.from(
+      new Set<string>([...consultants.map((c) => c.id), ...assignments.map((a) => a.consultantId)])
+    );
+    const consultantChildren: PLRow[] = relevantConsultantIds
+      // Keep every currently-Active consultant (even with zero activity, so
+      // Plan can still be entered against them), plus any consultant/id
+      // with real plan or actual data in the shown period regardless of
+      // status — this is what surfaces a real logged cost for a consultant
+      // who happens to be marked "Inactive" instead of silently dropping it.
+      .filter((id) => {
+        const consultant = consultants.find((c) => c.id === id);
+        if (consultant?.status === "Active") return true;
+        return periods.some((p) => {
+          const plan = getConsultantPlanForMonths(consultantPlans, id, p.months);
+          const actual = computeConsultantActualCostForMonths(assignments, consultants, id, p.months);
+          return plan !== 0 || actual !== 0;
+        });
+      })
+      .map((id) => {
+        const consultant = consultants.find((c) => c.id === id);
+        return {
+          key: `consultant:${id}`,
+          label: consultant?.name || `Danışman (${id})`,
+          tone: "expense" as const,
+          values: periods.map((p) => ({
+            plan: getConsultantPlanForMonths(consultantPlans, id, p.months),
+            actual: computeConsultantActualCostForMonths(assignments, consultants, id, p.months),
+          })),
+          getEditable: (i: number) =>
+            periods[i].months.length === 1 ? { onSave: (v: number) => updateConsultantPlan(id, periods[i].months[0], v) } : undefined,
+        };
+      });
     const consultantsTotals = sumValues(consultantChildren, periods.length);
 
     const otherProjectExpenseChildren: PLRow[] = PROJECT_EXPENSE_CATEGORIES.map((cat) => {
