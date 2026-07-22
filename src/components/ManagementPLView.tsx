@@ -104,6 +104,48 @@ function computeConsultantActualCostForMonths(
     .reduce((sum, a) => sum + a.allocatedDays * (a.consultantDailyRate ?? consultant?.dailyCost ?? 0), 0);
 }
 
+// Many real Gelir Yönetimi workflows never fill in a formal "Danışman
+// Atamaları" record — the consultant is only tagged directly on the
+// imported invoice row (the "Kategori"/"Danışman" column, parsed into
+// Invoice.consultantNames). Without this, a consultant with only
+// invoice-level tagging and no assignment record showed ₺0 here even
+// though real fatura data existed for them. Mirrors the split-evenly logic
+// RevenueManagementView.tsx's own computeCostForCustomerInvoices() uses.
+function computeConsultantActualCostFromInvoicesForMonths(
+  revenueInvoices: RevenueInvoice[],
+  consultants: Consultant[],
+  consultantId: string,
+  months: string[]
+): number {
+  const consultant = consultants.find((c) => c.id === consultantId);
+  if (!consultant) return 0;
+  const targetName = consultant.name.trim().toLowerCase();
+  let cost = 0;
+  revenueInvoices
+    .filter((inv) => months.includes(inv.month) && (inv.consultantNames || []).length > 0)
+    .forEach((inv) => {
+      const names = (inv.consultantNames || []).filter(Boolean);
+      const matchCount = names.filter((n) => n.trim().toLowerCase() === targetName).length;
+      if (matchCount === 0) return;
+      const perPersonDays = inv.deliveredDays / names.length;
+      cost += perPersonDays * matchCount * consultant.dailyCost;
+    });
+  return cost;
+}
+
+function computeConsultantTotalActualCostForMonths(
+  assignments: ProjectAssignment[],
+  revenueInvoices: RevenueInvoice[],
+  consultants: Consultant[],
+  consultantId: string,
+  months: string[]
+): number {
+  return (
+    computeConsultantActualCostForMonths(assignments, consultants, consultantId, months) +
+    computeConsultantActualCostFromInvoicesForMonths(revenueInvoices, consultants, consultantId, months)
+  );
+}
+
 function computeRevenueActualForCategory(
   revenueInvoices: RevenueInvoice[],
   plInvoices: PLInvoiceRecord[],
@@ -233,7 +275,7 @@ function EditableAmountCell({ value, onSave }: { value: number; onSave: (v: numb
     <button
       type="button"
       onClick={() => setEditing(true)}
-      className="text-right w-full bg-transparent border-0 shadow-none appearance-none hover:bg-indigo-50 dark:hover:bg-indigo-950/30 rounded px-1.5 py-0.5 transition-colors text-inherit"
+      className="text-right w-full bg-transparent border-0 shadow-none appearance-none hover:bg-slate-100 dark:hover:bg-zinc-700/50 rounded px-1.5 py-0.5 transition-colors text-inherit"
       title="Düzenlemek için tıklayın"
     >
       {formatTRY(value)}
@@ -753,7 +795,7 @@ export default function ManagementPLView() {
         if (consultant?.status === "Active") return true;
         return periods.some((p) => {
           const plan = getConsultantPlanForMonths(consultantPlans, id, p.months);
-          const actual = computeConsultantActualCostForMonths(assignments, consultants, id, p.months);
+          const actual = computeConsultantTotalActualCostForMonths(assignments, revenueInvoices, consultants, id, p.months);
           return plan !== 0 || actual !== 0;
         });
       })
@@ -765,7 +807,7 @@ export default function ManagementPLView() {
           tone: "expense" as const,
           values: periods.map((p) => ({
             plan: getConsultantPlanForMonths(consultantPlans, id, p.months),
-            actual: computeConsultantActualCostForMonths(assignments, consultants, id, p.months),
+            actual: computeConsultantTotalActualCostForMonths(assignments, revenueInvoices, consultants, id, p.months),
           })),
           getEditable: (i: number) =>
             periods[i].months.length === 1 ? { onSave: (v: number) => updateConsultantPlan(id, periods[i].months[0], v) } : undefined,
