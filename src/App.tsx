@@ -16,6 +16,7 @@ import ContractManagerView from "./components/ContractManagerView";
 import DocumentsView from "./components/documents/DocumentsView";
 import ServicesView from "./components/ServicesView";
 import RevenueManagementView from "./components/RevenueManagementView";
+import ManagementPLView from "./components/ManagementPLView";
 import CompanyDiscoveryView from "./components/CompanyDiscoveryView";
 import GembaLensView from "./components/GembaLensView";
 import AdministrationCenter from "./components/AdministrationCenter";
@@ -85,6 +86,7 @@ const ACTIVE_TAB_STORAGE_KEY = "gemba_iq_active_tab";
 const ACTIVE_TABS = [
   "company-discovery",
   "revenue-management",
+  "management-pl",
   "dashboard",
   "designer",
   "lead-generator",
@@ -694,6 +696,7 @@ export default function App() {
   const getBreadcrumbs = (tab: string) => {
     const breadcrumbsMap: Record<string, { parent: string; child: string }> = {
       "revenue-management": { parent: "CRM", child: "Revenue Management" },
+      "management-pl": { parent: "CRM", child: "Yönetim P/L" },
       "company-discovery": { parent: "Companies & Targets", child: "Company Search" },
       "gemba-lens": { parent: "Companies & Targets", child: "Gemba Lens" },
       "lead-profiles": { parent: "Lead Discovery", child: "Lead Profiles" },
@@ -833,6 +836,13 @@ export default function App() {
                     id="revenue-management"
                     icon={isNotionMode ? <span className="text-base">💸</span> : <BarChart2 className="w-[20px] h-[20px] flex-shrink-0 text-[#0078D4]" />}
                     label="Revenue Management"
+                    activeBorderClass="border-l-[#0078D4]"
+                    isSubmenu={true}
+                  />
+                  <SidebarButton
+                    id="management-pl"
+                    icon={isNotionMode ? <span className="text-base">🔒</span> : <Lock className="w-[20px] h-[20px] flex-shrink-0 text-[#0078D4]" />}
+                    label="Yönetim P/L"
                     activeBorderClass="border-l-[#0078D4]"
                     isSubmenu={true}
                   />
@@ -1671,6 +1681,10 @@ export default function App() {
 
             {activeTab === "revenue-management" && (
               <RevenueManagementView />
+            )}
+
+            {activeTab === "management-pl" && (
+              <ManagementPLView />
             )}
 
             {activeTab === "dashboard" && (
