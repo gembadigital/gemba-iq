@@ -24,6 +24,11 @@ import {
   CartesianGrid,
   Tooltip,
   Cell,
+  PieChart,
+  Pie,
+  Legend,
+  AreaChart,
+  Area,
 } from "recharts";
 import { CrmDb } from "../lib/CrmDb";
 import { uploadBlobDocument, getSignedDownloadUrl } from "../lib/enterpriseDocumentService";
@@ -319,6 +324,75 @@ function computePLSummaryActualsForMonths(
   return { netSales, directOpex, grossProfit, fixedExpenses, operatingProfit, financingExpenses, taxExpenses, netProfit };
 }
 
+// ---------------------------------------------------------------------------
+// Finansal Analiz tab — category breakdowns for the donut/bar charts.
+// ---------------------------------------------------------------------------
+
+interface BreakdownItem {
+  label: string;
+  value: number;
+}
+
+function computeRevenueBreakdown(revenueInvoices: RevenueInvoice[], plInvoices: PLInvoiceRecord[], months: string[]): BreakdownItem[] {
+  return REVENUE_CATEGORIES.map((cat) => ({
+    label: cat.label,
+    value: computeRevenueActualForCategory(revenueInvoices, plInvoices, cat.key, months),
+  })).filter((i) => i.value > 0);
+}
+
+// Sums a single Sabit Giderler/Finansman/Vergiler category's Gerçekleşen
+// across the given months — same rule buildRecurringGroupRows uses.
+function categoryActualForMonths(entries: RecurringCostEntry[], groupKey: PLGroupKey, categoryKey: string, months: string[]): number {
+  return entries
+    .filter((e) => e.groupKey === groupKey && e.categoryKey === categoryKey)
+    .reduce((s, e) => s + months.reduce((ss, m) => ss + (entryAppliesToMonth(e, m) ? e.amountActual : 0), 0), 0);
+}
+
+function computeRecurringBreakdown(entries: RecurringCostEntry[], groupKey: PLGroupKey, months: string[]): BreakdownItem[] {
+  return categoriesForGroup(groupKey)
+    .map((cat) => ({ label: cat.label, value: categoryActualForMonths(entries, groupKey, cat.key, months) }))
+    .filter((i) => i.value > 0);
+}
+
+// Gider Dağılımı — regroups every real expense source in the system (Sabit
+// Giderler categories, Finansman, project-level Ulaşım/Konaklama/
+// Organizasyon/Yazılım, and Danışman Maliyetleri) into the simplified
+// bucket set requested for this chart. Vergiler is deliberately excluded
+// here — it gets its own "Vergi Analizi" chart below, matching the request.
+function computeExpenseBreakdown(
+  consultants: Consultant[],
+  assignments: ProjectAssignment[],
+  revenueInvoices: RevenueInvoice[],
+  plInvoices: PLInvoiceRecord[],
+  recurringEntries: RecurringCostEntry[],
+  months: string[]
+): BreakdownItem[] {
+  const fixed = (key: string) => categoryActualForMonths(recurringEntries, "fixed", key, months);
+  const financing = (key: string) => categoryActualForMonths(recurringEntries, "financing", key, months);
+  const project = (key: string) => computeExpenseActualForCategory(plInvoices, key, months);
+  const relevantConsultantIds = Array.from(new Set<string>([...consultants.map((c) => c.id), ...assignments.map((a) => a.consultantId)]));
+  const consultantCost = relevantConsultantIds.reduce(
+    (s, id) => s + computeConsultantTotalActualCostForMonths(revenueInvoices, plInvoices, consultants, id, months),
+    0
+  );
+  return [
+    { label: "Danışman Maliyetleri", value: consultantCost },
+    { label: "Ofis Maaşları", value: fixed("office_salaries") },
+    { label: "Yönetim Maaşları", value: fixed("management_salaries") },
+    { label: "SGK", value: fixed("sgk") },
+    { label: "Yazılım", value: fixed("software_licenses") + project("opex_software") },
+    { label: "Pazarlama", value: fixed("marketing") },
+    { label: "Araç", value: fixed("vehicle") },
+    { label: "Kira", value: fixed("office_rent") },
+    { label: "Muhasebe", value: fixed("accounting") },
+    { label: "Seyahat", value: fixed("general_travel") + project("transport") + project("accommodation") },
+    { label: "Finansman", value: financing("interest") + financing("fx_loss") + financing("other_financing") },
+    { label: "Diğer", value: fixed("bank_fees") + fixed("dues") + fixed("office_expenses") + fixed("other_general") + project("organization") },
+  ]
+    .filter((i) => i.value > 0)
+    .sort((a, b) => b.value - a.value);
+}
+
 interface PLValue {
   plan: number;
   actual: number;
@@ -560,6 +634,132 @@ function TrendChartTooltip({ active, payload, label }: any) {
           {p.name}: {formatTRY(p.value)}
         </p>
       ))}
+    </div>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// Finansal Analiz — chart sub-components
+// ---------------------------------------------------------------------------
+
+const BREAKDOWN_COLORS = ["#4338ca", "#059669", "#e11d48", "#d97706", "#0891b2", "#7c3aed", "#65a30d", "#db2777", "#0f766e", "#b45309", "#475569", "#9333ea"];
+
+function BreakdownTooltip({ active, payload }: any) {
+  if (!active || !payload || !payload.length) return null;
+  const p = payload[0];
+  return (
+    <div className="rounded-lg border border-slate-200 dark:border-zinc-700 bg-white dark:bg-zinc-900 shadow-md text-[11.5px]" style={{ padding: 8 }}>
+      <p className="font-semibold text-slate-700 dark:text-zinc-200">{p.name ?? p.payload?.label}</p>
+      <p className="text-slate-500 dark:text-zinc-400 tabular-nums">{formatTRY(p.value)}</p>
+    </div>
+  );
+}
+
+function BreakdownDonutChart({ data, height = 240 }: { data: BreakdownItem[]; height?: number }) {
+  const total = data.reduce((s, d) => s + d.value, 0);
+  if (data.length === 0 || total === 0) {
+    return (
+      <div className="flex items-center justify-center text-[12px] text-slate-400 dark:text-zinc-500" style={{ height }}>
+        Seçili ayda veri yok.
+      </div>
+    );
+  }
+  return (
+    <div style={{ height }}>
+      <ResponsiveContainer width="100%" height="100%">
+        <PieChart>
+          <Pie data={data} dataKey="value" nameKey="label" innerRadius="55%" outerRadius="82%" paddingAngle={2} isAnimationActive={false}>
+            {data.map((_, i) => (
+              <Cell key={i} fill={BREAKDOWN_COLORS[i % BREAKDOWN_COLORS.length]} stroke="none" />
+            ))}
+          </Pie>
+          <Tooltip content={<BreakdownTooltip />} />
+          <Legend
+            layout="vertical"
+            verticalAlign="middle"
+            align="right"
+            iconType="circle"
+            iconSize={8}
+            formatter={(value: string, entry: any) => (
+              <span className="text-[11px] text-slate-600 dark:text-zinc-300">
+                {value} <span className="text-slate-400 dark:text-zinc-500">— {formatPercent1((entry?.payload?.value / total) * 100)}</span>
+              </span>
+            )}
+          />
+        </PieChart>
+      </ResponsiveContainer>
+    </div>
+  );
+}
+
+function BreakdownBarChart({ data, height = 320 }: { data: BreakdownItem[]; height?: number }) {
+  if (data.length === 0) {
+    return (
+      <div className="flex items-center justify-center text-[12px] text-slate-400 dark:text-zinc-500" style={{ height }}>
+        Seçili ayda gider verisi yok.
+      </div>
+    );
+  }
+  return (
+    <div style={{ height }}>
+      <ResponsiveContainer width="100%" height="100%">
+        <BarChart data={data} layout="vertical" margin={{ top: 4, right: 16, left: 0, bottom: 0 }}>
+          <CartesianGrid strokeDasharray="3 3" horizontal={false} stroke="#e5e7eb" />
+          <XAxis type="number" tickFormatter={(v: number) => formatCompactTRY(v)} tick={{ fontSize: 10.5, fill: "#94a3b8" }} axisLine={false} tickLine={false} />
+          <YAxis type="category" dataKey="label" tick={{ fontSize: 11, fill: "#475569" }} axisLine={false} tickLine={false} width={110} />
+          <Tooltip content={<BreakdownTooltip />} cursor={{ fill: "rgba(148,163,184,0.08)" }} />
+          <Bar dataKey="value" radius={[0, 4, 4, 0]} isAnimationActive={false}>
+            {data.map((_, i) => (
+              <Cell key={i} fill={BREAKDOWN_COLORS[i % BREAKDOWN_COLORS.length]} />
+            ))}
+          </Bar>
+        </BarChart>
+      </ResponsiveContainer>
+    </div>
+  );
+}
+
+// "Gelire Göre Gider Dağılımı" — a single 100%-of-revenue segmented bar.
+// Built with plain flex divs rather than forcing recharts into a one-row
+// stacked bar (which handles negative segments and label placement badly);
+// negative shares (e.g. a loss month) are clamped to 0 width visually but
+// their real percentage is still shown in the legend text underneath.
+function RevenueShareBar({
+  directOpexPct,
+  generalPct,
+  taxPct,
+  netProfitPct,
+}: {
+  directOpexPct: number;
+  generalPct: number;
+  taxPct: number;
+  netProfitPct: number;
+}) {
+  const segments = [
+    { label: "Direkt Operasyon", pct: directOpexPct, color: "#e11d48" },
+    { label: "Genel Gider", pct: generalPct, color: "#d97706" },
+    { label: "Vergi", pct: taxPct, color: "#7c3aed" },
+    { label: "Net Kâr", pct: netProfitPct, color: "#059669" },
+  ];
+  return (
+    <div>
+      <div className="w-full h-8 rounded-lg overflow-hidden flex bg-slate-100 dark:bg-zinc-800">
+        {segments.map((s) => (
+          <div
+            key={s.label}
+            style={{ width: `${Math.max(0, Math.min(100, s.pct))}%`, backgroundColor: s.color }}
+            title={`${s.label}: ${formatPercent1(s.pct)}`}
+          />
+        ))}
+      </div>
+      <div className="flex flex-wrap items-center gap-x-4 gap-y-1.5 mt-3 text-[11.5px]">
+        {segments.map((s) => (
+          <span key={s.label} className="flex items-center gap-1.5 text-slate-600 dark:text-zinc-300">
+            <span className="w-2.5 h-2.5 rounded-full shrink-0" style={{ backgroundColor: s.color }} />
+            {s.label}: <b className="tabular-nums">{formatPercent1(s.pct)}</b>
+          </span>
+        ))}
+      </div>
     </div>
   );
 }
@@ -832,10 +1032,11 @@ function KdvStatCard({ label, value, tone }: { label: string; value: number; ton
 // Main view
 // ---------------------------------------------------------------------------
 
-type PLSection = "dashboard" | "pl" | "fixed" | "financing" | "tax" | "invoices" | "kdv";
+type PLSection = "dashboard" | "finansal-analiz" | "pl" | "fixed" | "financing" | "tax" | "invoices" | "kdv";
 
 const SECTIONS: { key: PLSection; label: string }[] = [
   { key: "dashboard", label: "Yönetici Özeti" },
+  { key: "finansal-analiz", label: "Finansal Analiz" },
   { key: "pl", label: "P/L Tablosu" },
   { key: "fixed", label: "Sabit Giderler" },
   { key: "financing", label: "Finansman Giderleri" },
@@ -1239,6 +1440,40 @@ export default function ManagementPLView() {
     };
   }, [selectedMonth, trendWindow, consultants, assignments, revenueInvoices, invoices, recurringEntries]);
 
+  // Finansal Analiz — always reads the single selected month for the
+  // breakdown charts (Gelir/Gider Dağılımı, Gelire Göre Gider Dağılımı,
+  // Vergi Analizi) and a fixed trailing 12-month window for the trend area
+  // chart, independent of the Yönetici Özeti trend-window toggle, per spec
+  // ("Son 12 Ay Finansal Trend" is explicitly a fixed 12-month view).
+  const finansalAnalizData = useMemo(() => {
+    const summaryFor = (months: string[]) =>
+      computePLSummaryActualsForMonths(consultants, assignments, revenueInvoices, invoices, recurringEntries, months);
+
+    const currentMonths = [selectedMonth];
+    const revenueBreakdown = computeRevenueBreakdown(revenueInvoices, invoices, currentMonths);
+    const expenseBreakdown = computeExpenseBreakdown(consultants, assignments, revenueInvoices, invoices, recurringEntries, currentMonths);
+    const taxBreakdown = computeRecurringBreakdown(recurringEntries, "tax", currentMonths);
+
+    const current = summaryFor(currentMonths);
+    const netSales = current.netSales;
+    const shareOf = (v: number) => (netSales !== 0 ? (v / netSales) * 100 : 0);
+    const revenueShare = {
+      directOpexPct: shareOf(current.directOpex),
+      generalPct: shareOf(current.fixedExpenses + current.financingExpenses),
+      taxPct: shareOf(current.taxExpenses),
+      netProfitPct: shareOf(current.netProfit),
+    };
+
+    const trend12Months = lastNMonthsEndingAt(selectedMonth, 12);
+    const trend12Series = trend12Months.map((m) => {
+      const s = summaryFor([m]);
+      const totalExpenses = s.directOpex + s.fixedExpenses + s.financingExpenses + s.taxExpenses;
+      return { month: m, label: formatMonthLabelShort(m), Gelir: s.netSales, Gider: totalExpenses, "Net Kâr": s.netProfit };
+    });
+
+    return { revenueBreakdown, expenseBreakdown, taxBreakdown, revenueShare, trend12Series };
+  }, [selectedMonth, consultants, assignments, revenueInvoices, invoices, recurringEntries]);
+
   const kdvSummary = useMemo(() => computeKdvSummary(invoices, selectedMonth), [invoices, selectedMonth]);
 
   // Diagnostic snapshot of the raw source data behind the "Danışman
@@ -1545,6 +1780,112 @@ export default function ManagementPLView() {
               Yönetimi'nde henüz alacak/tahsilat/teklif takibi için ayrı bir veri kaynağı olmadığından bu aşamaya dahil
               edilmedi (uydurma sayı göstermemek için). Finansal Analiz, Operasyon Analizi ve Tahmin/Planlama sekmeleri ile
               çoklu para birimi (döviz) desteği sonraki aşamalarda eklenecek.
+            </div>
+          </div>
+        )}
+
+        {activeSection === "finansal-analiz" && (
+          <div className="space-y-5">
+            <div className="flex flex-wrap items-center justify-between gap-3">
+              <div>
+                <h2 className="text-[15px] font-semibold text-slate-800 dark:text-zinc-100">Finansal Analiz</h2>
+                <p className="text-[12px] text-slate-400 dark:text-zinc-500">
+                  {formatMonthLabel(selectedMonth)} dağılımları ve son 12 aylık trend
+                </p>
+              </div>
+              <select
+                value={selectedMonth}
+                onChange={(e) => setSelectedMonth(e.target.value)}
+                className="rounded-lg border border-slate-200 dark:border-zinc-700 bg-white dark:bg-zinc-900 px-2.5 py-1.5 text-[12.5px]"
+              >
+                {monthOptions.map((m) => (
+                  <option key={m} value={m}>
+                    {formatMonthLabel(m)}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            <div className="grid grid-cols-1 xl:grid-cols-2 gap-4">
+              <div className="rounded-2xl border border-slate-200 dark:border-zinc-800" style={{ padding: 20 }}>
+                <p className="text-[13px] font-semibold text-slate-700 dark:text-zinc-200 mb-3">
+                  Gelir Dağılımı — {formatMonthLabel(selectedMonth)}
+                </p>
+                <BreakdownDonutChart data={finansalAnalizData.revenueBreakdown} />
+              </div>
+
+              <div className="rounded-2xl border border-slate-200 dark:border-zinc-800" style={{ padding: 20 }}>
+                <p className="text-[13px] font-semibold text-slate-700 dark:text-zinc-200 mb-3">
+                  Gider Dağılımı — {formatMonthLabel(selectedMonth)}
+                </p>
+                <BreakdownBarChart data={finansalAnalizData.expenseBreakdown} />
+              </div>
+            </div>
+
+            <div className="rounded-2xl border border-slate-200 dark:border-zinc-800" style={{ padding: 20 }}>
+              <p className="text-[13px] font-semibold text-slate-700 dark:text-zinc-200 mb-1">
+                Gelire Göre Gider Dağılımı — {formatMonthLabel(selectedMonth)}
+              </p>
+              <p className="text-[11.5px] text-slate-400 dark:text-zinc-500 mb-4">
+                Net Satış Gelirinin yüzde kaçı direkt operasyona, genel giderlere, vergiye gidiyor ve yüzde kaçı net kâr
+                olarak kalıyor.
+              </p>
+              <RevenueShareBar {...finansalAnalizData.revenueShare} />
+            </div>
+
+            <div className="rounded-2xl border border-slate-200 dark:border-zinc-800" style={{ padding: 20 }}>
+              <p className="text-[13px] font-semibold text-slate-700 dark:text-zinc-200 mb-3">Son 12 Ay Finansal Trend</p>
+              <div style={{ height: 260 }}>
+                <ResponsiveContainer width="100%" height="100%">
+                  <AreaChart data={finansalAnalizData.trend12Series} margin={{ top: 4, right: 8, left: 0, bottom: 0 }}>
+                    <defs>
+                      <linearGradient id="faGelirGrad" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="5%" stopColor="#059669" stopOpacity={0.28} />
+                        <stop offset="95%" stopColor="#059669" stopOpacity={0.02} />
+                      </linearGradient>
+                      <linearGradient id="faGiderGrad" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="5%" stopColor="#e11d48" stopOpacity={0.24} />
+                        <stop offset="95%" stopColor="#e11d48" stopOpacity={0.02} />
+                      </linearGradient>
+                      <linearGradient id="faNetGrad" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="5%" stopColor="#4338ca" stopOpacity={0.24} />
+                        <stop offset="95%" stopColor="#4338ca" stopOpacity={0.02} />
+                      </linearGradient>
+                    </defs>
+                    <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e5e7eb" />
+                    <XAxis dataKey="label" tick={{ fontSize: 10.5, fill: "#94a3b8" }} axisLine={{ stroke: "#e5e7eb" }} tickLine={false} />
+                    <YAxis
+                      tickFormatter={(v: number) => formatCompactTRY(v)}
+                      tick={{ fontSize: 10.5, fill: "#94a3b8" }}
+                      axisLine={false}
+                      tickLine={false}
+                      width={54}
+                    />
+                    <Tooltip content={<TrendChartTooltip />} />
+                    <Area type="monotone" dataKey="Gelir" stroke="#059669" strokeWidth={2} fill="url(#faGelirGrad)" />
+                    <Area type="monotone" dataKey="Gider" stroke="#e11d48" strokeWidth={2} fill="url(#faGiderGrad)" />
+                    <Area type="monotone" dataKey="Net Kâr" stroke="#4338ca" strokeWidth={2} fill="url(#faNetGrad)" />
+                  </AreaChart>
+                </ResponsiveContainer>
+              </div>
+              <div className="flex items-center gap-4 mt-2 text-[11px] text-slate-500 dark:text-zinc-400">
+                <span className="flex items-center gap-1.5">
+                  <span className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: "#059669" }} /> Gelir
+                </span>
+                <span className="flex items-center gap-1.5">
+                  <span className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: "#e11d48" }} /> Gider
+                </span>
+                <span className="flex items-center gap-1.5">
+                  <span className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: "#4338ca" }} /> Net Kâr
+                </span>
+              </div>
+            </div>
+
+            <div className="rounded-2xl border border-slate-200 dark:border-zinc-800" style={{ padding: 20 }}>
+              <p className="text-[13px] font-semibold text-slate-700 dark:text-zinc-200 mb-3">
+                Vergi Analizi — {formatMonthLabel(selectedMonth)}
+              </p>
+              <BreakdownBarChart data={finansalAnalizData.taxBreakdown} height={220} />
             </div>
           </div>
         )}
