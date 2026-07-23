@@ -1,4 +1,5 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
+import * as XLSX from "xlsx";
 import {
   Lock,
   ChevronDown,
@@ -498,6 +499,116 @@ function sumValues(rows: PLRow[], periodCount: number): PLValue[] {
   return Array.from({ length: periodCount }, (_, i) =>
     rows.reduce((s, r) => ({ plan: s.plan + r.values[i].plan, actual: s.actual + r.values[i].actual }), { plan: 0, actual: 0 })
   );
+}
+
+// ---------------------------------------------------------------------------
+// P/L Tablosu — Excel (.xlsx) export
+// ---------------------------------------------------------------------------
+//
+// Builds a real formatted workbook, not a CSV: a merged title/period header
+// block, a two-row column header (period label spanning Plan/Gerçekleşen/
+// Fark/Fark %), native numeric cells with an accounting-style TRY number
+// format (so Excel right-aligns and formats them, not text strings), and the
+// same indentation depth as the on-screen expandable table so the row
+// hierarchy (group → sub-group → line item) survives the export.
+
+const PL_EXPORT_CURRENCY_FMT = '#,##0.00 "₺";[RED]-#,##0.00 "₺"';
+const PL_EXPORT_PERCENT_FMT = "0.0%;[RED]-0.0%";
+
+interface PLExportRowFlat {
+  label: string;
+  depth: number;
+  isTotal: boolean;
+  values: PLValue[];
+}
+
+function flattenPLRowsForExport(rows: PLRow[], depth = 0): PLExportRowFlat[] {
+  const out: PLExportRowFlat[] = [];
+  rows.forEach((row) => {
+    out.push({ label: row.label, depth, isTotal: !!row.isTotal, values: row.values });
+    if (row.children && row.children.length > 0) {
+      out.push(...flattenPLRowsForExport(row.children, depth + 1));
+    }
+  });
+  return out;
+}
+
+function exportPLTableToExcel(rows: PLRow[], periods: PLPeriod[]) {
+  const flatRows = flattenPLRowsForExport(rows);
+
+  const title = "Gemba IQ — Yönetim P/L Tablosu";
+  const periodLabel = periods.map((p) => p.label).join(" · ");
+  const generatedAt = new Date().toLocaleString("tr-TR");
+
+  const aoa: any[][] = [];
+  aoa.push([title]);
+  aoa.push([`Dönem: ${periodLabel}`]);
+  aoa.push([`Oluşturulma: ${generatedAt}`]);
+  aoa.push([]);
+
+  const headerRow1: any[] = ["KALEM"];
+  const headerRow2: any[] = [""];
+  periods.forEach((p) => {
+    headerRow1.push(p.label, "", "", "");
+    headerRow2.push("Plan", "Gerçekleşen", "Fark", "Fark %");
+  });
+  aoa.push(headerRow1);
+  aoa.push(headerRow2);
+
+  const dataStartRowIndex = aoa.length;
+
+  flatRows.forEach((r) => {
+    const indent = "    ".repeat(r.depth);
+    const labelText = r.isTotal ? r.label.toUpperCase() : `${indent}${r.label}`;
+    const row: any[] = [labelText];
+    periods.forEach((_, i) => {
+      const v = r.values[i] ?? { plan: 0, actual: 0 };
+      const fark = v.actual - v.plan;
+      const farkPct = v.plan !== 0 ? fark / Math.abs(v.plan) : 0;
+      row.push(v.plan, v.actual, fark, farkPct);
+    });
+    aoa.push(row);
+  });
+
+  const ws = XLSX.utils.aoa_to_sheet(aoa);
+
+  const totalCols = 1 + periods.length * 4;
+  const lastColIdx = totalCols - 1;
+  ws["!merges"] = [
+    { s: { r: 0, c: 0 }, e: { r: 0, c: lastColIdx } },
+    { s: { r: 1, c: 0 }, e: { r: 1, c: lastColIdx } },
+    { s: { r: 2, c: 0 }, e: { r: 2, c: lastColIdx } },
+  ];
+  periods.forEach((_, i) => {
+    const startCol = 1 + i * 4;
+    ws["!merges"]!.push({ s: { r: 4, c: startCol }, e: { r: 4, c: startCol + 3 } });
+  });
+
+  ws["!cols"] = [{ wch: 44 }, ...periods.flatMap(() => [{ wch: 16 }, { wch: 16 }, { wch: 14 }, { wch: 10 }])];
+
+  flatRows.forEach((r, rowOffset) => {
+    const rIdx = dataStartRowIndex + rowOffset;
+    periods.forEach((_, i) => {
+      const baseCol = 1 + i * 4;
+      [0, 1, 2].forEach((colOffset) => {
+        const cellRef = XLSX.utils.encode_cell({ r: rIdx, c: baseCol + colOffset });
+        const cell = ws[cellRef];
+        if (cell) cell.z = PL_EXPORT_CURRENCY_FMT;
+      });
+      const pctRef = XLSX.utils.encode_cell({ r: rIdx, c: baseCol + 3 });
+      const pctCell = ws[pctRef];
+      if (pctCell) pctCell.z = PL_EXPORT_PERCENT_FMT;
+    });
+  });
+
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, "P-L Tablosu");
+
+  const periodTag =
+    periods.length === 1
+      ? periods[0].shortLabel.replace(/\s+/g, "_")
+      : `${periods[0].shortLabel}-${periods[periods.length - 1].shortLabel}`.replace(/\s+/g, "_");
+  XLSX.writeFile(wb, `Gemba_IQ_Yonetim_PL_${periodTag}.xlsx`, { cellStyles: true });
 }
 
 function buildRecurringGroupRows(
@@ -2227,6 +2338,15 @@ export default function ManagementPLView() {
                   </div>
                 </div>
               )}
+
+              <button
+                type="button"
+                onClick={() => exportPLTableToExcel(plData.rows, periods)}
+                className="ml-auto flex items-center gap-1.5 rounded-lg border border-slate-200 dark:border-zinc-700 px-3 py-1.5 text-[12.5px] font-medium text-slate-600 dark:text-zinc-300 hover:bg-slate-50 dark:hover:bg-zinc-800/60 transition-colors"
+                title="P/L Tablosu'nu formatlanmış Excel (.xlsx) raporu olarak indir"
+              >
+                <Download className="w-3.5 h-3.5" /> Excel'e Aktar
+              </button>
             </div>
 
             <div className="rounded-xl border border-amber-200 dark:border-amber-900/40 bg-amber-50/60 dark:bg-amber-950/20 px-4 py-3 text-[12px] text-amber-900 dark:text-amber-200 space-y-1.5">
