@@ -92,6 +92,22 @@ const DEFAULT_CATEGORY_PLANS: Record<string, Record<string, number>> = {
 // 3-month quarter bucket)
 // ---------------------------------------------------------------------------
 
+// Two consultant names can look 100% identical on screen and still fail a
+// strict `===` comparison: (1) Turkish "İ"/"I"/"ı"/"i" don't fold the same
+// way under the default (non-locale) .toLowerCase(), and (2) a letter like
+// "ç" can be stored as either one precomposed Unicode codepoint or as "c"
+// plus a separate combining cedilla mark (NFC vs NFD normalization) — these
+// render identically but are different byte sequences, most commonly caused
+// by data typed on different keyboards/OSes or pasted from different
+// sources (e.g. an Excel import vs. a manually-typed Danışman Master entry).
+// Confirmed via the Veri Kontrolü panel as the actual cause of at least one
+// real "isim eşleşmiyor" case ("Faik Çakır" not matching the Master list
+// despite looking identical), so both name-matching call sites below now
+// normalize through this before comparing.
+function normalizeConsultantName(name: string): string {
+  return name.normalize("NFC").replace(/\s+/g, " ").trim().toLocaleLowerCase("tr-TR");
+}
+
 function computeConsultantActualCostForMonths(
   assignments: ProjectAssignment[],
   consultants: Consultant[],
@@ -119,13 +135,13 @@ function computeConsultantActualCostFromInvoicesForMonths(
 ): number {
   const consultant = consultants.find((c) => c.id === consultantId);
   if (!consultant) return 0;
-  const targetName = consultant.name.trim().toLowerCase();
+  const targetName = normalizeConsultantName(consultant.name);
   let cost = 0;
   revenueInvoices
     .filter((inv) => months.includes(inv.month) && (inv.consultantNames || []).length > 0)
     .forEach((inv) => {
       const names = (inv.consultantNames || []).filter(Boolean);
-      const matchCount = names.filter((n) => n.trim().toLowerCase() === targetName).length;
+      const matchCount = names.filter((n) => normalizeConsultantName(n) === targetName).length;
       if (matchCount === 0) return;
       const perPersonDays = inv.deliveredDays / names.length;
       cost += perPersonDays * matchCount * consultant.dailyCost;
@@ -930,10 +946,10 @@ export default function ManagementPLView() {
     const invoicesWithNames = invoicesInPeriod.filter((inv) => (inv.consultantNames || []).some((n) => n && n.trim()));
     const invoicesWithNamesNoDays = invoicesWithNames.filter((inv) => !inv.deliveredDays || inv.deliveredDays <= 0);
     const assignmentsInPeriod = assignments.filter((a) => periodMonths.includes(a.month));
-    const masterNames = new Set(consultants.map((c) => c.name.trim().toLowerCase()));
+    const masterNames = new Set(consultants.map((c) => normalizeConsultantName(c.name)));
     const invoiceNamesSet = new Set<string>();
     invoicesWithNames.forEach((inv) => (inv.consultantNames || []).forEach((n) => n && n.trim() && invoiceNamesSet.add(n.trim())));
-    const unmatchedNames = Array.from(invoiceNamesSet).filter((n) => !masterNames.has(n.toLowerCase()));
+    const unmatchedNames = Array.from(invoiceNamesSet).filter((n) => !masterNames.has(normalizeConsultantName(n)));
     return {
       consultantCount: consultants.length,
       assignmentCount: assignments.length,
