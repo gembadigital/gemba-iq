@@ -393,6 +393,91 @@ function computeExpenseBreakdown(
     .sort((a, b) => b.value - a.value);
 }
 
+// ---------------------------------------------------------------------------
+// Tahmin ve Planlama — forecast helpers
+// ---------------------------------------------------------------------------
+//
+// There is no separate AR/AP or cash-timing data source in this system (the
+// Yönetici Özeti disclosure banner already explains this), so "Nakit Akışı
+// Tahmini" is explicitly built as an approximation derived from real Net
+// Kâr history, not fabricated — the UI must always label it as such rather
+// than presenting it as a true cash-timing forecast.
+
+interface ForecastPoint {
+  month: string;
+  label: string;
+  actual?: number;
+  forecast?: number;
+  optimistic?: number;
+  pessimistic?: number;
+}
+
+// Ordinary-least-squares linear regression over (0..n-1, values), projecting
+// `horizon` additional future points. With fewer than 3 real data points a
+// trend line is not meaningful, so we flat-continue the last known value
+// instead of extrapolating from noise.
+function linearForecast(values: number[], horizon: number): number[] {
+  const n = values.length;
+  if (n === 0) return new Array(horizon).fill(0);
+  if (n < 3) {
+    const last = values[n - 1];
+    return new Array(horizon).fill(last);
+  }
+  const xMean = (n - 1) / 2;
+  const yMean = values.reduce((s, v) => s + v, 0) / n;
+  let num = 0;
+  let den = 0;
+  values.forEach((v, i) => {
+    num += (i - xMean) * (v - yMean);
+    den += (i - xMean) * (i - xMean);
+  });
+  const slope = den !== 0 ? num / den : 0;
+  const intercept = yMean - slope * xMean;
+  const out: number[] = [];
+  for (let i = 0; i < horizon; i++) out.push(intercept + slope * (n + i));
+  return out;
+}
+
+// Builds a Gerçekleşen/Tahmin series for a single metric, with a fixed ±10%
+// of the forecast magnitude as the İyimser/Kötümser band (the "sabit yüzde
+// sapma" scenario method). The last historical point also carries the
+// forecast/optimistic/pessimistic values equal to the actual, so the
+// dashed forecast line visually connects to the solid actual line instead
+// of leaving a gap.
+function buildForecastSeries(historyMonths: string[], historyValues: number[], forecastMonths: string[]): ForecastPoint[] {
+  const projected = linearForecast(historyValues, forecastMonths.length);
+  const points: ForecastPoint[] = historyMonths.map((m, i) => ({
+    month: m,
+    label: formatMonthLabelShort(m),
+    actual: historyValues[i],
+  }));
+  if (points.length > 0) {
+    const bridge = points[points.length - 1];
+    bridge.forecast = bridge.actual;
+    bridge.optimistic = bridge.actual;
+    bridge.pessimistic = bridge.actual;
+  }
+  forecastMonths.forEach((m, i) => {
+    const v = projected[i];
+    const dev = Math.abs(v) * 0.1;
+    points.push({ month: m, label: formatMonthLabelShort(m), forecast: v, optimistic: v + dev, pessimistic: v - dev });
+  });
+  return points;
+}
+
+interface ScenarioPoint {
+  label: string;
+  İyimser: number;
+  Beklenen: number;
+  Kötümser: number;
+}
+
+function buildScenarioSeries(profitForecast: ForecastPoint[]): ScenarioPoint[] {
+  return profitForecast
+    .filter((p) => p.forecast !== undefined && p.actual === undefined)
+    .map((p) => ({ label: p.label, İyimser: p.optimistic ?? p.forecast!, Beklenen: p.forecast!, Kötümser: p.pessimistic ?? p.forecast! }));
+}
+
 interface PLValue {
   plan: number;
   actual: number;
@@ -764,6 +849,103 @@ function RevenueShareBar({
   );
 }
 
+// ---------------------------------------------------------------------------
+// Tahmin ve Planlama — chart sub-components
+// ---------------------------------------------------------------------------
+
+function ForecastTooltip({ active, payload, label }: any) {
+  if (!active || !payload || !payload.length) return null;
+  const byKey: Record<string, any> = {};
+  payload.forEach((p: any) => (byKey[p.dataKey] = p));
+  return (
+    <div className="rounded-lg border border-slate-200 dark:border-zinc-700 bg-white dark:bg-zinc-900 shadow-md text-[11.5px]" style={{ padding: 8 }}>
+      <p className="font-semibold text-slate-700 dark:text-zinc-200 mb-1">{label}</p>
+      {byKey.actual !== undefined && (
+        <p className="tabular-nums" style={{ color: byKey.actual.color }}>
+          Gerçekleşen: {formatTRY(byKey.actual.value)}
+        </p>
+      )}
+      {byKey.forecast !== undefined && (
+        <p className="tabular-nums" style={{ color: byKey.forecast.color }}>
+          Tahmin: {formatTRY(byKey.forecast.value)}
+        </p>
+      )}
+      {byKey.optimistic !== undefined && (
+        <p className="tabular-nums text-emerald-500">İyimser: {formatTRY(byKey.optimistic.value)}</p>
+      )}
+      {byKey.pessimistic !== undefined && (
+        <p className="tabular-nums text-rose-500">Kötümser: {formatTRY(byKey.pessimistic.value)}</p>
+      )}
+    </div>
+  );
+}
+
+function ForecastLineChart({ data, color, height = 240 }: { data: ForecastPoint[]; color: string; height?: number }) {
+  return (
+    <div style={{ height }}>
+      <ResponsiveContainer width="100%" height="100%">
+        <LineChart data={data} margin={{ top: 4, right: 8, left: 0, bottom: 0 }}>
+          <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e5e7eb" />
+          <XAxis dataKey="label" tick={{ fontSize: 10, fill: "#94a3b8" }} axisLine={{ stroke: "#e5e7eb" }} tickLine={false} />
+          <YAxis
+            tickFormatter={(v: number) => formatCompactTRY(v)}
+            tick={{ fontSize: 10, fill: "#94a3b8" }}
+            axisLine={false}
+            tickLine={false}
+            width={54}
+          />
+          <Tooltip content={<ForecastTooltip />} />
+          <Line type="monotone" dataKey="optimistic" stroke="#059669" strokeWidth={1} strokeDasharray="2 3" dot={false} />
+          <Line type="monotone" dataKey="pessimistic" stroke="#e11d48" strokeWidth={1} strokeDasharray="2 3" dot={false} />
+          <Line type="monotone" dataKey="actual" stroke={color} strokeWidth={2.5} dot={false} />
+          <Line type="monotone" dataKey="forecast" stroke={color} strokeWidth={2.5} strokeDasharray="6 4" dot={false} />
+        </LineChart>
+      </ResponsiveContainer>
+    </div>
+  );
+}
+
+const SCENARIO_TOOLTIP_COLORS: Record<string, string> = { İyimser: "#059669", Beklenen: "#4338ca", Kötümser: "#e11d48" };
+
+function ScenarioTooltip({ active, payload, label }: any) {
+  if (!active || !payload || !payload.length) return null;
+  return (
+    <div className="rounded-lg border border-slate-200 dark:border-zinc-700 bg-white dark:bg-zinc-900 shadow-md text-[11.5px]" style={{ padding: 8 }}>
+      <p className="font-semibold text-slate-700 dark:text-zinc-200 mb-1">{label}</p>
+      {payload.map((p: any) => (
+        <p key={p.dataKey} className="tabular-nums" style={{ color: SCENARIO_TOOLTIP_COLORS[p.dataKey] ?? p.color }}>
+          {p.dataKey}: {formatTRY(p.value)}
+        </p>
+      ))}
+    </div>
+  );
+}
+
+function ScenarioBarChart({ data, height = 240 }: { data: ScenarioPoint[]; height?: number }) {
+  return (
+    <div style={{ height }}>
+      <ResponsiveContainer width="100%" height="100%">
+        <BarChart data={data} margin={{ top: 4, right: 8, left: 0, bottom: 0 }}>
+          <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e5e7eb" />
+          <XAxis dataKey="label" tick={{ fontSize: 10, fill: "#94a3b8" }} axisLine={{ stroke: "#e5e7eb" }} tickLine={false} />
+          <YAxis
+            tickFormatter={(v: number) => formatCompactTRY(v)}
+            tick={{ fontSize: 10, fill: "#94a3b8" }}
+            axisLine={false}
+            tickLine={false}
+            width={54}
+          />
+          <Tooltip content={<ScenarioTooltip />} cursor={{ fill: "rgba(148,163,184,0.08)" }} />
+          <Legend wrapperStyle={{ fontSize: 11.5 }} />
+          <Bar dataKey="İyimser" fill="#059669" radius={[3, 3, 0, 0]} isAnimationActive={false} />
+          <Bar dataKey="Beklenen" fill="#4338ca" radius={[3, 3, 0, 0]} isAnimationActive={false} />
+          <Bar dataKey="Kötümser" fill="#e11d48" radius={[3, 3, 0, 0]} isAnimationActive={false} />
+        </BarChart>
+      </ResponsiveContainer>
+    </div>
+  );
+}
+
 function PLTableRow({
   row,
   depth,
@@ -1032,10 +1214,11 @@ function KdvStatCard({ label, value, tone }: { label: string; value: number; ton
 // Main view
 // ---------------------------------------------------------------------------
 
-type PLSection = "dashboard" | "pl" | "fixed" | "financing" | "tax" | "invoices" | "kdv";
+type PLSection = "dashboard" | "forecast" | "pl" | "fixed" | "financing" | "tax" | "invoices" | "kdv";
 
 const SECTIONS: { key: PLSection; label: string }[] = [
   { key: "dashboard", label: "Yönetici Özeti" },
+  { key: "forecast", label: "Tahmin ve Planlama" },
   { key: "pl", label: "P/L Tablosu" },
   { key: "fixed", label: "Sabit Giderler" },
   { key: "financing", label: "Finansman Giderleri" },
@@ -1473,6 +1656,53 @@ export default function ManagementPLView() {
     return { revenueBreakdown, expenseBreakdown, taxBreakdown, revenueShare, trend12Series };
   }, [selectedMonth, consultants, assignments, revenueInvoices, invoices, recurringEntries]);
 
+  // Tahmin ve Planlama — 12 aylık gerçek geçmişten (selectedMonth dahil)
+  // basit doğrusal trend ile 6 ay ileri projeksiyon. Nakit Akışı Tahmini
+  // için ayrı bir tahsilat/alacak veri kaynağı olmadığından (bkz. Yönetici
+  // Özeti bilgi notu), Net Kâr'ın kümülatif toplamı yaklaşık bir vekil
+  // (proxy) olarak kullanılır — bu, kullanıcıyla netleştirilmiş ve arayüzde
+  // açıkça "yaklaşık" olarak etiketlenmiştir, gerçek nakit zamanlamasını
+  // yansıtmaz.
+  const forecastData = useMemo(() => {
+    const summaryFor = (months: string[]) =>
+      computePLSummaryActualsForMonths(consultants, assignments, revenueInvoices, invoices, recurringEntries, months);
+
+    const historyMonths = lastNMonthsEndingAt(selectedMonth, 12);
+    const forecastMonths: string[] = [];
+    for (let i = 1; i <= 6; i++) forecastMonths.push(shiftMonth(selectedMonth, i));
+
+    const historySummaries = historyMonths.map((m) => summaryFor([m]));
+    const revenueForecast = buildForecastSeries(historyMonths, historySummaries.map((s) => s.netSales), forecastMonths);
+    const profitForecast = buildForecastSeries(historyMonths, historySummaries.map((s) => s.netProfit), forecastMonths);
+
+    const projectedMonthlyProfit = linearForecast(historySummaries.map((s) => s.netProfit), forecastMonths.length);
+    let cum = 0;
+    const cashFlowForecast: ForecastPoint[] = historyMonths.map((m, i) => {
+      cum += historySummaries[i].netProfit;
+      return { month: m, label: formatMonthLabelShort(m), actual: cum };
+    });
+    if (cashFlowForecast.length > 0) {
+      const bridge = cashFlowForecast[cashFlowForecast.length - 1];
+      bridge.forecast = bridge.actual;
+    }
+    let cumForecast = cum;
+    forecastMonths.forEach((m, i) => {
+      cumForecast += projectedMonthlyProfit[i];
+      const dev = Math.abs(cumForecast - cum) * 0.1;
+      cashFlowForecast.push({
+        month: m,
+        label: formatMonthLabelShort(m),
+        forecast: cumForecast,
+        optimistic: cumForecast + dev,
+        pessimistic: cumForecast - dev,
+      });
+    });
+
+    const scenarioSeries = buildScenarioSeries(profitForecast);
+
+    return { revenueForecast, profitForecast, cashFlowForecast, scenarioSeries, hasEnoughHistory: historyMonths.length >= 3 };
+  }, [selectedMonth, consultants, assignments, revenueInvoices, invoices, recurringEntries]);
+
   const kdvSummary = useMemo(() => computeKdvSummary(invoices, selectedMonth), [invoices, selectedMonth]);
 
   // Diagnostic snapshot of the raw source data behind the "Danışman
@@ -1856,7 +2086,62 @@ export default function ManagementPLView() {
               Kartlar ve grafikler tamamen sistemdeki gerçek Gerçekleşen verilere dayanır. Tahsilat, Bekleyen Alacak, Bekleyen
               Teklif Tutarı, Tahmini Ay Sonu ve Nakit Akışı kartları — Gelir Yönetimi'nde henüz alacak/tahsilat/teklif takibi
               için ayrı bir veri kaynağı olmadığından bu aşamaya dahil edilmedi (uydurma sayı göstermemek için). Operasyon
-              Analizi, Tahmin/Planlama ve çoklu para birimi (döviz) desteği sonraki aşamalarda eklenecek.
+              Analizi ve çoklu para birimi (döviz) desteği sonraki aşamalarda eklenecek.
+            </div>
+          </div>
+        )}
+
+        {activeSection === "forecast" && (
+          <div className="space-y-5">
+            <div>
+              <h2 className="text-[15px] font-semibold text-slate-800 dark:text-zinc-100">Tahmin ve Planlama</h2>
+              <p className="text-[12px] text-slate-400 dark:text-zinc-500">
+                Son 12 aylık gerçek veriden doğrusal trend ile {formatMonthLabel(shiftMonth(selectedMonth, 1))} –{" "}
+                {formatMonthLabel(shiftMonth(selectedMonth, 6))} arası projeksiyon. Düz çizgi Gerçekleşen, kesikli çizgi
+                Tahmin'dir.
+              </p>
+            </div>
+
+            {!forecastData.hasEnoughHistory && (
+              <div
+                className="rounded-xl border border-amber-200 dark:border-amber-900/40 bg-amber-50/60 dark:bg-amber-950/20 text-[12px] text-amber-900 dark:text-amber-200 leading-relaxed"
+                style={{ padding: 14 }}
+              >
+                <Info className="w-3.5 h-3.5 inline mr-1.5 -mt-0.5" />
+                Güvenilir bir trend çizgisi için en az 3 aylık gerçek veri gerekir. Şu an daha az geçmiş ay olduğundan
+                tahmin çizgileri son bilinen değerin düz devamı olarak gösteriliyor.
+              </div>
+            )}
+
+            <div className="grid grid-cols-1 xl:grid-cols-2 gap-4">
+              <div className="rounded-2xl border border-slate-200 dark:border-zinc-800" style={{ padding: 20 }}>
+                <p className="text-[13px] font-semibold text-slate-700 dark:text-zinc-200 mb-3">Gelir Tahmini</p>
+                <ForecastLineChart data={forecastData.revenueForecast} color="#059669" />
+              </div>
+
+              <div className="rounded-2xl border border-slate-200 dark:border-zinc-800" style={{ padding: 20 }}>
+                <p className="text-[13px] font-semibold text-slate-700 dark:text-zinc-200 mb-3">Kâr Tahmini</p>
+                <ForecastLineChart data={forecastData.profitForecast} color="#4338ca" />
+              </div>
+            </div>
+
+            <div className="rounded-2xl border border-slate-200 dark:border-zinc-800" style={{ padding: 20 }}>
+              <p className="text-[13px] font-semibold text-slate-700 dark:text-zinc-200 mb-1">
+                Nakit Akışı Tahmini <span className="font-normal text-slate-400 dark:text-zinc-500">(Net Kâr Kümülatif — Yaklaşık)</span>
+              </p>
+              <p className="text-[11.5px] text-slate-400 dark:text-zinc-500 mb-3">
+                Sistemde ayrı bir tahsilat/alacak (AR/AP) veri kaynağı olmadığından, kümülatif Net Kâr gerçek nakit
+                zamanlamasının yaklaşık bir vekili olarak kullanılır — gerçek tahsilat tarihlerini yansıtmaz.
+              </p>
+              <ForecastLineChart data={forecastData.cashFlowForecast} color="#0891b2" />
+            </div>
+
+            <div className="rounded-2xl border border-slate-200 dark:border-zinc-800" style={{ padding: 20 }}>
+              <p className="text-[13px] font-semibold text-slate-700 dark:text-zinc-200 mb-1">Senaryo Analizi — Net Kâr</p>
+              <p className="text-[11.5px] text-slate-400 dark:text-zinc-500 mb-3">
+                Beklenen = trend projeksiyonu · İyimser/Kötümser = Beklenen değerin ±%10'u (sabit yüzde sapma yöntemi).
+              </p>
+              <ScenarioBarChart data={forecastData.scenarioSeries} />
             </div>
           </div>
         )}
