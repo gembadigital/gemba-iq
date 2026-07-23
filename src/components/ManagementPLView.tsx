@@ -1032,11 +1032,10 @@ function KdvStatCard({ label, value, tone }: { label: string; value: number; ton
 // Main view
 // ---------------------------------------------------------------------------
 
-type PLSection = "dashboard" | "finansal-analiz" | "pl" | "fixed" | "financing" | "tax" | "invoices" | "kdv";
+type PLSection = "dashboard" | "pl" | "fixed" | "financing" | "tax" | "invoices" | "kdv";
 
 const SECTIONS: { key: PLSection; label: string }[] = [
   { key: "dashboard", label: "Yönetici Özeti" },
-  { key: "finansal-analiz", label: "Finansal Analiz" },
   { key: "pl", label: "P/L Tablosu" },
   { key: "fixed", label: "Sabit Giderler" },
   { key: "financing", label: "Finansman Giderleri" },
@@ -1623,21 +1622,11 @@ export default function ManagementPLView() {
               <div>
                 <h2 className="text-[15px] font-semibold text-slate-800 dark:text-zinc-100">Yönetici Özeti</h2>
                 <p className="text-[12px] text-slate-400 dark:text-zinc-500">
-                  {formatMonthLabel(selectedMonth)} performansı — bir önceki aya göre
+                  {formatMonthLabel(selectedMonth)} performansı — bir önceki aya göre. Ay seçimi sayfanın üstündeki filtreden
+                  yapılır.
                 </p>
               </div>
               <div className="flex items-center gap-3">
-                <select
-                  value={selectedMonth}
-                  onChange={(e) => setSelectedMonth(e.target.value)}
-                  className="rounded-lg border border-slate-200 dark:border-zinc-700 bg-white dark:bg-zinc-900 px-2.5 py-1.5 text-[12.5px]"
-                >
-                  {monthOptions.map((m) => (
-                    <option key={m} value={m}>
-                      {formatMonthLabel(m)}
-                    </option>
-                  ))}
-                </select>
                 <div className="flex items-center gap-1 rounded-lg border border-slate-200 dark:border-zinc-700 p-1">
                   {([6, 12] as const).map((w) => (
                     <button
@@ -1771,39 +1760,11 @@ export default function ManagementPLView() {
               </div>
             </div>
 
-            <div
-              className="rounded-xl border border-sky-200 dark:border-sky-900/40 bg-sky-50/60 dark:bg-sky-950/20 text-[12px] text-sky-800 dark:text-sky-300 leading-relaxed"
-              style={{ padding: 14 }}
-            >
-              Bu, Yönetici Özeti panelinin ilk aşamasıdır: kartlar ve grafikler tamamen sistemdeki gerçek Gerçekleşen verilere
-              dayanır. Tahsilat, Bekleyen Alacak, Bekleyen Teklif Tutarı, Tahmini Ay Sonu ve Nakit Akışı kartları — Gelir
-              Yönetimi'nde henüz alacak/tahsilat/teklif takibi için ayrı bir veri kaynağı olmadığından bu aşamaya dahil
-              edilmedi (uydurma sayı göstermemek için). Finansal Analiz, Operasyon Analizi ve Tahmin/Planlama sekmeleri ile
-              çoklu para birimi (döviz) desteği sonraki aşamalarda eklenecek.
-            </div>
-          </div>
-        )}
-
-        {activeSection === "finansal-analiz" && (
-          <div className="space-y-5">
-            <div className="flex flex-wrap items-center justify-between gap-3">
-              <div>
-                <h2 className="text-[15px] font-semibold text-slate-800 dark:text-zinc-100">Finansal Analiz</h2>
-                <p className="text-[12px] text-slate-400 dark:text-zinc-500">
-                  {formatMonthLabel(selectedMonth)} dağılımları ve son 12 aylık trend
-                </p>
-              </div>
-              <select
-                value={selectedMonth}
-                onChange={(e) => setSelectedMonth(e.target.value)}
-                className="rounded-lg border border-slate-200 dark:border-zinc-700 bg-white dark:bg-zinc-900 px-2.5 py-1.5 text-[12.5px]"
-              >
-                {monthOptions.map((m) => (
-                  <option key={m} value={m}>
-                    {formatMonthLabel(m)}
-                  </option>
-                ))}
-              </select>
+            <div className="pt-1 border-t border-slate-100 dark:border-zinc-800">
+              <h3 className="text-[13.5px] font-semibold text-slate-700 dark:text-zinc-200 mt-4 mb-0.5">Finansal Analiz</h3>
+              <p className="text-[12px] text-slate-400 dark:text-zinc-500">
+                {formatMonthLabel(selectedMonth)} dağılımları ve son 12 aylık trend
+              </p>
             </div>
 
             <div className="grid grid-cols-1 xl:grid-cols-2 gap-4">
@@ -1886,6 +1847,16 @@ export default function ManagementPLView() {
                 Vergi Analizi — {formatMonthLabel(selectedMonth)}
               </p>
               <BreakdownBarChart data={finansalAnalizData.taxBreakdown} height={220} />
+            </div>
+
+            <div
+              className="rounded-xl border border-sky-200 dark:border-sky-900/40 bg-sky-50/60 dark:bg-sky-950/20 text-[12px] text-sky-800 dark:text-sky-300 leading-relaxed"
+              style={{ padding: 14 }}
+            >
+              Kartlar ve grafikler tamamen sistemdeki gerçek Gerçekleşen verilere dayanır. Tahsilat, Bekleyen Alacak, Bekleyen
+              Teklif Tutarı, Tahmini Ay Sonu ve Nakit Akışı kartları — Gelir Yönetimi'nde henüz alacak/tahsilat/teklif takibi
+              için ayrı bir veri kaynağı olmadığından bu aşamaya dahil edilmedi (uydurma sayı göstermemek için). Operasyon
+              Analizi, Tahmin/Planlama ve çoklu para birimi (döviz) desteği sonraki aşamalarda eklenecek.
             </div>
           </div>
         )}
