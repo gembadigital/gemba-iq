@@ -835,7 +835,21 @@ export default function DealManagementView({ initialTab = "dashboard", onNavigat
   };
 
   // Drag deals handles
+  //
+  // Root cause of "dragging a card moves the whole column instead": each
+  // deal card sits nested inside its stage column, and the column's own
+  // wrapper div is ALSO draggable (for column reordering). The native
+  // dragstart event bubbles, so without stopPropagation() here,
+  // handleColumnDragStart would fire on the SAME event right after this one
+  // and stamp "text/column-stage" onto the same dataTransfer object — so by
+  // the time the card is dropped, dataTransfer.types contains BOTH
+  // "text/deal-card-id" AND "text/column-stage", and the onDrop handler's
+  // `includes("text/column-stage")` check wrongly picks handleColumnDrop
+  // (reordering entire stage columns) instead of handleDealDropOnStage
+  // (moving just this one card). stopPropagation keeps the card's own drag
+  // from ever reaching the column's dragstart handler.
   const handleDealDragStart = (e: React.DragEvent, dealId: string) => {
+    e.stopPropagation();
     e.dataTransfer.setData("text/deal-card-id", dealId);
   };
 
