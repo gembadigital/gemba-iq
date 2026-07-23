@@ -977,14 +977,21 @@ export default function ManagementPLView() {
   }, [periods, revenueInvoices, assignments, consultants]);
 
   if (!pinOk) {
-    // Explicit inline maxWidth alongside the Tailwind class — this card was
-    // reported rendering almost full-viewport-wide despite max-w-sm, so the
-    // width is now hard-capped regardless of any competing/global CSS.
+    // Root cause of the oversized card (found by reading index.css): a
+    // global rule `[class*="p-6"]:not(button):not(input) { max-width: 1600px
+    // !important; width: 100% !important; ... }` matches ANY element whose
+    // className contains the substring "p-6" (or "p-8") ANYWHERE — this
+    // card used Tailwind's "p-6" padding class, which silently tripped that
+    // rule and forced it to full width regardless of max-w-sm or even an
+    // inline maxWidth style (author-stylesheet !important beats a plain,
+    // non-!important inline style). Padding is applied via inline style
+    // instead of a "p-6"/"p-8" Tailwind class so the substring match never
+    // fires at all, and max-width/width are then free to actually apply.
     return (
       <div className="flex items-center justify-center min-h-[70vh] px-4">
         <div
-          className="w-full mx-auto rounded-2xl border border-slate-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 p-6 shadow-sm text-center"
-          style={{ maxWidth: 300 }}
+          className="w-full mx-auto rounded-2xl border border-slate-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 shadow-sm text-center"
+          style={{ maxWidth: 300, padding: 20 }}
         >
           <div className="w-9 h-9 mx-auto rounded-full bg-indigo-50 dark:bg-indigo-950/40 flex items-center justify-center mb-3">
             <Lock className="w-4 h-4 text-indigo-600" />
