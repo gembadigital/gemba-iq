@@ -51,7 +51,6 @@ import {
   revenueRowKey,
   expenseRowKey,
   getCategoryPlanForMonths,
-  getConsultantPlanForMonths,
 } from "../data/managementPlData";
 
 const PIN_CODE = "1234";
@@ -109,7 +108,16 @@ function normalizeConsultantName(name: string): string {
   return name.normalize("NFC").replace(/\s+/g, " ").trim().toLocaleLowerCase("tr-TR");
 }
 
-function computeConsultantActualCostForMonths(
+// Danışman Atamaları (ProjectAssignment) represent SCHEDULED/PLANNED work —
+// you assign a consultant to a project for N days at a rate before that
+// work is necessarily invoiced. Per user decision (2026-07-23): this now
+// feeds the "Plan" column automatically instead of "Gerçekleşen", since the
+// system has no separate budget/forecast data model for consultants —
+// assignments are the closest real "plan" the system already has. Actual
+// realized cost comes only from real invoices (see
+// computeConsultantActualCostFromInvoicesForMonths /
+// computeConsultantActualCostFromPLInvoicesForMonths below).
+function computeConsultantPlannedCostForMonths(
   assignments: ProjectAssignment[],
   consultants: Consultant[],
   consultantId: string,
@@ -119,6 +127,23 @@ function computeConsultantActualCostForMonths(
   return assignments
     .filter((a) => a.consultantId === consultantId && months.includes(a.month))
     .reduce((sum, a) => sum + a.allocatedDays * (a.consultantDailyRate ?? consultant?.dailyCost ?? 0), 0);
+}
+
+// Plan column value: a manual override in consultantPlans (entered via the
+// editable Plan cell) always wins when present for a given month; otherwise
+// it falls back to the assignment-based planned cost above.
+function computeConsultantPlanForMonths(
+  consultantPlans: Record<string, Record<string, number>>,
+  assignments: ProjectAssignment[],
+  consultants: Consultant[],
+  consultantId: string,
+  months: string[]
+): number {
+  return months.reduce((sum, m) => {
+    const manual = consultantPlans[consultantId]?.[m];
+    if (manual !== undefined && manual !== null) return sum + manual;
+    return sum + computeConsultantPlannedCostForMonths(assignments, consultants, consultantId, [m]);
+  }, 0);
 }
 
 // Many real Gelir Yönetimi workflows never fill in a formal "Danışman
@@ -161,8 +186,11 @@ function computeConsultantActualCostFromPLInvoicesForMonths(plInvoices: PLInvoic
     .reduce((s, i) => s + i.amount, 0);
 }
 
+// "Gerçekleşen" (actual) is now purely real, invoiced spend — the
+// assignment-based figure moved to the Plan column above (see comment
+// there). Two real sources: a Revenue Management invoice tagged with this
+// consultant's name, or a "Danışman Faturası" uploaded directly here.
 function computeConsultantTotalActualCostForMonths(
-  assignments: ProjectAssignment[],
   revenueInvoices: RevenueInvoice[],
   plInvoices: PLInvoiceRecord[],
   consultants: Consultant[],
@@ -170,7 +198,6 @@ function computeConsultantTotalActualCostForMonths(
   months: string[]
 ): number {
   return (
-    computeConsultantActualCostForMonths(assignments, consultants, consultantId, months) +
     computeConsultantActualCostFromInvoicesForMonths(revenueInvoices, consultants, consultantId, months) +
     computeConsultantActualCostFromPLInvoicesForMonths(plInvoices, consultantId, months)
   );
@@ -824,8 +851,8 @@ export default function ManagementPLView() {
         const consultant = consultants.find((c) => c.id === id);
         if (consultant?.status === "Active") return true;
         return periods.some((p) => {
-          const plan = getConsultantPlanForMonths(consultantPlans, id, p.months);
-          const actual = computeConsultantTotalActualCostForMonths(assignments, revenueInvoices, invoices, consultants, id, p.months);
+          const plan = computeConsultantPlanForMonths(consultantPlans, assignments, consultants, id, p.months);
+          const actual = computeConsultantTotalActualCostForMonths(revenueInvoices, invoices, consultants, id, p.months);
           return plan !== 0 || actual !== 0;
         });
       })
@@ -836,8 +863,8 @@ export default function ManagementPLView() {
           label: consultant?.name || `Danışman (${id})`,
           tone: "expense" as const,
           values: periods.map((p) => ({
-            plan: getConsultantPlanForMonths(consultantPlans, id, p.months),
-            actual: computeConsultantTotalActualCostForMonths(assignments, revenueInvoices, invoices, consultants, id, p.months),
+            plan: computeConsultantPlanForMonths(consultantPlans, assignments, consultants, id, p.months),
+            actual: computeConsultantTotalActualCostForMonths(revenueInvoices, invoices, consultants, id, p.months),
           })),
           getEditable: (i: number) =>
             periods[i].months.length === 1 ? { onSave: (v: number) => updateConsultantPlan(id, periods[i].months[0], v) } : undefined,
