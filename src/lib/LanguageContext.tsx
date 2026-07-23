@@ -96,7 +96,7 @@ const dictionary: Record<Language, Record<string, string>> = {
     "Used for the 'Deep Research with Tavily' button in the AI Sales Assistant module. Conducts live cyber intelligence and web searches to prepare enriched company analysis kits in seconds.": "AI Sales Assistant modülünde \"Tavily ile Derin Araştırma Yap (Deep Search)\" butonu için kullanılır. Canlı siber istihbarat ve internet taraması yaparak saniyeler içinde zenginleştirilmiş şirket analiz kiti hazırlar.",
     "Enter your Tavily API key starting with tvly-...": "tvly-... şeklinde başlayan Tavily API anahtarınızı girin",
     "Clear": "Temizle",
-    "Currently, your key is stored in local browser memory as {status}.": "Şu anda anahtarınız {status} olarak yerel tarayıcı hafızasında saklanmaktadır.",
+    "This key is shared across your whole organization (every user, every device) as {status}.": "Bu anahtar tüm organizasyonunuzda (her kullanıcı, her cihaz) {status} olarak paylaşılmaktadır.",
     "Saved: {prefix}...*****": "Kaydedildi: {prefix}...*****",
     "Empty (Enters simulation mode)": "Boş (Simülasyon moduna geçilir)",
     "Active Permissions & API Infrastructure (Google AI Studio Build)": "Aktif İzinler ve API Alt Yapısı (Google AI Studio Build)",

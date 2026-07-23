@@ -33,6 +33,14 @@ import { useNavigate } from "react-router-dom";
 const logoImage = "https://lh3.googleusercontent.com/d/13bNnthJU4LIICB4iiF1a4GH1PEn05MBx";
 // Must exactly match the key used in AdministrationCenter.tsx and currencyHelper.ts.
 const ADMIN_ORG_SETTINGS_KEY = "crm_admin_org_settings";
+// Org-shared (Supabase-backed via CrmDb), NOT per-browser localStorage. Must
+// match the same literal string used in AISalesAssistant.tsx's
+// getTavilyApiKey(). Previously this key lived only in the admin's own
+// browser localStorage ("tavily_api_key"), which meant it worked when the
+// admin tested it on their own machine but every other user/device saw a
+// "Tavily API key missing" error, since localStorage never leaves the
+// browser it was written in.
+const TAVILY_API_KEY_KV = "crm_tavily_api_key";
 
 import {
   Recipient,
@@ -289,8 +297,21 @@ export default function App() {
   const [isSettingsOpen, setIsSettingsOpen] = useState<boolean>(false);
   const [isUserAccountSettingsOpen, setIsUserAccountSettingsOpen] = useState<boolean>(false);
   const [settingsActiveTab, setSettingsActiveTab] = useState<"admin-center" | "system-config">("admin-center");
+  // Org-shared via CrmDb (Supabase), same pattern as ADMIN_ORG_SETTINGS_KEY
+  // above — App.tsx only ever runs inside CrmProvider, so CrmDb is already
+  // hydrated here and safe to read synchronously. One-time migration below:
+  // if this org has never saved a shared key but this specific browser has
+  // an old localStorage-only key (from before this fix), promote it to the
+  // shared CrmDb store once so the admin doesn't have to re-type it.
   const [tavilyKey, setTavilyKey] = useState<string>(() => {
-    return localStorage.getItem("tavily_api_key") || "";
+    const shared = CrmDb.getKv<string>(TAVILY_API_KEY_KV, "");
+    if (shared) return shared;
+    const legacyLocal = (localStorage.getItem("tavily_api_key") || "").trim();
+    if (legacyLocal) {
+      CrmDb.setKv(TAVILY_API_KEY_KV, legacyLocal);
+      return legacyLocal;
+    }
+    return "";
   });
   
   // Theme Toggle: Light / Dark Mode
@@ -1929,7 +1950,7 @@ export default function App() {
                           onChange={(e) => {
                             const val = e.target.value;
                             setTavilyKey(val);
-                            localStorage.setItem("tavily_api_key", val.trim());
+                            CrmDb.setKv(TAVILY_API_KEY_KV, val.trim());
                           }}
                           placeholder={t("Enter your Tavily API key starting with tvly-...")}
                           className="flex-1 text-xs bg-slate-50 dark:bg-black/30 text-slate-800 dark:text-slate-100 px-4 py-3 border border-slate-200 dark:border-zinc-805 rounded-xl focus:outline-none focus:ring-1 focus:ring-[#0078D4] font-mono"
@@ -1938,6 +1959,7 @@ export default function App() {
                           type="button"
                           onClick={() => {
                             setTavilyKey("");
+                            CrmDb.setKv(TAVILY_API_KEY_KV, "");
                             localStorage.removeItem("tavily_api_key");
                           }}
                           className="text-xs font-semibold text-rose-600 bg-rose-50 dark:bg-[#321111] dark:text-rose-400 hover:bg-rose-100 dark:hover:bg-[#4a1c1c] border border-rose-200 dark:border-rose-950/40 px-3.5 py-3 rounded-xl transition-all font-sans cursor-pointer"
@@ -1948,7 +1970,7 @@ export default function App() {
                       <div className="text-[10px] text-slate-400 dark:text-slate-500 font-sans italic flex items-center gap-1">
                         <Info className="w-3.5 h-3.5 text-slate-400 inline" />
                         <span>
-                          {t("Currently, your key is stored in local browser memory as {status}.").replace(
+                          {t("This key is shared across your whole organization (every user, every device) as {status}.").replace(
                             "{status}",
                             tavilyKey 
                               ? `"${t("Saved: {prefix}...*****").replace("{prefix}", tavilyKey.substring(0, 8))}"`

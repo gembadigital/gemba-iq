@@ -127,8 +127,15 @@ async function parseJsonApiResponse(resp: Response): Promise<Record<string, unkn
   return data;
 }
 
+// Org-shared (Supabase-backed via CrmDb), NOT per-browser localStorage. Must
+// match the same literal string used in App.tsx's TAVILY_API_KEY_KV. This
+// used to read window.localStorage directly, which only ever held whatever
+// the admin typed into their own browser — every other user/device saw
+// TAVILY_KEY_MESSAGE below even though the admin had "already saved" a key.
+const TAVILY_API_KEY_KV = "crm_tavily_api_key";
+
 function getTavilyApiKey(): string {
-  return localStorage.getItem("tavily_api_key")?.trim() || "";
+  return CrmDb.getKv<string>(TAVILY_API_KEY_KV, "").trim();
 }
 
 export default function AISalesAssistant({ onOpenSettings }: AISalesAssistantProps) {
