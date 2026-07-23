@@ -108,6 +108,36 @@ function normalizeConsultantName(name: string): string {
   return name.normalize("NFC").replace(/\s+/g, " ").trim().toLocaleLowerCase("tr-TR");
 }
 
+// The Unicode/whitespace fix above did NOT resolve the "Faik Çakır" warning
+// because that was never an encoding issue — the Danışman Master record is
+// literally "Faik Suat Çakır" (has a middle name) while the invoice's
+// consultant tag just says "Faik Çakır" (first + last name only, no middle
+// name), confirmed directly from the user's own screenshot of the Danışman
+// Master list. No amount of Unicode normalization makes two DIFFERENT
+// strings equal — this needs an actual fallback: match on first-word +
+// last-word only. To avoid silently merging two different people who share
+// a first/last name, this fallback is only used when it uniquely identifies
+// ONE consultant in the whole Master list (see allowLooseMatch below).
+function nameTokens(name: string): string[] {
+  return normalizeConsultantName(name).split(" ").filter(Boolean);
+}
+
+function namesMatchLoosely(a: string, b: string): boolean {
+  const ta = nameTokens(a);
+  const tb = nameTokens(b);
+  if (ta.length === 0 || tb.length === 0) return false;
+  return ta[0] === tb[0] && ta[ta.length - 1] === tb[tb.length - 1];
+}
+
+// True if invoiceName matches this consultant either exactly (normalized)
+// or, when unambiguous, via the first+last-name fallback above.
+function invoiceNameMatchesConsultant(invoiceName: string, consultant: Consultant, allConsultants: Consultant[]): boolean {
+  if (normalizeConsultantName(invoiceName) === normalizeConsultantName(consultant.name)) return true;
+  const loosePeers = allConsultants.filter((c) => namesMatchLoosely(c.name, consultant.name));
+  if (loosePeers.length !== 1) return false; // ambiguous — more than one Master entry shares first+last name
+  return namesMatchLoosely(invoiceName, consultant.name);
+}
+
 // Danışman Atamaları (ProjectAssignment) represent SCHEDULED/PLANNED work —
 // you assign a consultant to a project for N days at a rate before that
 // work is necessarily invoiced. Per user decision (2026-07-23): this now
@@ -161,13 +191,12 @@ function computeConsultantActualCostFromInvoicesForMonths(
 ): number {
   const consultant = consultants.find((c) => c.id === consultantId);
   if (!consultant) return 0;
-  const targetName = normalizeConsultantName(consultant.name);
   let cost = 0;
   revenueInvoices
     .filter((inv) => months.includes(inv.month) && (inv.consultantNames || []).length > 0)
     .forEach((inv) => {
       const names = (inv.consultantNames || []).filter(Boolean);
-      const matchCount = names.filter((n) => normalizeConsultantName(n) === targetName).length;
+      const matchCount = names.filter((n) => invoiceNameMatchesConsultant(n, consultant, consultants)).length;
       if (matchCount === 0) return;
       const perPersonDays = inv.deliveredDays / names.length;
       cost += perPersonDays * matchCount * consultant.dailyCost;
@@ -987,10 +1016,14 @@ export default function ManagementPLView() {
     const invoicesWithNames = invoicesInPeriod.filter((inv) => (inv.consultantNames || []).some((n) => n && n.trim()));
     const invoicesWithNamesNoDays = invoicesWithNames.filter((inv) => !inv.deliveredDays || inv.deliveredDays <= 0);
     const assignmentsInPeriod = assignments.filter((a) => periodMonths.includes(a.month));
-    const masterNames = new Set(consultants.map((c) => normalizeConsultantName(c.name)));
     const invoiceNamesSet = new Set<string>();
     invoicesWithNames.forEach((inv) => (inv.consultantNames || []).forEach((n) => n && n.trim() && invoiceNamesSet.add(n.trim())));
-    const unmatchedNames = Array.from(invoiceNamesSet).filter((n) => !masterNames.has(normalizeConsultantName(n)));
+    // Same match logic the actual cost calculation uses (exact normalized,
+    // or an unambiguous first+last-name fallback) — kept identical so this
+    // warning never disagrees with what the numbers above it actually did.
+    const unmatchedNames = Array.from(invoiceNamesSet).filter(
+      (n) => !consultants.some((c) => invoiceNameMatchesConsultant(n, c, consultants))
+    );
     return {
       consultantCount: consultants.length,
       assignmentCount: assignments.length,
@@ -1212,9 +1245,11 @@ export default function ManagementPLView() {
               )}
               {diagnostics.unmatchedNames.length > 0 && (
                 <p className="leading-relaxed text-rose-700 dark:text-rose-300">
-                  ⚠ Faturalarda geçen ama Danışman Master listesiyle birebir eşleşmeyen adlar:{" "}
-                  <b>{diagnostics.unmatchedNames.join(", ")}</b>. Yazım farkı (fazladan boşluk, farklı karakter) eşleşmeyi
-                  engeller — Master listedeki adla birebir aynı olmalı.
+                  ⚠ Faturalarda geçen ama Danışman Master listesiyle eşleşmeyen adlar:{" "}
+                  <b>{diagnostics.unmatchedNames.join(", ")}</b>. Yazım farkı (boşluk, karakter) veya sadece isim/soyisim
+                  (orta ad eksik) otomatik toleranslı hale getirildi — bu adlar hâlâ eşleşmiyorsa ya Master listede bu kişi
+                  hiç yok, ya da birden fazla danışmanla aynı isim/soyisim paylaşıldığı için sistem hangisi olduğunu
+                  otomatik seçemiyor (bu durumda Master listedeki adı faturadakiyle birebir aynı yapın).
                 </p>
               )}
               {diagnostics.invoicesWithNamesCount === 0 && diagnostics.assignmentsInPeriodCount === 0 && (
