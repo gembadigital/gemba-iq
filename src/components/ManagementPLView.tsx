@@ -31,6 +31,7 @@ import {
   entryDisplayLabel,
   REVENUE_CATEGORIES,
   PROJECT_EXPENSE_CATEGORIES,
+  CONSULTANT_INVOICE_CATEGORY,
   ALL_INVOICE_CATEGORIES,
   PLInvoiceRecord,
   PLInvoiceCategoryKey,
@@ -149,16 +150,29 @@ function computeConsultantActualCostFromInvoicesForMonths(
   return cost;
 }
 
+// Third cost source: a "Danışman Faturası" (consultant_fee) invoice uploaded
+// directly in the Fatura Yükleme tab and tagged with a real consultantId —
+// for invoices that never went through Revenue Management at all (e.g. a
+// subcontractor/freelance invoice with no matching Danışman Atamaları or
+// Revenue Management invoice row).
+function computeConsultantActualCostFromPLInvoicesForMonths(plInvoices: PLInvoiceRecord[], consultantId: string, months: string[]): number {
+  return plInvoices
+    .filter((i) => i.category === "consultant_fee" && i.consultantId === consultantId && months.includes(i.month))
+    .reduce((s, i) => s + i.amount, 0);
+}
+
 function computeConsultantTotalActualCostForMonths(
   assignments: ProjectAssignment[],
   revenueInvoices: RevenueInvoice[],
+  plInvoices: PLInvoiceRecord[],
   consultants: Consultant[],
   consultantId: string,
   months: string[]
 ): number {
   return (
     computeConsultantActualCostForMonths(assignments, consultants, consultantId, months) +
-    computeConsultantActualCostFromInvoicesForMonths(revenueInvoices, consultants, consultantId, months)
+    computeConsultantActualCostFromInvoicesForMonths(revenueInvoices, consultants, consultantId, months) +
+    computeConsultantActualCostFromPLInvoicesForMonths(plInvoices, consultantId, months)
   );
 }
 
@@ -811,7 +825,7 @@ export default function ManagementPLView() {
         if (consultant?.status === "Active") return true;
         return periods.some((p) => {
           const plan = getConsultantPlanForMonths(consultantPlans, id, p.months);
-          const actual = computeConsultantTotalActualCostForMonths(assignments, revenueInvoices, consultants, id, p.months);
+          const actual = computeConsultantTotalActualCostForMonths(assignments, revenueInvoices, invoices, consultants, id, p.months);
           return plan !== 0 || actual !== 0;
         });
       })
@@ -823,7 +837,7 @@ export default function ManagementPLView() {
           tone: "expense" as const,
           values: periods.map((p) => ({
             plan: getConsultantPlanForMonths(consultantPlans, id, p.months),
-            actual: computeConsultantTotalActualCostForMonths(assignments, revenueInvoices, consultants, id, p.months),
+            actual: computeConsultantTotalActualCostForMonths(assignments, revenueInvoices, invoices, consultants, id, p.months),
           })),
           getEditable: (i: number) =>
             periods[i].months.length === 1 ? { onSave: (v: number) => updateConsultantPlan(id, periods[i].months[0], v) } : undefined,
@@ -963,14 +977,20 @@ export default function ManagementPLView() {
   }, [periods, revenueInvoices, assignments, consultants]);
 
   if (!pinOk) {
+    // Explicit inline maxWidth alongside the Tailwind class — this card was
+    // reported rendering almost full-viewport-wide despite max-w-sm, so the
+    // width is now hard-capped regardless of any competing/global CSS.
     return (
       <div className="flex items-center justify-center min-h-[70vh] px-4">
-        <div className="w-full max-w-sm rounded-2xl border border-slate-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 p-8 shadow-sm text-center">
-          <div className="w-12 h-12 mx-auto rounded-full bg-indigo-50 dark:bg-indigo-950/40 flex items-center justify-center mb-4">
-            <Lock className="w-5 h-5 text-indigo-600" />
+        <div
+          className="w-full mx-auto rounded-2xl border border-slate-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 p-6 shadow-sm text-center"
+          style={{ maxWidth: 300 }}
+        >
+          <div className="w-9 h-9 mx-auto rounded-full bg-indigo-50 dark:bg-indigo-950/40 flex items-center justify-center mb-3">
+            <Lock className="w-4 h-4 text-indigo-600" />
           </div>
-          <h2 className="text-[17px] font-semibold text-slate-800 dark:text-zinc-100 mb-1">Yönetim P/L</h2>
-          <p className="text-[12.5px] text-slate-400 dark:text-zinc-500 mb-5">Bu sayfaya erişmek için şifre gereklidir.</p>
+          <h2 className="text-[14.5px] font-semibold text-slate-800 dark:text-zinc-100 mb-1">Yönetim P/L</h2>
+          <p className="text-[11px] text-slate-400 dark:text-zinc-500 mb-3.5">Bu sayfaya erişmek için şifre gereklidir.</p>
           <input
             type="password"
             inputMode="numeric"
@@ -983,15 +1003,15 @@ export default function ManagementPLView() {
             onKeyDown={(e) => e.key === "Enter" && handleUnlock()}
             placeholder="••••"
             autoFocus
-            className={`w-full text-center tracking-[0.5em] text-lg rounded-lg border ${
+            className={`w-full text-center tracking-[0.4em] text-[15px] rounded-lg border ${
               pinError ? "border-rose-400" : "border-slate-200 dark:border-zinc-700"
-            } bg-transparent py-2.5 mb-3 focus:outline-none focus:ring-2 focus:ring-indigo-400`}
+            } bg-transparent py-1.5 mb-2.5 focus:outline-none focus:ring-2 focus:ring-indigo-400`}
           />
-          {pinError && <p className="text-[12px] text-rose-500 mb-3">Hatalı şifre, tekrar deneyin.</p>}
+          {pinError && <p className="text-[11px] text-rose-500 mb-2.5">Hatalı şifre, tekrar deneyin.</p>}
           <button
             type="button"
             onClick={handleUnlock}
-            className="w-full rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white text-[13.5px] font-semibold py-2.5 transition-colors"
+            className="w-full rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white text-[12.5px] font-semibold py-1.5 transition-colors"
           >
             Giriş Yap
           </button>
@@ -1270,7 +1290,9 @@ export default function ManagementPLView() {
               <p className="text-[12px] text-sky-800 dark:text-sky-300 leading-relaxed">
                 Danışmanlık/Eğitim satış gelirleri ve danışman maliyetleri, Gelir Yönetimi'nde kayıtlı gerçek fatura ve atama
                 verilerinden otomatik çekiliyor. Bu panel yalnızca buradaki sistemin kapsamadığı kalemler için: Yazılım/Diğer
-                Hizmet gelirleri ve Ulaşım/Konaklama/Organizasyon/Yazılım proje giderleri.
+                Hizmet gelirleri, Ulaşım/Konaklama/Organizasyon/Yazılım proje giderleri, ve Gelir Yönetimi'ne hiç girmemiş bir
+                "Danışman Faturası" varsa (kategori olarak seçip danışmanı işaretleyin — doğrudan Danışman Maliyetleri'ne
+                yazılır). Her satırda faturanın kime ait olduğunu (danışman veya tedarikçi/kişi) "Kime Ait" sütunundan girin.
               </p>
             </div>
             <div
@@ -1302,6 +1324,7 @@ export default function ManagementPLView() {
                     <th className="text-left py-2 pl-3">Dosya</th>
                     <th className="text-left py-2 px-2">Ay</th>
                     <th className="text-left py-2 px-2">Kategori</th>
+                    <th className="text-left py-2 px-2">Kime Ait</th>
                     <th className="text-right py-2 px-2">Tutar (₺, KDV Hariç)</th>
                     <th className="text-right py-2 px-2">KDV %</th>
                     <th className="text-center py-2 px-2">Tevkifat</th>
@@ -1365,6 +1388,7 @@ export default function ManagementPLView() {
                               ))}
                             </optgroup>
                             <optgroup label="Gider">
+                              <option value={CONSULTANT_INVOICE_CATEGORY.key}>{CONSULTANT_INVOICE_CATEGORY.label}</option>
                               {PROJECT_EXPENSE_CATEGORIES.map((c) => (
                                 <option key={c.key} value={c.key}>
                                   {c.label}
@@ -1372,6 +1396,33 @@ export default function ManagementPLView() {
                               ))}
                             </optgroup>
                           </select>
+                        </td>
+                        <td className="py-2 px-2">
+                          {inv.category === "consultant_fee" ? (
+                            <select
+                              value={inv.consultantId ?? ""}
+                              onChange={(e) => {
+                                const cId = e.target.value;
+                                const c = consultants.find((x) => x.id === cId);
+                                updateInvoice(inv.id, { consultantId: cId || undefined, vendorName: c?.name });
+                              }}
+                              className="rounded border border-slate-200 dark:border-zinc-700 bg-transparent px-1.5 py-1 max-w-[140px]"
+                            >
+                              <option value="">Danışman seçin...</option>
+                              {consultants.map((c) => (
+                                <option key={c.id} value={c.id}>
+                                  {c.name}
+                                </option>
+                              ))}
+                            </select>
+                          ) : (
+                            <input
+                              value={inv.vendorName ?? ""}
+                              onChange={(e) => updateInvoice(inv.id, { vendorName: e.target.value })}
+                              placeholder="Tedarikçi/kişi..."
+                              className="w-28 rounded border border-slate-200 dark:border-zinc-700 bg-transparent px-1.5 py-1"
+                            />
+                          )}
                         </td>
                         <td className="py-2 px-2 text-right">
                           <input
@@ -1424,7 +1475,7 @@ export default function ManagementPLView() {
                     ))}
                   {invoices.length === 0 && (
                     <tr>
-                      <td colSpan={9} className="py-6 text-center text-slate-400 text-[12.5px]">
+                      <td colSpan={10} className="py-6 text-center text-slate-400 text-[12.5px]">
                         Henüz fatura yüklenmedi.
                       </td>
                     </tr>

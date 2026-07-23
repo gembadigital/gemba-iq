@@ -111,7 +111,19 @@ export const PROJECT_EXPENSE_CATEGORIES: { key: PLProjectExpenseCategoryKey; lab
   { key: "opex_software", label: "Yazılım Maliyetleri" },
 ];
 
-export type PLInvoiceCategoryKey = PLRevenueCategoryKey | PLProjectExpenseCategoryKey;
+// A consultant fee/invoice uploaded directly here (not already captured by
+// Revenue Management's own invoice ledger — e.g. a subcontractor invoice).
+// Kept as its own category, distinct from PLProjectExpenseCategoryKey,
+// because it needs to feed the "Danışman Maliyetleri" per-consultant rows
+// (via PLInvoiceRecord.consultantId) instead of "Diğer Proje Giderleri".
+export type PLConsultantInvoiceCategoryKey = "consultant_fee";
+
+export type PLInvoiceCategoryKey = PLRevenueCategoryKey | PLProjectExpenseCategoryKey | PLConsultantInvoiceCategoryKey;
+
+export const CONSULTANT_INVOICE_CATEGORY: { key: PLConsultantInvoiceCategoryKey; label: string } = {
+  key: "consultant_fee",
+  label: "Danışman Faturası",
+};
 
 // Maps a Revenue Management Invoice's free-text serviceType (Yamazumi, MTM,
 // OEE, Lean Manufacturing, Capacity Planning, Training, Workshop,
@@ -128,6 +140,7 @@ export function mapServiceTypeToRevenueCategory(serviceType: string | undefined)
 
 export const ALL_INVOICE_CATEGORIES: { key: PLInvoiceCategoryKey; label: string; direction: "revenue" | "expense" }[] = [
   ...REVENUE_CATEGORIES.map((c) => ({ ...c, direction: "revenue" as const })),
+  { ...CONSULTANT_INVOICE_CATEGORY, direction: "expense" as const },
   ...PROJECT_EXPENSE_CATEGORIES.map((c) => ({ ...c, direction: "expense" as const })),
 ];
 
@@ -150,6 +163,13 @@ export interface PLInvoiceRecord {
   direction: "revenue" | "expense";
   category: PLInvoiceCategoryKey | "uncategorized";
   description?: string;
+  // "Kime ait" — who/what this invoice belongs to. When category is
+  // "consultant_fee" this is a real Consultant id (drives the "Danışman
+  // Maliyetleri" per-consultant actuals); for every other category it's a
+  // free-text vendor/customer name so any uploaded invoice can show who it
+  // belongs to, not just consultant ones.
+  consultantId?: string;
+  vendorName?: string;
 }
 
 export function computeVatAmount(amount: number, vatRate: number, tevkifatEnabled: boolean, tevkifatFraction: string): number {
