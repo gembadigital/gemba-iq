@@ -1,6 +1,30 @@
 import React, { useState, useEffect, useRef } from "react";
 import { useLanguage } from "../lib/LanguageContext";
 import { CrmDb } from "../lib/CrmDb";
+
+// Gemini calls (with transient-error retry/backoff on the server) can take
+// well over the platform's old 10s default serverless timeout, which used
+// to kill the request silently and leave this screen spinning forever with
+// no error ever surfacing (the fetch just never resolved/rejected cleanly).
+// The server function's own maxDuration was raised to 60s (see vercel.json),
+// and this client-side timeout is the matching safety net so a genuinely
+// stuck request still ends in a clear message instead of an endless spinner.
+const SALES_COACH_TIMEOUT_MS = 55_000;
+
+async function fetchWithTimeout(url: string, options: RequestInit, timeoutMs: number): Promise<Response> {
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), timeoutMs);
+  try {
+    return await fetch(url, { ...options, signal: controller.signal });
+  } catch (err: any) {
+    if (err?.name === "AbortError") {
+      throw new Error("İstek zaman aşımına uğradı (60 sn). Gemini şu anda yanıt vermiyor olabilir, lütfen tekrar deneyin.");
+    }
+    throw err;
+  } finally {
+    clearTimeout(timer);
+  }
+}
 import {
   Brain,
   Bot,
@@ -314,14 +338,18 @@ export default function SalesCoachAI({ deals }: SalesCoachAIProps) {
       // Find active skills description to supply to backend
       const activeSkills = skills.filter(s => s.status === "Active");
 
-      const res = await fetch("/api/gemini/sales-coach", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          deals,
-          activeSkills
-        })
-      });
+      const res = await fetchWithTimeout(
+        "/api/gemini/sales-coach",
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            deals,
+            activeSkills
+          })
+        },
+        SALES_COACH_TIMEOUT_MS
+      );
 
       const data = await res.json();
       if (data.success) {
@@ -402,15 +430,19 @@ export default function SalesCoachAI({ deals }: SalesCoachAIProps) {
 
     try {
       const activeSkills = skills.filter(s => s.status === "Active");
-      const res = await fetch("/api/gemini/sales-coach", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          deals,
-          query: userText,
-          activeSkills
-        })
-      });
+      const res = await fetchWithTimeout(
+        "/api/gemini/sales-coach",
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            deals,
+            query: userText,
+            activeSkills
+          })
+        },
+        SALES_COACH_TIMEOUT_MS
+      );
 
       const data = await res.json();
       if (data.success) {
