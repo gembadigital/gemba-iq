@@ -9,7 +9,22 @@ import {
   FileText,
   Download,
   Info,
+  TrendingUp,
+  TrendingDown,
+  Minus,
 } from "lucide-react";
+import {
+  ResponsiveContainer,
+  LineChart,
+  Line,
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  Cell,
+} from "recharts";
 import { CrmDb } from "../lib/CrmDb";
 import { uploadBlobDocument, getSignedDownloadUrl } from "../lib/enterpriseDocumentService";
 import {
@@ -51,6 +66,9 @@ import {
   revenueRowKey,
   expenseRowKey,
   getCategoryPlanForMonths,
+  shiftMonth,
+  lastNMonthsEndingAt,
+  formatMonthLabelShort,
 } from "../data/managementPlData";
 
 const PIN_CODE = "1234";
@@ -253,6 +271,54 @@ function computeExpenseActualForCategory(plInvoices: PLInvoiceRecord[], category
     .reduce((s, i) => s + i.amount, 0);
 }
 
+function sumRecurringActual(entries: RecurringCostEntry[], groupKey: PLGroupKey, months: string[]): number {
+  return entries
+    .filter((e) => e.groupKey === groupKey)
+    .reduce((sum, e) => sum + months.reduce((s, m) => s + (entryAppliesToMonth(e, m) ? e.amountActual : 0), 0), 0);
+}
+
+interface PLSummaryActuals {
+  netSales: number;
+  directOpex: number;
+  grossProfit: number;
+  fixedExpenses: number;
+  operatingProfit: number;
+  financingExpenses: number;
+  taxExpenses: number;
+  netProfit: number;
+}
+
+// Scalar (non-PLRow-tree) actuals-only summary for an arbitrary set of
+// months — used by the Yönetici Özeti dashboard's KPI cards, trend chart,
+// and waterfall, which each need a single number per metric per month
+// rather than the full expandable row tree the P/L Tablosu tab builds.
+// Reuses the exact same underlying compute functions as that tab so the
+// two views can never disagree on what a number means.
+function computePLSummaryActualsForMonths(
+  consultants: Consultant[],
+  assignments: ProjectAssignment[],
+  revenueInvoices: RevenueInvoice[],
+  plInvoices: PLInvoiceRecord[],
+  recurringEntries: RecurringCostEntry[],
+  months: string[]
+): PLSummaryActuals {
+  const netSales = REVENUE_CATEGORIES.reduce((s, cat) => s + computeRevenueActualForCategory(revenueInvoices, plInvoices, cat.key, months), 0);
+  const relevantConsultantIds = Array.from(new Set<string>([...consultants.map((c) => c.id), ...assignments.map((a) => a.consultantId)]));
+  const consultantCost = relevantConsultantIds.reduce(
+    (s, id) => s + computeConsultantTotalActualCostForMonths(revenueInvoices, plInvoices, consultants, id, months),
+    0
+  );
+  const otherProjectExpense = PROJECT_EXPENSE_CATEGORIES.reduce((s, cat) => s + computeExpenseActualForCategory(plInvoices, cat.key, months), 0);
+  const directOpex = consultantCost + otherProjectExpense;
+  const grossProfit = netSales - directOpex;
+  const fixedExpenses = sumRecurringActual(recurringEntries, "fixed", months);
+  const operatingProfit = grossProfit - fixedExpenses;
+  const financingExpenses = sumRecurringActual(recurringEntries, "financing", months);
+  const taxExpenses = sumRecurringActual(recurringEntries, "tax", months);
+  const netProfit = operatingProfit - financingExpenses - taxExpenses;
+  return { netSales, directOpex, grossProfit, fixedExpenses, operatingProfit, financingExpenses, taxExpenses, netProfit };
+}
+
 interface PLValue {
   plan: number;
   actual: number;
@@ -366,6 +432,135 @@ function EditableAmountCell({ value, onSave }: { value: number; onSave: (v: numb
     >
       {formatTRY(value)}
     </button>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// Yönetici Özeti (Dashboard) — KPI cards, trend line, and waterfall
+// ---------------------------------------------------------------------------
+
+function formatCompactTRY(v: number): string {
+  const abs = Math.abs(v);
+  const nf = (n: number, digits: number) => new Intl.NumberFormat("tr-TR", { maximumFractionDigits: digits }).format(n);
+  if (abs >= 1_000_000) return `₺${nf(v / 1_000_000, 1)}M`;
+  if (abs >= 1_000) return `₺${nf(v / 1_000, 0)}B`;
+  return formatTRY(v);
+}
+
+function formatPercent1(v: number): string {
+  return `%${new Intl.NumberFormat("tr-TR", { maximumFractionDigits: 1 }).format(v)}`;
+}
+
+interface KpiCardProps {
+  label: string;
+  value: number;
+  previousValue: number;
+  sparklineData: number[]; // chronological, oldest → newest, last entry = current value
+  isPercent?: boolean;
+  invert?: boolean; // true when a HIGHER value is bad (expense-type metrics)
+}
+
+function KpiCard({ label, value, previousValue, sparklineData, isPercent, invert }: KpiCardProps) {
+  const hasPrev = previousValue !== 0;
+  const changePct = hasPrev ? ((value - previousValue) / Math.abs(previousValue)) * 100 : null;
+  const isUp = changePct !== null && changePct > 0.05;
+  const isDown = changePct !== null && changePct < -0.05;
+  const isGood = invert ? isDown : isUp;
+  const isBad = invert ? isUp : isDown;
+  const changeColorClass = isGood
+    ? "text-emerald-600 dark:text-emerald-400"
+    : isBad
+    ? "text-rose-600 dark:text-rose-400"
+    : "text-slate-400 dark:text-zinc-500";
+  const sparkColor = isBad ? "#e11d48" : isGood ? "#059669" : "#94a3b8";
+  const sparkData = sparklineData.map((v, i) => ({ i, v }));
+
+  return (
+    <div
+      className="rounded-2xl border border-slate-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 shadow-sm"
+      style={{ padding: 16 }}
+    >
+      <p className="text-[10.5px] uppercase tracking-wide text-slate-400 dark:text-zinc-500 mb-1.5 truncate" title={label}>
+        {label}
+      </p>
+      <div className="flex items-end justify-between gap-2">
+        <p className="text-[20px] font-bold text-slate-800 dark:text-zinc-100 tabular-nums leading-tight">
+          {isPercent ? formatPercent1(value) : formatCompactTRY(value)}
+        </p>
+        {sparkData.length > 1 && (
+          <div className="w-14 h-7 shrink-0">
+            <ResponsiveContainer width="100%" height="100%">
+              <LineChart data={sparkData}>
+                <Line type="monotone" dataKey="v" stroke={sparkColor} strokeWidth={1.75} dot={false} isAnimationActive={false} />
+              </LineChart>
+            </ResponsiveContainer>
+          </div>
+        )}
+      </div>
+      <div className={`flex items-center gap-1 mt-1.5 text-[11px] font-medium ${changeColorClass}`}>
+        {changePct === null ? (
+          <span className="text-slate-400 dark:text-zinc-500">Önceki ay verisi yok</span>
+        ) : (
+          <>
+            {isUp ? <TrendingUp className="w-3 h-3 shrink-0" /> : isDown ? <TrendingDown className="w-3 h-3 shrink-0" /> : <Minus className="w-3 h-3 shrink-0" />}
+            <span>
+              {changePct > 0 ? "+" : ""}
+              {new Intl.NumberFormat("tr-TR", { maximumFractionDigits: 1 }).format(changePct)}% geçen aya göre
+            </span>
+          </>
+        )}
+      </div>
+    </div>
+  );
+}
+
+interface WaterfallStage {
+  name: string;
+  base: number;
+  value: number;
+  kind: "total" | "decrease";
+}
+
+function buildWaterfallStages(s: PLSummaryActuals): WaterfallStage[] {
+  let cum = s.netSales;
+  const stages: WaterfallStage[] = [{ name: "Net Satış", base: 0, value: s.netSales, kind: "total" }];
+  stages.push({ name: "Direkt Op. Gid.", base: cum - s.directOpex, value: s.directOpex, kind: "decrease" });
+  cum -= s.directOpex;
+  stages.push({ name: "Brüt Kâr", base: 0, value: cum, kind: "total" });
+  stages.push({ name: "Genel Yön. Gid.", base: cum - s.fixedExpenses, value: s.fixedExpenses, kind: "decrease" });
+  cum -= s.fixedExpenses;
+  stages.push({ name: "Faaliyet Kârı", base: 0, value: cum, kind: "total" });
+  stages.push({ name: "Finansman Gid.", base: cum - s.financingExpenses, value: s.financingExpenses, kind: "decrease" });
+  cum -= s.financingExpenses;
+  stages.push({ name: "Vergiler", base: cum - s.taxExpenses, value: s.taxExpenses, kind: "decrease" });
+  cum -= s.taxExpenses;
+  stages.push({ name: "Net Kâr", base: 0, value: cum, kind: "total" });
+  return stages;
+}
+
+function WaterfallTooltip({ active, payload, label }: any) {
+  if (!active || !payload || !payload.length) return null;
+  const entry = payload.find((p: any) => p.dataKey === "value");
+  if (!entry) return null;
+  return (
+    <div className="rounded-lg border border-slate-200 dark:border-zinc-700 bg-white dark:bg-zinc-900 shadow-md text-[11.5px]" style={{ padding: 8 }}>
+      <p className="font-semibold text-slate-700 dark:text-zinc-200">{label}</p>
+      <p className="text-slate-500 dark:text-zinc-400 tabular-nums">{formatTRY(entry.value)}</p>
+    </div>
+  );
+}
+
+function TrendChartTooltip({ active, payload, label }: any) {
+  if (!active || !payload || !payload.length) return null;
+  return (
+    <div className="rounded-lg border border-slate-200 dark:border-zinc-700 bg-white dark:bg-zinc-900 shadow-md text-[11.5px]" style={{ padding: 8 }}>
+      <p className="font-semibold text-slate-700 dark:text-zinc-200 mb-1">{label}</p>
+      {payload.map((p: any) => (
+        <p key={p.dataKey} className="tabular-nums" style={{ color: p.color }}>
+          {p.name}: {formatTRY(p.value)}
+        </p>
+      ))}
+    </div>
   );
 }
 
@@ -637,9 +832,10 @@ function KdvStatCard({ label, value, tone }: { label: string; value: number; ton
 // Main view
 // ---------------------------------------------------------------------------
 
-type PLSection = "pl" | "fixed" | "financing" | "tax" | "invoices" | "kdv";
+type PLSection = "dashboard" | "pl" | "fixed" | "financing" | "tax" | "invoices" | "kdv";
 
 const SECTIONS: { key: PLSection; label: string }[] = [
+  { key: "dashboard", label: "Yönetici Özeti" },
   { key: "pl", label: "P/L Tablosu" },
   { key: "fixed", label: "Sabit Giderler" },
   { key: "financing", label: "Finansman Giderleri" },
@@ -655,7 +851,8 @@ export default function ManagementPLView() {
 
   const monthOptions = useMemo(() => generateMonthOptions(), []);
   const [selectedMonth, setSelectedMonth] = useState("2026-06");
-  const [activeSection, setActiveSection] = useState<PLSection>("pl");
+  const [activeSection, setActiveSection] = useState<PLSection>("dashboard");
+  const [trendWindow, setTrendWindow] = useState<6 | 12>(6);
 
   const [periodMode, setPeriodMode] = useState<PLPeriodMode>("single");
   const [rangeStart, setRangeStart] = useState("2026-06");
@@ -998,6 +1195,50 @@ export default function ManagementPLView() {
     return { rows, netSalesValues };
   }, [categoryPlans, consultantPlans, consultants, assignments, invoices, revenueInvoices, recurringEntries, periods]);
 
+  // Yönetici Özeti (Dashboard) — independent of the P/L Tablosu tab's
+  // periodMode/periods (which can be a range or a quarter); this always
+  // anchors on the single top "Ay" picker (selectedMonth) plus a local
+  // trend-window toggle, since an executive summary reads best as "this
+  // month vs last month" with a rolling trend, not an arbitrary range.
+  const dashboardData = useMemo(() => {
+    const summaryFor = (months: string[]) =>
+      computePLSummaryActualsForMonths(consultants, assignments, revenueInvoices, invoices, recurringEntries, months);
+
+    const trendMonths = lastNMonthsEndingAt(selectedMonth, trendWindow);
+    const trendSeries = trendMonths.map((m) => {
+      const s = summaryFor([m]);
+      const totalExpenses = s.directOpex + s.fixedExpenses + s.financingExpenses + s.taxExpenses;
+      return { month: m, label: formatMonthLabelShort(m), Gelir: s.netSales, Gider: totalExpenses, "Net Kâr": s.netProfit };
+    });
+
+    const current = summaryFor([selectedMonth]);
+    const previous = summaryFor([shiftMonth(selectedMonth, -1)]);
+    const totalOpex = (s: PLSummaryActuals) => s.directOpex + s.fixedExpenses + s.financingExpenses + s.taxExpenses;
+    const profitability = (s: PLSummaryActuals) => (s.netSales !== 0 ? (s.netProfit / s.netSales) * 100 : 0);
+
+    const sparkMonths = lastNMonthsEndingAt(selectedMonth, 6);
+    const sparkSummaries = sparkMonths.map((m) => summaryFor([m]));
+
+    return {
+      trendSeries,
+      current,
+      previous,
+      totalOpexCurrent: totalOpex(current),
+      totalOpexPrevious: totalOpex(previous),
+      profitabilityCurrent: profitability(current),
+      profitabilityPrevious: profitability(previous),
+      waterfallStages: buildWaterfallStages(current),
+      sparklines: {
+        netSales: sparkSummaries.map((s) => s.netSales),
+        totalOpex: sparkSummaries.map(totalOpex),
+        grossProfit: sparkSummaries.map((s) => s.grossProfit),
+        operatingProfit: sparkSummaries.map((s) => s.operatingProfit),
+        netProfit: sparkSummaries.map((s) => s.netProfit),
+        profitability: sparkSummaries.map(profitability),
+      },
+    };
+  }, [selectedMonth, trendWindow, consultants, assignments, revenueInvoices, invoices, recurringEntries]);
+
   const kdvSummary = useMemo(() => computeKdvSummary(invoices, selectedMonth), [invoices, selectedMonth]);
 
   // Diagnostic snapshot of the raw source data behind the "Danışman
@@ -1141,6 +1382,173 @@ export default function ManagementPLView() {
       </div>
 
       <div className="rounded-2xl border border-slate-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 p-5">
+        {activeSection === "dashboard" && (
+          <div className="space-y-5">
+            <div className="flex flex-wrap items-center justify-between gap-3">
+              <div>
+                <h2 className="text-[15px] font-semibold text-slate-800 dark:text-zinc-100">Yönetici Özeti</h2>
+                <p className="text-[12px] text-slate-400 dark:text-zinc-500">
+                  {formatMonthLabel(selectedMonth)} performansı — bir önceki aya göre
+                </p>
+              </div>
+              <div className="flex items-center gap-3">
+                <select
+                  value={selectedMonth}
+                  onChange={(e) => setSelectedMonth(e.target.value)}
+                  className="rounded-lg border border-slate-200 dark:border-zinc-700 bg-white dark:bg-zinc-900 px-2.5 py-1.5 text-[12.5px]"
+                >
+                  {monthOptions.map((m) => (
+                    <option key={m} value={m}>
+                      {formatMonthLabel(m)}
+                    </option>
+                  ))}
+                </select>
+                <div className="flex items-center gap-1 rounded-lg border border-slate-200 dark:border-zinc-700 p-1">
+                  {([6, 12] as const).map((w) => (
+                    <button
+                      key={w}
+                      type="button"
+                      onClick={() => setTrendWindow(w)}
+                      className={`px-2.5 py-1.5 rounded-md text-[12px] font-medium transition-colors ${
+                        trendWindow === w
+                          ? "bg-indigo-600 text-white"
+                          : "text-slate-500 dark:text-zinc-400 hover:bg-slate-100 dark:hover:bg-zinc-800"
+                      }`}
+                    >
+                      Son {w} Ay
+                    </button>
+                  ))}
+                </div>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-6 gap-3">
+              <KpiCard
+                label="Net Satış Geliri"
+                value={dashboardData.current.netSales}
+                previousValue={dashboardData.previous.netSales}
+                sparklineData={dashboardData.sparklines.netSales}
+              />
+              <KpiCard
+                label="Toplam Operasyon Gideri"
+                value={dashboardData.totalOpexCurrent}
+                previousValue={dashboardData.totalOpexPrevious}
+                sparklineData={dashboardData.sparklines.totalOpex}
+                invert
+              />
+              <KpiCard
+                label="Brüt Kâr"
+                value={dashboardData.current.grossProfit}
+                previousValue={dashboardData.previous.grossProfit}
+                sparklineData={dashboardData.sparklines.grossProfit}
+              />
+              <KpiCard
+                label="Faaliyet Kârı"
+                value={dashboardData.current.operatingProfit}
+                previousValue={dashboardData.previous.operatingProfit}
+                sparklineData={dashboardData.sparklines.operatingProfit}
+              />
+              <KpiCard
+                label="Net Kâr"
+                value={dashboardData.current.netProfit}
+                previousValue={dashboardData.previous.netProfit}
+                sparklineData={dashboardData.sparklines.netProfit}
+              />
+              <KpiCard
+                label="Karlılık Oranı"
+                value={dashboardData.profitabilityCurrent}
+                previousValue={dashboardData.profitabilityPrevious}
+                sparklineData={dashboardData.sparklines.profitability}
+                isPercent
+              />
+            </div>
+
+            <div className="grid grid-cols-1 xl:grid-cols-2 gap-4">
+              <div className="rounded-2xl border border-slate-200 dark:border-zinc-800" style={{ padding: 20 }}>
+                <p className="text-[13px] font-semibold text-slate-700 dark:text-zinc-200 mb-3">Gelir - Gider - Net Kâr Trendi</p>
+                <div style={{ height: 260 }}>
+                  <ResponsiveContainer width="100%" height="100%">
+                    <LineChart data={dashboardData.trendSeries} margin={{ top: 4, right: 8, left: 0, bottom: 0 }}>
+                      <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e5e7eb" />
+                      <XAxis dataKey="label" tick={{ fontSize: 10.5, fill: "#94a3b8" }} axisLine={{ stroke: "#e5e7eb" }} tickLine={false} />
+                      <YAxis
+                        tickFormatter={(v: number) => formatCompactTRY(v)}
+                        tick={{ fontSize: 10.5, fill: "#94a3b8" }}
+                        axisLine={false}
+                        tickLine={false}
+                        width={54}
+                      />
+                      <Tooltip content={<TrendChartTooltip />} />
+                      <Line type="monotone" dataKey="Gelir" stroke="#059669" strokeWidth={2} dot={false} />
+                      <Line type="monotone" dataKey="Gider" stroke="#e11d48" strokeWidth={2} dot={false} />
+                      <Line type="monotone" dataKey="Net Kâr" stroke="#4338ca" strokeWidth={2} dot={false} />
+                    </LineChart>
+                  </ResponsiveContainer>
+                </div>
+                <div className="flex items-center gap-4 mt-2 text-[11px] text-slate-500 dark:text-zinc-400">
+                  <span className="flex items-center gap-1.5">
+                    <span className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: "#059669" }} /> Gelir
+                  </span>
+                  <span className="flex items-center gap-1.5">
+                    <span className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: "#e11d48" }} /> Gider
+                  </span>
+                  <span className="flex items-center gap-1.5">
+                    <span className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: "#4338ca" }} /> Net Kâr
+                  </span>
+                </div>
+              </div>
+
+              <div className="rounded-2xl border border-slate-200 dark:border-zinc-800" style={{ padding: 20 }}>
+                <p className="text-[13px] font-semibold text-slate-700 dark:text-zinc-200 mb-3">
+                  Kâr Akışı — {formatMonthLabel(selectedMonth)}
+                </p>
+                <div style={{ height: 260 }}>
+                  <ResponsiveContainer width="100%" height="100%">
+                    <BarChart data={dashboardData.waterfallStages} margin={{ top: 4, right: 8, left: 0, bottom: 0 }}>
+                      <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e5e7eb" />
+                      <XAxis
+                        dataKey="name"
+                        tick={{ fontSize: 9.5, fill: "#94a3b8" }}
+                        axisLine={{ stroke: "#e5e7eb" }}
+                        tickLine={false}
+                        interval={0}
+                        angle={-20}
+                        textAnchor="end"
+                        height={48}
+                      />
+                      <YAxis
+                        tickFormatter={(v: number) => formatCompactTRY(v)}
+                        tick={{ fontSize: 10.5, fill: "#94a3b8" }}
+                        axisLine={false}
+                        tickLine={false}
+                        width={54}
+                      />
+                      <Tooltip content={<WaterfallTooltip />} />
+                      <Bar dataKey="base" stackId="wf" fill="transparent" isAnimationActive={false} />
+                      <Bar dataKey="value" stackId="wf" isAnimationActive={false} radius={[3, 3, 3, 3]}>
+                        {dashboardData.waterfallStages.map((s, i) => (
+                          <Cell key={i} fill={s.kind === "total" ? (s.value >= 0 ? "#059669" : "#e11d48") : "#e11d48"} />
+                        ))}
+                      </Bar>
+                    </BarChart>
+                  </ResponsiveContainer>
+                </div>
+              </div>
+            </div>
+
+            <div
+              className="rounded-xl border border-sky-200 dark:border-sky-900/40 bg-sky-50/60 dark:bg-sky-950/20 text-[12px] text-sky-800 dark:text-sky-300 leading-relaxed"
+              style={{ padding: 14 }}
+            >
+              Bu, Yönetici Özeti panelinin ilk aşamasıdır: kartlar ve grafikler tamamen sistemdeki gerçek Gerçekleşen verilere
+              dayanır. Tahsilat, Bekleyen Alacak, Bekleyen Teklif Tutarı, Tahmini Ay Sonu ve Nakit Akışı kartları — Gelir
+              Yönetimi'nde henüz alacak/tahsilat/teklif takibi için ayrı bir veri kaynağı olmadığından bu aşamaya dahil
+              edilmedi (uydurma sayı göstermemek için). Finansal Analiz, Operasyon Analizi ve Tahmin/Planlama sekmeleri ile
+              çoklu para birimi (döviz) desteği sonraki aşamalarda eklenecek.
+            </div>
+          </div>
+        )}
+
         {activeSection === "pl" && (
           <div className="space-y-4">
             <div className="flex flex-wrap items-center gap-3">

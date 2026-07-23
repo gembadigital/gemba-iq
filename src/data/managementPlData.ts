@@ -273,6 +273,21 @@ export function monthsBetween(start: string, end: string): string[] {
   return months;
 }
 
+// Shifts a "YYYY-MM" month string by `delta` months (negative = backward).
+// Used by the Yönetici Özeti dashboard to build "last N months" windows for
+// trend charts and sparklines without needing explicit start/end pickers.
+export function shiftMonth(month: string, delta: number): string {
+  const [y, m] = month.split("-").map((v) => parseInt(v, 10));
+  const totalIdx = y * 12 + (m - 1) + delta;
+  const ny = Math.floor(totalIdx / 12);
+  const nm = (totalIdx % 12) + 1;
+  return `${ny}-${String(nm).padStart(2, "0")}`;
+}
+
+export function lastNMonthsEndingAt(endMonth: string, n: number): string[] {
+  return monthsBetween(shiftMonth(endMonth, -(n - 1)), endMonth);
+}
+
 export function quarterMonths(year: number, quarterIndex: number): string[] {
   const startMonth = (quarterIndex - 1) * 3 + 1;
   return [0, 1, 2].map((i) => `${year}-${String(startMonth + i).padStart(2, "0")}`);
