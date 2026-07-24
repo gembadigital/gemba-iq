@@ -2154,6 +2154,14 @@ export const uiDictionaryTR: Record<string, string> = {
   "copied to clipboard": "panoya kopyalanır",
   "Copy and Open in Mail App": "Kopyala ve Şifrele/Aç",
 
+  // Modül 4 (ProposalManagementView.tsx + ProposalFormModal.tsx) - silme
+  // onay diyaloğundaki karışık TR/EN sabit metinler + 2 hata mesajı + kısayol
+  // etiketleri artık t() ile sarmalanıyor
+  "Code": "Kod",
+  "Download Proposal as PDF": "Teklifi PDF olarak indir",
+  "A server error occurred.": "API sunucu hatası oluştu.",
+  "Could not get a valid table from the AI.": "Yapay zekadan geçerli bir tablo alınamadı.",
+
 };
 
 export const uiDictionaryEN: Record<string, string> = Object.fromEntries(

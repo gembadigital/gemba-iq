@@ -289,7 +289,7 @@ export default function ProposalFormModal({
         body: JSON.stringify({ pastedContent: rawPastedHtml }),
       });
       if (!response.ok) {
-        throw new Error("API sunucu hatası oluştu.");
+        throw new Error(t("A server error occurred."));
       }
       const data = await response.json();
       if (data.htmlTable) {
@@ -301,7 +301,7 @@ export default function ProposalFormModal({
         setRawPastedHtml("");
         alert(t("AI successfully converted the pasted content into a gorgeous HTML table and populated the selected field!"));
       } else {
-        throw new Error("Yapay zekadan geçerli bir tablo alınamadı.");
+        throw new Error(t("Could not get a valid table from the AI."));
       }
     } catch (err: any) {
       console.error(err);
@@ -538,7 +538,7 @@ export default function ProposalFormModal({
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 overflow-y-auto px-4 py-8">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 overflow-y-auto px-4 py-8" role="dialog" aria-modal="true">
       <div className="bg-white dark:bg-[#1e1d1c] rounded-xl shadow-2xl border border-slate-100 dark:border-zinc-800 w-full max-w-5xl overflow-hidden max-h-[90vh] flex flex-col animate-in fade-in zoom-in-95 duration-150">
         
         {/* Header */}
@@ -554,7 +554,7 @@ export default function ProposalFormModal({
               </p>
             </div>
           </div>
-          <button onClick={onClose} className="p-1 px-1.5 hover:bg-black/15 rounded text-white text-xs font-bold cursor-pointer transition-all">
+          <button onClick={onClose} className="p-1 px-1.5 hover:bg-black/15 rounded text-white text-xs font-bold cursor-pointer transition-all" aria-label={t("Close")}>
             <X className="w-4 h-4" />
           </button>
         </div>
@@ -571,7 +571,7 @@ export default function ProposalFormModal({
                 onClick={() => setShowAddCompanyInline(!showAddCompanyInline)}
                 className="text-emerald-600 dark:text-emerald-400 font-bold hover:underline flex items-center gap-1 cursor-pointer"
               >
-                <Plus className="w-3.5 h-3.5" /> Quick Add Company
+                <Plus className="w-3.5 h-3.5" /> {t("Quick Add Company")}
               </button>
             </div>
 

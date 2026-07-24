@@ -961,7 +961,7 @@ export default function ProposalManagementView() {
                         <button
                           onClick={() => handleDownloadPdf(p)}
                           className="p-1.5 hover:bg-emerald-50 text-emerald-700 dark:hover:bg-emerald-955/20 rounded cursor-pointer"
-                          title="Teklifi PDF olarak indir"
+                          title={t("Download Proposal as PDF")}
                         >
                           <FileText className="w-3.5 h-3.5" />
                         </button>
@@ -1110,7 +1110,7 @@ export default function ProposalManagementView() {
 
       {/* REVISION CREATION TEXT MODAL */}
       {revisingProposal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4" role="dialog" aria-modal="true">
           <div className="bg-white dark:bg-[#1f1d1c] max-w-md w-full rounded-xl border border-slate-100 p-5 space-y-4 text-xs animate-in zoom-in-95 duration-100">
             <h3 className="font-bold text-sm text-slate-800 dark:text-zinc-150">{t("Create Proposal Revision Clone")}</h3>
             <p className="text-slate-500 leading-relaxed">
@@ -1160,7 +1160,7 @@ export default function ProposalManagementView() {
 
       {/* COMPILATION AND REVIEWS VIEW (Corporate Letterhead Presentation) */}
       {viewingProposalDoc && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 overflow-y-auto">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 overflow-y-auto" role="dialog" aria-modal="true">
           <div className="bg-white dark:bg-zinc-900 max-w-5xl w-full rounded-2xl overflow-hidden shadow-2xl border border-zinc-250 flex flex-col my-10 max-h-[90vh]">
             
             {/* Toolbar */}
@@ -1179,8 +1179,8 @@ export default function ProposalManagementView() {
                 >
                   <Eye className="w-3.5 h-3.5" /> {t("Trigger PDF Print")}
                 </button>
-                <button onClick={() => setViewingProposalDoc(null)} className="p-1 px-2 hover:bg-slate-200 rounded text-slate-650 cursor-pointer">
-                  Close
+                <button onClick={() => setViewingProposalDoc(null)} className="p-1 px-2 hover:bg-slate-200 rounded text-slate-650 cursor-pointer" aria-label={t("Close")}>
+                  {t("Close")}
                 </button>
               </div>
             </div>
@@ -1209,7 +1209,7 @@ export default function ProposalManagementView() {
 
       {/* OUTLOOK EMAIL DISPATCH AND CRM SYNC DRAWER */}
       {sendingProposal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4" role="dialog" aria-modal="true">
           <div className="bg-white dark:bg-zinc-900 rounded-2xl w-full max-w-2xl border border-slate-100 p-6 space-y-4 text-xs animate-in zoom-in-95 duration-100">
             
             {/* Header */}
@@ -1359,7 +1359,7 @@ export default function ProposalManagementView() {
         (() => {
           const propToDelete = proposals.find(p => p.id === deletingProposalId);
           return (
-            <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-xs p-4">
+            <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-xs p-4" role="dialog" aria-modal="true">
               <div className="bg-white dark:bg-[#151515] max-w-sm w-full rounded-xl border border-slate-205 dark:border-zinc-800 p-5 space-y-4 animate-in fade-in zoom-in-95 duration-100">
                 
                 {/* Header info */}
@@ -1368,14 +1368,14 @@ export default function ProposalManagementView() {
                     <Trash2 className="w-5 h-5 shrink-0" />
                   </div>
                   <h3 className="font-extrabold text-xs uppercase tracking-wider font-mono">
-                    Teklifi Sil / Delete Proposal
+                    {t("Delete Proposal")}
                   </h3>
                 </div>
 
                 {/* Question & details */}
                 <div className="space-y-2 text-left">
                   <p className="text-[11px] text-slate-650 dark:text-zinc-350 leading-relaxed font-semibold">
-                    Geri dönüşüm kutusuna taşınsın mı?
+                    {t("Move to recycle bin?")}
                   </p>
                   {propToDelete && (
                     <div className="p-2.5 bg-slate-50 dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 rounded-lg text-[10px] space-y-1">
@@ -1386,7 +1386,7 @@ export default function ProposalManagementView() {
                         {propToDelete.proposalSubject}
                       </p>
                       <p className="font-mono text-slate-400">
-                        Kod: {propToDelete.proposalNumber} • Sürüm: {propToDelete.currentVersion}
+                        {t("Code")}: {propToDelete.proposalNumber} • {t("Version")}: {propToDelete.currentVersion}
                       </p>
                     </div>
                   )}
@@ -1399,14 +1399,14 @@ export default function ProposalManagementView() {
                     onClick={() => setDeletingProposalId(null)}
                     className="px-4 py-2 bg-slate-100 hover:bg-slate-200 dark:bg-zinc-800 dark:hover:bg-zinc-700 text-slate-600 dark:text-zinc-300 font-bold rounded-lg cursor-pointer"
                   >
-                    İptal
+                    {t("Cancel")}
                   </button>
                   <button
                     type="button"
                     onClick={handleConfirmDelete}
                     className="px-4 py-2 bg-rose-600 hover:bg-rose-700 text-white font-extrabold rounded-lg cursor-pointer shadow-sm active:scale-95 transition-transform"
                   >
-                    Sil
+                    {t("Delete")}
                   </button>
                 </div>
 
@@ -1418,7 +1418,7 @@ export default function ProposalManagementView() {
 
       {/* 10. PROPOSAL SUMMARY & PDF FILE VIEWER PANEL */}
       {selectedProposalForDetail && (
-        <div className="fixed inset-0 z-50 flex justify-end bg-black/60 backdrop-blur-xs p-0 sm:p-4 animate-in fade-in duration-200">
+        <div className="fixed inset-0 z-50 flex justify-end bg-black/60 backdrop-blur-xs p-0 sm:p-4 animate-in fade-in duration-200" role="dialog" aria-modal="true">
           <div className="bg-slate-50 dark:bg-[#0e0d0c] w-full max-w-7xl h-full sm:h-[95vh] my-auto rounded-none sm:rounded-2xl border-l sm:border border-slate-205 dark:border-zinc-800 shadow-2xl flex flex-col overflow-hidden animate-in slide-in-from-right duration-300">
             
             {/* Header block */}
@@ -1516,6 +1516,7 @@ export default function ProposalManagementView() {
                 <button
                   onClick={() => setSelectedProposalForDetail(null)}
                   className="p-1.5 hover:bg-slate-100 dark:hover:bg-zinc-800 rounded-full text-slate-500 dark:text-zinc-400 transition-colors cursor-pointer"
+                  aria-label={t("Close")}
                 >
                   <X className="w-5 h-5" />
                 </button>
@@ -1819,7 +1820,7 @@ export default function ProposalManagementView() {
 
       {/* WORD TEMPLATE MANAGER */}
       {showTemplateManager && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4" role="dialog" aria-modal="true">
           <div className="bg-white dark:bg-zinc-900 rounded-2xl w-full max-w-4xl border border-slate-100 p-6 space-y-4 text-xs max-h-[90vh] overflow-y-auto">
             <div className="flex items-center justify-between border-b pb-3">
               <div className="flex items-center gap-2">
@@ -1835,7 +1836,7 @@ export default function ProposalManagementView() {
                 }}
                 className="text-slate-450 hover:text-red-500 font-bold"
               >
-                CLOSE
+                {t("CLOSE")}
               </button>
             </div>
 
@@ -1868,12 +1869,14 @@ export default function ProposalManagementView() {
                       <button
                         onClick={() => setEditingTemplate(tpl)}
                         className="p-1 hover:bg-slate-100 dark:hover:bg-zinc-800 rounded cursor-pointer"
+                        aria-label={`${t("Edit")}: ${tpl.name}`}
                       >
                         <Edit className="w-3.5 h-3.5" />
                       </button>
                       <button
                         onClick={() => void handleDeleteTemplate(tpl.id)}
                         className="p-1 hover:bg-red-50 text-red-600 rounded cursor-pointer"
+                        aria-label={`${t("Delete")}: ${tpl.name}`}
                       >
                         <Trash2 className="w-3.5 h-3.5" />
                       </button>

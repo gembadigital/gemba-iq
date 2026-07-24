@@ -17,7 +17,7 @@ Son güncelleme: 2026-07-24
 | 1 | CompaniesView.tsx (Şirketler) | Tamamlandı (2026-07-24) |
 | 2 | TargetAccountsView.tsx (Hedef Hesaplar) | Tamamlandı (2026-07-24) |
 | 3 | DealManagementView.tsx (Fırsat Yönetimi / Kanban) | Tamamlandı (2026-07-24) |
-| 4 | ProposalManagementView.tsx + ProposalFormModal.tsx | Planlandı |
+| 4 | ProposalManagementView.tsx + ProposalFormModal.tsx | Tamamlandı (2026-07-24) |
 | 5 | LeadProfilesView.tsx + EmailLeadDiscoveryView.tsx | Planlandı |
 | 6 | ServicesView.tsx (Hizmet Kataloğu) | Planlandı |
 | 7 | RevenueManagementView.tsx + ManagementPLView.tsx | Planlandı |
@@ -52,6 +52,15 @@ Her modül geçişi kendi commit/deploy döngüsüyle kapanır; bu tablo ilerled
 - UI/UX — CSS: fırsat detay çekmecesinin overlay'inde geçersiz `z-45` Tailwind class'ı (Modül 1'deki `z-55` ile aynı kök neden — proje bu ölçeği tanımlamıyor, hiç uygulanmıyordu) → `z-[45]` yapıldı.
 - UI/UX — Erişilebilirlik: liste ve Kanban kart görünümündeki ikon-only silme (Trash2) butonlarına `aria-label` eklendi; dosyadaki 8 modal/popup overlay'inin tamamına (`role="dialog" aria-modal="true"`) eklendi — bu dosyada daha önce hiçbirinde yoktu.
 - UI/UX — Boş durumlar: liste görünümü ("No deals found matching current filters") ve Kanban sütunları ("Move deals here") için boş durum mesajları zaten mevcuttu, ek iş gerekmedi.
+
+**Modül 4 (ProposalManagementView.tsx + ProposalFormModal.tsx) — yapılanlar:**
+- Bu iki dosya genel olarak zaten büyük ölçüde `t()` kapsamındaydı (önceki modüllerin aksine, çoğu metin baştan beri sarmalıydı) — asıl bulgu az sayıda ama göze çarpan istisnalardı.
+- Dil — Silme onay modalı en kötü örnekti: başlık ve butonlar TR/EN karışık hardcoded metin içeriyordu ("Teklifi Sil / Delete Proposal", "Geri dönüşüm kutusuna taşınsın mı?", "Kod:"/"Sürüm:", "İptal", "Sil") → tamamı `t()`'ye taşındı, mevcut sözlük anahtarları (`Delete Proposal`, `Cancel`, `Move to recycle bin?`) yeniden kullanıldı, yalnızca `"Code"` yeni eklendi.
+- Dil — Liste satırındaki PDF indirme ikonunun `title`'ı hardcoded Türkçe'ydi ("Teklifi PDF olarak indir") → `t()`'ye taşındı.
+- Dil — Belge önizleme modalındaki "Close" ve şablon yöneticisindeki "CLOSE" butonları literal İngilizce yazılmıştı (TR modda çevrilmiyordu) → `t()`'ye sarmalandı.
+- Dil — `ProposalFormModal.tsx`'te AI tablo dönüştürme akışının 2 hata mesajı (`throw new Error(...)`) hardcoded Türkçe'ydi, kullanıcıya `catch` bloğunda `t()`'siz gösteriliyordu → `t()`'ye taşındı. "Quick Add Company" linki de hardcoded İngilizce'ydi → mevcut sözlük anahtarına bağlandı.
+- UI/UX — Erişilebilirlik: bu iki dosyada `role="dialog"` hiç kullanılmamıştı — `ProposalManagementView.tsx`'teki 6 modal (revizyon, belge önizleme, mail gönderim, silme onayı, teklif detay paneli, şablon yöneticisi) ve `ProposalFormModal.tsx`'teki tek modal olmak üzere toplam 7 modal'a eklendi. Ayrıca 4 ikon-only butona (detay panel kapatma X, form modal kapatma X, şablon düzenle/sil ikonları) `aria-label` eklendi.
+- Not: Teklif onay durumunu "Draft"a geri alma (`confirm()`) ve red gerekçesi girme (`prompt()`) hâlâ native tarayıcı diyalogları kullanıyor — bu modülün kapsamındaki tek "eksik" ama düşük öncelikli madde; silme akışının aksine burada zaten en az bir onay adımı var, sadece markalı modal değil.
 
 ---
 
