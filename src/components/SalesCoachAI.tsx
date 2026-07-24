@@ -18,7 +18,12 @@ async function fetchWithTimeout(url: string, options: RequestInit, timeoutMs: nu
     return await fetch(url, { ...options, signal: controller.signal });
   } catch (err: any) {
     if (err?.name === "AbortError") {
-      throw new Error("İstek zaman aşımına uğradı (60 sn). Gemini şu anda yanıt vermiyor olabilir, lütfen tekrar deneyin.");
+      // Thrown as a canonical English string (dictionary key convention used
+      // throughout this file) so it localizes correctly regardless of the
+      // active UI language - this function runs outside the component tree
+      // and has no access to the t() hook itself, so translation happens at
+      // the catch sites below via t(err.message).
+      throw new Error("Request timed out (60s). Gemini may not be responding right now, please try again.");
     }
     throw err;
   } finally {
@@ -386,7 +391,7 @@ export default function SalesCoachAI({ deals }: SalesCoachAIProps) {
         ...prev,
         {
           sender: "director",
-          text: t("Sales audit error: {error}. Please check GEMINI_API_KEY in Settings > Secrets.").replace("{error}", err.message || t("Unknown error"))
+          text: t("Sales audit error: {error}. Please check GEMINI_API_KEY in Settings > Secrets.").replace("{error}", t(err.message || "Unknown error"))
         }
       ]);
     } finally {
@@ -462,7 +467,7 @@ export default function SalesCoachAI({ deals }: SalesCoachAIProps) {
         ...prev,
         {
           sender: "director",
-          text: t("Connection error: {error}. Please verify your GEMINI_API_KEY in Settings.").replace("{error}", err.message || t("Unknown error"))
+          text: t("Connection error: {error}. Please verify your GEMINI_API_KEY in Settings.").replace("{error}", t(err.message || "Unknown error"))
         }
       ]);
     } finally {
