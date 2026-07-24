@@ -1148,6 +1148,7 @@ title={t("Manually release locked pipeline template draft for immediate custom b
                                   }}
                                   className="p-1.5 bg-rose-50 dark:bg-rose-950/10 hover:bg-rose-600 hover:text-white border border-rose-200 dark:border-rose-900 rounded cursor-pointer text-xs text-rose-600 transition shadow-sm"
 title={t("Cancel and wipe scheduled item")}
+aria-label={t("Delete Campaign")}
                                 >
                                   <Trash2 className="w-4 h-4" />
                                 </button>
@@ -1227,9 +1228,19 @@ title={t("Publish Update Immediately")}
                         )}
                         <button
                           type="button"
-                          onClick={() => handleDeletePost(p.id)}
+                          onClick={() => {
+                            setConfirmDeleteModal({
+                              isOpen: true,
+                              title: t("Delete Post"),
+                              message: t("Move to recycle bin?"),
+                              onConfirm: () => {
+                                handleDeletePost(p.id);
+                              }
+                            });
+                          }}
                           className="p-1.5 bg-[#FAF9F8] hover:bg-rose-600 hover:text-white dark:bg-[#252423] dark:hover:bg-rose-700 text-slate-550 border border-[#EDEBE9] dark:border-[#323130] rounded cursor-pointer transition shadow-sm"
 title={t("Delete Post")}
+aria-label={t("Delete Post")}
                         >
                           <Trash2 className="w-3.5 h-3.5" />
                         </button>
@@ -1959,7 +1970,7 @@ placeholder={t("Enter custom post topic (e.g. Digitizing Gemba board values)")}
 
       {/* Custom Global Confirmation Dialog */}
       {confirmDeleteModal.isOpen && (
-        <div className="fixed inset-0 bg-black/60 backdrop-blur-xs flex items-center justify-center z-[9999] p-4 font-sans antialiased animate-fade-in text-slate-800 dark:text-zinc-200">
+        <div role="dialog" aria-modal="true" className="fixed inset-0 bg-black/60 backdrop-blur-xs flex items-center justify-center z-[9999] p-4 font-sans antialiased animate-fade-in text-slate-800 dark:text-zinc-200">
           <div className="bg-white dark:bg-[#181818] w-full max-w-sm rounded-xl border border-slate-205 dark:border-zinc-855 shadow-2xl p-6 text-center animate-in zoom-in-95 duration-100">
             <div className="mx-auto w-12 h-12 bg-rose-50 dark:bg-rose-950/25 rounded-full flex items-center justify-center text-rose-500 mb-4">
               <Trash2 className="w-6 h-6 animate-pulse" />

@@ -22,7 +22,7 @@ Son güncelleme: 2026-07-24
 | 6 | ServicesView.tsx (Hizmet Kataloğu) | Tamamlandı (2026-07-24, kısmi — aşağıya bak) |
 | 7 | RevenueManagementView.tsx + ManagementPLView.tsx | Tamamlandı (2026-07-24, kısmi — aşağıya bak) |
 | 8 | TasksView.tsx (Görevler) | Tamamlandı (2026-07-24, kısmi — aşağıya bak) |
-| 9 | CampaignManagerView.tsx + CampaignDesigner.tsx | Planlandı |
+| 9 | CampaignManagerView.tsx + CampaignDesigner.tsx | Tamamlandı (2026-07-24) |
 | 10 | AISalesAssistant.tsx + SalesCoachAI.tsx + CompanyDiscoveryView.tsx + GembaLensView.tsx | Planlandı |
 | 11 | AdministrationCenter.tsx + UserAccountSettings.tsx | Planlandı |
 | 12 | DashboardView.tsx + SalesDashboardView.tsx + CompanyDetailView.tsx | Planlandı |
@@ -91,6 +91,13 @@ Her modül geçişi kendi commit/deploy döngüsüyle kapanır; bu tablo ilerled
 - UI/UX — Onay eksikliği: Danışman Atamaları modülündeki (Modül 7) ile aynı kalıp — Kanban kartındaki hızlı-sil ikonu zaten dosya-yerel `confirmDeleteModal` sistemi üzerinden onay alıyordu (iyi), ama bu sistemin başlık/mesaj metinleri hardcoded Türkçe idi → `t()`'ye taşındı, `role="dialog" aria-modal="true"` eklendi (önceden yoktu).
 - UI/UX — Erişilebilirlik: Liste görünümündeki ikon-only düzenle/sil butonlarına, Kanban kartının hızlı-sil ikonuna, sütun kebab-menü tetikleyicisine ve sütun daraltma/genişletme ikonlarına `aria-label` eklendi (hiçbirinde yoktu). Görev Ekle/Düzenle ve E-posta Önizleme modallarına `role="dialog" aria-modal="true"` eklendi (3 modal, hiçbirinde yoktu).
 - **KAPSAM NOTU:** Sayfanın "Engine Kuralları (Admin)" sekmesi (SLA eskalasyon/bildirim motoru yapılandırması, ~650 satır — genel kurallar, eskalasyon yetkilileri, e-posta HTML şablonları alt-sekmeleri) şu anki modül kapsamına **dahil edilmedi**. Bu, ServicesView'ın Teklif Sihirbazı veya ManagementPLView'dan farklı olarak "tasarım gereği Türkçe" değil — sadece hacim olarak çok büyük, yalnızca Admin rolündeki kullanıcıların seyrek eriştiği bir yapılandırma paneli olduğu için bu modülün zaman/kapsam bütçesi dışında bırakıldı. Görev panosu ve bildirim merkezi gibi günlük kullanılan, yüksek trafikli kısımlar tam kapsandı. Admin ayarları sekmesi ayrı bir alt-görev olarak planlanmalı.
+
+**Modül 9 (CampaignManagerView.tsx + CampaignDesigner.tsx) — yapılanlar:**
+- Bu iki dosya önceki modüllerin çoğundan farklı olarak baştan iyi durumdaydı: CampaignManagerView.tsx'te 175, CampaignDesigner.tsx'te 165 adet `t()` çağrısı zaten mevcuttu — sistematik dil eksikliği yoktu. Türkçe karakter taramasında bulunan tek eşleşmeler gerçek UI metni değildi (LinkedIn gönderisi için örnek/demo Türkçe içerik verisi ve bir anahtar kelime eşleştirme kontrolü `"TEKLİF"` — ikisi de kasıtlı, dil hatası değil).
+- **Gerçek bug — onay eksikliği tutarsızlığı:** `CampaignManagerView.tsx`'te markalı bir `confirmDeleteModal` sistemi kurulmuştu ve kampanya silme (`handleDeleteCampaign`) doğru şekilde bu onay modalını kullanıyordu, ama LinkedIn gönderisi silme (`handleDeletePost`) aynı dosyada, doğrudan `onClick={() => handleDeletePost(p.id)}` ile **hiç onay almadan** siliyordu. İki silme işlemi arasında tutarsızlık vardı; `handleDeletePost` de `confirmDeleteModal`'a bağlandı.
+- UI/UX — Erişilebilirlik: Kampanya ve gönderi silme butonlarına `aria-label` eklendi; `confirmDeleteModal`'ın dış `div`'ine `role="dialog" aria-modal="true"` eklendi (önceden yoktu, dosyanın tek modalı).
+- CampaignDesigner.tsx'te modal/CSS taraması: gerçek bir overlay modal yok (tek `fixed inset-0` eşleşmesi, alıcı listesi panelinin "büyüt" moduna geçişi — TasksView'daki ekran genişletme paternine benzer, dialog değil), geçersiz z-index class'ı yok, `alert()`/`confirm()` yok. Alıcı satırı silme (mail-merge tablosundaki taslak satır) onay istemiyor — bu, henüz kaydedilmemiş/gönderilmemiş bir taslak listesinden satır çıkarma olduğu için (Modül 4'te aynı gerekçeyle satır düzeyi silmelerin onaysız bırakıldığı kalıpla tutarlı) kasıtlı olarak değiştirilmedi.
+- Not: CampaignManagerView.tsx'teki 8 `alert()` çağrısı (başarı/hata bilgilendirmesi) — Modül 1'de not edilen "toast sistemi" eksikliğiyle aynı kategori, bu modülün kapsamı dışında bırakıldı.
 
 ---
 
