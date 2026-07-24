@@ -35,6 +35,8 @@ import { TargetAccount, Recipient } from "../types";
 import { useLanguage } from "../lib/LanguageContext";
 import { CrmDb } from "../lib/CrmDb";
 import { getActiveOrganizationId } from "../lib/tenantStorage";
+import { ConfirmModal } from "./shared/ConfirmModal";
+import { useConfirm } from "../lib/useConfirm";
 
 // Shared organization-scoped key — must match the key used by LeadProfilesView.tsx
 // and AISalesAssistant.tsx when pushing a company into the Target Accounts registry.
@@ -52,6 +54,7 @@ export default function TargetAccountsView({
   onNavigateToTab
 }: TargetAccountsViewProps) {
   const { t } = useLanguage();
+  const { confirm, confirmProps } = useConfirm();
 
   // Accounts Storage State
   const [accounts, setAccounts] = useState<TargetAccount[]>([]);
@@ -255,7 +258,16 @@ export default function TargetAccountsView({
     triggerToast(t("Target account details updated successfully."), "success");
   };
 
-  const deleteSingleAccount = (id: string) => {
+  const deleteSingleAccount = async (id: string) => {
+    const account = accounts.find(a => a.id === id);
+    const ok = await confirm({
+      title: t("Remove Target"),
+      message: t("Are you sure you want to delete {name} and all associated proposals/deals?").replace("{name}", account?.companyName || ""),
+      confirmLabel: t("Delete"),
+      cancelLabel: t("Cancel"),
+      danger: true,
+    });
+    if (!ok) return;
     const remaining = accounts.filter(a => a.id !== id);
     // Standardize 'no' sequence values
     const standardized = remaining.map((a, idx) => ({ ...a, no: idx + 1 }));
@@ -263,12 +275,21 @@ export default function TargetAccountsView({
     triggerToast(t("Account removed from database."), "info");
   };
 
-  const deleteSelectedAccounts = () => {
+  const deleteSelectedAccounts = async () => {
     const remaining = accounts.filter(a => !a.isSelected);
     if (accounts.length === remaining.length) {
       triggerToast(t("No items selected to delete."), "info");
       return;
     }
+    const selectedCountLocal = accounts.length - remaining.length;
+    const ok = await confirm({
+      title: t("Delete Selected"),
+      message: t("Are you sure you want to permanently delete selected {count} companies?").replace("{count}", String(selectedCountLocal)),
+      confirmLabel: t("Delete"),
+      cancelLabel: t("Cancel"),
+      danger: true,
+    });
+    if (!ok) return;
     const standardized = remaining.map((a, idx) => ({ ...a, no: idx + 1 }));
     updateAccountsAndPersist(standardized);
     triggerToast(t("Bulk deleted selected records successfully."), "success");
@@ -627,7 +648,14 @@ export default function TargetAccountsView({
       {/* Inline diagnostic block */}
       {importError && (
         <div className="p-4 bg-rose-50 dark:bg-rose-950/20 border border-rose-300 dark:border-rose-900 rounded text-xs text-rose-800 dark:text-rose-300 flex items-center gap-3">
-          <X className="w-4.5 h-4.5 cursor-pointer flex-shrink-0 hover:opacity-80" onClick={() => setImportError(null)} />
+          <button
+            type="button"
+            onClick={() => setImportError(null)}
+            className="shrink-0 hover:opacity-80 cursor-pointer"
+            aria-label={t("Close")}
+          >
+            <X className="w-4.5 h-4.5" />
+          </button>
           <span>{importError}</span>
         </div>
       )}
@@ -697,7 +725,7 @@ export default function TargetAccountsView({
                 <Plus className="w-4 h-4 text-emerald-500" />
                 <span>{t("Input Target Company Manual Record")}</span>
               </h3>
-              <button type="button" onClick={() => setIsAddingAccount(false)} className="text-slate-400 hover:text-slate-600">
+              <button type="button" onClick={() => setIsAddingAccount(false)} className="text-slate-400 hover:text-slate-600" aria-label={t("Close")}>
                 <X className="w-4 h-4" />
               </button>
             </div>
@@ -1038,12 +1066,15 @@ export default function TargetAccountsView({
                   const isEditing = editingAccountId === a.id;
                   const itemNo = a.no || ((currentPage - 1) * pageSize) + index + 1;
                   
-                  // Default clean fallbacks inside table cells
-                  const contactFirstName = a.contactName || "Kalite / Operasyon";
-                  const contactLastName = a.contactSurname || "Direktörü";
+                  // Default clean fallbacks inside table cells - t()-wrapped so
+                  // they respect the active UI language (records saved before
+                  // this fix have the Turkish literal baked in as data, but
+                  // t()'s reverse-lookup still resolves those correctly in EN mode).
+                  const contactFirstName = a.contactName || t("Quality / Operations");
+                  const contactLastName = a.contactSurname || t("Director");
                   const contactEmail = a.contactEmail || `opex@${a.companyName.toLowerCase().replace(/[^a-z0-9]/g, "")}.com`;
-                  const deptStr = a.department || "Operational Excellence";
-                  const addrStr = a.locationMain || "Belirtilmemiş";
+                  const deptStr = a.department || t("Operational Excellence");
+                  const addrStr = a.locationMain || t("Not specified");
                   const statusVal = a.leadStatus || "New";
                   const segmentVal = a.leadSegment || "Cold";
 
@@ -1110,7 +1141,7 @@ export default function TargetAccountsView({
                           />
                         ) : (
                           <span className="bg-slate-100 dark:bg-black/25 px-2 py-0.5 rounded text-[10px] font-mono text-slate-500 font-bold">
-                            {a.industryTag || "Genel Endüstri"}
+                            {a.industryTag || t("General Industry")}
                           </span>
                         )}
                       </td>
@@ -1258,6 +1289,7 @@ export default function TargetAccountsView({
                               onClick={saveEditedAccount}
                               className="p-1 hover:bg-emerald-50 dark:hover:bg-emerald-950 text-emerald-600 dark:text-emerald-450 border border-emerald-250 dark:border-emerald-800 rounded shadow-sm cursor-pointer"
                               title={t("Confirm Changes")}
+                              aria-label={t("Confirm Changes")}
                             >
                               <Check className="w-3.5 h-3.5" />
                             </button>
@@ -1269,6 +1301,7 @@ export default function TargetAccountsView({
                               }}
                               className="p-1 hover:bg-slate-100 dark:hover:bg-[#252423] text-slate-500 rounded border border-slate-200 dark:border-[#323130] cursor-pointer"
                               title={t("Discard Edit")}
+                              aria-label={t("Discard Edit")}
                             >
                               <X className="w-3.5 h-3.5" />
                             </button>
@@ -1303,6 +1336,7 @@ export default function TargetAccountsView({
                               }}
                               className="p-1 bg-[#FAF9F8] text-slate-500 border border-[#EDEBE9] dark:bg-[#201f1e] dark:border-[#323130] hover:bg-blue-50 hover:text-[#0078D4] dark:hover:bg-blue-950/20 dark:hover:text-[#85c1f5] rounded cursor-pointer shrink-0 transition-colors"
                               title={t("Push Target Email to Mail Merge outbox")}
+                              aria-label={`${t("Push Target Email to Mail Merge outbox")}: ${a.companyName}`}
                             >
                               <Mail className="w-3.5 h-3.5" />
                             </button>
@@ -1312,6 +1346,7 @@ export default function TargetAccountsView({
                               onClick={() => startEditingAccount(a)}
                               className="p-1 bg-[#FAF9F8] text-slate-505 border border-[#EDEBE9] dark:bg-[#201f1e] dark:border-[#323130] hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-[#0078D4] rounded cursor-pointer transition-colors"
                               title={t("Quick Edit properties inline")}
+                              aria-label={`${t("Quick Edit properties inline")}: ${a.companyName}`}
                             >
                               <Edit className="w-3.5 h-3.5" />
                             </button>
@@ -1321,6 +1356,7 @@ export default function TargetAccountsView({
                               onClick={() => deleteSingleAccount(a.id)}
                               className="p-1 bg-[#FAF9F8] text-rose-500 border border-[#EDEBE9] dark:bg-[#201f1e] dark:border-[#323130] hover:bg-rose-50 dark:hover:bg-rose-950/20 rounded cursor-pointer transition-colors"
                               title={t("Remove Target")}
+                              aria-label={`${t("Remove Target")}: ${a.companyName}`}
                             >
                               <Trash2 className="w-3.5 h-3.5" />
                             </button>
@@ -1390,7 +1426,7 @@ export default function TargetAccountsView({
 
       {/* Drawer / Detail View Modal Sidebar */}
       {selectedAccount && (
-        <div className="fixed inset-0 bg-black/60 backdrop-blur-xs z-50 flex justify-end animate-fade-in" onClick={() => setSelectedAccount(null)}>
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-xs z-50 flex justify-end animate-fade-in" onClick={() => setSelectedAccount(null)} role="dialog" aria-modal="true">
           <div 
             className="w-full max-w-2xl bg-white dark:bg-[#1b1a19] h-full shadow-2xl flex flex-col overflow-hidden border-l border-[#EDEBE9] dark:border-[#323130]"
             onClick={(e) => e.stopPropagation()}
@@ -1414,8 +1450,10 @@ export default function TargetAccountsView({
               </div>
 
               <button
+                type="button"
                 onClick={() => setSelectedAccount(null)}
                 className="p-1.5 hover:bg-slate-100 dark:hover:bg-black/20 rounded-full text-slate-400 hover:text-slate-700 dark:hover:text-white transition-colors cursor-pointer"
+                aria-label={t("Close")}
               >
                 <X className="w-5 h-5" />
               </button>
@@ -1436,7 +1474,7 @@ export default function TargetAccountsView({
                 </div>
                 <div className="text-center p-1.5">
                   <span className="text-[9px] uppercase font-bold text-slate-400 font-mono block">{t("Main Location")}</span>
-                  <span className="text-xs font-semibold text-slate-700 dark:text-slate-200 block mt-0.5 truncate">{selectedAccount.locationMain || "Belirtilmemiş"}</span>
+                  <span className="text-xs font-semibold text-slate-700 dark:text-slate-200 block mt-0.5 truncate">{selectedAccount.locationMain || t("Not specified")}</span>
                 </div>
               </div>
 
@@ -1469,11 +1507,11 @@ export default function TargetAccountsView({
                   <div className="grid grid-cols-2 gap-4">
                     <div>
                       <span className="text-[10px] uppercase font-bold tracking-brand text-slate-400 block">{t("First Name")}</span>
-                      <span className="font-semibold text-slate-700 dark:text-slate-200">{selectedAccount.contactName || "Kalite / Operasyon"}</span>
+                      <span className="font-semibold text-slate-700 dark:text-slate-200">{selectedAccount.contactName || t("Quality / Operations")}</span>
                     </div>
                     <div>
                       <span className="text-[10px] uppercase font-bold tracking-brand text-slate-400 block">{t("Surname")}</span>
-                      <span className="font-semibold text-slate-700 dark:text-slate-200">{selectedAccount.contactSurname || "Direktörü"}</span>
+                      <span className="font-semibold text-slate-700 dark:text-slate-200">{selectedAccount.contactSurname || t("Director")}</span>
                     </div>
                     <div>
                       <span className="text-[10px] uppercase font-bold tracking-brand text-slate-400 block">{t("Designated Email")}</span>
@@ -1481,7 +1519,7 @@ export default function TargetAccountsView({
                     </div>
                     <div>
                       <span className="text-[10px] uppercase font-bold tracking-brand text-slate-400 block">{t("Department / Role")}</span>
-                      <span className="font-medium text-slate-750 dark:text-slate-300">{selectedAccount.department || "Operational Excellence"}</span>
+                      <span className="font-medium text-slate-750 dark:text-slate-300">{selectedAccount.department || t("Operational Excellence")}</span>
                     </div>
                   </div>
                 </div>
@@ -1576,6 +1614,8 @@ export default function TargetAccountsView({
           </div>
         </div>
       )}
+
+      <ConfirmModal {...confirmProps} />
     </div>
   );
 }

@@ -2128,6 +2128,12 @@ export const uiDictionaryTR: Record<string, string> = {
   "Try adjusting your search or filters.": "Arama veya filtrelerinizi değiştirmeyi deneyin.",
   "Custom field inputs": "Özel alan girişleri",
 
+  // Modül 2 (TargetAccountsView.tsx) - sabit Türkçe fallback verileri artık
+  // t() ile sarmalanıyor ki İngilizce modda da doğru görünsün
+  "Quality / Operations": "Kalite / Operasyon",
+  "Director": "Direktörü",
+  "General Industry": "Genel Endüstri",
+
 };
 
 export const uiDictionaryEN: Record<string, string> = Object.fromEntries(

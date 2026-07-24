@@ -15,7 +15,7 @@ Son güncelleme: 2026-07-24
 | # | Modül | Durum |
 |---|-------|-------|
 | 1 | CompaniesView.tsx (Şirketler) | Tamamlandı (2026-07-24) |
-| 2 | TargetAccountsView.tsx (Hedef Hesaplar) | Planlandı |
+| 2 | TargetAccountsView.tsx (Hedef Hesaplar) | Tamamlandı (2026-07-24) |
 | 3 | DealManagementView.tsx (Fırsat Yönetimi / Kanban) | Planlandı |
 | 4 | ProposalManagementView.tsx + ProposalFormModal.tsx | Planlandı |
 | 5 | LeadProfilesView.tsx + EmailLeadDiscoveryView.tsx | Planlandı |
@@ -36,6 +36,12 @@ Her modül geçişi kendi commit/deploy döngüsüyle kapanır; bu tablo ilerled
 - UI/UX — Erişilebilirlik (Faz 5): ikon-only butonlara (düzenle/sil/kapat/geniş görünüm) `aria-label` eklendi, iki modal'a `role="dialog" aria-modal="true"` eklendi.
 - UI/UX — CSS: özel alan modalındaki `z-55` geçersiz bir Tailwind class'ıydı (Tailwind'in varsayılan ölçeğinde yok, hiç uygulanmıyordu) → `z-[55]` yapıldı.
 - Not: Bu dosyadaki 9 `alert()`'ten sadece 3'ü (silme onayları) ConfirmModal'a taşındı; kalan 6'sı bilgilendirme amaçlı (içe/dışa aktarma sonucu) — bunlar ayrı bir "toast sistemi" gerektiriyor (Faz 4'ün ikinci yarısı), henüz yapılmadı.
+
+**Modül 2 (TargetAccountsView.tsx) — yapılanlar:**
+- UI/UX — Onay eksikliği (Faz 4, daha kritik bir varyant): bu dosyada silme işlemleri (tekli ve toplu) hiçbir onay istemeden anında siliyordu — CompaniesView'daki gibi "çirkin ama en azından var olan" bir `confirm()` bile yoktu. Artık ikisi de Modül 1'de kurulan `ConfirmModal`/`useConfirm()` üzerinden onay istiyor.
+- Dil: Yeni kayıt/içe aktarma varsayılanlarında ve tablo/detay panelinde gösterilen "Kalite / Operasyon", "Direktörü", "Genel Endüstri", "Belirtilmemiş" gibi sabit Türkçe yer tutucu metinler artık `t()` ile sarmalanmış kanonik İngilizce anahtarlar üzerinden gösteriliyor (İngilizce modda da doğru görünür; eskiden kaydedilmiş kayıtlardaki ham Türkçe veri de sözlüğün çift yönlü arama mekanizması sayesinde doğru çevriliyor).
+- UI/UX — Erişilebilirlik: İçe aktarma hata banner'ındaki kapatma ikonu aslında bir `<button>` bile değildi (klavyeyle asla kapatılamıyordu) → gerçek `<button>` yapıldı. Satır aksiyon ikonları (mail/düzenle/sil), düzenleme modu onay/iptal ikonları, form ve çekmece kapatma ikonlarına `aria-label` eklendi; detay çekmecesine `role="dialog" aria-modal="true"` eklendi.
+- Not: Bu dosyanın kendi `t()` çağrıları zaten sözlükte tamdı (yalnızca örnek/placeholder veri metinleri "eksik" görünüyordu, gerçek arayüz metni değil) — bu modülün asıl sorunu dil değil, UI/UX'ti.
 
 ---
 
