@@ -6,6 +6,39 @@ Son güncelleme: 2026-07-24
 
 ---
 
+## Yürütme yöntemi (2026-07-24'te güncellendi)
+
+İlk yaklaşım bulgu-tipi bazlıydı (önce tüm uygulamada dil hatalarını topla, sonra tüm CSS çakışmalarını topla, vb.). Kullanıcı talebiyle yönteme geçildi: **modül modül / sayfa sayfa ilerle** — her modülü açıp o modüldeki hem dil (eksik `t()` çevirisi) hem UI/UX (alert/confirm, aria-label, boş durum, CSS çakışması) sorunlarını aynı anda düzelt, sonra bir sonraki modüle geç. Faz 1-8 altındaki bulgu kategorileri hâlâ referans olarak geçerli — her modül geçişinde hangi kategoriye denk geldiği not ediliyor.
+
+**Modül sırası ve durumu:**
+
+| # | Modül | Durum |
+|---|-------|-------|
+| 1 | CompaniesView.tsx (Şirketler) | Tamamlandı (2026-07-24) |
+| 2 | TargetAccountsView.tsx (Hedef Hesaplar) | Planlandı |
+| 3 | DealManagementView.tsx (Fırsat Yönetimi / Kanban) | Planlandı |
+| 4 | ProposalManagementView.tsx + ProposalFormModal.tsx | Planlandı |
+| 5 | LeadProfilesView.tsx + EmailLeadDiscoveryView.tsx | Planlandı |
+| 6 | ServicesView.tsx (Hizmet Kataloğu) | Planlandı |
+| 7 | RevenueManagementView.tsx + ManagementPLView.tsx | Planlandı |
+| 8 | TasksView.tsx (Görevler) | Planlandı |
+| 9 | CampaignManagerView.tsx + CampaignDesigner.tsx | Planlandı |
+| 10 | AISalesAssistant.tsx + SalesCoachAI.tsx + CompanyDiscoveryView.tsx + GembaLensView.tsx | Planlandı |
+| 11 | AdministrationCenter.tsx + UserAccountSettings.tsx | Planlandı |
+| 12 | DashboardView.tsx + SalesDashboardView.tsx + CompanyDetailView.tsx | Planlandı |
+
+Her modül geçişi kendi commit/deploy döngüsüyle kapanır; bu tablo ilerledikçe güncellenir.
+
+**Modül 1 (CompaniesView.tsx) — yapılanlar:**
+- Dil: "Açıklama" ve "Custom field inputs" sabit yazılmıştı, `t()`'ye sarıldı + sözlüğe eklendi.
+- UI/UX — Boş durum (Faz 6): Şirketler tablosu 0 sonuçta artık boş satırlar yerine ikon + mesaj + (hesap tamamen boşsa) "Add Enterprise Company" butonu gösteriyor.
+- UI/UX — Onay diyalogları (Faz 4): Şirket silme, toplu silme, özel alan tanımı silme artık native `confirm()` yerine yeni paylaşımlı `ConfirmModal` + `useConfirm()` hook'unu kullanıyor (`src/components/shared/ConfirmModal.tsx`, `src/lib/useConfirm.tsx`) — bundan sonraki her modülde aynı bileşen tekrar kullanılacak.
+- UI/UX — Erişilebilirlik (Faz 5): ikon-only butonlara (düzenle/sil/kapat/geniş görünüm) `aria-label` eklendi, iki modal'a `role="dialog" aria-modal="true"` eklendi.
+- UI/UX — CSS: özel alan modalındaki `z-55` geçersiz bir Tailwind class'ıydı (Tailwind'in varsayılan ölçeğinde yok, hiç uygulanmıyordu) → `z-[55]` yapıldı.
+- Not: Bu dosyadaki 9 `alert()`'ten sadece 3'ü (silme onayları) ConfirmModal'a taşındı; kalan 6'sı bilgilendirme amaçlı (içe/dışa aktarma sonucu) — bunlar ayrı bir "toast sistemi" gerektiriyor (Faz 4'ün ikinci yarısı), henüz yapılmadı.
+
+---
+
 ## Faz 1 — Dil Tutarlılığı (TR/EN)
 
 **Neden öncelikli:** Kullanıcının doğrudan ve tekrarlanan geri bildirimi ("hala bir çok noktada dil hatası var... menu seçeneklerini ingilizce yapıyorsun"). Ayrıca mekanik olarak en hızlı düzeltilebilir kategori — kod mimarisi değişmiyor, sadece sözlük dosyasına çeviri ekleniyor.

@@ -2121,6 +2121,13 @@ export const uiDictionaryTR: Record<string, string> = {
   "Account": "Hesap",
   "Request timed out (60s). Gemini may not be responding right now, please try again.": "İstek zaman aşımına uğradı (60 sn). Gemini şu anda yanıt vermiyor olabilir, lütfen tekrar deneyin.",
 
+  // Modül 1 (CompaniesView.tsx) - boş durum + yeni sözlük çevirisi eksikleri
+  "No companies yet": "Henüz şirket yok",
+  "No companies match your filters": "Filtrelerinize uyan şirket bulunamadı",
+  "Add your first company to start building your client portfolio.": "Müşteri portföyünüzü oluşturmaya başlamak için ilk şirketinizi ekleyin.",
+  "Try adjusting your search or filters.": "Arama veya filtrelerinizi değiştirmeyi deneyin.",
+  "Custom field inputs": "Özel alan girişleri",
+
 };
 
 export const uiDictionaryEN: Record<string, string> = Object.fromEntries(

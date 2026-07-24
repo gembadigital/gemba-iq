@@ -59,6 +59,8 @@ import CompanyRevenueTab from "./company-tabs/CompanyRevenueTab";
 import CompanyDetailView from "./CompanyDetailView";
 import { TargetAccount } from "../types";
 import { getActiveOrganizationId } from "../lib/tenantStorage";
+import { ConfirmModal } from "./shared/ConfirmModal";
+import { useConfirm } from "../lib/useConfirm";
 
 // Must match the key TargetAccountsView.tsx / AISalesAssistant.tsx read from.
 const TARGET_ACCOUNTS_KEY = "crm_target_accounts";
@@ -131,6 +133,7 @@ export interface Company {
 
 export default function CompaniesView() {
   const { lang, t } = useLanguage();
+  const { confirm, confirmProps } = useConfirm();
 
   // File import refs
   const csvImportInputRef = useRef<HTMLInputElement>(null);
@@ -471,14 +474,21 @@ export default function CompaniesView() {
   };
 
   // Bulk Actions execution
-  const handleExecuteBulkAction = () => {
+  const handleExecuteBulkAction = async () => {
     if (selectedCompanyIds.length === 0) {
       alert(t("Please select at least one company!"));
       return;
     }
 
     if (bulkAction === "delete") {
-      if (confirm(t("Are you sure you want to permanently delete selected {count} companies?").replace("{count}", String(selectedCompanyIds.length)))) {
+      const ok = await confirm({
+        title: t("Delete Selected"),
+        message: t("Are you sure you want to permanently delete selected {count} companies?").replace("{count}", String(selectedCompanyIds.length)),
+        confirmLabel: t("Delete"),
+        cancelLabel: t("Cancel"),
+        danger: true,
+      });
+      if (ok) {
         setCompanies(prev => prev.filter(c => !selectedCompanyIds.includes(c.id)));
         setSelectedCompanyIds([]);
         setBulkAction("");
@@ -635,8 +645,15 @@ export default function CompaniesView() {
     setIsFormOpen(true);
   };
 
-  const handleDeleteCompany = (id: string, name: string) => {
-    if (confirm(t("Are you sure you want to delete {name} and all associated proposals/deals?").replace("{name}", name))) {
+  const handleDeleteCompany = async (id: string, name: string) => {
+    const ok = await confirm({
+      title: t("Delete Company"),
+      message: t("Are you sure you want to delete {name} and all associated proposals/deals?").replace("{name}", name),
+      confirmLabel: t("Delete"),
+      cancelLabel: t("Cancel"),
+      danger: true,
+    });
+    if (ok) {
       setCompanies(prev => prev.filter(c => c.id !== id));
       setSelectedCompanyIds(prev => prev.filter(x => x !== id));
       if (selectedCompany?.id === id) {
@@ -661,8 +678,15 @@ export default function CompaniesView() {
     setNewFieldForm({ name: "", type: "text", options: [] });
   };
 
-  const handleDeleteCustomFieldDef = (id: string) => {
-    if (confirm(t("Delete this custom field definition?"))) {
+  const handleDeleteCustomFieldDef = async (id: string) => {
+    const ok = await confirm({
+      title: t("Delete definition"),
+      message: t("Delete this custom field definition?"),
+      confirmLabel: t("Delete"),
+      cancelLabel: t("Cancel"),
+      danger: true,
+    });
+    if (ok) {
       setCustomFieldDefs(prev => prev.filter(d => d.id !== id));
     }
   };
@@ -933,6 +957,7 @@ export default function CompaniesView() {
                           : "bg-slate-50 border-slate-200 text-slate-400"
                       }`}
                       title={t("Toggle Full-Width Grid")}
+                      aria-label={t("Toggle Full-Width Grid")}
                     >
                       <Maximize2 className="w-3.5 h-3.5" />
                     </button>
@@ -1059,6 +1084,35 @@ export default function CompaniesView() {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-100 dark:divide-zinc-850">
+                  {paginatedCompanies.length === 0 && (
+                    <tr>
+                      <td colSpan={9} className="p-0">
+                        <div className="flex flex-col items-center justify-center gap-2 py-14 px-4 text-center">
+                          <div className="p-3 bg-slate-50 dark:bg-zinc-900 rounded-full">
+                            <Building className="w-6 h-6 text-slate-300 dark:text-zinc-600" />
+                          </div>
+                          <p className="font-bold text-slate-600 dark:text-zinc-300 text-[13px]">
+                            {companies.length === 0 ? t("No companies yet") : t("No companies match your filters")}
+                          </p>
+                          <p className="text-slate-400 dark:text-zinc-500 max-w-sm">
+                            {companies.length === 0
+                              ? t("Add your first company to start building your client portfolio.")
+                              : t("Try adjusting your search or filters.")}
+                          </p>
+                          {companies.length === 0 && (
+                            <button
+                              type="button"
+                              onClick={handleOpenAddForm}
+                              className="mt-1.5 px-4 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg font-bold flex items-center gap-1.5 cursor-pointer text-[11px]"
+                            >
+                              <Plus className="w-3.5 h-3.5" />
+                              <span>{t("Add Enterprise Company")}</span>
+                            </button>
+                          )}
+                        </div>
+                      </td>
+                    </tr>
+                  )}
                   {paginatedCompanies.map((c) => (
                     <tr key={c.id} className="hover:bg-slate-50/50 dark:hover:bg-zinc-900/30 transition-colors">
                       <td className="p-3 pl-5">
@@ -1133,6 +1187,7 @@ export default function CompaniesView() {
                             onClick={() => handleOpenEditForm(c)}
                             className="p-1.5 bg-slate-50 hover:bg-slate-100 dark:bg-zinc-900 border border-slate-205 dark:border-zinc-800 text-slate-550 dark:text-zinc-400 hover:text-indigo-600 dark:hover:text-indigo-400 rounded cursor-pointer"
                             title={t("Edit Profile")}
+                            aria-label={`${t("Edit Profile")}: ${c.name}`}
                           >
                             <Edit2 className="w-3.5 h-3.5" />
                           </button>
@@ -1141,6 +1196,7 @@ export default function CompaniesView() {
                             onClick={() => handleDeleteCompany(c.id, c.name)}
                             className="p-1.5 bg-rose-50 hover:bg-rose-100 dark:bg-rose-950/20 border border-rose-200 dark:border-rose-900/40 text-rose-600 dark:text-rose-400 rounded cursor-pointer"
                             title={t("Delete Company")}
+                            aria-label={`${t("Delete Company")}: ${c.name}`}
                           >
                             <Trash2 className="w-3.5 h-3.5" />
                           </button>
@@ -1227,7 +1283,7 @@ export default function CompaniesView() {
           3. FULL PROFILE CREATE & EDIT SLIDING MODAL FORM
           ------------------------------------------------------------- */}
       {isFormOpen && (
-        <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-xs flex items-center justify-center p-4">
+        <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-xs flex items-center justify-center p-4" role="dialog" aria-modal="true">
           <form
             onSubmit={handleSaveCompanySubmit}
             className="bg-white dark:bg-[#121212] border border-slate-205 dark:border-zinc-800 rounded-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto shadow-2xl animate-scaleIn text-xs"
@@ -1244,6 +1300,7 @@ export default function CompaniesView() {
                 type="button"
                 onClick={() => setIsFormOpen(false)}
                 className="p-1 hover:bg-slate-200 dark:hover:bg-zinc-800 rounded-lg text-slate-400"
+                aria-label={t("Close")}
               >
                 <X className="w-4 h-4" />
               </button>
@@ -1415,7 +1472,7 @@ export default function CompaniesView() {
               </div>
 
               <div>
-                <label className="block text-[9px] uppercase font-bold text-slate-400 mb-1">Açıklama</label>
+                <label className="block text-[9px] uppercase font-bold text-slate-400 mb-1">{t("Description")}</label>
                 <textarea
                   value={formState.description}
                   onChange={(e) => setFormState({ ...formState, description: e.target.value })}
@@ -1426,7 +1483,7 @@ export default function CompaniesView() {
               {/* Custom fields form inputs */}
               {customFieldDefs.length > 0 && (
                 <div className="border-t border-slate-100 dark:border-zinc-800 pt-3 space-y-3">
-                  <h5 className="font-bold uppercase tracking-wider text-[10px] text-slate-400 font-mono">Custom field inputs</h5>
+                  <h5 className="font-bold uppercase tracking-wider text-[10px] text-slate-400 font-mono">{t("Custom field inputs")}</h5>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                     {customFieldDefs.map(def => {
                       const curVal = formState.customFields?.[def.id] || "";
@@ -1478,7 +1535,7 @@ export default function CompaniesView() {
           4. CUSTOM FIELD DEFINITION CONFIGURATION MODAL
           ------------------------------------------------------------- */}
       {isFieldCustomizerOpen && (
-        <div className="fixed inset-0 z-55 bg-black/50 backdrop-blur-xs flex items-center justify-center p-4">
+        <div className="fixed inset-0 z-[55] bg-black/50 backdrop-blur-xs flex items-center justify-center p-4" role="dialog" aria-modal="true">
           <div className="bg-white dark:bg-[#121212] border border-slate-205 dark:border-zinc-800 rounded-2xl w-full max-w-lg shadow-2xl animate-scaleIn text-xs">
             
             <div className="p-4 bg-slate-50 dark:bg-zinc-900 border-b border-slate-100 dark:border-zinc-800 flex justify-between items-center">
@@ -1490,6 +1547,7 @@ export default function CompaniesView() {
                 type="button"
                 onClick={() => setIsFieldCustomizerOpen(false)}
                 className="p-1 hover:bg-slate-200 dark:hover:bg-zinc-800 rounded-lg text-slate-400"
+                aria-label={t("Close")}
               >
                 <X className="w-4 h-4" />
               </button>
@@ -1555,6 +1613,7 @@ export default function CompaniesView() {
                           onClick={() => handleDeleteCustomFieldDef(def.id)}
                           className="p-1 hover:bg-rose-100 dark:hover:bg-rose-950/20 text-rose-600 rounded cursor-pointer"
                           title={t("Delete definition")}
+                          aria-label={`${t("Delete definition")}: ${def.name}`}
                         >
                           <Trash2 className="w-3.5 h-3.5" />
                         </button>
@@ -1579,6 +1638,8 @@ export default function CompaniesView() {
           </div>
         </div>
       )}
+
+      <ConfirmModal {...confirmProps} />
 
     </div>
   );
