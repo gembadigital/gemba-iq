@@ -21,7 +21,7 @@ Son güncelleme: 2026-07-24
 | 5 | LeadProfilesView.tsx + EmailLeadDiscoveryView.tsx | Tamamlandı (2026-07-24) |
 | 6 | ServicesView.tsx (Hizmet Kataloğu) | Tamamlandı (2026-07-24, kısmi — aşağıya bak) |
 | 7 | RevenueManagementView.tsx + ManagementPLView.tsx | Tamamlandı (2026-07-24, kısmi — aşağıya bak) |
-| 8 | TasksView.tsx (Görevler) | Planlandı |
+| 8 | TasksView.tsx (Görevler) | Tamamlandı (2026-07-24, kısmi — aşağıya bak) |
 | 9 | CampaignManagerView.tsx + CampaignDesigner.tsx | Planlandı |
 | 10 | AISalesAssistant.tsx + SalesCoachAI.tsx + CompanyDiscoveryView.tsx + GembaLensView.tsx | Planlandı |
 | 11 | AdministrationCenter.tsx + UserAccountSettings.tsx | Planlandı |
@@ -84,6 +84,13 @@ Her modül geçişi kendi commit/deploy döngüsüyle kapanır; bu tablo ilerled
   - İkon-only sil (Trash2, x2) ve indir (Download) butonlarına `aria-label` eklendi — hiçbirinde yoktu.
   - Modal/CSS taraması: dosyada hiç modal yok (0 `fixed inset-0`), geçersiz z-index class'ı yok.
   - **Kullanıcı bu panelin İngilizce modda da çalışmasını istiyorsa, ServicesView'ın Teklif Sihirbazı ile birlikte ayrı bir "büyük Türkçe-özel panelleri İngilizceye taşı" görevi olarak planlanmalı.**
+
+**Modül 8 (TasksView.tsx) — yapılanlar ve KAPSAM NOTU:**
+- **En kritik bulgu:** Bu dosyada (3300+ satır) daha önceki modüllerin hiçbirinde görülmemiş bir dil sorunu vardı — dosyada tam olarak **SIFIR** `t()` çağrısı bulunuyordu. Sayfa başlığı/alt başlığı `lang === "TR" ? "..." : "..."` şeklinde 2 adet manuel ternary ile çevriliyordu (çalışıyordu), ama geri kalan HER ŞEY — sekme başlıkları, butonlar, tablo başlıkları, boş durum mesajları, dropdown seçenekleri, bildirim etiketleri, modal form alanları — dil ayarından bağımsız olarak sabit Türkçe basılıyordu. Bu, "birkaç satır unutulmuş" değil, sayfanın neredeyse tamamının İngilizce modda hiç çalışmadığı anlamına geliyordu.
+- Kapsam: Görev Tahtası (Kanban + Liste görünümü) sekmesinin tamamı, Bildirim Merkezi sekmesinin tamamı, Görev Ekle/Düzenle modalları, ve E-posta Önizleme modalı — hepsi `t()` ile sarmalandı (~90 yeni sözlük anahtarı eklendi). Öncelik rozetleri (`task.priority` → `Low/Medium/High`) artık `t()` üzerinden gösteriliyor, önceden dil değişse bile hep İngilizce enum değeri basılıyordu.
+- UI/UX — Onay eksikliği: Danışman Atamaları modülündeki (Modül 7) ile aynı kalıp — Kanban kartındaki hızlı-sil ikonu zaten dosya-yerel `confirmDeleteModal` sistemi üzerinden onay alıyordu (iyi), ama bu sistemin başlık/mesaj metinleri hardcoded Türkçe idi → `t()`'ye taşındı, `role="dialog" aria-modal="true"` eklendi (önceden yoktu).
+- UI/UX — Erişilebilirlik: Liste görünümündeki ikon-only düzenle/sil butonlarına, Kanban kartının hızlı-sil ikonuna, sütun kebab-menü tetikleyicisine ve sütun daraltma/genişletme ikonlarına `aria-label` eklendi (hiçbirinde yoktu). Görev Ekle/Düzenle ve E-posta Önizleme modallarına `role="dialog" aria-modal="true"` eklendi (3 modal, hiçbirinde yoktu).
+- **KAPSAM NOTU:** Sayfanın "Engine Kuralları (Admin)" sekmesi (SLA eskalasyon/bildirim motoru yapılandırması, ~650 satır — genel kurallar, eskalasyon yetkilileri, e-posta HTML şablonları alt-sekmeleri) şu anki modül kapsamına **dahil edilmedi**. Bu, ServicesView'ın Teklif Sihirbazı veya ManagementPLView'dan farklı olarak "tasarım gereği Türkçe" değil — sadece hacim olarak çok büyük, yalnızca Admin rolündeki kullanıcıların seyrek eriştiği bir yapılandırma paneli olduğu için bu modülün zaman/kapsam bütçesi dışında bırakıldı. Görev panosu ve bildirim merkezi gibi günlük kullanılan, yüksek trafikli kısımlar tam kapsandı. Admin ayarları sekmesi ayrı bir alt-görev olarak planlanmalı.
 
 ---
 

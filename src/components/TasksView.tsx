@@ -1321,8 +1321,8 @@ export default function TasksView() {
   const handleDeleteTask = (taskId: string) => {
     setConfirmDeleteModal({
       isOpen: true,
-      title: "Görev Kartı Silinecek",
-      message: "Geri dönüşüm kutusuna taşınsın mı?",
+      title: t("Task Card Will Be Deleted"),
+      message: t("Move to recycle bin?"),
       onConfirm: () => {
         setTasks(prev => prev.filter(t => t.id !== taskId));
         setIsEditModalOpen(false);
@@ -1333,7 +1333,7 @@ export default function TasksView() {
 
   // --- COLUMN MANAGEMENT ---
   const handleAddNewColumn = () => {
-    const colName = prompt("Yeni bölüm ismini giriniz:");
+    const colName = prompt(t("Enter the new column name:"));
     if (!colName || !colName.trim()) return;
     const newId = `col-${Date.now()}`;
     const newCol: TaskColumn = {
@@ -1358,8 +1358,8 @@ export default function TasksView() {
     if (columnTasks.length > 0) {
       setConfirmDeleteModal({
         isOpen: true,
-        title: "Bölüm Silinecek",
-        message: `Bu sütunda ${columnTasks.length} adet görev bulunmaktadır. Sütunu sildiğinizde bu görevler ilk sütuna aktarılacak ve bölüm geri dönüşüm kutusuna taşınacaktır. Devam etmek istiyor musunuz?`,
+        title: t("Column Will Be Deleted"),
+        message: t("This column has {count} task(s). Deleting it will move these tasks to the first column, and the column will be moved to the recycle bin. Continue?").replace("{count}", String(columnTasks.length)),
         onConfirm: () => {
           // Re-route tasks to first column
           const defaultCol = columns.find(c => c.id !== colId)?.id || "not_started";
@@ -1370,8 +1370,8 @@ export default function TasksView() {
     } else {
       setConfirmDeleteModal({
         isOpen: true,
-        title: "Bölüm Silinecek",
-        message: "Geri dönüşüm kutusuna taşınsın mı?",
+        title: t("Column Will Be Deleted"),
+        message: t("Move to recycle bin?"),
         onConfirm: () => {
           setColumns(prev => prev.filter(c => c.id !== colId));
         }
@@ -1453,7 +1453,7 @@ export default function TasksView() {
                type="button"
                onClick={() => setIsFullScreen(!isFullScreen)}
                className="p-2 bg-slate-100 dark:bg-[#252423] hover:bg-slate-200 dark:hover:bg-[#323130] text-slate-700 dark:text-slate-300 border border-[#EDEBE9] dark:border-[#323130] rounded flex items-center justify-center transition-all cursor-pointer"
-               title={isFullScreen ? "Ekranı Daralt" : "Ekranı Genişlet"}
+               title={isFullScreen ? t("Collapse Screen") : t("Expand Screen")}
              >
                {isFullScreen ? (
                  <Minimize2 className="w-4 h-4 text-slate-600 dark:text-slate-400" />
@@ -1467,10 +1467,10 @@ export default function TasksView() {
                type="button"
                onClick={handleExportToExcel}
                className="bg-emerald-600 hover:bg-emerald-700 text-white px-3.5 py-2 rounded text-xs font-bold font-sans flex items-center gap-1.5 shadow-sm transition-all focus:outline-hidden cursor-pointer"
-               title="Görevleri Excel formatında indir"
+               title={t("Download tasks as Excel file")}
              >
                <FileSpreadsheet className="w-4 h-4" />
-               XLS Dışa Aktar
+               {t("Export XLS")}
              </button>
 
              {/* View Toggle */}
@@ -1497,10 +1497,10 @@ export default function TasksView() {
                  }`}
                >
                  <List className="w-3.5 h-3.5" />
-                 <span>Liste</span>
+                 <span>{t("List")}</span>
                </button>
              </div>
- 
+
              {/* Main top action button */}
              <button
                type="button"
@@ -1508,7 +1508,7 @@ export default function TasksView() {
                className="bg-[#0078D4] hover:bg-[#005a9e] text-white px-3.5 py-2 rounded text-xs font-bold font-sans flex items-center gap-1.5 shadow-sm transition-all focus:outline-hidden cursor-pointer"
              >
                <Plus className="w-4 h-4" />
-               Yeni Görev Ekle
+               {t("Add New Task")}
              </button>
            </div>
          </div>
@@ -1526,7 +1526,7 @@ export default function TasksView() {
                }`}
              >
                <LayoutDashboard className="w-4 h-4 text-[#0078D4]" />
-               Görev Tahtası
+               {t("Task Board")}
              </button>
              <button
                type="button"
@@ -1538,7 +1538,7 @@ export default function TasksView() {
                }`}
              >
                <Bell className="w-4 h-4 text-amber-500" />
-               Bildirim Merkezi
+               {t("Notification Center")}
                {notifications.filter(n => !n.isRead).length > 0 && (
                  <span className="bg-red-500 text-white text-[10px] px-1.5 py-0.5 rounded-full font-sans font-extrabold animate-pulse min-w-4 text-center">
                    {notifications.filter(n => !n.isRead).length}
@@ -1555,7 +1555,7 @@ export default function TasksView() {
                }`}
              >
                <Settings className="w-4 h-4 text-slate-500" />
-               Engine Kuralları (Admin)
+               {t("Engine Rules (Admin)")}
              </button>
            </div>
 
@@ -1563,20 +1563,20 @@ export default function TasksView() {
            <div className="flex flex-wrap items-center gap-3 bg-[#FAF8F5] dark:bg-[#201f1e] px-3.5 py-2 rounded-lg border border-indigo-100 dark:border-indigo-900/40">
              <span className="text-[11px] font-bold text-slate-500 dark:text-slate-400 flex items-center gap-1.5">
                <Calendar className="w-3.5 h-3.5 text-indigo-500" />
-               Bugün: {getEffectiveToday()}
+               {t("Today")}: {getEffectiveToday()}
              </span>
              <div className="flex items-center gap-2 flex-wrap">
                <span className="text-[10px] text-slate-450 dark:text-slate-500">
-                 Otomatik tarama {NOTIFICATION_ENGINE_INTERVAL_MINUTES} dakikada bir çalışır ve gerçek e-posta gönderir.
+                 {t("Automatic scan runs every {minutes} minutes and sends real emails.").replace("{minutes}", String(NOTIFICATION_ENGINE_INTERVAL_MINUTES))}
                </span>
                <button
                  type="button"
                  onClick={() => runNotificationEngine(true)}
-                 title="Manuel görev durum taraması & alarm kontrolü"
+                 title={t("Manual task status scan & alert check")}
                  className="p-1 px-2 text-indigo-600 hover:text-indigo-800 bg-indigo-50 hover:bg-indigo-100 dark:bg-slate-800 dark:hover:bg-slate-700 dark:text-indigo-400 rounded text-[11px] font-bold flex items-center gap-1 cursor-pointer transition-all border border-indigo-100/40"
                >
                  <RefreshCw className="w-3 h-3" />
-                 Şimdi Tara
+                 {t("Scan Now")}
                </button>
              </div>
            </div>
@@ -1593,7 +1593,7 @@ export default function TasksView() {
             </span>
             <input
               type="text"
-              placeholder="Görev adı veya açıklama ara..."
+              placeholder={t("Search task name or description...")}
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               className="pl-9 pr-3 py-2 w-full bg-slate-50 dark:bg-[#252423] border border-[#EDEBE9] dark:border-[#323130] rounded text-xs text-slate-800 dark:text-slate-200 focus:outline-hidden focus:border-[#0078D4] dark:focus:border-blue-500"
@@ -1610,10 +1610,10 @@ export default function TasksView() {
               onChange={(e) => setPriorityFilter(e.target.value)}
               className="pl-9 pr-3 py-2 w-full bg-slate-50 dark:bg-[#252423] border border-[#EDEBE9] dark:border-[#323130] rounded text-xs text-slate-800 dark:text-slate-200 focus:outline-hidden"
             >
-              <option value="All">Tüm Öncelikler</option>
-              <option value="Low">Düşük</option>
-              <option value="Medium">Orta</option>
-              <option value="High">Yüksek</option>
+              <option value="All">{t("All Priorities")}</option>
+              <option value="Low">{t("Low")}</option>
+              <option value="Medium">{t("Medium")}</option>
+              <option value="High">{t("High")}</option>
             </select>
           </div>
 
@@ -1627,7 +1627,7 @@ export default function TasksView() {
               onChange={(e) => setAssigneeFilter(e.target.value)}
               className="pl-9 pr-3 py-2 w-full bg-slate-50 dark:bg-[#252423] border border-[#EDEBE9] dark:border-[#323130] rounded text-xs text-slate-800 dark:text-slate-200 focus:outline-hidden"
             >
-              <option value="All">Tüm Sorumlular</option>
+              <option value="All">{t("All Assignees")}</option>
               {orgMembers.map((m) => {
                 const name = m.full_name?.trim() || m.email;
                 return (
@@ -1651,7 +1651,7 @@ export default function TasksView() {
                   <div 
                     key={col.id}
                     className="w-12 bg-slate-50 dark:bg-[#1b1a19] border border-[#EDEBE9] dark:border-[#323130] rounded flex flex-col py-4 items-center gap-4 transition-all hover:bg-slate-100 dark:hover:bg-[#252423] cursor-pointer"
-                    title="Genişletmek için tıklayın"
+                    title={t("Click to expand")}
                     onClick={() => handleCollapseColumn(col.id)}
                   >
                     <div className="flex flex-col items-center gap-1.5">
@@ -1662,13 +1662,14 @@ export default function TasksView() {
                     <div className="vertical-text text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 select-none pointer-events-none py-2 shrink-0">
                       {col.title}
                     </div>
-                    <button 
+                    <button
                       type="button"
                       className="text-[#0078D4] hover:text-blue-500 p-1 rounded-full text-xs"
                       onClick={(e) => {
                         e.stopPropagation();
                         handleCollapseColumn(col.id);
                       }}
+                      aria-label={t("Expand Screen")}
                     >
                       <Maximize2 className="w-3.5 h-3.5" />
                     </button>
@@ -1717,6 +1718,7 @@ export default function TasksView() {
                         type="button"
                         onClick={() => setActiveColumnMenu(activeColumnMenu === col.id ? null : col.id)}
                         className="opacity-0 group-hover:opacity-100 focus:opacity-100 text-slate-400 hover:text-slate-600 dark:text-slate-500 dark:hover:text-slate-300 p-1 rounded-full hover:bg-slate-200 dark:hover:bg-[#323130] transition-opacity cursor-pointer flex-shrink-0"
+                        aria-label={t("Column Options")}
                       >
                         <MoreHorizontal className="w-3.5 h-3.5" />
                       </button>
@@ -1740,7 +1742,7 @@ export default function TasksView() {
                             className="w-full text-left px-3 py-1.5 hover:bg-slate-50 dark:hover:bg-[#323130] flex items-center gap-2"
                           >
                             <Edit3 className="w-3.5 h-3.5 text-[#0078D4]" />
-                            Bölüm Adını Düzenle
+                            {t("Rename Column")}
                           </button>
                           <button
                             type="button"
@@ -1751,7 +1753,7 @@ export default function TasksView() {
                             className="w-full text-left px-3 py-1.5 hover:bg-slate-50 dark:hover:bg-[#323130] flex items-center gap-2"
                           >
                             <FolderPlus className="w-3.5 h-3.5 text-emerald-500" />
-                            Yeni Bölüm Ekle
+                            {t("Add New Column")}
                           </button>
                           <button
                             type="button"
@@ -1762,7 +1764,7 @@ export default function TasksView() {
                             className="w-full text-left px-3 py-1.5 hover:bg-slate-50 dark:hover:bg-[#323130] flex items-center gap-2"
                           >
                             <X className="w-3.5 h-3.5 text-amber-500" />
-                            Bölümü Daralt
+                            {t("Collapse Column")}
                           </button>
                           {columns.length > 1 && (
                             <button
@@ -1774,7 +1776,7 @@ export default function TasksView() {
                               className="w-full text-left px-3 py-1.5 text-rose-600 hover:text-white hover:bg-rose-500 dark:hover:bg-rose-600 border-t border-slate-100 dark:border-[#323130] mt-1.5 flex items-center gap-2"
                             >
                               <Trash2 className="w-3.5 h-3.5" />
-                              Bölümü Sil
+                              {t("Delete Column")}
                             </button>
                           )}
                         </div>
@@ -1786,7 +1788,7 @@ export default function TasksView() {
                   <div className="flex-1 flex flex-col gap-2.5 overflow-y-auto max-h-[550px] scrollbar-thin pr-1">
                     {columnTasks.length === 0 ? (
                       <div className="flex-1 flex flex-col items-center justify-center border-2 border-dashed border-slate-200 dark:border-zinc-800 p-5 rounded text-center text-[10px] text-slate-400 dark:text-slate-500 min-h-[90px]">
-                        Görev Yok
+                        {t("No Tasks")}
                       </div>
                     ) : (
                       columnTasks.map((task) => (
@@ -1810,13 +1812,14 @@ export default function TasksView() {
                                 handleDeleteTask(task.id);
                               }}
                               className="text-slate-350 hover:text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-950/30 p-1 rounded-md opacity-0 group-hover/card:opacity-100 focus:opacity-100 transition-all cursor-pointer"
+                              aria-label={`${t("Delete Task")}: ${task.title}`}
                             >
                               <Trash2 className="w-3.5 h-3.5" />
                             </button>
                           </div>
 
                           <p className="text-[11px] text-slate-500 dark:text-slate-400 line-clamp-2 leading-relaxed h-8">
-                            {task.description || "Açıklama belirtilmemiş..."}
+                            {task.description || t("No description provided...")}
                           </p>
 
                           <div className="flex items-center justify-between border-t border-[#EDEBE9]/50 dark:border-[#323130]/50 pt-2.5 mt-1">
@@ -1825,7 +1828,7 @@ export default function TasksView() {
                               <div className="w-5 h-5 rounded-full bg-[#0078D4]/10 text-[#0078D4] flex items-center justify-center font-bold text-[9px]">
                                 {task.assignee ? task.assignee.substring(0, 2).toUpperCase() : "U"}
                               </div>
-                              <span className="truncate max-w-[80px]">{task.assignee || "Atanmamış"}</span>
+                              <span className="truncate max-w-[80px]">{task.assignee || t("Unassigned")}</span>
                             </div>
 
                             {/* Tags / Priority & Target Calendar */}
@@ -1843,7 +1846,7 @@ export default function TasksView() {
                                   ? "bg-amber-50 dark:bg-amber-955 text-amber-650 dark:text-amber-455 border border-amber-200"
                                   : "bg-slate-100 dark:bg-[#323130] text-slate-600 dark:text-slate-400 border border-slate-205"
                               }`}>
-                                {task.priority}
+                                {t(task.priority)}
                               </span>
                             </div>
                           </div>
@@ -1859,7 +1862,7 @@ export default function TasksView() {
                     className="mt-3.5 py-1.5 w-full bg-white dark:bg-[#252423]/40 hover:bg-[#FAF9F8] dark:hover:bg-[#252423] text-[#0078D4] hover:text-blue-500 border border-dashed border-slate-200 dark:border-zinc-800 rounded text-xs font-semibold flex items-center justify-center gap-1 shadow-2xs transition-all cursor-pointer"
                   >
                     <Plus className="w-3.5 h-3.5" />
-                    Görev Ekle
+                    {t("Add Task")}
                   </button>
                 </div>
               );
@@ -1871,7 +1874,7 @@ export default function TasksView() {
               className="w-44 h-[120px] bg-slate-50/50 hover:bg-slate-100/50 dark:bg-[#1b1a19]/30 dark:hover:bg-[#1b1a19]/60 rounded-xl border-2 border-dashed border-slate-200 dark:border-zinc-800 flex flex-col items-center justify-center gap-2 hover:border-[#0078D4] dark:hover:border-blue-500 text-slate-400 hover:text-[#0078D4] dark:hover:text-blue-400 transition-all shrink-0 cursor-pointer text-xs font-bold"
             >
               <FolderPlus className="w-5 h-5" />
-              Yeni Kart Sütunu
+              {t("New Column")}
             </button>
           </div>
         ) : (
@@ -1880,25 +1883,25 @@ export default function TasksView() {
             {filteredTasks.length === 0 ? (
               <div className="p-10 text-center text-slate-450 dark:text-slate-550 flex flex-col items-center justify-center gap-2">
                 <CheckCircle className="w-10 h-10 text-slate-300" />
-                <span className="text-sm font-semibold">Gösterilecek görev bulunamadı</span>
-                <span className="text-xs">Arama kelimelerini veya filtreleri değiştirmeyi deneyin.</span>
+                <span className="text-sm font-semibold">{t("No tasks found to display")}</span>
+                <span className="text-xs">{t("Try changing your search terms or filters.")}</span>
               </div>
             ) : (
               <div className="overflow-x-auto">
                 <table className="w-full text-left border-collapse">
                   <thead>
                     <tr className="bg-[#FAF9F8] dark:bg-[#201f1e] border-b border-[#EDEBE9] dark:border-[#323130] text-xs font-bold font-sans uppercase text-slate-500 dark:text-slate-400 tracking-wider">
-                      <th className="px-5 py-3 shadow-2xs">Görev Adı</th>
-                      <th className="px-5 py-3">Bölüm / Aşama</th>
-                      <th className="px-5 py-3">Atanan Sorumlu</th>
-                      <th className="px-5 py-3">Bitiş Tarihi</th>
-                      <th className="px-5 py-3">Öncelik</th>
-                      <th className="px-5 py-3 text-right">İşlemler</th>
+                      <th className="px-5 py-3 shadow-2xs">{t("Task Name")}</th>
+                      <th className="px-5 py-3">{t("Column / Stage")}</th>
+                      <th className="px-5 py-3">{t("Assigned To")}</th>
+                      <th className="px-5 py-3">{t("Due Date")}</th>
+                      <th className="px-5 py-3">{t("Priority")}</th>
+                      <th className="px-5 py-3 text-right">{t("Actions")}</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-slate-100 dark:divide-[#323130]">
                     {filteredTasks.map((task) => {
-                      const colTitle = columns.find(c => c.id === task.status)?.title || "Aşama Yok";
+                      const colTitle = columns.find(c => c.id === task.status)?.title || t("No Stage");
                       return (
                         <tr 
                           key={task.id}
@@ -1911,7 +1914,7 @@ export default function TasksView() {
                                 {task.title}
                               </span>
                               <span className="text-[11px] text-slate-450 dark:text-slate-400 truncate">
-                                {task.description || "Açıklama girilmemiş."}
+                                {task.description || t("No description entered.")}
                               </span>
                             </div>
                           </td>
@@ -1925,7 +1928,7 @@ export default function TasksView() {
                               <div className="w-5 h-5 rounded-full bg-[#0078D4]/20 text-[#0078D4] dark:text-blue-300 flex items-center justify-center font-bold text-[9px]">
                                 {task.assignee ? task.assignee.substring(0, 2).toUpperCase() : "U"}
                               </div>
-                              <span className="text-slate-700 dark:text-slate-300 font-sans">{task.assignee || "Atanmamış"}</span>
+                              <span className="text-slate-700 dark:text-slate-300 font-sans">{task.assignee || t("Unassigned")}</span>
                             </div>
                           </td>
                           <td className="px-5 py-3.5 text-slate-500 dark:text-slate-400 font-medium">
@@ -1939,7 +1942,7 @@ export default function TasksView() {
                                 ? "bg-amber-50 dark:bg-amber-950/30 text-amber-650 dark:text-amber-400"
                                 : "bg-slate-100 dark:bg-[#323130] text-slate-600 dark:text-slate-400"
                             }`}>
-                              {task.priority}
+                              {t(task.priority)}
                             </span>
                           </td>
                           <td className="px-5 py-3.5 text-right" onClick={(e) => e.stopPropagation()}>
@@ -1948,7 +1951,8 @@ export default function TasksView() {
                                 type="button"
                                 onClick={() => handleOpenEditTask(task)}
                                 className="p-1 bg-white hover:bg-slate-100 dark:bg-[#252423] dark:hover:bg-[#323130] border border-[#EDEBE9] dark:border-[#323130] rounded text-slate-600 hover:text-[#0078D4] dark:text-zinc-300"
-                                title="Görevi Düzenle"
+                                title={t("Edit Task")}
+                                aria-label={`${t("Edit Task")}: ${task.title}`}
                               >
                                 <Edit3 className="w-3.5 h-3.5" />
                               </button>
@@ -1956,7 +1960,8 @@ export default function TasksView() {
                                 type="button"
                                 onClick={() => handleDeleteTask(task.id)}
                                 className="p-1 bg-white hover:bg-rose-50 dark:bg-[#252423] dark:hover:bg-rose-950/30 border border-[#EDEBE9] dark:border-[#323130] rounded text-slate-600 hover:text-rose-600 dark:text-zinc-300"
-                                title="Görevi Sil"
+                                title={t("Delete Task")}
+                                aria-label={`${t("Delete Task")}: ${task.title}`}
                               >
                                 <Trash2 className="w-3.5 h-3.5" />
                               </button>
@@ -1981,10 +1986,10 @@ export default function TasksView() {
             <div>
               <h2 className="text-sm font-bold text-slate-800 dark:text-slate-100 flex items-center gap-2 font-sans uppercase tracking-wider">
                 <Bell className="w-4 h-4 text-amber-500" />
-                Sistem Bildirim Merkezi
+                {t("System Notification Center")}
               </h2>
               <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
-                Hatırlatma motoru tarafından tetiklenen tüm yaklaşan gün, gecikme ve departman eskalasyon e-postalarını ve gönderim durumlarını buradan izleyin.
+                {t("Track all upcoming, overdue, and department escalation emails triggered by the reminder engine, along with their delivery status.")}
               </p>
             </div>
             <div className="flex items-center gap-2 flex-wrap pb-1 sm:pb-0">
@@ -1992,28 +1997,28 @@ export default function TasksView() {
                 type="button"
                 onClick={() => {
                   setNotifications(prev => prev.map(n => ({ ...n, isRead: true })));
-                  showToast("Tüm bildirimler okundu olarak işaretlendi.");
+                  showToast(t("All notifications marked as read."));
                 }}
                 className="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 dark:bg-[#323130] dark:hover:bg-[#424140] text-slate-700 dark:text-slate-200 rounded text-xs font-bold transition-all cursor-pointer"
               >
-                Tümünü Okundu Yap
+                {t("Mark All as Read")}
               </button>
               <button
                 type="button"
                 onClick={() => {
                   setConfirmDeleteModal({
                     isOpen: true,
-                    title: "Geçmiş Temizlenecek",
-                    message: "Tüm bildirim geçmişi silinsin mi?",
+                    title: t("History Will Be Cleared"),
+                    message: t("Delete all notification history?"),
                     onConfirm: () => {
                       setNotifications([]);
-                      showToast("Bildirim geçmişi sıfırlandı.", "info");
+                      showToast(t("Notification history has been reset."), "info");
                     }
                   });
                 }}
                 className="px-3 py-1.5 bg-rose-50 hover:bg-rose-105 dark:bg-rose-950/20 dark:hover:bg-rose-900/30 text-rose-600 dark:text-rose-400 rounded text-xs font-bold transition-all cursor-pointer"
               >
-                Geçmişi Temizle
+                {t("Clear History")}
               </button>
             </div>
           </div>
@@ -2021,7 +2026,7 @@ export default function TasksView() {
           {/* Filters bar */}
           <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 bg-[#FAF8F5] dark:bg-[#201f1e] p-3 rounded border border-[#EDEBE9] dark:border-[#323130]">
             <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2">
-              <span className="text-xs font-bold text-slate-500 dark:text-slate-400">Tür Filtresi:</span>
+              <span className="text-xs font-bold text-slate-500 dark:text-slate-400">{t("Type Filter")}:</span>
               <div className="flex flex-wrap items-center gap-1.5 bg-white dark:bg-[#252423] p-1 rounded border border-slate-200/60 dark:border-[#2d2c2b]">
                 <button
                   type="button"
@@ -2032,7 +2037,7 @@ export default function TasksView() {
                       : "text-slate-600 dark:text-slate-400 hover:bg-slate-100"
                   }`}
                 >
-                  Hepsi ({notifications.length})
+                  {t("All")} ({notifications.length})
                 </button>
                 <button
                   type="button"
@@ -2043,7 +2048,7 @@ export default function TasksView() {
                       : "text-slate-600 dark:text-slate-400 hover:bg-slate-100"
                   }`}
                 >
-                  Görev Ataması ({notifications.filter(n => n.type === "assigned").length})
+                  {t("Task Assignment")} ({notifications.filter(n => n.type === "assigned").length})
                 </button>
                 <button
                   type="button"
@@ -2054,7 +2059,7 @@ export default function TasksView() {
                       : "text-slate-600 dark:text-slate-400 hover:bg-slate-100"
                   }`}
                 >
-                  Yaklaşan Vade ({notifications.filter(n => n.type === "due_soon").length})
+                  {t("Due Soon")} ({notifications.filter(n => n.type === "due_soon").length})
                 </button>
                 <button
                   type="button"
@@ -2065,7 +2070,7 @@ export default function TasksView() {
                       : "text-slate-600 dark:text-slate-400 hover:bg-slate-100"
                   }`}
                 >
-                  Gecikme ({notifications.filter(n => n.type === "overdue").length})
+                  {t("Overdue")} ({notifications.filter(n => n.type === "overdue").length})
                 </button>
                 <button
                   type="button"
@@ -2076,12 +2081,12 @@ export default function TasksView() {
                       : "text-slate-600 dark:text-slate-400 hover:bg-slate-100"
                   }`}
                 >
-                  Eskalasyon ({notifications.filter(n => n.type === "escalation").length})
+                  {t("Escalation")} ({notifications.filter(n => n.type === "escalation").length})
                 </button>
               </div>
             </div>
             <span className="text-[11px] font-mono text-slate-500 dark:text-slate-400">
-              Bekleyen Okunmamış: {notifications.filter(n => !n.isRead).length}
+              {t("Unread Pending")}: {notifications.filter(n => !n.isRead).length}
             </span>
           </div>
 
@@ -2089,9 +2094,9 @@ export default function TasksView() {
           {notifications.length === 0 ? (
             <div className="p-12 text-center text-slate-400 dark:text-slate-550 border border-dashed border-slate-200 dark:border-[#323130] rounded-lg">
               <Bell className="w-12 h-12 text-slate-300 dark:text-[#323130] mx-auto opacity-70 mb-3" />
-              <span className="block text-sm font-bold text-slate-600 dark:text-slate-300">Henüz alarm üretilmedi</span>
+              <span className="block text-sm font-bold text-slate-600 dark:text-slate-300">{t("No alarms generated yet")}</span>
               <span className="block text-xs mt-1">
-                "Şimdi Tara" butonuyla manuel bir tarama başlatabilir veya sistem otomatik taramasının ({NOTIFICATION_ENGINE_INTERVAL_MINUTES} dakikada bir) tetiklemesini bekleyebilirsiniz.
+                {t('You can start a manual scan with the "Scan Now" button, or wait for the system\'s automatic scan (every {minutes} minutes) to trigger.').replace("{minutes}", String(NOTIFICATION_ENGINE_INTERVAL_MINUTES))}
               </span>
             </div>
           ) : (
@@ -2111,7 +2116,7 @@ export default function TasksView() {
                       : "bg-purple-50 dark:bg-purple-955 text-purple-600 dark:text-purple-400 border border-purple-200/50";
 
                   const typeLabel =
-                    n.type === "assigned" ? "Görev Ataması" : n.type === "due_soon" ? "Yaklaşan" : n.type === "overdue" ? "Gecikme" : "Eskalasyon";
+                    n.type === "assigned" ? t("Task Assignment") : n.type === "due_soon" ? t("Upcoming") : n.type === "overdue" ? t("Overdue") : t("Escalation");
 
                   return (
                     <div 
@@ -2133,15 +2138,15 @@ export default function TasksView() {
                                 ? "bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 border-slate-200/50"
                                 : "bg-rose-50 dark:bg-rose-955 text-rose-600 dark:text-rose-400 border-rose-200/50"
                             }`}
-                            title={n.errorNote || (n.status === "skipped" ? "Gerçek bir e-posta adresi tanımlı olmadığı için gönderilmedi." : undefined)}
+                            title={n.errorNote || (n.status === "skipped" ? t("Not sent because no real email address was defined.") : undefined)}
                           >
-                            {n.status === "sent" ? "Gönderildi" : n.status === "skipped" ? "Atlandı" : "Başarısız"}
+                            {n.status === "sent" ? t("Sent") : n.status === "skipped" ? t("Skipped") : t("Failed")}
                           </span>
                           <span className="text-[10px] text-slate-400 dark:text-slate-500 font-mono">
                             {n.createdAt}
                           </span>
                           {!n.isRead && (
-                            <span className="bg-red-500 w-1.5 h-1.5 rounded-full" title="Okunmadı" />
+                            <span className="bg-red-500 w-1.5 h-1.5 rounded-full" title={t("Unread")} />
                           )}
                         </div>
                         <h4 className="font-bold text-xs text-slate-800 dark:text-slate-200 truncate">
@@ -2149,10 +2154,10 @@ export default function TasksView() {
                         </h4>
                         <div className="flex flex-wrap items-center gap-3 text-[10px] text-slate-500 dark:text-slate-400 font-medium font-mono">
                           <span className="flex items-center gap-1">
-                            <User className="w-3 h-3 text-slate-400" /> Alıcı: {n.recipientName} ({n.recipientRole})
+                            <User className="w-3 h-3 text-slate-400" /> {t("Recipient")}: {n.recipientName} ({n.recipientRole})
                           </span>
                           <span>•</span>
-                          <span>E-posta: {n.recipientEmail}</span>
+                          <span>{t("Email")}: {n.recipientEmail}</span>
                         </div>
                       </div>
                       <div className="flex items-center gap-2 self-stretch md:self-auto justify-end">
@@ -2163,23 +2168,24 @@ export default function TasksView() {
                           }}
                           className="px-2 py-1 text-[10px] font-semibold border border-slate-200 dark:border-[#323130] rounded bg-white hover:bg-slate-50 dark:bg-[#252423] dark:hover:bg-[#323130] text-slate-705 dark:text-slate-300 cursor-pointer"
                         >
-                          {n.isRead ? "Okunmadı Yap" : "Okundu Yap"}
+                          {n.isRead ? t("Mark as Unread") : t("Mark as Read")}
                         </button>
                         <button
                           type="button"
                           onClick={() => setActiveNotificationItem(n)}
                           className="px-2.5 py-1 text-[10px] font-bold bg-[#0078D4] hover:bg-[#005a9e] text-white rounded cursor-pointer"
                         >
-                          E-postayı Önizle
+                          {t("Preview Email")}
                         </button>
                         <button
                           type="button"
                           onClick={() => {
                             setNotifications(prev => prev.filter(item => item.id !== n.id));
-                            showToast("Bildirim kaydı silindi.");
+                            showToast(t("Notification record deleted."));
                           }}
                           className="p-1 hover:bg-rose-50 dark:hover:bg-rose-955 text-rose-500 dark:text-rose-450 rounded transition-all cursor-pointer"
-                          title="Sil"
+                          title={t("Delete")}
+                          aria-label={t("Delete")}
                         >
                           <Trash2 className="w-3.5 h-3.5" />
                         </button>
@@ -2849,18 +2855,19 @@ export default function TasksView() {
 
       {/* ADD TASK MODAL */}
       {isAddModalOpen && (
-        <div className="fixed inset-0 bg-black/60 dark:bg-black/85 backdrop-blur-xs flex items-center justify-center z-50 p-4">
+        <div className="fixed inset-0 bg-black/60 dark:bg-black/85 backdrop-blur-xs flex items-center justify-center z-50 p-4" role="dialog" aria-modal="true">
           <div className="bg-white dark:bg-[#1b1a19] w-full max-w-lg rounded-lg border border-[#EDEBE9] dark:border-[#323130] shadow-2xl overflow-hidden animate-in fade-in zoom-in-95 duration-150">
             {/* Header */}
             <div className="px-5 py-4 border-b border-[#EDEBE9] dark:border-[#323130] bg-[#FAF9F8] dark:bg-[#201f1e] flex items-center justify-between">
               <h3 className="font-bold text-slate-900 dark:text-slate-100 text-sm flex items-center gap-1.5">
                 <Plus className="w-4 h-4 text-[#0078D4]" />
-                Yeni Görev Ekle
+                {t("Add New Task")}
               </h3>
               <button
                 type="button"
                 onClick={() => setIsAddModalOpen(false)}
                 className="p-1 rounded hover:bg-slate-200 dark:hover:bg-[#252423] text-slate-500 dark:text-slate-400 cursor-pointer"
+                aria-label={t("Close")}
               >
                 <X className="w-4 h-4" />
               </button>
@@ -2871,12 +2878,12 @@ export default function TasksView() {
               {/* Task Title */}
               <div className="space-y-1">
                 <label className="text-xs font-bold text-slate-600 dark:text-slate-400 uppercase tracking-wider block">
-                  Görev Başlığı *
+                  {t("Task Title")} *
                 </label>
                 <input
                   type="text"
                   required
-                  placeholder="Göreve açıklayıcı bir isim verin..."
+                  placeholder={t("Give the task a descriptive name...")}
                   value={newTitle}
                   onChange={(e) => setNewTitle(e.target.value)}
                   className="w-full px-3 py-2 bg-slate-50 dark:bg-[#252423] border border-[#EDEBE9] dark:border-[#323130] rounded text-xs text-slate-800 dark:text-slate-200 focus:outline-hidden focus:border-[#0078D4]"
@@ -2886,10 +2893,10 @@ export default function TasksView() {
               {/* Task Description */}
               <div className="space-y-1">
                 <label className="text-xs font-bold text-slate-600 dark:text-slate-400 uppercase tracking-wider block">
-                  Açıklama / Detaylar
+                  {t("Description / Details")}
                 </label>
                 <textarea
-                  placeholder="Yapılacakları ve varsa önemli notları girin..."
+                  placeholder={t("Enter what needs to be done and any important notes...")}
                   value={newDescription}
                   onChange={(e) => setNewDescription(e.target.value)}
                   rows={3}
@@ -2901,7 +2908,7 @@ export default function TasksView() {
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div className="space-y-1">
                   <label className="text-xs font-bold text-slate-600 dark:text-slate-400 uppercase tracking-wider block">
-                    Sorumlu (Assignee)
+                    {t("Assignee")}
                   </label>
                   <select
                     value={newAssignee}
@@ -2917,28 +2924,28 @@ export default function TasksView() {
                     }}
                     className="w-full px-3 py-2 bg-slate-50 dark:bg-[#252423] border border-[#EDEBE9] dark:border-[#323130] rounded text-xs text-slate-800 dark:text-slate-200 focus:outline-hidden"
                   >
-                    <option value="">-- Sorumlu Seçiniz --</option>
+                    <option value="">-- {t("Select Assignee")} --</option>
                     {orgMembers.map((m) => (
                       <option key={m.user_id} value={m.full_name?.trim() || m.email}>
-                        {(m.full_name?.trim() || m.email)} · {m.role === "ADMIN" ? "Yönetici" : "Kullanıcı"}
+                        {(m.full_name?.trim() || m.email)} · {m.role === "ADMIN" ? t("Admin") : t("User")}
                       </option>
                     ))}
                   </select>
                   {orgMembers.length === 0 && (
                     <p className="text-[10px] text-slate-450 dark:text-zinc-500 mt-1">
-                      Organizasyonda kayıtlı hesap bulunamadı. Sorumlu atayabilmek için önce Admin ayarlarından kullanıcı ekleyin.
+                      {t("No registered accounts found in the organization. Add a user from Admin settings first to assign someone.")}
                     </p>
                   )}
                   {newAssigneeEmail && (
                     <p className="text-[10px] text-slate-450 dark:text-zinc-500 mt-1">
-                      Görev kaydedildiğinde {newAssigneeEmail} adresine "Gemba IQ Task: {newTitle || "..."}" konulu bir bilgilendirme e-postası gönderilecek.
+                      {t('When the task is saved, a notification email with the subject "Gemba IQ Task: {title}" will be sent to {email}.').replace("{title}", newTitle || "...").replace("{email}", newAssigneeEmail)}
                     </p>
                   )}
                 </div>
 
                 <div className="space-y-1">
                   <label className="text-xs font-bold text-slate-600 dark:text-slate-400 uppercase tracking-wider block">
-                    Bitiş Tarihi
+                    {t("Due Date")}
                   </label>
                   <input
                     type="date"
@@ -2954,7 +2961,7 @@ export default function TasksView() {
                 {/* Priority */}
                 <div className="space-y-1">
                   <label className="text-xs font-bold text-slate-600 dark:text-slate-400 uppercase tracking-wider block">
-                    Öncelik Derecesi
+                    {t("Priority Level")}
                   </label>
                   <div className="flex gap-2">
                     {(["Low", "Medium", "High"] as const).map((pri) => (
@@ -2972,7 +2979,7 @@ export default function TasksView() {
                             : "bg-white dark:bg-[#252423] hover:bg-slate-50 dark:hover:bg-[#323130] border-[#EDEBE9] dark:border-[#323130] text-slate-700 dark:text-slate-300"
                         }`}
                       >
-                        {pri === "High" ? "Yüksek" : pri === "Medium" ? "Orta" : "Düşük"}
+                        {t(pri)}
                       </button>
                     ))}
                   </div>
@@ -2981,7 +2988,7 @@ export default function TasksView() {
                 {/* Status Column */}
                 <div className="space-y-1">
                   <label className="text-xs font-bold text-slate-600 dark:text-slate-400 uppercase tracking-wider block">
-                    Başlangıç Aşaması
+                    {t("Starting Stage")}
                   </label>
                   <select
                     value={addTaskColumnId}
@@ -3004,13 +3011,13 @@ export default function TasksView() {
                   onClick={() => setIsAddModalOpen(false)}
                   className="px-4 py-2 hover:bg-slate-100 dark:hover:bg-[#252423] border border-[#EDEBE9] dark:border-[#323130] text-slate-600 dark:text-slate-400 rounded text-xs font-bold transition-all cursor-pointer"
                 >
-                  Vazgeç
+                  {t("Discard")}
                 </button>
                 <button
                   type="submit"
                   className="px-4 py-2 bg-[#0078D4] hover:bg-[#005a9e] text-white rounded text-xs font-bold shadow-sm transition-all cursor-pointer"
                 >
-                  Görev Ekle
+                  {t("Add Task")}
                 </button>
               </div>
             </form>
@@ -3020,13 +3027,13 @@ export default function TasksView() {
 
       {/* EDIT / DETAIL TASK MODAL */}
       {isEditModalOpen && selectedTask && (
-        <div className="fixed inset-0 bg-black/60 dark:bg-black/85 backdrop-blur-xs flex items-center justify-center z-50 p-4">
+        <div className="fixed inset-0 bg-black/60 dark:bg-black/85 backdrop-blur-xs flex items-center justify-center z-50 p-4" role="dialog" aria-modal="true">
           <div className="bg-white dark:bg-[#1b1a19] w-full max-w-lg rounded-lg border border-[#EDEBE9] dark:border-[#323130] shadow-2xl overflow-hidden animate-in fade-in zoom-in-95 duration-150">
             {/* Header */}
             <div className="px-5 py-4 border-b border-[#EDEBE9] dark:border-[#323130] bg-[#FAF9F8] dark:bg-[#201f1e] flex items-center justify-between">
               <h3 className="font-bold text-slate-900 dark:text-slate-100 text-sm flex items-center gap-1.5">
                 <CheckSquare className="w-4 h-4 text-[#0078D4]" />
-                Görev Detayları &amp; Düzenle
+                {t("Task Details & Edit")}
               </h3>
               <button
                 type="button"
@@ -3035,6 +3042,7 @@ export default function TasksView() {
                   setSelectedTask(null);
                 }}
                 className="p-1 rounded hover:bg-slate-200 dark:hover:bg-[#252423] text-slate-500 dark:text-slate-400 cursor-pointer"
+                aria-label={t("Close")}
               >
                 <X className="w-4 h-4" />
               </button>
@@ -3045,12 +3053,12 @@ export default function TasksView() {
               {/* Task Title */}
               <div className="space-y-1">
                 <label className="text-xs font-bold text-slate-600 dark:text-slate-400 uppercase tracking-wider block">
-                  Görev Başlığı *
+                  {t("Task Title")} *
                 </label>
                 <input
                   type="text"
                   required
-                  placeholder="Göreve açıklayıcı bir isim verin..."
+                  placeholder={t("Give the task a descriptive name...")}
                   value={newTitle}
                   onChange={(e) => setNewTitle(e.target.value)}
                   className="w-full px-3 py-2 bg-slate-50 dark:bg-[#252423] border border-[#EDEBE9] dark:border-[#323130] rounded text-xs text-slate-800 dark:text-slate-200 focus:outline-hidden focus:border-[#0078D4]"
@@ -3060,10 +3068,10 @@ export default function TasksView() {
               {/* Task Description */}
               <div className="space-y-1">
                 <label className="text-xs font-bold text-slate-600 dark:text-slate-400 uppercase tracking-wider block">
-                  Açıklama / Detaylar
+                  {t("Description / Details")}
                 </label>
                 <textarea
-                  placeholder="Yapılacakları ve varsa önemli notları girin..."
+                  placeholder={t("Enter what needs to be done and any important notes...")}
                   value={newDescription}
                   onChange={(e) => setNewDescription(e.target.value)}
                   rows={3}
@@ -3075,7 +3083,7 @@ export default function TasksView() {
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div className="space-y-1">
                   <label className="text-xs font-bold text-slate-600 dark:text-slate-400 uppercase tracking-wider block">
-                    Sorumlu (Assignee)
+                    {t("Assignee")}
                   </label>
                   <select
                     value={newAssignee}
@@ -3091,28 +3099,28 @@ export default function TasksView() {
                     }}
                     className="w-full px-3 py-2 bg-slate-50 dark:bg-[#252423] border border-[#EDEBE9] dark:border-[#323130] rounded text-xs text-slate-800 dark:text-slate-200 focus:outline-hidden"
                   >
-                    <option value="">-- Sorumlu Seçiniz --</option>
+                    <option value="">-- {t("Select Assignee")} --</option>
                     {orgMembers.map((m) => (
                       <option key={m.user_id} value={m.full_name?.trim() || m.email}>
-                        {(m.full_name?.trim() || m.email)} · {m.role === "ADMIN" ? "Yönetici" : "Kullanıcı"}
+                        {(m.full_name?.trim() || m.email)} · {m.role === "ADMIN" ? t("Admin") : t("User")}
                       </option>
                     ))}
                   </select>
                   {orgMembers.length === 0 && (
                     <p className="text-[10px] text-slate-450 dark:text-zinc-500 mt-1">
-                      Organizasyonda kayıtlı hesap bulunamadı. Sorumlu atayabilmek için önce Admin ayarlarından kullanıcı ekleyin.
+                      {t("No registered accounts found in the organization. Add a user from Admin settings first to assign someone.")}
                     </p>
                   )}
                   {newAssigneeEmail && (
                     <p className="text-[10px] text-slate-450 dark:text-zinc-500 mt-1">
-                      Görev kaydedildiğinde {newAssigneeEmail} adresine "Gemba IQ Task: {newTitle || "..."}" konulu bir bilgilendirme e-postası gönderilecek.
+                      {t('When the task is saved, a notification email with the subject "Gemba IQ Task: {title}" will be sent to {email}.').replace("{title}", newTitle || "...").replace("{email}", newAssigneeEmail)}
                     </p>
                   )}
                 </div>
 
                 <div className="space-y-1">
                   <label className="text-xs font-bold text-slate-600 dark:text-slate-400 uppercase tracking-wider block">
-                    Bitiş Tarihi
+                    {t("Due Date")}
                   </label>
                   <input
                     type="date"
@@ -3128,7 +3136,7 @@ export default function TasksView() {
                 {/* Priority */}
                 <div className="space-y-1">
                   <label className="text-xs font-bold text-slate-600 dark:text-slate-400 uppercase tracking-wider block">
-                    Öncelik Derecesi
+                    {t("Priority Level")}
                   </label>
                   <div className="flex gap-2">
                     {(["Low", "Medium", "High"] as const).map((pri) => (
@@ -3146,7 +3154,7 @@ export default function TasksView() {
                             : "bg-white dark:bg-[#252423] hover:bg-slate-50 dark:hover:bg-[#323130] border-[#EDEBE9] dark:border-[#323130] text-slate-700 dark:text-slate-300"
                         }`}
                       >
-                        {pri === "High" ? "Yüksek" : pri === "Medium" ? "Orta" : "Düşük"}
+                        {t(pri)}
                       </button>
                     ))}
                   </div>
@@ -3155,7 +3163,7 @@ export default function TasksView() {
                 {/* Status Column */}
                 <div className="space-y-1">
                   <label className="text-xs font-bold text-slate-600 dark:text-slate-400 uppercase tracking-wider block">
-                    Mevcut Durum / Sütun
+                    {t("Current Status / Column")}
                   </label>
                   <select
                     value={newStatus}
@@ -3179,7 +3187,7 @@ export default function TasksView() {
                   className="px-4 py-2 border border-rose-200 dark:border-rose-950/40 hover:bg-rose-500 hover:text-white dark:hover:bg-rose-650 text-rose-600 dark:text-rose-400 rounded text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer"
                 >
                   <Trash2 className="w-3.5 h-3.5" />
-                  Görevi Sil
+                  {t("Delete Task")}
                 </button>
 
                 <div className="flex gap-2.5">
@@ -3191,13 +3199,13 @@ export default function TasksView() {
                     }}
                     className="px-4 py-2 hover:bg-slate-100 dark:hover:bg-[#252423] border border-[#EDEBE9] dark:border-[#323130] text-slate-600 dark:text-slate-400 rounded text-xs font-bold transition-all cursor-pointer"
                   >
-                    Vazgeç
+                    {t("Discard")}
                   </button>
                   <button
                     type="submit"
                     className="px-4 py-2 bg-[#0078D4] hover:bg-[#005a9e] text-white rounded text-xs font-bold shadow-sm transition-all cursor-pointer"
                   >
-                    Değişiklikleri Kaydet
+                    {t("Save Changes")}
                   </button>
                 </div>
               </div>
@@ -3208,7 +3216,7 @@ export default function TasksView() {
 
       {/* EMAIL PREVIEW MODAL FOR ACTIVE NOTIFICATION ITEM */}
       {activeNotificationItem && (
-        <div className="fixed inset-0 bg-black/75 dark:bg-black/90 backdrop-blur-xs flex items-center justify-center z-50 p-4 animate-in fade-in duration-200">
+        <div className="fixed inset-0 bg-black/75 dark:bg-black/90 backdrop-blur-xs flex items-center justify-center z-50 p-4 animate-in fade-in duration-200" role="dialog" aria-modal="true">
           <div className="bg-[#FAF9F8] dark:bg-[#1f1e1d] w-full max-w-2xl rounded-xl border border-[#EDEBE9] dark:border-[#323130] shadow-2xl overflow-hidden flex flex-col max-h-[90vh]">
             {/* Header */}
             <div className="px-5 py-4 border-b border-[#EDEBE9] dark:border-[#323130] bg-[#FAF9F8] dark:bg-[#201f1e] flex items-center justify-between flex-shrink-0">
@@ -3217,13 +3225,14 @@ export default function TasksView() {
                 <div className="w-2.5 h-2.5 rounded-full bg-amber-500" />
                 <div className="w-2.5 h-2.5 rounded-full bg-emerald-500" />
                 <span className="text-xs font-bold text-slate-500 dark:text-slate-400 font-mono ml-2">
-                  E-Posta Önizleyici
+                  {t("Email Preview")}
                 </span>
               </div>
               <button
                 type="button"
                 onClick={() => setActiveNotificationItem(null)}
                 className="p-1 rounded hover:bg-slate-200 dark:hover:bg-[#252423] text-slate-500 dark:text-slate-400 cursor-pointer"
+                aria-label={t("Close")}
               >
                 <X className="w-4 h-4" />
               </button>
@@ -3232,26 +3241,26 @@ export default function TasksView() {
             {/* Email Metadatalar */}
             <div className="bg-white dark:bg-[#1b1a19] px-6 py-4 border-b border-[#EDEBE9] dark:border-[#323130] text-xs space-y-2 flex-shrink-0">
               <div className="flex items-center">
-                <span className="w-16 font-bold text-slate-405 dark:text-slate-500">Kimden:</span>
-                <span className="text-slate-700 dark:text-slate-300 font-medium">Organizasyon Posta Kutusu (Ayarlar &gt; Paylaşılan Posta Kutuları)</span>
+                <span className="w-16 font-bold text-slate-405 dark:text-slate-500">{t("From")}:</span>
+                <span className="text-slate-700 dark:text-slate-300 font-medium">{t("Organization Mailbox (Settings > Shared Mailboxes)")}</span>
               </div>
               <div className="flex items-center">
-                <span className="w-16 font-bold text-slate-405 dark:text-slate-500">Kime:</span>
+                <span className="w-16 font-bold text-slate-405 dark:text-slate-500">{t("To")}:</span>
                 <span className="text-slate-700 dark:text-slate-200 font-bold">{activeNotificationItem.recipientName} &lt;{activeNotificationItem.recipientEmail}&gt;</span>
               </div>
               <div className="flex items-center">
-                <span className="w-16 font-bold text-slate-405 dark:text-slate-500">Konu:</span>
+                <span className="w-16 font-bold text-slate-405 dark:text-slate-500">{t("Subject")}:</span>
                 <span className="text-[#0078D4] dark:text-blue-400 font-black">{activeNotificationItem.subject}</span>
               </div>
               <div className="flex items-center">
-                <span className="w-16 font-bold text-slate-405 dark:text-slate-500">Tarih:</span>
+                <span className="w-16 font-bold text-slate-405 dark:text-slate-500">{t("Date")}:</span>
                 <span className="text-slate-500 dark:text-slate-400 font-mono font-medium">{activeNotificationItem.createdAt}</span>
               </div>
             </div>
 
             {/* Rendered HTML Body */}
             <div className="flex-1 overflow-y-auto p-6 bg-[#FAF9F8] dark:bg-black/10 scrollbar-thin">
-              <div 
+              <div
                 className="bg-white p-5 rounded-lg border border-slate-200 shadow-xs max-w-full overflow-hidden"
                 dangerouslySetInnerHTML={{ __html: activeNotificationItem.bodyHtml }}
               />
@@ -3261,17 +3270,17 @@ export default function TasksView() {
             <div className="px-5 py-3.5 bg-slate-50 dark:bg-zinc-900 border-t border-[#EDEBE9] dark:border-[#323130] flex justify-between items-center flex-shrink-0">
               <span className="text-[10px] text-slate-450 dark:text-slate-500 uppercase tracking-widest font-bold">
                 {activeNotificationItem.status === "sent"
-                  ? `* Bu e-posta ${activeNotificationItem.recipientEmail} adresine gerçekten gönderildi.`
+                  ? t("* This email was actually sent to {email}.").replace("{email}", activeNotificationItem.recipientEmail)
                   : activeNotificationItem.status === "skipped"
-                  ? "* Gönderilmedi: bu alıcı için tanımlı bir e-posta adresi yok."
-                  : `* Gönderilemedi: ${activeNotificationItem.errorNote || "bilinmeyen hata"}`}
+                  ? t("* Not sent: no email address defined for this recipient.")
+                  : t("* Failed to send: {error}").replace("{error}", activeNotificationItem.errorNote || t("unknown error"))}
               </span>
               <button
                 type="button"
                 onClick={() => setActiveNotificationItem(null)}
                 className="px-4 py-2 bg-[#0078D4] hover:bg-[#005a9e] text-white rounded text-xs font-bold transition-all cursor-pointer"
               >
-                Kapat
+                {t("Close")}
               </button>
             </div>
           </div>
@@ -3280,16 +3289,16 @@ export default function TasksView() {
 
       {/* Custom Global Confirmation Dialog */}
       {confirmDeleteModal.isOpen && (
-        <div className="fixed inset-0 bg-black/60 backdrop-blur-xs flex items-center justify-center z-[9999] p-4 font-sans antialiased animate-fade-in text-slate-800 dark:text-zinc-200">
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-xs flex items-center justify-center z-[9999] p-4 font-sans antialiased animate-fade-in text-slate-800 dark:text-zinc-200" role="dialog" aria-modal="true">
           <div className="bg-white dark:bg-[#181818] w-full max-w-sm rounded-xl border border-slate-205 dark:border-zinc-805 shadow-2xl p-6 text-center animate-in zoom-in-95 duration-100">
             <div className="mx-auto w-12 h-12 bg-rose-50 dark:bg-rose-950/25 rounded-full flex items-center justify-center text-rose-500 mb-4">
               <Trash2 className="w-6 h-6 animate-pulse" />
             </div>
             <h3 className="font-extrabold text-slate-800 dark:text-zinc-100 text-sm mb-2">
-              {confirmDeleteModal.title || "Kayıt Silinecek"}
+              {confirmDeleteModal.title || t("Record will be deleted")}
             </h3>
             <p className="text-slate-500 dark:text-zinc-400 text-xs mb-6 font-semibold">
-              {confirmDeleteModal.message || "Geri dönüşüm kutusuna taşınsın mı?"}
+              {confirmDeleteModal.message || t("Move to recycle bin?")}
             </p>
             <div className="flex gap-3 justify-center select-none font-bold">
               <button
@@ -3297,7 +3306,7 @@ export default function TasksView() {
                 onClick={() => setConfirmDeleteModal({ isOpen: false, onConfirm: () => {} })}
                 className="border border-slate-200 dark:border-zinc-800 text-slate-600 dark:text-zinc-300 hover:bg-slate-50 dark:hover:bg-zinc-900 px-4 py-2 text-xs rounded-lg transition-colors cursor-pointer w-24"
               >
-                İptal
+                {t("Cancel")}
               </button>
               <button
                 type="button"
@@ -3307,7 +3316,7 @@ export default function TasksView() {
                 }}
                 className="bg-rose-600 hover:bg-rose-700 text-white px-4 py-2 text-xs rounded-lg transition-colors cursor-pointer shadow-sm w-24 active:scale-95 transition-transform"
               >
-                Sil
+                {t("Delete")}
               </button>
             </div>
           </div>
