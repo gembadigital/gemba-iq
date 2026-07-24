@@ -2204,6 +2204,11 @@ export const uiDictionaryTR: Record<string, string> = {
   "Add New": "Yeni Ekle",
   "Delete Selected Service": "Seçili Hizmeti Sil",
 
+  // Modül 7 (RevenueManagementView.tsx) - danışman atama silme işlemi hiç
+  // onay istemiyordu, fatura silme işlemleri native confirm() kullanıyordu;
+  // ikisi de markalı ConfirmModal'a taşındı, bu yeni onay mesajı eklendi
+  "Are you sure you want to delete this assignment?": "Bu atamayı silmek istediğinizden emin misiniz?",
+
 };
 
 export const uiDictionaryEN: Record<string, string> = Object.fromEntries(

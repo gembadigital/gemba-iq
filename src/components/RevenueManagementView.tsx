@@ -2,6 +2,8 @@ import React, { useState, useMemo, useEffect } from "react";
 import * as XLSX from "xlsx";
 import { useLanguage } from "../lib/LanguageContext";
 import { CrmDb } from "../lib/CrmDb";
+import { ConfirmModal } from "./shared/ConfirmModal";
+import { useConfirm } from "../lib/useConfirm";
 import type { Proposal } from "../types/proposal";
 import { jsPDF } from "jspdf";
 import {
@@ -70,6 +72,7 @@ const REVENUE_IMPORT_LOGS_KEY = "crm_revenue_import_logs";
 
 export default function RevenueManagementView() {
   const { lang, t } = useLanguage();
+  const { confirm, confirmProps } = useConfirm();
   // --- ROOT TABS ---
   const [activeTab, setActiveTab] = useState<"dashboard" | "data">("dashboard");
 
@@ -970,22 +973,36 @@ CRITICAL FORMATTING INSTRUCTIONS: Your response MUST be output as beautiful, pro
     setShowAssignmentForm(false);
   };
 
-  const handleDeleteAssignment = (id: string) => {
+  const handleDeleteAssignment = async (id: string) => {
+    const ok = await confirm({
+      title: t("Delete Assignment"),
+      message: t("Are you sure you want to delete this assignment?"),
+      confirmLabel: t("Delete"),
+      cancelLabel: t("Cancel"),
+      danger: true
+    });
+    if (!ok) return;
     setAssignments(prev => prev.filter(a => a.id !== id));
   };
 
-  const handleDeleteInvoice = (id: string) => {
-    if (confirm(t("Are you sure you want to delete this invoice?"))) {
-      setInvoices(prev => prev.filter(inv => inv.id !== id));
-      setSelectedInvoiceIds(prev => {
-        if (!prev.has(id)) return prev;
-        const next = new Set(prev);
-        next.delete(id);
-        return next;
-      });
-      const logMsg = `${new Date().toLocaleTimeString()} - ${t("Invoice deleted (ID: {id}).").replace("{id}", id)}`;
-      setImportLogs(prev => [logMsg, ...prev]);
-    }
+  const handleDeleteInvoice = async (id: string) => {
+    const ok = await confirm({
+      title: t("Delete Invoice"),
+      message: t("Are you sure you want to delete this invoice?"),
+      confirmLabel: t("Delete"),
+      cancelLabel: t("Cancel"),
+      danger: true
+    });
+    if (!ok) return;
+    setInvoices(prev => prev.filter(inv => inv.id !== id));
+    setSelectedInvoiceIds(prev => {
+      if (!prev.has(id)) return prev;
+      const next = new Set(prev);
+      next.delete(id);
+      return next;
+    });
+    const logMsg = `${new Date().toLocaleTimeString()} - ${t("Invoice deleted (ID: {id}).").replace("{id}", id)}`;
+    setImportLogs(prev => [logMsg, ...prev]);
   };
 
   const toggleInvoiceSelection = (id: string) => {
@@ -1084,15 +1101,21 @@ CRITICAL FORMATTING INSTRUCTIONS: Your response MUST be output as beautiful, pro
     setEditingInvoiceId(null);
   };
 
-  const handleDeleteSelectedInvoices = () => {
+  const handleDeleteSelectedInvoices = async () => {
     const count = selectedInvoiceIds.size;
     if (count === 0) return;
-    if (confirm(t("Delete {count} selected invoices? This cannot be undone.").replace("{count}", String(count)))) {
-      setInvoices(prev => prev.filter(inv => !selectedInvoiceIds.has(inv.id)));
-      const logMsg = `${new Date().toLocaleTimeString()} - ${t("{count} invoices deleted in bulk.").replace("{count}", String(count))}`;
-      setImportLogs(prev => [logMsg, ...prev]);
-      setSelectedInvoiceIds(new Set());
-    }
+    const ok = await confirm({
+      title: t("Delete Selected"),
+      message: t("Delete {count} selected invoices? This cannot be undone.").replace("{count}", String(count)),
+      confirmLabel: t("Delete"),
+      cancelLabel: t("Cancel"),
+      danger: true
+    });
+    if (!ok) return;
+    setInvoices(prev => prev.filter(inv => !selectedInvoiceIds.has(inv.id)));
+    const logMsg = `${new Date().toLocaleTimeString()} - ${t("{count} invoices deleted in bulk.").replace("{count}", String(count))}`;
+    setImportLogs(prev => [logMsg, ...prev]);
+    setSelectedInvoiceIds(new Set());
   };
 
   // --- INVOICE IMPORTER ---
@@ -2773,6 +2796,8 @@ CRITICAL FORMATTING INSTRUCTIONS: Your response MUST be output as beautiful, pro
                             <button
                               onClick={() => handleEditConsultant(c)}
                               className="p-1 text-slate-400 hover:text-sky-500 rounded inline-block cursor-pointer"
+                              title={t("Edit")}
+                              aria-label={`${t("Edit")}: ${c.name}`}
                             >
                               <Edit className="w-4 h-4" />
                             </button>
@@ -3102,14 +3127,16 @@ CRITICAL FORMATTING INSTRUCTIONS: Your response MUST be output as beautiful, pro
                                 }}
                                 className="p-1 hover:bg-sky-50 dark:hover:bg-zinc-850 text-slate-400 hover:text-[#0078D4] rounded cursor-pointer inline-block"
                                 title={t("Edit Assignment")}
+                                aria-label={t("Edit Assignment")}
                               >
                                 <Edit className="w-3.5 h-3.5" />
                               </button>
                               <button
                                 type="button"
-                                onClick={() => handleDeleteAssignment(ass.id)}
+                                onClick={() => void handleDeleteAssignment(ass.id)}
                                 className="p-1 hover:bg-rose-50 dark:hover:bg-rose-950/30 text-slate-400 hover:text-rose-500 rounded cursor-pointer inline-block"
                                 title={t("Delete Assignment")}
+                                aria-label={t("Delete Assignment")}
                               >
                                 <Trash className="w-3.5 h-3.5" />
                               </button>
@@ -3218,7 +3245,7 @@ CRITICAL FORMATTING INSTRUCTIONS: Your response MUST be output as beautiful, pro
                     {selectedInvoiceIds.size > 0 && (
                       <button
                         type="button"
-                        onClick={handleDeleteSelectedInvoices}
+                        onClick={() => void handleDeleteSelectedInvoices()}
                         className="flex items-center gap-1.5 px-2.5 py-1 text-[10px] font-bold text-rose-650 bg-rose-50 dark:bg-rose-950/25 hover:bg-rose-100 dark:hover:bg-rose-950/40 rounded transition-all cursor-pointer"
                       >
                         <Trash className="w-3 h-3" />
@@ -3301,14 +3328,16 @@ CRITICAL FORMATTING INSTRUCTIONS: Your response MUST be output as beautiful, pro
                                     onClick={() => handleOpenEditInvoice(inv)}
                                     className="p-1 text-[#0078D4] hover:bg-sky-50 dark:hover:bg-sky-950/35 rounded transition-all cursor-pointer inline-flex items-center"
                                     title={t("Edit Invoice")}
+                                    aria-label={t("Edit Invoice")}
                                   >
                                     <Edit className="w-3.5 h-3.5" />
                                   </button>
                                   <button
                                     type="button"
-                                    onClick={() => handleDeleteInvoice(inv.id)}
+                                    onClick={() => void handleDeleteInvoice(inv.id)}
                                     className="p-1 text-rose-650 hover:bg-rose-50 dark:hover:bg-rose-950/35 rounded transition-all cursor-pointer inline-flex items-center"
                                     title={t("Delete Invoice")}
+                                    aria-label={t("Delete Invoice")}
                                   >
                                     <Trash className="w-3.5 h-3.5" />
                                   </button>
@@ -3337,7 +3366,7 @@ CRITICAL FORMATTING INSTRUCTIONS: Your response MUST be output as beautiful, pro
 
       {/* EDIT INVOICE MODAL */}
       {editingInvoiceId && (
-        <div className="fixed inset-0 bg-black/60 dark:bg-black/85 backdrop-blur-xs flex items-center justify-center z-50 p-4">
+        <div className="fixed inset-0 bg-black/60 dark:bg-black/85 backdrop-blur-xs flex items-center justify-center z-50 p-4" role="dialog" aria-modal="true">
           <div className="bg-white dark:bg-[#1b1a19] w-full max-w-lg rounded-lg border border-[#EDEBE9] dark:border-[#323130] shadow-2xl overflow-hidden animate-in fade-in zoom-in-95 duration-150">
             <div className="px-5 py-4 border-b border-[#EDEBE9] dark:border-[#323130] bg-[#FAF9F8] dark:bg-[#201f1e] flex items-center justify-between">
               <h3 className="font-bold text-slate-900 dark:text-slate-100 text-sm flex items-center gap-1.5">
@@ -3348,6 +3377,7 @@ CRITICAL FORMATTING INSTRUCTIONS: Your response MUST be output as beautiful, pro
                 type="button"
                 onClick={() => setEditingInvoiceId(null)}
                 className="p-1 rounded hover:bg-slate-200 dark:hover:bg-[#252423] text-slate-550 dark:text-slate-400 cursor-pointer"
+                aria-label={t("Close")}
               >
                 <Trash className="w-4 h-4 rotate-45" />
               </button>
@@ -3478,6 +3508,7 @@ CRITICAL FORMATTING INSTRUCTIONS: Your response MUST be output as beautiful, pro
         </div>
       )}
 
+      <ConfirmModal {...confirmProps} />
     </div>
   );
 }

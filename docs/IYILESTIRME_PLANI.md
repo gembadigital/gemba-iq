@@ -20,7 +20,7 @@ Son güncelleme: 2026-07-24
 | 4 | ProposalManagementView.tsx + ProposalFormModal.tsx | Tamamlandı (2026-07-24) |
 | 5 | LeadProfilesView.tsx + EmailLeadDiscoveryView.tsx | Tamamlandı (2026-07-24) |
 | 6 | ServicesView.tsx (Hizmet Kataloğu) | Tamamlandı (2026-07-24, kısmi — aşağıya bak) |
-| 7 | RevenueManagementView.tsx + ManagementPLView.tsx | Planlandı |
+| 7 | RevenueManagementView.tsx + ManagementPLView.tsx | Tamamlandı (2026-07-24, kısmi — aşağıya bak) |
 | 8 | TasksView.tsx (Görevler) | Planlandı |
 | 9 | CampaignManagerView.tsx + CampaignDesigner.tsx | Planlandı |
 | 10 | AISalesAssistant.tsx + SalesCoachAI.tsx + CompanyDiscoveryView.tsx + GembaLensView.tsx | Planlandı |
@@ -74,6 +74,16 @@ Her modül geçişi kendi commit/deploy döngüsüyle kapanır; bu tablo ilerled
 - Dil: Hizmet Kartları panelindeki "Yeni Ekle" butonu ve "Seçili Hizmeti Sil" ikon başlığı hardcoded Türkçe idi → `t()`'ye sarmalandı, ikon-only silme butonuna `aria-label` eklendi.
 - UI/UX: Dosyadaki tek gerçek modal (silme onay diyaloğu) zaten mevcut `confirmDeleteModal` sistemiyle tam `t()` kapsamındaydı, sadece eksik olan `role="dialog" aria-modal="true"` eklendi.
 - **KAPSAM NOTU (önemli):** Bu dosyanın ~1700 satırlık "Teklif Sihirbazı" (Proposal Wizard, Aşama 1-5: Müşteri Bilgileri → Hizmet Seçimi → Ticari Opsiyonlar → Genel Şartlar → Antetli & Gönderim) bölümü, yukarıdaki modüllerde bulunan "birkaç satır hardcoded, geri kalanı `t()`" tipi noktasal tutarsızlıklardan farklı olarak, **baştan sona tasarım gereği Türkçe** yazılmış — placeholder token'ları bile Türkçe (`{{FirmaAdı}}`, `{{TeklifNo}}`, `{{İlgiliKişi}}` vb.). Yaklaşık 150+ ayrı metin (etiket, buton, placeholder, yardım metni) `t()` içermiyor. Bunu diğer modüllerdeki gibi noktasal düzeltmelerle kapatmak mümkün değil — bu, kendi başına ayrı bir "Teklif Sihirbazını İngilizce moda taşı" projesi gerektirir (~150+ yeni sözlük anahtarı, dikkatli test). Şu anki modül-modül dil taraması kapsamında bunu YAPMADIM; sadece gerçek tutarsızlık bulgularını (alert'ler, 2 buton, modal rolü) düzelttim. Kullanıcı bu sihirbazın İngilizce modda da tam çalışmasını istiyorsa, bu ayrı bir görev olarak planlanmalı.
+
+**Modül 7 (RevenueManagementView.tsx + ManagementPLView.tsx) — yapılanlar ve KAPSAM NOTU:**
+- **RevenueManagementView.tsx** (255 `t()` çağrısı, zaten büyük ölçüde tam çevrili — Türkçe karakter taramasında yalnızca kod yorumları ve örnek isim placeholder'ları çıktı, gerçek dil tutarsızlığı bulunmadı):
+  - UI/UX — Onay eksikliği/tutarsızlığı: danışman atama (`handleDeleteAssignment`) kaydı hiçbir onay istemeden anında siliniyordu — TargetAccountsView'da (Modül 2) bulunanla aynı kök neden. Fatura silme (`handleDeleteInvoice`) ve toplu fatura silme (`handleDeleteSelectedInvoices`) ise native tarayıcı `confirm()` kullanıyordu — dosyanın geri kalanı tamamen markalı arayüz bileşenleriyle tasarlanmışken bu native diyalog göze batan bir tutarsızlıktı. Üçü de paylaşımlı `ConfirmModal`/`useConfirm()` hook'una taşındı; yeni sözlük anahtarı yalnızca atama onay mesajı için eklendi (`"Are you sure you want to delete this assignment?"`), diğer metinler zaten mevcuttu.
+  - UI/UX — Erişilebilirlik: Fatura Düzenle modalına `role="dialog" aria-modal="true"` eklendi (dosyadaki tek gerçek modal, daha önce yoktu). Danışman/atama/fatura satırlarındaki ikon-only düzenle/sil butonlarına ve modalın kapatma ikonuna `aria-label` eklendi — hiçbirinde daha önce yoktu (yalnızca bazılarında `title` vardı).
+- **ManagementPLView.tsx** (2700+ satır, **`t()` çağrısı SIFIR** — ServicesView'daki Teklif Sihirbazı ile aynı kalıp: baştan sona tasarım gereği Türkçe yazılmış bağımsız bir yönetim paneli, noktasal tutarsızlık değil): Bu dosyayı tam `t()` kapsamına almak (tahmini 200+ yeni sözlük anahtarı) ayrı, büyük bir proje gerektirdiğinden şu an kapsam dışı bırakıldı — yalnızca gerçek UI/UX güvenlik açıkları düzeltildi, dosyanın kendi Türkçe diliyle tutarlı kalacak şekilde (yeni metinler `t()` yerine düz Türkçe eklendi, çünkü dosyada zaten `useLanguage`/`t()` altyapısı hiç kullanılmıyor):
+  - Fatura satırı silme (`removeInvoice`) ve Sabit Giderler satırı silme — ikisi de hiçbir onay istemeden anında siliniyordu → `window.confirm()` ile onay eklendi (Türkçe metin, dosyanın geneliyle tutarlı).
+  - İkon-only sil (Trash2, x2) ve indir (Download) butonlarına `aria-label` eklendi — hiçbirinde yoktu.
+  - Modal/CSS taraması: dosyada hiç modal yok (0 `fixed inset-0`), geçersiz z-index class'ı yok.
+  - **Kullanıcı bu panelin İngilizce modda da çalışmasını istiyorsa, ServicesView'ın Teklif Sihirbazı ile birlikte ayrı bir "büyük Türkçe-özel panelleri İngilizceye taşı" görevi olarak planlanmalı.**
 
 ---
 

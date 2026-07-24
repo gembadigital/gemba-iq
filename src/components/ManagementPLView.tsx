@@ -1290,8 +1290,12 @@ function RecurringTab({
                     />
                     <button
                       type="button"
-                      onClick={() => onRemove(entry.id)}
+                      onClick={() => {
+                        if (!window.confirm("Bu satırı silmek istediğinizden emin misiniz?")) return;
+                        onRemove(entry.id);
+                      }}
                       className="col-span-1 flex justify-end text-slate-400 hover:text-rose-600"
+                      aria-label="Satırı sil"
                     >
                       <Trash2 className="w-3.5 h-3.5" />
                     </button>
@@ -1511,6 +1515,7 @@ export default function ManagementPLView() {
   }
 
   function removeInvoice(id: string) {
+    if (!window.confirm("Bu faturayı silmek istediğinizden emin misiniz?")) return;
     setInvoices((prev) => {
       const next = prev.filter((i) => i.id !== id);
       CrmDb.setKv(PL_INVOICES_KEY, next);
@@ -2544,6 +2549,7 @@ export default function ManagementPLView() {
                                 type="button"
                                 onClick={() => handleDownloadInvoice(inv)}
                                 className="text-indigo-500 hover:text-indigo-700 shrink-0"
+                                aria-label="Faturayı indir"
                               >
                                 <Download className="w-3.5 h-3.5" />
                               </button>
@@ -2661,7 +2667,7 @@ export default function ManagementPLView() {
                           />
                         </td>
                         <td className="py-2 pr-3 text-right">
-                          <button type="button" onClick={() => removeInvoice(inv.id)} className="text-slate-400 hover:text-rose-600">
+                          <button type="button" onClick={() => removeInvoice(inv.id)} className="text-slate-400 hover:text-rose-600" aria-label="Faturayı sil">
                             <Trash2 className="w-3.5 h-3.5" />
                           </button>
                         </td>
