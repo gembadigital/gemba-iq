@@ -1020,7 +1020,7 @@ export default function DealManagementView({ initialTab = "dashboard", onNavigat
   const handleExportCSV = () => {
     try {
       if (deals.length === 0) {
-        alert("Export yapacak fırsat bulunamadı!");
+        alert(t("No deals found to export."));
         return;
       }
       const headers = [
@@ -1193,7 +1193,7 @@ export default function DealManagementView({ initialTab = "dashboard", onNavigat
             const merged = [...prev, ...newDeals];
             return merged;
           });
-          alert(`${newDeals.length} deals successfully imported!`);
+          alert(t("{count} deals successfully imported!").replace("{count}", String(newDeals.length)));
         } else {
           alert(t("No valid rows containing a Company Name could be imported."));
         }
@@ -1403,7 +1403,7 @@ export default function DealManagementView({ initialTab = "dashboard", onNavigat
     const newName = renameStageInput.trim();
     if (!newName) return;
     if (activeStages.includes(newName) && newName !== oldName) {
-      alert("Bu aşama adı zaten mevcut!");
+      alert(t("Stage already exists!"));
       return;
     }
 
@@ -1577,7 +1577,7 @@ export default function DealManagementView({ initialTab = "dashboard", onNavigat
     setDeals(updatedDeals);
     
     setIsReminderMailboxOpen(false);
-    alert("Hatırlatma e-postası başarıyla hazırlandı ve mail uygulamasında açıldı!");
+    alert(t("Reminder email prepared successfully and opened in your mail application!"));
   };
 
   // Sending Email logs inside Active deal (Formulated to open mail client links correctly & copy to clipboard!)
@@ -1585,11 +1585,11 @@ export default function DealManagementView({ initialTab = "dashboard", onNavigat
     e.preventDefault();
     if (!selectedDeal) return;
     if (!emailComposeTo) {
-      alert("Alıcı adresi boş olamaz.");
+      alert(t("Recipient address cannot be empty."));
       return;
     }
     if (!emailComposeBody || !emailComposeSubject) {
-      alert("Konu başlığı ve mesaj gövdesi boş bırakılamaz.");
+      alert(t("Subject line and message body cannot be left empty."));
       return;
     }
 
@@ -1796,8 +1796,8 @@ export default function DealManagementView({ initialTab = "dashboard", onNavigat
     if (selectedDealIds.length === 0) return;
     setConfirmDeleteModal({
       isOpen: true,
-      title: "Seçili Fırsatlar Silinecek",
-      message: `${selectedDealIds.length} fırsat kaydı geri dönüşüm kutusuna taşınsın mı?`,
+      title: t("Selected Deals Will Be Deleted"),
+      message: t("{count} deal record(s) will be moved to the recycle bin. Continue?").replace("{count}", String(selectedDealIds.length)),
       onConfirm: () => {
         setDeals((prev) => prev.filter((d) => !selectedDealIds.includes(d.id)));
         setSelectedDealIds([]);
@@ -2019,7 +2019,7 @@ export default function DealManagementView({ initialTab = "dashboard", onNavigat
               <div className="flex items-center gap-1.5 border-r border-slate-200 dark:border-zinc-800 pr-2 mr-1">
                 <label className="p-1.5 px-2.5 bg-white dark:bg-[#202020] border border-slate-200 dark:border-zinc-800 hover:bg-slate-50 dark:hover:bg-zinc-700/60 text-slate-700 dark:text-zinc-300 rounded-lg text-xs font-bold flex items-center gap-1.5 cursor-pointer transition-all shadow-xs" title={t("Import deal list from Excel/CSV (.csv)")}>
                   <Upload className="w-3.5 h-3.5 text-blue-500 dark:text-blue-400" />
-                  <span className="hidden sm:inline">İçe Aktar</span>
+                  <span className="hidden sm:inline">{t("Import")}</span>
                   <input type="file" accept=".csv" onChange={handleImportCSV} className="hidden" />
                 </label>
 
@@ -2030,7 +2030,7 @@ export default function DealManagementView({ initialTab = "dashboard", onNavigat
                   title={t("Export deal list as CSV")}
                 >
                   <Download className="w-3.5 h-3.5 text-white" />
-                  <span className="hidden sm:inline">Dışa Aktar</span>
+                  <span className="hidden sm:inline">{t("Export")}</span>
                   <span className="sm:hidden">.CSV</span>
                 </button>
               </div>
@@ -2304,8 +2304,8 @@ export default function DealManagementView({ initialTab = "dashboard", onNavigat
                                 onClick={() => {
                                   setConfirmDeleteModal({
                                     isOpen: true,
-                                    title: "Fırsat Kaydı Silinecek",
-                                    message: "Geri dönüşüm kutusuna taşınsın mı?",
+                                    title: t("Deal Record Will Be Deleted"),
+                                    message: t("Move to recycle bin?"),
                                     onConfirm: () => {
                                       setDeals(prev => {
                                         const updated = prev.filter(p => p.id !== deal.id);
@@ -2316,6 +2316,7 @@ export default function DealManagementView({ initialTab = "dashboard", onNavigat
                                 }}
                                 className="p-1.5 text-slate-400 hover:text-rose-500 rounded hover:bg-slate-50 dark:hover:bg-zinc-800 cursor-pointer"
                                 title={t("Delete")}
+                                aria-label={`${t("Delete")}: ${deal.companyName || ""}`}
                               >
                                 <Trash2 className="w-3.5 h-3.5" />
                               </button>
@@ -2679,8 +2680,8 @@ export default function DealManagementView({ initialTab = "dashboard", onNavigat
                                           e.stopPropagation();
                                           setConfirmDeleteModal({
                                             isOpen: true,
-                                            title: "Fırsat Kartı Silinecek",
-                                            message: "Geri dönüşüm kutusuna taşınsın mı?",
+                                            title: t("Deal Card Will Be Deleted"),
+                                            message: t("Move to recycle bin?"),
                                             onConfirm: () => {
                                               setDeals(prev => {
                                                 const updated = prev.filter(p => p.id !== deal.id);
@@ -2691,6 +2692,7 @@ export default function DealManagementView({ initialTab = "dashboard", onNavigat
                                         }}
                                         className="p-1.5 text-slate-400 hover:text-rose-500 rounded hover:bg-slate-50 dark:hover:bg-zinc-800 cursor-pointer"
                                         title={t("Delete")}
+                                        aria-label={`${t("Delete")}: ${deal.companyName || ""}`}
                                       >
                                         <Trash2 className="w-3.5 h-3.5" />
                                       </button>
@@ -2721,7 +2723,7 @@ export default function DealManagementView({ initialTab = "dashboard", onNavigat
       {/* 5. CREATE OPPORTUNITY FORM DIALOG MODAL                  */}
       {/* ======================================================== */}
       {isAddModalOpen && (
-        <div className="fixed inset-0 bg-[#0c0c0c]/60 dark:bg-[#000000]/80 backdrop-blur-xs flex items-center justify-center z-50 p-4 font-sans">
+        <div className="fixed inset-0 bg-[#0c0c0c]/60 dark:bg-[#000000]/80 backdrop-blur-xs flex items-center justify-center z-50 p-4 font-sans" role="dialog" aria-modal="true">
           <div className="bg-white dark:bg-[#151515] w-full max-w-2xl rounded-xl border border-slate-200 dark:border-zinc-800 shadow-2xl flex flex-col max-h-[90vh] overflow-hidden animate-in fade-in zoom-in-95 duration-100">
             
             {/* Modal Header */}
@@ -3316,7 +3318,7 @@ export default function DealManagementView({ initialTab = "dashboard", onNavigat
       {/* 6. SLIDE-IN DEAL DRAWER SIDEBAR PANEL                     */}
       {/* ======================================================== */}
       {selectedDeal && (
-        <div className="fixed inset-0 z-45 flex justify-end bg-black/40 backdrop-blur-xs">
+        <div className="fixed inset-0 z-[45] flex justify-end bg-black/40 backdrop-blur-xs" role="dialog" aria-modal="true">
           <div className="w-full max-w-2xl bg-white dark:bg-[#151515] h-full shadow-2xl flex flex-col overflow-hidden animate-in slide-in-from-right duration-150">
             
             {/* Drawer Header Toolbar */}
@@ -3398,7 +3400,7 @@ export default function DealManagementView({ initialTab = "dashboard", onNavigat
               {activeDrawerTab === "Overview" && (
                 <div className="space-y-5 animate-in fade-in duration-100">
                   <div className="bg-slate-50 dark:bg-black/10 p-4 rounded-xl border border-slate-100 dark:border-zinc-800/80 space-y-3 font-sans">
-                    <h4 className="text-xs font-bold text-slate-800 dark:text-zinc-150 uppercase tracking-wide font-mono">Fırsat Kartvizit Detayları</h4>
+                    <h4 className="text-xs font-bold text-slate-800 dark:text-zinc-150 uppercase tracking-wide font-mono">{t("Opportunity Business Card Details")}</h4>
                     
                     <div className="grid grid-cols-2 gap-4 text-xs">
                       <div>
@@ -4169,7 +4171,7 @@ export default function DealManagementView({ initialTab = "dashboard", onNavigat
       {/* 7. ADD POPUP POPUPS/MODALS FOR PIPELINE MILESTONES       */}
       {/* ======================================================== */}
       {isAddingNewStagePopup && (
-        <div className="fixed inset-0 bg-[#0c0c0c]/50 dark:bg-[#000000]/70 backdrop-blur-xs flex items-center justify-center z-50 p-4">
+        <div className="fixed inset-0 bg-[#0c0c0c]/50 dark:bg-[#000000]/70 backdrop-blur-xs flex items-center justify-center z-50 p-4" role="dialog" aria-modal="true">
           <form onSubmit={handleAddNewStage} className="bg-white dark:bg-[#151515] w-full max-w-sm rounded-xl border border-slate-205 dark:border-zinc-800 p-5 space-y-4 animate-in fade-in zoom-in-95">
             <h3 className="font-bold text-slate-800 dark:text-zinc-100 text-xs uppercase tracking-wide font-mono">
               Add Custom Pipeline Stage
@@ -4208,7 +4210,7 @@ export default function DealManagementView({ initialTab = "dashboard", onNavigat
 
       {/* Adding descriptions stage popup */}
       {isAddingDescPopup && (
-        <div className="fixed inset-0 bg-[#0c0c0c]/50 dark:bg-[#000000]/70 backdrop-blur-xs flex items-center justify-center z-50 p-4">
+        <div className="fixed inset-0 bg-[#0c0c0c]/50 dark:bg-[#000000]/70 backdrop-blur-xs flex items-center justify-center z-50 p-4" role="dialog" aria-modal="true">
           <form onSubmit={handleSaveStageDescription} className="bg-white dark:bg-[#151515] w-full max-w-sm rounded-xl border border-slate-205 dark:border-zinc-800 p-5 space-y-4 animate-in fade-in zoom-in-95">
             <h3 className="font-bold text-slate-800 dark:text-zinc-100 text-xs uppercase tracking-wide font-mono">
               {t('Add Description: "{stage}"').replace("{stage}", isAddingDescPopup.stage)}
@@ -4247,7 +4249,7 @@ export default function DealManagementView({ initialTab = "dashboard", onNavigat
 
       {/* Renaming stage popup */}
       {isRenamingStagePopup && (
-        <div className="fixed inset-0 bg-[#0c0c0c]/50 dark:bg-[#000000]/70 backdrop-blur-xs flex items-center justify-center z-50 p-4">
+        <div className="fixed inset-0 bg-[#0c0c0c]/50 dark:bg-[#000000]/70 backdrop-blur-xs flex items-center justify-center z-50 p-4" role="dialog" aria-modal="true">
           <form onSubmit={handleRenameStage} className="bg-white dark:bg-[#151515] w-full max-w-sm rounded-xl border border-slate-205 dark:border-zinc-800 p-5 space-y-4 animate-in fade-in zoom-in-95">
             <h3 className="font-bold text-slate-800 dark:text-zinc-100 text-xs uppercase tracking-wide font-mono">
               {t("Rename Stage")}
@@ -4292,7 +4294,7 @@ export default function DealManagementView({ initialTab = "dashboard", onNavigat
 
       {/* Deleting stage popup */}
       {isDeletingStagePopup && (
-        <div className="fixed inset-0 bg-[#0c0c0c]/50 dark:bg-[#000000]/70 backdrop-blur-xs flex items-center justify-center z-50 p-4">
+        <div className="fixed inset-0 bg-[#0c0c0c]/50 dark:bg-[#000000]/70 backdrop-blur-xs flex items-center justify-center z-50 p-4" role="dialog" aria-modal="true">
           <form onSubmit={handleConfirmDeleteStage} className="bg-white dark:bg-[#151515] w-full max-w-sm rounded-xl border border-slate-205 dark:border-zinc-800 p-5 space-y-4 animate-in fade-in zoom-in-95">
             <h3 className="font-bold text-slate-850 dark:text-zinc-100 text-xs uppercase tracking-wide font-mono text-rose-600 dark:text-rose-450">
               {t("Delete Stage")}
@@ -4356,7 +4358,7 @@ export default function DealManagementView({ initialTab = "dashboard", onNavigat
       {/* 8. CRM FOLLOW-UP REMINDER MAILBOX DIALOG MODAL           */}
       {/* ======================================================== */}
       {isReminderMailboxOpen && reminderSelectedDeal && (
-        <div className="fixed inset-0 bg-[#0c0c0c]/60 dark:bg-[#000000]/80 backdrop-blur-xs flex items-center justify-center z-50 p-4">
+        <div className="fixed inset-0 bg-[#0c0c0c]/60 dark:bg-[#000000]/80 backdrop-blur-xs flex items-center justify-center z-50 p-4" role="dialog" aria-modal="true">
           <div className="bg-white dark:bg-[#151515] w-full max-w-2xl rounded-xl border border-slate-200 dark:border-zinc-800 shadow-2xl flex flex-col max-h-[90vh] overflow-hidden animate-in fade-in zoom-in-95 duration-100">
             
             {/* Modal Header */}
@@ -4526,10 +4528,10 @@ export default function DealManagementView({ initialTab = "dashboard", onNavigat
                 <div className="p-3 bg-[#0078D4]/5 border border-blue-200/20 rounded-xl space-y-1 text-[10px] text-slate-500 dark:text-zinc-400">
                   <p className="font-extrabold text-blue-600 dark:text-blue-400 uppercase tracking-wider flex items-center gap-1">
                     <Sparkles className="w-3.5 h-3.5" />
-                    Bilgi ve Akıllı Entegrasyon
+                    {t("Info & Smart Integration")}
                   </p>
                   <p className="leading-tight">
-                    Hazırlanan mail içeriği gönderilmek üzere seçtiğiniz e-posta istemcisinde otomatik doldurulur. Ayrıca kolaylık olması açısından mail metni <b>panoya kopyalanır</b>.
+                    {t("The prepared mail content is auto-filled in your selected email client for sending. For convenience, the mail text is also")} <b>{t("copied to clipboard")}</b>.
                   </p>
                 </div>
               </div>
@@ -4588,7 +4590,7 @@ export default function DealManagementView({ initialTab = "dashboard", onNavigat
                   onClick={handleSendReminderMail}
                 >
                   <Send className="w-3.5 h-3.5" />
-                  <span>Kopyala ve Şifrele/Aç</span>
+                  <span>{t("Copy and Open in Mail App")}</span>
                 </button>
               </div>
             </div>
@@ -4599,16 +4601,16 @@ export default function DealManagementView({ initialTab = "dashboard", onNavigat
 
       {/* Custom Global Confirmation Dialog */}
       {confirmDeleteModal.isOpen && (
-        <div className="fixed inset-0 bg-black/60 backdrop-blur-xs flex items-center justify-center z-[9999] p-4 font-sans antialiased animate-fade-in text-slate-800 dark:text-zinc-200">
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-xs flex items-center justify-center z-[9999] p-4 font-sans antialiased animate-fade-in text-slate-800 dark:text-zinc-200" role="dialog" aria-modal="true">
           <div className="bg-white dark:bg-[#181818] w-full max-w-sm rounded-xl border border-slate-205 dark:border-zinc-805 shadow-2xl p-6 text-center animate-in zoom-in-95 duration-100">
             <div className="mx-auto w-12 h-12 bg-rose-50 dark:bg-rose-950/25 rounded-full flex items-center justify-center text-rose-500 mb-4">
               <Trash2 className="w-6 h-6 animate-pulse" />
             </div>
             <h3 className="font-extrabold text-slate-800 dark:text-zinc-100 text-sm mb-2">
-              {confirmDeleteModal.title || "Kayıt Silinecek"}
+              {confirmDeleteModal.title || t("Delete Record")}
             </h3>
             <p className="text-slate-500 dark:text-zinc-400 text-xs mb-6 font-semibold">
-              {confirmDeleteModal.message || "Geri dönüşüm kutusuna taşınsın mı?"}
+              {confirmDeleteModal.message || t("Move to recycle bin?")}
             </p>
             <div className="flex gap-3 justify-center select-none font-bold">
               <button
@@ -4616,7 +4618,7 @@ export default function DealManagementView({ initialTab = "dashboard", onNavigat
                 onClick={() => setConfirmDeleteModal({ isOpen: false, onConfirm: () => {} })}
                 className="border border-slate-200 dark:border-zinc-800 text-slate-600 dark:text-zinc-300 hover:bg-slate-50 dark:hover:bg-zinc-900 px-4 py-2 text-xs rounded-lg transition-colors cursor-pointer w-24"
               >
-                İptal
+                {t("Cancel")}
               </button>
               <button
                 type="button"
@@ -4626,7 +4628,7 @@ export default function DealManagementView({ initialTab = "dashboard", onNavigat
                 }}
                 className="bg-rose-600 hover:bg-rose-700 text-white px-4 py-2 text-xs rounded-lg transition-colors cursor-pointer shadow-sm w-24 active:scale-95 transition-transform"
               >
-                Sil
+                {t("Delete")}
               </button>
             </div>
           </div>

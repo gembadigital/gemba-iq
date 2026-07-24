@@ -16,7 +16,7 @@ Son güncelleme: 2026-07-24
 |---|-------|-------|
 | 1 | CompaniesView.tsx (Şirketler) | Tamamlandı (2026-07-24) |
 | 2 | TargetAccountsView.tsx (Hedef Hesaplar) | Tamamlandı (2026-07-24) |
-| 3 | DealManagementView.tsx (Fırsat Yönetimi / Kanban) | Planlandı |
+| 3 | DealManagementView.tsx (Fırsat Yönetimi / Kanban) | Tamamlandı (2026-07-24) |
 | 4 | ProposalManagementView.tsx + ProposalFormModal.tsx | Planlandı |
 | 5 | LeadProfilesView.tsx + EmailLeadDiscoveryView.tsx | Planlandı |
 | 6 | ServicesView.tsx (Hizmet Kataloğu) | Planlandı |
@@ -42,6 +42,16 @@ Her modül geçişi kendi commit/deploy döngüsüyle kapanır; bu tablo ilerled
 - Dil: Yeni kayıt/içe aktarma varsayılanlarında ve tablo/detay panelinde gösterilen "Kalite / Operasyon", "Direktörü", "Genel Endüstri", "Belirtilmemiş" gibi sabit Türkçe yer tutucu metinler artık `t()` ile sarmalanmış kanonik İngilizce anahtarlar üzerinden gösteriliyor (İngilizce modda da doğru görünür; eskiden kaydedilmiş kayıtlardaki ham Türkçe veri de sözlüğün çift yönlü arama mekanizması sayesinde doğru çevriliyor).
 - UI/UX — Erişilebilirlik: İçe aktarma hata banner'ındaki kapatma ikonu aslında bir `<button>` bile değildi (klavyeyle asla kapatılamıyordu) → gerçek `<button>` yapıldı. Satır aksiyon ikonları (mail/düzenle/sil), düzenleme modu onay/iptal ikonları, form ve çekmece kapatma ikonlarına `aria-label` eklendi; detay çekmecesine `role="dialog" aria-modal="true"` eklendi.
 - Not: Bu dosyanın kendi `t()` çağrıları zaten sözlükte tamdı (yalnızca örnek/placeholder veri metinleri "eksik" görünüyordu, gerçek arayüz metni değil) — bu modülün asıl sorunu dil değil, UI/UX'ti.
+
+**Modül 3 (DealManagementView.tsx) — yapılanlar:**
+- Bu dosya 4600+ satır ile şimdiye kadarki en büyük modül; kendi içinde daha önce kurulmuş, dosyaya özel bir `confirmDeleteModal` onay sistemi zaten vardı (bulgu: onay eksikliği değil, bu onay sisteminin metinleri hardcoded Türkçe'ydi). Karar: bu iyi çalışan yapıyı paylaşımlı `ConfirmModal`'a taşımadık (4600 satırlık dosyada riskli bir refactor olurdu), sadece metinlerini `t()` ile sarmaladık.
+- Dil — Onay diyalogları: toplu silme, tekli fırsat silme (liste görünümü + Kanban kart görünümü) başlık/mesajları artık `t()` üzerinden geliyor (`"Deal Record Will Be Deleted"`, `"Deal Card Will Be Deleted"`, `"Selected Deals Will Be Deleted"` vb. yeni sözlük anahtarları eklendi).
+- Dil — 6 `alert()` çağrısı hardcoded Türkçe'ydi, `t()`'ye taşındı: CSV dışa aktarma boş liste uyarısı, CSV içe aktarma başarı mesajı, aşama adı çakışması, hatırlatma maili hazırlama başarı mesajı, alıcı/konu-gövde boş uyarıları.
+- Dil — JSX içinde 5 sabit Türkçe metin bulundu ve `t()`'ye sarmalandı: "İçe Aktar"/"Dışa Aktar" liste toolbar butonları, çekmece başlığı "Fırsat Kartvizit Detayları", hatırlatma maili panelindeki "Bilgi ve Akıllı Entegrasyon" bilgi kutusu metni ve gönder butonu etiketi.
+- Aşama silme/yeniden adlandırma akışı (`handleDeleteStage`/`handleRenameStage`, migrasyon popup'ı dahil) incelendi — bu akış zaten tam `t()` kapsamındaydı, ek düzeltme gerekmedi.
+- UI/UX — CSS: fırsat detay çekmecesinin overlay'inde geçersiz `z-45` Tailwind class'ı (Modül 1'deki `z-55` ile aynı kök neden — proje bu ölçeği tanımlamıyor, hiç uygulanmıyordu) → `z-[45]` yapıldı.
+- UI/UX — Erişilebilirlik: liste ve Kanban kart görünümündeki ikon-only silme (Trash2) butonlarına `aria-label` eklendi; dosyadaki 8 modal/popup overlay'inin tamamına (`role="dialog" aria-modal="true"`) eklendi — bu dosyada daha önce hiçbirinde yoktu.
+- UI/UX — Boş durumlar: liste görünümü ("No deals found matching current filters") ve Kanban sütunları ("Move deals here") için boş durum mesajları zaten mevcuttu, ek iş gerekmedi.
 
 ---
 

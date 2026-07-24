@@ -2134,6 +2134,26 @@ export const uiDictionaryTR: Record<string, string> = {
   "Director": "Direktörü",
   "General Industry": "Genel Endüstri",
 
+  // Modül 3 (DealManagementView.tsx) - confirmDeleteModal + alert() sabit
+  // Türkçe metinlerin t() ile sarmalanması, ayrıca 2 sabit buton/başlık metni
+  "Delete Record": "Kayıt Silinecek",
+  "Selected Deals Will Be Deleted": "Seçili Fırsatlar Silinecek",
+  "{count} deal record(s) will be moved to the recycle bin. Continue?": "{count} fırsat kaydı geri dönüşüm kutusuna taşınacak. Devam edilsin mi?",
+  "Deal Record Will Be Deleted": "Fırsat Kaydı Silinecek",
+  "Deal Card Will Be Deleted": "Fırsat Kartı Silinecek",
+  "Reminder email prepared successfully and opened in your mail application!": "Hatırlatma e-postası başarıyla hazırlandı ve mail uygulamasında açıldı!",
+  "Recipient address cannot be empty.": "Alıcı adresi boş olamaz.",
+  "Subject line and message body cannot be left empty.": "Konu başlığı ve mesaj gövdesi boş bırakılamaz.",
+  "No deals found to export.": "Dışa aktarılacak fırsat bulunamadı.",
+  "{count} deals successfully imported!": "{count} fırsat başarıyla içe aktarıldı!",
+  "Import": "İçe Aktar",
+  "Export": "Dışa Aktar",
+  "Opportunity Business Card Details": "Fırsat Kartvizit Detayları",
+  "Info & Smart Integration": "Bilgi ve Akıllı Entegrasyon",
+  "The prepared mail content is auto-filled in your selected email client for sending. For convenience, the mail text is also": "Hazırlanan mail içeriği gönderilmek üzere seçtiğiniz e-posta istemcisinde otomatik doldurulur. Ayrıca kolaylık olması açısından mail metni",
+  "copied to clipboard": "panoya kopyalanır",
+  "Copy and Open in Mail App": "Kopyala ve Şifrele/Aç",
+
 };
 
 export const uiDictionaryEN: Record<string, string> = Object.fromEntries(
