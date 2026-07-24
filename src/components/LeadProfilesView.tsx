@@ -30,6 +30,8 @@ import CompanyAutocomplete from "./CompanyAutocomplete";
 import { CrmDb } from "../lib/CrmDb";
 import { getActiveOrganizationId } from "../lib/tenantStorage";
 import { useOrganization } from "../lib/OrganizationContext";
+import { ConfirmModal } from "./shared/ConfirmModal";
+import { useConfirm } from "../lib/useConfirm";
 
 const LEAD_PROFILES_KEY = "crm_lead_profiles";
 // Must match the key TargetAccountsView.tsx / AISalesAssistant.tsx / CompaniesView.tsx read from.
@@ -69,6 +71,7 @@ export default function LeadProfilesView({
 }: LeadProfilesViewProps) {
   const { lang, t } = useLanguage();
   const { actorName } = useOrganization();
+  const { confirm, confirmProps } = useConfirm();
   // Profiles Storage State
   const [profiles, setProfiles] = useState<LeadProfile[]>([]);
 
@@ -223,7 +226,16 @@ export default function LeadProfilesView({
     triggerToast(t("Lead details updated successfully."), "success");
   };
 
-  const deleteSingleProfile = (id: string) => {
+  const deleteSingleProfile = async (id: string) => {
+    const profile = profiles.find(p => p.id === id);
+    const ok = await confirm({
+      title: t("Delete Lead"),
+      message: t("Are you sure you want to delete {name}?").replace("{name}", profile ? `${profile.firstName} ${profile.lastName}` : ""),
+      confirmLabel: t("Delete"),
+      cancelLabel: t("Cancel"),
+      danger: true,
+    });
+    if (!ok) return;
     const remaining = profiles.filter(p => p.id !== id);
     // Standardize 'no' sequence values
     const standardized = remaining.map((p, idx) => ({ ...p, no: idx + 1 }));
@@ -231,12 +243,20 @@ export default function LeadProfilesView({
     triggerToast(t("Profile removed from database."), "info");
   };
 
-  const deleteSelectedProfiles = () => {
+  const deleteSelectedProfiles = async () => {
     const remaining = profiles.filter(p => !p.isSelected);
     if (profiles.length === remaining.length) {
       triggerToast(t("No items selected to delete."), "info");
       return;
     }
+    const ok = await confirm({
+      title: t("Delete Selected"),
+      message: t("Are you sure you want to permanently delete {count} selected lead profile(s)?").replace("{count}", String(profiles.length - remaining.length)),
+      confirmLabel: t("Delete"),
+      cancelLabel: t("Cancel"),
+      danger: true,
+    });
+    if (!ok) return;
     const standardized = remaining.map((p, idx) => ({ ...p, no: idx + 1 }));
     updateProfilesAndPersist(standardized);
     triggerToast(t("Bulk deleted selected records successfully."), "success");
@@ -811,7 +831,9 @@ export default function LeadProfilesView({
       {/* Inline diagnostic block */}
       {importError && (
         <div className="p-4 bg-rose-50 dark:bg-rose-950/20 border border-rose-300 dark:border-rose-900 rounded text-xs text-rose-800 dark:text-rose-300 flex items-center gap-3">
-          <X className="w-4.5 h-4.5 cursor-pointer flex-shrink-0 hover:opacity-80" onClick={() => setImportError(null)} />
+          <button type="button" onClick={() => setImportError(null)} aria-label={t("Close")} className="flex-shrink-0 hover:opacity-80 cursor-pointer">
+            <X className="w-4.5 h-4.5" />
+          </button>
           <span>{importError}</span>
         </div>
       )}
@@ -895,7 +917,7 @@ export default function LeadProfilesView({
                 <Plus className="w-4 h-4 text-emerald-500" />
                 <span>{t("Input Manual Profile Candidate")}</span>
               </h3>
-              <button type="button" onClick={() => setIsAddingLead(false)} className="text-slate-400 hover:text-slate-600">
+              <button type="button" onClick={() => setIsAddingLead(false)} className="text-slate-400 hover:text-slate-600" aria-label={t("Close")}>
                 <X className="w-4 h-4" />
               </button>
             </div>
@@ -1116,7 +1138,7 @@ export default function LeadProfilesView({
 
             <button
               type="button"
-              onClick={deleteSelectedProfiles}
+              onClick={() => void deleteSelectedProfiles()}
               disabled={selectedCount === 0}
               className={`text-xs font-bold px-3 py-2 border rounded flex items-center gap-1 cursor-pointer transition-all ${
                 selectedCount > 0
@@ -1471,9 +1493,10 @@ export default function LeadProfilesView({
                               </button>
                               <button
                                 type="button"
-                                onClick={() => deleteSingleProfile(p.id)}
+                                onClick={() => void deleteSingleProfile(p.id)}
                                 className="p-1 text-rose-500 hover:text-rose-600 rounded hover:bg-rose-50 dark:hover:bg-rose-950/25"
                                 title={t("Delete Lead")}
+                                aria-label={`${t("Delete Lead")}: ${p.firstName} ${p.lastName}`}
                               >
                                 <Trash2 className="w-3.5 h-3.5" />
                               </button>
@@ -1560,6 +1583,7 @@ export default function LeadProfilesView({
       </>
       )}
 
+      <ConfirmModal {...confirmProps} />
     </div>
   );
 }

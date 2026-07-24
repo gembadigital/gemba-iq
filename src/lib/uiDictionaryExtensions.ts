@@ -2162,6 +2162,38 @@ export const uiDictionaryTR: Record<string, string> = {
   "A server error occurred.": "API sunucu hatası oluştu.",
   "Could not get a valid table from the AI.": "Yapay zekadan geçerli bir tablo alınamadı.",
 
+  // Modül 5 (LeadProfilesView.tsx) - hiç var olmayan silme onayı eklendi
+  "Are you sure you want to permanently delete {count} selected lead profile(s)?": "Seçili {count} aday profilini kalıcı olarak silmek istediğinizden emin misiniz?",
+
+  // Modül 5 (EmailLeadDiscoveryView.tsx) - tarama log/durum mesajlarındaki ve
+  // hata-yardım kutusundaki hardcoded Türkçe metinler artık t() ile sarmalanıyor
+  "No real mailbox connected, so sample/demo data is being shown.": "Bağlı gerçek bir posta kutusu olmadığı için örnek/deneme verileri gösteriliyor.",
+  "✓ {count} real B2B corporate contact(s) resolved and added to the candidate list ({scanned} emails scanned).": "✓ {count} gerçek B2B kurumsal kontağı çözümlenip aday listesine alındı ({scanned} e-posta tarandı).",
+  "Live scan extracted {count} B2B corporate candidate(s).": "Canlı tarama sonucu {count} adet B2B kurumsal aday çıkarıldı.",
+  "Connection established, {scanned} email(s) read. However, no new candidate matching corporate signature/title criteria was found.": "Bağlantı kuruldu, {scanned} e-posta okundu. Ancak kurumsal imza/unvan kriterlerine uyan yeni bir aday bulunamadı.",
+  "Connection established and emails read. However, no new corporate candidate matching signature criteria was detected.": "Bağlantı kuruldu ve e-postalar okundu. Ancak imza kriterlerine uyan yeni bir kurumsal aday tespit edilmedi.",
+  "❌ Live scan failed: {error}": "❌ Canlı tarama başarısız: {error}",
+  "Microsoft Graph 'Mail.Read' permission appears to be missing. The Mail.Read (application) permission must be added in Azure App Registration and admin consent granted.": "Microsoft Graph 'Mail.Read' izni verilmemiş görünüyor. Azure App Registration'da Mail.Read (application) izni eklenip yönetici onayı (admin consent) verilmesi gerekiyor.",
+  "Live scan could not be performed due to a Microsoft Graph API access error.": "Microsoft Graph API erişim hatası nedeniyle canlı tarama gerçekleştirilemedi.",
+  "Unknown Address": "Bilinmeyen Adres",
+  "Missing identity information": "Boş kimlik bilgisi",
+  "Internal correspondence ({domain})": "İç yazışma ({domain})",
+  "Automated/system email (no-reply)": "Otomatik/Sistem e-postası (no-reply)",
+  "Generic personal provider ({domain})": "Genel bireysel sağlayıcı ({domain})",
+  "Corporate Contact": "Kurumsal Kontak",
+  "Corporate Communications Partner": "Kurumsal İletişim Ortağı",
+  "Extracting from sender's signature...": "Gönderici imzasından süzülüyor...",
+  "(Email signature or body text is empty/could not be detected)": "(E-posta imza veya gövde metni boş/algılanamadı)",
+  "Error Causes & How to Fix Them?": "Hata Nedenleri & Nasıl Giderilir?",
+  "Refreshing the Organization Mailbox connection:": "Organization Mailbox bağlantısının yenilenmesi:",
+  "Microsoft Graph permissions are refreshed automatically server-side. If the refresh fails, the ADMIN must reconnect it.": "Microsoft Graph yetkileri sunucu tarafında otomatik yenilenir. Yenileme başarısız olursa ADMIN bağlantıyı yeniden kurmalıdır.",
+  "Insufficient Permission Scope:": "Yetersiz İzin Kapsamı:",
+  "The signed-in profile must be granted the": "Giriş yapılan profilin e-postaları okuyabilmesi için",
+  "permission in order to read emails.": "yetkisinin verilmiş olması şarttır.",
+  "Solution: Test or reconnect the connection from the Shared Mailboxes screen in Organization Settings.": "Çözüm: Organization Settings içindeki Shared Mailboxes ekranından bağlantıyı test edin veya yeniden bağlayın.",
+  "Resolved Corporate Candidates:": "Çözümlenen Kurumsal Aday:",
+  "Generic/Filtered Signals:": "Genel/Filtrelenen Sinyaller:",
+
 };
 
 export const uiDictionaryEN: Record<string, string> = Object.fromEntries(

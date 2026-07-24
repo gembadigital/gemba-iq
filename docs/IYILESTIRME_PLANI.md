@@ -18,7 +18,7 @@ Son güncelleme: 2026-07-24
 | 2 | TargetAccountsView.tsx (Hedef Hesaplar) | Tamamlandı (2026-07-24) |
 | 3 | DealManagementView.tsx (Fırsat Yönetimi / Kanban) | Tamamlandı (2026-07-24) |
 | 4 | ProposalManagementView.tsx + ProposalFormModal.tsx | Tamamlandı (2026-07-24) |
-| 5 | LeadProfilesView.tsx + EmailLeadDiscoveryView.tsx | Planlandı |
+| 5 | LeadProfilesView.tsx + EmailLeadDiscoveryView.tsx | Tamamlandı (2026-07-24) |
 | 6 | ServicesView.tsx (Hizmet Kataloğu) | Planlandı |
 | 7 | RevenueManagementView.tsx + ManagementPLView.tsx | Planlandı |
 | 8 | TasksView.tsx (Görevler) | Planlandı |
@@ -61,6 +61,13 @@ Her modül geçişi kendi commit/deploy döngüsüyle kapanır; bu tablo ilerled
 - Dil — `ProposalFormModal.tsx`'te AI tablo dönüştürme akışının 2 hata mesajı (`throw new Error(...)`) hardcoded Türkçe'ydi, kullanıcıya `catch` bloğunda `t()`'siz gösteriliyordu → `t()`'ye taşındı. "Quick Add Company" linki de hardcoded İngilizce'ydi → mevcut sözlük anahtarına bağlandı.
 - UI/UX — Erişilebilirlik: bu iki dosyada `role="dialog"` hiç kullanılmamıştı — `ProposalManagementView.tsx`'teki 6 modal (revizyon, belge önizleme, mail gönderim, silme onayı, teklif detay paneli, şablon yöneticisi) ve `ProposalFormModal.tsx`'teki tek modal olmak üzere toplam 7 modal'a eklendi. Ayrıca 4 ikon-only butona (detay panel kapatma X, form modal kapatma X, şablon düzenle/sil ikonları) `aria-label` eklendi.
 - Not: Teklif onay durumunu "Draft"a geri alma (`confirm()`) ve red gerekçesi girme (`prompt()`) hâlâ native tarayıcı diyalogları kullanıyor — bu modülün kapsamındaki tek "eksik" ama düşük öncelikli madde; silme akışının aksine burada zaten en az bir onay adımı var, sadece markalı modal değil.
+
+**Modül 5 (LeadProfilesView.tsx + EmailLeadDiscoveryView.tsx) — yapılanlar:**
+- UI/UX — Onay eksikliği (Faz 4, TargetAccountsView ile aynı ciddiyette bulgu): `LeadProfilesView.tsx`'te tekli ve toplu aday silme hiçbir onay istemeden anında siliyordu. Paylaşımlı `ConfirmModal`/`useConfirm()` eklendi.
+- UI/UX — Erişilebilirlik: içe aktarma hata banner'ındaki kapatma ikonu gerçek bir `<button>` değildi → düzeltildi; silme/kapatma ikon-only butonlarına `aria-label` eklendi.
+- Dil — `EmailLeadDiscoveryView.tsx`: canlı tarama akışının log/durum mesajlarının bir kısmı `t()` ile sarmalıyken bir kısmı (özellikle başarı/hata sonuç mesajları) hardcoded Türkçe'ydi — aynı ekranda İngilizce modda yarı Türkçe yarı İngilizce görünüyordu. Tüm tarama log satırları, durum mesajları ve "filtrelenen adres" nedeni etiketleri (`Bilinmeyen Adres`, `İç yazışma`, `Otomatik/Sistem e-postası` vb. — bunlar arayüzde gerçekten gösteriliyor, sadece kod yorumu değil) `t()`'ye taşındı.
+- Dil — Hata detay kutusundaki "Hata Nedenleri & Nasıl Giderilir?" yardım metni (3 maddelik Mail.Read izin rehberi) ve canlı tarama istatistik etiketleri ("Çözümlenen Kurumsal Aday:", "Genel/Filtrelenen Sinyaller:") tamamen hardcoded Türkçe idi, hiç `t()` içermiyordu → sarmalandı.
+- Not: `LeadProfilesView.tsx`'in kendi tablo/form arayüzü zaten baştan tamdı (dinamik `t(p.leadStatus)` / `t(p.leadSegment)` çevirileri dahil) — bu modülün asıl sorunu `EmailLeadDiscoveryView.tsx` tarafındaki tarama-sonucu mesajlarıydı.
 
 ---
 

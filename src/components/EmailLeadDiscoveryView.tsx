@@ -383,7 +383,7 @@ export default function EmailLeadDiscoveryView({
     const contactNameRaw = contact?.name || "";
 
     if (!contactEmailRaw) {
-      filteredList.push({ email: "Bilinmeyen Adres", reason: "Boş kimlik bilgisi", folder: msg.folder, date: msg.date });
+      filteredList.push({ email: t("Unknown Address"), reason: t("Missing identity information"), folder: msg.folder, date: msg.date });
       return;
     }
 
@@ -392,21 +392,21 @@ export default function EmailLeadDiscoveryView({
     const contactName = contactNameRaw || contactEmail.split("@")[0];
 
     if (myDomain && domain === myDomain) {
-      filteredList.push({ email: contactEmail, reason: `İç yazışma (${myDomain})`, folder: msg.folder, date: msg.date });
+      filteredList.push({ email: contactEmail, reason: t("Internal correspondence ({domain})").replace("{domain}", myDomain), folder: msg.folder, date: msg.date });
       return;
     }
     if (contactEmail.includes("noreply") || contactEmail.includes("no-reply") || contactEmail.includes("support") || contactEmail.includes("alert")) {
-      filteredList.push({ email: contactEmail, reason: "Otomatik/Sistem e-postası (no-reply)", folder: msg.folder, date: msg.date });
+      filteredList.push({ email: contactEmail, reason: t("Automated/system email (no-reply)"), folder: msg.folder, date: msg.date });
       return;
     }
     if (["gmail.com", "outlook.com", "hotmail.com", "yahoo.com", "protonmail.com", "aol.com", "yandex.com", "icloud.com"].includes(domain)) {
-      filteredList.push({ email: contactEmail, reason: "Genel bireysel sağlayıcı (" + domain + ")", folder: msg.folder, date: msg.date });
+      filteredList.push({ email: contactEmail, reason: t("Generic personal provider ({domain})").replace("{domain}", domain), folder: msg.folder, date: msg.date });
       return;
     }
 
-    const companyName = domain ? domain.split(".")[0].toUpperCase() + " Şirketi" : "Kurumsal Kontak";
-    let jobTitle = "Kurumsal İletişim Ortağı";
-    let phoneNum = "Gönderici imzasından süzülüyor...";
+    const companyName = domain ? domain.split(".")[0].toUpperCase() + " " + t("Company") : t("Corporate Contact");
+    let jobTitle = t("Corporate Communications Partner");
+    let phoneNum = t("Extracting from sender's signature...");
     const bodyPreview = msg.bodyPreview || "";
 
     const previewLines = bodyPreview.split(/\r?\n|,\s*|\|\s*/);
@@ -451,7 +451,7 @@ export default function EmailLeadDiscoveryView({
         companySuggestion: companyName + " A.Ş.",
         assignedSalesperson,
         status: "new",
-        detectedSignature: bodyPreview.length > 250 ? bodyPreview.substring(0, 250) + "..." : bodyPreview || "(E-posta imza veya gövde metni boş/algılanamadı)"
+        detectedSignature: bodyPreview.length > 250 ? bodyPreview.substring(0, 250) + "..." : bodyPreview || t("(Email signature or body text is empty/could not be detected)")
       });
     }
   };
@@ -475,7 +475,7 @@ export default function EmailLeadDiscoveryView({
       seedDiscoveredData();
       setScanStatus({
         success: true,
-        message: "Bağlı gerçek bir posta kutusu olmadığı için örnek/deneme verileri gösteriliyor.",
+        message: t("No real mailbox connected, so sample/demo data is being shown."),
         source: "sandbox",
         totalParsed: 6,
         totalFiltered: 6
@@ -516,10 +516,10 @@ export default function EmailLeadDiscoveryView({
 
       if (parsedList.length > 0) {
         setDiscoveredLeads(parsedList);
-        log(`✓ ${parsedList.length} gerçek B2B kurumsal kontağı çözümlenip aday listesine alındı (${totalMessages} e-posta tarandı).`);
+        log(t("✓ {count} real B2B corporate contact(s) resolved and added to the candidate list ({scanned} emails scanned).").replace("{count}", String(parsedList.length)).replace("{scanned}", String(totalMessages)));
         setScanStatus({
           success: true,
-          message: `Canlı tarama sonucu ${parsedList.length} adet B2B kurumsal aday çıkarıldı.`,
+          message: t("Live scan extracted {count} B2B corporate candidate(s).").replace("{count}", String(parsedList.length)),
           source: "live",
           totalParsed: parsedList.length,
           totalFiltered: filteredList.length
@@ -527,10 +527,10 @@ export default function EmailLeadDiscoveryView({
         triggerToast(t("{count} real leads extracted from your emails!").replace("{count}", String(parsedList.length)));
       } else {
         setDiscoveredLeads([]);
-        log(`Bağlantı kuruldu, ${totalMessages} e-posta okundu. Ancak kurumsal imza/unvan kriterlerine uyan yeni bir aday bulunamadı.`);
+        log(t("Connection established, {scanned} email(s) read. However, no new candidate matching corporate signature/title criteria was found.").replace("{scanned}", String(totalMessages)));
         setScanStatus({
           success: true,
-          message: "Bağlantı kuruldu ve e-postalar okundu. Ancak imza kriterlerine uyan yeni bir kurumsal aday tespit edilmedi.",
+          message: t("Connection established and emails read. However, no new corporate candidate matching signature criteria was detected."),
           source: "live",
           totalParsed: 0,
           totalFiltered: filteredList.length
@@ -540,12 +540,12 @@ export default function EmailLeadDiscoveryView({
     } catch (err: any) {
       console.error("Live scanning error:", err);
       const errMsg = err.message || String(err);
-      log(`❌ Canlı tarama başarısız: ${errMsg}`);
+      log(t("❌ Live scan failed: {error}").replace("{error}", errMsg));
       setScanStatus({
         success: false,
         message: /mail\.read|permission|forbidden|403/i.test(errMsg)
-          ? "Microsoft Graph 'Mail.Read' izni verilmemiş görünüyor. Azure App Registration'da Mail.Read (application) izni eklenip yönetici onayı (admin consent) verilmesi gerekiyor."
-          : "Microsoft Graph API erişim hatası nedeniyle canlı tarama gerçekleştirilemedi.",
+          ? t("Microsoft Graph 'Mail.Read' permission appears to be missing. The Mail.Read (application) permission must be added in Azure App Registration and admin consent granted.")
+          : t("Live scan could not be performed due to a Microsoft Graph API access error."),
         source: "live",
         errorDetails: errMsg
       });
@@ -1039,10 +1039,10 @@ export default function EmailLeadDiscoveryView({
                     {scanStatus.errorDetails}
                   </p>
                   <p className="text-[11px] text-slate-500 leading-relaxed bg-white/40 dark:bg-black/30 p-2.5 rounded-md mt-2 border border-slate-200/40">
-                    <strong>Hata Nedenleri & Nasıl Giderilir?</strong><br />
-                    1. <strong>Organization Mailbox bağlantısının yenilenmesi:</strong> Microsoft Graph yetkileri sunucu tarafında otomatik yenilenir. Yenileme başarısız olursa ADMIN bağlantıyı yeniden kurmalıdır.<br />
-                    2. <strong>Yetersiz İzin Kapsamı:</strong> Giriş yapılan profilin e-postaları okuyabilmesi için <code className="bg-slate-100 px-1 py-0.5 rounded text-[10px] dark:bg-zinc-900 dark:text-zinc-300">Mail.Read</code> yetkisinin verilmiş olması şarttır.<br />
-                    <strong className="text-indigo-650 dark:text-indigo-400 block mt-1">✓ Çözüm: Organization Settings içindeki Shared Mailboxes ekranından bağlantıyı test edin veya yeniden bağlayın.</strong>
+                    <strong>{t("Error Causes & How to Fix Them?")}</strong><br />
+                    1. <strong>{t("Refreshing the Organization Mailbox connection:")}</strong> {t("Microsoft Graph permissions are refreshed automatically server-side. If the refresh fails, the ADMIN must reconnect it.")}<br />
+                    2. <strong>{t("Insufficient Permission Scope:")}</strong> {t("The signed-in profile must be granted the")} <code className="bg-slate-100 px-1 py-0.5 rounded text-[10px] dark:bg-zinc-900 dark:text-zinc-300">Mail.Read</code> {t("permission in order to read emails.")}<br />
+                    <strong className="text-indigo-650 dark:text-indigo-400 block mt-1">✓ {t("Solution: Test or reconnect the connection from the Shared Mailboxes screen in Organization Settings.")}</strong>
                   </p>
                 </div>
               )}
@@ -1051,12 +1051,12 @@ export default function EmailLeadDiscoveryView({
               {scanStatus.success && scanStatus.source === "live" && (
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2 text-[11px] font-mono border-t border-emerald-250/20 mt-3">
                   <div>
-                    <span className="font-bold text-slate-700 dark:text-zinc-400">Çözümlenen Kurumsal Aday:</span>{" "}
-                    <span className="text-emerald-600 dark:text-emerald-400 font-bold">{scanStatus.totalParsed} adet</span>
+                    <span className="font-bold text-slate-700 dark:text-zinc-400">{t("Resolved Corporate Candidates:")}</span>{" "}
+                    <span className="text-emerald-600 dark:text-emerald-400 font-bold">{scanStatus.totalParsed}</span>
                   </div>
                   <div>
-                    <span className="font-bold text-slate-705 dark:text-zinc-400">Genel/Filtrelenen Sinyaller:</span>{" "}
-                    <span className="text-amber-600 dark:text-amber-400 font-semibold">{scanStatus.totalFiltered} adet</span>
+                    <span className="font-bold text-slate-705 dark:text-zinc-400">{t("Generic/Filtered Signals:")}</span>{" "}
+                    <span className="text-amber-600 dark:text-amber-400 font-semibold">{scanStatus.totalFiltered}</span>
                   </div>
                 </div>
               )}
