@@ -2194,6 +2194,16 @@ export const uiDictionaryTR: Record<string, string> = {
   "Resolved Corporate Candidates:": "Çözümlenen Kurumsal Aday:",
   "Generic/Filtered Signals:": "Genel/Filtrelenen Sinyaller:",
 
+  // Modül 6 (ServicesView.tsx) - hizmet kartı yönetimi paneli + PDF/e-posta
+  // alert() metinleri hardcoded Türkçe idi, artık t() ile sarmalanıyor
+  "Could not generate PDF. Please try again after the preview has fully loaded.": "PDF oluşturulamadı. Lütfen önizleme yüklendikten sonra tekrar deneyin.",
+  "An error occurred while generating the PDF. Please try again.": "PDF oluşturulurken bir hata oluştu. Lütfen tekrar deneyin.",
+  "Please connect an Organization or Personal mailbox from the Settings tab before sending an email.": "E-posta göndermeden önce Ayarlar sekmesinden bir Kurumsal veya Kişisel posta kutusu bağlayın.",
+  "Please fill in the recipient email, subject, and content fields.": "Lütfen alıcı e-postası, konu ve içerik alanlarını doldurun.",
+  "The proposal PDF could not be generated, so the email was not sent. Please make sure the A4 preview has fully loaded and try again.": "Teklif PDF'i oluşturulamadı, bu yüzden e-posta gönderilmedi. Lütfen A4 önizlemenin tam yüklendiğinden emin olup tekrar deneyin.",
+  "Add New": "Yeni Ekle",
+  "Delete Selected Service": "Seçili Hizmeti Sil",
+
 };
 
 export const uiDictionaryEN: Record<string, string> = Object.fromEntries(

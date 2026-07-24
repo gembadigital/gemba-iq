@@ -2406,13 +2406,13 @@ export default function ServicesView({
     try {
       const pdf = await generateProposalPdfBase64();
       if (!pdf) {
-        alert("PDF oluşturulamadı. Lütfen önizleme yüklendikten sonra tekrar deneyin.");
+        alert(t("Could not generate PDF. Please try again after the preview has fully loaded."));
         return;
       }
       triggerBase64FileDownload(pdf.base64, pdf.filename, "application/pdf");
     } catch (err) {
       console.error("PDF export failed:", err);
-      alert("PDF oluşturulurken bir hata oluştu. Lütfen tekrar deneyin.");
+      alert(t("An error occurred while generating the PDF. Please try again."));
     } finally {
       setIsExportingPdf(false);
     }
@@ -2420,11 +2420,11 @@ export default function ServicesView({
 
   const handleSendProposalEmailInApp = async () => {
     if (!selectedProposalSender) {
-      alert("E-posta göndermeden önce Ayarlar sekmesinden bir Kurumsal veya Kişisel posta kutusu bağlayın.");
+      alert(t("Please connect an Organization or Personal mailbox from the Settings tab before sending an email."));
       return;
     }
     if (!clientContactEmail || !mailSubject || !mailBody) {
-      alert("Lütfen alıcı e-postası, konu ve içerik alanlarını doldurun.");
+      alert(t("Please fill in the recipient email, subject, and content fields."));
       return;
     }
 
@@ -2436,7 +2436,7 @@ export default function ServicesView({
       // success (that was the previous, confusing behavior).
       const pdf = await generateProposalPdfBase64().catch(() => null);
       if (!pdf) {
-        alert("Teklif PDF'i oluşturulamadı, bu yüzden e-posta gönderilmedi. Lütfen A4 önizlemenin tam yüklendiğinden emin olup tekrar deneyin.");
+        alert(t("The proposal PDF could not be generated, so the email was not sent. Please make sure the A4 preview has fully loaded and try again."));
         return;
       }
 
@@ -2610,7 +2610,7 @@ export default function ServicesView({
                   onClick={createNewCard}
                   className="flex-1 bg-[#0078D4] hover:bg-blue-600 text-white text-xs font-bold px-3 py-2 rounded flex items-center justify-center gap-1.5 cursor-pointer transition-colors"
                 >
-                  <Plus className="w-3.5 h-3.5" /> Yeni Ekle
+                  <Plus className="w-3.5 h-3.5" /> {t("Add New")}
                 </button>
                 
                 {selectedEditCardId && (
@@ -2623,7 +2623,8 @@ export default function ServicesView({
                       }
                     }}
                     className="bg-rose-50 dark:bg-rose-950/20 hover:bg-rose-100 dark:hover:bg-rose-950/40 text-rose-600 dark:text-rose-450 p-2 rounded border border-rose-200 dark:border-rose-900/30 cursor-pointer transition-colors"
-                    title="Seçili Hizmeti Sil"
+                    title={t("Delete Selected Service")}
+                    aria-label={t("Delete Selected Service")}
                   >
                     <Trash2 className="w-4 h-4" />
                   </button>
@@ -4202,7 +4203,7 @@ export default function ServicesView({
 
       {/* Custom Global Confirmation Dialog */}
       {confirmDeleteModal.isOpen && (
-        <div className="fixed inset-0 bg-black/60 backdrop-blur-xs flex items-center justify-center z-[9999] p-4 font-sans antialiased animate-fade-in text-slate-800 dark:text-zinc-200">
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-xs flex items-center justify-center z-[9999] p-4 font-sans antialiased animate-fade-in text-slate-800 dark:text-zinc-200" role="dialog" aria-modal="true">
           <div className="bg-white dark:bg-[#181818] w-full max-w-sm rounded-xl border border-slate-205 dark:border-zinc-855 shadow-2xl p-6 text-center animate-in zoom-in-95 duration-100">
             <div className="mx-auto w-12 h-12 bg-rose-50 dark:bg-rose-950/25 rounded-full flex items-center justify-center text-rose-500 mb-4">
               <Trash2 className="w-6 h-6 animate-pulse" />

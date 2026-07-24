@@ -19,7 +19,7 @@ Son güncelleme: 2026-07-24
 | 3 | DealManagementView.tsx (Fırsat Yönetimi / Kanban) | Tamamlandı (2026-07-24) |
 | 4 | ProposalManagementView.tsx + ProposalFormModal.tsx | Tamamlandı (2026-07-24) |
 | 5 | LeadProfilesView.tsx + EmailLeadDiscoveryView.tsx | Tamamlandı (2026-07-24) |
-| 6 | ServicesView.tsx (Hizmet Kataloğu) | Planlandı |
+| 6 | ServicesView.tsx (Hizmet Kataloğu) | Tamamlandı (2026-07-24, kısmi — aşağıya bak) |
 | 7 | RevenueManagementView.tsx + ManagementPLView.tsx | Planlandı |
 | 8 | TasksView.tsx (Görevler) | Planlandı |
 | 9 | CampaignManagerView.tsx + CampaignDesigner.tsx | Planlandı |
@@ -68,6 +68,12 @@ Her modül geçişi kendi commit/deploy döngüsüyle kapanır; bu tablo ilerled
 - Dil — `EmailLeadDiscoveryView.tsx`: canlı tarama akışının log/durum mesajlarının bir kısmı `t()` ile sarmalıyken bir kısmı (özellikle başarı/hata sonuç mesajları) hardcoded Türkçe'ydi — aynı ekranda İngilizce modda yarı Türkçe yarı İngilizce görünüyordu. Tüm tarama log satırları, durum mesajları ve "filtrelenen adres" nedeni etiketleri (`Bilinmeyen Adres`, `İç yazışma`, `Otomatik/Sistem e-postası` vb. — bunlar arayüzde gerçekten gösteriliyor, sadece kod yorumu değil) `t()`'ye taşındı.
 - Dil — Hata detay kutusundaki "Hata Nedenleri & Nasıl Giderilir?" yardım metni (3 maddelik Mail.Read izin rehberi) ve canlı tarama istatistik etiketleri ("Çözümlenen Kurumsal Aday:", "Genel/Filtrelenen Sinyaller:") tamamen hardcoded Türkçe idi, hiç `t()` içermiyordu → sarmalandı.
 - Not: `LeadProfilesView.tsx`'in kendi tablo/form arayüzü zaten baştan tamdı (dinamik `t(p.leadStatus)` / `t(p.leadSegment)` çevirileri dahil) — bu modülün asıl sorunu `EmailLeadDiscoveryView.tsx` tarafındaki tarama-sonucu mesajlarıydı.
+
+**Modül 6 (ServicesView.tsx) — yapılanlar ve ÖNEMLİ KAPSAM NOTU:**
+- Dil: PDF indirme/e-posta gönderme akışındaki 5 `alert()` çağrısı hardcoded Türkçe idi (`t()` içermiyordu) → tamamı `t()`'ye taşındı.
+- Dil: Hizmet Kartları panelindeki "Yeni Ekle" butonu ve "Seçili Hizmeti Sil" ikon başlığı hardcoded Türkçe idi → `t()`'ye sarmalandı, ikon-only silme butonuna `aria-label` eklendi.
+- UI/UX: Dosyadaki tek gerçek modal (silme onay diyaloğu) zaten mevcut `confirmDeleteModal` sistemiyle tam `t()` kapsamındaydı, sadece eksik olan `role="dialog" aria-modal="true"` eklendi.
+- **KAPSAM NOTU (önemli):** Bu dosyanın ~1700 satırlık "Teklif Sihirbazı" (Proposal Wizard, Aşama 1-5: Müşteri Bilgileri → Hizmet Seçimi → Ticari Opsiyonlar → Genel Şartlar → Antetli & Gönderim) bölümü, yukarıdaki modüllerde bulunan "birkaç satır hardcoded, geri kalanı `t()`" tipi noktasal tutarsızlıklardan farklı olarak, **baştan sona tasarım gereği Türkçe** yazılmış — placeholder token'ları bile Türkçe (`{{FirmaAdı}}`, `{{TeklifNo}}`, `{{İlgiliKişi}}` vb.). Yaklaşık 150+ ayrı metin (etiket, buton, placeholder, yardım metni) `t()` içermiyor. Bunu diğer modüllerdeki gibi noktasal düzeltmelerle kapatmak mümkün değil — bu, kendi başına ayrı bir "Teklif Sihirbazını İngilizce moda taşı" projesi gerektirir (~150+ yeni sözlük anahtarı, dikkatli test). Şu anki modül-modül dil taraması kapsamında bunu YAPMADIM; sadece gerçek tutarsızlık bulgularını (alert'ler, 2 buton, modal rolü) düzelttim. Kullanıcı bu sihirbazın İngilizce modda da tam çalışmasını istiyorsa, bu ayrı bir görev olarak planlanmalı.
 
 ---
 
