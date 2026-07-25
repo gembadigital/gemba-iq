@@ -372,6 +372,27 @@ export const uiDictionaryTR: Record<string, string> = {
   "Other": "Diğer",
   "English": "İngilizce",
 
+  // Loss reason + re-contact reminder (LossReasonModal — Fırsat Kanban +
+  // Teklif Reddet akışı, 2026-07-25)
+  "Loss Reason": "Kaybetme Nedeni",
+  "Project cancelled": "Proje iptal",
+  "Postponed": "Ertelendi",
+  "Went with different company": "Farklı firma",
+  "Proposal too expensive": "Teklif pahalı",
+  "Why was this lost?": "Bu neden kaybedildi?",
+  "Loss reason notes (optional)": "Kayıp nedeni notları (opsiyonel)",
+  "Any extra context (optional)": "Ek bağlam (opsiyonel)",
+  "Create a re-contact reminder": "Tekrar temas hatırlatması oluştur",
+  "Re-contact window start": "Tekrar temas başlangıcı",
+  "Re-contact window end": "Tekrar temas bitişi",
+  "A reminder email will be sent to the owner (or admin) when this window starts.": "Bu tarih aralığı başladığında sorumlu kişiye (veya admin'e) hatırlatma e-postası gönderilir.",
+  "Please select a loss reason.": "Lütfen bir kaybetme nedeni seçin.",
+  "Please set both reminder dates, or turn the reminder off.": "Lütfen her iki hatırlatma tarihini de girin ya da hatırlatmayı kapatın.",
+  "End date must be after start date.": "Bitiş tarihi başlangıç tarihinden sonra olmalı.",
+  "-- Select --": "-- Seçiniz --",
+  "Re-contact reminder": "Tekrar Temas Hatırlatması",
+  "Re-contact window": "Tekrar temas aralığı",
+
   // Revenue tab
   "Draft": "Taslak",
   "Pending": "Beklemede",

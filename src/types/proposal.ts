@@ -92,6 +92,17 @@ export interface Proposal {
   competitor?: string;
   notes?: string;
 
+  // Loss reason + re-contact reminder (added for Kanban/Proposal "lost" flow —
+  // see LossReasonModal). lossReason stores one of the fixed English option
+  // values (translated for display via t()); lossReasonNote is the optional
+  // free-text detail (used for "Other" or any extra context). The reminder
+  // window drives an auto-created CrmDb task so the assignee/admin gets a
+  // real reminder email via the existing TasksView notification engine.
+  lossReason?: string;
+  lossReasonNote?: string;
+  nextContactReminderStart?: string;
+  nextContactReminderEnd?: string;
+
   services: string[];
   options: {
     [key: string]: ProposalOption;

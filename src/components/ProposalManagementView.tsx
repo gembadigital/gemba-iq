@@ -34,6 +34,7 @@ import ProposalFormModal from "./ProposalFormModal";
 import ProposalLetterheadBody from "./ProposalLetterheadBody";
 import { Company } from "./CompaniesView";
 import { CrmDb } from "../lib/CrmDb";
+import LossReasonModal, { LossReasonResult } from "./shared/LossReasonModal";
 import { generateProposalPdfBlobUrl, generateProposalPdfBlob } from "../lib/proposalPdf";
 import { renderElementToPdfBase64, base64ToBlob } from "../lib/htmlToPdf";
 import {
@@ -122,6 +123,9 @@ export default function ProposalManagementView() {
 
   // Selected proposal for full detail & PDF view
   const [selectedProposalForDetail, setSelectedProposalForDetail] = useState<Proposal | null>(null);
+  // Proposal currently pending a loss-reason + re-contact reminder prompt,
+  // shown from the "Reject" button (replaces the old native prompt()).
+  const [lossReasonProposal, setLossReasonProposal] = useState<Proposal | null>(null);
   const [detailPdfUrl, setDetailPdfUrl] = useState<string>("");
   const [proposalTimeline, setProposalTimeline] = useState<ProposalTimelineEvent[]>([]);
   const [proposalAuditLog, setProposalAuditLog] = useState<ProposalAuditLog[]>([]);
@@ -531,11 +535,28 @@ export default function ProposalManagementView() {
   const handleSetApproval = async (
     proposal: Proposal,
     approvalStatus: ProposalApprovalStatus,
-    notes?: string
+    notes?: string,
+    lossInfo?: {
+      lossReason?: string;
+      lossReasonNote?: string;
+      nextContactReminderStart?: string;
+      nextContactReminderEnd?: string;
+    }
   ) => {
     try {
-      const updated = await setProposalApprovalStatus(proposal, approvalStatus, notes);
+      const updated = await setProposalApprovalStatus(proposal, approvalStatus, notes, lossInfo);
       setProposals((prev) => prev.map((p) => (p.id === updated.id ? updated : p)));
+      if (lossInfo?.nextContactReminderStart && lossInfo?.nextContactReminderEnd) {
+        CrmDb.upsertTask({
+          id: `recontact-proposal-${updated.id}`,
+          title: `${t("Re-contact reminder")}: ${updated.companyName}`,
+          description: `${t("Loss Reason")}: ${lossInfo.lossReason ? t(lossInfo.lossReason) : "-"}${lossInfo.lossReasonNote ? " — " + lossInfo.lossReasonNote : ""}. ${t("Re-contact window")}: ${lossInfo.nextContactReminderStart} → ${lossInfo.nextContactReminderEnd}.`,
+          status: "not_started",
+          assignee: updated.owner || "",
+          dueDate: lossInfo.nextContactReminderStart,
+          priority: "Medium",
+        });
+      }
       if (selectedProposalForDetail?.id === updated.id) {
         setSelectedProposalForDetail(updated);
         const meta = await loadProposalEnterpriseMeta(updated.id);
@@ -1479,10 +1500,7 @@ export default function ProposalManagementView() {
                 )}
                 {selectedProposalForDetail.approvalStatus !== "Rejected" && (
                   <button
-                    onClick={() => {
-                      const notes = prompt(t("Rejection reason (optional):"));
-                      void handleSetApproval(selectedProposalForDetail, "Rejected", notes || undefined);
-                    }}
+                    onClick={() => setLossReasonProposal(selectedProposalForDetail)}
                     className="bg-red-600 hover:bg-red-700 text-white p-2 px-3 rounded-lg font-extrabold text-[11px] flex items-center gap-1.5 cursor-pointer"
                   >
                     <X className="w-3.5 h-3.5" />
@@ -1974,6 +1992,22 @@ export default function ProposalManagementView() {
           </div>
         </div>
       )}
+
+      <LossReasonModal
+        open={!!lossReasonProposal}
+        contextLabel={lossReasonProposal ? `${lossReasonProposal.companyName} — ${lossReasonProposal.proposalSubject}` : ""}
+        onCancel={() => setLossReasonProposal(null)}
+        onConfirm={(result: LossReasonResult) => {
+          if (!lossReasonProposal) return;
+          void handleSetApproval(lossReasonProposal, "Rejected", result.lossReasonNote, {
+            lossReason: result.lossReason,
+            lossReasonNote: result.lossReasonNote,
+            nextContactReminderStart: result.reminderStart,
+            nextContactReminderEnd: result.reminderEnd,
+          });
+          setLossReasonProposal(null);
+        }}
+      />
 
     </div>
   );

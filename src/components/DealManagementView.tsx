@@ -46,10 +46,11 @@ import {
   Check,
   FileCheck
 } from "lucide-react";
-import SalesDashboardView from "./SalesDashboardView";
+import SalesDashboardView, { isLostStage } from "./SalesDashboardView";
 import { jsPDF } from "jspdf";
 import { CrmDb } from "../lib/CrmDb";
 import CompanyAutocomplete from "./CompanyAutocomplete";
+import LossReasonModal, { LossReasonResult } from "./shared/LossReasonModal";
 import {
   TimelineActivitiesSection,
   OpexAssessmentSection,
@@ -212,6 +213,17 @@ export interface Deal {
     notes: string;
     aiAnalysis?: string;
   };
+
+  // Loss reason + re-contact reminder (LossReasonModal, shown when a deal is
+  // dropped/moved into a "Lost" stage). lossReason is one of the fixed
+  // English option values (translated via t()); lossReasonNote is optional
+  // free text. The reminder window auto-creates a CrmDb task so the deal
+  // owner (or admin, via the existing assignee->orgMembers email fallback)
+  // gets a real reminder email from the TasksView notification engine.
+  lossReason?: string;
+  lossReasonNote?: string;
+  nextContactReminderStart?: string;
+  nextContactReminderEnd?: string;
 
   // Metadata logs
   activities?: { id: string; date: string; title: string; type: string }[];
@@ -550,6 +562,10 @@ export default function DealManagementView({ initialTab = "dashboard", onNavigat
 
   // Selected Deal drawer
   const [selectedDeal, setSelectedDeal] = useState<Deal | null>(null);
+  // Deal currently pending a loss-reason + re-contact reminder prompt (set
+  // right after a Kanban drop / list-view stage change moves it into a
+  // "Lost"-type stage). See LossReasonModal + handleLossReasonConfirm.
+  const [lossReasonDeal, setLossReasonDeal] = useState<Deal | null>(null);
   const [activeDrawerTab, setActiveDrawerTab] = useState<string>("Overview");
   const [isDrawerReadOnly, setIsDrawerReadOnly] = useState(false);
 
@@ -885,6 +901,8 @@ export default function DealManagementView({ initialTab = "dashboard", onNavigat
 
     syncProposalStatusOnDealStageChange(deal.proposalNumber, targetStage);
 
+    let dealAfterMove: Deal | null = null;
+
     // Direct move with update probability
     setDeals((prev) => {
       const updated = prev.map((d) => {
@@ -928,12 +946,22 @@ export default function DealManagementView({ initialTab = "dashboard", onNavigat
             setSelectedDeal(updatedDeal);
           }
 
+          dealAfterMove = updatedDeal;
           return updatedDeal;
         }
         return d;
       });
       return updated;
     });
+
+    // Prompt for a loss reason + re-contact reminder whenever a deal enters
+    // a "Lost"-type stage. Stage names are user-customizable (custom stage
+    // feature), so use the fuzzy isLostStage() check rather than a literal
+    // "Lost" string comparison — matches the same helper SalesDashboardView
+    // uses for won/lost aggregation.
+    if (isLostStage(targetStage) && dealAfterMove) {
+      setLossReasonDeal(dealAfterMove);
+    }
   };
 
   // Open create deal modal
@@ -2221,6 +2249,8 @@ export default function DealManagementView({ initialTab = "dashboard", onNavigat
                               onChange={(e) => {
                                 const newStage = e.target.value;
                                 if (newStage === deal.stage) return;
+                                syncProposalStatusOnDealStageChange(deal.proposalNumber, newStage);
+                                let dealAfterMove: Deal | null = null;
                                 setDeals((prev) => {
                                   const updated = prev.map((d) => {
                                     if (d.id === deal.id) {
@@ -2248,12 +2278,19 @@ export default function DealManagementView({ initialTab = "dashboard", onNavigat
                                       if (selectedDeal && selectedDeal.id === d.id) {
                                         setSelectedDeal(updatedDeal);
                                       }
+                                      dealAfterMove = updatedDeal;
                                       return updatedDeal;
                                     }
                                     return d;
                                   });
                                   return updated;
                                 });
+                                // Same loss-reason + re-contact prompt as the Kanban
+                                // drop handler (handleDealDropOnStage) — kept in sync
+                                // so the list view isn't a silent bypass of the flow.
+                                if (isLostStage(newStage) && dealAfterMove) {
+                                  setLossReasonDeal(dealAfterMove);
+                                }
                               }}
                               className="bg-slate-55/70 dark:bg-zinc-800 border border-slate-200 dark:border-zinc-700 rounded-lg px-2 py-1 text-[11px] font-semibold text-slate-700 dark:text-zinc-200 focus:outline-none focus:border-green-600 cursor-pointer"
                             >
@@ -4634,6 +4671,35 @@ export default function DealManagementView({ initialTab = "dashboard", onNavigat
           </div>
         </div>
       )}
+
+      <LossReasonModal
+        open={!!lossReasonDeal}
+        contextLabel={lossReasonDeal ? `${lossReasonDeal.companyName}${lossReasonDeal.dealName ? " — " + lossReasonDeal.dealName : ""}` : ""}
+        onCancel={() => setLossReasonDeal(null)}
+        onConfirm={(result: LossReasonResult) => {
+          if (!lossReasonDeal) return;
+          const dealId = lossReasonDeal.id;
+          setDeals((prev) => prev.map((d) => d.id === dealId ? {
+            ...d,
+            lossReason: result.lossReason,
+            lossReasonNote: result.lossReasonNote,
+            nextContactReminderStart: result.reminderStart,
+            nextContactReminderEnd: result.reminderEnd,
+          } : d));
+          if (result.reminderStart && result.reminderEnd) {
+            CrmDb.upsertTask({
+              id: `recontact-deal-${dealId}`,
+              title: `${t("Re-contact reminder")}: ${lossReasonDeal.companyName}`,
+              description: `${t("Loss Reason")}: ${t(result.lossReason)}${result.lossReasonNote ? " — " + result.lossReasonNote : ""}. ${t("Re-contact window")}: ${result.reminderStart} → ${result.reminderEnd}.`,
+              status: "not_started",
+              assignee: lossReasonDeal.owner || "",
+              dueDate: result.reminderStart,
+              priority: "Medium",
+            });
+          }
+          setLossReasonDeal(null);
+        }}
+      />
 
     </div>
   );

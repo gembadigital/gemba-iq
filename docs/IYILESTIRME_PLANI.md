@@ -2,7 +2,7 @@
 
 Bu dosya, projenin kaynak kodu üzerinden yapılan UI/UX değerlendirmesini ve dil (TR/EN) tutarlılığı taramasını fazlara bölünmüş, uygulanabilir bir plana çeviriyor. Ekip bu dosyayı çalışma listesi olarak kullanabilir — her fazın altında **Durum** satırı var ve ilerledikçe güncellenmeli.
 
-Son güncelleme: 2026-07-25 (Global CSS: kenarlık kontrastı + font okunabilirliği tamamlandı)
+Son güncelleme: 2026-07-25 (Kaybetme nedeni + tekrar temas hatırlatması tamamlandı)
 
 ---
 
@@ -282,5 +282,27 @@ Bundan sonra eklenen her yeni özellik/menü/buton için:
 **Kapsam dışı bırakılan bulgu:** Kullanıcının bahsettiği "renk geçişleri" (gradient) incelendi; kod taramasında gradient kullanımı seyrek ve dağınık bulundu (dominant bir sorun değil) — bu nedenle bu turda kenarlık ve font düzeltmelerine odaklanıldı. Kullanıcı hâlâ belirgin bir gradient sorunu görüyorsa spesifik ekran/örnek istenmeli.
 
 **Doğrulama:** `npx tsc --noEmit` (yalnızca CSS değişikliği, tsc çıktısı etkilenmedi — mevcut ilgisiz hatalar değişmeden kaldı), `npx vite build` (EXIT:0, `dist/assets/index-*.css` başarıyla üretildi).
+
+**Durum:** Tamamlandı (2026-07-25).
+
+---
+
+## Fırsat/Teklif kaybetme nedeni + tekrar temas hatırlatması (2026-07-25)
+
+**Kullanıcı talebi:** "Teklif yönetimi, ve Fırsat yönetimi kanban yönetim paneli için özellikle kaybedilen tekliflerde kaybetme nedenini ekleme fonksiyonu koy... kaybetme nedeni (Proje iptal, ertelendi, farklı firma, Teklif pahalı, diğer)... bir sonraki dönem değerlendirmek ve müşteri ile temasa geçebilmek adına Tekrar temas hatırlatması ve tarih aralığı koy... bu hatırlatma sistem maili tarafından sistemi kullanan kişiye (user, admin) mail atsın."
+
+**Yeni paylaşılan bileşen:** `src/components/shared/LossReasonModal.tsx` — hem `DealManagementView.tsx` (Kanban sürükle-bırak VE liste görünümü aşama dropdown'ı) hem `ProposalManagementView.tsx` ("Reddet" butonu) tarafından kullanılıyor. Sabit 5 seçenekli kaybetme nedeni (`Project cancelled`/`Postponed`/`Went with different company`/`Proposal too expensive`/`Other` — TR arayüzde otomatik "Proje iptal"/"Ertelendi"/"Farklı firma"/"Teklif pahalı"/"Diğer" olarak gösteriliyor), opsiyonel serbest metin notu, ve varsayılan olarak bugünden +90/+97 gün önerilen (kullanıcı değiştirebilir veya kapatabilir) bir "tekrar temas" tarih aralığı içeriyor.
+
+**Fırsat (Deal) tarafı — `DealManagementView.tsx`:** Bir fırsat Kanban'da "Kaybedildi"ye benzer bir aşamaya sürüklenince (mevcut `isLostStage()` yardımcı fonksiyonu — özel aşama isimlerini de kapsıyor, sadece literal "Lost" değil) veya liste görünümündeki aşama dropdown'ından aynı şekilde değiştirilince, modal otomatik açılıyor. Onaylandığında `deal.lossReason`/`lossReasonNote`/`nextContactReminderStart`/`nextContactReminderEnd` alanları kaydediliyor (bu alanlar `Deal` arayüzüne eklendi — Supabase `deals` tablosu zaten `jsonb` blob olduğu için migration gerekmedi).
+
+**Teklif (Proposal) tarafı — `ProposalManagementView.tsx`:** Detay panelindeki "Reddet" butonu artık eski `prompt()` yerine aynı modalı açıyor; onay `handleSetApproval` → `setProposalApprovalStatus` (`src/lib/proposalService.ts`) zincirine `lossInfo` parametresi olarak akıyor ve aynı 4 alan `Proposal` nesnesine (tip tanımı `src/types/proposal.ts`) kaydediliyor.
+
+**Hatırlatma e-postası — kök neden ve mimari karar:** Kod tabanında zaten çalışan bir görev hatırlatma motoru var (`TasksView.tsx`, 20 dakikada bir tarayan client-side `setInterval` + "Şimdi Tara" butonu, `POST /api/mail/send` üzerinden gerçek e-posta gönderiyor, alıcı e-postası bulunamazsa isimden organizasyon dizinine bakarak (`orgMembers`) çözümlüyor). Vercel Hobby planı 12/12 serverless fonksiyon limitinde olduğu için yeni bir `api/*.js` dosyası eklemek yerine, modal onaylandığında `CrmDb.upsertTask(...)` ile bu mevcut motoru tetikleyen bir Görev (`Task`) otomatik oluşturuluyor (`dueDate` = hatırlatma başlangıç tarihi, `assignee` = fırsat/teklif sorumlusu). Böylece hatırlatma tarihi geldiğinde kullanıcı zaten var olan "Görev Takibi" e-posta altyapısı üzerinden gerçek bir e-posta alıyor — ek sunucu kodu veya yeni fonksiyon eklemeden.
+
+**Yan düzeltme:** `CrmDb.createTask()` her zaman yeni bir satır ekliyordu (aynı id ile tekrar çağrılırsa satır çoğaltıyordu). Kayıp nedeni modalı aynı fırsat/teklif için tekrar açılıp kaydedilebileceğinden (`recontact-deal-<id>` / `recontact-proposal-<id>` sabit id kullanıyor), bu durumda çoğalan görev satırları oluşmasını önlemek için `CrmDb.upsertTask()` eklendi (var olan id ise günceller, yoksa oluşturur).
+
+**Dil:** 19 yeni TR çeviri anahtarı `src/lib/uiDictionaryExtensions.ts`'e eklendi (kaybetme nedeni seçenekleri + modal metinleri). EN sözlük TR'den otomatik türetildiği için ayrıca dokunulmadı.
+
+**Doğrulama:** `npx tsc --noEmit` (yeni hata yok, aynı 3 önceden var olan ilgisiz hata — birleşim tipi sıralaması dışında birebir aynı), `npx vite build` (EXIT:0).
 
 **Durum:** Tamamlandı (2026-07-25).

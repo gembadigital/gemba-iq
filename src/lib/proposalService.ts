@@ -428,7 +428,17 @@ export async function createProposalRevision(
 export async function setProposalApprovalStatus(
   proposal: Proposal,
   approvalStatus: ProposalApprovalStatus,
-  notes?: string
+  notes?: string,
+  // Optional structured loss info, set from LossReasonModal when a proposal
+  // is rejected — kept separate from the free-text `notes`/`rejectedReason`
+  // fields above so the fixed reason category and the re-contact reminder
+  // window survive round-trips even if `notes` is left blank.
+  lossInfo?: {
+    lossReason?: string;
+    lossReasonNote?: string;
+    nextContactReminderStart?: string;
+    nextContactReminderEnd?: string;
+  }
 ): Promise<Proposal> {
   const updated: Proposal = enrichProposal({
     ...proposal,
@@ -437,6 +447,10 @@ export async function setProposalApprovalStatus(
     lastUpdate: new Date().toLocaleString(),
     notes: notes || proposal.notes,
     rejectedReason: approvalStatus === "Rejected" ? notes : proposal.rejectedReason,
+    ...(lossInfo?.lossReason ? { lossReason: lossInfo.lossReason } : {}),
+    ...(lossInfo?.lossReasonNote !== undefined ? { lossReasonNote: lossInfo.lossReasonNote } : {}),
+    ...(lossInfo?.nextContactReminderStart !== undefined ? { nextContactReminderStart: lossInfo.nextContactReminderStart } : {}),
+    ...(lossInfo?.nextContactReminderEnd !== undefined ? { nextContactReminderEnd: lossInfo.nextContactReminderEnd } : {}),
   });
 
   await persistProposalWithEnterpriseData(updated);

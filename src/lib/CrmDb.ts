@@ -708,6 +708,28 @@ export const CrmDb = {
     return newTask;
   },
 
+  // Like createTask, but safe to call repeatedly with the same explicit id
+  // (e.g. a deterministic `recontact-deal-<dealId>` id) — updates the
+  // existing task in place instead of always pushing a new one. createTask()
+  // above always pushes, so calling it twice with the same id produces two
+  // rows sharing one id (duplicate React keys in TasksView, and Supabase's
+  // upsert only keeping the last one written) — used by the loss-reason
+  // re-contact reminder flow in DealManagementView/ProposalManagementView,
+  // which can be re-submitted (edit a deal's loss reason again) without
+  // piling up duplicate reminder tasks.
+  upsertTask(taskData: Partial<Task> & { id: string }): Task {
+    const tasks = this.getTasks();
+    const existingIndex = tasks.findIndex((t) => t.id === taskData.id);
+    if (existingIndex === -1) {
+      return this.createTask(taskData);
+    }
+    const updatedTask: Task = { ...tasks[existingIndex], ...taskData };
+    const nextTasks = [...tasks];
+    nextTasks[existingIndex] = updatedTask;
+    this.saveTasks(nextTasks);
+    return updatedTask;
+  },
+
   propagateCompanyChanges(companies: Company[]) {
     const deals = this.getDeals();
     let dealsUpdated = false;
