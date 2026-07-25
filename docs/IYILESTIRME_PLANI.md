@@ -2,7 +2,7 @@
 
 Bu dosya, projenin kaynak kodu üzerinden yapılan UI/UX değerlendirmesini ve dil (TR/EN) tutarlılığı taramasını fazlara bölünmüş, uygulanabilir bir plana çeviriyor. Ekip bu dosyayı çalışma listesi olarak kullanabilir — her fazın altında **Durum** satırı var ve ilerledikçe güncellenmeli.
 
-Son güncelleme: 2026-07-25 (Modül 12 tamamlandı)
+Son güncelleme: 2026-07-25 (Global CSS: kenarlık kontrastı + font okunabilirliği tamamlandı)
 
 ---
 
@@ -264,3 +264,23 @@ Bundan sonra eklenen her yeni özellik/menü/buton için:
 2. Aynı commit içinde `src/lib/uiDictionaryExtensions.ts`'e TR karşılığı eklenmeli.
 3. Kayıt/silme işlemi varsa, hata durumunu kullanıcıya görünür şekilde göster (fire-and-forget + sadece `console.error` YETERSİZ — bkz. Faz 2).
 4. Yeni bir global CSS kuralı yazmadan önce `index.css`'teki mevcut `[class*="..."]` desenlerine bakılmalı, aynı hataya düşülmemeli (bkz. Faz 3).
+
+---
+
+## Global CSS: kenarlık kontrastı + font okunabilirliği (2026-07-25)
+
+**Kullanıcı geri bildirimi:** "gemba iq renk geçişler, kenarlıklar çok belirgin değil, bazı alanlara font büyüklüğü yeteri kadar okunaklı değil." Netleştirme sorusuyla kapsam teyit edildi: canlı Gemba IQ uygulaması (Stitch tasarım önizlemesi değil), genel olarak her yerde (tek bir modül değil).
+
+**Kök neden 1 — kenarlık kontrastı:** `src/App.tsx` (satır ~341-362) `<html>` etiketine daima `.saas-layout` sınıfını uyguluyor (`layoutTheme` sabit `"saas"`, kullanıcıya açık bir tema seçici yok — `.notion-layout`/`.fluent-layout` CSS'te tanımlı ama hiç aktif edilmiyor). `.saas-layout` teması altında sidebar, kart, input, tablo ve hover kenarlıkları `rgba(0,0,0,0.03-0.08)` / `rgba(255,255,255,0.03-0.08)` gibi çok düşük opaklıkta tanımlanmıştı (yaklaşık 1.1-1.5:1 kontrast oranı). Ayrıca genel (saas-layout dışı) bir "kenarlık birleştirme" katmanı da `#EDEBE9` (açık tema) / `#323130` (koyu tema) gibi benzer düşük kontrastlı hex değerleri kullanıyordu. WCAG 2.1 AA, arayüz bileşeni sınırları (non-text contrast) için minimum 3:1 kontrast oranı istiyor — mevcut değerler bunun oldukça altındaydı.
+
+**Düzeltme 1:** `src/index.css` içinde ~16 farklı kural bloğu güncellendi (sidebar, kart, input/select/textarea, hover durumları, tablo başlık/satır kenarlıkları, buton kenarlıkları, `.ms-border` yardımcı sınıfı, genel `.border`/`.divide-y`/`[class*="border-..."]` birleştirme katmanı, KPI kart kenarlıkı). Açık temada kenarlıklar `#d4d4d8` (hex) veya `rgba(0,0,0,0.10-0.22)` (bağlama göre kademeli opaklık) değerlerine, koyu temada `#52525b` (hex) veya `rgba(255,255,255,0.12-0.24)` değerlerine yükseltildi. Renkli anlamsal rozet kenarlıkları (örn. emerald durum etiketleri) kasıtlı olarak dokunulmadan bırakıldı.
+
+**Kök neden 2 — font okunabilirliği:** "SUBTEXT PUNTO & COLOR UNIFICATION" kuralı yalnızca `<p>` etiketlerini ve `text-[9px]/[10px]/[11px]` boyutlarını yakalıyordu; `<span>`/`<div>` içindeki küçük metinler ile `text-[8px]` boyutu kapsam dışı kalmıştı — bu da bazı alanlardaki metnin hem çok küçük hem düşük kontrastlı kalmasına yol açıyordu.
+
+**Düzeltme 2:** Aynı kural `span`/`div` etiketlerini de kapsayacak şekilde genişletildi (rozet/etiket bileşenlerini bozmamak için `bg-`/`p-`/`border-` sınıfı taşıyan `span`/`div`'ler hariç tutuldu — `div[class*="text-xs"]` için zaten var olan aynı koruma deseni kullanıldı) ve `text-[8px]` boyutu da her iki tema için kapsama eklendi. Sonuç: tüm küçük yazı tipleri artık tutarlı şekilde 11px + yüksek kontrastlı slate rengine (`#64748b` açık / `#94a3b8` koyu) normalize ediliyor.
+
+**Kapsam dışı bırakılan bulgu:** Kullanıcının bahsettiği "renk geçişleri" (gradient) incelendi; kod taramasında gradient kullanımı seyrek ve dağınık bulundu (dominant bir sorun değil) — bu nedenle bu turda kenarlık ve font düzeltmelerine odaklanıldı. Kullanıcı hâlâ belirgin bir gradient sorunu görüyorsa spesifik ekran/örnek istenmeli.
+
+**Doğrulama:** `npx tsc --noEmit` (yalnızca CSS değişikliği, tsc çıktısı etkilenmedi — mevcut ilgisiz hatalar değişmeden kaldı), `npx vite build` (EXIT:0, `dist/assets/index-*.css` başarıyla üretildi).
+
+**Durum:** Tamamlandı (2026-07-25).

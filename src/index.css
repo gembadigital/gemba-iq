@@ -32,10 +32,10 @@
 
 @layer utilities {
   .ms-border {
-    border-color: #E6EAF0;
+    border-color: #d4d4d8;
   }
   .dark .ms-border {
-    border-color: #323130;
+    border-color: #52525b;
   }
 }
 
@@ -317,7 +317,7 @@
 .saas-layout aside,
 .saas-layout .bg-[#201f1e] {
   background-color: #ffffff !important;
-  border-right: 1px solid rgba(0, 0, 0, 0.04) !important;
+  border-right: 1px solid rgba(0, 0, 0, 0.14) !important;
   box-shadow: none !important;
   overflow: hidden !important;
 }
@@ -330,7 +330,7 @@
 .saas-layout.dark aside,
 .saas-layout.dark .bg-[#201f1e] {
   background-color: #0c0c0e !important;
-  border-right: 1px solid rgba(255, 255, 255, 0.04) !important;
+  border-right: 1px solid rgba(255, 255, 255, 0.16) !important;
   box-shadow: none !important;
 }
 
@@ -343,7 +343,7 @@
 .saas-layout div.shadow-md:not(button):not(input):not(select):not(textarea):not(a),
 .saas-layout div.shadow-lg:not(button):not(input):not(select):not(textarea):not(a) {
   background-color: #ffffff !important;
-  border: 1px solid rgba(0, 0, 0, 0.04) !important;
+  border: 1px solid rgba(0, 0, 0, 0.14) !important;
   box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.01), 0 1px 2px -1px rgba(0, 0, 0, 0.01) !important;
   border-radius: 12px !important;
 }
@@ -359,7 +359,7 @@
 .saas-layout.dark .bg-[#252423],
 .saas-layout.dark .bg-[#11100f] {
   background-color: #121215 !important;
-  border: 1px solid rgba(255, 255, 255, 0.04) !important;
+  border: 1px solid rgba(255, 255, 255, 0.16) !important;
   box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px -1px rgba(0, 0, 0, 0.1) !important;
   border-radius: 12px !important;
 }
@@ -370,12 +370,12 @@
 }
 .saas-layout .fluent-card-hover:hover {
   box-shadow: 0 12px 24px -10px rgba(0, 0, 0, 0.04) !important;
-  border-color: rgba(0, 0, 0, 0.08) !important;
+  border-color: rgba(0, 0, 0, 0.22) !important;
   transform: translateY(-1px) !important;
 }
 .saas-layout.dark .fluent-card-hover:hover {
   box-shadow: 0 12px 24px -10px rgba(0, 0, 0, 0.4) !important;
-  border-color: rgba(255, 255, 255, 0.08) !important;
+  border-color: rgba(255, 255, 255, 0.24) !important;
   transform: translateY(-1px) !important;
 }
 
@@ -392,7 +392,7 @@
 .saas-layout select,
 .saas-layout textarea {
   background-color: #ffffff !important;
-  border: 1px solid rgba(0, 0, 0, 0.08) !important;
+  border: 1px solid rgba(0, 0, 0, 0.22) !important;
   box-shadow: 0 1px 2px 0 rgba(0,0,0,0.02) !important;
 }
 
@@ -400,7 +400,7 @@
 .saas-layout.dark select,
 .saas-layout.dark textarea {
   background-color: #18181b !important;
-  border: 1px solid rgba(255, 255, 255, 0.08) !important;
+  border: 1px solid rgba(255, 255, 255, 0.24) !important;
   box-shadow: none !important;
 }
 
@@ -413,17 +413,23 @@
 }
 
 /* Layout border colors */
+/* Kullanıcı geri bildirimi (2026-07-25): "kenarlıklar çok belirgin değil" —
+   bu rgba(0,0,0,0.04)/(255,255,255,0.04) değerleri neredeyse görünmez
+   kenarlıklar üretiyordu (kontrast oranı ~1.1:1, WCAG UI-sınır önerisi
+   3:1'in çok altında). .saas-layout App.tsx'te sabit/aktif tema olduğu için
+   (bkz. classList.add("saas-layout")) bu kural her zaman devrede — daha
+   belirgin bir opaklığa yükseltildi. */
 .saas-layout .border,
 .saas-layout .border-slate-200,
 .saas-layout .border-[#EDEBE9],
 .saas-layout .border-indigo-200 {
-  border-color: rgba(0, 0, 0, 0.04) !important;
+  border-color: rgba(0, 0, 0, 0.16) !important;
 }
 .saas-layout.dark .border,
 .saas-layout.dark .border-[#323130],
 .saas-layout.dark .border-slate-800,
 .saas-layout.dark .border-indigo-950\/40 {
-  border-color: rgba(255, 255, 255, 0.04) !important;
+  border-color: rgba(255, 255, 255, 0.18) !important;
 }
 
 /* Modern minimal table styles to improve visual density and readability */
@@ -431,24 +437,24 @@
   border-collapse: collapse !important;
 }
 .saas-layout table th {
-  background-color: rgba(0, 0, 0, 0.01) !important;
+  background-color: rgba(0, 0, 0, 0.02) !important;
   font-weight: 600 !important;
   font-size: 11px !important;
   color: #64748b !important;
   text-transform: uppercase !important;
   letter-spacing: 0.05em !important;
-  border-bottom: 1px solid rgba(0, 0, 0, 0.04) !important;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.18) !important;
 }
 .saas-layout.dark table th {
-  background-color: rgba(255, 255, 255, 0.01) !important;
+  background-color: rgba(255, 255, 255, 0.02) !important;
   color: #94a3b8 !important;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.04) !important;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.2) !important;
 }
 .saas-layout table td {
-  border-bottom: 1px solid rgba(0, 0, 0, 0.03) !important;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.1) !important;
 }
 .saas-layout.dark table td {
-  border-bottom: 1px solid rgba(255, 255, 255, 0.03) !important;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.12) !important;
 }
 
 /* Stripe and Linear gradient badges */
@@ -558,7 +564,7 @@ button[class*="border-slate-"]:not([class*="bg-[#0078D4]"]):not([class*="bg-rose
 button[class*="border-zinc-"]:not([class*="bg-[#0078D4]"]):not([class*="bg-rose-"]):not([class*="bg-red-"]):not([class*="bg-emerald-"]),
 button[class*="border-gray-"]:not([class*="bg-[#0078D4]"]):not([class*="bg-rose-"]):not([class*="bg-red-"]):not([class*="bg-emerald-"]) {
   background-color: #ffffff !important;
-  border: 1px solid #EDEBE9 !important;
+  border: 1px solid #d4d4d8 !important;
   color: #323130 !important;
 }
 
@@ -569,7 +575,7 @@ button[class*="border-gray-"]:not([class*="bg-[#0078D4]"]):not([class*="bg-rose-
 .dark button[class*="border-zinc-"]:not([class*="bg-[#0078D4]"]):not([class*="bg-rose-"]):not([class*="bg-red-"]):not([class*="bg-emerald-"]),
 .dark button[class*="border-gray-"]:not([class*="bg-[#0078D4]"]):not([class*="bg-rose-"]):not([class*="bg-red-"]):not([class*="bg-emerald-"]) {
   background-color: #252423 !important;
-  border: 1px solid #323130 !important;
+  border: 1px solid #52525b !important;
   color: #f3f2f1 !important;
 }
 
@@ -600,7 +606,7 @@ button[class*="border-gray-"]:hover:not([class*="bg-[#0078D4]"]):not([class*="bg
 [class*="border-gray-"],
 [class*="border-[#EDEBE9]"],
 [class*="border-[#323130]"] {
-  border-color: #EDEBE9 !important;
+  border-color: #d4d4d8 !important;
 }
 
 .dark .border,
@@ -613,17 +619,17 @@ button[class*="border-gray-"]:hover:not([class*="bg-[#0078D4]"]):not([class*="bg
 .dark [class*="border-gray-"],
 .dark [class*="border-[#EDEBE9]"],
 .dark [class*="border-[#323130]"] {
-  border-color: #323130 !important;
+  border-color: #52525b !important;
 }
 
 /* Divide rules */
 .divide-y > :not([hidden]) ~ :not([hidden]),
 [class*="divide-"] > :not([hidden]) ~ :not([hidden]) {
-  border-color: #EDEBE9 !important;
+  border-color: #d4d4d8 !important;
 }
 .dark .divide-y > :not([hidden]) ~ :not([hidden]),
 .dark [class*="divide-"] > :not([hidden]) ~ :not([hidden]) {
-  border-color: #323130 !important;
+  border-color: #52525b !important;
 }
 
 /* 3. TYPOGRAPHY AND HEADINGS HIERARCHY UNIFICATION */
@@ -671,12 +677,26 @@ h4, .h4-title,
 .dark h4, .dark .h4-title { color: #d1d5db !important; }
 
 /* 4. SUBTEXT PUNTO & COLOR UNIFICATION */
+/* Kullanıcı geri bildirimi (2026-07-25): "bazı alanlara font büyüklüğü yeteri
+   kadar okunaklı değil". Önceki kural yalnızca <p> etiketlerini ve text-[9/10/11px]
+   boyutlarını yakalıyordu; <span>/<div> içindeki küçük metinler ile text-[8px]
+   boyutu kapsam dışıydı. Rozet/etiket (badge/pill) bileşenlerini bozmamak için
+   bg-/p-/border- taşıyan span/div'ler hariç tutuluyor. */
 p[class*="text-xs"],
-span[class*="text-xs"],
+span[class*="text-xs"]:not([class*="bg-"]):not([class*="p-"]):not([class*="border-"]),
 div[class*="text-xs"]:not([class*="bg-"]):not([class*="p-"]):not([class*="border-"]),
 p[class*="text-[10px]"],
+span[class*="text-[10px]"]:not([class*="bg-"]):not([class*="p-"]):not([class*="border-"]),
+div[class*="text-[10px]"]:not([class*="bg-"]):not([class*="p-"]):not([class*="border-"]),
 p[class*="text-[11px]"],
+span[class*="text-[11px]"]:not([class*="bg-"]):not([class*="p-"]):not([class*="border-"]),
+div[class*="text-[11px]"]:not([class*="bg-"]):not([class*="p-"]):not([class*="border-"]),
 p[class*="text-[9px]"],
+span[class*="text-[9px]"]:not([class*="bg-"]):not([class*="p-"]):not([class*="border-"]),
+div[class*="text-[9px]"]:not([class*="bg-"]):not([class*="p-"]):not([class*="border-"]),
+p[class*="text-[8px]"],
+span[class*="text-[8px]"]:not([class*="bg-"]):not([class*="p-"]):not([class*="border-"]),
+div[class*="text-[8px]"]:not([class*="bg-"]):not([class*="p-"]):not([class*="border-"]),
 .subtext-unified {
   font-family: var(--font-sans) !important;
   font-size: 11px !important; /* 11px unified subtext */
@@ -684,11 +704,20 @@ p[class*="text-[9px]"],
 }
 
 .dark p[class*="text-xs"],
-.dark span[class*="text-xs"],
+.dark span[class*="text-xs"]:not([class*="bg-"]):not([class*="p-"]):not([class*="border-"]),
 .dark div[class*="text-xs"]:not([class*="bg-"]):not([class*="p-"]):not([class*="border-"]),
 .dark p[class*="text-[10px]"],
+.dark span[class*="text-[10px]"]:not([class*="bg-"]):not([class*="p-"]):not([class*="border-"]),
+.dark div[class*="text-[10px]"]:not([class*="bg-"]):not([class*="p-"]):not([class*="border-"]),
 .dark p[class*="text-[11px]"],
+.dark span[class*="text-[11px]"]:not([class*="bg-"]):not([class*="p-"]):not([class*="border-"]),
+.dark div[class*="text-[11px]"]:not([class*="bg-"]):not([class*="p-"]):not([class*="border-"]),
 .dark p[class*="text-[9px]"],
+.dark span[class*="text-[9px]"]:not([class*="bg-"]):not([class*="p-"]):not([class*="border-"]),
+.dark div[class*="text-[9px]"]:not([class*="bg-"]):not([class*="p-"]):not([class*="border-"]),
+.dark p[class*="text-[8px]"],
+.dark span[class*="text-[8px]"]:not([class*="bg-"]):not([class*="p-"]):not([class*="border-"]),
+.dark div[class*="text-[8px]"]:not([class*="bg-"]):not([class*="p-"]):not([class*="border-"]),
 .dark .subtext-unified {
   color: #94a3b8 !important; /* slate-400 */
 }
@@ -908,7 +937,7 @@ div.shadow-lg:not(button):not(input):not(select):not(textarea):not(a) {
   background-color: #FFFFFF !important;
   border-radius: 6px !important; /* Clean industrial corner radius, similar to Azure/Notion */
   padding: 20px !important;
-  border: 1px solid #E6EAF0 !important; /* Card Border: #E6EAF0 */
+  border: 1px solid #d4d4d8 !important; /* Card Border */
   box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.02) !important;
 }
 
@@ -922,7 +951,7 @@ div.shadow-lg:not(button):not(input):not(select):not(textarea):not(a) {
   background-color: #121215 !important;
   border-radius: 6px !important;
   padding: 20px !important;
-  border: 1px solid #2d2d30 !important;
+  border: 1px solid #52525b !important;
   box-shadow: none !important;
 }
 
@@ -1045,14 +1074,14 @@ table th {
   background-color: #f1f5f9 !important; /* Light gray header background */
   text-align: left !important;
   padding: 10px 16px !important;
-  border-bottom: 1px solid #E6EAF0 !important; /* Subtle border */
+  border-bottom: 1px solid #d4d4d8 !important; /* Subtle border */
 }
 
 .dark thead th,
 .dark table th {
   background-color: #18181b !important;
   color: #a1a1aa !important;
-  border-bottom: 1px solid #2d2d30 !important;
+  border-bottom: 1px solid #52525b !important;
 }
 
 tbody tr,
@@ -1097,13 +1126,13 @@ tbody td,
 table td {
   font-size: 14px !important; /* Body: 14px */
   padding: 10px 16px !important;
-  border-bottom: 1px solid #E6EAF0 !important; /* Subtle border */
+  border-bottom: 1px solid #d4d4d8 !important; /* Subtle border */
   color: #374151 !important;
 }
 
 .dark tbody td,
 .dark table td {
-  border-bottom: 1px solid #2d2d30 !important;
+  border-bottom: 1px solid #52525b !important;
   color: #d1d5db !important;
 }
 
@@ -1115,7 +1144,7 @@ div.grid div.bg-white:has(span[class*="uppercase"]):has(p[class*="font-bold"]) {
   background-color: #FFFFFF !important;
   border-radius: 6px !important;
   padding: 20px !important;
-  border: 1px solid #E6EAF0 !important;
+  border: 1px solid #d4d4d8 !important;
   box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.02) !important;
   height: auto !important;
   min-height: 110px !important;
