@@ -1857,6 +1857,17 @@ export const uiDictionaryTR: Record<string, string> = {
   // ConfirmModal'a bağlandı.
   "Are you sure you want to delete this skill?": "Bu yetkinliği silmek istediğinizden emin misiniz?",
 
+  // Modül 11 (AdministrationCenter.tsx) - üç silme işlemi (e-posta şablonu,
+  // döküman kategorisi, bulut depolama bağlantısı) hiç onay almadan veya native
+  // tarayıcı confirm() ile (Türkçe sabit metin) siliyordu, paylaşımlı ConfirmModal'a
+  // baglandı.
+  "Template Will Be Deleted": "Şablon Silinecek",
+  "Are you sure you want to delete the '{name}' template?": "'{name}' şablonunu silmek istediğinizden emin misiniz?",
+  "Document Category Will Be Deleted": "Döküman Kategorisi Silinecek",
+  "Are you sure you want to delete the '{name}' document category?": "'{name}' döküman kategorisini silmek istediğinizden emin misiniz?",
+  "Storage Connection Will Be Deleted": "Depolama Bağlantısı Silinecek",
+  "Are you sure you want to delete the '{name}' storage connection?": "'{name}' depolama bağlantısını silmek istediğinizden emin misiniz?",
+
   // Companies View custom fields
   "Add custom column": "Özel sütun ekle",
   "Field Label *": "Alan Etiketi *",

@@ -37,6 +37,8 @@ import {
 import { useLanguage } from "../lib/LanguageContext";
 import { DocumentService } from "../services/DocumentService";
 import { CrmDb } from "../lib/CrmDb";
+import { ConfirmModal } from "./shared/ConfirmModal";
+import { useConfirm } from "../lib/useConfirm";
 import OrganizationUsersPanel from "./admin/OrganizationUsersPanel";
 import type { OrganizationMailbox } from "../lib/organizationMailbox";
 const logoImage = "https://lh3.googleusercontent.com/d/13bNnthJU4LIICB4iiF1a4GH1PEn05MBx";
@@ -44,7 +46,6 @@ const logoImage = "https://lh3.googleusercontent.com/d/13bNnthJU4LIICB4iiF1a4GH1
 // Organization-scoped keys in the shared CRM auxiliary store (Supabase-backed).
 // ADMIN_ORG_SETTINGS_KEY must match the key used by App.tsx and currencyHelper.ts.
 const ADMIN_ORG_SETTINGS_KEY = "crm_admin_org_settings";
-const ADMIN_MAILBOXES_KEY = "crm_admin_mailboxes_list";
 const ADMIN_TEMPLATES_KEY = "crm_admin_templates_list";
 const ADMIN_DATA_HUB_KEY = "crm_admin_data_hub_connections";
 
@@ -56,16 +57,6 @@ interface TemplateItem {
   content: string;
   status: "Active" | "Draft";
   updatedAt: string;
-}
-
-interface MailboxItem {
-  id: string;
-  name: string;
-  email: string;
-  provider: "Microsoft 365" | "Outlook" | "Exchange Online" | "Gmail" | "Google Workspace" | "IMAP" | "SMTP";
-  status: "Connected" | "Expired" | "Error";
-  owner: string;
-  lastSync: string;
 }
 
 interface StorageHubItem {
@@ -118,6 +109,7 @@ export default function AdministrationCenter({
   onTestOrganizationMailbox,
 }: AdministrationCenterProps) {
   const { lang: selectedLanguage, setLang: setSelectedLanguage, t } = useLanguage();
+  const { confirm, confirmProps } = useConfirm();
   const isTR = selectedLanguage === "TR";
   const L = (trText: string, enText: string) => (isTR ? trText : enText);
   const menuLabel = (menu: string) => {
@@ -292,71 +284,16 @@ export default function AdministrationCenter({
     addAuditLog(actorName, "Yetki Değişikliği", `${selectedRoleForMatrix} rolü için ${menu} yetkileri güncellendi.`, "Yetki Yönetimi");
   };
 
-  // 3. Connected Mailboxes (shared, organization-scoped — Supabase-backed via CrmDb)
-  const [mailboxes, setMailboxes] = useState<MailboxItem[]>(() =>
-    CrmDb.getKv<MailboxItem[]>(ADMIN_MAILBOXES_KEY, [
-      {
-        id: "m-2",
-        name: "Atakan Zehir Genel",
-        email: "a.zehir@gembapartner.com",
-        provider: "Microsoft 365",
-        status: "Connected",
-        owner: "Atakan Zehir",
-        lastSync: "Şimdi"
-      },
-      {
-        id: "m-4",
-        name: "Destek Masası",
-        email: "support@gembapartner.com",
-        provider: "Microsoft 365",
-        status: "Expired",
-        owner: "Müşteri Hizmetleri",
-        lastSync: "Dün"
-      }
-    ])
-  );
-
-  useEffect(() => {
-    CrmDb.setKv(ADMIN_MAILBOXES_KEY, mailboxes);
-  }, [mailboxes]);
-
-  const [newMailbox, setNewMailbox] = useState<Partial<MailboxItem>>({
-    name: "",
-    email: "",
-    provider: "Microsoft 365",
-    owner: ""
-  });
-  const [isConnectMailboxOpen, setIsConnectMailboxOpen] = useState(false);
-
-  const handleConnectNewMailbox = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!newMailbox.email) return;
-
-    const item: MailboxItem = {
-      id: `m-${Date.now()}`,
-      name: newMailbox.name || "Yeni Posta Kutusu",
-      email: newMailbox.email,
-      provider: newMailbox.provider || "Microsoft 365",
-      status: "Connected",
-      owner: newMailbox.owner || actorName,
-      lastSync: "Şimdi bağlı (Canlı)"
-    };
-
-    setMailboxes([...mailboxes, item]);
-    setIsConnectMailboxOpen(false);
-    setNewMailbox({ name: "", email: "", provider: "Microsoft 365", owner: "" });
-    addAuditLog(actorName, "Yeni E-posta Bağlandı", `Yeni posta kutusu entegre edildi: ${item.email} (${item.provider})`, "E-posta Yönetimi");
-    alert("Posta kutusu entegrasyonu ve Microsoft Graph API yetkilendirmesi başarıyla tamamlandı!");
-  };
-
-  const handleRemoveMailbox = (id: string) => {
-    const box = mailboxes.find(m => m.id === id);
-    if (!box) return;
-    if (confirm(`${box.email} posta kutusu bağlantısını koparmak istediğinize emin misiniz?`)) {
-      setMailboxes(mailboxes.filter(m => m.id !== id));
-      addAuditLog(actorName, "E-posta Bağlantısı Kesildi", `${box.email} hesabı sistemden kaldırıldı.`, "E-posta Yönetimi");
-    }
-  };
+  // NOTE: this file previously had a second, entirely local "Connected Mailboxes"
+  // list (MailboxItem[] state + handleConnectNewMailbox/handleRemoveMailbox) with
+  // its own seed data and a fake "Microsoft Graph API yetkilendirmesi başarıyla
+  // tamamlandı!" success alert that never actually called any API. It was dead
+  // code — no button in the rendered "email" tab opened its connect form or called
+  // its remove handler; that tab renders the real, MS-Graph-backed
+  // `organizationMailboxCard` instead. Removed as a duplicate/non-functional
+  // feature (kullanıcı talebi: "mükerrer fonksiyonlar varsa iptal et"). Its only
+  // other reference was the System Health "BAĞLI POSTA KUTULARI" stat card, which
+  // now reads the real `organizationMailbox` prop instead (see systemhealth tab).
 
   // 4. Email Templates (shared, organization-scoped — Supabase-backed via CrmDb)
   const [templates, setTemplates] = useState<TemplateItem[]>(() =>
@@ -435,8 +372,16 @@ export default function AdministrationCenter({
     alert("Yeni şablon başarıyla oluşturuldu!");
   };
 
-  const deleteTemplate = (id: string, name: string) => {
-    setTemplates(templates.filter(t => t.id !== id));
+  const deleteTemplate = async (id: string, name: string) => {
+    const ok = await confirm({
+      title: t("Template Will Be Deleted"),
+      message: t("Are you sure you want to delete the '{name}' template?").replace("{name}", name),
+      confirmLabel: t("Delete"),
+      cancelLabel: t("Cancel"),
+      danger: true,
+    });
+    if (!ok) return;
+    setTemplates(templates.filter(tpl => tpl.id !== id));
     if (selectedTemplateId === id) setSelectedTemplateId(null);
     addAuditLog(actorName, "Şablon Silindi", `Şablon kaldırıldı: ${name}`, "Şablon Yönetimi");
   };
@@ -548,7 +493,15 @@ export default function AdministrationCenter({
     alert(`'${added.name}' döküman kategorisi başarıyla oluşturuldu!`);
   };
 
-  const handleDeleteDocType = (id: string, name: string) => {
+  const handleDeleteDocType = async (id: string, name: string) => {
+    const ok = await confirm({
+      title: t("Document Category Will Be Deleted"),
+      message: t("Are you sure you want to delete the '{name}' document category?").replace("{name}", name),
+      confirmLabel: t("Delete"),
+      cancelLabel: t("Cancel"),
+      danger: true,
+    });
+    if (!ok) return;
     const success = DocumentService.deleteDocType(id);
     if (success) {
       setDocTypes(DocumentService.getDocTypes());
@@ -659,21 +612,27 @@ export default function AdministrationCenter({
     }));
   };
 
-  const handleDeleteConnection = (id: string, name: string) => {
+  const handleDeleteConnection = async (id: string, name: string) => {
     if (id === "sh-local") {
       alert("Yerel uygulama depolama alanı (DMS Local) silinemez! Bu sistemin temel altyapısıdır.");
       return;
     }
-    if (confirm(`'${name}' depolama bağlantısını silmek istediğinize emin misiniz?`)) {
-      const conn = dataHubConnections.find(c => c.id === id);
-      if (conn?.defaultStorage) {
-        setDataHubConnections(prev => prev.map(p => p.id === "sh-local" ? { ...p, defaultStorage: true, enabled: true, status: "Connected" } : p));
-      }
-      setDataHubConnections(dataHubConnections.filter(c => c.id !== id));
-      addAuditLog(actorName, "Depolama Bağlantısı Silindi", `${name} bağlantısı sistemden kaldırıldı.`, "Data Hub");
-      setEditingConnId(null);
-      setEditForm(null);
+    const ok = await confirm({
+      title: t("Storage Connection Will Be Deleted"),
+      message: t("Are you sure you want to delete the '{name}' storage connection?").replace("{name}", name),
+      confirmLabel: t("Delete"),
+      cancelLabel: t("Cancel"),
+      danger: true,
+    });
+    if (!ok) return;
+    const conn = dataHubConnections.find(c => c.id === id);
+    if (conn?.defaultStorage) {
+      setDataHubConnections(prev => prev.map(p => p.id === "sh-local" ? { ...p, defaultStorage: true, enabled: true, status: "Connected" } : p));
     }
+    setDataHubConnections(dataHubConnections.filter(c => c.id !== id));
+    addAuditLog(actorName, "Depolama Bağlantısı Silindi", `${name} bağlantısı sistemden kaldırıldı.`, "Data Hub");
+    setEditingConnId(null);
+    setEditForm(null);
   };
 
   const handleSetDefaultStorage = (id: string) => {
@@ -1599,7 +1558,7 @@ export default function AdministrationCenter({
                         <td className="p-3 text-right">
                           <button
                             type="button"
-                            onClick={() => deleteTemplate(t.id, t.name)}
+                            onClick={() => void deleteTemplate(t.id, t.name)}
                             className="p-1.5 text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/20 rounded transition-all cursor-pointer"
                           >
                             <Trash2 className="w-3.5 h-3.5" />
@@ -1827,7 +1786,7 @@ export default function AdministrationCenter({
                     <div className="flex gap-2">
                       <button
                         type="button"
-                        onClick={() => handleDeleteConnection(editForm.id, editForm.name)}
+                        onClick={() => void handleDeleteConnection(editForm.id, editForm.name)}
                         className="p-2 px-3 bg-rose-50 text-rose-600 hover:bg-rose-100 rounded-lg font-bold cursor-pointer"
                       >
                         Bağlantıyı Kaldır
@@ -1980,7 +1939,7 @@ export default function AdministrationCenter({
                             {type.isCustom ? (
                               <button
                                 type="button"
-                                onClick={() => handleDeleteDocType(type.id, type.name)}
+                                onClick={() => void handleDeleteDocType(type.id, type.name)}
                                 className="text-rose-600 hover:text-rose-500 font-bold hover:underline font-mono text-[10px] cursor-pointer"
                               >
                                 Sil
@@ -2250,10 +2209,12 @@ export default function AdministrationCenter({
                 
                 <div className="p-4 bg-emerald-50/20 rounded-2xl border border-emerald-200/50 space-y-1">
                   <span className="text-[9px] font-bold text-emerald-500 font-mono block uppercase">
-                    {L("BAĞLI POSTA KUTULARI", "CONNECTED MAILBOXES")}
+                    {L("BAĞLI POSTA KUTUSU", "CONNECTED MAILBOX")}
                   </span>
-                  <div className="text-xl font-black text-slate-800 dark:text-emerald-400">{mailboxes.filter(m => m.status === "Connected").length} / {mailboxes.length}</div>
-                  <p className="text-[10px] text-slate-405 leading-none">{L("Aktif Exchange hesaplar", "Active Exchange accounts")}</p>
+                  <div className="text-xl font-black text-slate-800 dark:text-emerald-400">
+                    {organizationMailbox?.status === "Connected" ? "1 / 1" : "0 / 1"}
+                  </div>
+                  <p className="text-[10px] text-slate-405 leading-none">{L("Organizasyon Microsoft 365 hesabı", "Organization Microsoft 365 account")}</p>
                 </div>
 
                 <div className="p-4 bg-indigo-50/20 rounded-2xl border border-indigo-200/50 space-y-1">
@@ -2261,9 +2222,9 @@ export default function AdministrationCenter({
                     {L("BULUT DEPOLAMA KANALLARI", "CLOUD STORAGE CHANNELS")}
                   </span>
                   <div className="text-xl font-black text-indigo-650 dark:text-indigo-400">
-                    {L("3 Bağlantı", "3 Connections")}
+                    {dataHubConnections.filter(c => c.enabled).length} / {dataHubConnections.length}
                   </div>
-                  <p className="text-[10px] text-slate-405 leading-none">{L("OneDrive, Dropbox / S3", "OneDrive, Dropbox / S3")}</p>
+                  <p className="text-[10px] text-slate-405 leading-none">{L("Aktif / Tanımlı depolama kanalı", "Active / defined storage channels")}</p>
                 </div>
 
                 <div className="p-4 bg-white dark:bg-black/10 rounded-2xl border border-slate-200/80 space-y-1">
@@ -2362,7 +2323,7 @@ export default function AdministrationCenter({
           </div>
         )}
 
-
+        <ConfirmModal {...confirmProps} />
       </div>
     </div>
   );

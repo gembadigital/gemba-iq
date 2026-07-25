@@ -2,7 +2,7 @@
 
 Bu dosya, projenin kaynak kodu üzerinden yapılan UI/UX değerlendirmesini ve dil (TR/EN) tutarlılığı taramasını fazlara bölünmüş, uygulanabilir bir plana çeviriyor. Ekip bu dosyayı çalışma listesi olarak kullanabilir — her fazın altında **Durum** satırı var ve ilerledikçe güncellenmeli.
 
-Son güncelleme: 2026-07-25 (Modül 10 tamamlandı)
+Son güncelleme: 2026-07-25 (Modül 11 tamamlandı)
 
 ---
 
@@ -25,7 +25,7 @@ Son güncelleme: 2026-07-25 (Modül 10 tamamlandı)
 | 9 | CampaignManagerView.tsx + CampaignDesigner.tsx | Tamamlandı (2026-07-24) |
 | — | Gemba Lens özelliği kaldırıldı (kullanıcı talebi) | Tamamlandı (2026-07-25) |
 | 10 | AISalesAssistant.tsx + SalesCoachAI.tsx + CompanyDiscoveryView.tsx | Tamamlandı (2026-07-25) |
-| 11 | AdministrationCenter.tsx + UserAccountSettings.tsx | Planlandı |
+| 11 | AdministrationCenter.tsx + UserAccountSettings.tsx | Tamamlandı (2026-07-25) |
 | 12 | DashboardView.tsx + SalesDashboardView.tsx + CompanyDetailView.tsx | Planlandı |
 
 Her modül geçişi kendi commit/deploy döngüsüyle kapanır; bu tablo ilerledikçe güncellenir.
@@ -117,6 +117,14 @@ Her modül geçişi kendi commit/deploy döngüsüyle kapanır; bu tablo ilerled
 - Kaldırılan ölü kodla birlikte artık kullanılmayan importlar da temizlendi: `Layers, ChevronRight, TrendingUp, Users, Download, FileSpreadsheet, FileText, Printer, ChevronDown, Trash2, Calendar, DollarSign, Briefcase, Workflow, HelpCircle, Eye` (lucide-react), `XLSX`, `jsPDF`, ve tüm `recharts` importları (`BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, Legend, AreaChart, Area`) — hiçbiri render edilen kodda kullanılmıyordu.
 - Dil: Detay çekmecesi (Kapat butonu, "FİRMA AYRINTILARI" başlığı, "Derin Rapor Analizi Çalıştır"/"Rapor Oluşturuluyor..." butonu, "Müşteriler'e (Won) Ekle"/"Hedef Hesaplara Ekle" alt butonları) ve arama sonuç kartlarındaki üç aksiyon butonu (CRM Hedef Defterine Ekle, Müşteriler'e Ekle, Fabrikayı Analiz Et) `t()` ile sarmalandı. Google-tarzı arama sayfasındaki "Klasik Arama"/"Kendimi Şanslı Hissediyorum"/"Hızlı Arama Önerileri"/"Arama Paneline Dön" butonları da `t()`'ye taşındı. Detay çekmecesine `role="dialog" aria-modal="true"` eklendi.
 - **Kasıtlı olarak dokunulmadı:** Sanayi/OSB arama sonuçlarındaki mock şirket verisi, örnek arama anahtar kelimeleri (chip önerileri), `computeCompanyProfile`'daki sektörel strateji cümleleri, ve interpolasyonlu (değişken içeren) toast mesajları (`` `"${item.name}" ... eklendi!` `` gibi) — bunlar ya iş verisi/demo içeriği ya da `t()`'nin tam-eşleşme gerektirmesi nedeniyle basit bir sarmalamayla çevrilemeyen dinamik metinler; önceki modüllerdeki aynı kategori kararlarıyla tutarlı bırakıldı.
+
+**Modül 11 (AdministrationCenter.tsx + UserAccountSettings.tsx) — yapılanlar:**
+- **UserAccountSettings.tsx** (246 satır, Kişisel Posta Kutusu paneli): baştan iyi durumdaydı (19 `t()` çağrısı, hiç `alert()`/`confirm()` yok, üç buton — Bağla/Test/Bağlantıyı Kes — hepsi gerçek handler'lara bağlı). Ek düzeltme gerekmedi.
+- **AdministrationCenter.tsx** (2369 satır) çok daha büyük bir bulgu içeriyordu — bu dosyada yalnızca 4 `t()` çağrısı vardı (dosyanın geri kalanı kendi yerel `L(tr, en)` iki-dilli fonksiyonuyla yazılmış, bu yüzden dil tarafı zaten büyük ölçüde kapsanıyordu; asıl mesele farklıydı):
+  - **Gerçek "mükerrer fonksiyon" bulgusu (kullanıcının bu turdaki talebiyle birebir örtüşüyor):** Dosyada TAMAMEN AYRI, ikinci bir "Bağlı Posta Kutuları" sistemi vardı (`MailboxItem` interface, `mailboxes` state + Supabase-backed key, `handleConnectNewMailbox`, `handleRemoveMailbox`, kendi seed verisi, ve gerçekte hiçbir API çağırmayan ama "Microsoft Graph API yetkilendirmesi başarıyla tamamlandı!" diyen sahte bir başarı `alert()`'i). Render edilen "E-posta" sekmesi bu sistemi hiç kullanmıyordu — gerçek, MS Graph destekli `organizationMailboxCard`'ı gösteriyordu. Yani bu ikinci sistem tamamen ölü koddu; tek etkisi, "Sistem Sağlığı" sekmesindeki "BAĞLI POSTA KUTULARI" istatistik kartının kendi sahte verisini göstermesiydi (gerçek organizasyon posta kutusu durumunu değil). Kaldırıldı; istatistik kartı artık gerçek `organizationMailbox` prop'undan okuyor (`1/1` bağlıysa, `0/1` değilse).
+  - **İlişkili başka bir sahte veri:** Aynı Sistem Sağlığı sekmesindeki "BULUT DEPOLAMA KANALLARI" kartı hesaplanmış bir değer değil, sabit "3 Bağlantı"/"3 Connections" metniydi — gerçek `dataHubConnections` listesi zaten mevcuttu (Data Hub sekmesinde kullanılıyor), kart artık `dataHubConnections.filter(c => c.enabled).length / dataHubConnections.length` gösteriyor.
+  - **Onay eksikliği (3 yer):** `deleteTemplate` (e-posta şablonu silme) ve `handleDeleteDocType` (döküman kategorisi silme) hiçbir onay istemeden anında siliyordu; `handleDeleteConnection` (bulut depolama bağlantısı silme) native tarayıcı `confirm()` kullanıyordu (Türkçe sabit metin, uygulamanın geri kalanıyla tutarsız UX). Üçü de paylaşımlı `ConfirmModal`/`useConfirm()`'e bağlandı, yeni sözlük anahtarları eklendi (`Template Will Be Deleted`, `Document Category Will Be Deleted`, `Storage Connection Will Be Deleted` + karşılık gelen onay mesajları).
+  - **Kasıtlı olarak dokunulmadı:** Organizasyon Posta Kutusu kartındaki "Bağlantıyı Kes" butonu (App.tsx'ten gelen `onDisconnectOrganizationMailbox` prop'una doğrudan bağlı, onaysız) — UserAccountSettings.tsx'teki Kişisel Posta Kutusu panelinin aynı Bağla/Test/Bağlantıyı Kes deseniyle tutarlı bırakıldı, tutarsızlık yaratmamak için değiştirilmedi. Dosyanın üç genişleyen form paneli (Yeni Şablon, Yeni Depolama Bağlantısı, Bağlantı Düzenle) gerçek `fixed inset-0` overlay modal değil, sayfa akışı içinde açılıp kapanan satır-içi panellerdir — bu yüzden `role="dialog"` eklenmedi (diğer modüllerdeki gerçek overlay modallardan farklı bir UI deseni). "Engine Kuralları (Admin)" alt-sekmesi bu dosyada yok (ayrı bir bileşende — bu modülün kapsamında bulunmadı, önceki not hâlâ geçerli: Modül 8'de kapsam dışı bırakılmıştı, tekrar incelenmedi). Kalan 15+ `alert()` çağrısı (bilgilendirme amaçlı başarı/hata mesajları) — Modül 1'de not edilen "toast sistemi" eksikliğiyle aynı kategori, kapsam dışı bırakıldı.
 
 ---
 
