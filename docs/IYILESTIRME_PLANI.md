@@ -2,7 +2,7 @@
 
 Bu dosya, projenin kaynak kodu üzerinden yapılan UI/UX değerlendirmesini ve dil (TR/EN) tutarlılığı taramasını fazlara bölünmüş, uygulanabilir bir plana çeviriyor. Ekip bu dosyayı çalışma listesi olarak kullanabilir — her fazın altında **Durum** satırı var ve ilerledikçe güncellenmeli.
 
-Son güncelleme: 2026-07-25 (Modül 11 tamamlandı)
+Son güncelleme: 2026-07-25 (Modül 12 tamamlandı)
 
 ---
 
@@ -26,7 +26,7 @@ Son güncelleme: 2026-07-25 (Modül 11 tamamlandı)
 | — | Gemba Lens özelliği kaldırıldı (kullanıcı talebi) | Tamamlandı (2026-07-25) |
 | 10 | AISalesAssistant.tsx + SalesCoachAI.tsx + CompanyDiscoveryView.tsx | Tamamlandı (2026-07-25) |
 | 11 | AdministrationCenter.tsx + UserAccountSettings.tsx | Tamamlandı (2026-07-25) |
-| 12 | DashboardView.tsx + SalesDashboardView.tsx + CompanyDetailView.tsx | Planlandı |
+| 12 | DashboardView.tsx + SalesDashboardView.tsx + CompanyDetailView.tsx | Tamamlandı (2026-07-25) |
 
 Her modül geçişi kendi commit/deploy döngüsüyle kapanır; bu tablo ilerledikçe güncellenir.
 
@@ -125,6 +125,17 @@ Her modül geçişi kendi commit/deploy döngüsüyle kapanır; bu tablo ilerled
   - **İlişkili başka bir sahte veri:** Aynı Sistem Sağlığı sekmesindeki "BULUT DEPOLAMA KANALLARI" kartı hesaplanmış bir değer değil, sabit "3 Bağlantı"/"3 Connections" metniydi — gerçek `dataHubConnections` listesi zaten mevcuttu (Data Hub sekmesinde kullanılıyor), kart artık `dataHubConnections.filter(c => c.enabled).length / dataHubConnections.length` gösteriyor.
   - **Onay eksikliği (3 yer):** `deleteTemplate` (e-posta şablonu silme) ve `handleDeleteDocType` (döküman kategorisi silme) hiçbir onay istemeden anında siliyordu; `handleDeleteConnection` (bulut depolama bağlantısı silme) native tarayıcı `confirm()` kullanıyordu (Türkçe sabit metin, uygulamanın geri kalanıyla tutarsız UX). Üçü de paylaşımlı `ConfirmModal`/`useConfirm()`'e bağlandı, yeni sözlük anahtarları eklendi (`Template Will Be Deleted`, `Document Category Will Be Deleted`, `Storage Connection Will Be Deleted` + karşılık gelen onay mesajları).
   - **Kasıtlı olarak dokunulmadı:** Organizasyon Posta Kutusu kartındaki "Bağlantıyı Kes" butonu (App.tsx'ten gelen `onDisconnectOrganizationMailbox` prop'una doğrudan bağlı, onaysız) — UserAccountSettings.tsx'teki Kişisel Posta Kutusu panelinin aynı Bağla/Test/Bağlantıyı Kes deseniyle tutarlı bırakıldı, tutarsızlık yaratmamak için değiştirilmedi. Dosyanın üç genişleyen form paneli (Yeni Şablon, Yeni Depolama Bağlantısı, Bağlantı Düzenle) gerçek `fixed inset-0` overlay modal değil, sayfa akışı içinde açılıp kapanan satır-içi panellerdir — bu yüzden `role="dialog"` eklenmedi (diğer modüllerdeki gerçek overlay modallardan farklı bir UI deseni). "Engine Kuralları (Admin)" alt-sekmesi bu dosyada yok (ayrı bir bileşende — bu modülün kapsamında bulunmadı, önceki not hâlâ geçerli: Modül 8'de kapsam dışı bırakılmıştı, tekrar incelenmedi). Kalan 15+ `alert()` çağrısı (bilgilendirme amaçlı başarı/hata mesajları) — Modül 1'de not edilen "toast sistemi" eksikliğiyle aynı kategori, kapsam dışı bırakıldı.
+
+**Modül 12 (DashboardView.tsx + SalesDashboardView.tsx + CompanyDetailView.tsx) — yapılanlar:**
+- **DashboardView.tsx** (275 satır, kampanya performans paneli): baştan iyi durumdaydı — kampanyaya özel çeviri sözlüğünü genel `t()` ile birleştiren yerel bir `t = (key) => getCampaignTranslation(lang, key) ?? globalT(key) ?? key` yardımcısı kullanıyor, hiç `alert()`/`confirm()` yok, tek `onClick` (`onNavigateToDesigner`) gerçek bir prop'a bağlı. Ek düzeltme gerekmedi.
+- **CompanyDetailView.tsx** (488 satır): 36 `t()` çağrısı, `alert()`/`confirm()` yok, 5 `onClick` (Kapat ×2, Düzenle Formunu Aç, Şirketi Sil, sekme değiştir) hepsi gerçek prop/state'e bağlı. Türkçe karakter taramasındaki tek eşleşmeler durum etiketi eşleme sözlüğü (`{"Prospect": "Potansiyel Müşteri", ...}` — gerçek iş verisi, dil hatası değil) ve bir kod yorumuydu. Ek düzeltme gerekmedi.
+- **SalesDashboardView.tsx** (1977 satır) — asıl bulgular burada:
+  - Dil sızıntısı: `{lang === "TR" ? "AKSİYON TETİKLE" : "TETIKLE / FOLLOW-UP"}` — İngilizce dal içinde yanlışlıkla Türkçe kelime kalmış (`TETIKLE`) → `"TRIGGER FOLLOW-UP"` olarak düzeltildi.
+  - Erişilebilirlik: Filtre çekmecesi (Filter Drawer) ve Düzenlenebilir Hedefler modalına `role="dialog" aria-modal="true"` + kapat butonlarına `aria-label` eklendi (ikisinde de yoktu).
+  - **Uydurma veri — "SECTION 7: TOPLANTI PERFORMANSI" paneli:** Hızlı istatistik kartları (Toplam Görüşme, Gemba Ziyareti, Online Görüşme, Kişi Başı Ortalama) gerçek hiçbir veriye dayanmıyordu — `stats.totalCount * 3`, `* 1`, `* 2` gibi keyfi çarpanlardan üretiliyordu. Altındaki trend grafiğinde de Ocak-Mayıs ayları için sabit, uydurma sayılar (`{ name: "Ocak", visits: 2, online: 5, ... }` vb.) vardı, yalnızca son ay (Haziran) aynı sahte formülü kullanıyordu. `DealRecord.meetings` (id/date/title/result) alanı gerçek bir veri kaynağı olarak zaten mevcuttu; panel artık `filteredDeals`'ten gerçek toplantı tarihlerine göre aylık toplam hesaplayan yeni `meetingTrendData`/`totalMeetingsCount` useMemo'larını kullanıyor. Görüşme tipi (yerinde Gemba ziyareti / online görüşme) ayrı bir alan olarak tutulmadığı için bu ayrım kaldırıldı — tek, dürüst bir "toplam görüşme" serisi gösteriliyor; kart sayısı 4'ten 2'ye indi (Toplam Görüşme, Kişi Başı Ortalama).
+  - **Bununla bağlantılı, önceden gizli kalmış gerçek bug:** Bu değişikliği yaparken TypeScript, dosyanın yerel `Deal` arayüzünde (`meetings` alanı hiç tanımlı değildi) zaten var olan bir hatayı ortaya çıkardı — "Fırsat Yaşlandırma" panelindeki `{d.meetings?.length === 0 && <span>...Toplantı Yok...</span>}` satırı, `meetings` alanı tipte tanımsız olduğu için çalışma zamanında her zaman `undefined === 0` → `false` değerlendiriyor, yani "Toplantı Yok" rozeti **hiçbir zaman görünmüyordu** — kullanıcının tarif ettiği "fiziksel olarak var ama çalışmayan" segment örneklerinden biri. Kök neden: `SalesDashboardView.tsx`'in kendi yerel `Deal` arayüzü (satır 60), `DealManagementView.tsx`'teki asıl `Deal` tipinden farklı ve `meetings?: {...}[]` alanını içermiyordu. Düzeltme: alan yerel arayüze eklendi — hem yeni useMemo'ların tip hatası giderildi hem de "Toplantı Yok" rozeti artık gerçekten çalışıyor.
+  - Tüm `onClick` handler'ları (`resetAllFilters`, `setIsFilterOpen`, `setDashboardPageTab`, `setDateRangePreset`, `setActiveDrillDown`, `handleCompanyClick`, `setTrendPeriod`, `setIsTargetModalOpen`, `handleSaveTargets` vb.) tarandı — hepsi gerçek state/mantığa bağlı, başka ölü buton bulunmadı. `dashboardPageTab`'ın iki değeri de (`metrics`, `coach`) render ediliyor — ölü sekme yok.
+  - **Kasıtlı olarak dokunulmadı:** Satış Temsilcisi Liderlik Tablosu'ndaki `meetings` sütunu (satır ~628) — bu sütun, gerçek toplantı-ekleme arayüzü sistemde henüz bulunmadığı için (deal detayına toplantı eklemek için bir form/buton yok, `meetings` alanı yalnızca demo/seed verilerinde dolu) önceki bir oturumda zaten dürüstçe `0` gösterecek şekilde düzeltilmişti (kod yorumuyla belgelenmiş); bu modülde tekrar dokunulmadı, aynı gerekçeyle tutarlı bırakıldı.
 
 ---
 

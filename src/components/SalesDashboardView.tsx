@@ -83,6 +83,7 @@ export interface Deal {
   region?: string;
   businessUnit?: string;
   createdDate?: string;
+  meetings?: { id: string; date: string; title: string; result: string }[];
 }
 
 interface SalesDashboardProps {
@@ -522,6 +523,37 @@ export default function SalesDashboardView({ deals, onSelectDeal }: SalesDashboa
     return monthNames.map((m) => ({ name: m, ...byMonth[m] }));
   }, [filteredDeals, trendPeriod]);
 
+  // Meeting performance panel data (Section 7)
+  // Önceden bu panel tamamen uydurma sayılardan oluşuyordu: "Toplam Görüşme" =
+  // stats.totalCount * 3, "Gemba Ziyareti" = stats.totalCount * 1, "Online Görüşme"
+  // = stats.totalCount * 2 gibi keyfi çarpanlar, ve trend grafiğinde Ocak-Mayıs
+  // ayları için sabit uydurma sayılar (2, 4, 5, 8, 6 ziyaret) vardı — hiçbiri
+  // gerçek toplantı kaydına dayanmıyordu. DealRecord.meetings (id/date/title/result)
+  // gerçek veri kaynağı zaten mevcuttu (Fırsat Yaşlandırma panelinde d.meetings
+  // kullanılıyor), bu yüzden artık gerçek toplantı tarihlerinden aylık toplam
+  // hesaplanıyor. Görüşme tipi (yerinde Gemba ziyareti / online görüşme) ayrı bir
+  // alan olarak tutulmadığı için bu ayrım kaldırıldı — tek, dürüst bir "toplam
+  // görüşme" serisi gösteriliyor.
+  const meetingTrendData = useMemo(() => {
+    const monthNames = ["Ocak", "Şubat", "Mart", "Nisan", "Mayıs", "Haziran", "Temmuz", "Ağustos", "Eylül", "Ekim", "Kasım", "Aralık"];
+    const byMonth: { [key: string]: number } = {};
+    monthNames.forEach((m) => { byMonth[m] = 0; });
+    filteredDeals.forEach((d) => {
+      (d.meetings || []).forEach((mtg) => {
+        const dateObj = new Date(mtg.date);
+        if (isNaN(dateObj.getTime())) return;
+        const key = monthNames[dateObj.getMonth()];
+        byMonth[key] = (byMonth[key] || 0) + 1;
+      });
+    });
+    return monthNames.map((m) => ({ name: m, meetings: byMonth[m] }));
+  }, [filteredDeals]);
+
+  const totalMeetingsCount = useMemo(
+    () => filteredDeals.reduce((sum, d) => sum + (d.meetings?.length || 0), 0),
+    [filteredDeals]
+  );
+
   // Topic bar chart data
   // Önceden burada, gerçek konu listesi kısaysa 6 tane tamamen uydurma konu
   // (OEE Tracking Setup, Muda Mapping Auditing vb.) ekleniyordu. Artık sadece
@@ -735,7 +767,7 @@ export default function SalesDashboardView({ deals, onSelectDeal }: SalesDashboa
         <>
           {/* FILTER DRAWER PANEL (SLIDES FROM RIGHT) */}
       {isFilterOpen && (
-        <div className="fixed inset-0 bg-black/60 backdrop-blur-xs flex justify-end z-50 animate-in fade-in duration-200">
+        <div role="dialog" aria-modal="true" className="fixed inset-0 bg-black/60 backdrop-blur-xs flex justify-end z-50 animate-in fade-in duration-200">
           <div className="bg-[#FAF9F8] dark:bg-[#1f1e1d] w-full max-w-sm border-l border-[#EDEBE9] dark:border-[#323130] h-full shadow-2xl flex flex-col animate-in slide-in-from-right duration-200">
             {/* Drawer Header */}
             <div className="p-5 border-b border-[#EDEBE9] dark:border-[#323130] flex items-center justify-between bg-white dark:bg-[#201f1e]">
@@ -748,6 +780,7 @@ export default function SalesDashboardView({ deals, onSelectDeal }: SalesDashboa
               <button
                 onClick={() => setIsFilterOpen(false)}
                 className="p-1 border border-transparent rounded hover:bg-slate-100 dark:hover:bg-[#252423] cursor-pointer"
+                aria-label={t("Close")}
               >
                 <X className="w-4 h-4" />
               </button>
@@ -1457,7 +1490,7 @@ export default function SalesDashboardView({ deals, onSelectDeal }: SalesDashboa
                             }}
                             className="px-2 py-1 bg-rose-500 hover:bg-rose-600 text-white font-extrabold text-[10px] rounded animate-pulse cursor-pointer"
                           >
-                             {lang === "TR" ? "AKSİYON TETİKLE" : "TETIKLE / FOLLOW-UP"}
+                             {lang === "TR" ? "AKSİYON TETİKLE" : "TRIGGER FOLLOW-UP"}
                           </button>
                         ) : (
                            <span className="text-[10px] text-emerald-500 font-bold uppercase tracking-wider">{lang === "TR" ? "SAĞLIKLI" : "HEALTHY"}</span>
@@ -1700,46 +1733,30 @@ export default function SalesDashboardView({ deals, onSelectDeal }: SalesDashboa
             <h3 className="text-xs font-black uppercase tracking-widest text-[#0078D4] dark:text-blue-400 mb-1">
               {t("Monthly Meeting Stats & Trend")}
             </h3>
-            <p className="text-[10px] text-slate-400 mb-3">{t("Total outbound meetings, physical Gemba visits and online calls representation")}</p>
+            <p className="text-[10px] text-slate-400 mb-3">{t("Total logged meetings across filtered opportunities, by month")}</p>
           </div>
 
           {/* Quick Stats Grid */}
-          <div className="grid grid-cols-4 gap-2 mb-3">
+          <div className="grid grid-cols-2 gap-2 mb-3">
             <div className="p-2 bg-slate-50 dark:bg-zinc-900 border border-slate-100 dark:border-zinc-800 rounded-lg text-center">
               <span className="text-[8px] uppercase text-slate-400 font-extrabold block">{t("Total Meet")}</span>
-              <span className="text-sm font-black font-mono text-[#0078D4] block">{stats.totalCount * 3}</span>
-            </div>
-            <div className="p-2 bg-slate-50 dark:bg-zinc-900 border border-slate-100 dark:border-zinc-800 rounded-lg text-center">
-              <span className="text-[8px] uppercase text-slate-400 font-extrabold block">{t("Gemba Visit")}</span>
-              <span className="text-sm font-black font-mono text-emerald-500 block">{stats.totalCount * 1}</span>
-            </div>
-            <div className="p-2 bg-slate-50 dark:bg-zinc-900 border border-slate-100 dark:border-zinc-800 rounded-lg text-center">
-              <span className="text-[8px] uppercase text-slate-400 font-extrabold block">{t("Online Calls")}</span>
-              <span className="text-sm font-black font-mono text-indigo-500 block">{stats.totalCount * 2}</span>
+              <span className="text-sm font-black font-mono text-[#0078D4] block">{totalMeetingsCount}</span>
             </div>
             <div className="p-2 bg-[#FAF8F5] dark:bg-zinc-900 rounded-lg text-center">
               <span className="text-[8px] uppercase text-slate-400 font-extrabold block">{t("Avg / Person")}</span>
-              <span className="text-sm font-black font-mono text-slate-805 block">{Math.max(1, Math.round(stats.totalCount * 3 / salespeople.length))}</span>
+              <span className="text-sm font-black font-mono text-slate-805 block">{Math.max(0, Math.round(totalMeetingsCount / Math.max(1, salespeople.length)))}</span>
             </div>
           </div>
 
           <div className="flex-1">
             <ResponsiveContainer width="100%" height="75%">
-              <AreaChart data={[
-                { name: "Ocak", visits: 2, online: 5, totalToDate: 7 },
-                { name: "Şubat", visits: 4, online: 8, totalToDate: 12 },
-                { name: "Mart", visits: 5, online: 12, totalToDate: 17 },
-                { name: "Nisan", visits: 8, online: 15, totalToDate: 23 },
-                { name: "Mayıs", visits: 6, online: 11, totalToDate: 17 },
-                { name: "Haziran", visits: stats.totalCount, online: stats.totalCount * 2, totalToDate: stats.totalCount * 3 }
-              ]}>
+              <AreaChart data={meetingTrendData}>
                 <CartesianGrid strokeDasharray="3 3" opacity={0.1} />
                 <XAxis dataKey="name" fontSize={8} tickLine={false} />
-                <YAxis fontSize={8} tickLine={false} />
+                <YAxis fontSize={8} tickLine={false} allowDecimals={false} />
                 <Tooltip />
                 <Legend wrapperStyle={{ fontSize: 8 }} />
-                <Area type="monotone" dataKey="visits" name={t("Gemba Visits")} stroke="#10b981" fill="#10b981" fillOpacity={0.15} />
-                <Area type="monotone" dataKey="online" name={t("Online Calls")} stroke="#6366f1" fill="#6366f1" fillOpacity={0.15} />
+                <Area type="monotone" dataKey="meetings" name={t("Meetings")} stroke="#10b981" fill="#10b981" fillOpacity={0.15} />
               </AreaChart>
             </ResponsiveContainer>
           </div>
@@ -1910,11 +1927,11 @@ export default function SalesDashboardView({ deals, onSelectDeal }: SalesDashboa
 
       {/* EDITABLE TARGETS MODAL */}
       {isTargetModalOpen && (
-        <div className="fixed inset-0 bg-black/70 backdrop-blur-xs flex items-center justify-center z-50 p-4 animate-in fade-in duration-200">
+        <div role="dialog" aria-modal="true" className="fixed inset-0 bg-black/70 backdrop-blur-xs flex items-center justify-center z-50 p-4 animate-in fade-in duration-200">
           <div className="bg-white dark:bg-[#1f1e1d] rounded-2xl border border-slate-200 dark:border-[#323130] w-full max-w-sm overflow-hidden shadow-2xl flex flex-col">
             <div className="px-5 py-4 border-b border-slate-100 dark:border-[#323130] bg-[#FAF9F8] dark:bg-[#201f1e] flex items-center justify-between">
               <span className="text-sm font-extrabold uppercase tracking-widest text-[#0078D4]">{t("Adjust Sales targets")}</span>
-              <button onClick={() => setIsTargetModalOpen(false)} className="p-1 hover:bg-slate-200 rounded cursor-pointer">
+              <button onClick={() => setIsTargetModalOpen(false)} className="p-1 hover:bg-slate-200 rounded cursor-pointer" aria-label={t("Close")}>
                 <X className="w-4 h-4" />
               </button>
             </div>
