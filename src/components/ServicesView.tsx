@@ -813,6 +813,18 @@ export default function ServicesView({
   const [serviceFilterQuery, setServiceFilterQuery] = useState("");
   const [toastMessage, setToastMessage] = useState<string | null>(null);
 
+  // "CRM'e Kaydet" butonunun çalışıp çalışmadığı belli olmuyordu — tek geri
+  // bildirim, birkaç saniyede kaybolan bir toast'tı, buton hiçbir zaman
+  // durum göstermiyordu. Artık başarılı kayıttan sonra buton kalıcı bir
+  // "Kaydedildi" durumuna geçiyor; aynı taslak (proposalNumber değişmeden)
+  // tekrar tıklanırsa yeniden kayıt/üzerine yazma yapılmıyor (bu, kaydedilen
+  // fırsatın aşamasını sessizce sıfırlayabilirdi — bkz. buildAndPersistProposal),
+  // bunun yerine "zaten kayıtlı" mesajı gösteriliyor.
+  const [savedProposalInfo, setSavedProposalInfo] = useState<{ number: string } | null>(null);
+  useEffect(() => {
+    setSavedProposalInfo(null);
+  }, [proposalNumber]);
+
   const handleSaveServiceDefaults = () => {
     if (!selectedService) return;
     setServiceCards(prev => prev.map(c => {
@@ -1473,9 +1485,13 @@ export default function ServicesView({
       }).join("");
     };
 
+    // Kullanıcı talebi: kapak mektubundaki sabit "SAYIN YETKİLİ," selamlaması
+    // kaldırıldı — jenerik/kişiselleştirilmemiş bir hitap olduğu için (gerçek
+    // ilgili kişi adı zaten teklifin başka yerlerinde ve e-posta gövdesinde
+    // kullanılıyor). Kapak mektubu artık doğrudan kullanıcının girdiği/
+    // seçtiği içerikle başlıyor.
     const coverLetterContent = `
       <div style="font-family: Arial, sans-serif; font-size: 9.5pt; color: #334155; line-height: 1.5;">
-        <p style="font-size: 10.5pt; font-weight: bold; color: #1e293b; margin-top: 0; margin-bottom: 12px; font-family: Arial;">SAYIN YETKİLİ,</p>
         ${parseCoverLetterBody(wizardCoverPage || selectedService?.defaultCoverPage || "")}
       </div>
     `;
@@ -2026,8 +2042,15 @@ export default function ServicesView({
   // SPA underneath sits frozen. None of that popup/navigation juggling
   // happens here anymore — saving is just saving.
   const handleCreateAndSaveProposal = (silent = false) => {
+    if (savedProposalInfo && savedProposalInfo.number === proposalNumber) {
+      if (!silent) {
+        setToastMessage(t("This proposal is already saved in the system. (PROP-{number})").replace("{number}", savedProposalInfo.number));
+      }
+      return;
+    }
     const result = buildAndPersistProposal();
     if (!result) return;
+    setSavedProposalInfo({ number: proposalNumber });
     if (!silent) {
       setToastMessage(t("Proposal and opportunity saved!"));
     }
@@ -3898,9 +3921,21 @@ export default function ServicesView({
                   <button
                     type="button"
                     onClick={() => handleCreateAndSaveProposal(false)}
-                    className="w-full h-[52px] px-6 py-3.5 bg-[#0078D4] hover:bg-[#106ebe] text-white font-semibold rounded-md flex items-center justify-center gap-2 transition-colors border border-[#005a9e] cursor-pointer text-[14px]"
+                    className={`w-full h-[52px] px-6 py-3.5 text-white font-semibold rounded-md flex items-center justify-center gap-2 transition-colors border cursor-pointer text-[14px] ${
+                      savedProposalInfo && savedProposalInfo.number === proposalNumber
+                        ? "bg-emerald-600 hover:bg-emerald-700 border-emerald-800"
+                        : "bg-[#0078D4] hover:bg-[#106ebe] border-[#005a9e]"
+                    }`}
                   >
-                    <Save className="w-4 h-4 text-blue-100" /> {t("Create Proposal & Save to CRM")}
+                    {savedProposalInfo && savedProposalInfo.number === proposalNumber ? (
+                      <>
+                        <CheckCircle2 className="w-4 h-4 text-emerald-100" /> {t("Saved to CRM ✓ — click again to check")}
+                      </>
+                    ) : (
+                      <>
+                        <Save className="w-4 h-4 text-blue-100" /> {t("Create Proposal & Save to CRM")}
+                      </>
+                    )}
                   </button>
                 </div>
               )}

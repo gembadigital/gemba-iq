@@ -361,10 +361,19 @@ export default function CompanyDetailView({
                   </thead>
                   <tbody className="divide-y divide-slate-50 dark:divide-zinc-850">
                     {CrmDb.getProposalsByCompany(company.id).map((prop: any) => (
-                      <tr key={prop.id} className="hover:bg-slate-50/40 dark:hover:bg-zinc-900/40">
+                      <tr
+                        key={prop.id}
+                        onClick={() =>
+                          window.dispatchEvent(
+                            new CustomEvent("crm-navigate", { detail: { tab: "proposal-management", id: prop.id, type: "proposal" } })
+                          )
+                        }
+                        className="hover:bg-slate-50/40 dark:hover:bg-zinc-900/40 cursor-pointer"
+                        title={t("Click to view proposal summary and PDF file")}
+                      >
                         <td className="p-3 pl-4 font-extrabold text-[#0078D4] font-mono">#{prop.proposalNumber}</td>
-                        <td className="p-3 font-semibold text-slate-800 dark:text-zinc-200">{prop.title}</td>
-                        <td className="p-3 font-mono text-slate-500">{prop.date || "2026-06-15"}</td>
+                        <td className="p-3 font-semibold text-slate-800 dark:text-zinc-200">{prop.proposalSubject}</td>
+                        <td className="p-3 font-mono text-slate-500">{prop.date || "-"}</td>
                         <td className="p-3">
                           <span className={`inline-block px-2 py-0.5 rounded-full text-[9px] font-mono font-bold uppercase ${
                             prop.status === "Approved" || prop.status === "Accepted"
@@ -376,7 +385,9 @@ export default function CompanyDetailView({
                             {prop.status}
                           </span>
                         </td>
-                        <td className="p-3 text-right pr-4 font-extrabold text-slate-800 dark:text-zinc-100 font-mono">{prop.totalCost || "N/A"}</td>
+                        <td className="p-3 text-right pr-4 font-extrabold text-slate-800 dark:text-zinc-100 font-mono">
+                          {prop.currency || "₺"} {formatSystemNumber(prop.grandTotal ?? prop.totalBudget ?? 0)}
+                        </td>
                       </tr>
                     ))}
                   </tbody>

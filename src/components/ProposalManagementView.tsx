@@ -153,25 +153,46 @@ export default function ProposalManagementView() {
 
   useEffect(() => {
     let url = "";
+    let cancelled = false;
     if (selectedProposalForDetail) {
-      try {
-        url = generateProposalPdfBlobUrl(selectedProposalForDetail, lang);
-        setDetailPdfUrl(url);
-        void storeProposalPdf(selectedProposalForDetail, lang);
-        void loadProposalEnterpriseMeta(selectedProposalForDetail.id).then((meta) => {
-          setProposalTimeline(meta.timeline);
-          setProposalAuditLog(meta.auditLog);
+      // Bu çekmece daha önce eski, jenerik jsPDF üretecini (generateProposalPdfBlobUrl)
+      // kullanıyordu — bu yüzden listede bir teklife tıklandığında görünen PDF,
+      // gerçek marka/kapak/logo içeren "Yazdır" önizlemesinden ve indirilen
+      // dosyadan (handleDownloadPdf, captureProposalPdf kullanır) FARKLI bir
+      // belgeydi. Artık aynı gerçek HTML letterhead'i (ProposalLetterheadBody)
+      // html2canvas-pro ile yakalayan captureProposalPdf kullanılıyor, böylece
+      // görüntüleme, indirme ve Documents'a otomatik kaydedilen kopya birbiriyle
+      // tutarlı. Yakalama başarısız olursa (ör. DOM hazır değilse) eski üretece
+      // düşülüyor — görüntüleyici hiçbir zaman tamamen boş kalmasın diye.
+      captureProposalPdf(selectedProposalForDetail)
+        .then((captured) => {
+          if (cancelled) return;
+          if (captured) {
+            url = URL.createObjectURL(captured.blob);
+            setDetailPdfUrl(url);
+            void storeProposalPdf(selectedProposalForDetail, lang, captured.blob);
+          } else {
+            url = generateProposalPdfBlobUrl(selectedProposalForDetail, lang);
+            setDetailPdfUrl(url);
+            void storeProposalPdf(selectedProposalForDetail, lang);
+          }
+        })
+        .catch((err) => {
+          console.error("Failed to generate proposal PDF:", err);
+          if (!cancelled) setDetailPdfUrl("");
         });
-      } catch (err) {
-        console.error("Failed to generate PDF Blob URL:", err);
-        setDetailPdfUrl("");
-      }
+      void loadProposalEnterpriseMeta(selectedProposalForDetail.id).then((meta) => {
+        if (cancelled) return;
+        setProposalTimeline(meta.timeline);
+        setProposalAuditLog(meta.auditLog);
+      });
     } else {
       setDetailPdfUrl("");
       setProposalTimeline([]);
       setProposalAuditLog([]);
     }
     return () => {
+      cancelled = true;
       if (url) {
         URL.revokeObjectURL(url);
       }

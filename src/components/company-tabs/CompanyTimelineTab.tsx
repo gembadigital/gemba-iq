@@ -166,11 +166,19 @@ export default function CompanyTimelineTab({
     proposals.forEach((prop) => {
       // Create milestones based on proposal status
       const formattedDate = prop.date || new Date().toISOString().split("T")[0];
+      // Onceden burada `prop.title` (var olmayan bir alan, gercek alan adi
+      // proposalSubject) ve `prop.totalCost` (var olmayan bir alan, gercek
+      // alan adi grandTotal) okunuyordu — ikisi de `any` tipli oldugu icin
+      // TypeScript hatasi vermiyordu, sonuc her zaman "undefined - N/A"
+      // gosteriyordu. Gercek Proposal alanlarina duzeltildi.
+      const amountLabel = typeof prop.grandTotal === "number"
+        ? `${prop.currency || "₺"} ${prop.grandTotal.toLocaleString("tr-TR")}`
+        : t("N/A");
       items.push({
         id: `prop-sent-${prop.id}`,
         type: "proposal",
         title: t("Proposal Sent: #{number}").replace("{number}", prop.proposalNumber),
-        description: `${prop.title} - ${t("Total Amount:")} ${prop.totalCost || t("N/A")}`,
+        description: `${prop.proposalSubject} - ${t("Total Amount:")} ${amountLabel}`,
         date: formattedDate + "T10:00:00.000Z",
         user: "GP Wizard",
         metadata: { status: prop.status }

@@ -1577,6 +1577,8 @@ export const uiDictionaryTR: Record<string, string> = {
   "Improve overall win conversion by 8%.": "Genel kazanma dönüşümünü %8 artırın.",
   "Sales Director welcome message": "Selam Şef. Ben Satış Direktörün. OPEX CRM verilerini inceledim.\n\nZayıf takipleri sevmem, hedefleri yakalamak için buradayız. Hazırsan **'Haftalık Satış Denetimi Çalıştır'** butonuna tıklayarak pipeline'ı derinlemesine denetleyelim veya sormak istediğin fırsatların detaylarını yaz, masaya yatıralım!",
   "Proposal and opportunity saved!": "Teklif ve Fırsat Kaydedildi!",
+  "This proposal is already saved in the system. (PROP-{number})": "Bu teklif sistemde zaten kayıtlı. (PROP-{number})",
+  "Saved to CRM ✓ — click again to check": "CRM'e Kaydedildi ✓ — kontrol için tekrar tıklayın",
   "Terms saved!": "Genel Şartlar Kaydedildi!",
   "Default template saved successfully!": "Hizmet şablonu varsayılan olarak başarıyla kaydedildi!",
   "Subject": "Konu (Subject)",

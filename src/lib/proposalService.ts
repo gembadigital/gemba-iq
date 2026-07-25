@@ -553,8 +553,15 @@ export async function sendProposalEmail(
   return updated;
 }
 
-export async function storeProposalPdf(proposal: Proposal, lang: string): Promise<void> {
-  const blob = generateProposalPdfBlob(proposal, lang);
+// `preGeneratedBlob` lets callers that already captured the real, branded
+// letterhead PDF (via captureProposalPdf/renderElementToPdfBase64 — the same
+// html2canvas-pro render used for "PDF İndir" and the on-screen "Yazdır"
+// preview) pass that exact file through, so the copy auto-stored in
+// Documents visually matches what the user actually sees/downloads/prints.
+// Falls back to the old generic jsPDF renderer only when no capture was
+// possible (e.g. called from a context with no DOM to render into).
+export async function storeProposalPdf(proposal: Proposal, lang: string, preGeneratedBlob?: Blob): Promise<void> {
+  const blob = preGeneratedBlob || generateProposalPdfBlob(proposal, lang);
   const filename = `Proposal_${proposal.proposalNumber}_${proposal.currentVersion}_${proposal.companyName.replace(/[^a-zA-Z0-9_-]+/g, "_")}.pdf`;
 
   await uploadBlobDocument({
