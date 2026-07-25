@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Nexus Business Suite — Tasarım Önizleme</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet"/>
+<style>
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    font-family: 'Inter', sans-serif;
+    background: #0b1326;
+    color: #dae2fd;
+    padding: 32px 24px 64px;
+  }
+  .wrap { max-width: 1100px; margin: 0 auto; }
+  header { margin-bottom: 8px; }
+  h1 { font-size: 26px; font-weight: 700; margin: 0 0 6px; }
+  .subtitle { color: #9aa6c9; font-size: 14px; margin: 0 0 4px; line-height: 1.5; }
+  .badge {
+    display: inline-block;
+    background: #171f33;
+    border: 1px solid #2d3449;
+    color: #00dbe9;
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    padding: 4px 10px;
+    border-radius: 999px;
+    margin-bottom: 16px;
+  }
+  .note {
+    background: #131b2e;
+    border: 1px solid #2d3449;
+    border-radius: 10px;
+    padding: 14px 16px;
+    font-size: 13px;
+    color: #b9cacb;
+    line-height: 1.6;
+    margin: 20px 0 32px;
+  }
+  .grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+    gap: 20px;
+  }
+  .card {
+    background: #171f33;
+    border: 1px solid #2d3449;
+    border-radius: 14px;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+  }
+  .card .thumb {
+    aspect-ratio: 16/10;
+    background: #060e20;
+    overflow: hidden;
+    position: relative;
+  }
+  .card .thumb img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: top;
+    display: block;
+    transition: transform 0.25s ease;
+  }
+  .card:hover .thumb img { transform: scale(1.03); }
+  .card .body { padding: 16px; display: flex; flex-direction: column; gap: 10px; flex: 1; }
+  .card h3 { margin: 0; font-size: 15px; font-weight: 600; }
+  .card p { margin: 0; font-size: 12.5px; color: #9aa6c9; line-height: 1.5; }
+  .themes { display: flex; gap: 8px; margin-top: auto; }
+  .themes a {
+    flex: 1;
+    text-align: center;
+    padding: 8px 10px;
+    border-radius: 8px;
+    font-size: 12.5px;
+    font-weight: 600;
+    text-decoration: none;
+    transition: opacity 0.15s ease;
+  }
+  .themes a:hover { opacity: 0.85; }
+  .themes a.dark { background: #00dbe9; color: #00363a; }
+  .themes a.light { background: #2d3449; color: #dae2fd; border: 1px solid #3b494b; }
+  footer { margin-top: 40px; font-size: 12px; color: #6b7694; text-align: center; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <span class="badge">Tasarım Önizleme · Statik Mockup</span>
+    <h1>Nexus Business Suite — Yeni Arayüz Konsepti</h1>
+    <p class="subtitle">Stitch ile üretilen 4 modüllük arayüz taslağı. Aşağıdaki ekranlar canlı sitede gerçek veriyle çalışmaz — yalnızca görsel/etkileşim tasarımını incelemek içindir.</p>
+  </header>
+
+  <div class="note">
+    Bu sayfa Gemba IQ uygulamasının canlı (üretim) verisine bağlı değildir; sadece statik HTML/CSS önizlemesidir. Beğendiğiniz ekranları işaretleyip bildirin, gerçek modüllere (Dashboard, Fırsat Yönetimi, Görevler, Gelir Yönetimi) kademeli olarak uygulayalım.
+  </div>
+
+  <div class="grid" id="grid"></div>
+
+  <footer>Gemba IQ · Tasarım önizleme alanı · /design-preview</footer>
+</div>
+
+<script>
+  const modules = [
+    {
+      title: "Dashboard — Genel Bakış",
+      desc: "Ana kontrol paneli: KPI kartları, aktivite akışı ve hızlı erişim widget'ları.",
+      dark: "dashboard_genel_bak",
+      light: "dashboard_genel_bak_light"
+    },
+    {
+      title: "CRM — Satış Hunisi",
+      desc: "Fırsat/Teklif pipeline görünümü, huni aşamaları ve satış metrikleri.",
+      dark: "crm_sat_hunisi",
+      light: "crm_sat_hunisi_light"
+    },
+    {
+      title: "Görev ve Ekip Yönetimi",
+      desc: "Görev panosu, ekip yükü ve atama akışı için yeni arayüz konsepti.",
+      dark: "g_rev_ve_ekip_y_netimi",
+      light: "g_rev_ve_ekip_y_netimi_light"
+    },
+    {
+      title: "Gelir ve Finans Yönetimi",
+      desc: "P/L özet paneli, gelir trendleri ve finansal metrik kartları.",
+      dark: "gelir_ve_finans_y_netimi",
+      light: "gelir_ve_finans_y_netimi_light"
+    }
+  ];
+
+  const grid = document.getElementById("grid");
+  modules.forEach(m => {
+    const card = document.createElement("div");
+    card.className = "card";
+    card.innerHTML = `
+      <a class="thumb" href="./${m.dark}/">
+        <img src="./${m.dark}/screen.png" alt="${m.title}" loading="lazy"/>
+      </a>
+      <div class="body">
+        <h3>${m.title}</h3>
+        <p>${m.desc}</p>
+        <div class="themes">
+          <a class="dark" href="./${m.dark}/">Koyu Tema</a>
+          <a class="light" href="./${m.light}/">Açık Tema</a>
+        </div>
+      </div>
+    `;
+    grid.appendChild(card);
+  });
+</script>
+</body>
+</html>

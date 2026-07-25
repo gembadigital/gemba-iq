@@ -1,0 +1,490 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>OmniCore ERP - Task Management</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&amp;family=JetBrains+Mono:wght@400;500;700&amp;family=Geist:wght@400;500;600;700;800&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<style>
+        body {
+            background-color: #f7f9fb;
+            color: #191c1e;
+            font-family: 'Inter', sans-serif;
+            overflow-x: hidden;
+        }
+        .glass-panel {
+            background: rgba(255, 255, 255, 0.8);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(0, 0, 0, 0.05);
+            box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.05), 0 2px 4px -2px rgb(0 0 0 / 0.05);
+        }
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .glow-border:focus-within {
+            border-color: #0057a1;
+            box-shadow: 0 0 15px rgba(0, 87, 161, 0.1);
+        }
+        ::-webkit-scrollbar {
+            width: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #f7f9fb;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #c1c7d4;
+            border-radius: 10px;
+        }
+    </style>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "on-secondary": "#ffffff",
+                        "error-container": "#ffdad6",
+                        "secondary-fixed-dim": "#b7c8e1",
+                        "surface-container-highest": "#e0e3e5",
+                        "on-tertiary-fixed": "#001e2f",
+                        "on-tertiary": "#ffffff",
+                        "outline-variant": "#c1c7d4",
+                        "surface": "#f7f9fb",
+                        "on-tertiary-container": "#eaf4ff",
+                        "inverse-primary": "#a5c8ff",
+                        "background": "#f7f9fb",
+                        "secondary": "#505f76",
+                        "on-secondary-container": "#54647a",
+                        "on-primary": "#ffffff",
+                        "on-surface": "#191c1e",
+                        "on-background": "#191c1e",
+                        "error": "#ba1a1a",
+                        "on-primary-container": "#f0f4ff",
+                        "primary": "#0057a1",
+                        "primary-container": "#0070cc",
+                        "secondary-fixed": "#d3e4fe",
+                        "on-primary-fixed": "#001c3a",
+                        "on-secondary-fixed": "#0b1c30",
+                        "secondary-container": "#d0e1fb",
+                        "surface-container": "#eceef0",
+                        "on-error-container": "#93000a",
+                        "outline": "#717783",
+                        "on-error": "#ffffff",
+                        "surface-container-low": "#f2f4f6",
+                        "inverse-surface": "#2d3133",
+                        "surface-dim": "#d8dadc",
+                        "primary-fixed": "#d4e3ff",
+                        "inverse-on-surface": "#eff1f3",
+                        "on-secondary-fixed-variant": "#38485d",
+                        "on-primary-fixed-variant": "#004785",
+                        "tertiary-container": "#0076a9",
+                        "surface-tint": "#005fae",
+                        "on-tertiary-fixed-variant": "#004c6e",
+                        "surface-container-lowest": "#ffffff",
+                        "tertiary": "#005c85",
+                        "primary-fixed-dim": "#a5c8ff",
+                        "surface-bright": "#f7f9fb",
+                        "on-surface-variant": "#414752",
+                        "surface-container-high": "#e6e8ea",
+                        "tertiary-fixed": "#c9e6ff",
+                        "surface-variant": "#e0e3e5",
+                        "tertiary-fixed-dim": "#89ceff"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                    "spacing": {
+                        "gutter": "24px",
+                        "unit": "4px",
+                        "margin-mobile": "16px",
+                        "bento-gap": "16px",
+                        "margin-desktop": "40px"
+                    },
+                    "fontFamily": {
+                        "headline-lg": ["Geist"],
+                        "label-caps": ["JetBrains Mono"],
+                        "body-md": ["Inter"],
+                        "headline-xl": ["Geist"],
+                        "body-sm": ["Inter"],
+                        "headline-md": ["Geist"],
+                        "label-sm": ["JetBrains Mono"],
+                        "label-md": ["JetBrains Mono"]
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+<body class="light bg-background text-on-background">
+<!-- Sidebar Navigation -->
+<aside class="h-screen w-64 fixed left-0 top-0 overflow-y-auto bg-white border-r border-outline-variant/30 shadow-sm flex flex-col py-6 z-50">
+<div class="px-6 mb-10">
+<h1 class="font-headline-md text-headline-md font-bold text-primary tracking-tighter">OmniCore ERP</h1>
+<p class="font-label-sm text-label-sm text-on-surface-variant opacity-60">Enterprise Hub</p>
+</div>
+<nav class="flex-1 space-y-1 px-3">
+<a class="flex items-center px-4 py-3 rounded-lg text-on-surface-variant hover:bg-secondary-container/30 hover:text-primary transition-all duration-150" href="#">
+<span class="material-symbols-outlined mr-3">dashboard</span>
+<span class="font-label-md text-label-md">Dashboard</span>
+</a>
+<a class="flex items-center px-4 py-3 rounded-lg text-on-surface-variant hover:bg-secondary-container/30 hover:text-primary transition-all duration-150" href="#">
+<span class="material-symbols-outlined mr-3">payments</span>
+<span class="font-label-md text-label-md">Sales</span>
+</a>
+<a class="flex items-center px-4 py-3 rounded-lg text-on-surface-variant hover:bg-secondary-container/30 hover:text-primary transition-all duration-150" href="#">
+<span class="material-symbols-outlined mr-3">groups</span>
+<span class="font-label-md text-label-md">CRM</span>
+</a>
+<a class="flex items-center px-4 py-3 rounded-lg text-primary border-r-2 border-primary bg-primary/5 transition-all duration-150" href="#">
+<span class="material-symbols-outlined mr-3">assignment</span>
+<span class="font-label-md text-label-md">Task Management</span>
+</a>
+<a class="flex items-center px-4 py-3 rounded-lg text-on-surface-variant hover:bg-secondary-container/30 hover:text-primary transition-all duration-150" href="#">
+<span class="material-symbols-outlined mr-3">person_add</span>
+<span class="font-label-md text-label-md">Lead Management</span>
+</a>
+<a class="flex items-center px-4 py-3 rounded-lg text-on-surface-variant hover:bg-secondary-container/30 hover:text-primary transition-all duration-150" href="#">
+<span class="material-symbols-outlined mr-3">account_balance</span>
+<span class="font-label-md text-label-md">Revenue</span>
+</a>
+<a class="flex items-center px-4 py-3 rounded-lg text-on-surface-variant hover:bg-secondary-container/30 hover:text-primary transition-all duration-150" href="#">
+<span class="material-symbols-outlined mr-3">mail</span>
+<span class="font-label-md text-label-md">Email</span>
+</a>
+<a class="flex items-center px-4 py-3 rounded-lg text-on-surface-variant hover:bg-secondary-container/30 hover:text-primary transition-all duration-150" href="#">
+<span class="material-symbols-outlined mr-3">description</span>
+<span class="font-label-md text-label-md">Proposals</span>
+</a>
+<a class="flex items-center px-4 py-3 rounded-lg text-on-surface-variant hover:bg-secondary-container/30 hover:text-primary transition-all duration-150" href="#">
+<span class="material-symbols-outlined mr-3">business</span>
+<span class="font-label-md text-label-md">Company Tracking</span>
+</a>
+</nav>
+<div class="mt-auto px-3 space-y-1">
+<button class="w-full mb-6 py-3 bg-primary text-on-primary font-label-md text-label-md font-bold rounded-xl flex items-center justify-center gap-2 hover:brightness-110 active:scale-95 transition-all shadow-md">
+<span class="material-symbols-outlined">add</span>
+            New Entry
+        </button>
+<a class="flex items-center px-4 py-3 rounded-lg text-on-surface-variant hover:bg-secondary-container/30 hover:text-primary transition-all duration-150" href="#">
+<span class="material-symbols-outlined mr-3">settings</span>
+<span class="font-label-md text-label-md">Settings</span>
+</a>
+<a class="flex items-center px-4 py-3 rounded-lg text-on-surface-variant hover:bg-secondary-container/30 hover:text-primary transition-all duration-150" href="#">
+<span class="material-symbols-outlined mr-3">help_outline</span>
+<span class="font-label-md text-label-md">Support</span>
+</a>
+</div>
+</aside>
+<!-- Main Content Canvas -->
+<main class="ml-64 min-h-screen">
+<!-- Top Nav Bar -->
+<header class="flex items-center justify-between px-10 h-16 sticky top-0 z-40 bg-white/80 backdrop-blur-md border-b border-outline-variant/20 shadow-sm">
+<div class="flex items-center gap-8">
+<div class="relative group glow-border bg-surface-container-low rounded-full px-4 py-1.5 flex items-center border border-outline-variant/20">
+<span class="material-symbols-outlined text-outline text-[20px] mr-2">search</span>
+<input class="bg-transparent border-none focus:ring-0 text-label-md text-on-surface w-64 placeholder:text-outline-variant" placeholder="Global system search..." type="text"/>
+</div>
+<nav class="hidden md:flex gap-6">
+<a class="font-label-md text-label-md text-on-surface-variant hover:text-primary transition-colors" href="#">Analytics</a>
+<a class="font-label-md text-label-md text-on-surface-variant hover:text-primary transition-colors" href="#">Inbox</a>
+<a class="font-label-md text-label-md text-on-surface-variant hover:text-primary transition-colors" href="#">Reports</a>
+</nav>
+</div>
+<div class="flex items-center gap-4">
+<button class="material-symbols-outlined p-2 text-on-surface-variant hover:bg-secondary-container/30 rounded-full transition-colors">notifications</button>
+<button class="material-symbols-outlined p-2 text-on-surface-variant hover:bg-secondary-container/30 rounded-full transition-colors">apps</button>
+<div class="h-8 w-[1px] bg-outline-variant/30 mx-2"></div>
+<div class="flex items-center gap-3">
+<div class="text-right">
+<p class="font-label-md text-label-md font-bold text-on-surface">Alex Rivera</p>
+<p class="text-[10px] text-outline-variant uppercase tracking-widest">Lead Strategist</p>
+</div>
+<img class="h-10 w-10 rounded-full border border-primary/20 object-cover" data-alt="Alex Rivera profile" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCuvEfwNWkttFZKzL1jq1NN-l46mBYnf2eKH_3uKJp0PK8ztbo0vyZV-nWzy0SI0FxAQDXbyE3NkQ0xmLzO_QH6hI9AlWGEWHb9qA3PsSZ5fcViu9smt8pNtwXAZiWFMKGcRb_--okRYDg_6JkqrDQY1IddwlmLTddITxX9YxeD73CU-qGGdS9zQ2YYp4dA8Mo5i4XjIQYrsjPFxVQ6L5TVX_eH0OsxYKNtdpxLbXytD5Rc9MJfgx9sTD0R5HN0mBg6egykWaefr4uQ"/>
+</div>
+</div>
+</header>
+<!-- Bento Content Grid -->
+<div class="p-10 max-w-7xl mx-auto grid grid-cols-12 gap-gutter">
+<!-- Welcome/Overview Header -->
+<div class="col-span-12 flex items-end justify-between mb-2">
+<div>
+<h2 class="font-headline-lg text-headline-lg text-on-surface">Task Orchestration</h2>
+<p class="font-body-md text-body-md text-on-surface-variant">Syncing 14 active workstreams across 4 regions.</p>
+</div>
+<div class="flex gap-3">
+<button class="px-6 py-2 border border-primary/20 text-primary rounded-lg font-label-md text-label-md hover:bg-primary/5 transition-all">Quick Actions</button>
+<button class="px-6 py-2 bg-primary text-on-primary rounded-lg font-label-md text-label-md font-bold hover:brightness-110 shadow-sm transition-all">Create New</button>
+</div>
+</div>
+<!-- Main Task List Container -->
+<div class="col-span-12 lg:col-span-8 glass-panel rounded-2xl p-6 bg-white">
+<div class="flex items-center justify-between mb-8">
+<div class="flex items-center gap-6">
+<h3 class="font-label-md text-label-md font-bold tracking-widest text-primary uppercase">Active Workstreams</h3>
+<div class="flex gap-2">
+<span class="px-3 py-1 bg-error-container text-on-error-container text-[10px] font-bold rounded-full border border-error/10 uppercase">Critical (3)</span>
+<span class="px-3 py-1 bg-surface-container-high text-on-surface-variant text-[10px] font-bold rounded-full uppercase">Normal (11)</span>
+</div>
+</div>
+<div class="flex gap-1 bg-surface-container-low rounded-lg p-1">
+<button class="p-1.5 rounded bg-white shadow-sm text-primary"><span class="material-symbols-outlined text-[18px]">view_list</span></button>
+<button class="p-1.5 rounded text-on-surface-variant hover:text-on-surface"><span class="material-symbols-outlined text-[18px]">grid_view</span></button>
+</div>
+</div>
+<div class="space-y-4">
+<!-- Task Item 1 -->
+<div class="group relative flex items-center justify-between p-4 bg-white border border-outline-variant/20 rounded-xl hover:border-primary/50 transition-all duration-300 shadow-sm">
+<div class="flex items-center gap-4">
+<div class="h-10 w-1 bg-error rounded-full"></div>
+<div>
+<h4 class="font-label-md text-label-md font-bold text-on-surface group-hover:text-primary transition-colors">Q1 Infrastructure Synthesis</h4>
+<p class="text-[12px] text-outline-variant">Project: Neural Backbone v4.2</p>
+</div>
+</div>
+<div class="flex items-center gap-12">
+<div class="flex -space-x-2">
+<img class="h-8 w-8 rounded-full border-2 border-white object-cover shadow-sm" data-alt="Staff 1" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBCnnNugNxjDy-dF7oDRupisnSuubzaS0ez1jnx6_S-td_McLdgZAbEpWs4FyRxL74bxakIiwSb6S4YwZgIDBrg7Ng20DuOPT26caVS-ImbX6bWvIQ0tG7HvD2_bhQmeD-c9WWUBTgg45cN0UQHw-VLX-Meczaeb5RAMIX24Ud-OZ0bk7B4Wyg2jvyYToQu_LCrWQE2idWkhJEt6jRFepTxnB4dYydd4FHSAI-nlSC3GT1P4aP7V8QbkB2_e9k1nmq1JdhN5-yQdpjv"/>
+<img class="h-8 w-8 rounded-full border-2 border-white object-cover shadow-sm" data-alt="Staff 2" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDD0rQibrarPt2fLRTB0qSsdJhGP0_zkHtjsRC4siZhf50jyF8uYu56nz-iOmmWr75ai4_KEYQWQqkzNMX_E36ECZdNyTTYWSOQbLicPZNE2FOlHEPepb9LVJXK0LD81CMYUjEoZfs7nQYne0q96PbPv0ckI9uZhZ3VzpOwL6vbBPqiC4qWLeKpC0q07uhlgBtKjN2R9ukvWvEtjNuS4IKDTHLQcpIzaooLd0Sy2XN8m7OAR8B62MPA4etC1mGniMIyFICvN_e0QUxF"/>
+<div class="h-8 w-8 rounded-full bg-surface-container-low border-2 border-white flex items-center justify-center text-[10px] font-bold">+2</div>
+</div>
+<div class="w-32 text-right">
+<p class="text-[10px] uppercase font-bold text-error tracking-tighter mb-1">Expires in</p>
+<div class="font-label-md text-label-md text-on-surface flex items-center justify-end gap-1">
+<span class="material-symbols-outlined text-[16px] text-error">schedule</span>
+<span class="timer-countdown" data-hours="02" data-mins="45">02:45:12</span>
+</div>
+</div>
+</div>
+</div>
+<!-- Task Item 2 -->
+<div class="group relative flex items-center justify-between p-4 bg-white border border-outline-variant/20 rounded-xl hover:border-primary/50 transition-all duration-300 shadow-sm">
+<div class="flex items-center gap-4">
+<div class="h-10 w-1 bg-primary rounded-full"></div>
+<div>
+<h4 class="font-label-md text-label-md font-bold text-on-surface group-hover:text-primary transition-colors">Revenue Model Optimization</h4>
+<p class="text-[12px] text-outline-variant">Project: Financial Core Upgrade</p>
+</div>
+</div>
+<div class="flex items-center gap-12">
+<div class="flex -space-x-2">
+<img class="h-8 w-8 rounded-full border-2 border-white object-cover shadow-sm" data-alt="Staff 3" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCeys6vEv-NEwlv0gmEzJHiIjynvNIeS8PDCH8D8SNgayfORPFnv7ANiPOQo8J0XtnzpeKLGRn25TiUZpmRqjW_KvJ55yArkjukENajAQmnPwtA-eh7L6WZOdgQ_WDldvgmTUh3JrvAPP5VERi-_W6MBHEWvbWkhBqCAFulaUnPluuygDcL9g1LmhyR54TOi38r1y2O8HQejivTO8p6dfp2QgB9OQnWcbVM9nXEoGb_gEG_-knLIYPeftQQs9lYDK9fQpt_DOOpe6yt"/>
+<div class="h-8 w-8 rounded-full bg-primary-fixed border-2 border-white flex items-center justify-center text-[10px] font-bold text-primary">AR</div>
+</div>
+<div class="w-32 text-right">
+<p class="text-[10px] uppercase font-bold text-outline-variant tracking-tighter mb-1">Target date</p>
+<div class="font-label-md text-label-md text-on-surface">14 Oct, 2026</div>
+</div>
+</div>
+</div>
+<!-- Task Item 3 -->
+<div class="group relative flex items-center justify-between p-4 bg-white border border-outline-variant/20 rounded-xl hover:border-primary/50 transition-all duration-300 shadow-sm">
+<div class="flex items-center gap-4">
+<div class="h-10 w-1 bg-tertiary-container rounded-full"></div>
+<div>
+<h4 class="font-label-md text-label-md font-bold text-on-surface group-hover:text-primary transition-colors">Legal Compliance Review</h4>
+<p class="text-[12px] text-outline-variant">Project: Global Expansion Phase 2</p>
+</div>
+</div>
+<div class="flex items-center gap-12">
+<div class="flex -space-x-2">
+<img class="h-8 w-8 rounded-full border-2 border-white object-cover shadow-sm" data-alt="Staff 4" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCnYOPZ3o6qy-F2QXDwZsh1FpWvGopZEtgTmIFeWmIHjHafjLngJso9Oflg08zZtDL5kyNMFvzq9VPXwMdRlGpSizvOyKP9jwHfSUg5WjLVX-Tf9eg1bIrUbNSIFZulHKbQ5Bcyz0hASazLq61KuPm_IfduzU8FgfdOgx0qgDX9fhQtn7_R8NSaOyJmBH02KUFIrFPRVNiAjThoS-StNYgZ4lRDCc17clcE3a7gR9SZjCQtp7WJFCBKBFsA72tBNk7nJPPVvkjAhKBH"/>
+</div>
+<div class="w-32 text-right">
+<p class="text-[10px] uppercase font-bold text-tertiary tracking-tighter mb-1">Completed</p>
+<div class="font-label-md text-label-md text-on-surface-variant flex items-center justify-end gap-1">
+<span class="material-symbols-outlined text-[16px] text-tertiary" style="font-variation-settings: 'FILL' 1;">check_circle</span>
+<span>Archived</span>
+</div>
+</div>
+</div>
+</div>
+<!-- Task Item 4 -->
+<div class="group relative flex items-center justify-between p-4 bg-white border border-outline-variant/20 rounded-xl hover:border-primary/50 transition-all duration-300 shadow-sm">
+<div class="flex items-center gap-4">
+<div class="h-10 w-1 bg-outline-variant rounded-full"></div>
+<div>
+<h4 class="font-label-md text-label-md font-bold text-on-surface group-hover:text-primary transition-colors">Legacy Database Migration</h4>
+<p class="text-[12px] text-outline-variant">Project: System Stability</p>
+</div>
+</div>
+<div class="flex items-center gap-12">
+<div class="flex -space-x-2">
+<div class="h-8 w-8 rounded-full bg-surface-container-low border-2 border-white flex items-center justify-center text-[10px] font-bold text-on-surface-variant">?</div>
+</div>
+<div class="w-32 text-right">
+<p class="text-[10px] uppercase font-bold text-outline-variant tracking-tighter mb-1">Status</p>
+<div class="font-label-md text-label-md text-on-surface-variant">Pending Review</div>
+</div>
+</div>
+</div>
+</div>
+<div class="mt-8 pt-6 border-t border-outline-variant/20 flex justify-center">
+<button class="text-label-md font-label-md text-primary hover:underline">View all 14 workstreams</button>
+</div>
+</div>
+<!-- Sidebar Bento Column -->
+<div class="col-span-12 lg:col-span-4 space-y-gutter">
+<!-- Mini Calendar Widget -->
+<div class="bg-white border border-outline-variant/20 rounded-2xl p-6 shadow-sm">
+<div class="flex items-center justify-between mb-4">
+<h3 class="font-label-md text-label-md font-bold tracking-widest text-primary uppercase">Calendar</h3>
+<div class="flex gap-2">
+<button class="material-symbols-outlined text-[18px] text-on-surface-variant hover:text-primary">chevron_left</button>
+<button class="material-symbols-outlined text-[18px] text-on-surface-variant hover:text-primary">chevron_right</button>
+</div>
+</div>
+<div class="grid grid-cols-7 gap-1 text-center mb-2">
+<span class="text-[10px] text-outline-variant font-bold">M</span>
+<span class="text-[10px] text-outline-variant font-bold">T</span>
+<span class="text-[10px] text-outline-variant font-bold">W</span>
+<span class="text-[10px] text-outline-variant font-bold">T</span>
+<span class="text-[10px] text-outline-variant font-bold">F</span>
+<span class="text-[10px] text-primary/40 font-bold">S</span>
+<span class="text-[10px] text-primary/40 font-bold">S</span>
+</div>
+<div class="grid grid-cols-7 gap-1 text-center">
+<div class="p-2 text-[12px] rounded-lg text-on-surface-variant opacity-40">28</div>
+<div class="p-2 text-[12px] rounded-lg text-on-surface-variant opacity-40">29</div>
+<div class="p-2 text-[12px] rounded-lg text-on-surface-variant opacity-40">30</div>
+<div class="p-2 text-[12px] rounded-lg hover:bg-secondary-container/20 cursor-pointer">1</div>
+<div class="p-2 text-[12px] rounded-lg hover:bg-secondary-container/20 cursor-pointer">2</div>
+<div class="p-2 text-[12px] rounded-lg hover:bg-secondary-container/20 cursor-pointer">3</div>
+<div class="p-2 text-[12px] rounded-lg hover:bg-secondary-container/20 cursor-pointer">4</div>
+<div class="p-2 text-[12px] rounded-lg hover:bg-secondary-container/20 cursor-pointer">5</div>
+<div class="p-2 text-[12px] rounded-lg hover:bg-secondary-container/20 cursor-pointer">6</div>
+<div class="p-2 text-[12px] rounded-lg hover:bg-secondary-container/20 cursor-pointer">7</div>
+<div class="p-2 text-[12px] rounded-lg hover:bg-secondary-container/20 cursor-pointer">8</div>
+<div class="p-2 text-[12px] rounded-lg hover:bg-secondary-container/20 cursor-pointer relative">
+                        9 <div class="absolute bottom-1 left-1/2 -translate-x-1/2 w-1 h-1 bg-error rounded-full"></div>
+</div>
+<div class="p-2 text-[12px] rounded-lg hover:bg-secondary-container/20 cursor-pointer">10</div>
+<div class="p-2 text-[12px] rounded-lg hover:bg-secondary-container/20 cursor-pointer">11</div>
+<div class="p-2 text-[12px] rounded-lg bg-primary text-on-primary font-bold shadow-md">12</div>
+<div class="p-2 text-[12px] rounded-lg hover:bg-secondary-container/20 cursor-pointer">13</div>
+<div class="p-2 text-[12px] rounded-lg hover:bg-secondary-container/20 cursor-pointer relative">
+                        14 <div class="absolute bottom-1 left-1/2 -translate-x-1/2 w-1 h-1 bg-primary rounded-full"></div>
+</div>
+<div class="p-2 text-[12px] rounded-lg hover:bg-secondary-container/20 cursor-pointer">15</div>
+</div>
+</div>
+<!-- Performance Leaderboard -->
+<div class="bg-white border border-outline-variant/20 rounded-2xl p-6 relative overflow-hidden shadow-sm">
+<div class="relative z-10">
+<h3 class="font-label-md text-label-md font-bold tracking-widest text-primary uppercase mb-6">Unit Leaders</h3>
+<div class="space-y-4">
+<div class="flex items-center justify-between">
+<div class="flex items-center gap-3">
+<span class="text-label-sm font-label-sm text-outline-variant">01</span>
+<img class="h-8 w-8 rounded-full object-cover" data-alt="Sarah Chen" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDj8T0A3yIl3Zsw3L8hLrP2fHMdgU-LzRyuTTdQrU4ivveSDj9AroLM4Z3YY08z5XqJPvBporUEtWK59TYTZEnL8kqjy7gQVpzCM0Wl-0Hdgaye3dG1VbRRSKjib6mKmeNYp60rtpJ932Jk6e1YygMzPyUXjKnNkqHw4MxBszyNW0RlPWBO2_kH2PtXf9MqUNz4flE8-YgBHQQk8ZcieSY5Iapvz4-Wsx18MMYo2-WOUge4W2oUdPdi4dOuu4bIey1mQD4CWhlUvbsO"/>
+<span class="text-label-md text-on-surface">Sarah Chen</span>
+</div>
+<span class="text-label-md font-bold text-primary">2.4k pts</span>
+</div>
+<div class="flex items-center justify-between">
+<div class="flex items-center gap-3">
+<span class="text-label-sm font-label-sm text-outline-variant">02</span>
+<img class="h-8 w-8 rounded-full object-cover" data-alt="Marcus Thorne" src="https://lh3.googleusercontent.com/aida-public/AB6AXuB01WxdRuXrKvb4P08Yybjcv2dM335gBMEgduMMYPLRGk2LhUt1yPackG_AeibhpGDn1_hkPhhjC7XLsrfwYwHN-OXYyt4dyWTpu4dZR9rHhiiXZIKDP2iLSJgJL3llEvq7FT_cs8cXuysnvxo0pDXBe0AIJI2rObLBxeSM1GUF9susV8GjI7umVlJGDwy5ALDmIwiLvADqp6qJaa0GGGcEHm2KqOrt101gNX8C2vhi0S1S0wT9hpTK_nB2hBFiR3v4BlGFmHrxW-xu"/>
+<span class="text-label-md text-on-surface">Marcus Thorne</span>
+</div>
+<span class="text-label-md font-bold text-on-surface">1.9k pts</span>
+</div>
+<div class="flex items-center justify-between">
+<div class="flex items-center gap-3">
+<span class="text-label-sm font-label-sm text-outline-variant">03</span>
+<img class="h-8 w-8 rounded-full object-cover" data-alt="David Vance" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDp3Ia9Sz544Z6rBiDZEqI-hc0VIRm50jYXuaRCe1HPEOWmzsKrGgv-gVWdXRDia1MD8euMnXbYm0ajp894C3vRZELud-O2hGY3b7ZFqcV0I8dCVMi1ytwiIW4dQGyUV_jEKGEIVlAIgjAupmzAX33IIbiEp1k9eN34lwhv264ABUgfS5iTeOQTPC1BeQTAU02jH0SS7pJXnCOAj4meuZcwCJNnYX9h8Ek95WwcRs6z-V6-55_iiZMqf6CY6sdAleu5qqz5ujCdZM8p"/>
+<span class="text-label-md text-on-surface">David Vance</span>
+</div>
+<span class="text-label-md font-bold text-on-surface">1.2k pts</span>
+</div>
+</div>
+</div>
+</div>
+<!-- Task Progress Stats -->
+<div class="bg-white border border-outline-variant/20 rounded-2xl p-6 grid grid-cols-2 gap-4 shadow-sm">
+<div class="bg-surface-container-low rounded-xl p-4 border border-outline-variant/10 text-center">
+<p class="text-[10px] font-bold text-outline-variant uppercase tracking-widest mb-1">Active</p>
+<p class="font-headline-md text-headline-md text-primary">42</p>
+</div>
+<div class="bg-surface-container-low rounded-xl p-4 border border-outline-variant/10 text-center">
+<p class="text-[10px] font-bold text-outline-variant uppercase tracking-widest mb-1">Resolved</p>
+<p class="font-headline-md text-headline-md text-secondary">158</p>
+</div>
+<div class="col-span-2 pt-2">
+<div class="flex justify-between items-center mb-1">
+<span class="text-[10px] font-bold text-outline-variant uppercase">Ecosystem Health</span>
+<span class="text-[10px] font-bold text-primary uppercase">79% Optimal</span>
+</div>
+<div class="h-1.5 w-full bg-surface-container-low rounded-full overflow-hidden">
+<div class="h-full bg-gradient-to-r from-primary to-secondary-fixed-dim" style="width: 79%"></div>
+</div>
+</div>
+</div>
+</div>
+<!-- Bottom Asymmetric "Insight" Tile -->
+<div class="col-span-12 bg-primary/5 rounded-2xl p-8 flex items-center gap-10 overflow-hidden relative group border border-primary/10">
+<div class="h-32 w-32 shrink-0 bg-white rounded-2xl flex items-center justify-center border border-primary/20 shadow-sm overflow-hidden">
+<span class="material-symbols-outlined text-[64px] text-primary opacity-50 group-hover:scale-110 transition-transform duration-500">insights</span>
+</div>
+<div class="relative z-10">
+<h3 class="font-headline-md text-headline-md text-on-surface mb-2">Predictive Velocity</h3>
+<p class="font-body-md text-body-md text-on-surface-variant max-w-2xl mb-4">
+                    Based on current completion rates, your team is on track to finalize the "Neural Backbone" project 4 days ahead of the original October 2026 deadline. Recommend re-allocating 15% of resources to "Financial Core" to balance load.
+                </p>
+<div class="flex gap-4">
+<button class="px-6 py-2 bg-white hover:bg-white/80 rounded-lg text-label-md font-label-md transition-colors border border-outline-variant/30 shadow-sm">Analyze Strategy</button>
+<button class="px-6 py-2 bg-primary text-on-primary hover:brightness-110 rounded-lg text-label-md font-label-md transition-colors shadow-md">Optimize Allocation</button>
+</div>
+</div>
+</div>
+</div>
+</main>
+<!-- Floating Action Button -->
+<button class="fixed bottom-10 right-10 h-16 w-16 bg-primary text-on-primary rounded-full shadow-lg flex items-center justify-center hover:scale-110 active:scale-95 transition-all z-50 group">
+<span class="material-symbols-outlined text-[32px] group-hover:rotate-90 transition-transform duration-300">add</span>
+<span class="absolute right-20 bg-white px-4 py-2 rounded-lg text-label-md font-bold text-primary border border-primary/30 opacity-0 group-hover:opacity-100 translate-x-4 group-hover:translate-x-0 transition-all whitespace-nowrap pointer-events-none shadow-xl">Start New Sync</span>
+</button>
+<script>
+    // Simple Countdown logic
+    function updateTimers() {
+        const timers = document.querySelectorAll('.timer-countdown');
+        timers.forEach(timer => {
+            let timeStr = timer.innerText;
+            let parts = timeStr.split(':');
+            let h = parseInt(parts[0]);
+            let m = parseInt(parts[1]);
+            let s = parseInt(parts[2]);
+
+            s--;
+            if (s < 0) {
+                s = 59;
+                m--;
+                if (m < 0) {
+                    m = 59;
+                    h--;
+                }
+            }
+
+            timer.innerText = `${h.toString().padStart(2, '0')}:${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
+        });
+    }
+
+    setInterval(updateTimers, 1000);
+
+    // Hover effect for panels
+    const cards = document.querySelectorAll('.glass-panel, .bg-white');
+    cards.forEach(card => {
+        card.addEventListener('mousedown', () => {
+            card.style.transform = 'scale(0.995)';
+        });
+        card.addEventListener('mouseup', () => {
+            card.style.transform = 'scale(1)';
+        });
+        card.style.transition = 'transform 0.1s ease-out';
+    });
+</script>
+</body></html>

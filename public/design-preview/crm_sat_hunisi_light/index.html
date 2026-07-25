@@ -1,0 +1,556 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>CRM &amp; Lead Management | OmniCore ERP</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&amp;family=Geist:wght@400;500;600;700&amp;family=JetBrains+Mono:wght@400;500&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<style>
+        .glass-panel {
+            background: rgba(255, 255, 255, 0.7);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(0, 0, 0, 0.05);
+        }
+        .ambient-glow {
+            box-shadow: 0 4px 20px rgba(0, 87, 161, 0.08);
+        }
+        .no-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+        .no-scrollbar {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+        .kanban-column {
+            min-width: 320px;
+            max-width: 320px;
+        }
+    </style>
+<script id="tailwind-config">
+  tailwind.config = {
+    darkMode: "class",
+    theme: {
+      extend: {
+        "colors": {
+                "on-secondary": "#ffffff",
+                "error-container": "#ffdad6",
+                "secondary-fixed-dim": "#b7c8e1",
+                "surface-container-highest": "#e0e3e5",
+                "on-tertiary-fixed": "#001e2f",
+                "on-tertiary": "#ffffff",
+                "outline-variant": "#c1c7d4",
+                "surface": "#f7f9fb",
+                "on-tertiary-container": "#eaf4ff",
+                "inverse-primary": "#a5c8ff",
+                "background": "#f7f9fb",
+                "secondary": "#505f76",
+                "on-secondary-container": "#54647a",
+                "on-primary": "#ffffff",
+                "on-surface": "#191c1e",
+                "on-background": "#191c1e",
+                "error": "#ba1a1a",
+                "on-primary-container": "#f0f4ff",
+                "primary": "#0057a1",
+                "primary-container": "#0070cc",
+                "secondary-fixed": "#d3e4fe",
+                "on-primary-fixed": "#001c3a",
+                "on-secondary-fixed": "#0b1c30",
+                "secondary-container": "#d0e1fb",
+                "surface-container": "#eceef0",
+                "on-error-container": "#93000a",
+                "outline": "#717783",
+                "on-error": "#ffffff",
+                "surface-container-low": "#f2f4f6",
+                "inverse-surface": "#2d3133",
+                "surface-dim": "#d8dadc",
+                "primary-fixed": "#d4e3ff",
+                "inverse-on-surface": "#eff1f3",
+                "on-secondary-fixed-variant": "#38485d",
+                "on-primary-fixed-variant": "#004785",
+                "tertiary-container": "#0076a9",
+                "surface-tint": "#005fae",
+                "on-tertiary-fixed-variant": "#004c6e",
+                "surface-container-lowest": "#ffffff",
+                "tertiary": "#005c85",
+                "primary-fixed-dim": "#a5c8ff",
+                "surface-bright": "#f7f9fb",
+                "on-surface-variant": "#414752",
+                "surface-container-high": "#e6e8ea",
+                "tertiary-fixed": "#c9e6ff",
+                "surface-variant": "#e0e3e5",
+                "tertiary-fixed-dim": "#89ceff"
+        },
+        "borderRadius": {
+                "DEFAULT": "0.25rem",
+                "lg": "0.5rem",
+                "xl": "0.75rem",
+                "full": "9999px"
+        },
+        "spacing": {
+                "gutter": "24px",
+                "unit": "4px",
+                "margin-mobile": "16px",
+                "bento-gap": "16px",
+                "margin-desktop": "40px"
+        },
+        "fontFamily": {
+                "headline-lg": [
+                        "Geist"
+                ],
+                "label-caps": [
+                        "JetBrains Mono"
+                ],
+                "body-md": [
+                        "Inter"
+                ],
+                "headline-lg-mobile": [
+                        "Geist"
+                ],
+                "headline-xl": [
+                        "Geist"
+                ],
+                "body-sm": [
+                        "Inter"
+                ]
+        },
+        "fontSize": {
+                "headline-lg": [
+                        "32px",
+                        {
+                                "lineHeight": "40px",
+                                "letterSpacing": "-0.01em",
+                                "fontWeight": "600"
+                        }
+                ],
+                "label-caps": [
+                        "12px",
+                        {
+                                "lineHeight": "16px",
+                                "letterSpacing": "0.05em",
+                                "fontWeight": "500"
+                        }
+                ],
+                "body-md": [
+                        "16px",
+                        {
+                                "lineHeight": "24px",
+                                "fontWeight": "400"
+                        }
+                ],
+                "headline-lg-mobile": [
+                        "24px",
+                        {
+                                "lineHeight": "32px",
+                                "fontWeight": "600"
+                        }
+                ],
+                "headline-xl": [
+                        "40px",
+                        {
+                                "lineHeight": "48px",
+                                "letterSpacing": "-0.02em",
+                                "fontWeight": "700"
+                        }
+                ],
+                "body-sm": [
+                        "14px",
+                        {
+                                "lineHeight": "20px",
+                                "fontWeight": "400"
+                        }
+                ]
+        }
+},
+    },
+  }
+</script>
+</head>
+<body class="bg-background text-on-background font-body-md text-body-md overflow-hidden">
+<!-- Side Navigation Shell -->
+<aside class="h-screen w-64 fixed left-0 top-0 overflow-y-auto bg-surface-container/80 backdrop-blur-xl border-r border-outline-variant/30 shadow-sm flex flex-col h-full py-6 z-[60]">
+<div class="px-6 mb-8">
+<h1 class="font-headline-lg text-headline-lg font-bold text-primary tracking-tighter" style="font-size: 24px; line-height: 32px;">OmniCore ERP</h1>
+<p class="font-label-caps text-label-caps text-on-surface-variant/70 uppercase tracking-widest">Enterprise Hub</p>
+</div>
+<nav class="flex-1 space-y-1 px-3">
+<!-- Navigation Links -->
+<a class="flex items-center gap-3 px-3 py-3 rounded-lg text-on-surface-variant hover:bg-primary/5 hover:text-primary transition-all duration-150 group" href="#">
+<span class="material-symbols-outlined">dashboard</span>
+<span class="font-label-caps text-label-caps">Dashboard</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-3 rounded-lg text-on-surface-variant hover:bg-primary/5 hover:text-primary transition-all duration-150" href="#">
+<span class="material-symbols-outlined">payments</span>
+<span class="font-label-caps text-label-caps">Sales</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-3 rounded-lg text-primary bg-primary/10 border-r-2 border-primary" href="#">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">groups</span>
+<span class="font-label-caps text-label-caps font-bold">CRM</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-3 rounded-lg text-on-surface-variant hover:bg-primary/5 hover:text-primary transition-all duration-150" href="#">
+<span class="material-symbols-outlined">person_add</span>
+<span class="font-label-caps text-label-caps">Lead Management</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-3 rounded-lg text-on-surface-variant hover:bg-primary/5 hover:text-primary transition-all duration-150" href="#">
+<span class="material-symbols-outlined">account_balance</span>
+<span class="font-label-caps text-label-caps">Revenue</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-3 rounded-lg text-on-surface-variant hover:bg-primary/5 hover:text-primary transition-all duration-150" href="#">
+<span class="material-symbols-outlined">mail</span>
+<span class="font-label-caps text-label-caps">Email</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-3 rounded-lg text-on-surface-variant hover:bg-primary/5 hover:text-primary transition-all duration-150" href="#">
+<span class="material-symbols-outlined">description</span>
+<span class="font-label-caps text-label-caps">Proposals</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-3 rounded-lg text-on-surface-variant hover:bg-primary/5 hover:text-primary transition-all duration-150" href="#">
+<span class="material-symbols-outlined">assignment</span>
+<span class="font-label-caps text-label-caps">Task Management</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-3 rounded-lg text-on-surface-variant hover:bg-primary/5 hover:text-primary transition-all duration-150" href="#">
+<span class="material-symbols-outlined">business</span>
+<span class="font-label-caps text-label-caps">Company Tracking</span>
+</a>
+</nav>
+<div class="mt-auto px-3 space-y-1">
+<a class="flex items-center gap-3 px-3 py-3 rounded-lg text-on-surface-variant hover:bg-primary/5 hover:text-primary transition-all duration-150" href="#">
+<span class="material-symbols-outlined">settings</span>
+<span class="font-label-caps text-label-caps">Settings</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-3 rounded-lg text-on-surface-variant hover:bg-primary/5 hover:text-primary transition-all duration-150" href="#">
+<span class="material-symbols-outlined">help_outline</span>
+<span class="font-label-caps text-label-caps">Support</span>
+</a>
+</div>
+</aside>
+<!-- Top Navigation Bar -->
+<header class="flex items-center justify-between px-margin-desktop h-16 ml-64 bg-surface/80 backdrop-blur-md border-b border-outline-variant/30 sticky top-0 z-50">
+<div class="flex items-center gap-6">
+<div class="relative group">
+<span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant text-body-md pointer-events-none">search</span>
+<input class="bg-surface-container-low border border-outline-variant/30 rounded-full pl-10 pr-4 py-2 text-label-caps focus:outline-none focus:ring-1 focus:ring-primary w-64 transition-all focus:w-80" placeholder="Search OmniCore..." type="text"/>
+</div>
+<nav class="hidden md:flex items-center gap-6">
+<a class="font-label-caps text-label-caps text-on-surface-variant hover:text-primary transition-colors" href="#">Analytics</a>
+<a class="font-label-caps text-label-caps text-on-surface-variant hover:text-primary transition-colors" href="#">Inbox</a>
+<a class="font-label-caps text-label-caps text-on-surface-variant hover:text-primary transition-colors" href="#">Reports</a>
+</nav>
+</div>
+<div class="flex items-center gap-4">
+<button class="px-4 py-2 rounded-lg bg-primary text-on-primary font-label-caps text-label-caps hover:opacity-90 active:scale-95 transition-all">
+                Create New
+            </button>
+<div class="flex items-center gap-2">
+<button class="p-2 text-on-surface-variant hover:text-primary transition-colors relative">
+<span class="material-symbols-outlined">notifications</span>
+<span class="absolute top-2 right-2 w-2 h-2 bg-primary rounded-full border-2 border-surface"></span>
+</button>
+<button class="p-2 text-on-surface-variant hover:text-primary transition-colors">
+<span class="material-symbols-outlined">apps</span>
+</button>
+</div>
+<div class="flex items-center gap-3 ml-2 pl-4 border-l border-outline-variant/30">
+<div class="text-right hidden sm:block">
+<p class="font-label-caps text-label-caps font-bold text-on-surface leading-tight">Alex Sterling</p>
+<p class="text-[10px] text-on-surface-variant uppercase tracking-tighter">Administrator</p>
+</div>
+<div class="w-8 h-8 rounded-full bg-cover bg-center border border-primary/30" style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuBIxT17tUYRa9jYQ4KFBeLG0IjRrnMQN8kt7aTfAOAH823cEZ306MkajilajNceofGYNy8BWE3bJHLEbHl_KOt7kSeaCEd11lav7mFX8SGX5EJqqD1zg1AQo1a5LzVcT2Kxn8Yrs7lMldINgKxhzfCy9ndEKwI00e_Lax5pdLFiZE4gXBF02BZGZSSjYVUeioGepQChYMR6jNi_pcbkWWMn0dbX7uxd7FvP2HSH1NcLtmZ_5rfShznx1gWmawqra91-JFbSIbeeEA58')"></div>
+</div>
+</div>
+</header>
+<!-- Main Content Area -->
+<main class="ml-64 p-8 h-[calc(100vh-64px)] overflow-hidden flex flex-col gap-6">
+<!-- Header & Filter Bar -->
+<section class="flex flex-col gap-6">
+<div class="flex items-end justify-between">
+<div>
+<h2 class="font-headline-lg text-headline-lg text-primary">Lead Management</h2>
+<p class="text-on-surface-variant">Track, manage, and optimize your sales pipeline in real-time.</p>
+</div>
+<div class="flex gap-2">
+<button class="flex items-center gap-2 px-4 py-2 bg-white/60 backdrop-blur-md border border-outline-variant/40 rounded-lg text-label-caps hover:bg-white/90 transition-colors shadow-sm">
+<span class="material-symbols-outlined text-body-md">download</span>
+                        Export Data
+                    </button>
+<button class="flex items-center gap-2 px-4 py-2 bg-white/60 backdrop-blur-md border border-outline-variant/40 rounded-lg text-label-caps hover:bg-white/90 transition-colors shadow-sm">
+<span class="material-symbols-outlined text-body-md">share</span>
+                        Share Pipeline
+                    </button>
+</div>
+</div>
+<!-- Filter Bar -->
+<div class="bg-white/50 backdrop-blur-md p-4 rounded-xl border border-outline-variant/30 flex flex-wrap items-center gap-4 shadow-sm">
+<div class="flex items-center gap-2 bg-surface-container-lowest border border-outline-variant/30 rounded-lg px-3 py-1.5 min-w-[180px]">
+<span class="material-symbols-outlined text-body-md text-primary">person</span>
+<select class="bg-transparent border-none focus:ring-0 text-label-caps w-full text-on-surface">
+<option>All Owners</option>
+<option>Alex Sterling</option>
+<option>Sarah Chen</option>
+<option>Marcus Wright</option>
+</select>
+</div>
+<div class="flex items-center gap-2 bg-surface-container-lowest border border-outline-variant/30 rounded-lg px-3 py-1.5 min-w-[180px]">
+<span class="material-symbols-outlined text-body-md text-primary">source</span>
+<select class="bg-transparent border-none focus:ring-0 text-label-caps w-full text-on-surface">
+<option>All Sources</option>
+<option>Inbound Website</option>
+<option>Referral</option>
+<option>LinkedIn Campaign</option>
+<option>Direct Outreach</option>
+</select>
+</div>
+<div class="flex items-center gap-2 bg-surface-container-lowest border border-outline-variant/30 rounded-lg px-3 py-1.5 min-w-[180px]">
+<span class="material-symbols-outlined text-body-md text-primary">calendar_today</span>
+<select class="bg-transparent border-none focus:ring-0 text-label-caps w-full text-on-surface">
+<option>Last 30 Days</option>
+<option>This Quarter</option>
+<option>Year to Date</option>
+<option>Custom Range</option>
+</select>
+</div>
+<div class="h-8 w-px bg-outline-variant/30 mx-2 hidden lg:block"></div>
+<div class="flex gap-2">
+<span class="text-label-caps uppercase tracking-widest text-on-surface-variant/60 self-center mr-2" style="font-size: 10px;">Quick View:</span>
+<button class="px-3 py-1.5 rounded-full bg-primary/10 border border-primary/20 text-primary text-[10px] font-bold uppercase">Priority Only</button>
+<button class="px-3 py-1.5 rounded-full bg-surface-container border border-outline-variant/20 text-on-surface-variant text-[10px] font-bold uppercase">Stagnant</button>
+</div>
+</div>
+</section>
+<!-- Kanban Board -->
+<section class="flex-1 overflow-x-auto no-scrollbar pb-6">
+<div class="flex gap-bento-gap h-full min-w-max">
+<!-- Column: Leads -->
+<div class="kanban-column flex flex-col gap-4 bg-surface-container/30 p-2 rounded-2xl border border-outline-variant/20">
+<div class="flex items-center justify-between px-2 py-1">
+<div class="flex items-center gap-2">
+<span class="w-2 h-2 rounded-full bg-primary shadow-[0_0_8px_rgba(0,87,161,0.4)]"></span>
+<h3 class="font-label-caps text-label-caps font-bold uppercase tracking-widest text-on-surface">Leads</h3>
+<span class="bg-surface-container-high px-2 py-0.5 rounded text-[10px] text-on-surface-variant">12</span>
+</div>
+<button class="text-on-surface-variant hover:text-primary transition-colors"><span class="material-symbols-outlined">more_horiz</span></button>
+</div>
+<div class="flex-1 space-y-4 overflow-y-auto no-scrollbar pr-1">
+<!-- Lead Card 1 -->
+<div class="bg-surface-container-lowest p-4 rounded-xl space-y-3 group hover:border-primary/40 border border-transparent transition-all duration-300 ambient-glow active:scale-[0.98]">
+<div class="flex justify-between items-start">
+<span class="bg-primary/10 text-primary text-[10px] font-bold uppercase px-2 py-0.5 rounded-full border border-primary/20">High Priority</span>
+<span class="text-on-surface-variant/60 text-[10px] font-mono">ID: LC-9021</span>
+</div>
+<div>
+<h4 class="font-headline-lg text-body-md font-bold text-on-surface" style="font-size: 18px;">Nexus Dynamics Corp</h4>
+<p class="text-[12px] text-on-surface-variant">Enterprise Solution Inquiry</p>
+</div>
+<div class="pt-2 border-t border-outline-variant/10 space-y-2">
+<div class="flex items-center gap-2 text-[12px] text-on-surface-variant">
+<span class="material-symbols-outlined text-sm">person</span>
+<span>Jonathan Reed (CTO)</span>
+</div>
+<div class="flex items-center gap-2 text-[12px] text-on-surface-variant">
+<span class="material-symbols-outlined text-sm">mail</span>
+<span>j.reed@nexus.io</span>
+</div>
+</div>
+<div class="flex items-center justify-between pt-2">
+<div class="flex -space-x-2">
+<div class="w-6 h-6 rounded-full border border-surface bg-cover" style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuBwrH4Vzwdba2N-YhjsxwTqKDK9QFwl_fBj6lo-qzZC97-ndiuEK8CVzR5dT2F8NCuCCLe1H8eJ_uDhNcRLwvgvVX6-NkV0XU18UTSn_5v7s_r94QE0U-hNe3NLI-5a3M7HtGoShqnvD1LNzTJ8hFWiIVhjHrRUwhrY7qNJOoBK0Ri37HhoFEmSfzwrXy2tQXHJDyP_fwAO8dsTguFo4ULx-LpKMmD-JYE05KpcdyaQ2y5TiH1xHy9ZtETIBpvXnhhctKBBXtJwmxCB')"></div>
+</div>
+<span class="text-[11px] font-bold font-mono text-primary">$45,000</span>
+</div>
+</div>
+<!-- Lead Card 2 -->
+<div class="bg-surface-container-lowest p-4 rounded-xl space-y-3 group hover:border-primary/40 border border-transparent transition-all duration-300 ambient-glow active:scale-[0.98]">
+<div class="flex justify-between items-start">
+<span class="bg-surface-container-high text-on-surface-variant text-[10px] font-bold uppercase px-2 py-0.5 rounded-full border border-outline-variant/20">Medium</span>
+<span class="text-on-surface-variant/60 text-[10px] font-mono">ID: LC-8812</span>
+</div>
+<div>
+<h4 class="font-headline-lg text-body-md font-bold text-on-surface" style="font-size: 18px;">Veridia Global</h4>
+<p class="text-[12px] text-on-surface-variant">Supply Chain Audit</p>
+</div>
+<div class="pt-2 border-t border-outline-variant/10 space-y-2">
+<div class="flex items-center gap-2 text-[12px] text-on-surface-variant">
+<span class="material-symbols-outlined text-sm">person</span>
+<span>Elena Vance</span>
+</div>
+</div>
+<div class="flex items-center justify-between pt-2">
+<div class="flex -space-x-2">
+<div class="w-6 h-6 rounded-full border border-surface bg-cover" style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuCTFAsVsTU5hhF6ngoWt2MJm6tDoBb3Hge_QX6JUQD_nIGN-NYsuCai3m6au5iXQublCCISAUErEgnM8ULSDMT_v_z27y6F_QgHY0PKFBF2KIK_4TtnRp4fFU31Dtqe4hPyYV-3066HzVlp2K4cYOtHBF4DcRHtJ8EicdDTouh624ZDvy2xxeCrl5x-c_g3PQlCW_pHpbhaJeZJn_qh93lF1k1aw6Z988iZZwb_bZFsWENFrdBri_llCzMr7VPOzOD_aZc1ZII9CKJb')"></div>
+</div>
+<span class="text-[11px] font-bold font-mono text-primary">$12,400</span>
+</div>
+</div>
+</div>
+</div>
+<!-- Column: Contacted -->
+<div class="kanban-column flex flex-col gap-4 bg-surface-container/30 p-2 rounded-2xl border border-outline-variant/20">
+<div class="flex items-center justify-between px-2 py-1">
+<div class="flex items-center gap-2">
+<span class="w-2 h-2 rounded-full bg-tertiary shadow-[0_0_8px_rgba(0,92,133,0.4)]"></span>
+<h3 class="font-label-caps text-label-caps font-bold uppercase tracking-widest text-on-surface">Contacted</h3>
+<span class="bg-surface-container-high px-2 py-0.5 rounded text-[10px] text-on-surface-variant">8</span>
+</div>
+</div>
+<div class="flex-1 space-y-4 overflow-y-auto no-scrollbar pr-1">
+<div class="bg-surface-container-lowest p-4 rounded-xl space-y-3 group hover:border-primary/40 border border-transparent transition-all duration-300 ambient-glow active:scale-[0.98]">
+<div class="flex justify-between items-start">
+<span class="bg-primary/10 text-primary text-[10px] font-bold uppercase px-2 py-0.5 rounded-full border border-primary/20">High Priority</span>
+<div class="flex gap-1">
+<span class="material-symbols-outlined text-[14px] text-primary">schedule</span>
+<span class="text-on-surface-variant/70 text-[10px]">2h ago</span>
+</div>
+</div>
+<div>
+<h4 class="font-headline-lg text-body-md font-bold text-on-surface" style="font-size: 18px;">Horizon BioTech</h4>
+<p class="text-[12px] text-on-surface-variant">R&amp;D Data Integration</p>
+</div>
+<div class="bg-primary/5 rounded-lg p-2 border border-primary/10">
+<p class="text-[11px] text-primary leading-relaxed italic">"Follow up scheduled for Thursday 10:00 AM regarding API documentation."</p>
+</div>
+<div class="flex items-center justify-between pt-2">
+<div class="flex -space-x-2">
+<div class="w-6 h-6 rounded-full border border-surface bg-cover" style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuBP_sYwWcbv6aCIp7shd4elOoSA8UAFgEL9QAsRiRwK28BpADVKWk-Br0cFenaOnWatNbu6IhjqJTrqRMe8xt92LueBvaA4BgrTe9gSnylDTtCPjbHPLf47mo7vThDb0SLiY9xFBVeKP8EVHYgSTCb0oG_93hGGst02Tbe8pFu7tflfGP0_QSFj9LtPubYssnWUfwIRBslwVUH4HUHeMUFLKPIr6GHkghtGJiR0lmPN4DSEtSg7ndRrEn1Kp1_WGvNinWmH50D_a5SF')"></div>
+</div>
+<span class="text-[11px] font-bold font-mono text-primary">$89,000</span>
+</div>
+</div>
+</div>
+</div>
+<!-- Column: Proposal -->
+<div class="kanban-column flex flex-col gap-4 bg-surface-container/30 p-2 rounded-2xl border border-outline-variant/20">
+<div class="flex items-center justify-between px-2 py-1">
+<div class="flex items-center gap-2">
+<span class="w-2 h-2 rounded-full bg-secondary shadow-[0_0_8px_rgba(80,95,118,0.4)]"></span>
+<h3 class="font-label-caps text-label-caps font-bold uppercase tracking-widest text-on-surface">Proposal</h3>
+<span class="bg-surface-container-high px-2 py-0.5 rounded text-[10px] text-on-surface-variant">4</span>
+</div>
+</div>
+<div class="flex-1 space-y-4 overflow-y-auto no-scrollbar pr-1">
+<div class="bg-surface-container-lowest p-4 rounded-xl space-y-3 group border-l-4 border-l-primary/60 hover:border-primary/40 border border-transparent transition-all duration-300 ambient-glow active:scale-[0.98]">
+<div class="flex justify-between items-start">
+<span class="bg-surface-container-high text-on-surface-variant text-[10px] font-bold uppercase px-2 py-0.5 rounded-full border border-outline-variant/20">Drafting</span>
+<span class="text-on-surface-variant/60 text-[10px] font-mono">ID: LC-7721</span>
+</div>
+<div>
+<h4 class="font-headline-lg text-body-md font-bold text-on-surface" style="font-size: 18px;">Aether Logistics</h4>
+<p class="text-[12px] text-on-surface-variant">Global Hub Deployment</p>
+</div>
+<div class="pt-2">
+<div class="w-full bg-surface-container rounded-full h-1.5 overflow-hidden">
+<div class="bg-primary h-full w-3/4 shadow-[0_0_8px_rgba(0,87,161,0.3)]"></div>
+</div>
+<p class="text-[10px] text-on-surface-variant mt-1">Proposal 75% complete</p>
+</div>
+<div class="flex items-center justify-between pt-2">
+<div class="flex -space-x-2">
+<div class="w-6 h-6 rounded-full border border-surface bg-cover" style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuAn9k6f2kEOuSnD0-U2W16we2wcWKB1dTMp_awSwpysEsQPttb_S19XsGN_YK5Av9fNkvA_70-ie6XfP-uoJDLD50pVYb2VCvl_dNIqBO0S5MCM26j1kQLBCdWTjnHBB9p8oST_3sZwwwy7jARjAMOzwSpdKqgF_FikLAO8KaurK9vJWQiXicRyN_lGKtr_-AMSLkFVXESsld7odZ2uTcorwZMS7OUrt7k5OOyo41nGnZ7L9Bme4-f63yLhSr8rjdaZQihkLTQ6BWUk')"></div>
+</div>
+<span class="text-[11px] font-bold font-mono text-primary">$210,000</span>
+</div>
+</div>
+</div>
+</div>
+<!-- Column: Negotiation -->
+<div class="kanban-column flex flex-col gap-4 bg-surface-container/30 p-2 rounded-2xl border border-outline-variant/20">
+<div class="flex items-center justify-between px-2 py-1">
+<div class="flex items-center gap-2">
+<span class="w-2 h-2 rounded-full bg-error shadow-[0_0_8px_rgba(186,26,26,0.4)]"></span>
+<h3 class="font-label-caps text-label-caps font-bold uppercase tracking-widest text-on-surface">Negotiation</h3>
+<span class="bg-surface-container-high px-2 py-0.5 rounded text-[10px] text-on-surface-variant">3</span>
+</div>
+</div>
+<div class="flex-1 space-y-4 overflow-y-auto no-scrollbar pr-1">
+<div class="bg-surface-container-lowest p-4 rounded-xl space-y-3 group hover:border-primary/40 border border-transparent transition-all duration-300 ambient-glow active:scale-[0.98]">
+<div class="flex justify-between items-start">
+<span class="bg-error/10 text-error text-[10px] font-bold uppercase px-2 py-0.5 rounded-full border border-error/20">Hot Deal</span>
+<span class="material-symbols-outlined text-error">priority_high</span>
+</div>
+<div>
+<h4 class="font-headline-lg text-body-md font-bold text-on-surface" style="font-size: 18px;">Titan Security Systems</h4>
+<p class="text-[12px] text-on-surface-variant">Cloud Migration Phase 2</p>
+</div>
+<div class="flex items-center justify-between pt-2">
+<div class="flex -space-x-2">
+<div class="w-6 h-6 rounded-full border border-surface bg-cover" style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuAQKl0syVO1rTAnUmobYi6-8giSBN-dim7K5CZIpM90mqlU14HkmpUNeJp3gMk7_K2zmockWHjaP2rgK1odUFUNf_iDL0obWu_ib0vpmWY6N3Q0na3eOOWFGWHgosWe9di3A54_eMqIxLnNvReIL7zM3PWfYDlA6nAHXYAQdb2fyNYG46Ex6EZle2zLKW8IZUgDRZYaHCsBPwA49WbYe3y3h29OtLd_YNYqVNqYXjwNAZYKOZnuiwAplYG8kbpyXojFrCje2AeJDcC6')"></div>
+<div class="w-6 h-6 rounded-full border border-surface bg-cover" style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuCyrolGadKzSSSw1MFbqJE8GnGn5yf6RV2i-DJnjWQftNxJcM60nAZ7Wtc4_6SFf-C_qQ7uKJsCYzNvWTw8p1NHfDPjqRzvhP95akoIf4ohb6WBjS-SJIfaI5vLeYUaILadb25vkcNLP2a2pKJnOUbFGxFq-0Zn3wcbpQzkccuWD-AOzmdCg9M-EvT9vN7tAAdch_T46tHkFKiPMn1xvDVimttD1fjrlRXs-mS_-K84WXU5cHLvK39IwjruG_mh7B3SetOy0BvSJDkK')"></div>
+</div>
+<span class="text-[11px] font-bold font-mono text-primary">$540,000</span>
+</div>
+</div>
+</div>
+</div>
+<!-- Column: Closed -->
+<div class="kanban-column flex flex-col gap-4 bg-surface-container/30 p-2 rounded-2xl border border-outline-variant/20">
+<div class="flex items-center justify-between px-2 py-1">
+<div class="flex items-center gap-2">
+<span class="w-2 h-2 rounded-full bg-secondary shadow-[0_0_8px_rgba(80,95,118,0.4)]"></span>
+<h3 class="font-label-caps text-label-caps font-bold uppercase tracking-widest text-on-surface">Closed</h3>
+<span class="bg-surface-container-high px-2 py-0.5 rounded text-[10px] text-on-surface-variant">24</span>
+</div>
+</div>
+<div class="flex-1 space-y-4 overflow-y-auto no-scrollbar pr-1">
+<div class="bg-surface-container-lowest p-4 rounded-xl space-y-3 opacity-70 hover:opacity-100 transition-opacity border border-transparent">
+<div class="flex justify-between items-start">
+<span class="bg-surface-container text-on-surface-variant text-[10px] font-bold uppercase px-2 py-0.5 rounded-full">Won</span>
+<span class="material-symbols-outlined text-primary text-sm">check_circle</span>
+</div>
+<div>
+<h4 class="font-headline-lg text-body-md font-bold text-on-surface" style="font-size: 18px;">Omni Retail Group</h4>
+<p class="text-[12px] text-on-surface-variant">POS Modernization</p>
+</div>
+<div class="flex items-center justify-between pt-2">
+<span class="text-[10px] font-mono text-on-surface-variant">Closed: Oct 12</span>
+<span class="text-[11px] font-bold font-mono text-primary">$1,250,000</span>
+</div>
+</div>
+</div>
+</div>
+</div>
+</section>
+</main>
+<!-- Add New Lead Floating Action Button -->
+<button class="fixed bottom-10 right-10 w-16 h-16 rounded-full bg-primary text-on-primary flex items-center justify-center shadow-[0_10px_30px_rgba(0,87,161,0.3)] hover:scale-110 active:scale-90 transition-all duration-300 z-[70] group overflow-hidden">
+<span class="material-symbols-outlined text-4xl group-hover:rotate-90 transition-transform duration-500">add</span>
+<div class="absolute inset-0 bg-white/20 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none"></div>
+</button>
+<script>
+        // Interactive states for cards
+        document.querySelectorAll('.bg-surface-container-lowest').forEach(card => {
+            card.addEventListener('mouseenter', () => {
+                card.style.transform = 'translateY(-4px)';
+            });
+            card.addEventListener('mouseleave', () => {
+                card.style.transform = 'translateY(0px)';
+            });
+        });
+
+        // Simple Drag and Drop logic simulation for Kanban
+        let currentDragCard = null;
+
+        document.querySelectorAll('.bg-surface-container-lowest').forEach(card => {
+            card.setAttribute('draggable', 'true');
+            card.addEventListener('dragstart', (e) => {
+                currentDragCard = card;
+                card.style.opacity = '0.4';
+            });
+            card.addEventListener('dragend', () => {
+                currentDragCard = null;
+                card.style.opacity = '1';
+            });
+        });
+
+        document.querySelectorAll('.kanban-column').forEach(column => {
+            column.addEventListener('dragover', (e) => {
+                e.preventDefault();
+            });
+            column.addEventListener('drop', (e) => {
+                e.preventDefault();
+                if (currentDragCard) {
+                    const container = column.querySelector('.overflow-y-auto');
+                    container.appendChild(currentDragCard);
+                }
+            });
+        });
+    </script>
+</body></html>
