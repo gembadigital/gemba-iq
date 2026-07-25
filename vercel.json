@@ -15,7 +15,6 @@
     { "source": "/api/gemini/assist", "destination": "/api/gemini/[...action]?action=assist" },
     { "source": "/api/gemini/company-search", "destination": "/api/gemini/[...action]?action=company-search" },
     { "source": "/api/gemini/analyze-company", "destination": "/api/gemini/[...action]?action=analyze-company" },
-    { "source": "/api/gemini/gemba-lens-chat", "destination": "/api/gemini/[...action]?action=gemba-lens-chat" },
     { "source": "/api/gemini/sales-coach", "destination": "/api/gemini/[...action]?action=sales-coach" },
     { "source": "/api/gemini/campaign-assist", "destination": "/api/gemini/[...action]?action=campaign-assist" },
     { "source": "/api/gemini/generate-custom-pitch", "destination": "/api/gemini/[...action]?action=generate-custom-pitch" },

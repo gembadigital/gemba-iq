@@ -18,7 +18,6 @@ import ServicesView from "./components/ServicesView";
 import RevenueManagementView from "./components/RevenueManagementView";
 import ManagementPLView from "./components/ManagementPLView";
 import CompanyDiscoveryView from "./components/CompanyDiscoveryView";
-import GembaLensView from "./components/GembaLensView";
 import AdministrationCenter from "./components/AdministrationCenter";
 import UserAccountSettings from "./components/UserAccountSettings";
 import GlobalSearchBar from "./components/GlobalSearchBar";
@@ -100,7 +99,6 @@ const ACTIVE_TABS = [
   "lead-generator",
   "lead-profiles",
   "ai-sales-assistant",
-  "gemba-lens",
   "target-accounts",
   "deal-management",
   "sales-dashboard",
@@ -409,7 +407,7 @@ export default function App() {
     if (["services", "deal-management", "proposal-management", "create-proposal", "sales-dashboard"].includes(activeTab)) {
       setDealsMenuExpanded(true);
     }
-    if (["companies-registry", "company-discovery", "gemba-lens", "target-accounts"].includes(activeTab)) {
+    if (["companies-registry", "company-discovery", "target-accounts"].includes(activeTab)) {
       setCompaniesMenuExpanded(true);
     }
     if (["lead-generator", "lead-profiles", "ai-sales-assistant"].includes(activeTab)) {
@@ -719,7 +717,6 @@ export default function App() {
       "revenue-management": { parent: "CRM", child: "Revenue Management" },
       "management-pl": { parent: "CRM", child: "Yönetim P/L" },
       "company-discovery": { parent: "Companies & Targets", child: "Company Search" },
-      "gemba-lens": { parent: "Companies & Targets", child: "Gemba Lens" },
       "lead-profiles": { parent: "Lead Discovery", child: "Lead Profiles" },
       "lead-generator": { parent: "Lead Discovery", child: "Lead Mail Generator" },
       "ai-sales-assistant": { parent: "Lead Discovery", child: "AI Sales Assistant" },
@@ -993,14 +990,6 @@ export default function App() {
                     icon={isNotionMode ? <span className="text-base">🔍</span> : <Search className="w-[20px] h-[20px] flex-shrink-0 text-amber-500" />}
                     label="Company Search"
                     activeBorderClass="border-l-amber-500"
-                    isSubmenu={true}
-                  />
-
-                  <SidebarButton
-                    id="gemba-lens"
-                    icon={isNotionMode ? <span className="text-base">🔬</span> : <Sliders className="w-[20px] h-[20px] flex-shrink-0 text-violet-500" />}
-                    label="Gemba Lens"
-                    activeBorderClass="border-l-violet-500"
                     isSubmenu={true}
                   />
 
@@ -1761,10 +1750,6 @@ export default function App() {
                     : undefined
                 }
               />
-            )}
-
-            {activeTab === "gemba-lens" && (
-              <GembaLensView onNavigateToTab={(tab) => setActiveTab(tab as any)} />
             )}
 
             {activeTab === "target-accounts" && (

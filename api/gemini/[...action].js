@@ -2,7 +2,6 @@ import { runCompanyAnalysis } from "../../lib/server/analyzeCompanyCore.js";
 import {
   runGeminiAssist,
   runGeminiCompanySearch,
-  runGembaLensChat,
   runGeminiSalesCoach,
   runGeminiCampaignAssist,
   runGeminiCustomPitch,
@@ -76,24 +75,6 @@ export async function companySearchHandler(request, response) {
   } catch (error) {
     console.error("company-search handler error:", error);
     return response.status(500).json({ error: error.message || "Could not complete company search with Gemini." });
-  }
-}
-
-export async function gembaLensChatHandler(request, response) {
-  response.setHeader("Content-Type", "application/json");
-
-  if (request.method !== "POST") {
-    response.setHeader("Allow", "POST");
-    return response.status(405).json({ error: "Method not allowed" });
-  }
-
-  try {
-    const { message, history, context } = request.body || {};
-    const result = await runGembaLensChat({ message, history, context });
-    return response.status(result.status).json(result.body);
-  } catch (error) {
-    console.error("gemba-lens-chat handler error:", error);
-    return response.status(500).json({ error: error.message || "Saha AI Danışmanı şu anda yanıt veremiyor." });
   }
 }
 
@@ -174,7 +155,6 @@ export default async function handler(request, response) {
   if (action === "analyze-company") return analyzeCompanyHandler(request, response);
   if (action === "assist") return assistHandler(request, response);
   if (action === "company-search") return companySearchHandler(request, response);
-  if (action === "gemba-lens-chat") return gembaLensChatHandler(request, response);
   if (action === "sales-coach") return salesCoachHandler(request, response);
   if (action === "campaign-assist") return campaignAssistHandler(request, response);
   if (action === "generate-custom-pitch") return generateCustomPitchHandler(request, response);

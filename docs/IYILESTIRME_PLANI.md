@@ -2,7 +2,7 @@
 
 Bu dosya, projenin kaynak kodu üzerinden yapılan UI/UX değerlendirmesini ve dil (TR/EN) tutarlılığı taramasını fazlara bölünmüş, uygulanabilir bir plana çeviriyor. Ekip bu dosyayı çalışma listesi olarak kullanabilir — her fazın altında **Durum** satırı var ve ilerledikçe güncellenmeli.
 
-Son güncelleme: 2026-07-24
+Son güncelleme: 2026-07-25
 
 ---
 
@@ -23,11 +23,20 @@ Son güncelleme: 2026-07-24
 | 7 | RevenueManagementView.tsx + ManagementPLView.tsx | Tamamlandı (2026-07-24, kısmi — aşağıya bak) |
 | 8 | TasksView.tsx (Görevler) | Tamamlandı (2026-07-24, kısmi — aşağıya bak) |
 | 9 | CampaignManagerView.tsx + CampaignDesigner.tsx | Tamamlandı (2026-07-24) |
-| 10 | AISalesAssistant.tsx + SalesCoachAI.tsx + CompanyDiscoveryView.tsx + GembaLensView.tsx | Planlandı |
+| — | Gemba Lens özelliği kaldırıldı (kullanıcı talebi) | Tamamlandı (2026-07-25) |
+| 10 | AISalesAssistant.tsx + SalesCoachAI.tsx + CompanyDiscoveryView.tsx | Planlandı |
 | 11 | AdministrationCenter.tsx + UserAccountSettings.tsx | Planlandı |
 | 12 | DashboardView.tsx + SalesDashboardView.tsx + CompanyDetailView.tsx | Planlandı |
 
 Her modül geçişi kendi commit/deploy döngüsüyle kapanır; bu tablo ilerledikçe güncellenir.
+
+**Gemba Lens kaldırma (2026-07-25) — kullanıcı talebi üzerine:**
+- Kullanıcı Gemba Lens özelliğinin tamamen kaldırılmasını istedi. Kaldırılan dosyalar: `src/components/GembaLensView.tsx`, `src/lib/gembaLensDb.ts`.
+- `src/App.tsx`: import, sidebar menü girişi ("Companies & Targets" altında), `activeTab` listesi, breadcrumb map'i ve render bloğu kaldırıldı.
+- `api/gemini/[...action].js` + `lib/server/geminiCore.js`: `gemba-lens-chat` action'ı ve `runGembaLensChat` fonksiyonu (Saha AI Danışmanı chat handler'ı) kaldırıldı.
+- `vercel.json`: `/api/gemini/gemba-lens-chat` rewrite kuralı kaldırıldı.
+- Gemba Lens'in kullandığı veriler `CrmDb.getKv()` üzerinden genel key-value deposundaydı (ayrı bir Supabase tablosu değildi), bu yüzden veritabanı tarafında ek bir temizlik gerekmiyor — sadece kod tarafı kaldırıldı.
+- Modül 10'un kapsamı bu kaldırma nedeniyle güncellendi: artık yalnızca AISalesAssistant.tsx + SalesCoachAI.tsx + CompanyDiscoveryView.tsx içeriyor.
 
 **Modül 1 (CompaniesView.tsx) — yapılanlar:**
 - Dil: "Açıklama" ve "Custom field inputs" sabit yazılmıştı, `t()`'ye sarıldı + sözlüğe eklendi.
