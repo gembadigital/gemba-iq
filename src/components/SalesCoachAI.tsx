@@ -1,6 +1,8 @@
 import React, { useState, useEffect, useRef } from "react";
 import { useLanguage } from "../lib/LanguageContext";
 import { CrmDb } from "../lib/CrmDb";
+import { ConfirmModal } from "./shared/ConfirmModal";
+import { useConfirm } from "../lib/useConfirm";
 
 // Gemini calls (with transient-error retry/backoff on the server) can take
 // well over the platform's old 10s default serverless timeout, which used
@@ -92,6 +94,7 @@ interface SalesCoachAIProps {
 
 export default function SalesCoachAI({ deals }: SalesCoachAIProps) {
   const { t } = useLanguage();
+  const { confirm, confirmProps } = useConfirm();
 
   // --- SUBMENU STATE ---
   const [activeSubmenu, setActiveSubmenu] = useState<
@@ -323,7 +326,15 @@ export default function SalesCoachAI({ deals }: SalesCoachAIProps) {
     setUploadedFileName("");
   };
 
-  const handleDeleteSkill = (id: string) => {
+  const handleDeleteSkill = async (id: string) => {
+    const ok = await confirm({
+      title: t("Delete Skill"),
+      message: t("Are you sure you want to delete this skill?"),
+      confirmLabel: t("Delete"),
+      cancelLabel: t("Cancel"),
+      danger: true,
+    });
+    if (!ok) return;
     setSkills(prev => prev.filter(s => s.id !== id));
   };
 
@@ -749,9 +760,10 @@ export default function SalesCoachAI({ deals }: SalesCoachAIProps) {
                         <span>{s.fileName} ({s.contentSize || "18 KB"})</span>
                       </div>
                       <button
-                        onClick={() => handleDeleteSkill(s.id)}
+                        onClick={() => void handleDeleteSkill(s.id)}
                         className="p-1 hover:bg-rose-50 dark:hover:bg-rose-950/30 text-slate-400 hover:text-rose-500 rounded transition-all cursor-pointer"
                         title={t("Delete Skill")}
+                        aria-label={t("Delete Skill")}
                       >
                         <Trash className="w-3.5 h-3.5" />
                       </button>
@@ -762,11 +774,11 @@ export default function SalesCoachAI({ deals }: SalesCoachAIProps) {
 
               {/* ADD SKILL MODAL */}
               {showAddSkillModal && (
-                <div className="fixed inset-0 bg-black/60 backdrop-blur-xs flex items-center justify-center z-50 animate-in fade-in duration-150">
+                <div role="dialog" aria-modal="true" className="fixed inset-0 bg-black/60 backdrop-blur-xs flex items-center justify-center z-50 animate-in fade-in duration-150">
                   <div className="bg-white dark:bg-[#1f1e1d] border border-slate-200 dark:border-[#323130] rounded-xl w-full max-w-lg shadow-2xl overflow-hidden animate-in zoom-in-95 duration-150">
                     <div className="p-5 border-b border-[#EDEBE9] dark:border-[#323130] flex items-center justify-between">
                       <h3 className="text-sm font-extrabold uppercase text-slate-850 dark:text-slate-100">{t("Upload methodology / Skill")}</h3>
-                      <button onClick={() => setShowAddSkillModal(false)} className="p-1 hover:bg-slate-100 dark:hover:bg-[#252423] rounded">
+                      <button onClick={() => setShowAddSkillModal(false)} className="p-1 hover:bg-slate-100 dark:hover:bg-[#252423] rounded" aria-label={t("Close")}>
                         <X className="w-4 h-4" />
                       </button>
                     </div>

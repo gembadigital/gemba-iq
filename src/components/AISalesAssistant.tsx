@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from "react";
 import { useLanguage } from "../lib/LanguageContext";
 import { motion, AnimatePresence } from "motion/react";
+import { ConfirmModal } from "./shared/ConfirmModal";
+import { useConfirm } from "../lib/useConfirm";
 import {
   Sparkles,
   Search,
@@ -140,6 +142,7 @@ function getTavilyApiKey(): string {
 
 export default function AISalesAssistant({ onOpenSettings }: AISalesAssistantProps) {
   const { lang, t } = useLanguage();
+  const { confirm, confirmProps } = useConfirm();
   const [companyInput, setCompanyInput] = useState("");
   const [loading, setLoading] = useState(false);
   const [loadingStep, setLoadingStep] = useState(0);
@@ -191,25 +194,25 @@ export default function AISalesAssistant({ onOpenSettings }: AISalesAssistantPro
       const data = await resp.json();
       if (data.success && data.text) {
         setGeneratedEmailResult(data.text);
-        showToast("Özel e-posta şablonunuz başarıyla üretildi!", "success");
+        showToast(t("Your custom email template was generated successfully!"), "success");
       } else {
         throw new Error(data.error || "Boş çıktı döndü.");
       }
     } catch (err: any) {
       console.error("Custom pitch generator failed:", err);
-      showToast(err.message || "E-posta taslağı oluşturulamadı.", "error");
+      showToast(err.message ? t(err.message) : t("Could not create email draft."), "error");
     } finally {
       setGeneratorLoading(false);
     }
   };
 
   const loadingMessages = [
-    "Tavily arama motoru başlatılıyor...",
-    "Şirket adı ve OpEx anahtar kelimeleri ile web taraması yapılıyor...",
-    "Lean manufacturing, kaizen ve sürdürülebilirlik kaynakları taranıyor...",
-    "Finansal raporlar, yatırımcı bilgileri ve ESG verileri toplanıyor...",
-    "E-posta, iletişim ve yönetim kadrosu kaynakları analiz ediliyor...",
-    "Gemini yalnızca Tavily sonuçlarını analiz ediyor...",
+    t("Starting Tavily search engine..."),
+    t("Scanning the web with the company name and OpEx keywords..."),
+    t("Scanning lean manufacturing, kaizen and sustainability sources..."),
+    t("Collecting financial reports, investor info and ESG data..."),
+    t("Analyzing email, contact and management staff sources..."),
+    t("Gemini is analyzing only the Tavily results..."),
   ];
 
   useEffect(() => {
@@ -411,11 +414,11 @@ export default function AISalesAssistant({ onOpenSettings }: AISalesAssistantPro
       setCompanyInput("");
       if (data.partialGemini) {
         showToast(
-          "İnternet araştırması tamamlandı. AI yorumu şu anda oluşturulamadı.",
+          t("Internet research completed. AI commentary could not be generated right now."),
           "success"
         );
       } else {
-        showToast("Şirket araştırması başarıyla tamamlandı!", "success");
+        showToast(t("Company research completed successfully!"), "success");
       }
     } catch (err: any) {
       console.error("Search company failed:", err);
@@ -425,14 +428,22 @@ export default function AISalesAssistant({ onOpenSettings }: AISalesAssistantPro
     }
   };
 
-  const handleDeleteAnalysis = (id: string, e: React.MouseEvent) => {
+  const handleDeleteAnalysis = async (id: string, e: React.MouseEvent) => {
     e.stopPropagation();
+    const ok = await confirm({
+      title: t("Delete Analysis"),
+      message: t("Are you sure you want to delete this analysis?"),
+      confirmLabel: t("Delete"),
+      cancelLabel: t("Cancel"),
+      danger: true,
+    });
+    if (!ok) return;
     const filtered = savedAnalyses.filter((item) => item.id !== id);
     saveAnalysesList(filtered);
     if (activeAnalysis?.id === id) {
       setActiveAnalysis(filtered.length > 0 ? filtered[0] : null);
     }
-    showToast("Analiz geçmişten kaldırıldı.", "success");
+    showToast(t("Removed from history."), "success");
   };
 
   const parseScreenerOutput = (text: string) => {
@@ -506,7 +517,7 @@ export default function AISalesAssistant({ onOpenSettings }: AISalesAssistantPro
         .then(() => {
           setCopiedSection(id);
           setTimeout(() => setCopiedSection(null), 2000);
-          showToast("Panoya başarıyla kopyalandı!", "success");
+          showToast(t("Copied to clipboard successfully!"), "success");
         })
         .catch(() => {
           // Fallback to execCommand if permission rejected
@@ -535,12 +546,12 @@ export default function AISalesAssistant({ onOpenSettings }: AISalesAssistantPro
       if (success) {
         setCopiedSection(id);
         setTimeout(() => setCopiedSection(null), 2000);
-        showToast("Panoya başarıyla kopyalandı (Alternatif Mod)!", "success");
+        showToast(t("Copied to clipboard successfully (Alternative Mode)!"), "success");
       } else {
-        showToast("Kopyalama başarısız oldu. Lütfen metni seçip manuel kopyalayın.", "error");
+        showToast(t("Copy failed. Please select the text and copy it manually."), "error");
       }
     } catch (err) {
-      showToast("Kopyalama hatası.", "error");
+      showToast(t("Copy error."), "error");
     }
   };
 
@@ -584,7 +595,7 @@ export default function AISalesAssistant({ onOpenSettings }: AISalesAssistantPro
 
     const verifiedEmails = extractVerifiedEmails(activeAnalysis.parsed.emailDiscovery);
     if (!verifiedEmails.length) {
-      showToast("E-posta adresi tespit edilemedi. Lead eklenemedi.", "error");
+      showToast(t("No email address detected. Could not add lead."), "error");
       return;
     }
 
@@ -620,10 +631,10 @@ export default function AISalesAssistant({ onOpenSettings }: AISalesAssistantPro
       const updated = [newLead, ...currentProfiles];
       CrmDb.setKv(LEAD_PROFILES_KEY, updated);
 
-      showToast(`${companyCapitalized} Lead Profiles listesine eklendi!`, "success");
+      showToast(t("{company} added to the Lead Profiles list!").replace("{company}", companyCapitalized), "success");
     } catch (err) {
       console.error(err);
-      showToast("Müşteri listesine eklenirken hata oluştu.", "error");
+      showToast(t("An error occurred while adding to the customer list."), "error");
     }
   };
 
@@ -654,7 +665,7 @@ export default function AISalesAssistant({ onOpenSettings }: AISalesAssistantPro
           return existingNorm === normalizedUrl;
         });
         if (isDuplicate) {
-          showToast("Bu şirket zaten hedef listenizde mevcut!", "error");
+          showToast(t("This company is already in your target list!"), "error");
           return;
         }
       }
@@ -701,10 +712,10 @@ export default function AISalesAssistant({ onOpenSettings }: AISalesAssistantPro
       ];
       CrmDb.setKv(TARGET_ACCOUNTS_KEY, updatedList);
 
-      showToast("Şirket hedef listesine kaydedildi!", "success");
+      showToast(t("Company saved to the target list!"), "success");
     } catch (err) {
       console.error(err);
-      showToast("Hedef listesine eklenirken bir hata oluştu.", "error");
+      showToast(t("An error occurred while adding to the target list."), "error");
     }
   };
 
@@ -714,17 +725,17 @@ export default function AISalesAssistant({ onOpenSettings }: AISalesAssistantPro
         <ShieldAlert className="w-7 h-7" />
       </div>
       <h4 className="text-base font-bold text-slate-800 dark:text-slate-100 mb-3">
-        Tavily API anahtarı bulunamadı
+        {t("Tavily API key not found")}
       </h4>
       <p className="text-xs text-slate-500 dark:text-slate-400 leading-relaxed mb-6">
-        {TAVILY_KEY_MESSAGE}
+        {t(TAVILY_KEY_MESSAGE)}
       </p>
       {onOpenSettings && (
         <button
           onClick={onOpenSettings}
           className="px-5 py-2.5 bg-[#0078D4] hover:bg-[#106ebe] text-white text-xs font-bold rounded-lg shadow transition-all cursor-pointer"
         >
-          Ayarlara Git
+          {t("Go to Settings")}
         </button>
       )}
     </div>
@@ -744,7 +755,7 @@ export default function AISalesAssistant({ onOpenSettings }: AISalesAssistantPro
             className="fixed bottom-6 right-6 z-50 bg-[#106ebe] dark:bg-brand-500 text-white px-4 py-2.5 rounded-lg shadow-lg flex items-center gap-2 text-xs font-semibold"
           >
             <Check className="w-4 h-4 text-emerald-400" />
-            {toastMessage}
+            {t(toastMessage || "")}
           </motion.div>
         )}
       </AnimatePresence>
@@ -763,19 +774,19 @@ export default function AISalesAssistant({ onOpenSettings }: AISalesAssistantPro
           </div>
 
           <p className="text-[11px] text-[#0078D4] dark:text-brand-405 leading-relaxed bg-blue-50/50 dark:bg-black/10 p-2.5 rounded-lg border border-blue-100 dark:border-[#323130] mb-5">
-            Tavily Search API ile gerçek web kaynakları taranır. Gemini yalnızca bulunan verileri analiz eder; tahmin veya uydurma yapılmaz.
+            {t("Real web sources are scanned with the Tavily Search API. Gemini only analyzes the data found; no guessing or fabrication.")}
           </p>
 
           {!hasTavilyKey && (
             <div className="mb-4 p-3 rounded-lg border border-amber-200 dark:border-amber-900/40 bg-amber-50/50 dark:bg-amber-950/10 text-[10px] text-amber-700 dark:text-amber-400">
-              {TAVILY_KEY_MESSAGE}
+              {t(TAVILY_KEY_MESSAGE)}
             </div>
           )}
 
           <form onSubmit={handleSearchCompany} className="space-y-3 mb-6">
             <div>
               <label className="block text-[9px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500 mb-1.5 font-mono">
-                HEDEF ŞİRKET VEYA FABRİKA ADI
+                {t("TARGET COMPANY OR FACTORY NAME")}
               </label>
               <div className="relative">
                 <input
@@ -799,12 +810,12 @@ export default function AISalesAssistant({ onOpenSettings }: AISalesAssistantPro
               {loading ? (
                 <>
                   <Loader2 className="w-3.5 h-3.5 animate-spin" />
-                  Tavily Araştırması Yapılıyor...
+                  {t("Running Tavily Research...")}
                 </>
               ) : (
                 <>
                   <Search className="w-3.5 h-3.5" />
-                  Şirket Araştırması Başlat
+                  {t("Start Company Research")}
                 </>
               )}
             </button>
@@ -816,14 +827,14 @@ export default function AISalesAssistant({ onOpenSettings }: AISalesAssistantPro
           <div className="flex items-center justify-between mb-3">
             <span className="text-[9px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500 flex items-center gap-1 font-mono">
               <Clock className="w-3 h-3" />
-              ÇÖZÜMLEME GEÇMİŞİ ({savedAnalyses.length})
+              {t("ANALYSIS HISTORY")} ({savedAnalyses.length})
             </span>
           </div>
 
           {savedAnalyses.length === 0 ? (
             <div className="flex-1 flex flex-col items-center justify-center text-center p-4 border border-dashed border-[#EDEBE9] dark:border-[#323130] rounded-lg bg-white/50 dark:bg-black/5">
               <TrendingUp className="w-6 h-6 text-slate-300 dark:text-slate-700 mb-2" />
-              <p className="text-[10px] text-slate-400 dark:text-slate-500 font-medium font-sans">Henüz analiz geçmişi boş.</p>
+              <p className="text-[10px] text-slate-400 dark:text-slate-500 font-medium font-sans">{t("Analysis history is empty so far.")}</p>
             </div>
           ) : (
             <div className="space-y-1.5 flex-1 overflow-y-auto max-h-[400px] pr-1">
@@ -850,7 +861,8 @@ export default function AISalesAssistant({ onOpenSettings }: AISalesAssistantPro
                     <button
                       onClick={(e) => handleDeleteAnalysis(item.id, e)}
                       className="opacity-0 group-hover:opacity-100 p-1 rounded hover:bg-red-500/10 text-slate-400 hover:text-red-500 transition-all cursor-pointer"
-                      title="Geçmişten Sil"
+                      title={t("Delete from History")}
+                      aria-label={t("Delete from History")}
                     >
                       <Trash2 className="w-3.5 h-3.5" />
                     </button>
@@ -881,13 +893,13 @@ export default function AISalesAssistant({ onOpenSettings }: AISalesAssistantPro
               className="text-center max-w-sm"
             >
               <h4 className="text-[10px] font-bold text-[#106ebe] dark:text-brand-400 mb-2 font-display uppercase tracking-widest font-mono">
-                TAVILY + GEMINI ARAŞTIRMASI
+                {t("TAVILY + GEMINI RESEARCH")}
               </h4>
               <h4 className="text-xs font-bold text-slate-700 dark:text-slate-200 mb-2 font-display leading-relaxed">
                 {loadingMessages[loadingStep]}
               </h4>
               <p className="text-[10px] text-slate-500 dark:text-slate-400 leading-relaxed font-sans">
-                Yalnızca Tavily tarafından dönen gerçek kaynaklar analiz edilir. Tahmin veya uydurma yapılmaz.
+                {t("Only real sources returned by Tavily are analyzed. No guessing or fabrication.")}
               </p>
             </motion.div>
           </div>
@@ -899,13 +911,13 @@ export default function AISalesAssistant({ onOpenSettings }: AISalesAssistantPro
               <div className="w-12 h-12 rounded-full bg-red-100 dark:bg-red-950/30 text-red-600 dark:text-red-400 flex items-center justify-center mx-auto mb-2">
                 <ShieldAlert className="w-6 h-6" />
               </div>
-              <h4 className="text-sm font-bold text-slate-800 dark:text-slate-200">Araştırma Tamamlanamadı</h4>
-              <p className="text-xs text-red-500 dark:text-red-400 text-center max-w-md mb-6">{error}</p>
+              <h4 className="text-sm font-bold text-slate-800 dark:text-slate-200">{t("Research Could Not Be Completed")}</h4>
+              <p className="text-xs text-red-500 dark:text-red-400 text-center max-w-md mb-6">{t(error || "")}</p>
               <button
                 onClick={() => setError(null)}
                 className="px-4 py-2 bg-slate-100 dark:bg-[#252423] hover:bg-slate-200 text-xs font-bold rounded-lg transition-colors cursor-pointer"
               >
-                Yeniden Dene
+                {t("Try Again")}
               </button>
             </div>
           </div>
@@ -920,29 +932,29 @@ export default function AISalesAssistant({ onOpenSettings }: AISalesAssistantPro
               {t("Gemini Sales Assistant: B2B Business Developer")}
             </h3>
             <p className="text-xs text-slate-500 dark:text-slate-400 max-w-md leading-relaxed mb-8">
-              Şirket adını girerek Tavily Search API ile gerçek web kaynaklarını tarayın. Gemini yalnızca bulunan verileri analiz eder.
+              {t("Enter a company name to scan real web sources with the Tavily Search API. Gemini only analyzes the data found.")}
             </p>
 
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 max-w-2xl text-left">
               <div className="p-4 bg-white dark:bg-[#201f1e] border border-[#EDEBE9] dark:border-[#323130] rounded-xl shadow-sm">
                 <Building2 className="w-5 h-5 text-[#0078D4] mb-2.5" />
-                <h5 className="text-[11px] font-bold text-slate-800 dark:text-slate-200 mb-1">Şirket Özeti</h5>
+                <h5 className="text-[11px] font-bold text-slate-800 dark:text-slate-200 mb-1">{t("Company Summary")}</h5>
                 <p className="text-[10px] text-slate-400 leading-relaxed font-sans">
-                  Kaynaklarda bulunan sektör, ürün ve lokasyon bilgileri özetlenir.
+                  {t("Sector, product and location information found in sources is summarized.")}
                 </p>
               </div>
               <div className="p-4 bg-white dark:bg-[#201f1e] border border-[#EDEBE9] dark:border-[#323130] rounded-xl shadow-sm">
                 <Target className="w-5 h-5 text-indigo-500 mb-2.5" />
-                <h5 className="text-[11px] font-bold text-slate-800 dark:text-slate-200 mb-1">Karar Vericiler</h5>
+                <h5 className="text-[11px] font-bold text-slate-800 dark:text-slate-200 mb-1">{t("Decision Makers")}</h5>
                 <p className="text-[10px] text-slate-400 leading-relaxed font-sans">
-                  Yalnızca doğrulanabilir isim ve ünvanlar listelenir.
+                  {t("Only verifiable names and titles are listed.")}
                 </p>
               </div>
               <div className="p-4 bg-white dark:bg-[#201f1e] border border-[#EDEBE9] dark:border-[#323130] rounded-xl shadow-sm">
                 <Mail className="w-5 h-5 text-emerald-500 mb-2.5" />
-                <h5 className="text-[11px] font-bold text-slate-800 dark:text-slate-200 mb-1">E-posta Keşfi</h5>
+                <h5 className="text-[11px] font-bold text-slate-800 dark:text-slate-200 mb-1">{t("Email Discovery")}</h5>
                 <p className="text-[10px] text-slate-400 leading-relaxed font-sans">
-                  İnternette gerçekten bulunan e-posta adresleri listelenir.
+                  {t("Email addresses genuinely found on the internet are listed.")}
                 </p>
               </div>
             </div>
@@ -956,17 +968,17 @@ export default function AISalesAssistant({ onOpenSettings }: AISalesAssistantPro
               <div>
                 <div className="flex items-center gap-2">
                   <h4 className="text-sm font-extrabold text-slate-800 dark:text-slate-100 font-display">
-                    {activeAnalysis.companyInput.toUpperCase()} SATIŞ GELİŞTİRME RAPORU
+                    {activeAnalysis.companyInput.toUpperCase()} {t("SALES DEVELOPMENT REPORT")}
                   </h4>
                   <span className="text-[9px] font-mono text-slate-400 dark:text-slate-500 bg-white dark:bg-black/10 border border-[#EDEBE9] dark:border-[#323130] px-2 py-0.5 rounded-full">
                     {activeAnalysis.timestamp}
                   </span>
                 </div>
                 <div className="text-[10px] mt-1 text-slate-400 flex items-center gap-1 font-sans">
-                  <span>Tavily Search API kaynaklarına dayalı gerçek veri analizi.</span>
+                  <span>{t("Real data analysis based on Tavily Search API sources.")}</span>
                   {activeAnalysis.sources.length > 0 && (
                     <span className="font-semibold text-[#0078D4] dark:text-brand-400 hover:underline cursor-pointer">
-                      ({activeAnalysis.sources.length} kaynak taranmıştır)
+                      ({activeAnalysis.sources.length} {t("sources scanned")})
                     </span>
                   )}
                 </div>
@@ -977,10 +989,10 @@ export default function AISalesAssistant({ onOpenSettings }: AISalesAssistantPro
                 <button
                   onClick={handlePushToTargetAccounts}
                   className="px-3 py-1.5 bg-gradient-to-r from-emerald-600 to-green-600 text-white hover:from-emerald-700 hover:to-green-700 text-xs font-bold rounded-lg shadow-sm flex items-center gap-1.5 transition-all cursor-pointer"
-                  title="Target Accounts Listesine Gönder"
+                  title={t("Send to Target Accounts List")}
                 >
                   <Plus className="w-3.5 h-3.5" />
-                  Müşteri Listesine Ekle
+                  {t("Add to Customer List")}
                 </button>
 
                 <div className="flex bg-slate-100 dark:bg-black/20 p-1 rounded-lg border border-[#EDEBE9] dark:border-[#323130]">
@@ -992,7 +1004,7 @@ export default function AISalesAssistant({ onOpenSettings }: AISalesAssistantPro
                         : "text-slate-500 hover:text-slate-800 dark:hover:text-slate-300"
                     }`}
                   >
-                    Görsel Panel
+                    {t("Visual Panel")}
                   </button>
                   <button
                     onClick={() => setActiveTab("raw")}
@@ -1002,7 +1014,7 @@ export default function AISalesAssistant({ onOpenSettings }: AISalesAssistantPro
                         : "text-slate-500 hover:text-slate-800 dark:hover:text-slate-300"
                     }`}
                   >
-                    MD Çıktısı (Raw)
+                    {t("MD Output (Raw)")}
                   </button>
                 </div>
               </div>
@@ -1015,7 +1027,7 @@ export default function AISalesAssistant({ onOpenSettings }: AISalesAssistantPro
                 /* Raw Markdown Text tab */
                 <div className="space-y-4">
                   <div className="flex items-center justify-between">
-                    <span className="text-[9px] font-bold text-slate-400 uppercase tracking-widest block font-mono">HAM ANALİZ RAPORU (TAVILY)</span>
+                    <span className="text-[9px] font-bold text-slate-400 uppercase tracking-widest block font-mono">{t("RAW ANALYSIS REPORT (TAVILY)")}</span>
                     <button
                       onClick={() => copyToClipboard(activeAnalysis.rawOutput, "raw")}
                       className="text-slate-400 hover:text-[#0078D4] p-1.5 bg-white dark:bg-[#201f1e] hover:bg-slate-100 dark:hover:bg-[#252423] rounded-lg border border-[#EDEBE9] dark:border-[#323130] text-xs font-semibold flex items-center gap-1.5 transition-all cursor-pointer"
@@ -1023,12 +1035,12 @@ export default function AISalesAssistant({ onOpenSettings }: AISalesAssistantPro
                       {copiedSection === "raw" ? (
                         <>
                           <Check className="w-3.5 h-3.5 text-emerald-500" />
-                          Metin Kopyalandı!
+                          {t("Text Copied!")}
                         </>
                       ) : (
                         <>
                           <Copy className="w-3.5 h-3.5" />
-                          Raporu Kopyala
+                          {t("Copy Report")}
                         </>
                       )}
                     </button>
@@ -1046,7 +1058,7 @@ export default function AISalesAssistant({ onOpenSettings }: AISalesAssistantPro
                     <div className="flex items-center gap-2 mb-3 pb-2 border-b border-slate-100 dark:border-[#323130]">
                       <Building2 className="w-4 h-4 text-[#0078D4]" />
                       <h5 className="text-xs font-bold text-slate-800 dark:text-slate-200 uppercase tracking-wider font-mono">
-                        # Şirket Özeti
+                        # {t("Company Summary")}
                       </h5>
                     </div>
                     <div className="text-xs text-slate-700 dark:text-slate-200 whitespace-pre-line leading-relaxed font-sans">
@@ -1060,24 +1072,25 @@ export default function AISalesAssistant({ onOpenSettings }: AISalesAssistantPro
                       <div className="flex items-center gap-2">
                         <TrendingUp className="w-4 h-4 text-rose-500" />
                         <h5 className="text-xs font-bold text-slate-800 dark:text-slate-200 uppercase tracking-wider font-mono">
-                          # Finansal Veriler
+                          # {t("Financial Data")}
                         </h5>
                       </div>
                       <div className="flex items-center gap-2">
                         <button
                           onClick={() => setIsFinancialExpanded(true)}
                           className="text-[10px] text-slate-500 hover:text-rose-600 dark:hover:text-[#dfdfde] font-bold px-2 py-1 bg-white dark:bg-[#11100f] border border-[#D2D0CE] dark:border-[#323130] rounded cursor-pointer flex items-center gap-1 transition-all"
-                          title="Ekranı Genişlet"
+                          title={t("Expand Screen")}
+                          aria-label={t("Expand Screen")}
                         >
                           <Maximize2 className="w-3 h-3 text-rose-500" />
-                          Genişlet
+                          {t("Expand")}
                         </button>
                         <button
                           onClick={() => copyToClipboard(activeAnalysis.parsed.financialData, "financial")}
                           className="text-[10px] text-slate-500 hover:text-[#0078D4] dark:hover:text-brand-400 font-bold px-2 py-1 bg-white dark:bg-[#11100f] border border-[#D2D0CE] dark:border-[#323130] rounded cursor-pointer flex items-center gap-1 transition-all"
                         >
                           {copiedSection === "financial" ? <Check className="w-3 h-3 text-emerald-500" /> : <Copy className="w-3 h-3" />}
-                          Kopyala
+                          {t("Copy")}
                         </button>
                       </div>
                     </div>
@@ -1092,10 +1105,10 @@ export default function AISalesAssistant({ onOpenSettings }: AISalesAssistantPro
                       <div className="flex items-center gap-2">
                         <Mail className="w-4 h-4 text-rose-500" />
                         <h5 className="text-xs font-bold text-slate-800 dark:text-slate-200 uppercase tracking-wider font-mono">
-                          # E-posta Keşfi
+                          # {t("Email Discovery")}
                         </h5>
                       </div>
-                      <span className="text-[9px] font-bold text-emerald-600 bg-emerald-500/10 px-2 py-0.5 rounded uppercase font-mono">Doğrulanmış Adresler</span>
+                      <span className="text-[9px] font-bold text-emerald-600 bg-emerald-500/10 px-2 py-0.5 rounded uppercase font-mono">{t("Verified Addresses")}</span>
                     </div>
                     <div className="text-xs text-slate-700 dark:text-slate-200 font-mono whitespace-pre-wrap leading-relaxed bg-slate-50 dark:bg-black/30 p-4 rounded-xl border border-dashed border-[#EDEBE9] dark:border-[#323130]">
                       {activeAnalysis.parsed.emailDiscovery}
@@ -1107,7 +1120,7 @@ export default function AISalesAssistant({ onOpenSettings }: AISalesAssistantPro
                     <div className="flex items-center gap-2 mb-3 pb-2 border-b border-indigo-100 dark:border-[#323130]">
                       <Target className="w-4 h-4 text-indigo-500" />
                       <h5 className="text-xs font-bold text-slate-800 dark:text-slate-200 uppercase tracking-wider font-mono">
-                        # Karar Vericiler
+                        # {t("Decision Makers")}
                       </h5>
                     </div>
                     <div className="text-xs text-slate-700 dark:text-slate-200 whitespace-pre-line leading-relaxed font-sans bg-slate-50/50 dark:bg-black/10 p-3 rounded-lg border border-slate-100 dark:border-[#323130]">
@@ -1121,7 +1134,7 @@ export default function AISalesAssistant({ onOpenSettings }: AISalesAssistantPro
                       <div className="flex items-center gap-2">
                         <Send className="w-4 h-4 text-emerald-500" />
                         <h5 className="text-xs font-bold text-slate-800 dark:text-slate-200 uppercase tracking-wider font-mono">
-                          # Fırsat Analizi
+                          # {t("Opportunity Analysis")}
                         </h5>
                       </div>
                       <button
@@ -1131,12 +1144,12 @@ export default function AISalesAssistant({ onOpenSettings }: AISalesAssistantPro
                         {copiedSection === "outreach" ? (
                           <>
                             <Check className="w-3 h-3 text-emerald-500" />
-                            Kopyalandı!
+                            {t("Copied!")}
                           </>
                         ) : (
                           <>
                             <Copy className="w-3 h-3" />
-                            Kopyala
+                            {t("Copy")}
                           </>
                         )}
                       </button>
@@ -1154,24 +1167,25 @@ export default function AISalesAssistant({ onOpenSettings }: AISalesAssistantPro
                       <div className="flex items-center gap-2">
                         <Sparkles className="w-4 h-4 text-indigo-500 animate-pulse" />
                         <h5 className="text-xs font-bold text-slate-800 dark:text-slate-200 uppercase tracking-wider font-mono">
-                          # 📬 B2B E-POSTA SIHİRBAZI & TASLAK OLUŞTURUCU
+                          # 📬 {t("B2B EMAIL WIZARD & DRAFT GENERATOR")}
                         </h5>
                       </div>
                       <div className="flex items-center gap-2">
                         <button
                           onClick={() => setIsEmailWizardExpanded(true)}
                           className="text-[10px] text-slate-500 hover:text-indigo-600 dark:hover:text-[#dfdfde] font-bold px-2 py-1 bg-white dark:bg-[#11100f] border border-[#D2D0CE] dark:border-[#323130] rounded cursor-pointer flex items-center gap-1 transition-all"
-                          title="Ekranı Genişlet"
+                          title={t("Expand Screen")}
+                          aria-label={t("Expand Screen")}
                         >
                           <Maximize2 className="w-3 h-3 text-indigo-500" />
-                          Genişlet
+                          {t("Expand")}
                         </button>
-                        <span className="text-[10px] font-bold text-indigo-600 dark:text-indigo-400 bg-indigo-500/10 px-2 py-0.5 rounded uppercase font-mono">Özelleştirilebilir Taslaklar</span>
+                        <span className="text-[10px] font-bold text-indigo-600 dark:text-indigo-400 bg-indigo-500/10 px-2 py-0.5 rounded uppercase font-mono">{t("Customizable Drafts")}</span>
                       </div>
                     </div>
 
                     <p className="text-[11px] text-slate-500 dark:text-slate-400 mb-4 leading-relaxed font-sans">
-                      Şirket analizine uygun, hedeflenen sürekli iyileştirme konularına ve iletişim tipine özel cold/warm e-posta taslakları üretin.
+                      {t("Generate cold/warm email drafts tailored to the company analysis, targeted continuous-improvement topics, and contact type.")}
                     </p>
 
                     <div className="grid grid-cols-1 md:grid-cols-12 gap-5 mb-4">
@@ -1179,7 +1193,7 @@ export default function AISalesAssistant({ onOpenSettings }: AISalesAssistantPro
                       <div className="md:col-span-5 space-y-4">
                         {/* 1. İletişim Tipi */}
                         <div>
-                          <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block mb-1.5 font-mono">1. İLETİŞİM ALANI</label>
+                          <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block mb-1.5 font-mono">1. {t("CONTACT AREA")}</label>
                           <div className="grid grid-cols-2 gap-2">
                             <button
                               type="button"
@@ -1190,8 +1204,8 @@ export default function AISalesAssistant({ onOpenSettings }: AISalesAssistantPro
                                   : "border-slate-200 dark:border-[#323130] text-slate-500 hover:bg-slate-50 dark:hover:bg-[#252423] text-xs"
                               }`}
                             >
-                              <div className="text-[11px]">Soğuk Temas (Cold)</div>
-                              <div className="text-[8px] opacity-75 mt-0.5">İlk kez tanışma</div>
+                              <div className="text-[11px]">{t("Cold Contact (Cold)")}</div>
+                              <div className="text-[8px] opacity-75 mt-0.5">{t("First introduction")}</div>
                             </button>
                             <button
                               type="button"
@@ -1202,15 +1216,15 @@ export default function AISalesAssistant({ onOpenSettings }: AISalesAssistantPro
                                   : "border-slate-200 dark:border-[#323130] text-slate-500 hover:bg-slate-50 dark:hover:bg-[#252423] text-xs"
                               }`}
                             >
-                              <div className="text-[11px]">Sıcak Temas (Warm)</div>
-                              <div className="text-[8px] opacity-75 mt-0.5">İlgi uyandıran teklif</div>
+                              <div className="text-[11px]">{t("Warm Contact (Warm)")}</div>
+                              <div className="text-[8px] opacity-75 mt-0.5">{t("Interest-generating offer")}</div>
                             </button>
                           </div>
                         </div>
 
                         {/* 2. Odak Konusu */}
                         <div>
-                          <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block mb-1.5 font-mono">2. ODAK KONUSU SEÇİN</label>
+                          <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block mb-1.5 font-mono">2. {t("SELECT FOCUS TOPIC")}</label>
                           <div className="flex flex-wrap gap-1.5 mb-2">
                             {[
                               "OEE (Ekipman Etkinliği) & Çevrim İyileştirme",
@@ -1245,22 +1259,22 @@ export default function AISalesAssistant({ onOpenSettings }: AISalesAssistantPro
 
                         {/* 3. İletişim Tonu */}
                         <div>
-                          <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block mb-1 font-mono">3. İLETİŞİM TONU</label>
+                          <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block mb-1 font-mono">3. {t("CONTACT TONE")}</label>
                           <select
                             value={generatorTone}
                             onChange={(e) => setGeneratorTone(e.target.value)}
                             className="w-full text-xs bg-slate-50 dark:bg-[#11100f] text-slate-900 dark:text-white px-3 py-2 border border-slate-200 dark:border-[#323130] rounded-lg focus:outline-none focus:border-indigo-500 font-bold"
                           >
-                            <option value="Profesyonel & Danışmanlık Yaklaşımı" className="bg-white dark:bg-[#1b1a19] text-slate-950 dark:text-white font-semibold">Profesyonel & Danışmanlık Yaklaşımı</option>
-                            <option value="Kararlı & Doğrudan (Kısa ve Net)" className="bg-white dark:bg-[#1b1a19] text-slate-950 dark:text-white font-semibold">Kararlı & Doğrudan (Kısa ve Net)</option>
-                            <option value="Çözüm Odaklı (Saha Terimleri Ağırlıklı)" className="bg-white dark:bg-[#1b1a19] text-slate-950 dark:text-white font-semibold">Çözüm Odaklı (Saha Terimleri Ağırlıklı)</option>
-                            <option value="Yalın & Mütevazı İş Geliştirici" className="bg-white dark:bg-[#1b1a19] text-slate-950 dark:text-white font-semibold">Yalın & Mütevazı İş Geliştirici</option>
+                            <option value="Profesyonel & Danışmanlık Yaklaşımı" className="bg-white dark:bg-[#1b1a19] text-slate-950 dark:text-white font-semibold">{t("Professional & Consulting Approach")}</option>
+                            <option value="Kararlı & Doğrudan (Kısa ve Net)" className="bg-white dark:bg-[#1b1a19] text-slate-950 dark:text-white font-semibold">{t("Confident & Direct (Short and Clear)")}</option>
+                            <option value="Çözüm Odaklı (Saha Terimleri Ağırlıklı)" className="bg-white dark:bg-[#1b1a19] text-slate-950 dark:text-white font-semibold">{t("Solution-Focused (Field Terminology Heavy)")}</option>
+                            <option value="Yalın & Mütevazı İş Geliştirici" className="bg-white dark:bg-[#1b1a19] text-slate-950 dark:text-white font-semibold">{t("Lean & Modest Business Developer")}</option>
                           </select>
                         </div>
 
                         {/* 4. Ekstra Notlar */}
                         <div>
-                          <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block mb-1 font-mono">4. EKSTRA NOTLAR (İSTEĞE BAĞLI)</label>
+                          <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block mb-1 font-mono">4. {t("EXTRA NOTES (OPTIONAL)")}</label>
                           <textarea
                             value={generatorExtraContext}
                             onChange={(e) => setGeneratorExtraContext(e.target.value)}
@@ -1279,12 +1293,12 @@ export default function AISalesAssistant({ onOpenSettings }: AISalesAssistantPro
                           {generatorLoading ? (
                             <>
                               <Loader2 className="w-4 h-4 animate-spin" />
-                              E-Posta Taslağı Hazırlanıyor...
+                              {t("Preparing Email Draft...")}
                             </>
                           ) : (
                             <>
                               <Send className="w-3.5 h-3.5" />
-                              Yapay Zeka ile E-Posta Şablonu Oluştur
+                              {t("Generate Email Template with AI")}
                             </>
                           )}
                         </button>
@@ -1296,7 +1310,7 @@ export default function AISalesAssistant({ onOpenSettings }: AISalesAssistantPro
                           <div className="flex-1 flex flex-col justify-between h-full space-y-3">
                             <div>
                               <div className="flex items-center justify-between mb-2">
-                                <span className="text-[9px] font-bold text-emerald-600 bg-emerald-500/10 px-2 py-0.5 rounded font-mono uppercase">TASLAK HAZIR</span>
+                                <span className="text-[9px] font-bold text-emerald-600 bg-emerald-500/10 px-2 py-0.5 rounded font-mono uppercase">{t("Draft Ready")}</span>
                                 <button
                                   type="button"
                                   onClick={() => copyToClipboard(generatedEmailResult, "wizard_email")}
@@ -1305,12 +1319,12 @@ export default function AISalesAssistant({ onOpenSettings }: AISalesAssistantPro
                                   {copiedSection === "wizard_email" ? (
                                     <>
                                       <Check className="w-3 h-3 text-emerald-500" />
-                                      Taslak Kopyalandı!
+                                      {t("Draft Copied!")}
                                     </>
                                   ) : (
                                     <>
                                       <Copy className="w-3 h-3" />
-                                      E-Postayı Kopyala
+                                      {t("Copy Email")}
                                     </>
                                   )}
                                 </button>
@@ -1320,15 +1334,15 @@ export default function AISalesAssistant({ onOpenSettings }: AISalesAssistantPro
                               </div>
                             </div>
                             <p className="text-[9px] text-slate-400 dark:text-slate-500 font-sans text-right italic leading-none">
-                              *Bu taslak {activeAnalysis.companyInput.toUpperCase()} hedefleri ve seçtiğiniz focuses esas alınarak dinamik türetilmiştir.
+                              *{t("This draft was dynamically generated based on {company} targets and your selected focuses.").replace("{company}", activeAnalysis.companyInput.toUpperCase())}
                             </p>
                           </div>
                         ) : (
                           <div className="flex-1 flex flex-col items-center justify-center text-center p-6">
                             <Mail className="w-8 h-8 text-indigo-400/40 mb-3" />
-                            <h6 className="text-xs font-bold text-slate-700 dark:text-slate-300">Taslak Henüz Oluşturulmadı</h6>
+                            <h6 className="text-xs font-bold text-slate-700 dark:text-slate-300">{t("Draft Not Yet Generated")}</h6>
                             <p className="text-[10px] text-slate-400 dark:text-slate-500 max-w-xs mt-1">
-                              Sol taraftaki ayarları (iletişim tipi, odak konusu ve ton seçeneği) belirleyerek "E-Posta Şablonu Oluştur" butonuna tıklayın.
+                              {t('Set the options on the left (contact type, focus topic and tone) and click "Generate Email Template".')}
                             </p>
                           </div>
                         )}
@@ -1340,7 +1354,7 @@ export default function AISalesAssistant({ onOpenSettings }: AISalesAssistantPro
                   {activeAnalysis.sources.length > 0 && (
                     <div className="p-4 bg-slate-100/50 dark:bg-black/10 rounded-xl border border-[#EDEBE9] dark:border-[#323130]">
                       <span className="text-[9px] font-bold text-slate-400 uppercase tracking-wider block mb-3 font-mono">
-                        Kaynaklar (Tavily Search API)
+                        {t("Sources (Tavily Search API)")}
                       </span>
                       <div className="space-y-2">
                         {activeAnalysis.sources.map((src, index) => (
@@ -1374,15 +1388,15 @@ export default function AISalesAssistant({ onOpenSettings }: AISalesAssistantPro
 
         {/* MODAL OVERLAYS FOR SCREEN EXPANSION */}
         {isFinancialExpanded && activeAnalysis && (
-          <div className="fixed inset-0 bg-slate-900/60 dark:bg-black/85 backdrop-blur-md flex items-center justify-center z-50 p-4 md:p-8">
+          <div role="dialog" aria-modal="true" className="fixed inset-0 bg-slate-900/60 dark:bg-black/85 backdrop-blur-md flex items-center justify-center z-50 p-4 md:p-8">
             <div className="bg-white dark:bg-[#1a1a1a] w-full max-w-5xl max-h-[92vh] rounded-2xl border border-rose-500/20 dark:border-rose-500/10 shadow-2xl flex flex-col overflow-hidden animate-in fade-in zoom-in-95 duration-200">
-              
+
               {/* Header */}
               <div className="flex items-center justify-between p-5 border-b border-rose-100 dark:border-[#323130] bg-slate-50/50 dark:bg-black/25">
                 <div className="flex items-center gap-2">
                   <TrendingUp className="w-5 h-5 text-rose-500" />
                   <h5 className="text-sm font-bold text-slate-800 dark:text-slate-200 uppercase tracking-wider font-mono">
-                    # Finansal Veriler (Genişletilmiş Rapor)
+                    # {t("Financial Data (Expanded Report)")}
                   </h5>
                 </div>
                 <div className="flex items-center gap-2">
@@ -1391,14 +1405,15 @@ export default function AISalesAssistant({ onOpenSettings }: AISalesAssistantPro
                     className="text-xs text-slate-600 dark:text-slate-300 hover:text-[#0078D4] dark:hover:text-brand-400 font-bold px-3 py-1.5 bg-white dark:bg-[#11100f] border border-[#D2D0CE] dark:border-[#323130] rounded-lg cursor-pointer flex items-center gap-1.5 transition-all"
                   >
                     {copiedSection === "financial" ? <Check className="w-3.5 h-3.5 text-emerald-500" /> : <Copy className="w-0.5 h-3.5" />}
-                    Raporu Kopyala
+                    {t("Copy Report")}
                   </button>
                   <button
                     onClick={() => setIsFinancialExpanded(false)}
                     className="p-1 px-3 bg-rose-50 hover:bg-rose-100 dark:bg-[#321111] dark:hover:bg-[#4a1c1c] border border-rose-200 dark:border-rose-950/40 rounded-lg text-xs font-bold font-mono text-rose-700 dark:text-rose-300 transition-all cursor-pointer flex items-center gap-1"
+                    aria-label={t("Close")}
                   >
                     <Minimize2 className="w-3.5 h-3.5" />
-                    Kapat
+                    {t("Close")}
                   </button>
                 </div>
               </div>
@@ -1417,40 +1432,41 @@ export default function AISalesAssistant({ onOpenSettings }: AISalesAssistantPro
 
         {/* B2B EMAIL WIZARD SCREEN EXPANSION MODAL OVERLAY */}
         {isEmailWizardExpanded && activeAnalysis && (
-          <div className="fixed inset-0 bg-slate-900/60 dark:bg-black/85 backdrop-blur-md flex items-center justify-center z-50 p-4 md:p-8">
+          <div role="dialog" aria-modal="true" className="fixed inset-0 bg-slate-900/60 dark:bg-black/85 backdrop-blur-md flex items-center justify-center z-50 p-4 md:p-8">
             <div className="bg-white dark:bg-[#1a1a1a] w-full max-w-6xl max-h-[92vh] rounded-2xl border border-indigo-500/20 dark:border-indigo-500/10 shadow-2xl flex flex-col overflow-hidden animate-in fade-in zoom-in-95 duration-200">
-              
+
               {/* Header */}
               <div className="flex items-center justify-between p-5 border-b border-indigo-100 dark:border-[#323130] bg-slate-50/50 dark:bg-black/25">
                 <div className="flex items-center gap-2">
                   <Sparkles className="w-5 h-5 text-indigo-500 animate-pulse" />
                   <h5 className="text-sm font-bold text-slate-800 dark:text-slate-200 uppercase tracking-wider font-mono">
-                    # 📬 B2B E-POSTA SIHİRBAZI & TASLAK OLUŞTURUCU (Genişletilmiş Güçlü Editör)
+                    # 📬 {t("B2B EMAIL WIZARD & DRAFT GENERATOR (Expanded Powerful Editor)")}
                   </h5>
                 </div>
                 <button
                   onClick={() => setIsEmailWizardExpanded(false)}
                   className="p-1 px-3 bg-indigo-50 hover:bg-indigo-100 dark:bg-[#1b1c32] dark:hover:bg-[#20224a] border border-indigo-100 dark:border-indigo-950/40 rounded-lg text-xs font-bold font-mono text-indigo-700 dark:text-indigo-300 transition-all cursor-pointer flex items-center gap-1"
+                  aria-label={t("Close")}
                 >
                   <Minimize2 className="w-3.5 h-3.5" />
-                  Kapat
+                  {t("Close")}
                 </button>
               </div>
 
               {/* Body */}
               <div className="p-6 md:p-8 overflow-y-auto flex-1 bg-white dark:bg-[#1a1a1a] space-y-6">
                 <p className="text-xs text-slate-500 dark:text-slate-400 leading-relaxed font-sans max-w-3xl">
-                  Şirket analizine uygun, hedeflenen sürekli iyileştirme konularına ve iletişim tipine özel cold/warm e-posta taslakları üretin. OpEx metodolojisindeki zayıflıkları avantaja dönüştürecek stratejik şablon editörü.
+                  {t("Generate cold/warm email drafts tailored to the company analysis, targeted continuous-improvement topics, and contact type. A strategic template editor that turns weaknesses in the OpEx methodology into an advantage.")}
                 </p>
 
                 <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-stretch">
-                  
+
                   {/* Left Column Config */}
                   <div className="lg:col-span-5 space-y-5 bg-slate-50/50 dark:bg-black/15 p-5 rounded-xl border border-slate-100 dark:border-slate-800/45">
-                    
+
                     {/* 1. İletişim Tipi */}
                     <div>
-                      <label className="text-[10px] font-bold text-slate-450 dark:text-slate-500 uppercase tracking-wider block mb-2 font-mono">1. İLETİŞİM ALANI</label>
+                      <label className="text-[10px] font-bold text-slate-450 dark:text-slate-500 uppercase tracking-wider block mb-2 font-mono">1. {t("CONTACT AREA")}</label>
                       <div className="grid grid-cols-2 gap-3">
                         <button
                           type="button"
@@ -1461,8 +1477,8 @@ export default function AISalesAssistant({ onOpenSettings }: AISalesAssistantPro
                               : "border-slate-200 dark:border-[#323130] text-slate-500 hover:bg-slate-100 dark:hover:bg-[#252423] text-xs"
                           }`}
                         >
-                          <div className="text-[12px]">Soğuk Temas (Cold)</div>
-                          <div className="text-[9px] opacity-75 mt-0.5">İlk kez tanışma</div>
+                          <div className="text-[12px]">{t("Cold Contact (Cold)")}</div>
+                          <div className="text-[9px] opacity-75 mt-0.5">{t("First introduction")}</div>
                         </button>
                         <button
                           type="button"
@@ -1473,15 +1489,15 @@ export default function AISalesAssistant({ onOpenSettings }: AISalesAssistantPro
                               : "border-slate-200 dark:border-[#323130] text-slate-500 hover:bg-slate-100 dark:hover:bg-[#252423] text-xs"
                           }`}
                         >
-                          <div className="text-[12px]">Sıcak Temas (Warm)</div>
-                          <div className="text-[9px] opacity-75 mt-0.5">İlgi uyandıran teklif</div>
+                          <div className="text-[12px]">{t("Warm Contact (Warm)")}</div>
+                          <div className="text-[9px] opacity-75 mt-0.5">{t("Interest-generating offer")}</div>
                         </button>
                       </div>
                     </div>
 
                     {/* 2. Odak Konusu */}
                     <div>
-                      <label className="text-[10px] font-bold text-slate-450 dark:text-slate-500 uppercase tracking-wider block mb-2 font-mono">2. ODAK KONUSU SEÇİN</label>
+                      <label className="text-[10px] font-bold text-slate-450 dark:text-slate-500 uppercase tracking-wider block mb-2 font-mono">2. {t("SELECT FOCUS TOPIC")}</label>
                       <div className="flex flex-wrap gap-2 mb-3">
                         {[
                           "OEE (Ekipman Etkinliği) & Çevrim İyileştirme",
@@ -1516,22 +1532,22 @@ export default function AISalesAssistant({ onOpenSettings }: AISalesAssistantPro
 
                     {/* 3. İletişim Tonu */}
                     <div>
-                      <label className="text-[10px] font-bold text-slate-450 dark:text-slate-500 uppercase tracking-wider block mb-2 font-mono">3. İLETİŞİM TONU</label>
+                      <label className="text-[10px] font-bold text-slate-450 dark:text-slate-500 uppercase tracking-wider block mb-2 font-mono">3. {t("CONTACT TONE")}</label>
                       <select
                         value={generatorTone}
                         onChange={(e) => setGeneratorTone(e.target.value)}
                         className="w-full text-xs bg-white dark:bg-[#11100f] text-slate-900 dark:text-white px-3 py-2.5 border border-slate-200 dark:border-[#323130] rounded-lg focus:outline-none focus:border-indigo-500 font-bold"
                       >
-                        <option value="Profesyonel & Danışmanlık Yaklaşımı" className="bg-white dark:bg-[#1b1a19] text-slate-950 dark:text-white font-semibold">Profesyonel & Danışmanlık Yaklaşımı</option>
-                        <option value="Kararlı & Doğrudan (Kısa ve Net)" className="bg-white dark:bg-[#1b1a19] text-slate-950 dark:text-white font-semibold">Kararlı & Doğrudan (Kısa ve Net)</option>
-                        <option value="Çözüm Odaklı (Saha Terimleri Ağırlıklı)" className="bg-white dark:bg-[#1b1a19] text-slate-950 dark:text-white font-semibold">Çözüm Odaklı (Saha Terimleri Ağırlıklı)</option>
-                        <option value="Yalın & Mütevazı İş Geliştirici" className="bg-white dark:bg-[#1b1a19] text-slate-950 dark:text-white font-semibold">Yalın & Mütevazı İş Geliştirici</option>
+                        <option value="Profesyonel & Danışmanlık Yaklaşımı" className="bg-white dark:bg-[#1b1a19] text-slate-950 dark:text-white font-semibold">{t("Professional & Consulting Approach")}</option>
+                        <option value="Kararlı & Doğrudan (Kısa ve Net)" className="bg-white dark:bg-[#1b1a19] text-slate-950 dark:text-white font-semibold">{t("Confident & Direct (Short and Clear)")}</option>
+                        <option value="Çözüm Odaklı (Saha Terimleri Ağırlıklı)" className="bg-white dark:bg-[#1b1a19] text-slate-950 dark:text-white font-semibold">{t("Solution-Focused (Field Terminology Heavy)")}</option>
+                        <option value="Yalın & Mütevazı İş Geliştirici" className="bg-white dark:bg-[#1b1a19] text-slate-950 dark:text-white font-semibold">{t("Lean & Modest Business Developer")}</option>
                       </select>
                     </div>
 
                     {/* 4. Ekstra Notlar */}
                     <div>
-                      <label className="text-[10px] font-bold text-slate-450 dark:text-slate-500 uppercase tracking-wider block mb-2 font-mono">4. EKSTRA NOTLAR (İSTEĞE BAĞLI)</label>
+                      <label className="text-[10px] font-bold text-slate-450 dark:text-slate-500 uppercase tracking-wider block mb-2 font-mono">4. {t("EXTRA NOTES (OPTIONAL)")}</label>
                       <textarea
                         value={generatorExtraContext}
                         onChange={(e) => setGeneratorExtraContext(e.target.value)}
@@ -1550,12 +1566,12 @@ export default function AISalesAssistant({ onOpenSettings }: AISalesAssistantPro
                       {generatorLoading ? (
                         <>
                           <Loader2 className="w-4 h-4 animate-spin" />
-                          Geniş Ayrıntılı Şablon Taslağı Hazırlanıyor...
+                          {t("Preparing Detailed Template Draft...")}
                         </>
                       ) : (
                         <>
                           <Send className="w-4 h-4" />
-                          Yapay Zeka ile E-Posta Şablonu Oluştur
+                          {t("Generate Email Template with AI")}
                         </>
                       )}
                     </button>
@@ -1567,7 +1583,7 @@ export default function AISalesAssistant({ onOpenSettings }: AISalesAssistantPro
                       <div className="flex-1 flex flex-col justify-between h-full space-y-4">
                         <div>
                           <div className="flex items-center justify-between mb-4">
-                            <span className="text-[10px] font-bold text-emerald-600 bg-emerald-500/10 px-3 py-1 rounded font-mono uppercase">E-POSTA TASLAĞI HAZIR</span>
+                            <span className="text-[10px] font-bold text-emerald-600 bg-emerald-500/10 px-3 py-1 rounded font-mono uppercase">{t("Email Draft Ready")}</span>
                             <button
                               type="button"
                               onClick={() => copyToClipboard(generatedEmailResult, "wizard_email")}
@@ -1576,12 +1592,12 @@ export default function AISalesAssistant({ onOpenSettings }: AISalesAssistantPro
                               {copiedSection === "wizard_email" ? (
                                 <>
                                   <Check className="w-4 h-4 text-emerald-500" />
-                                  Kopyalandı!
+                                  {t("Copied!")}
                                 </>
                               ) : (
                                 <>
                                   <Copy className="w-4 h-4" />
-                                  Şablonu Kopyala
+                                  {t("Copy Template")}
                                 </>
                               )}
                             </button>
@@ -1591,15 +1607,15 @@ export default function AISalesAssistant({ onOpenSettings }: AISalesAssistantPro
                           </div>
                         </div>
                         <p className="text-[10px] text-slate-400 dark:text-slate-500 font-sans text-right italic leading-none block">
-                          *Bu şablon {activeAnalysis.companyInput.toUpperCase()} hedefleri ve seçtiğiniz focuses esas alınarak dinamik türetilmiştir.
+                          *{t("This template was dynamically generated based on {company} targets and your selected focuses.").replace("{company}", activeAnalysis.companyInput.toUpperCase())}
                         </p>
                       </div>
                     ) : (
                       <div className="flex-1 flex flex-col items-center justify-center text-center p-8">
                         <Mail className="w-16 h-16 text-indigo-400/40 mb-4 animate-bounce" />
-                        <h6 className="text-sm font-bold text-slate-700 dark:text-slate-300">Taslak Henüz Oluşturulmadı</h6>
+                        <h6 className="text-sm font-bold text-slate-700 dark:text-slate-300">{t("Draft Not Yet Generated")}</h6>
                         <p className="text-xs text-slate-400 dark:text-slate-500 max-w-sm mt-2 leading-relaxed">
-                          Sol taraftaki ayarları (iletişim tipi, odak konusu ve ton seçeneği) belirleyerek "E-Posta Şablonu Oluştur" butonuna tıklayın.
+                          {t('Set the options on the left (contact type, focus topic and tone) and click "Generate Email Template".')}
                         </p>
                       </div>
                     )}
@@ -1613,6 +1629,8 @@ export default function AISalesAssistant({ onOpenSettings }: AISalesAssistantPro
         )}
 
       </div>
+
+      <ConfirmModal {...confirmProps} />
 
     </div>
   );

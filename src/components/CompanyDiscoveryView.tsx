@@ -11,46 +11,13 @@ import {
   Plus,
   Check,
   Sparkles,
-  Layers,
-  ChevronRight,
-  TrendingUp,
-  Users,
-  Download,
-  FileSpreadsheet,
-  FileText,
-  Printer,
-  ChevronDown,
-  Trash2,
-  Calendar,
-  DollarSign,
   AlertCircle,
   Clock,
-  Briefcase,
   Sliders,
   Send,
-  Workflow,
-  HelpCircle,
-  Eye,
   UserCheck,
   RefreshCw
 } from "lucide-react";
-import * as XLSX from "xlsx";
-import { jsPDF } from "jspdf";
-import {
-  BarChart,
-  Bar,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Tooltip,
-  ResponsiveContainer,
-  PieChart,
-  Pie,
-  Cell,
-  Legend,
-  AreaChart,
-  Area
-} from "recharts";
 
 import { Company } from "./CompaniesView";
 import { TargetAccount, Recipient } from "../types";
@@ -99,28 +66,7 @@ export default function CompanyDiscoveryView() {
   // "pipeline" (Kanban Stage Management)
   // "dashboard" (Power BI Analytics Dashboard)
   // "campaign-builder" (Bulk outreach planner & Call sheet)
-  const [currentTab, setCurrentTab] = useState<"search" | "pipeline" | "dashboard" | "campaign-builder">("search");
-
-  // Custom stylish delete confirmation state
-  const [confirmDeleteModal, setConfirmDeleteModal] = useState<{
-    isOpen: boolean;
-    onConfirm: () => void;
-    title?: string;
-    message?: string;
-  }>({ isOpen: false, onConfirm: () => {} });
-
-  // --- SEARCH ENGINE STATES ---
-  const [searchName, setSearchName] = useState("");
-  const [searchIndustry, setSearchIndustry] = useState("");
-  const [searchCity, setSearchCity] = useState("");
-  const [searchRegion, setSearchRegion] = useState("");
-  const [searchKeywords, setSearchKeywords] = useState("");
-
-  // Grid/List result mode
-  const [resultsLayout, setResultsLayout] = useState<"grid" | "table">("grid");
-
-  // Selection state
-  const [selectedResultIds, setSelectedResultIds] = useState<string[]>([]);
+  const [currentTab, setCurrentTab] = useState<"search" | "campaign-builder">("search");
 
   // Detailed Modal/Drawer Side Panel
   const [detailCompany, setDetailCompany] = useState<any | null>(null);
@@ -147,12 +93,7 @@ export default function CompanyDiscoveryView() {
   // Toast Alerts State
   const [toast, setToast] = useState<{ msg: string; type: "success" | "danger" | "info" } | null>(null);
 
-  // Assign Salesperson variables
-  const [showAssignDialog, setShowAssignDialog] = useState(false);
-  const [selectedSalesperson, setSelectedSalesperson] = useState("Atakan Zehir");
-
   // Campaign creation variables
-  const [showCampaignDialog, setShowCampaignDialog] = useState(false);
   const [newCampaignTitle, setNewCampaignTitle] = useState("OpEx Giriş Kampanyası -" + new Date().toLocaleDateString("tr-TR"));
 
   // Call list variables
@@ -237,128 +178,6 @@ export default function CompanyDiscoveryView() {
       classification: `${c.industry} - Endüstri 4.4 Olgunluğu Mapped`
     };
   };
-
-  // --- SEARCH ENGINE INTERACTIVE CHIPS & KEYWORDS ---
-  const handleChipClick = (term: string, type: "zone" | "industry" | "city") => {
-    // Reset other fields to draw clear matching results
-    setSearchName("");
-    setSearchIndustry("");
-    setSearchCity("");
-    setSearchRegion("");
-    setSearchKeywords("");
-
-    if (type === "zone") {
-      setSearchKeywords(term);
-    } else if (type === "industry") {
-      setSearchIndustry(term);
-    } else if (type === "city") {
-      setSearchCity(term);
-    }
-    showToast(`Filtre uygulandı: "${term}"`, "info");
-  };
-
-  // --- QUERY FILTER LOGIC ---
-  const filteredResults = useMemo(() => {
-    return discoveryDb.filter(c => {
-      const matchName = !searchName || c.name.toLowerCase().includes(searchName.toLowerCase());
-      const matchInd = !searchIndustry || c.industry.toLowerCase().includes(searchIndustry.toLowerCase());
-      const matchCity = !searchCity || c.city.toLowerCase().includes(searchCity.toLowerCase());
-      const matchReg = !searchRegion || c.region.toLowerCase().includes(searchRegion.toLowerCase());
-      
-      const kw = searchKeywords.toLowerCase();
-      const matchKw = !searchKeywords || 
-        c.zone?.toLowerCase().includes(kw) ||
-        c.description?.toLowerCase().includes(kw) ||
-        c.notes?.toLowerCase().includes(kw) ||
-        c.name?.toLowerCase().includes(kw) ||
-        c.industry?.toLowerCase().includes(kw);
-
-      return matchName && matchInd && matchCity && matchReg && matchKw;
-    });
-  }, [discoveryDb, searchName, searchIndustry, searchCity, searchRegion, searchKeywords]);
-
-  // --- TARGET ACCOUNTS STATUS STAGES DEFINITION ---
-  const PIPELINE_STAGES = [
-    "Research",
-    "Contact Planned",
-    "Contacted",
-    "Meeting Scheduled",
-    "Opportunity Created",
-    "Proposal Sent",
-    "Won",
-    "Lost"
-  ];
-
-  // Target Accounts by pipeline stage grouping
-  const accountsByStage = useMemo(() => {
-    const accs = targetAccounts;
-    const map: { [stage: string]: TargetAccount[] } = {};
-    PIPELINE_STAGES.forEach(st => {
-      map[st] = [];
-    });
-
-    accs.forEach(a => {
-      // Mapping leadStatus or default to Research
-      const stage = a.leadStatus || "Research";
-      if (map[stage]) {
-        map[stage].push(a);
-      } else {
-        // Fallback fallback mappings
-        if (PIPELINE_STAGES.includes(stage)) {
-          map[stage] = map[stage] || [];
-          map[stage].push(a);
-        } else {
-          map["Research"].push(a);
-        }
-      }
-    });
-
-    return map;
-  }, [targetAccounts]);
-
-  // --- CONVERSION & PIPELINE METRICS ---
-  const pipelineMetrics = useMemo(() => {
-    const accs = targetAccounts;
-    const total = accs.length;
-    const highPotential = accs.filter(a => (a.riskScore || 50) > 80).length;
-    
-    // Conversion funnel calculations: counts / percentage
-    // Opportunity created + proposal sent + won are considered opportunity conversions
-    const convertedCount = accs.filter(a => 
-      ["Opportunity Created", "Proposal Sent", "Won"].includes(a.leadStatus || "")
-    ).length;
-
-    const wonCount = accs.filter(a => a.leadStatus === "Won").length;
-    const lostCount = accs.filter(a => a.leadStatus === "Lost").length;
-
-    // Industries distribution
-    const industriesMap: { [ind: string]: number } = {};
-    accs.forEach(a => {
-      const ind = a.industryTag || "Other";
-      industriesMap[ind] = (industriesMap[ind] || 0) + 1;
-    });
-    const industriesData = Object.entries(industriesMap).map(([name, value]) => ({ name, value }));
-
-    // Region distribution
-    const regionsMap: { [reg: string]: number } = {};
-    accs.forEach(a => {
-      const reg = a.locationMain?.split("/")[0]?.trim() || "Diğer Bilinmeyen";
-      regionsMap[reg] = (regionsMap[reg] || 0) + 1;
-    });
-    const regionsData = Object.entries(regionsMap).map(([name, value]) => ({ name, value }));
-
-    return {
-      total,
-      highPotential,
-      conversionPct: total > 0 ? (convertedCount / total) * 100 : 0,
-      wonPct: total > 0 ? (wonCount / total) * 100 : 0,
-      convertedCount,
-      wonCount,
-      lostCount,
-      industriesData,
-      regionsData
-    };
-  }, [targetAccounts]);
 
   // --- ACTIONS: SINGLE CLICK ADDERS ---
   const handleAddToTargetAccounts = (item: any, initialStage: string = "Research") => {
@@ -669,96 +488,35 @@ You must output a raw valid JSON ARRAY strictly matching this structure without 
     }
   };
 
-  // --- ACTIONS: BULK ACTIONS IMPLEMENTATION ---
-  const handleToggleSelectResult = (id: string) => {
-    setSelectedResultIds(prev =>
-      prev.includes(id) ? prev.filter(item => item !== id) : [...prev, id]
-    );
-  };
-
-  const handleSelectAllOnPage = () => {
-    const ids = filteredResults.map(r => r.id);
-    const allSelected = ids.every(id => selectedResultIds.includes(id));
-    if (allSelected) {
-      setSelectedResultIds(prev => prev.filter(id => !ids.includes(id)));
-    } else {
-      setSelectedResultIds(prev => Array.from(new Set([...prev, ...ids])));
-    }
-  };
-
-  const handleBulkAddToTargetAccounts = () => {
-    if (selectedResultIds.length === 0) {
-      showToast("Lütfen önce listeden en az bir şirket seçin!", "danger");
-      return;
-    }
-
-    let count = 0;
-    selectedResultIds.forEach(id => {
-      const match = discoveryDb.find(d => d.id === id);
-      if (match) {
-        // Add if not already target
-        const isAlready = targetAccounts.some(ta => ta.companyName.toLowerCase() === match.name.toLowerCase());
-        if (!isAlready) {
-          handleAddToTargetAccounts(match, "Research");
-          count++;
-        }
-      }
-    });
-
-    setSelectedResultIds([]);
-    showToast(`Seçilen ${count} yeni hesap Target Accounts listesine eklendi!`, "success");
-  };
-
-  const handleBulkAssignSalesperson = (person: string) => {
-    // Modify customField1 (assigned salesperson) for target accounts matching the selected list
-    if (selectedResultIds.length === 0) {
-      showToast("Lütfen atanacak şirketleri listeden seçin!", "danger");
-      return;
-    }
-
-    const selectedCompanyNames = discoveryDb
-      .filter(d => selectedResultIds.includes(d.id))
-      .map(d => d.name.toLowerCase());
-
-    setTargetAccounts(prev => 
-      prev.map(ta => 
-        selectedCompanyNames.includes(ta.companyName.toLowerCase())
-          ? { ...ta, customField1: person }
-          : ta
-      )
-    );
-
-    setSelectedResultIds([]);
-    setShowAssignDialog(false);
-    showToast(`Seçilen şirketlerin satış sorumlusu "${person}" olarak güncellendi!`, "success");
-  };
-
+  // --- ACTIONS: OUTREACH CAMPAIGN BUILDER ---
+  // NOTE: previously gated on a "selectedResultIds" multi-select list that had no
+  // reachable UI control to populate it (dead selection state removed alongside the
+  // old filter-based search/pipeline/dashboard tabs) -- this made the "Kampanya Draftı
+  // Oluştur" button in the Campaign Builder tab always fail with "select companies
+  // first". Fixed to build the campaign from the real, visible list: targetAccounts.
   const handleBulkCreateCampaign = () => {
-    // Generate draft email campaigns grouped by selected companies
-    if (selectedResultIds.length === 0) {
-      showToast("Kampanya oluşturulacak şirketleri seçin!", "danger");
+    if (targetAccounts.length === 0) {
+      showToast(t("Add at least one company to Target Accounts first."), "danger");
       return;
     }
-
-    const selectedCompanies = discoveryDb.filter(d => selectedResultIds.includes(d.id));
 
     // Save as draft campaign in the shared organization CRM store (must match
     // the "crm_email_campaigns" key used by CampaignManagerView.tsx and SendingProgressView.tsx)
     const campaignsList: any[] = CrmDb.getKv<any[]>("crm_email_campaigns", []);
 
     const newCampaignId = "camp-disc-" + Date.now();
-    const newCampaignRecipients: Recipient[] = selectedCompanies.map((c, idx) => ({
+    const newCampaignRecipients: Recipient[] = targetAccounts.map((ta, idx) => ({
       id: `rec-disc-${idx}-${Date.now()}`,
-      FirstName: "Satın Alma / Üretim",
-      LastName: "Direktörü",
-      Company: c.name,
-      Email: `islem@${c.website}`,
-      Department: "Operasyon liderliği",
-      Address: c.address,
-      Industry: c.industry,
+      FirstName: ta.contactName || "Satın Alma / Üretim",
+      LastName: ta.contactSurname || "Direktörü",
+      Company: ta.companyName,
+      Email: ta.contactEmail || `info@${ta.websiteUrl}`,
+      Department: ta.department || "Operasyon liderliği",
+      Address: ta.locationMain,
+      Industry: ta.industryTag,
       ScheduledDate: new Date(Date.now() + 86400000).toISOString().split("T")[0],
       CustomField1: "Yalın Danışmanlık Projesi",
-      CustomField2: computeCompanyProfile(c).recommendedServices.slice(0, 3).join(", "),
+      CustomField2: "",
       CustomField3: "Company Discovery Tool",
       status: "idle",
       openCount: 0
@@ -768,7 +526,7 @@ You must output a raw valid JSON ARRAY strictly matching this structure without 
       id: newCampaignId,
       date: new Date().toISOString().split("T")[0],
       subject: `Endüstriyel Verimlilik & OPEX İşbirliği - ${newCampaignTitle}`,
-      templateBody: `Sayın Yetkili ${selectedCompanies.map(c=>c.name).join(", ")} Grubu,\n\nFabrikanızın operasyonel analizini gerçekleştirdik. Sektörünüzdeki en verimsiz hatları gidermek adına size özel hazırladığımız metodolojik teklifimizi sunmak isteriz.\n\nSaygılarımızla,`,
+      templateBody: `Sayın Yetkili ${targetAccounts.map(ta => ta.companyName).join(", ")} Grubu,\n\nFabrikanızın operasyonel analizini gerçekleştirdik. Sektörünüzdeki en verimsiz hatları gidermek adına size özel hazırladığımız metodolojik teklifimizi sunmak isteriz.\n\nSaygılarımızla,`,
       recipients: newCampaignRecipients,
       attachments: [],
       status: "draft",
@@ -781,168 +539,9 @@ You must output a raw valid JSON ARRAY strictly matching this structure without 
     campaignsList.push(campaignRecord);
     CrmDb.setKv("crm_email_campaigns", campaignsList);
 
-    setSelectedResultIds([]);
-    setShowCampaignDialog(false);
     showToast(`"${newCampaignTitle}" başarılı şekilde oluşturuldu! ${newCampaignRecipients.length} Alıcı eklendi.`, "success");
   };
 
-  // --- ACTIONS: PIPELINE KANBAN STAGE MODERATORS ---
-  const handleUpdateTargetStage = (id: string, newStage: string) => {
-    setTargetAccounts(prev =>
-      prev.map(ta => ta.id === id ? { ...ta, leadStatus: newStage } : ta)
-    );
-    showToast(`Hesap aşaması "${newStage}" olarak güncellendi!`, "info");
-  };
-
-  const handleDeleteTargetAccount = (id: string) => {
-    setConfirmDeleteModal({
-      isOpen: true,
-      title: "Hedef Hesap Silinecek",
-      message: "Geri dönüşüm kutusuna taşınsın mı?",
-      onConfirm: () => {
-        setTargetAccounts(prev => prev.filter(ta => ta.id !== id));
-        showToast("Hedef hesap silindi.", "danger");
-      }
-    });
-  };
-
-  // --- ACTIONS: EXPORT SUITE (EXCEL, CSV, PDF) ---
-  const handleExportResultXl = () => {
-    const listToExport = selectedResultIds.length > 0 
-      ? discoveryDb.filter(d => selectedResultIds.includes(d.id))
-      : filteredResults;
-
-    if (listToExport.length === 0) {
-      showToast("Dışa aktarılacak veri bulunamadı!", "danger");
-      return;
-    }
-
-    const wsData = listToExport.map(item => {
-      const cp = computeCompanyProfile(item);
-      return {
-        "Şirket Adı": item.name,
-        "Web Sitesi": item.website,
-        "Sektör": item.industry,
-        "Hizmet Bölgesi/OSB": item.zone || "",
-        "Şehir": item.city,
-        "Telefon": item.phone,
-        "LinkedIn": item.linkedin,
-        "Çalışan Sayısı": item.size,
-        "Yaklaşık Ciro": item.revenue,
-        "Üretim Metodolojisi": item.productionType,
-        "Dijital Altyapı": item.digitalInfrastructure,
-        "Hedef Opex Skoru (%)": cp.score,
-        "Önerilen Danışmanlık": cp.recommendedServices.join(", "),
-        "Yalın Strateji": cp.outreachStrategy
-      };
-    });
-
-    const wb = XLSX.utils.book_new();
-    const ws = XLSX.utils.json_to_sheet(wsData);
-    XLSX.utils.book_append_sheet(wb, ws, "Company Search Results");
-    XLSX.writeFile(wb, `Company_Discovery_Report_${Date.now()}.xlsx`);
-    showToast(`${listToExport.length} şirket Excel formatıyla indirildi.`, "success");
-  };
-
-  const handleExportResultCsv = () => {
-    const listToExport = selectedResultIds.length > 0 
-      ? discoveryDb.filter(d => selectedResultIds.includes(d.id))
-      : filteredResults;
-
-    if (listToExport.length === 0) {
-      showToast("Dışa aktarılacak veri bulunamadı!", "danger");
-      return;
-    }
-
-    let csvContent = "\uFEFF"; // BOM for Turkish character set
-    csvContent += "Company Name,Website,Industry,OSB,City,Phone,Employee Size,Target Score,Services\n";
-
-    listToExport.forEach(item => {
-      const cp = computeCompanyProfile(item);
-      csvContent += `"${item.name.replace(/"/g, '""')}","${item.website}","${item.industry}","${(item.zone || "").replace(/"/g, '""')}","${item.city}","${item.phone}","${item.size}",${cp.score}%,"${cp.recommendedServices.join(";")}"\n`;
-    });
-
-    const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement("a");
-    link.href = url;
-    link.download = `Company_Discovery_CSV_${Date.now()}.csv`;
-    link.click();
-    showToast("CSV raporu indirildi.", "success");
-  };
-
-  const handleExportResultPdf = () => {
-    const listToExport = selectedResultIds.length > 0 
-      ? discoveryDb.filter(d => selectedResultIds.includes(d.id))
-      : filteredResults;
-
-    if (listToExport.length === 0) {
-      showToast("Dışa aktarılacak veri bulunamadı!", "danger");
-      return;
-    }
-
-    try {
-      const doc = new jsPDF();
-      doc.setFont("Helvetica");
-      
-      // Professional Power BI Theme Header
-      doc.setFillColor(15, 23, 42); // slate 900
-      doc.rect(0, 0, 210, 40, "F");
-      
-      doc.setTextColor(255, 255, 255);
-      doc.setFontSize(20);
-      doc.text("GEOPEX - COMPANY DISCOVERY REPORT", 14, 18);
-      
-      doc.setFontSize(10);
-      doc.text(`Tarih: ${new Date().toLocaleDateString("tr-TR")} | Listelenen Satis Portföyü`, 14, 30);
-      
-      // Grid table rows
-      let yPos = 50;
-      doc.setTextColor(50, 50, 50);
-      
-      listToExport.forEach((item, idx) => {
-        if (yPos > 260) {
-          doc.addPage();
-          yPos = 20;
-        }
-        
-        const cp = computeCompanyProfile(item);
-        
-        // Light grey container box
-        doc.setFillColor(248, 250, 252);
-        doc.rect(14, yPos, 182, 38, "F");
-        
-        doc.setFontSize(11);
-        doc.setTextColor(0, 120, 212); // Blue primary
-        doc.text(`${idx + 1}. ${item.name}`, 18, yPos + 6);
-        
-        // Metadata text
-        doc.setFontSize(8);
-        doc.setTextColor(115, 115, 115);
-        doc.text(`Website: ${item.website}   |   Industry: ${item.industry}   |   Region: ${item.zone || item.city}`, 18, yPos + 12);
-        
-        doc.setTextColor(50, 50, 50);
-        doc.text(`OpEx Target Score: %${cp.score}  |  Çalışan Sayısı: ${item.size}`, 18, yPos + 18);
-        
-        // Service recommendations
-        doc.setTextColor(22, 101, 52); // emerald 800
-        doc.text(`Önerilen Hizmetler: ${cp.recommendedServices.join(", ")}`, 18, yPos + 24);
-        
-        // Description wrap
-        doc.setTextColor(75, 85, 99);
-        const splitDesc = doc.splitTextToSize(item.description || "", 170);
-        doc.text(splitDesc, 18, yPos + 30);
-        
-        yPos += 44;
-      });
-      
-      doc.save(`GEOPEX_Discovery_Report_${Date.now()}.pdf`);
-      showToast("PDF raporu başarıyla indirildi.", "success");
-    } catch (e) {
-      console.error(e);
-      showToast("PDF oluşturulurken hata meydana geldi.", "danger");
-    }
-  };
 
   return (
     <div className="space-y-6 text-slate-800 dark:text-zinc-100 font-sans" id="company-discovery-view-wrapper">
@@ -1062,7 +661,7 @@ You must output a raw valid JSON ARRAY strictly matching this structure without 
                     disabled={googleSearching}
                     className="bg-slate-50 hover:bg-slate-100 dark:bg-zinc-900 w-full sm:w-auto dark:hover:bg-zinc-850 text-slate-700 dark:text-zinc-300 border border-slate-200/80 dark:border-zinc-800 text-xs font-bold px-5 py-2.5 rounded-full transition-all cursor-pointer shadow-xs whitespace-nowrap"
                   >
-                    {googleSearching ? "Arama Yapılıyor..." : "Klasik Arama"}
+                    {googleSearching ? t("Searching...") : t("Classic Search")}
                   </button>
                   <button
                     type="button"
@@ -1080,7 +679,7 @@ You must output a raw valid JSON ARRAY strictly matching this structure without 
                     }}
                     className="bg-slate-50 hover:bg-slate-100 dark:bg-zinc-900 w-full sm:w-auto dark:hover:bg-zinc-850 text-slate-700 dark:text-amber-500 border border-slate-200/80 dark:border-zinc-800 text-xs font-bold px-5 py-2.5 rounded-full transition-all cursor-pointer shadow-xs whitespace-nowrap"
                   >
-                    Kendimi Şanslı Hissediyorum
+                    {t("I'm Feeling Lucky")}
                   </button>
                 </div>
               </form>
@@ -1088,7 +687,7 @@ You must output a raw valid JSON ARRAY strictly matching this structure without 
               {/* Suggestions chips */}
               <div className="mt-8 text-center space-y-2">
                 <span className="text-[10px] tracking-wider uppercase font-extrabold text-slate-400 dark:text-zinc-500 font-mono block">
-                  Hızlı Arama Önerileri
+                  {t("Quick Search Suggestions")}
                 </span>
                 <div className="flex flex-wrap items-center justify-center gap-2 max-w-xl">
                   {[
@@ -1172,7 +771,7 @@ You must output a raw valid JSON ARRAY strictly matching this structure without 
                   }}
                   className="text-xs text-slate-500 hover:text-slate-800 dark:text-zinc-400 dark:hover:text-zinc-200 font-bold border border-slate-200 dark:border-zinc-800 rounded-lg px-3.5 py-1.5 bg-slate-50 dark:bg-zinc-900 transition-all cursor-pointer"
                 >
-                  ← Arama Paneline Dön
+                  ← {t("Back to Search Panel")}
                 </button>
               </div>
 
@@ -1281,19 +880,19 @@ You must output a raw valid JSON ARRAY strictly matching this structure without 
                                     : "bg-[#0078D4]/10 text-[#0078D4] hover:bg-[#0078D4]/20"
                                 }`}
                               >
-                                🎯 {isAlreadyTarget ? "✓ CRM Hedeflendi" : "CRM Hedef Defterine Ekle"}
+                                🎯 {isAlreadyTarget ? t("✓ CRM Targeted") : t("Add to CRM Target List")}
                               </button>
 
                               <button
                                 onClick={() => handleAddToCompanies(item)}
                                 disabled={isAlreadyWon}
                                 className={`text-[11px] font-bold px-3 py-1.5 rounded-lg flex items-center gap-1 cursor-pointer transition-all ${
-                                  isAlreadyWon 
-                                    ? "bg-slate-100 text-slate-400" 
+                                  isAlreadyWon
+                                    ? "bg-slate-100 text-slate-400"
                                     : "bg-emerald-100/40 text-emerald-700 hover:bg-emerald-200/40"
                                 }`}
                               >
-                                💼 {isAlreadyWon ? "✓ Müşteriler'de" : "Müşteriler'e (Won) Ekle"}
+                                💼 {isAlreadyWon ? t("✓ In Customers") : t("Add to Customers (Won)")}
                               </button>
 
                               <button
@@ -1303,7 +902,7 @@ You must output a raw valid JSON ARRAY strictly matching this structure without 
                                 }}
                                 className="text-[11px] hover:bg-slate-50 dark:hover:bg-zinc-850 text-slate-500 hover:text-slate-700 dark:text-zinc-400 font-bold px-2.5 py-1.5 rounded-lg transition-all"
                               >
-                                📈 Fabrikayı Analiz Et / İncele
+                                📈 {t("Analyze / Review Factory")}
                               </button>
                             </div>
 
@@ -1516,20 +1115,21 @@ You must output a raw valid JSON ARRAY strictly matching this structure without 
 
       {/* --- SIDE DRAWER COMPONENT: SINGLE DETAILED REVIEW (WITH GEMINI AI CAPABILITY) --- */}
       {detailCompany && (
-        <div className="fixed inset-0 bg-slate-900/40 dark:bg-black/50 z-[90] flex justify-end animate-fade-in" id="company-discovery-detail-drawer">
+        <div role="dialog" aria-modal="true" className="fixed inset-0 bg-slate-900/40 dark:bg-black/50 z-[90] flex justify-end animate-fade-in" id="company-discovery-detail-drawer">
           <div className="w-full max-w-2xl bg-white dark:bg-[#121212] h-full shadow-2xl p-6 overflow-y-auto flex flex-col justify-between">
             <div className="space-y-6">
-              
+
               {/* Drawer Close & Title */}
               <div className="flex items-center justify-between border-b border-slate-105 dark:border-zinc-805 pb-4">
                 <span className="text-[10px] bg-sky-50 dark:bg-sky-950/20 text-[#0078D4] font-black px-2.5 py-1 rounded font-mono">
-                  {detailCompany.industry} • FİRMA AYRINTILARI
+                  {detailCompany.industry} • {t("COMPANY DETAILS")}
                 </span>
                 <button
                   onClick={() => setDetailCompany(null)}
                   className="p-1 px-2.5 text-xs text-rose-500 bg-rose-50 hover:bg-rose-100 rounded-lg font-bold"
+                  aria-label={t("Close")}
                 >
-                  Kapat
+                  {t("Close")}
                 </button>
               </div>
 
@@ -1611,11 +1211,11 @@ You must output a raw valid JSON ARRAY strictly matching this structure without 
                     className="bg-slate-900 border border-slate-800 hover:bg-slate-800 text-white dark:bg-zinc-800 text-[10px] font-black px-3 py-1.5 rounded-lg flex items-center gap-1 cursor-pointer transition-all uppercase font-mono"
                   >
                     {isAiLoading ? (
-                      <span>Rapor Oluşturuluyor...</span>
+                      <span>{t("Generating Report...")}</span>
                     ) : (
                       <>
                         <Sparkles className="w-3.5 h-3.5 text-amber-500" />
-                        <span>Derin Rapor Analizi Calistir</span>
+                        <span>{t("Run Deep Report Analysis")}</span>
                       </>
                     )}
                   </button>
@@ -1642,7 +1242,7 @@ You must output a raw valid JSON ARRAY strictly matching this structure without 
                 }}
                 className="bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold px-4 py-2 rounded-lg flex-1 transition-all"
               >
-                + Won Müşterilere Ekle
+                + {t("Add to Customers (Won)")}
               </button>
               <button
                 onClick={() => {
@@ -1651,7 +1251,7 @@ You must output a raw valid JSON ARRAY strictly matching this structure without 
                 }}
                 className="bg-[#0078D4] hover:bg-[#0078D4]/90 text-white text-xs font-bold px-4 py-2 rounded-lg flex-1 transition-all"
               >
-                + Hedef Hesaplara Ekle
+                + {t("Add to Target Accounts")}
               </button>
             </div>
 
@@ -1659,133 +1259,6 @@ You must output a raw valid JSON ARRAY strictly matching this structure without 
         </div>
       )}
 
-      {/* --- ATTACHED DIALOG: SALESPERSON ASSIGNMENT MODEL --- */}
-      {showAssignDialog && (
-        <div className="fixed inset-0 bg-black/40 z-[100] flex items-center justify-center animate-fade-in">
-          <div className="bg-white dark:bg-zinc-900 p-6 rounded-2xl border border-slate-200 dark:border-zinc-800 w-full max-w-md shadow-2xl relative">
-            <h4 className="font-bold text-slate-900 dark:text-zinc-100 flex items-center gap-2 mb-2">
-              <UserCheck className="w-5 h-5 text-emerald-600 animate-pulse" />
-              <span>Satış Sorumlusu Ataması gerçekleştir</span>
-            </h4>
-            <p className="text-xs text-slate-500 mb-4">Seçilen {selectedResultIds.length} adet şirket için satış takip sorumlusu atayın.</p>
-            
-            <div className="space-y-4">
-              <div className="space-y-1">
-                <label className="text-[10px] font-bold text-slate-400 block font-mono">SATIS SORUMLUSU LİSTESİ</label>
-                <select
-                  value={selectedSalesperson}
-                  onChange={e => setSelectedSalesperson(e.target.value)}
-                  className="w-full p-2 py-2.5 text-xs bg-slate-50 dark:bg-zinc-850 rounded-lg border border-slate-250 dark:border-zinc-800 focus:outline-[#0078D4] focus:ring-1 text-slate-900 dark:text-white font-bold"
-                >
-                  <option value="Atakan Zehir" className="bg-white dark:bg-[#1b1a19] text-slate-950 dark:text-white font-semibold">Atakan Zehir (Senior Director)</option>
-                  <option value="Hakan Morsallı" className="bg-white dark:bg-[#1b1a19] text-slate-950 dark:text-white font-semibold">Hakan Morsallı (Commercial Excellence Leader)</option>
-                  <option value="Güray Yurdakul" className="bg-white dark:bg-[#1b1a19] text-slate-950 dark:text-white font-semibold">Güray Yurdakul (MTM Master Trainer)</option>
-                  <option value="Faik Suat Çakır" className="bg-white dark:bg-[#1b1a19] text-slate-950 dark:text-white font-semibold">Faik Suat Çakır (OEE Specialist)</option>
-                  <option value="Harun Aksoy" className="bg-white dark:bg-[#1b1a19] text-slate-950 dark:text-white font-semibold">Harun Aksoy (Senior IE Analyst)</option>
-                  <option value="Kemal Doğan" className="bg-white dark:bg-[#1b1a19] text-slate-950 dark:text-white font-semibold">Kemal Doğan (Kaizen Coach)</option>
-                  <option value="Gökhan Kuzu" className="bg-white dark:bg-[#1b1a19] text-slate-950 dark:text-white font-semibold">Gökhan Kuzu (CI Engineer)</option>
-                </select>
-              </div>
-
-              <div className="flex items-center justify-end gap-2 pt-2">
-                <button
-                  type="button"
-                  onClick={() => setShowAssignDialog(false)}
-                  className="text-xs text-slate-500 hover:bg-slate-50 px-3 py-2 rounded-lg"
-                >
-                  Vazgeç
-                </button>
-                <button
-                  type="button"
-                  onClick={() => handleBulkAssignSalesperson(selectedSalesperson)}
-                  className="bg-emerald-650 hover:bg-emerald-700 text-white text-xs font-bold px-4 py-2 rounded-lg"
-                >
-                  Sorumluyu Ata
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* --- ATTACHED DIALOG: OUTREACH CAMPAIGN MODULE --- */}
-      {showCampaignDialog && (
-        <div className="fixed inset-0 bg-black/40 z-[100] flex items-center justify-center animate-fade-in">
-          <div className="bg-white dark:bg-zinc-900 p-6 rounded-2xl border border-slate-200 dark:border-zinc-800 w-full max-w-lg shadow-2xl relative">
-            <h4 className="font-bold text-slate-900 dark:text-zinc-100 flex items-center gap-2 mb-2">
-              <Send className="w-5 h-5 text-amber-500" />
-              <span>Yeni Tanıtım Kampanyası Tanımla</span>
-            </h4>
-            <p className="text-xs text-slate-500 mb-4">Seçilen {selectedResultIds.length} şirket için e-posta fihristine toplu e-posta gönderimi taslağı hazırlanacaktır.</p>
-            
-            <div className="space-y-4">
-              <div className="space-y-1">
-                <label className="text-[10px] font-bold text-slate-400 block font-mono">KAMPANYA ÖLÇÜT LİSTESİ</label>
-                <input
-                  type="text"
-                  required
-                  value={newCampaignTitle}
-                  onChange={e => setNewCampaignTitle(e.target.value)}
-                  className="w-full p-2 py-2.5 text-xs bg-slate-50 dark:bg-zinc-850 rounded-lg border border-slate-250 dark:border-zinc-800 focus:outline-[#0078D4]"
-                />
-              </div>
-
-              <div className="flex items-center justify-end gap-2 pt-2">
-                <button
-                  type="button"
-                  onClick={() => setShowCampaignDialog(false)}
-                  className="text-xs text-slate-500 hover:bg-slate-50 px-3 py-2 rounded-lg"
-                >
-                  Vazgeç
-                </button>
-                <button
-                  type="button"
-                  onClick={() => handleBulkCreateCampaign()}
-                  className="bg-amber-600 hover:bg-amber-700 text-white text-xs font-bold px-4 py-2 rounded-lg"
-                >
-                  Draft Kampanyayı Kaydet
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Custom Global Confirmation Dialog */}
-      {confirmDeleteModal.isOpen && (
-        <div className="fixed inset-0 bg-black/60 backdrop-blur-xs flex items-center justify-center z-[9999] p-4 font-sans antialiased animate-fade-in text-slate-800 dark:text-zinc-200">
-          <div className="bg-white dark:bg-[#181818] w-full max-w-sm rounded-xl border border-slate-205 dark:border-zinc-855 shadow-2xl p-6 text-center animate-in zoom-in-95 duration-100">
-            <div className="mx-auto w-12 h-12 bg-rose-50 dark:bg-rose-950/25 rounded-full flex items-center justify-center text-rose-500 mb-4">
-              <Trash2 className="w-6 h-6 animate-pulse" />
-            </div>
-            <h3 className="font-extrabold text-slate-800 dark:text-zinc-100 text-sm mb-2">
-              {confirmDeleteModal.title || "Kayıt Silinecek"}
-            </h3>
-            <p className="text-slate-500 dark:text-zinc-400 text-xs mb-6 font-semibold animate-pulse">
-              {confirmDeleteModal.message || "Geri dönüşüm kutusuna taşınsın mı?"}
-            </p>
-            <div className="flex gap-3 justify-center select-none font-bold">
-              <button
-                type="button"
-                onClick={() => setConfirmDeleteModal({ isOpen: false, onConfirm: () => {} })}
-                className="border border-slate-200 dark:border-zinc-800 text-slate-600 dark:text-zinc-300 hover:bg-slate-50 dark:hover:bg-zinc-900 px-4 py-2 text-xs rounded-lg transition-colors cursor-pointer w-24"
-              >
-                İptal
-              </button>
-              <button
-                type="button"
-                onClick={() => {
-                  confirmDeleteModal.onConfirm();
-                  setConfirmDeleteModal({ isOpen: false, onConfirm: () => {} });
-                }}
-                className="bg-rose-600 hover:bg-rose-700 text-white px-4 py-2 text-xs rounded-lg transition-colors cursor-pointer shadow-sm w-24 active:scale-95 transition-transform"
-              >
-                Sil
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
 
     </div>
   );
