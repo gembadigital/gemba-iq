@@ -82,7 +82,6 @@ import {
   Megaphone,
   BarChart2,
   TrendingUp,
-  BookOpen,
   Award,
   Lock,
   MapPin,
@@ -120,7 +119,6 @@ const ACTIVE_TABS = [
   "marketing-industry-intel",
   "marketing-target-market",
   "marketing-bd-pipeline",
-  "marketing-playbooks",
   "marketing-growth-health",
   "marketing-digital-intel",
   "marketing-kpi-okr",
@@ -435,7 +433,6 @@ export default function App() {
         "marketing-industry-intel",
         "marketing-target-market",
         "marketing-bd-pipeline",
-        "marketing-playbooks",
         "marketing-growth-health",
         "marketing-digital-intel",
         "marketing-kpi-okr",
@@ -760,7 +757,6 @@ export default function App() {
       "marketing-industry-intel": { parent: "Marketing & Business Development", child: "Industry Intelligence" },
       "marketing-target-market": { parent: "Marketing & Business Development", child: "Target Market & Competitor Map" },
       "marketing-bd-pipeline": { parent: "Marketing & Business Development", child: "Business Development Pipeline" },
-      "marketing-playbooks": { parent: "Marketing & Business Development", child: "Industry Playbooks" },
       "marketing-growth-health": { parent: "Marketing & Business Development", child: "Growth Health" },
       "marketing-digital-intel": { parent: "Marketing & Business Development", child: "Digital Marketing Intelligence" },
       "marketing-kpi-okr": { parent: "Marketing & Business Development", child: "BD KPIs, Win/Loss & OKR" },
@@ -1203,12 +1199,6 @@ export default function App() {
                     id="marketing-bd-pipeline"
                     icon={isNotionMode ? <span className="text-base">💼</span> : <Briefcase className="w-[20px] h-[20px] flex-shrink-0 text-indigo-500" />}
                     label="Business Development Pipeline"
-                    isSubmenu={true}
-                  />
-                  <SidebarButton
-                    id="marketing-playbooks"
-                    icon={isNotionMode ? <span className="text-base">📘</span> : <BookOpen className="w-[20px] h-[20px] flex-shrink-0 text-amber-500" />}
-                    label="Industry Playbooks"
                     isSubmenu={true}
                   />
                   <SidebarButton
@@ -1935,10 +1925,6 @@ export default function App() {
 
             {activeTab === "marketing-bd-pipeline" && (
               <MarketingHubView key="marketing-bd-pipeline" initialSubTab="bd-pipeline" onNavigateToTab={(tab) => setActiveTab(tab as any)} />
-            )}
-
-            {activeTab === "marketing-playbooks" && (
-              <MarketingHubView key="marketing-playbooks" initialSubTab="playbooks" onNavigateToTab={(tab) => setActiveTab(tab as any)} />
             )}
 
             {activeTab === "marketing-growth-health" && (

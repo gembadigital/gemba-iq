@@ -137,6 +137,12 @@ export interface TargetAccount {
   nextReviewDate?: string; // ISO tarih — bir sonraki inceleme/görüşme hatırlatması
   reviewNote?: string;
 
+  // İş Geliştirme Pipeline'ı son aşamasına (soğuk temastan sıcak temasa geçiş
+  // — "Toplantı Yapıldı") ulaştığında otomatik olarak Fırsat Yönetimi'nde
+  // oluşturulan Deal kaydına referans — dönüşüm hunisi bu alanla izlenir.
+  promotedToDealId?: string;
+  promotedToDealAt?: string; // ISO tarih
+
   // --- Hedef Pazar & Rakip Haritası v2 (rakip firma = birinci sınıf hedef
   // firma kaydı; Company ile aynı "sektör/alt sektör/şehir" kavramlarını
   // paylaşır ama ayrı bir tablo değil, aynı TargetAccount kaydı kullanılır) ---

@@ -457,6 +457,7 @@ export const uiDictionaryTR: Record<string, string> = {
   "LinkedIn Connection": "LinkedIn Bağlantı",
   "Message Sent": "Mesaj Gönderildi",
   "Meeting Scheduled": "Toplantı Planlandı",
+  "Meeting Completed": "Toplantı Yapıldı",
   "Converted to Proposal": "Teklife Dönüştü",
   "Sectors Tracked": "Takip Edilen Sektör",
   "Industry intelligence": "Sektör zekası",
@@ -2623,6 +2624,34 @@ export const uiDictionaryTR: Record<string, string> = {
   "Could not process server response. Please try again.": "Sunucu yanıtı işlenemedi. Lütfen tekrar deneyin.",
   "An API error occurred.": "API hatası oluştu.",
   "Empty output returned.": "Boş çıktı döndü.",
+
+  // Hedef Pazar & Rakip Haritası v2.1 — müşteri arama otomatik tamamlama +
+  // hızlı formda ilk kontakt alanları (kullanıcı düzeltme talebi 1 & 2)
+  "Type a customer name...": "Müşteri adı yazın...",
+  "No matching customers found.": "Eşleşen müşteri bulunamadı.",
+  "First Contact (optional)": "İlk Kontakt (opsiyonel)",
+  "If you provide an email, you'll be asked whether to create this contact as a lead.": "E-posta girerseniz, bu kişiyi lead adayına dönüştürmek isteyip istemediğiniz sorulacaktır.",
+
+  // İş Geliştirme Pipeline'ı — Fırsat Yönetimi Kanban panosuyla aynı yapı/
+  // format/menü (stage ekleme/gizleme/silme/yeniden adlandırma + sürükle-
+  // bırak) ve otomatik Fırsat Yönetimi transferi (kullanıcı düzeltme talebi 3)
+  "Drag a company between stages, or use a column's menu to rename, collapse, or delete it. Reaching the final stage automatically promotes the company to Deal Management.":
+    "Bir firmayı sürükleyerek aşamalar arasında taşıyın veya bir sütunun menüsünü kullanarak yeniden adlandırın, daraltın ya da silin. Son aşamaya ulaşan firma otomatik olarak Fırsat Yönetimi'ne aktarılır.",
+  "New stage name": "Yeni aşama adı",
+  "Delete stage": "Aşamayı sil",
+  "Move its companies to:": "Bu aşamadaki firmaları şuraya taşı:",
+  "This stage already exists.": "Bu aşama zaten mevcut.",
+  "No companies in this stage yet.": "Bu aşamada henüz firma yok.",
+  "Promoted to Deal Management": "Fırsat Yönetimi'ne Aktarıldı",
+  "Reaching this stage automatically promotes the company to Deal Management.": "Bu aşamaya ulaşan firma otomatik olarak Fırsat Yönetimi'ne aktarılır.",
+  "FY": "FY",
+  "{name} completed the final pipeline stage and was automatically promoted to Deal Management (cold → warm contact).":
+    "{name} pipeline'ın son aşamasını tamamladı ve otomatik olarak Fırsat Yönetimi'ne aktarıldı (soğuk temastan sıcak temasa geçiş).",
+  "Transferred from Business Development Pipeline (cold contact)": "İş Geliştirme Pipeline'ından transfer edildi (soğuk temas)",
+  "Automatically transferred from the Business Development Pipeline.": "İş Geliştirme Pipeline'ından otomatik olarak transfer edildi.",
+  "→ Deal Management": "→ Fırsat Yönetimi",
+  "Leads Generated": "Oluşturulan Lead'ler",
+  "Contacts converted to leads": "Lead'e dönüştürülen kontaktlar",
 
 };
 

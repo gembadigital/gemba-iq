@@ -4,7 +4,6 @@ import {
   Target,
   TrendingUp,
   Briefcase,
-  BookOpen,
   BarChart2,
   Search,
   Award,
@@ -26,6 +25,7 @@ import {
   Percent,
   Users,
   Flag,
+  MoreVertical,
 } from "lucide-react";
 import {
   ResponsiveContainer,
@@ -45,7 +45,6 @@ import {
 import {
   TargetAccount,
   TargetContact,
-  MarketingPlaybook,
   StrategicGoal,
   MarketingKeyResult,
   MarketingReportInsight,
@@ -67,10 +66,16 @@ import type { Proposal } from "../types/proposal";
 // pipeline aşaması alanlarıyla genişletilmiş halini) kullanıyor. Böylece bir
 // firma iki kez girilmiyor.
 const TARGET_ACCOUNTS_KEY = "crm_target_accounts";
-const PLAYBOOKS_KEY = "crm_marketing_playbooks";
 const STRATEGIC_GOALS_KEY = "crm_strategic_goals";
 const REPORT_INSIGHTS_KEY = "crm_marketing_report_insights";
 
+// İş Geliştirme Pipeline'ı — Fırsat Yönetimi Kanban panosuyla AYNI yapı/format
+// (stage ekleme/gizleme/silme/yeniden adlandırma, sürükle-bırak) kullanır.
+// Son aşama ("Toplantı Yapıldı") artık pipeline'ın sonu DEĞİL — bu aşamaya
+// ulaşan bir hedef firma otomatik olarak Fırsat Yönetimi'ne (Deal Management)
+// transfer edilir (soğuk temastan sıcak temasa geçiş). Bu yüzden eski
+// "Saha Ziyareti" / "Teklife Dönüştü" / "Kaybedildi" aşamaları kaldırıldı —
+// bunlar artık Fırsat Yönetimi'nin kendi pipeline'ına ait.
 const BD_PIPELINE_STAGES = [
   "Yeni",
   "LinkedIn Bağlantı",
@@ -78,17 +83,27 @@ const BD_PIPELINE_STAGES = [
   "Mail Gönderildi",
   "Telefon Görüşmesi",
   "Toplantı Planlandı",
-  "Saha Ziyareti",
-  "Teklife Dönüştü",
-  "Kaybedildi",
+  "Toplantı Yapıldı",
 ] as const;
+
+const BD_STAGES_KEY = "crm_bd_pipeline_stages_v2";
+const BD_STAGE_META_KEY = "crm_bd_pipeline_stage_metadata_v2";
+
+const BD_INITIAL_STAGE_METADATA: Record<string, { collapsed: boolean; description: string }> = {
+  "Yeni": { collapsed: false, description: "Sektör eşleşmesiyle bulunan yeni hedef/rakip firma" },
+  "LinkedIn Bağlantı": { collapsed: false, description: "Karar vericiyle LinkedIn üzerinden bağlantı kuruldu" },
+  "Mesaj Gönderildi": { collapsed: false, description: "İlk mesaj/InMail gönderildi" },
+  "Mail Gönderildi": { collapsed: false, description: "Soğuk e-posta gönderildi" },
+  "Telefon Görüşmesi": { collapsed: false, description: "Telefonla ilk temas kuruldu" },
+  "Toplantı Planlandı": { collapsed: false, description: "Görüşme/toplantı tarihi netleşti" },
+  "Toplantı Yapıldı": { collapsed: false, description: "Görüşme tamamlandı — Fırsat Yönetimi'ne otomatik transfer edilir" },
+};
 
 export type MarketingSubTab =
   | "overview"
   | "industry-intel"
   | "target-market"
   | "bd-pipeline"
-  | "playbooks"
   | "growth-health"
   | "digital-intel"
   | "kpi-okr";
@@ -131,7 +146,6 @@ export default function MarketingHubView({ initialSubTab, onNavigateToTab }: Mar
   const [companies, setCompanies] = useState<Company[]>([]);
   const [deals, setDeals] = useState<Deal[]>([]);
   const [proposals, setProposals] = useState<Proposal[]>([]);
-  const [playbooks, setPlaybooks] = useState<MarketingPlaybook[]>([]);
   const [goals, setGoals] = useState<StrategicGoal[]>([]);
   const [reportInsights, setReportInsights] = useState<MarketingReportInsight[]>([]);
 
@@ -146,7 +160,6 @@ export default function MarketingHubView({ initialSubTab, onNavigateToTab }: Mar
     setCompanies(CrmDb.getCompanies());
     setDeals(CrmDb.getDeals());
     setProposals(CrmDb.getProposals());
-    setPlaybooks(CrmDb.getKv<MarketingPlaybook[]>(PLAYBOOKS_KEY, []));
     setGoals(CrmDb.getKv<StrategicGoal[]>(STRATEGIC_GOALS_KEY, []));
     setReportInsights(CrmDb.getKv<MarketingReportInsight[]>(REPORT_INSIGHTS_KEY, []));
   }, []);
@@ -156,10 +169,6 @@ export default function MarketingHubView({ initialSubTab, onNavigateToTab }: Mar
     const scoped = updated.map((a) => ({ ...a, organization_id: organizationId || a.organization_id }));
     setAccounts(scoped);
     CrmDb.setKv(TARGET_ACCOUNTS_KEY, scoped);
-  };
-  const persistPlaybooks = (updated: MarketingPlaybook[]) => {
-    setPlaybooks(updated);
-    CrmDb.setKv(PLAYBOOKS_KEY, updated);
   };
   const persistGoals = (updated: StrategicGoal[]) => {
     setGoals(updated);
@@ -257,22 +266,59 @@ export default function MarketingHubView({ initialSubTab, onNavigateToTab }: Mar
     [lossAnalysis, t]
   );
 
+  // --- İş Geliştirme Pipeline'ı: Fırsat Yönetimi Kanban panosuyla AYNI
+  // yapı/format/menü özellikleri (stage ekleme/gizleme/silme/yeniden
+  // adlandırma + sürükle-bırak) — aşamalar artık sabit değil, kullanıcı
+  // tarafından yapılandırılabilir ve CrmDb'de kalıcı tutulur.
+  const [bdActiveStages, setBdActiveStages] = useState<string[]>(() => {
+    const saved = CrmDb.getKv<string[]>(BD_STAGES_KEY, []);
+    return saved && saved.length > 0 ? saved : [...BD_PIPELINE_STAGES];
+  });
+  const [bdStageMetadata, setBdStageMetadata] = useState<Record<string, { collapsed: boolean; description: string }>>(() => {
+    const saved = CrmDb.getKv<Record<string, { collapsed: boolean; description: string }>>(BD_STAGE_META_KEY, {});
+    return saved && Object.keys(saved).length > 0 ? saved : { ...BD_INITIAL_STAGE_METADATA };
+  });
+  const [bdActiveStageMenu, setBdActiveStageMenu] = useState<string | null>(null);
+  const [bdIsAddingStage, setBdIsAddingStage] = useState(false);
+  const [bdNewStageName, setBdNewStageName] = useState("");
+  const [bdRenamingStage, setBdRenamingStage] = useState<string | null>(null);
+  const [bdRenameValue, setBdRenameValue] = useState("");
+  const [bdDeletingStage, setBdDeletingStage] = useState<string | null>(null);
+  const [bdDeleteMigrationTarget, setBdDeleteMigrationTarget] = useState("");
+
+  useEffect(() => {
+    CrmDb.setKv(BD_STAGES_KEY, bdActiveStages);
+  }, [bdActiveStages]);
+  useEffect(() => {
+    CrmDb.setKv(BD_STAGE_META_KEY, bdStageMetadata);
+  }, [bdStageMetadata]);
+
   // --- İş Geliştirme Pipeline'ı: Target Account.bdPipelineStage'e göre grupla ---
   const pipelineByStage = useMemo(() => {
     const map: Record<string, TargetAccount[]> = {};
-    BD_PIPELINE_STAGES.forEach((s) => {
+    bdActiveStages.forEach((s) => {
       map[s] = [];
     });
+    const firstStage = bdActiveStages[0] || "Yeni";
     accounts.forEach((a) => {
-      const stage = a.bdPipelineStage && (BD_PIPELINE_STAGES as readonly string[]).includes(a.bdPipelineStage) ? a.bdPipelineStage : "Yeni";
+      const stage = a.bdPipelineStage && bdActiveStages.includes(a.bdPipelineStage) ? a.bdPipelineStage : firstStage;
+      if (!map[stage]) map[stage] = [];
       map[stage].push(a);
     });
     return map;
-  }, [accounts]);
+  }, [accounts, bdActiveStages]);
+
+  // Dönüşüm hunisi: pipeline aşamaları + son adım olarak Fırsat Yönetimi'ne
+  // otomatik transfer edilen (soğuk temastan sıcak temasa geçen) firma
+  // sayısı — sistemin bu geçişin performansını izleyebilmesi için.
+  const promotedToDealCount = useMemo(() => accounts.filter((a) => a.promotedToDealId).length, [accounts]);
 
   const funnelChartData = useMemo(
-    () => BD_PIPELINE_STAGES.map((s) => ({ stage: t(s), count: pipelineByStage[s].length })),
-    [pipelineByStage, t]
+    () => [
+      ...bdActiveStages.map((s) => ({ stage: t(s), count: (pipelineByStage[s] || []).length })),
+      { stage: t("→ Deal Management"), count: promotedToDealCount },
+    ],
+    [pipelineByStage, bdActiveStages, promotedToDealCount, t]
   );
 
   const reviewPendingAccounts = useMemo(() => {
@@ -324,6 +370,10 @@ export default function MarketingHubView({ initialSubTab, onNavigateToTab }: Mar
   // listeler; (2) doğrudan yeni hedef firma — rakip analizi şart değil.
   const [startMode, setStartMode] = useState<"customer" | "manual">("customer");
   const [selectedSourceCompanyId, setSelectedSourceCompanyId] = useState<string>("");
+  // Müşteri seçici artık tüm müşterileri listeleyen bir dropdown değil,
+  // isim yazıldıkça otomatik tamamlayan bir arama kutusu.
+  const [customerSearchQuery, setCustomerSearchQuery] = useState("");
+  const [showCustomerSuggestions, setShowCustomerSuggestions] = useState(false);
   const [showTargetForm, setShowTargetForm] = useState(false);
   const [targetFormDraft, setTargetFormDraft] = useState({
     companyName: "",
@@ -332,6 +382,15 @@ export default function MarketingHubView({ initialSubTab, onNavigateToTab }: Mar
     city: "",
     websiteUrl: "",
     analysisNotes: "",
+    // Hızlı "Rakip/Hedef Firma Ekle" formunda ilk kontaktı da tek adımda
+    // girebilmek için (opsiyonel) — doldurulursa firmayla birlikte bir
+    // TargetContact oluşturulur ve e-posta varsa lead adayına dönüştürme
+    // istemi açılır.
+    contactFullName: "",
+    contactTitle: "",
+    contactPhone: "",
+    contactEmail: "",
+    contactLinkedin: "",
   });
   const [targetSectorFilter, setTargetSectorFilter] = useState("");
   const [targetSearch, setTargetSearch] = useState("");
@@ -344,6 +403,26 @@ export default function MarketingHubView({ initialSubTab, onNavigateToTab }: Mar
     () => companies.find((c) => c.id === selectedSourceCompanyId) || null,
     [companies, selectedSourceCompanyId]
   );
+
+  // Otomatik tamamlama önerileri — yazılan metne göre en fazla 8 eşleşen
+  // müşteri gösterilir, tüm liste bir kerede getirilmez.
+  const customerSuggestions = useMemo(() => {
+    const q = customerSearchQuery.trim().toLowerCase();
+    if (!q) return [];
+    return companies.filter((c) => c.name.toLowerCase().includes(q)).slice(0, 8);
+  }, [companies, customerSearchQuery]);
+
+  const handleSelectSourceCompany = (company: Company) => {
+    setSelectedSourceCompanyId(company.id);
+    setCustomerSearchQuery(company.name);
+    setShowCustomerSuggestions(false);
+  };
+
+  const handleClearSourceCompany = () => {
+    setSelectedSourceCompanyId("");
+    setCustomerSearchQuery("");
+    setShowCustomerSuggestions(false);
+  };
 
   // Seçenek 1 (Mevcut Müşteri Üzerinden) otomatik doldurma: referans
   // projeler kazanılan fırsatlardan, kullanılan hizmetler kabul edilen
@@ -391,7 +470,19 @@ export default function MarketingHubView({ initialSubTab, onNavigateToTab }: Mar
   };
 
   const resetTargetForm = () =>
-    setTargetFormDraft({ companyName: "", industryTag: "", subIndustry: "", city: "", websiteUrl: "", analysisNotes: "" });
+    setTargetFormDraft({
+      companyName: "",
+      industryTag: "",
+      subIndustry: "",
+      city: "",
+      websiteUrl: "",
+      analysisNotes: "",
+      contactFullName: "",
+      contactTitle: "",
+      contactPhone: "",
+      contactEmail: "",
+      contactLinkedin: "",
+    });
 
   const handleCreateTarget = (e: React.FormEvent) => {
     e.preventDefault();
@@ -403,6 +494,27 @@ export default function MarketingHubView({ initialSubTab, onNavigateToTab }: Mar
     const industryTag = isFromCustomer
       ? selectedSourceCompany!.industry || t("General Industry")
       : targetFormDraft.industryTag.trim() || t("General Industry");
+
+    // Hızlı formda ilk kontakt bilgisi de girildiyse, firmayla birlikte tek
+    // adımda bir TargetContact oluşturulur (rakip analizi yapmadan doğrudan
+    // hedef firma + kontakt ekleme akışı).
+    const now = new Date().toISOString();
+    const firstContact: TargetContact | null = targetFormDraft.contactFullName.trim()
+      ? {
+          id: `contact_${Date.now()}`,
+          fullName: targetFormDraft.contactFullName.trim(),
+          title: targetFormDraft.contactTitle.trim(),
+          department: "",
+          phone: targetFormDraft.contactPhone.trim(),
+          email: targetFormDraft.contactEmail.trim(),
+          linkedin: targetFormDraft.contactLinkedin.trim(),
+          source: isFromCustomer ? t("Competitor Map") : "",
+          status: "Bulundu",
+          createdAt: now,
+          updatedAt: now,
+        }
+      : null;
+
     const added: TargetAccount = {
       id: `target_${Date.now()}_${Math.floor(Math.random() * 1000)}`,
       no: accounts.length + 1,
@@ -422,17 +534,20 @@ export default function MarketingHubView({ initialSubTab, onNavigateToTab }: Mar
       analysisDate: new Date().toLocaleString("tr-TR"),
       rawOutput: "",
       analysisNotes: targetFormDraft.analysisNotes.trim(),
-      bdPipelineStage: "Yeni",
+      bdPipelineStage: bdActiveStages[0] || "Yeni",
       sourceType: isFromCustomer ? "customer" : "manual",
       discoveredFromCompanyId: isFromCustomer ? selectedSourceCompany!.id : undefined,
       discoveredFromCompanyName: isFromCustomer ? selectedSourceCompany!.name : undefined,
-      contacts: [],
+      contacts: firstContact ? [firstContact] : [],
     };
     persistAccounts([...accounts, added]);
     resetTargetForm();
     setShowTargetForm(false);
     setExpandedAccountId(added.id);
     triggerToast(t("Added {name} to Target Accounts registry").replace("{name}", added.companyName), "success");
+    if (firstContact) {
+      setPendingLeadPrompt({ accountId: added.id, contactId: firstContact.id });
+    }
   };
 
   const updateAccountField = (id: string, patch: Partial<TargetAccount>) => {
@@ -570,85 +685,184 @@ export default function MarketingHubView({ initialSubTab, onNavigateToTab }: Mar
   };
 
   // --- İş Geliştirme Pipeline'ı handlers ---
+  const formatTrDate = (d: Date) => {
+    const dd = String(d.getDate()).padStart(2, "0");
+    const mm = String(d.getMonth() + 1).padStart(2, "0");
+    return `${dd}.${mm}.${d.getFullYear()}`;
+  };
+
+  // Pipeline'ın son aşamasına ("Toplantı Yapıldı") ulaşan bir hedef firma
+  // soğuk temastan sıcak temasa geçer — Fırsat Yönetimi'nde otomatik bir Deal
+  // kaydı oluşturulur (CrmDb.createDeal yok, Deal Management'taki gerçek
+  // "yeni fırsat" akışıyla aynı minimal-geçerli alan seti elle dolduruluyor).
+  const promoteAccountToDeal = (account: TargetAccount): Deal => {
+    const contacts = account.contacts || [];
+    const bestContact = contacts.find((c) => c.status === "Görüşme Yapıldı") || contacts[contacts.length - 1] || null;
+    const closeDate = new Date();
+    closeDate.setDate(closeDate.getDate() + 30);
+    const newDeal: Deal = {
+      id: `deal_${Date.now()}_${Math.floor(Math.random() * 1000)}`,
+      companyId: account.discoveredFromCompanyId,
+      dealName: `${account.companyName} ${t("Opportunity")}`,
+      companyName: account.companyName,
+      contactPerson: bestContact?.fullName || account.companyName,
+      contactEmail: bestContact?.email || undefined,
+      contactPhone: bestContact?.phone || undefined,
+      opportunityValue: 25000,
+      expectedCloseDate: formatTrDate(closeDate),
+      opportunityScore: 75,
+      winProbability: 50,
+      currentStageDuration: 1,
+      priority: "Medium",
+      industry: account.industryTag || t("General Industry"),
+      opexScore: 72,
+      stage: "Lead Identified",
+      owner: actorName || "GP",
+      pipeline: "Sales Pipeline Standard",
+      leadSource: "İş Geliştirme Pipeline'ı (Soğuk Temas)",
+      description: account.analysisNotes || "",
+      dealEmails: [],
+      activities: [
+        {
+          id: `act_${Date.now()}`,
+          date: new Date().toLocaleDateString("tr-TR"),
+          title: t("Transferred from Business Development Pipeline (cold contact)"),
+          type: "system",
+        },
+      ],
+      stageHistory: [
+        {
+          stage: "Lead Identified",
+          date: new Date().toLocaleDateString("tr-TR"),
+          notes: t("Automatically transferred from the Business Development Pipeline."),
+        },
+      ],
+    };
+    return newDeal;
+  };
+
   const handleStageChange = (accountId: string, newStage: string) => {
     const account = accounts.find((a) => a.id === accountId);
     if (!account) return;
     const patch: Partial<TargetAccount> = { bdPipelineStage: newStage };
-    if (newStage !== "Yeni") {
+    const firstStage = bdActiveStages[0];
+    if (newStage !== firstStage) {
       patch.lastContactDate = new Date().toISOString().split("T")[0];
     }
-    updateAccountField(accountId, patch);
-    if (newStage === "Teklife Dönüştü") {
-      triggerToast(t("Great! Now create the real opportunity/proposal record in Deal Management for this company."), "success");
+    const finalStage = bdActiveStages[bdActiveStages.length - 1];
+    if (newStage === finalStage && bdActiveStages.length > 0 && !account.promotedToDealId) {
+      const newDeal = promoteAccountToDeal({ ...account, ...patch });
+      const existingDeals = CrmDb.getDeals();
+      const updatedDeals = [...existingDeals, newDeal];
+      CrmDb.saveDeals(updatedDeals);
+      setDeals(updatedDeals);
+      patch.promotedToDealId = newDeal.id;
+      patch.promotedToDealAt = new Date().toISOString();
+      triggerToast(
+        t("{name} completed the final pipeline stage and was automatically promoted to Deal Management (cold → warm contact).").replace(
+          "{name}",
+          account.companyName
+        ),
+        "success"
+      );
     }
+    updateAccountField(accountId, patch);
   };
 
-  // --- Sektör Oyun Kitapları CRUD ---
-  const [showAddPlaybook, setShowAddPlaybook] = useState(false);
-  const [playbookForm, setPlaybookForm] = useState({
-    industryTag: "",
-    title: "",
-    content: "",
-    talkingPoints: "",
-    commonObjections: "",
-    caseStudyRefs: "",
-  });
-  const [editingPlaybookId, setEditingPlaybookId] = useState<string | null>(null);
-  const [playbookSectorFilter, setPlaybookSectorFilter] = useState("");
+  // --- Aşama yönetimi (ekleme / yeniden adlandırma / gizleme / silme) —
+  // Fırsat Yönetimi Kanban panosundaki menüyle AYNI davranış. ---
+  const toggleBdCollapseStage = (stage: string) => {
+    setBdStageMetadata((prev) => ({
+      ...prev,
+      [stage]: { ...(prev[stage] || { collapsed: false, description: "" }), collapsed: !prev[stage]?.collapsed },
+    }));
+  };
 
-  const resetPlaybookForm = () =>
-    setPlaybookForm({ industryTag: "", title: "", content: "", talkingPoints: "", commonObjections: "", caseStudyRefs: "" });
-
-  const handleSavePlaybook = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!playbookForm.title.trim() || !playbookForm.industryTag.trim()) {
-      triggerToast(t("Title and industry are required."), "error");
+  const handleBdAddStage = () => {
+    const name = bdNewStageName.trim();
+    if (!name) return;
+    if (bdActiveStages.includes(name)) {
+      triggerToast(t("This stage already exists."), "error");
       return;
     }
-    const now = new Date().toISOString();
-    if (editingPlaybookId) {
-      persistPlaybooks(playbooks.map((p) => (p.id === editingPlaybookId ? { ...p, ...playbookForm, updatedAt: now } : p)));
-      triggerToast(t("Playbook updated."), "success");
-    } else {
-      const added: MarketingPlaybook = {
-        id: `playbook_${Date.now()}`,
-        ...playbookForm,
-        createdAt: now,
-        updatedAt: now,
-        createdBy: actorName || "",
-      };
-      persistPlaybooks([added, ...playbooks]);
-      triggerToast(t("Playbook created."), "success");
+    setBdActiveStages((prev) => [...prev, name]);
+    setBdStageMetadata((prev) => ({ ...prev, [name]: { collapsed: false, description: "" } }));
+    setBdNewStageName("");
+    setBdIsAddingStage(false);
+  };
+
+  const handleBdRenameStage = (oldName: string, newName: string) => {
+    const trimmed = newName.trim();
+    setBdRenamingStage(null);
+    if (!trimmed || trimmed === oldName) return;
+    if (bdActiveStages.includes(trimmed)) {
+      triggerToast(t("This stage already exists."), "error");
+      return;
     }
-    resetPlaybookForm();
-    setEditingPlaybookId(null);
-    setShowAddPlaybook(false);
+    setBdActiveStages((prev) => prev.map((s) => (s === oldName ? trimmed : s)));
+    setBdStageMetadata((prev) => {
+      const updated = { ...prev };
+      updated[trimmed] = updated[oldName] || { collapsed: false, description: "" };
+      delete updated[oldName];
+      return updated;
+    });
+    persistAccounts(accounts.map((a) => ((a.bdPipelineStage || bdActiveStages[0]) === oldName ? { ...a, bdPipelineStage: trimmed } : a)));
   };
 
-  const startEditPlaybook = (p: MarketingPlaybook) => {
-    setPlaybookForm({
-      industryTag: p.industryTag,
-      title: p.title,
-      content: p.content,
-      talkingPoints: p.talkingPoints || "",
-      commonObjections: p.commonObjections || "",
-      caseStudyRefs: p.caseStudyRefs || "",
-    });
-    setEditingPlaybookId(p.id);
-    setShowAddPlaybook(true);
+  const handleBdDeleteStage = (stage: string) => {
+    setBdDeletingStage(stage);
+    const others = bdActiveStages.filter((s) => s !== stage);
+    setBdDeleteMigrationTarget(others[0] || "");
   };
 
-  const deletePlaybook = async (id: string) => {
-    const ok = await confirm({
-      title: t("Delete Playbook"),
-      message: t("Are you sure you want to delete this playbook?"),
-      confirmLabel: t("Delete"),
-      cancelLabel: t("Cancel"),
-      danger: true,
+  const handleBdConfirmDeleteStage = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!bdDeletingStage) return;
+    const stageToDelete = bdDeletingStage;
+    setBdActiveStages((prev) => prev.filter((s) => s !== stageToDelete));
+    const affected = accounts.filter((a) => (a.bdPipelineStage || bdActiveStages[0]) === stageToDelete);
+    if (affected.length > 0 && bdDeleteMigrationTarget) {
+      persistAccounts(
+        accounts.map((a) => ((a.bdPipelineStage || bdActiveStages[0]) === stageToDelete ? { ...a, bdPipelineStage: bdDeleteMigrationTarget } : a))
+      );
+    }
+    setBdStageMetadata((prev) => {
+      const updated = { ...prev };
+      delete updated[stageToDelete];
+      return updated;
     });
-    if (!ok) return;
-    persistPlaybooks(playbooks.filter((p) => p.id !== id));
-    triggerToast(t("Playbook deleted."), "info");
+    setBdDeletingStage(null);
+  };
+
+  // --- Sürükle-bırak (native HTML5 D&D — Fırsat Yönetimi ile aynı yöntem) ---
+  const handleBdColumnDragStart = (e: React.DragEvent, stage: string) => {
+    e.dataTransfer.setData("text/bd-column-stage", stage);
+  };
+  const handleBdColumnDrop = (e: React.DragEvent, targetStage: string) => {
+    const draggedStage = e.dataTransfer.getData("text/bd-column-stage");
+    if (!draggedStage || draggedStage === targetStage) return;
+    const oldIndex = bdActiveStages.indexOf(draggedStage);
+    const newIndex = bdActiveStages.indexOf(targetStage);
+    if (oldIndex === -1 || newIndex === -1) return;
+    const updated = [...bdActiveStages];
+    updated.splice(oldIndex, 1);
+    updated.splice(newIndex, 0, draggedStage);
+    setBdActiveStages(updated);
+  };
+  const handleBdCardDragStart = (e: React.DragEvent, accountId: string) => {
+    e.stopPropagation();
+    e.dataTransfer.setData("text/bd-account-id", accountId);
+  };
+  const handleBdCardDragOver = (e: React.DragEvent) => {
+    e.preventDefault();
+  };
+  const handleBdCardDrop = (e: React.DragEvent, targetStage: string) => {
+    e.preventDefault();
+    const accountId = e.dataTransfer.getData("text/bd-account-id");
+    if (!accountId) return;
+    const account = accounts.find((a) => a.id === accountId);
+    if (!account || (account.bdPipelineStage || bdActiveStages[0]) === targetStage) return;
+    handleStageChange(accountId, targetStage);
   };
 
   // --- Stratejik Hedefler & OKR CRUD ---
@@ -888,12 +1102,6 @@ export default function MarketingHubView({ initialSubTab, onNavigateToTab }: Mar
       icon: <Briefcase className="w-5 h-5 flex-shrink-0" />,
     },
     {
-      key: "playbooks",
-      label: "Industry Playbooks",
-      description: "Sector-specific talking points, objections, and case studies.",
-      icon: <BookOpen className="w-5 h-5 flex-shrink-0" />,
-    },
-    {
       key: "growth-health",
       label: "Growth Health",
       description: "Customer, pipeline, and sales-cycle health indicators.",
@@ -970,9 +1178,10 @@ export default function MarketingHubView({ initialSubTab, onNavigateToTab }: Mar
             <KpiCard
               label={t("Active in BD Pipeline")}
               value={String(
-                accounts.filter(
-                  (a) => a.bdPipelineStage && a.bdPipelineStage !== "Yeni" && a.bdPipelineStage !== "Kaybedildi" && a.bdPipelineStage !== "Teklife Dönüştü"
-                ).length
+                accounts.filter((a) => {
+                  const stage = a.bdPipelineStage || bdActiveStages[0];
+                  return stage !== bdActiveStages[0] && !a.promotedToDealId;
+                }).length
               )}
               sub={t("Currently being worked")}
               icon={<Briefcase className="w-4 h-4" />}
@@ -994,7 +1203,12 @@ export default function MarketingHubView({ initialSubTab, onNavigateToTab }: Mar
               accentColor="text-emerald-500"
               valueColor="text-emerald-600 dark:text-emerald-400"
             />
-            <KpiCard label={t("Active Playbooks")} value={String(playbooks.length)} sub={t("Industry playbooks")} icon={<BookOpen className="w-4 h-4" />} />
+            <KpiCard
+              label={t("Leads Generated")}
+              value={String(accounts.reduce((sum, a) => sum + (a.contacts?.filter((c) => c.leadProfileId).length || 0), 0))}
+              sub={t("Contacts converted to leads")}
+              icon={<Users className="w-4 h-4" />}
+            />
             <KpiCard
               label={t("Open Pipeline Value")}
               value={formatCurrencyShort(growthHealth.pipelineValue)}
@@ -1169,18 +1383,49 @@ export default function MarketingHubView({ initialSubTab, onNavigateToTab }: Mar
               <div className="space-y-4">
                 <div>
                   <label className="text-[10px] font-bold text-slate-400 uppercase block mb-1">{t("Select Customer")}</label>
-                  <select
-                    value={selectedSourceCompanyId}
-                    onChange={(e) => setSelectedSourceCompanyId(e.target.value)}
-                    className="w-full sm:w-80 p-2 border border-[#EDEBE9] dark:border-[#323130] bg-[#faf9f8] dark:bg-[#252423] rounded outline-none text-xs focus:border-[#0078D4]"
-                  >
-                    <option value="">{t("-- Select a customer --")}</option>
-                    {companies.map((c) => (
-                      <option key={c.id} value={c.id}>
-                        {c.name}
-                      </option>
-                    ))}
-                  </select>
+                  <div className="relative w-full sm:w-80">
+                    <Search className="w-3.5 h-3.5 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
+                    <input
+                      type="text"
+                      value={customerSearchQuery}
+                      onChange={(e) => {
+                        setCustomerSearchQuery(e.target.value);
+                        setShowCustomerSuggestions(true);
+                        if (selectedSourceCompanyId) setSelectedSourceCompanyId("");
+                      }}
+                      onFocus={() => setShowCustomerSuggestions(true)}
+                      onBlur={() => setTimeout(() => setShowCustomerSuggestions(false), 150)}
+                      placeholder={t("Type a customer name...")}
+                      className="w-full p-2 pl-9 pr-8 border border-[#EDEBE9] dark:border-[#323130] bg-[#faf9f8] dark:bg-[#252423] rounded outline-none text-xs focus:border-[#0078D4]"
+                    />
+                    {selectedSourceCompanyId && (
+                      <button
+                        type="button"
+                        onMouseDown={handleClearSourceCompany}
+                        className="absolute right-2 top-1/2 -translate-y-1/2 text-slate-400 hover:text-rose-600 cursor-pointer"
+                      >
+                        <X className="w-3.5 h-3.5" />
+                      </button>
+                    )}
+                    {showCustomerSuggestions && customerSearchQuery.trim() && !selectedSourceCompanyId && (
+                      <div className="absolute z-20 top-full left-0 right-0 mt-1 bg-white dark:bg-[#1b1a19] border border-[#EDEBE9] dark:border-[#323130] rounded-lg shadow-lg max-h-56 overflow-y-auto">
+                        {customerSuggestions.map((c) => (
+                          <button
+                            type="button"
+                            key={c.id}
+                            onMouseDown={() => handleSelectSourceCompany(c)}
+                            className="w-full text-left px-3 py-2 text-xs hover:bg-[#FAF9F8] dark:hover:bg-[#252423] cursor-pointer flex items-center justify-between gap-2"
+                          >
+                            <span className="font-semibold text-slate-700 dark:text-slate-200 truncate">{c.name}</span>
+                            {c.industry && <span className="text-[10px] text-slate-400 flex-shrink-0">{c.industry}</span>}
+                          </button>
+                        ))}
+                        {customerSuggestions.length === 0 && (
+                          <div className="px-3 py-2 text-[11px] text-slate-400">{t("No matching customers found.")}</div>
+                        )}
+                      </div>
+                    )}
+                  </div>
                 </div>
 
                 {selectedSourceCompany && (
@@ -1372,6 +1617,54 @@ export default function MarketingHubView({ initialSubTab, onNavigateToTab }: Mar
                     />
                   </div>
                 </div>
+
+                {/* Rakip analizi yapmadan doğrudan hedef firma + ilk kontakt
+                    ekleyebilme — firma kaydıyla birlikte tek adımda kaydedilir,
+                    e-posta girildiyse lead adayına dönüştürme istemi açılır. */}
+                <div className="border-t border-[#EDEBE9] dark:border-[#323130] pt-3">
+                  <label className="text-[10px] font-bold text-slate-400 uppercase block mb-2">{t("First Contact (optional)")}</label>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <input
+                      type="text"
+                      placeholder={t("Full Name")}
+                      value={targetFormDraft.contactFullName}
+                      onChange={(e) => setTargetFormDraft({ ...targetFormDraft, contactFullName: e.target.value })}
+                      className="w-full p-2 border border-[#EDEBE9] dark:border-[#323130] bg-white dark:bg-[#252423] rounded outline-none focus:border-[#0078D4]"
+                    />
+                    <input
+                      type="text"
+                      placeholder={t("Title")}
+                      value={targetFormDraft.contactTitle}
+                      onChange={(e) => setTargetFormDraft({ ...targetFormDraft, contactTitle: e.target.value })}
+                      className="w-full p-2 border border-[#EDEBE9] dark:border-[#323130] bg-white dark:bg-[#252423] rounded outline-none focus:border-[#0078D4]"
+                    />
+                    <input
+                      type="text"
+                      placeholder={t("Phone")}
+                      value={targetFormDraft.contactPhone}
+                      onChange={(e) => setTargetFormDraft({ ...targetFormDraft, contactPhone: e.target.value })}
+                      className="w-full p-2 border border-[#EDEBE9] dark:border-[#323130] bg-white dark:bg-[#252423] rounded outline-none focus:border-[#0078D4]"
+                    />
+                    <input
+                      type="email"
+                      placeholder={t("Email")}
+                      value={targetFormDraft.contactEmail}
+                      onChange={(e) => setTargetFormDraft({ ...targetFormDraft, contactEmail: e.target.value })}
+                      className="w-full p-2 border border-[#EDEBE9] dark:border-[#323130] bg-white dark:bg-[#252423] rounded outline-none focus:border-[#0078D4]"
+                    />
+                    <input
+                      type="text"
+                      placeholder={t("LinkedIn")}
+                      value={targetFormDraft.contactLinkedin}
+                      onChange={(e) => setTargetFormDraft({ ...targetFormDraft, contactLinkedin: e.target.value })}
+                      className="w-full p-2 border border-[#EDEBE9] dark:border-[#323130] bg-white dark:bg-[#252423] rounded outline-none focus:border-[#0078D4] sm:col-span-2"
+                    />
+                  </div>
+                  <p className="text-[10px] text-slate-400 mt-1.5">
+                    {t("If you provide an email, you'll be asked whether to create this contact as a lead.")}
+                  </p>
+                </div>
+
                 <div className="flex justify-end">
                   <button type="submit" className="text-xs font-bold bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2 rounded flex items-center gap-1 cursor-pointer">
                     <Check className="w-4 h-4" />
@@ -1803,183 +2096,225 @@ export default function MarketingHubView({ initialSubTab, onNavigateToTab }: Mar
             </ResponsiveContainer>
           </ChartCard>
 
-          <div className="flex items-center justify-between gap-2">
+          <div className="flex items-center justify-between gap-2 flex-wrap">
             <p className="text-[11px] text-slate-500">
-              {t("Move a target company through the outreach pipeline. Changing stage automatically logs the contact date.")}
+              {t("Drag a company between stages, or use a column's menu to rename, collapse, or delete it. Reaching the final stage automatically promotes the company to Deal Management.")}
             </p>
-            {onNavigateToTab && (
+            <div className="flex items-center gap-2 flex-shrink-0">
               <button
                 type="button"
-                onClick={() => onNavigateToTab("deal-management")}
-                className="text-xs font-bold bg-[#FAF9F8] hover:bg-[#EDEBE9] dark:bg-[#252423] dark:hover:bg-[#323130] text-slate-700 dark:text-slate-200 px-3 py-2 border border-[#EDEBE9] dark:border-[#323130] rounded flex items-center gap-1.5 cursor-pointer flex-shrink-0"
+                onClick={() => setBdIsAddingStage(true)}
+                className="px-3 py-1.5 border border-[#EDEBE9] dark:border-[#323130] rounded-lg text-xs font-bold text-slate-600 dark:text-slate-300 hover:bg-[#FAF9F8] dark:hover:bg-[#252423] flex items-center gap-1 cursor-pointer"
               >
-                <Briefcase className="w-3.5 h-3.5" />
-                <span>{t("Deal Management")}</span>
+                <Plus className="w-3.5 h-3.5 text-emerald-600" />
+                <span>{t("+ Custom Stage")}</span>
               </button>
-            )}
-          </div>
-          <div className="flex gap-3 overflow-x-auto pb-2">
-            {BD_PIPELINE_STAGES.map((stage) => (
-              <div key={stage} className="flex-shrink-0 w-64 bg-[#FAF9F8] dark:bg-[#201f1e] border border-[#EDEBE9] dark:border-[#323130] rounded-2xl">
-                <div className="p-3 border-b border-[#EDEBE9] dark:border-[#323130] flex items-center justify-between">
-                  <span className="text-[11px] font-bold text-slate-700 dark:text-slate-200">{t(stage)}</span>
-                  <span className="text-[10px] bg-slate-200 dark:bg-[#323130] text-slate-600 dark:text-slate-300 rounded-full px-2 py-0.5">
-                    {pipelineByStage[stage].length}
-                  </span>
-                </div>
-                <div className="p-2 space-y-2 min-h-[80px]">
-                  {pipelineByStage[stage].map((account) => (
-                    <div key={account.id} className="bg-white dark:bg-[#1b1a19] border border-[#EDEBE9] dark:border-[#323130] rounded p-2.5 shadow-sm space-y-1.5">
-                      <div className="text-[11px] font-bold text-slate-800 dark:text-slate-100">{account.companyName}</div>
-                      <div className="text-[10px] text-slate-450">{account.industryTag}</div>
-                      <select
-                        value={stage}
-                        onChange={(e) => handleStageChange(account.id, e.target.value)}
-                        className="w-full text-[10px] p-1.5 border border-[#EDEBE9] dark:border-[#323130] bg-[#faf9f8] dark:bg-[#252423] rounded outline-none cursor-pointer"
-                      >
-                        {BD_PIPELINE_STAGES.map((s) => (
-                          <option key={s} value={s}>
-                            {t(s)}
-                          </option>
-                        ))}
-                      </select>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
-
-      {activeSubTab === "playbooks" && (
-        <div className="space-y-4">
-          <div className="flex items-center justify-between">
-            <select
-              value={playbookSectorFilter}
-              onChange={(e) => setPlaybookSectorFilter(e.target.value)}
-              className="bg-[#faf9f8] dark:bg-[#252423] border border-[#EDEBE9] dark:border-[#323130] text-xs p-2 rounded outline-none"
-            >
-              <option value="">{t("-- All Sectors --")}</option>
-              {industryStats.map((row) => (
-                <option key={row.industry} value={row.industry}>
-                  {row.industry}
-                </option>
-              ))}
-            </select>
-            <button
-              type="button"
-              onClick={() => {
-                resetPlaybookForm();
-                setEditingPlaybookId(null);
-                setShowAddPlaybook(!showAddPlaybook);
-              }}
-              className="text-xs font-bold bg-[#0078D4] hover:bg-[#106ebe] text-white px-3 py-2 rounded flex items-center gap-1.5 cursor-pointer"
-            >
-              <Plus className="w-4 h-4" />
-              <span>{showAddPlaybook ? t("Cancel") : t("New Playbook")}</span>
-            </button>
+              {onNavigateToTab && (
+                <button
+                  type="button"
+                  onClick={() => onNavigateToTab("deal-management")}
+                  className="text-xs font-bold bg-[#FAF9F8] hover:bg-[#EDEBE9] dark:bg-[#252423] dark:hover:bg-[#323130] text-slate-700 dark:text-slate-200 px-3 py-2 border border-[#EDEBE9] dark:border-[#323130] rounded flex items-center gap-1.5 cursor-pointer"
+                >
+                  <Briefcase className="w-3.5 h-3.5" />
+                  <span>{t("Deal Management")}</span>
+                </button>
+              )}
+            </div>
           </div>
 
-          {showAddPlaybook && (
-            <form onSubmit={handleSavePlaybook} className="bg-white dark:bg-[#1b1a19] border border-[#0078D4]/20 rounded-2xl p-5 shadow-md space-y-3 text-xs">
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                <div>
-                  <label className="text-[10px] font-bold text-slate-400 uppercase block mb-1">{t("Industry / Sector *")}</label>
-                  <input
-                    type="text"
-                    list="marketing-sector-suggestions-pb"
-                    value={playbookForm.industryTag}
-                    onChange={(e) => setPlaybookForm({ ...playbookForm, industryTag: e.target.value })}
-                    className="w-full p-2 border border-[#EDEBE9] dark:border-[#323130] bg-[#faf9f8] dark:bg-[#252423] rounded outline-none focus:border-[#0078D4]"
-                    required
-                  />
-                  <datalist id="marketing-sector-suggestions-pb">
-                    {industryStats.map((row) => (
-                      <option key={row.industry} value={row.industry} />
-                    ))}
-                  </datalist>
+          {bdIsAddingStage && (
+            <div className="bg-[#FAF9F8] dark:bg-[#201f1e] border border-[#0078D4]/30 rounded-xl p-3 flex items-center gap-2">
+              <input
+                type="text"
+                autoFocus
+                value={bdNewStageName}
+                onChange={(e) => setBdNewStageName(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") handleBdAddStage();
+                  if (e.key === "Escape") {
+                    setBdIsAddingStage(false);
+                    setBdNewStageName("");
+                  }
+                }}
+                placeholder={t("New stage name")}
+                className="flex-1 p-2 text-xs border border-[#EDEBE9] dark:border-[#323130] bg-white dark:bg-[#252423] rounded outline-none focus:border-[#0078D4]"
+              />
+              <button type="button" onClick={handleBdAddStage} className="text-xs font-bold bg-emerald-600 hover:bg-emerald-700 text-white px-3 py-2 rounded cursor-pointer">
+                {t("Add")}
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  setBdIsAddingStage(false);
+                  setBdNewStageName("");
+                }}
+                className="text-xs font-bold text-slate-500 px-3 py-2 cursor-pointer"
+              >
+                {t("Cancel")}
+              </button>
+            </div>
+          )}
+
+          {bdDeletingStage && (
+            <form onSubmit={handleBdConfirmDeleteStage} className="bg-rose-50 dark:bg-rose-950/20 border border-rose-200 dark:border-rose-900 rounded-xl p-3 space-y-2">
+              <p className="text-xs font-bold text-rose-800 dark:text-rose-300">
+                {t("Delete stage")} "{t(bdDeletingStage)}"?
+              </p>
+              {(pipelineByStage[bdDeletingStage] || []).length > 0 && (
+                <div className="flex items-center gap-2 flex-wrap">
+                  <label className="text-[11px] text-slate-600 dark:text-slate-300">{t("Move its companies to:")}</label>
+                  <select
+                    value={bdDeleteMigrationTarget}
+                    onChange={(e) => setBdDeleteMigrationTarget(e.target.value)}
+                    className="text-xs p-1.5 border border-[#EDEBE9] dark:border-[#323130] bg-white dark:bg-[#252423] rounded outline-none"
+                  >
+                    {bdActiveStages
+                      .filter((s) => s !== bdDeletingStage)
+                      .map((s) => (
+                        <option key={s} value={s}>
+                          {t(s)}
+                        </option>
+                      ))}
+                  </select>
                 </div>
-                <div>
-                  <label className="text-[10px] font-bold text-slate-400 uppercase block mb-1">{t("Playbook Title *")}</label>
-                  <input
-                    type="text"
-                    value={playbookForm.title}
-                    onChange={(e) => setPlaybookForm({ ...playbookForm, title: e.target.value })}
-                    className="w-full p-2 border border-[#EDEBE9] dark:border-[#323130] bg-[#faf9f8] dark:bg-[#252423] rounded outline-none focus:border-[#0078D4]"
-                    required
-                  />
-                </div>
-                <div className="sm:col-span-2">
-                  <label className="text-[10px] font-bold text-slate-400 uppercase block mb-1">{t("Playbook Content")}</label>
-                  <textarea
-                    value={playbookForm.content}
-                    onChange={(e) => setPlaybookForm({ ...playbookForm, content: e.target.value })}
-                    className="w-full p-2 border border-[#EDEBE9] dark:border-[#323130] bg-[#faf9f8] dark:bg-[#252423] rounded outline-none h-24 resize-none focus:border-[#0078D4]"
-                  />
-                </div>
-                <div>
-                  <label className="text-[10px] font-bold text-slate-400 uppercase block mb-1">{t("Key Talking Points")}</label>
-                  <textarea
-                    value={playbookForm.talkingPoints}
-                    onChange={(e) => setPlaybookForm({ ...playbookForm, talkingPoints: e.target.value })}
-                    className="w-full p-2 border border-[#EDEBE9] dark:border-[#323130] bg-[#faf9f8] dark:bg-[#252423] rounded outline-none h-16 resize-none focus:border-[#0078D4]"
-                  />
-                </div>
-                <div>
-                  <label className="text-[10px] font-bold text-slate-400 uppercase block mb-1">{t("Common Objections")}</label>
-                  <textarea
-                    value={playbookForm.commonObjections}
-                    onChange={(e) => setPlaybookForm({ ...playbookForm, commonObjections: e.target.value })}
-                    className="w-full p-2 border border-[#EDEBE9] dark:border-[#323130] bg-[#faf9f8] dark:bg-[#252423] rounded outline-none h-16 resize-none focus:border-[#0078D4]"
-                  />
-                </div>
-                <div className="sm:col-span-2">
-                  <label className="text-[10px] font-bold text-slate-400 uppercase block mb-1">{t("Case Study References")}</label>
-                  <input
-                    type="text"
-                    value={playbookForm.caseStudyRefs}
-                    onChange={(e) => setPlaybookForm({ ...playbookForm, caseStudyRefs: e.target.value })}
-                    className="w-full p-2 border border-[#EDEBE9] dark:border-[#323130] bg-[#faf9f8] dark:bg-[#252423] rounded outline-none focus:border-[#0078D4]"
-                  />
-                </div>
-              </div>
-              <div className="flex justify-end">
-                <button type="submit" className="text-xs font-bold bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2 rounded flex items-center gap-1 cursor-pointer">
-                  <Save className="w-4 h-4" />
-                  <span>{editingPlaybookId ? t("Update Playbook") : t("Save Playbook")}</span>
+              )}
+              <div className="flex items-center gap-2">
+                <button type="submit" className="text-xs font-bold bg-rose-600 hover:bg-rose-700 text-white px-3 py-1.5 rounded cursor-pointer">
+                  {t("Delete")}
+                </button>
+                <button type="button" onClick={() => setBdDeletingStage(null)} className="text-xs font-bold text-slate-500 px-3 py-1.5 cursor-pointer">
+                  {t("Cancel")}
                 </button>
               </div>
             </form>
           )}
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {playbooks
-              .filter((p) => !playbookSectorFilter || p.industryTag === playbookSectorFilter)
-              .map((p) => (
-                <div key={p.id} className="bg-white dark:bg-[#1b1a19] border border-[#EDEBE9] dark:border-[#323130] rounded-2xl shadow-xs p-4 space-y-2">
-                  <div className="flex items-start justify-between">
-                    <div>
-                      <div className="text-xs font-bold text-slate-800 dark:text-slate-100">{p.title}</div>
-                      <div className="text-[10px] text-[#0078D4] font-semibold mt-0.5">{p.industryTag}</div>
-                    </div>
-                    <div className="flex items-center gap-1.5">
-                      <button type="button" onClick={() => startEditPlaybook(p)} className="text-slate-400 hover:text-[#0078D4] cursor-pointer p-1">
-                        <Edit className="w-3.5 h-3.5" />
+          <div className="flex gap-3 overflow-x-auto pb-2">
+            {bdActiveStages.map((stage) => {
+              const stageAccounts = pipelineByStage[stage] || [];
+              const isCollapsed = !!bdStageMetadata[stage]?.collapsed;
+              const isFinalStage = stage === bdActiveStages[bdActiveStages.length - 1];
+              return (
+                <div
+                  key={stage}
+                  draggable
+                  onDragStart={(e) => handleBdColumnDragStart(e, stage)}
+                  onDragOver={handleBdCardDragOver}
+                  onDrop={(e) => {
+                    if (e.dataTransfer.types.includes("text/bd-column-stage")) {
+                      handleBdColumnDrop(e, stage);
+                    } else {
+                      handleBdCardDrop(e, stage);
+                    }
+                  }}
+                  className={`flex-shrink-0 ${isCollapsed ? "w-12" : "w-64"} bg-[#FAF9F8] dark:bg-[#201f1e] border border-[#EDEBE9] dark:border-[#323130] rounded-2xl transition-all`}
+                >
+                  <div className="p-3 border-b border-[#EDEBE9] dark:border-[#323130] cursor-move select-none">
+                    {isCollapsed ? (
+                      <button type="button" onClick={() => toggleBdCollapseStage(stage)} className="w-full flex flex-col items-center gap-1.5 cursor-pointer">
+                        <span className="text-[9px] font-bold text-slate-500 dark:text-slate-400">{stageAccounts.length}</span>
+                        <span className="text-[10px] font-bold text-slate-600 dark:text-slate-300 [writing-mode:vertical-rl] whitespace-nowrap">{t(stage)}</span>
                       </button>
-                      <button type="button" onClick={() => deletePlaybook(p.id)} className="text-slate-400 hover:text-rose-600 cursor-pointer p-1">
-                        <Trash2 className="w-3.5 h-3.5" />
-                      </button>
-                    </div>
+                    ) : bdRenamingStage === stage ? (
+                      <input
+                        type="text"
+                        autoFocus
+                        value={bdRenameValue}
+                        onChange={(e) => setBdRenameValue(e.target.value)}
+                        onKeyDown={(e) => {
+                          if (e.key === "Enter") handleBdRenameStage(stage, bdRenameValue);
+                          if (e.key === "Escape") setBdRenamingStage(null);
+                        }}
+                        onBlur={() => handleBdRenameStage(stage, bdRenameValue)}
+                        className="w-full text-[11px] font-bold p-1 border border-[#0078D4] bg-white dark:bg-[#252423] rounded outline-none"
+                      />
+                    ) : (
+                      <div className="relative">
+                        <div className="flex items-center justify-between gap-1.5">
+                          <div className="flex items-center gap-1.5 min-w-0">
+                            <span className="text-[11px] font-bold text-slate-700 dark:text-slate-200 truncate">{t(stage)}</span>
+                            <span className="text-[10px] bg-slate-200 dark:bg-[#323130] text-slate-600 dark:text-slate-300 rounded-full px-2 py-0.5 flex-shrink-0">
+                              {stageAccounts.length}
+                            </span>
+                            {isFinalStage && (
+                              <span
+                                title={t("Reaching this stage automatically promotes the company to Deal Management.")}
+                                className="text-[9px] font-bold text-indigo-600 dark:text-indigo-400 flex-shrink-0"
+                              >
+                                → {t("FY")}
+                              </span>
+                            )}
+                          </div>
+                          <button
+                            type="button"
+                            onClick={() => setBdActiveStageMenu(bdActiveStageMenu === stage ? null : stage)}
+                            className="text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 cursor-pointer flex-shrink-0 p-0.5"
+                          >
+                            <MoreVertical className="w-3.5 h-3.5" />
+                          </button>
+                        </div>
+                        {bdActiveStageMenu === stage && (
+                          <div className="absolute z-20 top-full right-0 mt-1 w-40 bg-white dark:bg-[#1b1a19] border border-[#EDEBE9] dark:border-[#323130] rounded-lg shadow-lg p-1 space-y-0.5">
+                            <button
+                              type="button"
+                              onClick={() => {
+                                toggleBdCollapseStage(stage);
+                                setBdActiveStageMenu(null);
+                              }}
+                              className="w-full text-left px-2 py-1.5 text-[11px] text-slate-600 dark:text-slate-300 hover:bg-[#FAF9F8] dark:hover:bg-[#252423] rounded cursor-pointer"
+                            >
+                              {t("Collapse Stage")}
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => {
+                                setBdRenamingStage(stage);
+                                setBdRenameValue(stage);
+                                setBdActiveStageMenu(null);
+                              }}
+                              className="w-full text-left px-2 py-1.5 text-[11px] text-slate-600 dark:text-slate-300 hover:bg-[#FAF9F8] dark:hover:bg-[#252423] rounded cursor-pointer"
+                            >
+                              {t("Rename Stage")}
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => {
+                                handleBdDeleteStage(stage);
+                                setBdActiveStageMenu(null);
+                              }}
+                              className="w-full text-left px-2 py-1.5 text-[11px] text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/20 rounded cursor-pointer"
+                            >
+                              {t("Delete Stage")}
+                            </button>
+                          </div>
+                        )}
+                      </div>
+                    )}
                   </div>
-                  {p.content && <p className="text-[11px] text-slate-600 dark:text-slate-300 whitespace-pre-wrap line-clamp-4">{p.content}</p>}
+                  {!isCollapsed && (
+                    <div className="p-2 space-y-2 min-h-[80px] max-h-[420px] overflow-y-auto">
+                      {stageAccounts.map((account) => (
+                        <div
+                          key={account.id}
+                          draggable
+                          onDragStart={(e) => handleBdCardDragStart(e, account.id)}
+                          className="bg-white dark:bg-[#1b1a19] border border-[#EDEBE9] dark:border-[#323130] rounded p-2.5 shadow-sm space-y-1 cursor-grab active:cursor-grabbing hover:shadow-md transition-all"
+                        >
+                          <div className="text-[11px] font-bold text-slate-800 dark:text-slate-100 truncate">{account.companyName}</div>
+                          <div className="text-[10px] text-slate-450 truncate">{account.industryTag}</div>
+                          {account.promotedToDealId && (
+                            <span className="inline-block text-[9px] font-bold px-1.5 py-0.5 rounded-full bg-indigo-100 text-indigo-700 dark:bg-indigo-950/30 dark:text-indigo-400">
+                              {t("Promoted to Deal Management")}
+                            </span>
+                          )}
+                        </div>
+                      ))}
+                      {stageAccounts.length === 0 && <p className="text-[10px] text-slate-400 text-center py-4">{t("No companies in this stage yet.")}</p>}
+                    </div>
+                  )}
                 </div>
-              ))}
-            {playbooks.length === 0 && (
-              <div className="md:col-span-2 bg-white dark:bg-[#1b1a19] border border-[#EDEBE9] dark:border-[#323130] rounded-2xl p-8 text-center text-xs text-slate-400">
-                {t("No playbooks yet. Create your first one above.")}
-              </div>
-            )}
+              );
+            })}
           </div>
         </div>
       )}
