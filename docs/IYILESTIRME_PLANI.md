@@ -2,7 +2,22 @@
 
 Bu dosya, projenin kaynak kodu üzerinden yapılan UI/UX değerlendirmesini ve dil (TR/EN) tutarlılığı taramasını fazlara bölünmüş, uygulanabilir bir plana çeviriyor. Ekip bu dosyayı çalışma listesi olarak kullanabilir — her fazın altında **Durum** satırı var ve ilerledikçe güncellenmeli.
 
-Son güncelleme: 2026-07-25 (Kaybetme nedeni + tekrar temas hatırlatması tamamlandı)
+Son güncelleme: 2026-07-27 (Pazarlama & İş Geliştirme modülü eklendi)
+
+## Yeni Modül: Pazarlama & İş Geliştirme (2026-07-27)
+
+Kullanıcı talebiyle sidebar'da tamamen ayrı, kendi başına bir modül olarak eklendi (`src/components/MarketingHubView.tsx`, tek sidebar girişi, kendi içinde 8 alt sekme — `AdministrationCenter.tsx`'in internal-tab desenine benzer):
+
+1. **Genel Bakış** — modülün tüm alt bölümlerinden özet istatistik kartları.
+2. **Sektör Zekası** — mevcut `Company`/`Deal` verisinden otomatik hesaplanan sektör bazlı müşteri sayısı, kazanma oranı, kazanılan değer (manuel veri girişi yok).
+3. **Hedef Pazar & Rakip Haritası** — mevcut `crm_target_accounts` kaydını genişletir (yeni alanlar: `competitors`, `analysisNotes`, `bdPipelineStage`, `nextReviewDate`, `lastContactDate`) — ayrı bir hedef firma veritabanı oluşturulmadı, veri tekrarı yok. Rakip ekleme, analiz notu, inceleme/temas hatırlatma tarihi + `CrmDb.upsertTask` ile gerçek hatırlatma görevi oluşturma.
+4. **İş Geliştirme Pipeline'ı** — Target Account'ların `bdPipelineStage` alanına göre gruplanan kanban görünümü (Yeni → LinkedIn Bağlantı → Mesaj → Mail → Telefon → Toplantı → Saha Ziyareti → Teklife Dönüştü/Kaybedildi), aşama değişiminde otomatik temas tarihi kaydı.
+5. **Sektör Oyun Kitapları** — sektöre özel satış playbook CRUD (`crm_marketing_playbooks` KV anahtarı).
+6. **Büyüme Sağlığı** — aktif müşteri, kazanılan/kaybedilen fırsat, açık pipeline değeri, ortalama satış döngüsü, riskli müşteriler (healthScore < 50), aşamaya göre pipeline değeri — hepsi mevcut veriden hesaplanıyor.
+7. **Dijital Pazarlama Zekası** — GA/Search Console/SEMrush rapor yükleme (csv/xlsx/txt) veya yapıştırma + Gemini ile anahtar kelime fırsatları/blog konuları/strateji aksiyonları üretimi. Yeni backend action: `api/gemini/[...action].js` içine `marketing-report-analysis` branch'i eklendi (Vercel Hobby 12/12 fonksiyon limiti korunarak, yeni dosya açılmadı), `lib/server/geminiCore.js`'e `runGeminiMarketingReportAnalysis` eklendi, `vercel.json`'a rewrite eklendi.
+8. **İş Geliştirme KPI + Kayıp Analizi (Win/Loss) + Stratejik Hedefler & OKR** — BD funnel aşama sayıları, mevcut `Deal.lossReason`/`Proposal.lossReason` verisinden kayıp nedeni dağılımı ve genel kazanma oranı, `StrategicGoal`/`MarketingKeyResult` CRUD (`crm_strategic_goals` KV anahtarı).
+
+Yeni tipler `src/types.ts`'e eklendi: `MarketingCompetitor`, `MarketingPlaybook`, `MarketingKeyResult`, `StrategicGoal`, `MarketingReportInsight`, artı `TargetAccount`'a yeni opsiyonel alanlar. Hiçbiri Supabase migration gerektirmedi (jsonb/KV blob deposu). ~150 yeni TR sözlük anahtarı `uiDictionaryExtensions.ts`'e eklendi.
 
 ---
 
