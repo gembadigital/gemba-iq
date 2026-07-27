@@ -6,6 +6,7 @@ import {
   runGeminiCampaignAssist,
   runGeminiCustomPitch,
   runGeminiConvertTable,
+  runGeminiMarketingReportAnalysis,
 } from "../../lib/server/geminiCore.js";
 
 // Consolidated into a single Vercel catch-all route (covers
@@ -150,6 +151,24 @@ export async function convertTableHandler(request, response) {
   }
 }
 
+export async function marketingReportAnalysisHandler(request, response) {
+  response.setHeader("Content-Type", "application/json");
+
+  if (request.method !== "POST") {
+    response.setHeader("Allow", "POST");
+    return response.status(405).json({ error: "Method not allowed" });
+  }
+
+  try {
+    const { reportText, fileName, sourceType, industryContext } = request.body || {};
+    const result = await runGeminiMarketingReportAnalysis({ reportText, fileName, sourceType, industryContext });
+    return response.status(result.status).json(result.body);
+  } catch (error) {
+    console.error("marketing-report-analysis handler error:", error);
+    return response.status(500).json({ error: error.message || "Rapor analizi tamamlanamadı." });
+  }
+}
+
 export default async function handler(request, response) {
   const action = Array.isArray(request.query?.action) ? request.query.action[0] : request.query?.action;
   if (action === "analyze-company") return analyzeCompanyHandler(request, response);
@@ -159,5 +178,6 @@ export default async function handler(request, response) {
   if (action === "campaign-assist") return campaignAssistHandler(request, response);
   if (action === "generate-custom-pitch") return generateCustomPitchHandler(request, response);
   if (action === "convert-table") return convertTableHandler(request, response);
+  if (action === "marketing-report-analysis") return marketingReportAnalysisHandler(request, response);
   return response.status(404).json({ error: "Unknown gemini endpoint." });
 }

@@ -124,6 +124,72 @@ export interface TargetAccount {
   customField1?: string;
   customField2?: string;
   isSelected?: boolean;
+
+  // --- Pazarlama & İş Geliştirme modülü alanları (Hedef Pazar & Rakip
+  // Haritası + İş Geliştirme Pipeline'ı sekmeleri). Mevcut Target Accounts
+  // kaydını genişletir — ayrı bir "hedef firma" veritabanı OLUŞTURULMADI,
+  // aynı crm_target_accounts kaydı kullanılıyor (veri tekrarı yok).
+  competitors?: MarketingCompetitor[];
+  analysisNotes?: string; // Serbest metin firma analiz notu
+  bdPipelineStage?: string; // İş Geliştirme Pipeline Kanban aşaması
+  lastContactDate?: string; // ISO tarih — son temas
+  nextReviewDate?: string; // ISO tarih — bir sonraki inceleme/görüşme hatırlatması
+  reviewNote?: string;
 }
 
+export interface MarketingCompetitor {
+  id: string;
+  name: string;
+  note?: string;
+  website?: string;
+}
+
+// Sektör Oyun Kitapları (Industry Playbooks)
+export interface MarketingPlaybook {
+  id: string;
+  organization_id?: string;
+  industryTag: string;
+  title: string;
+  content: string;
+  talkingPoints?: string;
+  commonObjections?: string;
+  caseStudyRefs?: string;
+  createdAt: string;
+  updatedAt: string;
+  createdBy?: string;
+}
+
+// Stratejik Hedefler & OKR
+export interface MarketingKeyResult {
+  id: string;
+  description: string;
+  targetValue: number;
+  currentValue: number;
+  unit?: string;
+}
+
+export interface StrategicGoal {
+  id: string;
+  organization_id?: string;
+  title: string;
+  ownerName?: string;
+  period: string; // ör. "2026-Q3"
+  keyResults: MarketingKeyResult[];
+  status: "Devam Ediyor" | "Tamamlandı" | "Riskte" | "Ertelendi";
+  createdAt: string;
+  updatedAt: string;
+}
+
+// Dijital Pazarlama Zekası — yüklenen rapor analiz sonuçları
+export interface MarketingReportInsight {
+  id: string;
+  organization_id?: string;
+  fileName: string;
+  uploadedAt: string;
+  sourceType: string; // "Google Analytics" | "Search Console" | "SEMrush" | "Diğer"
+  keywords: string[];
+  blogTopics: string[];
+  strategyActions: string[];
+  rawSummary?: string;
+}
 

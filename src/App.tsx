@@ -18,6 +18,7 @@ import ServicesView from "./components/ServicesView";
 import RevenueManagementView from "./components/RevenueManagementView";
 import ManagementPLView from "./components/ManagementPLView";
 import CompanyDiscoveryView from "./components/CompanyDiscoveryView";
+import MarketingHubView from "./components/MarketingHubView";
 import AdministrationCenter from "./components/AdministrationCenter";
 import UserAccountSettings from "./components/UserAccountSettings";
 import GlobalSearchBar from "./components/GlobalSearchBar";
@@ -112,6 +113,7 @@ const ACTIVE_TABS = [
   "todo-list",
   "contract-manager",
   "documents",
+  "marketing-hub",
   "administration",
 ] as const;
 type ActiveTab = typeof ACTIVE_TABS[number];
@@ -729,6 +731,7 @@ export default function App() {
       "create-proposal": { parent: "Deal Management", child: "Create Proposal" },
       "todo-list": { parent: "CRM", child: "Tasks" },
       "documents": { parent: "CRM", child: "Documents" },
+      "marketing-hub": { parent: "CRM", child: "Marketing & Business Development" },
       "contract-manager": { parent: "CRM", child: "Contract Manager" },
       "campaign-manager": { parent: "Campaign", child: "Campaign Manager" },
       "dashboard": { parent: "Campaign", child: "Campaign Dashboard" },
@@ -1101,6 +1104,14 @@ export default function App() {
               icon={isNotionMode ? <span className="text-base">📁</span> : <FileText className="w-[20px] h-[20px] flex-shrink-0 text-indigo-500" />}
               label="Documents"
               activeBorderClass="border-l-[#0078D4]"
+              isSubmenu={false}
+            />
+
+            <SidebarButton
+              id="marketing-hub"
+              icon={isNotionMode ? <span className="text-base">📣</span> : <Sparkles className="w-[20px] h-[20px] flex-shrink-0 text-purple-500" />}
+              label="Marketing & Business Development"
+              activeBorderClass="border-l-purple-500"
               isSubmenu={false}
             />
 
@@ -1790,6 +1801,10 @@ export default function App() {
 
             {activeTab === "documents" && (
               <DocumentsView />
+            )}
+
+            {activeTab === "marketing-hub" && (
+              <MarketingHubView onNavigateToTab={(tab) => setActiveTab(tab as any)} />
             )}
 
             {activeTab === "contract-manager" && (
