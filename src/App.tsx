@@ -81,6 +81,9 @@ import {
   ChevronDown,
   Megaphone,
   BarChart2,
+  TrendingUp,
+  BookOpen,
+  Award,
   Lock,
   MapPin,
   ShieldCheck,
@@ -113,7 +116,14 @@ const ACTIVE_TABS = [
   "todo-list",
   "contract-manager",
   "documents",
-  "marketing-hub",
+  "marketing-overview",
+  "marketing-industry-intel",
+  "marketing-target-market",
+  "marketing-bd-pipeline",
+  "marketing-playbooks",
+  "marketing-growth-health",
+  "marketing-digital-intel",
+  "marketing-kpi-okr",
   "administration",
 ] as const;
 type ActiveTab = typeof ACTIVE_TABS[number];
@@ -283,6 +293,7 @@ export default function App() {
   const [dealsMenuExpanded, setDealsMenuExpanded] = useState<boolean>(true);
   const [leadsMenuExpanded, setLeadsMenuExpanded] = useState<boolean>(true);
   const [campaignMenuExpanded, setCampaignMenuExpanded] = useState<boolean>(true);
+  const [marketingMenuExpanded, setMarketingMenuExpanded] = useState<boolean>(true);
   const [sidebarCollapsed, setSidebarCollapsed] = useState<boolean>(() => {
     return localStorage.getItem("sidebar-collapsed") === "true";
   });
@@ -417,6 +428,20 @@ export default function App() {
     }
     if (["campaign-manager", "dashboard", "designer", "progress", "history"].includes(activeTab)) {
       setCampaignMenuExpanded(true);
+    }
+    if (
+      [
+        "marketing-overview",
+        "marketing-industry-intel",
+        "marketing-target-market",
+        "marketing-bd-pipeline",
+        "marketing-playbooks",
+        "marketing-growth-health",
+        "marketing-digital-intel",
+        "marketing-kpi-okr",
+      ].includes(activeTab)
+    ) {
+      setMarketingMenuExpanded(true);
     }
   }, [activeTab]);
 
@@ -731,7 +756,14 @@ export default function App() {
       "create-proposal": { parent: "Deal Management", child: "Create Proposal" },
       "todo-list": { parent: "CRM", child: "Tasks" },
       "documents": { parent: "CRM", child: "Documents" },
-      "marketing-hub": { parent: "CRM", child: "Marketing & Business Development" },
+      "marketing-overview": { parent: "Marketing & Business Development", child: "Marketing Hub Overview" },
+      "marketing-industry-intel": { parent: "Marketing & Business Development", child: "Industry Intelligence" },
+      "marketing-target-market": { parent: "Marketing & Business Development", child: "Target Market & Competitor Map" },
+      "marketing-bd-pipeline": { parent: "Marketing & Business Development", child: "Business Development Pipeline" },
+      "marketing-playbooks": { parent: "Marketing & Business Development", child: "Industry Playbooks" },
+      "marketing-growth-health": { parent: "Marketing & Business Development", child: "Growth Health" },
+      "marketing-digital-intel": { parent: "Marketing & Business Development", child: "Digital Marketing Intelligence" },
+      "marketing-kpi-okr": { parent: "Marketing & Business Development", child: "BD KPIs, Win/Loss & OKR" },
       "contract-manager": { parent: "CRM", child: "Contract Manager" },
       "campaign-manager": { parent: "Campaign", child: "Campaign Manager" },
       "dashboard": { parent: "Campaign", child: "Campaign Dashboard" },
@@ -1107,13 +1139,99 @@ export default function App() {
               isSubmenu={false}
             />
 
-            <SidebarButton
-              id="marketing-hub"
-              icon={isNotionMode ? <span className="text-base">📣</span> : <Sparkles className="w-[20px] h-[20px] flex-shrink-0 text-purple-500" />}
-              label="Marketing & Business Development"
-              activeBorderClass="border-l-purple-500"
-              isSubmenu={false}
-            />
+            {/* Collapsible Marketing & Business Development sub-menu */}
+            <div className="flex flex-col gap-[4px]">
+              <button
+                type="button"
+                onClick={() => setMarketingMenuExpanded(!marketingMenuExpanded)}
+                className={`w-full max-w-full overflow-hidden flex items-center transition-all group relative cursor-pointer gap-[12px] ${
+                  sidebarCollapsed ? "px-0 justify-center h-[48px] min-h-[48px] py-1" : "justify-between pl-[24px] pr-[16px] h-[48px] min-h-[48px] py-1"
+                } ${
+                  isNotionMode
+                    ? "text-slate-650 dark:text-slate-400 hover:bg-[#eaeae9]/50 dark:hover:bg-[#2c2c2c]/50"
+                    : "border-l-[4px] border-l-transparent text-slate-500 dark:text-slate-400 hover:bg-slate-100/60 dark:hover:bg-zinc-800/40 hover:text-slate-800 dark:hover:text-zinc-100"
+                }`}
+              >
+                <div className={`flex items-center gap-[12px] ${sidebarCollapsed ? "w-full justify-center" : "truncate flex-1 min-w-0"}`}>
+                  <div className="w-[20px] h-[20px] flex items-center justify-center flex-shrink-0 [&_svg]:!w-[20px] [&_svg]:!h-[20px] text-purple-500 [&_svg]:!text-purple-500">
+                    {isNotionMode ? (
+                      <span className="text-base">📣</span>
+                    ) : (
+                      <Sparkles className="w-[20px] h-[20px] flex-shrink-0" />
+                    )}
+                  </div>
+                  {!sidebarCollapsed && <span className="text-[15px] font-semibold leading-[1.4] cursor-pointer text-left flex-1 truncate">{t("Marketing & Business Development")}</span>}
+                </div>
+                {!sidebarCollapsed && (
+                  <ChevronDown
+                     className={`w-4 h-4 text-slate-450 dark:text-zinc-500 transition-transform duration-200 flex-shrink-0 ${
+                      marketingMenuExpanded ? "" : "-rotate-90"
+                    }`}
+                  />
+                )}
+                {sidebarCollapsed && (
+                  <span className="absolute left-full ml-3 px-2.5 py-1.5 bg-slate-900 text-white dark:bg-zinc-800 dark:text-zinc-100 text-xs font-semibold rounded-md opacity-0 group-hover:opacity-100 transition-all duration-200 pointer-events-none z-50 shadow-lg translate-x-1 group-hover:translate-x-0 whitespace-nowrap">
+                    {t("Marketing & Business Development")}
+                  </span>
+                )}
+              </button>
+
+              {marketingMenuExpanded && (
+                <div className="relative flex flex-col gap-[4px] w-full overflow-hidden pl-0 ml-0">
+                  {!sidebarCollapsed && (
+                    <div className="absolute left-[34px] top-0 bottom-0 w-[1px] bg-[#EDEBE9] dark:bg-[#323130] z-10" />
+                  )}
+                  <SidebarButton
+                    id="marketing-overview"
+                    icon={isNotionMode ? <span className="text-base">📊</span> : <LayoutDashboard className="w-[20px] h-[20px] flex-shrink-0" />}
+                    label="Marketing Hub Overview"
+                    isSubmenu={true}
+                  />
+                  <SidebarButton
+                    id="marketing-industry-intel"
+                    icon={isNotionMode ? <span className="text-base">📈</span> : <TrendingUp className="w-[20px] h-[20px] flex-shrink-0 text-blue-550" />}
+                    label="Industry Intelligence"
+                    isSubmenu={true}
+                  />
+                  <SidebarButton
+                    id="marketing-target-market"
+                    icon={isNotionMode ? <span className="text-base">🎯</span> : <Target className="w-[20px] h-[20px] flex-shrink-0 text-rose-500" />}
+                    label="Target Market & Competitor Map"
+                    isSubmenu={true}
+                  />
+                  <SidebarButton
+                    id="marketing-bd-pipeline"
+                    icon={isNotionMode ? <span className="text-base">💼</span> : <Briefcase className="w-[20px] h-[20px] flex-shrink-0 text-indigo-500" />}
+                    label="Business Development Pipeline"
+                    isSubmenu={true}
+                  />
+                  <SidebarButton
+                    id="marketing-playbooks"
+                    icon={isNotionMode ? <span className="text-base">📘</span> : <BookOpen className="w-[20px] h-[20px] flex-shrink-0 text-amber-500" />}
+                    label="Industry Playbooks"
+                    isSubmenu={true}
+                  />
+                  <SidebarButton
+                    id="marketing-growth-health"
+                    icon={isNotionMode ? <span className="text-base">📉</span> : <BarChart2 className="w-[20px] h-[20px] flex-shrink-0 text-emerald-500" />}
+                    label="Growth Health"
+                    isSubmenu={true}
+                  />
+                  <SidebarButton
+                    id="marketing-digital-intel"
+                    icon={isNotionMode ? <span className="text-base">🔍</span> : <Search className="w-[20px] h-[20px] flex-shrink-0 text-blue-550" />}
+                    label="Digital Marketing Intelligence"
+                    isSubmenu={true}
+                  />
+                  <SidebarButton
+                    id="marketing-kpi-okr"
+                    icon={isNotionMode ? <span className="text-base">🏆</span> : <Award className="w-[20px] h-[20px] flex-shrink-0 text-purple-500" />}
+                    label="BD KPIs, Win/Loss & OKR"
+                    isSubmenu={true}
+                  />
+                </div>
+              )}
+            </div>
 
             <SidebarButton
               id="contract-manager"
@@ -1803,8 +1921,36 @@ export default function App() {
               <DocumentsView />
             )}
 
-            {activeTab === "marketing-hub" && (
-              <MarketingHubView onNavigateToTab={(tab) => setActiveTab(tab as any)} />
+            {activeTab === "marketing-overview" && (
+              <MarketingHubView key="marketing-overview" initialSubTab="overview" onNavigateToTab={(tab) => setActiveTab(tab as any)} />
+            )}
+
+            {activeTab === "marketing-industry-intel" && (
+              <MarketingHubView key="marketing-industry-intel" initialSubTab="industry-intel" onNavigateToTab={(tab) => setActiveTab(tab as any)} />
+            )}
+
+            {activeTab === "marketing-target-market" && (
+              <MarketingHubView key="marketing-target-market" initialSubTab="target-market" onNavigateToTab={(tab) => setActiveTab(tab as any)} />
+            )}
+
+            {activeTab === "marketing-bd-pipeline" && (
+              <MarketingHubView key="marketing-bd-pipeline" initialSubTab="bd-pipeline" onNavigateToTab={(tab) => setActiveTab(tab as any)} />
+            )}
+
+            {activeTab === "marketing-playbooks" && (
+              <MarketingHubView key="marketing-playbooks" initialSubTab="playbooks" onNavigateToTab={(tab) => setActiveTab(tab as any)} />
+            )}
+
+            {activeTab === "marketing-growth-health" && (
+              <MarketingHubView key="marketing-growth-health" initialSubTab="growth-health" onNavigateToTab={(tab) => setActiveTab(tab as any)} />
+            )}
+
+            {activeTab === "marketing-digital-intel" && (
+              <MarketingHubView key="marketing-digital-intel" initialSubTab="digital-intel" onNavigateToTab={(tab) => setActiveTab(tab as any)} />
+            )}
+
+            {activeTab === "marketing-kpi-okr" && (
+              <MarketingHubView key="marketing-kpi-okr" initialSubTab="kpi-okr" onNavigateToTab={(tab) => setActiveTab(tab as any)} />
             )}
 
             {activeTab === "contract-manager" && (
