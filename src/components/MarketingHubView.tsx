@@ -44,7 +44,7 @@ import {
 } from "recharts";
 import {
   TargetAccount,
-  MarketingCompetitor,
+  TargetContact,
   MarketingPlaybook,
   StrategicGoal,
   MarketingKeyResult,
@@ -52,7 +52,7 @@ import {
 } from "../types";
 import { useLanguage } from "../lib/LanguageContext";
 import { useOrganization } from "../lib/OrganizationContext";
-import { CrmDb } from "../lib/CrmDb";
+import { CrmDb, normalizeTrKey } from "../lib/CrmDb";
 import { getActiveOrganizationId } from "../lib/tenantStorage";
 import { ConfirmModal } from "./shared/ConfirmModal";
 import { useConfirm } from "../lib/useConfirm";
@@ -318,52 +318,120 @@ export default function MarketingHubView({ initialSubTab, onNavigateToTab }: Mar
     [growthHealth, t]
   );
 
-  // --- Hedef Pazar & Rakip Haritası state/handlers ---
-  const [newTargetForm, setNewTargetForm] = useState({
+  // --- Hedef Pazar & Rakip Haritası state/handlers (v2) ---
+  // İki başlangıç yolu: (1) mevcut müşteri üzerinden — sektörü otomatik alır,
+  // aynı sektördeki kayıtlı hedef/rakip firmaları "Rakip Haritası" olarak
+  // listeler; (2) doğrudan yeni hedef firma — rakip analizi şart değil.
+  const [startMode, setStartMode] = useState<"customer" | "manual">("customer");
+  const [selectedSourceCompanyId, setSelectedSourceCompanyId] = useState<string>("");
+  const [showTargetForm, setShowTargetForm] = useState(false);
+  const [targetFormDraft, setTargetFormDraft] = useState({
     companyName: "",
     industryTag: "",
+    subIndustry: "",
+    city: "",
     websiteUrl: "",
-    contactName: "",
-    contactEmail: "",
     analysisNotes: "",
   });
-  const [showAddTarget, setShowAddTarget] = useState(false);
   const [targetSectorFilter, setTargetSectorFilter] = useState("");
   const [targetSearch, setTargetSearch] = useState("");
   const [expandedAccountId, setExpandedAccountId] = useState<string | null>(null);
-  const [newCompetitorDraft, setNewCompetitorDraft] = useState<Record<string, string>>({});
+  const [contactDraftByAccount, setContactDraftByAccount] = useState<Record<string, Partial<TargetContact>>>({});
+  const [showContactFormFor, setShowContactFormFor] = useState<string | null>(null);
+  const [pendingLeadPrompt, setPendingLeadPrompt] = useState<{ accountId: string; contactId: string } | null>(null);
 
-  const handleAddTargetCompany = (e: React.FormEvent) => {
+  const selectedSourceCompany = useMemo(
+    () => companies.find((c) => c.id === selectedSourceCompanyId) || null,
+    [companies, selectedSourceCompanyId]
+  );
+
+  // Seçenek 1 (Mevcut Müşteri Üzerinden) otomatik doldurma: referans
+  // projeler kazanılan fırsatlardan, kullanılan hizmetler kabul edilen
+  // tekliflerin services[] alanından türetilir — Company kaydında bu alanlar
+  // ayrıca tutulmuyor, mevcut Deal/Proposal verisinden hesaplanır (veri
+  // tekrarı yok).
+  const selectedCompanyIntel = useMemo(() => {
+    if (!selectedSourceCompany) return { referenceProjects: [] as string[], servicesUsed: [] as string[] };
+    const companyDeals = deals.filter(
+      (d) => (d.companyId && d.companyId === selectedSourceCompany.id) || normalizeTrKey(d.companyName) === normalizeTrKey(selectedSourceCompany.name)
+    );
+    const referenceProjects = Array.from(
+      new Set(
+        companyDeals
+          .filter((d) => isWonStage(d.stage))
+          .map((d) => d.dealName)
+          .filter((n): n is string => Boolean(n && n.trim()))
+      )
+    ).slice(0, 6);
+    const companyProposals = proposals.filter(
+      (p) => (p.companyId && p.companyId === selectedSourceCompany.id) || normalizeTrKey(p.companyName) === normalizeTrKey(selectedSourceCompany.name)
+    );
+    const servicesUsed = Array.from(new Set(companyProposals.flatMap((p) => p.services || []).filter(Boolean))).slice(0, 8);
+    return { referenceProjects, servicesUsed };
+  }, [selectedSourceCompany, deals, proposals]);
+
+  // Rakip Haritası: seçili müşteriyle AYNI sektördeki (TR karakter
+  // duyarsız) tüm hedef firma kayıtları — bu sayede rakip listesi ayrı bir
+  // veri modeline değil, mevcut crm_target_accounts kaydına dayanır.
+  const competitorsForSelectedCompany = useMemo(() => {
+    if (!selectedSourceCompany) return [];
+    const key = normalizeTrKey(selectedSourceCompany.industry);
+    if (!key) return [];
+    return accounts.filter((a) => normalizeTrKey(a.industryTag) === key);
+  }, [accounts, selectedSourceCompany]);
+
+  // Durum: Hedef / Görüşülüyor / Müşteri — "Müşteri" mevcut Companies
+  // kaydıyla TR-duyarsız isim eşleşmesinden otomatik tespit edilir (aynı
+  // firma iki kez CRM'e girilmez, sadece durumu değişir).
+  const getRelationshipStatus = (account: TargetAccount): "Hedef" | "Görüşülüyor" | "Müşteri" => {
+    const isCustomer = companies.some((c) => normalizeTrKey(c.name) === normalizeTrKey(account.companyName));
+    if (isCustomer) return "Müşteri";
+    if (account.bdPipelineStage && account.bdPipelineStage !== "Yeni") return "Görüşülüyor";
+    return "Hedef";
+  };
+
+  const resetTargetForm = () =>
+    setTargetFormDraft({ companyName: "", industryTag: "", subIndustry: "", city: "", websiteUrl: "", analysisNotes: "" });
+
+  const handleCreateTarget = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!newTargetForm.companyName.trim()) {
+    if (!targetFormDraft.companyName.trim()) {
       triggerToast(t("Company name is strictly required."), "error");
       return;
     }
+    const isFromCustomer = startMode === "customer" && !!selectedSourceCompany;
+    const industryTag = isFromCustomer
+      ? selectedSourceCompany!.industry || t("General Industry")
+      : targetFormDraft.industryTag.trim() || t("General Industry");
     const added: TargetAccount = {
       id: `target_${Date.now()}_${Math.floor(Math.random() * 1000)}`,
       no: accounts.length + 1,
-      companyName: newTargetForm.companyName.trim(),
-      websiteUrl: newTargetForm.websiteUrl.trim() || `https://www.${newTargetForm.companyName.toLowerCase().replace(/[^a-z0-9]/g, "")}.com`,
-      industryTag: newTargetForm.industryTag.trim() || t("General Industry"),
+      companyName: targetFormDraft.companyName.trim(),
+      websiteUrl: targetFormDraft.websiteUrl.trim() || `https://www.${targetFormDraft.companyName.toLowerCase().replace(/[^a-z0-9]/g, "")}.com`,
+      industryTag,
+      subIndustry: isFromCustomer ? selectedSourceCompany!.subIndustry || "" : targetFormDraft.subIndustry.trim(),
+      city: isFromCustomer ? selectedSourceCompany!.billingCity || targetFormDraft.city.trim() : targetFormDraft.city.trim(),
       companySize: "",
       locationMain: "",
-      contactName: newTargetForm.contactName.trim(),
-      contactEmail: newTargetForm.contactEmail.trim(),
       leadStatus: "New",
       leadSegment: "Cold",
       riskScore: 70,
       aiAnalysisSummary: "",
       draftTemplates: "",
-      analysisSource: "Marketing Hub Manual Entry",
+      analysisSource: isFromCustomer ? "Marketing Hub — Rakip Haritası" : "Marketing Hub Manual Entry",
       analysisDate: new Date().toLocaleString("tr-TR"),
       rawOutput: "",
-      analysisNotes: newTargetForm.analysisNotes.trim(),
+      analysisNotes: targetFormDraft.analysisNotes.trim(),
       bdPipelineStage: "Yeni",
-      competitors: [],
+      sourceType: isFromCustomer ? "customer" : "manual",
+      discoveredFromCompanyId: isFromCustomer ? selectedSourceCompany!.id : undefined,
+      discoveredFromCompanyName: isFromCustomer ? selectedSourceCompany!.name : undefined,
+      contacts: [],
     };
     persistAccounts([...accounts, added]);
-    setNewTargetForm({ companyName: "", industryTag: "", websiteUrl: "", contactName: "", contactEmail: "", analysisNotes: "" });
-    setShowAddTarget(false);
+    resetTargetForm();
+    setShowTargetForm(false);
+    setExpandedAccountId(added.id);
     triggerToast(t("Added {name} to Target Accounts registry").replace("{name}", added.companyName), "success");
   };
 
@@ -371,20 +439,102 @@ export default function MarketingHubView({ initialSubTab, onNavigateToTab }: Mar
     persistAccounts(accounts.map((a) => (a.id === id ? { ...a, ...patch } : a)));
   };
 
-  const addCompetitor = (accountId: string) => {
-    const name = (newCompetitorDraft[accountId] || "").trim();
-    if (!name) return;
-    const account = accounts.find((a) => a.id === accountId);
-    if (!account) return;
-    const competitor: MarketingCompetitor = { id: `comp_${Date.now()}`, name };
-    updateAccountField(accountId, { competitors: [...(account.competitors || []), competitor] });
-    setNewCompetitorDraft({ ...newCompetitorDraft, [accountId]: "" });
+  // --- Kontakt Yönetimi (v2) ---
+  const openContactForm = (accountId: string) => {
+    setShowContactFormFor(accountId);
+    setContactDraftByAccount({ ...contactDraftByAccount, [accountId]: { status: "Araştırılıyor" } });
   };
 
-  const removeCompetitor = (accountId: string, competitorId: string) => {
+  const updateContactDraft = (accountId: string, patch: Partial<TargetContact>) => {
+    setContactDraftByAccount({
+      ...contactDraftByAccount,
+      [accountId]: { ...(contactDraftByAccount[accountId] || { status: "Araştırılıyor" }), ...patch },
+    });
+  };
+
+  const handleAddContact = (accountId: string) => {
+    const draft = contactDraftByAccount[accountId];
+    if (!draft?.fullName?.trim()) {
+      triggerToast(t("Contact full name is required."), "error");
+      return;
+    }
     const account = accounts.find((a) => a.id === accountId);
     if (!account) return;
-    updateAccountField(accountId, { competitors: (account.competitors || []).filter((c) => c.id !== competitorId) });
+    const now = new Date().toISOString();
+    const contact: TargetContact = {
+      id: `contact_${Date.now()}`,
+      fullName: draft.fullName.trim(),
+      title: draft.title?.trim() || "",
+      department: draft.department?.trim() || "",
+      phone: draft.phone?.trim() || "",
+      email: draft.email?.trim() || "",
+      linkedin: draft.linkedin?.trim() || "",
+      source: draft.source?.trim() || "",
+      status: draft.status || "Araştırılıyor",
+      createdAt: now,
+      updatedAt: now,
+    };
+    updateAccountField(accountId, {
+      contacts: [...(account.contacts || []), contact],
+      lastContactDate: new Date().toISOString().split("T")[0],
+    });
+    setContactDraftByAccount({ ...contactDraftByAccount, [accountId]: { status: "Araştırılıyor" } });
+    setShowContactFormFor(null);
+    setPendingLeadPrompt({ accountId, contactId: contact.id });
+  };
+
+  const updateContact = (accountId: string, contactId: string, patch: Partial<TargetContact>) => {
+    const account = accounts.find((a) => a.id === accountId);
+    if (!account) return;
+    updateAccountField(accountId, {
+      contacts: (account.contacts || []).map((c) => (c.id === contactId ? { ...c, ...patch, updatedAt: new Date().toISOString() } : c)),
+    });
+  };
+
+  const deleteContact = async (accountId: string, contactId: string) => {
+    const ok = await confirm({
+      title: t("Delete Contact"),
+      message: t("Are you sure you want to delete this contact?"),
+      confirmLabel: t("Delete"),
+      cancelLabel: t("Cancel"),
+      danger: true,
+    });
+    if (!ok) return;
+    const account = accounts.find((a) => a.id === accountId);
+    if (!account) return;
+    updateAccountField(accountId, { contacts: (account.contacts || []).filter((c) => c.id !== contactId) });
+  };
+
+  // Kontakt lead adayına dönüştürülür: mevcut CrmDb.upsertLeadProfile
+  // e-postaya göre eşleşir, firma tekrar oluşturulmaz (Lead.company sadece
+  // isim referansı), aynı e-posta varsa var olan Lead kaydı güncellenir.
+  const convertContactToLead = (accountId: string, contactId: string) => {
+    const account = accounts.find((a) => a.id === accountId);
+    const contact = account?.contacts?.find((c) => c.id === contactId);
+    if (!account || !contact) return;
+    if (!contact.email?.trim()) {
+      triggerToast(t("An email address is required to create a lead."), "error");
+      return;
+    }
+    const nameParts = contact.fullName.trim().split(" ");
+    const firstName = nameParts[0] || contact.fullName;
+    const lastName = nameParts.slice(1).join(" ");
+    const result = CrmDb.upsertLeadProfile({
+      firstName,
+      lastName,
+      fullName: contact.fullName,
+      email: contact.email.trim(),
+      company: account.companyName,
+      department: contact.department || "",
+      industry: account.industryTag,
+    });
+    if (!result) {
+      triggerToast(t("Could not create lead — check the email address."), "error");
+      return;
+    }
+    updateContact(accountId, contactId, { leadProfileId: result.id, convertedToLeadAt: new Date().toISOString() });
+    setPendingLeadPrompt(null);
+    triggerToast(t("Lead created and added to Lead Profiles."), "success");
   };
 
   const deleteTargetAccount = async (id: string) => {
@@ -968,133 +1118,269 @@ export default function MarketingHubView({ initialSubTab, onNavigateToTab }: Mar
               valueColor="text-amber-600 dark:text-amber-400"
             />
             <KpiCard
-              label={t("Competitors")}
-              value={String(accounts.reduce((sum, a) => sum + (a.competitors?.length || 0), 0))}
+              label={t("Contacts")}
+              value={String(accounts.reduce((sum, a) => sum + (a.contacts?.length || 0), 0))}
               icon={<Users className="w-4 h-4" />}
               accentColor="text-rose-500"
             />
             <KpiCard label={t("Sectors Tracked")} value={String(industryStats.length)} icon={<TrendingUp className="w-4 h-4" />} />
           </div>
 
-          <div className="bg-white dark:bg-[#1b1a19] p-4 border border-[#EDEBE9] dark:border-[#323130] rounded-2xl shadow-xs flex flex-col md:flex-row md:items-center justify-between gap-3">
-            <div className="flex flex-wrap items-center gap-2 text-xs">
-              <div className="relative">
-                <Search className="w-3.5 h-3.5 text-slate-400 absolute left-3 top-2.5" />
-                <input
-                  type="text"
-                  placeholder={t("Search target companies...")}
-                  value={targetSearch}
-                  onChange={(e) => setTargetSearch(e.target.value)}
-                  className="bg-[#faf9f8] dark:bg-[#252423] border border-[#EDEBE9] dark:border-[#323130] text-xs rounded pl-9 pr-4 py-2 w-56 outline-none focus:border-[#0078D4]"
-                />
-              </div>
-              <select
-                value={targetSectorFilter}
-                onChange={(e) => setTargetSectorFilter(e.target.value)}
-                className="bg-[#faf9f8] dark:bg-[#252423] border border-[#EDEBE9] dark:border-[#323130] text-xs p-2 rounded outline-none"
-              >
-                <option value="">{t("-- All Sectors --")}</option>
-                {industryStats.map((row) => (
-                  <option key={row.industry} value={row.industry}>
-                    {row.industry}
-                  </option>
-                ))}
-              </select>
-            </div>
+          {/* 1. Başlangıç Seçimi */}
+          <div className="bg-white dark:bg-[#1b1a19] border border-[#EDEBE9] dark:border-[#323130] rounded-2xl shadow-xs p-5 space-y-4">
             <div className="flex items-center gap-2">
+              <button
+                type="button"
+                onClick={() => setStartMode("customer")}
+                className={`text-xs font-bold px-3 py-2 rounded flex items-center gap-1.5 cursor-pointer border ${
+                  startMode === "customer"
+                    ? "bg-[#0078D4] border-[#0078D4] text-white"
+                    : "bg-[#FAF9F8] dark:bg-[#252423] border-[#EDEBE9] dark:border-[#323130] text-slate-600 dark:text-slate-300"
+                }`}
+              >
+                <Users className="w-3.5 h-3.5" />
+                <span>{t("Via Existing Customer")}</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => setStartMode("manual")}
+                className={`text-xs font-bold px-3 py-2 rounded flex items-center gap-1.5 cursor-pointer border ${
+                  startMode === "manual"
+                    ? "bg-[#0078D4] border-[#0078D4] text-white"
+                    : "bg-[#FAF9F8] dark:bg-[#252423] border-[#EDEBE9] dark:border-[#323130] text-slate-600 dark:text-slate-300"
+                }`}
+              >
+                <Plus className="w-3.5 h-3.5" />
+                <span>{t("New Target Company")}</span>
+              </button>
               {onNavigateToTab && (
                 <button
                   type="button"
                   onClick={() => onNavigateToTab("deal-management")}
-                  className="text-xs font-bold bg-[#FAF9F8] hover:bg-[#EDEBE9] dark:bg-[#252423] dark:hover:bg-[#323130] text-slate-700 dark:text-slate-200 px-3 py-2 border border-[#EDEBE9] dark:border-[#323130] rounded flex items-center gap-1.5 cursor-pointer"
+                  className="ml-auto text-xs font-bold bg-[#FAF9F8] hover:bg-[#EDEBE9] dark:bg-[#252423] dark:hover:bg-[#323130] text-slate-700 dark:text-slate-200 px-3 py-2 border border-[#EDEBE9] dark:border-[#323130] rounded flex items-center gap-1.5 cursor-pointer"
                 >
                   <Briefcase className="w-3.5 h-3.5" />
                   <span>{t("Deal Management")}</span>
                 </button>
               )}
-              <button
-                type="button"
-                onClick={() => setShowAddTarget(!showAddTarget)}
-                className="text-xs font-bold bg-[#0078D4] hover:bg-[#106ebe] text-white px-3 py-2 rounded flex items-center gap-1.5 cursor-pointer"
-              >
-                <Plus className="w-4 h-4" />
-                <span>{showAddTarget ? t("Cancel") : t("Add Target Company")}</span>
-              </button>
             </div>
-          </div>
 
-          {showAddTarget && (
-            <form onSubmit={handleAddTargetCompany} className="bg-white dark:bg-[#1b1a19] border border-[#0078D4]/20 rounded-2xl p-5 shadow-md space-y-3">
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
+            {startMode === "customer" && (
+              <div className="space-y-4">
                 <div>
-                  <label className="text-[10px] font-bold text-slate-400 uppercase block mb-1">{t("Company Name *")}</label>
-                  <input
-                    type="text"
-                    value={newTargetForm.companyName}
-                    onChange={(e) => setNewTargetForm({ ...newTargetForm, companyName: e.target.value })}
-                    className="w-full p-2 border border-[#EDEBE9] dark:border-[#323130] bg-[#faf9f8] dark:bg-[#252423] rounded outline-none focus:border-[#0078D4]"
-                    required
-                  />
-                </div>
-                <div>
-                  <label className="text-[10px] font-bold text-slate-400 uppercase block mb-1">{t("Industry / Sector")}</label>
-                  <input
-                    type="text"
-                    list="marketing-sector-suggestions"
-                    value={newTargetForm.industryTag}
-                    onChange={(e) => setNewTargetForm({ ...newTargetForm, industryTag: e.target.value })}
-                    className="w-full p-2 border border-[#EDEBE9] dark:border-[#323130] bg-[#faf9f8] dark:bg-[#252423] rounded outline-none focus:border-[#0078D4]"
-                  />
-                  <datalist id="marketing-sector-suggestions">
-                    {industryStats.map((row) => (
-                      <option key={row.industry} value={row.industry} />
+                  <label className="text-[10px] font-bold text-slate-400 uppercase block mb-1">{t("Select Customer")}</label>
+                  <select
+                    value={selectedSourceCompanyId}
+                    onChange={(e) => setSelectedSourceCompanyId(e.target.value)}
+                    className="w-full sm:w-80 p-2 border border-[#EDEBE9] dark:border-[#323130] bg-[#faf9f8] dark:bg-[#252423] rounded outline-none text-xs focus:border-[#0078D4]"
+                  >
+                    <option value="">{t("-- Select a customer --")}</option>
+                    {companies.map((c) => (
+                      <option key={c.id} value={c.id}>
+                        {c.name}
+                      </option>
                     ))}
-                  </datalist>
+                  </select>
                 </div>
-                <div>
-                  <label className="text-[10px] font-bold text-slate-400 uppercase block mb-1">{t("Website URL")}</label>
-                  <input
-                    type="text"
-                    value={newTargetForm.websiteUrl}
-                    onChange={(e) => setNewTargetForm({ ...newTargetForm, websiteUrl: e.target.value })}
-                    className="w-full p-2 border border-[#EDEBE9] dark:border-[#323130] bg-[#faf9f8] dark:bg-[#252423] rounded outline-none focus:border-[#0078D4]"
-                  />
-                </div>
-                <div>
-                  <label className="text-[10px] font-bold text-slate-400 uppercase block mb-1">{t("Contact Name")}</label>
-                  <input
-                    type="text"
-                    value={newTargetForm.contactName}
-                    onChange={(e) => setNewTargetForm({ ...newTargetForm, contactName: e.target.value })}
-                    className="w-full p-2 border border-[#EDEBE9] dark:border-[#323130] bg-[#faf9f8] dark:bg-[#252423] rounded outline-none focus:border-[#0078D4]"
-                  />
-                </div>
-                <div>
-                  <label className="text-[10px] font-bold text-slate-400 uppercase block mb-1">{t("Contact Email")}</label>
-                  <input
-                    type="email"
-                    value={newTargetForm.contactEmail}
-                    onChange={(e) => setNewTargetForm({ ...newTargetForm, contactEmail: e.target.value })}
-                    className="w-full p-2 border border-[#EDEBE9] dark:border-[#323130] bg-[#faf9f8] dark:bg-[#252423] rounded outline-none focus:border-[#0078D4]"
-                  />
-                </div>
-                <div className="sm:col-span-2">
-                  <label className="text-[10px] font-bold text-slate-400 uppercase block mb-1">{t("Company Analysis Notes")}</label>
-                  <textarea
-                    value={newTargetForm.analysisNotes}
-                    onChange={(e) => setNewTargetForm({ ...newTargetForm, analysisNotes: e.target.value })}
-                    className="w-full p-2 border border-[#EDEBE9] dark:border-[#323130] bg-[#faf9f8] dark:bg-[#252423] rounded outline-none h-16 resize-none focus:border-[#0078D4]"
-                  />
-                </div>
+
+                {selectedSourceCompany && (
+                  <>
+                    <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 text-xs bg-[#FAF9F8] dark:bg-[#201f1e] rounded-xl p-4 border border-[#EDEBE9] dark:border-[#323130]">
+                      <div>
+                        <span className="text-[10px] font-bold text-slate-400 uppercase block">{t("Sector")}</span>
+                        <span className="font-semibold text-slate-700 dark:text-slate-200">{selectedSourceCompany.industry || "—"}</span>
+                      </div>
+                      <div>
+                        <span className="text-[10px] font-bold text-slate-400 uppercase block">{t("Sub-Sector")}</span>
+                        <span className="font-semibold text-slate-700 dark:text-slate-200">{selectedSourceCompany.subIndustry || "—"}</span>
+                      </div>
+                      <div>
+                        <span className="text-[10px] font-bold text-slate-400 uppercase block">{t("Production Type")}</span>
+                        <span className="font-semibold text-slate-700 dark:text-slate-200">{selectedSourceCompany.productionType || "—"}</span>
+                      </div>
+                      <div>
+                        <span className="text-[10px] font-bold text-slate-400 uppercase block">{t("Location")}</span>
+                        <span className="font-semibold text-slate-700 dark:text-slate-200">{selectedSourceCompany.billingCity || "—"}</span>
+                      </div>
+                      <div className="col-span-2 sm:col-span-3">
+                        <span className="text-[10px] font-bold text-slate-400 uppercase block">{t("Services Used")}</span>
+                        <span className="font-semibold text-slate-700 dark:text-slate-200">
+                          {selectedCompanyIntel.servicesUsed.length > 0 ? selectedCompanyIntel.servicesUsed.join(", ") : "—"}
+                        </span>
+                      </div>
+                      <div className="col-span-2 sm:col-span-3">
+                        <span className="text-[10px] font-bold text-slate-400 uppercase block">{t("Reference Projects")}</span>
+                        <span className="font-semibold text-slate-700 dark:text-slate-200">
+                          {selectedCompanyIntel.referenceProjects.length > 0 ? selectedCompanyIntel.referenceProjects.join(", ") : "—"}
+                        </span>
+                      </div>
+                    </div>
+
+                    <div className="flex items-center justify-between">
+                      <h3 className="text-xs font-bold text-slate-700 dark:text-slate-200 uppercase">
+                        {t("Competitor Map")}{" "}
+                        <span className="text-slate-400 font-normal normal-case">
+                          ({t("companies operating in the same sector")}: {selectedSourceCompany.industry})
+                        </span>
+                      </h3>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          resetTargetForm();
+                          setShowTargetForm(!showTargetForm);
+                        }}
+                        className="text-xs font-bold bg-[#0078D4] hover:bg-[#106ebe] text-white px-3 py-2 rounded flex items-center gap-1.5 cursor-pointer"
+                      >
+                        <Plus className="w-3.5 h-3.5" />
+                        <span>{showTargetForm ? t("Cancel") : t("Add New Competitor")}</span>
+                      </button>
+                    </div>
+
+                    <div className="bg-white dark:bg-[#1b1a19] border border-[#EDEBE9] dark:border-[#323130] rounded-xl overflow-hidden">
+                      <table className="w-full text-left border-collapse text-xs">
+                        <thead>
+                          <tr className="bg-[#FAF9F8] dark:bg-[#201f1e] text-[10px] font-bold text-slate-450 uppercase border-b border-[#EDEBE9] dark:border-[#323130]">
+                            <th className="p-3">{t("Company Name")}</th>
+                            <th className="p-3">{t("City")}</th>
+                            <th className="p-3">{t("Status")}</th>
+                            <th className="p-3">{t("Contact Count")}</th>
+                            <th className="p-3">{t("Last Action")}</th>
+                          </tr>
+                        </thead>
+                        <tbody className="divide-y divide-[#EDEBE9] dark:divide-[#323130]">
+                          {competitorsForSelectedCompany.map((account) => {
+                            const status = getRelationshipStatus(account);
+                            return (
+                              <tr
+                                key={account.id}
+                                onClick={() => setExpandedAccountId(account.id)}
+                                className="cursor-pointer hover:bg-[#FAF9F8] dark:hover:bg-[#201f1e]"
+                              >
+                                <td className="p-3 font-semibold text-slate-700 dark:text-slate-200">{account.companyName}</td>
+                                <td className="p-3">{account.city || "—"}</td>
+                                <td className="p-3">
+                                  <span
+                                    className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
+                                      status === "Müşteri"
+                                        ? "bg-emerald-100 text-emerald-700 dark:bg-emerald-950/30 dark:text-emerald-400"
+                                        : status === "Görüşülüyor"
+                                        ? "bg-amber-100 text-amber-700 dark:bg-amber-950/30 dark:text-amber-400"
+                                        : "bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-300"
+                                    }`}
+                                  >
+                                    {t(status)}
+                                  </span>
+                                </td>
+                                <td className="p-3">{account.contacts?.length || 0}</td>
+                                <td className="p-3">{account.lastContactDate || "—"}</td>
+                              </tr>
+                            );
+                          })}
+                          {competitorsForSelectedCompany.length === 0 && (
+                            <tr>
+                              <td colSpan={5} className="p-6 text-center text-slate-400">
+                                {t("No competitors tracked in this sector yet. Add one above.")}
+                              </td>
+                            </tr>
+                          )}
+                        </tbody>
+                      </table>
+                    </div>
+                  </>
+                )}
               </div>
-              <div className="flex justify-end">
-                <button type="submit" className="text-xs font-bold bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2 rounded flex items-center gap-1 cursor-pointer">
-                  <Check className="w-4 h-4" />
-                  <span>{t("Append Target Company")}</span>
-                </button>
-              </div>
-            </form>
-          )}
+            )}
+
+            {(startMode === "manual" || (startMode === "customer" && showTargetForm)) && (
+              <form
+                onSubmit={handleCreateTarget}
+                className="bg-[#FAF9F8] dark:bg-[#201f1e] border border-[#0078D4]/20 rounded-xl p-4 space-y-3"
+              >
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
+                  <div>
+                    <label className="text-[10px] font-bold text-slate-400 uppercase block mb-1">{t("Company Name *")}</label>
+                    <input
+                      type="text"
+                      value={targetFormDraft.companyName}
+                      onChange={(e) => setTargetFormDraft({ ...targetFormDraft, companyName: e.target.value })}
+                      className="w-full p-2 border border-[#EDEBE9] dark:border-[#323130] bg-white dark:bg-[#252423] rounded outline-none focus:border-[#0078D4]"
+                      required
+                    />
+                  </div>
+                  {startMode === "manual" ? (
+                    <div>
+                      <label className="text-[10px] font-bold text-slate-400 uppercase block mb-1">{t("Industry / Sector")}</label>
+                      <input
+                        type="text"
+                        list="marketing-sector-suggestions"
+                        value={targetFormDraft.industryTag}
+                        onChange={(e) => setTargetFormDraft({ ...targetFormDraft, industryTag: e.target.value })}
+                        className="w-full p-2 border border-[#EDEBE9] dark:border-[#323130] bg-white dark:bg-[#252423] rounded outline-none focus:border-[#0078D4]"
+                      />
+                      <datalist id="marketing-sector-suggestions">
+                        {industryStats.map((row) => (
+                          <option key={row.industry} value={row.industry} />
+                        ))}
+                      </datalist>
+                    </div>
+                  ) : (
+                    <div>
+                      <label className="text-[10px] font-bold text-slate-400 uppercase block mb-1">{t("Sector")}</label>
+                      <input
+                        type="text"
+                        value={selectedSourceCompany?.industry || ""}
+                        disabled
+                        className="w-full p-2 border border-[#EDEBE9] dark:border-[#323130] bg-slate-100 dark:bg-[#323130] rounded outline-none text-slate-500"
+                      />
+                    </div>
+                  )}
+                  {startMode === "manual" && (
+                    <div>
+                      <label className="text-[10px] font-bold text-slate-400 uppercase block mb-1">{t("Sub-Sector")}</label>
+                      <input
+                        type="text"
+                        value={targetFormDraft.subIndustry}
+                        onChange={(e) => setTargetFormDraft({ ...targetFormDraft, subIndustry: e.target.value })}
+                        className="w-full p-2 border border-[#EDEBE9] dark:border-[#323130] bg-white dark:bg-[#252423] rounded outline-none focus:border-[#0078D4]"
+                      />
+                    </div>
+                  )}
+                  <div>
+                    <label className="text-[10px] font-bold text-slate-400 uppercase block mb-1">{t("City")}</label>
+                    <input
+                      type="text"
+                      value={targetFormDraft.city}
+                      onChange={(e) => setTargetFormDraft({ ...targetFormDraft, city: e.target.value })}
+                      className="w-full p-2 border border-[#EDEBE9] dark:border-[#323130] bg-white dark:bg-[#252423] rounded outline-none focus:border-[#0078D4]"
+                    />
+                  </div>
+                  <div>
+                    <label className="text-[10px] font-bold text-slate-400 uppercase block mb-1">{t("Website URL")}</label>
+                    <input
+                      type="text"
+                      value={targetFormDraft.websiteUrl}
+                      onChange={(e) => setTargetFormDraft({ ...targetFormDraft, websiteUrl: e.target.value })}
+                      className="w-full p-2 border border-[#EDEBE9] dark:border-[#323130] bg-white dark:bg-[#252423] rounded outline-none focus:border-[#0078D4]"
+                    />
+                  </div>
+                  <div className="sm:col-span-2">
+                    <label className="text-[10px] font-bold text-slate-400 uppercase block mb-1">{t("Note")}</label>
+                    <textarea
+                      value={targetFormDraft.analysisNotes}
+                      onChange={(e) => setTargetFormDraft({ ...targetFormDraft, analysisNotes: e.target.value })}
+                      className="w-full p-2 border border-[#EDEBE9] dark:border-[#323130] bg-white dark:bg-[#252423] rounded outline-none h-16 resize-none focus:border-[#0078D4]"
+                    />
+                  </div>
+                </div>
+                <div className="flex justify-end">
+                  <button type="submit" className="text-xs font-bold bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2 rounded flex items-center gap-1 cursor-pointer">
+                    <Check className="w-4 h-4" />
+                    <span>{t("Append Target Company")}</span>
+                  </button>
+                </div>
+              </form>
+            )}
+          </div>
 
           {reviewPendingAccounts.length > 0 && (
             <div className="bg-amber-50 dark:bg-amber-950/20 border border-amber-200 dark:border-amber-900 rounded-2xl p-4">
@@ -1106,7 +1392,8 @@ export default function MarketingHubView({ initialSubTab, onNavigateToTab }: Mar
                 {reviewPendingAccounts.map((a) => (
                   <div
                     key={a.id}
-                    className="flex items-center justify-between text-xs bg-white dark:bg-[#1b1a19] p-2 rounded border border-amber-100 dark:border-amber-900/50"
+                    onClick={() => setExpandedAccountId(a.id)}
+                    className="flex items-center justify-between text-xs bg-white dark:bg-[#1b1a19] p-2 rounded border border-amber-100 dark:border-amber-900/50 cursor-pointer"
                   >
                     <span className="font-semibold text-slate-700 dark:text-slate-200">
                       {a.companyName} <span className="text-slate-400 font-normal">— {a.industryTag}</span>
@@ -1118,115 +1405,386 @@ export default function MarketingHubView({ initialSubTab, onNavigateToTab }: Mar
             </div>
           )}
 
-          <div className="space-y-3">
-            {filteredAccounts.map((account) => {
-              const isExpanded = expandedAccountId === account.id;
+          {/* 3. Rakip/Hedef Firma Kartı — hem Rakip Haritası hem de Tüm Hedef
+              Firmalar listesinden tek bir paylaşılan detay panelini açar. */}
+          {expandedAccountId &&
+            (() => {
+              const account = accounts.find((a) => a.id === expandedAccountId);
+              if (!account) return null;
+              const status = getRelationshipStatus(account);
+              const contactDraft = contactDraftByAccount[account.id] || { status: "Araştırılıyor" };
               return (
-                <div key={account.id} className="bg-white dark:bg-[#1b1a19] border border-[#EDEBE9] dark:border-[#323130] rounded-2xl shadow-xs overflow-hidden">
-                  <div
-                    className="p-4 flex items-center justify-between cursor-pointer"
-                    onClick={() => setExpandedAccountId(isExpanded ? null : account.id)}
-                  >
+                <div className="bg-white dark:bg-[#1b1a19] border border-[#0078D4]/30 rounded-2xl shadow-md p-5 space-y-5 text-xs">
+                  <div className="flex items-start justify-between">
                     <div>
-                      <div className="text-xs font-bold text-slate-800 dark:text-slate-100">{account.companyName}</div>
-                      <div className="text-[10px] text-slate-450 mt-0.5">
-                        {account.industryTag} · {t(account.bdPipelineStage || "Yeni")}
+                      <div className="flex items-center gap-2">
+                        <h3 className="text-sm font-bold text-slate-800 dark:text-slate-100">{account.companyName}</h3>
+                        <span
+                          className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
+                            status === "Müşteri"
+                              ? "bg-emerald-100 text-emerald-700 dark:bg-emerald-950/30 dark:text-emerald-400"
+                              : status === "Görüşülüyor"
+                              ? "bg-amber-100 text-amber-700 dark:bg-amber-950/30 dark:text-amber-400"
+                              : "bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-300"
+                          }`}
+                        >
+                          {t(status)}
+                        </span>
                       </div>
+                      {account.discoveredFromCompanyName && (
+                        <p className="text-[10px] text-slate-450 mt-1">
+                          {t("Discovered via")}: {account.discoveredFromCompanyName}
+                        </p>
+                      )}
                     </div>
                     <div className="flex items-center gap-2">
                       <button
                         type="button"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          deleteTargetAccount(account.id);
-                        }}
+                        onClick={() => deleteTargetAccount(account.id)}
                         className="text-slate-400 hover:text-rose-600 cursor-pointer p-1"
                       >
                         <Trash2 className="w-3.5 h-3.5" />
                       </button>
-                      <ChevronRight className={`w-4 h-4 text-slate-400 transition-transform ${isExpanded ? "rotate-90" : ""}`} />
+                      <button type="button" onClick={() => setExpandedAccountId(null)} className="text-slate-400 hover:text-slate-700 cursor-pointer p-1">
+                        <X className="w-4 h-4" />
+                      </button>
                     </div>
                   </div>
-                  {isExpanded && (
-                    <div className="p-4 border-t border-[#EDEBE9] dark:border-[#323130] space-y-4 text-xs">
-                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                        <div>
-                          <label className="text-[10px] font-bold text-slate-400 uppercase block mb-1">{t("Company Analysis Notes")}</label>
-                          <textarea
-                            defaultValue={account.analysisNotes || ""}
-                            onBlur={(e) => updateAccountField(account.id, { analysisNotes: e.target.value })}
-                            className="w-full p-2 border border-[#EDEBE9] dark:border-[#323130] bg-[#faf9f8] dark:bg-[#252423] rounded outline-none h-20 resize-none focus:border-[#0078D4]"
-                          />
-                        </div>
-                        <div className="space-y-3">
-                          <div>
-                            <label className="text-[10px] font-bold text-slate-400 uppercase block mb-1">{t("Next Review / Contact Date")}</label>
-                            <input
-                              type="date"
-                              defaultValue={account.nextReviewDate || ""}
-                              onBlur={(e) => updateAccountField(account.id, { nextReviewDate: e.target.value })}
-                              className="w-full p-2 border border-[#EDEBE9] dark:border-[#323130] bg-[#faf9f8] dark:bg-[#252423] rounded outline-none focus:border-[#0078D4]"
-                            />
-                          </div>
-                          <button
-                            type="button"
-                            onClick={() => createReviewReminderTask(account)}
-                            className="text-[11px] font-bold text-[#0078D4] hover:underline flex items-center gap-1 cursor-pointer"
-                          >
-                            <Calendar className="w-3.5 h-3.5" />
-                            {t("Create Reminder Task")}
-                          </button>
-                        </div>
-                      </div>
-                      <div>
-                        <label className="text-[10px] font-bold text-slate-400 uppercase block mb-2">{t("Competitors")}</label>
-                        <div className="flex flex-wrap gap-1.5 mb-2">
-                          {(account.competitors || []).map((c) => (
-                            <span
-                              key={c.id}
-                              className="inline-flex items-center gap-1 bg-rose-50 dark:bg-rose-950/20 text-rose-700 dark:text-rose-400 border border-rose-200 dark:border-rose-900 rounded-full px-2.5 py-1 text-[11px] font-semibold"
-                            >
-                              {c.name}
-                              <button type="button" onClick={() => removeCompetitor(account.id, c.id)} className="cursor-pointer hover:text-rose-900">
-                                <X className="w-3 h-3" />
-                              </button>
-                            </span>
-                          ))}
-                          {(account.competitors || []).length === 0 && <span className="text-slate-400 text-[11px]">{t("No competitors added yet.")}</span>}
-                        </div>
-                        <div className="flex gap-2">
-                          <input
-                            type="text"
-                            placeholder={t("Competitor name")}
-                            value={newCompetitorDraft[account.id] || ""}
-                            onChange={(e) => setNewCompetitorDraft({ ...newCompetitorDraft, [account.id]: e.target.value })}
-                            onKeyDown={(e) => {
-                              if (e.key === "Enter") {
-                                e.preventDefault();
-                                addCompetitor(account.id);
-                              }
-                            }}
-                            className="flex-1 p-2 border border-[#EDEBE9] dark:border-[#323130] bg-[#faf9f8] dark:bg-[#252423] rounded outline-none focus:border-[#0078D4]"
-                          />
-                          <button
-                            type="button"
-                            onClick={() => addCompetitor(account.id)}
-                            className="text-xs font-bold bg-[#FAF9F8] hover:bg-[#EDEBE9] dark:bg-[#252423] dark:hover:bg-[#323130] text-slate-700 dark:text-slate-200 px-3 py-2 border border-[#EDEBE9] dark:border-[#323130] rounded cursor-pointer"
-                          >
-                            {t("Add")}
-                          </button>
-                        </div>
-                      </div>
+
+                  {/* Firma Bilgileri */}
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div>
+                      <label className="text-[10px] font-bold text-slate-400 uppercase block mb-1">{t("Website URL")}</label>
+                      <input
+                        type="text"
+                        defaultValue={account.websiteUrl || ""}
+                        onBlur={(e) => updateAccountField(account.id, { websiteUrl: e.target.value })}
+                        className="w-full p-2 border border-[#EDEBE9] dark:border-[#323130] bg-[#faf9f8] dark:bg-[#252423] rounded outline-none focus:border-[#0078D4]"
+                      />
                     </div>
-                  )}
+                    <div>
+                      <label className="text-[10px] font-bold text-slate-400 uppercase block mb-1">{t("Industry / Sector")}</label>
+                      <input
+                        type="text"
+                        defaultValue={account.industryTag || ""}
+                        onBlur={(e) => updateAccountField(account.id, { industryTag: e.target.value })}
+                        className="w-full p-2 border border-[#EDEBE9] dark:border-[#323130] bg-[#faf9f8] dark:bg-[#252423] rounded outline-none focus:border-[#0078D4]"
+                      />
+                    </div>
+                    <div>
+                      <label className="text-[10px] font-bold text-slate-400 uppercase block mb-1">{t("Sub-Sector")}</label>
+                      <input
+                        type="text"
+                        defaultValue={account.subIndustry || ""}
+                        onBlur={(e) => updateAccountField(account.id, { subIndustry: e.target.value })}
+                        className="w-full p-2 border border-[#EDEBE9] dark:border-[#323130] bg-[#faf9f8] dark:bg-[#252423] rounded outline-none focus:border-[#0078D4]"
+                      />
+                    </div>
+                    <div>
+                      <label className="text-[10px] font-bold text-slate-400 uppercase block mb-1">{t("City")}</label>
+                      <input
+                        type="text"
+                        defaultValue={account.city || ""}
+                        onBlur={(e) => updateAccountField(account.id, { city: e.target.value })}
+                        className="w-full p-2 border border-[#EDEBE9] dark:border-[#323130] bg-[#faf9f8] dark:bg-[#252423] rounded outline-none focus:border-[#0078D4]"
+                      />
+                    </div>
+                    <div>
+                      <label className="text-[10px] font-bold text-slate-400 uppercase block mb-1">{t("Employee Count (optional)")}</label>
+                      <input
+                        type="text"
+                        defaultValue={account.employeeCountLabel || ""}
+                        onBlur={(e) => updateAccountField(account.id, { employeeCountLabel: e.target.value })}
+                        className="w-full p-2 border border-[#EDEBE9] dark:border-[#323130] bg-[#faf9f8] dark:bg-[#252423] rounded outline-none focus:border-[#0078D4]"
+                      />
+                    </div>
+                    <div>
+                      <label className="text-[10px] font-bold text-slate-400 uppercase block mb-1">{t("Next Review / Contact Date")}</label>
+                      <input
+                        type="date"
+                        defaultValue={account.nextReviewDate || ""}
+                        onBlur={(e) => updateAccountField(account.id, { nextReviewDate: e.target.value })}
+                        className="w-full p-2 border border-[#EDEBE9] dark:border-[#323130] bg-[#faf9f8] dark:bg-[#252423] rounded outline-none focus:border-[#0078D4]"
+                      />
+                    </div>
+                    <div className="sm:col-span-2">
+                      <label className="text-[10px] font-bold text-slate-400 uppercase block mb-1">{t("Company Analysis Notes")}</label>
+                      <textarea
+                        defaultValue={account.analysisNotes || ""}
+                        onBlur={(e) => updateAccountField(account.id, { analysisNotes: e.target.value })}
+                        className="w-full p-2 border border-[#EDEBE9] dark:border-[#323130] bg-[#faf9f8] dark:bg-[#252423] rounded outline-none h-20 resize-none focus:border-[#0078D4]"
+                      />
+                    </div>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => createReviewReminderTask(account)}
+                    className="text-[11px] font-bold text-[#0078D4] hover:underline flex items-center gap-1 cursor-pointer"
+                  >
+                    <Calendar className="w-3.5 h-3.5" />
+                    {t("Create Reminder Task")}
+                  </button>
+
+                  {/* Kontakt Yönetimi */}
+                  <div className="border-t border-[#EDEBE9] dark:border-[#323130] pt-4">
+                    <div className="flex items-center justify-between mb-3">
+                      <label className="text-[10px] font-bold text-slate-400 uppercase">{t("Contact Management")}</label>
+                      <button
+                        type="button"
+                        onClick={() => (showContactFormFor === account.id ? setShowContactFormFor(null) : openContactForm(account.id))}
+                        className="text-[11px] font-bold text-[#0078D4] hover:underline cursor-pointer flex items-center gap-1"
+                      >
+                        <Plus className="w-3 h-3" />
+                        {t("Add Contact")}
+                      </button>
+                    </div>
+
+                    {showContactFormFor === account.id && (
+                      <div className="bg-[#FAF9F8] dark:bg-[#201f1e] rounded-xl p-3 mb-3 grid grid-cols-1 sm:grid-cols-2 gap-2">
+                        <input
+                          type="text"
+                          placeholder={t("Full Name *")}
+                          value={contactDraft.fullName || ""}
+                          onChange={(e) => updateContactDraft(account.id, { fullName: e.target.value })}
+                          className="p-2 border border-[#EDEBE9] dark:border-[#323130] bg-white dark:bg-[#252423] rounded outline-none focus:border-[#0078D4]"
+                        />
+                        <input
+                          type="text"
+                          placeholder={t("Title")}
+                          value={contactDraft.title || ""}
+                          onChange={(e) => updateContactDraft(account.id, { title: e.target.value })}
+                          className="p-2 border border-[#EDEBE9] dark:border-[#323130] bg-white dark:bg-[#252423] rounded outline-none focus:border-[#0078D4]"
+                        />
+                        <input
+                          type="text"
+                          placeholder={t("Department")}
+                          value={contactDraft.department || ""}
+                          onChange={(e) => updateContactDraft(account.id, { department: e.target.value })}
+                          className="p-2 border border-[#EDEBE9] dark:border-[#323130] bg-white dark:bg-[#252423] rounded outline-none focus:border-[#0078D4]"
+                        />
+                        <input
+                          type="text"
+                          placeholder={t("Phone")}
+                          value={contactDraft.phone || ""}
+                          onChange={(e) => updateContactDraft(account.id, { phone: e.target.value })}
+                          className="p-2 border border-[#EDEBE9] dark:border-[#323130] bg-white dark:bg-[#252423] rounded outline-none focus:border-[#0078D4]"
+                        />
+                        <input
+                          type="email"
+                          placeholder={t("Email")}
+                          value={contactDraft.email || ""}
+                          onChange={(e) => updateContactDraft(account.id, { email: e.target.value })}
+                          className="p-2 border border-[#EDEBE9] dark:border-[#323130] bg-white dark:bg-[#252423] rounded outline-none focus:border-[#0078D4]"
+                        />
+                        <input
+                          type="text"
+                          placeholder={t("LinkedIn")}
+                          value={contactDraft.linkedin || ""}
+                          onChange={(e) => updateContactDraft(account.id, { linkedin: e.target.value })}
+                          className="p-2 border border-[#EDEBE9] dark:border-[#323130] bg-white dark:bg-[#252423] rounded outline-none focus:border-[#0078D4]"
+                        />
+                        <input
+                          type="text"
+                          placeholder={t("Source")}
+                          value={contactDraft.source || ""}
+                          onChange={(e) => updateContactDraft(account.id, { source: e.target.value })}
+                          className="p-2 border border-[#EDEBE9] dark:border-[#323130] bg-white dark:bg-[#252423] rounded outline-none focus:border-[#0078D4]"
+                        />
+                        <select
+                          value={contactDraft.status || "Araştırılıyor"}
+                          onChange={(e) => updateContactDraft(account.id, { status: e.target.value as TargetContact["status"] })}
+                          className="p-2 border border-[#EDEBE9] dark:border-[#323130] bg-white dark:bg-[#252423] rounded outline-none"
+                        >
+                          {(["Araştırılıyor", "Bulundu", "Doğrulandı", "İlk Temas", "Görüşme Yapıldı"] as const).map((s) => (
+                            <option key={s} value={s}>
+                              {t(s)}
+                            </option>
+                          ))}
+                        </select>
+                        <div className="sm:col-span-2 flex justify-end">
+                          <button
+                            type="button"
+                            onClick={() => handleAddContact(account.id)}
+                            className="text-xs font-bold bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2 rounded flex items-center gap-1 cursor-pointer"
+                          >
+                            <Check className="w-4 h-4" />
+                            <span>{t("Save Contact")}</span>
+                          </button>
+                        </div>
+                      </div>
+                    )}
+
+                    {pendingLeadPrompt && pendingLeadPrompt.accountId === account.id && (
+                      <div className="bg-blue-50 dark:bg-blue-950/20 border border-blue-200 dark:border-blue-900 rounded-lg p-3 mb-3 flex items-center justify-between gap-3">
+                        <span className="text-[11px] font-semibold text-blue-800 dark:text-blue-300">{t("Create this contact as a lead?")}</span>
+                        <div className="flex items-center gap-2 flex-shrink-0">
+                          <button
+                            type="button"
+                            onClick={() => convertContactToLead(pendingLeadPrompt.accountId, pendingLeadPrompt.contactId)}
+                            className="text-[11px] font-bold bg-[#0078D4] hover:bg-[#106ebe] text-white px-3 py-1.5 rounded cursor-pointer"
+                          >
+                            {t("Yes")}
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => setPendingLeadPrompt(null)}
+                            className="text-[11px] font-bold bg-white dark:bg-[#252423] border border-[#EDEBE9] dark:border-[#323130] text-slate-600 dark:text-slate-300 px-3 py-1.5 rounded cursor-pointer"
+                          >
+                            {t("No")}
+                          </button>
+                        </div>
+                      </div>
+                    )}
+
+                    <div className="space-y-2">
+                      {(account.contacts || []).map((contact) => (
+                        <div key={contact.id} className="bg-[#FAF9F8] dark:bg-[#201f1e] rounded-lg p-3 flex items-start justify-between gap-3">
+                          <div className="min-w-0">
+                            <div className="flex items-center gap-2 flex-wrap">
+                              <span className="font-bold text-slate-800 dark:text-slate-100">{contact.fullName}</span>
+                              {contact.leadProfileId && (
+                                <span className="text-[9px] font-bold px-1.5 py-0.5 rounded-full bg-emerald-100 text-emerald-700 dark:bg-emerald-950/30 dark:text-emerald-400">
+                                  {t("Lead")} ✓
+                                </span>
+                              )}
+                            </div>
+                            <div className="text-[10px] text-slate-450 mt-0.5">
+                              {[contact.title, contact.department].filter(Boolean).join(" · ") || "—"}
+                            </div>
+                            <div className="text-[10px] text-slate-450 mt-0.5 flex flex-wrap gap-x-3">
+                              {contact.email && <span>{contact.email}</span>}
+                              {contact.phone && <span>{contact.phone}</span>}
+                              {contact.linkedin && <span>{contact.linkedin}</span>}
+                            </div>
+                          </div>
+                          <div className="flex flex-col items-end gap-1.5 flex-shrink-0">
+                            <select
+                              value={contact.status}
+                              onChange={(e) => updateContact(account.id, contact.id, { status: e.target.value as TargetContact["status"] })}
+                              className="text-[10px] p-1.5 border border-[#EDEBE9] dark:border-[#323130] bg-white dark:bg-[#252423] rounded outline-none cursor-pointer"
+                            >
+                              {(["Araştırılıyor", "Bulundu", "Doğrulandı", "İlk Temas", "Görüşme Yapıldı"] as const).map((s) => (
+                                <option key={s} value={s}>
+                                  {t(s)}
+                                </option>
+                              ))}
+                            </select>
+                            <div className="flex items-center gap-2">
+                              {!contact.leadProfileId && (
+                                <button
+                                  type="button"
+                                  onClick={() => convertContactToLead(account.id, contact.id)}
+                                  className="text-[10px] font-bold text-[#0078D4] hover:underline cursor-pointer"
+                                >
+                                  {t("Create Lead")}
+                                </button>
+                              )}
+                              <button
+                                type="button"
+                                onClick={() => deleteContact(account.id, contact.id)}
+                                className="text-slate-400 hover:text-rose-600 cursor-pointer"
+                              >
+                                <Trash2 className="w-3.5 h-3.5" />
+                              </button>
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                      {(account.contacts || []).length === 0 && (
+                        <p className="text-slate-400 text-[11px]">{t("No contacts added yet.")}</p>
+                      )}
+                    </div>
+                  </div>
                 </div>
               );
-            })}
-            {accounts.length === 0 && (
-              <div className="bg-white dark:bg-[#1b1a19] border border-[#EDEBE9] dark:border-[#323130] rounded-2xl p-8 text-center text-xs text-slate-400">
-                {t("No target companies yet. Add your first one above.")}
+            })()}
+
+          {/* Tüm Hedef Firmalar */}
+          <div className="space-y-3">
+            <div className="flex items-center justify-between">
+              <h3 className="text-xs font-bold text-slate-700 dark:text-slate-200 uppercase">{t("All Target Companies")}</h3>
+              <div className="flex flex-wrap items-center gap-2 text-xs">
+                <div className="relative">
+                  <Search className="w-3.5 h-3.5 text-slate-400 absolute left-3 top-2.5" />
+                  <input
+                    type="text"
+                    placeholder={t("Search target companies...")}
+                    value={targetSearch}
+                    onChange={(e) => setTargetSearch(e.target.value)}
+                    className="bg-[#faf9f8] dark:bg-[#252423] border border-[#EDEBE9] dark:border-[#323130] text-xs rounded pl-9 pr-4 py-2 w-56 outline-none focus:border-[#0078D4]"
+                  />
+                </div>
+                <select
+                  value={targetSectorFilter}
+                  onChange={(e) => setTargetSectorFilter(e.target.value)}
+                  className="bg-[#faf9f8] dark:bg-[#252423] border border-[#EDEBE9] dark:border-[#323130] text-xs p-2 rounded outline-none"
+                >
+                  <option value="">{t("-- All Sectors --")}</option>
+                  {industryStats.map((row) => (
+                    <option key={row.industry} value={row.industry}>
+                      {row.industry}
+                    </option>
+                  ))}
+                </select>
               </div>
-            )}
+            </div>
+            <div className="bg-white dark:bg-[#1b1a19] border border-[#EDEBE9] dark:border-[#323130] rounded-2xl overflow-hidden">
+              <table className="w-full text-left border-collapse text-xs">
+                <thead>
+                  <tr className="bg-[#FAF9F8] dark:bg-[#201f1e] text-[10px] font-bold text-slate-450 uppercase border-b border-[#EDEBE9] dark:border-[#323130]">
+                    <th className="p-3">{t("Company Name")}</th>
+                    <th className="p-3">{t("Sector")}</th>
+                    <th className="p-3">{t("Status")}</th>
+                    <th className="p-3">{t("Contact Count")}</th>
+                    <th className="p-3"></th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-[#EDEBE9] dark:divide-[#323130]">
+                  {filteredAccounts.map((account) => {
+                    const status = getRelationshipStatus(account);
+                    return (
+                      <tr key={account.id} onClick={() => setExpandedAccountId(account.id)} className="cursor-pointer hover:bg-[#FAF9F8] dark:hover:bg-[#201f1e]">
+                        <td className="p-3 font-semibold text-slate-700 dark:text-slate-200">{account.companyName}</td>
+                        <td className="p-3">{account.industryTag}</td>
+                        <td className="p-3">
+                          <span
+                            className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
+                              status === "Müşteri"
+                                ? "bg-emerald-100 text-emerald-700 dark:bg-emerald-950/30 dark:text-emerald-400"
+                                : status === "Görüşülüyor"
+                                ? "bg-amber-100 text-amber-700 dark:bg-amber-950/30 dark:text-amber-400"
+                                : "bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-300"
+                            }`}
+                          >
+                            {t(status)}
+                          </span>
+                        </td>
+                        <td className="p-3">{account.contacts?.length || 0}</td>
+                        <td className="p-3 text-right">
+                          <button
+                            type="button"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              deleteTargetAccount(account.id);
+                            }}
+                            className="text-slate-400 hover:text-rose-600 cursor-pointer p-1"
+                          >
+                            <Trash2 className="w-3.5 h-3.5" />
+                          </button>
+                        </td>
+                      </tr>
+                    );
+                  })}
+                  {filteredAccounts.length === 0 && (
+                    <tr>
+                      <td colSpan={5} className="p-6 text-center text-slate-400">
+                        {t("No target companies yet. Add your first one above.")}
+                      </td>
+                    </tr>
+                  )}
+                </tbody>
+              </table>
+            </div>
           </div>
         </div>
       )}

@@ -129,12 +129,24 @@ export interface TargetAccount {
   // Haritası + İş Geliştirme Pipeline'ı sekmeleri). Mevcut Target Accounts
   // kaydını genişletir — ayrı bir "hedef firma" veritabanı OLUŞTURULMADI,
   // aynı crm_target_accounts kaydı kullanılıyor (veri tekrarı yok).
-  competitors?: MarketingCompetitor[];
+  competitors?: MarketingCompetitor[]; // Eski (v1) düz rakip etiketi listesi — geriye dönük uyumluluk için
+                                        // korunuyor, Hedef Pazar & Rakip Haritası sayfası artık kullanmıyor.
   analysisNotes?: string; // Serbest metin firma analiz notu
   bdPipelineStage?: string; // İş Geliştirme Pipeline Kanban aşaması
   lastContactDate?: string; // ISO tarih — son temas
   nextReviewDate?: string; // ISO tarih — bir sonraki inceleme/görüşme hatırlatması
   reviewNote?: string;
+
+  // --- Hedef Pazar & Rakip Haritası v2 (rakip firma = birinci sınıf hedef
+  // firma kaydı; Company ile aynı "sektör/alt sektör/şehir" kavramlarını
+  // paylaşır ama ayrı bir tablo değil, aynı TargetAccount kaydı kullanılır) ---
+  subIndustry?: string; // Alt sektör (Company.subIndustry ile aynı kavram)
+  city?: string; // Şehir
+  employeeCountLabel?: string; // Çalışan sayısı (opsiyonel, serbest metin/aralık)
+  sourceType?: "customer" | "manual"; // Nasıl oluşturuldu: mevcut müşteri üzerinden mi, doğrudan mı
+  discoveredFromCompanyId?: string; // sourceType "customer" ise: hangi müşteri sektöründen bulundu
+  discoveredFromCompanyName?: string;
+  contacts?: TargetContact[]; // Çoklu kontakt (v2) — contactName/contactEmail tekil alanlarının yerini alır
 }
 
 export interface MarketingCompetitor {
@@ -142,6 +154,25 @@ export interface MarketingCompetitor {
   name: string;
   note?: string;
   website?: string;
+}
+
+// Hedef/Rakip firma kontakt yönetimi — bir TargetAccount birden fazla
+// kontakt içerebilir, her kontakt kendi araştırma/temas durumunu taşır.
+export interface TargetContact {
+  id: string;
+  fullName: string;
+  title?: string; // Görev
+  department?: string; // Departman
+  phone?: string;
+  email?: string;
+  linkedin?: string;
+  source?: string; // Kaynak (LinkedIn, Web sitesi, Referans, vb.)
+  status: "Araştırılıyor" | "Bulundu" | "Doğrulandı" | "İlk Temas" | "Görüşme Yapıldı";
+  notes?: string;
+  leadProfileId?: string; // Lead'e dönüştürüldüyse ilgili LeadProfile.id
+  convertedToLeadAt?: string;
+  createdAt: string;
+  updatedAt: string;
 }
 
 // Sektör Oyun Kitapları (Industry Playbooks)

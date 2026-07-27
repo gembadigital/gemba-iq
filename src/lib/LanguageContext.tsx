@@ -261,6 +261,14 @@ const dictionary: Record<Language, Record<string, string>> = {
     "Dış API servisleri, veritabanı ve e-posta entegrasyonlarının çalışma performansını analiz edin.": "Analyze performance of external API services, database, and email integrations.",
     "Sistem Sağlığı": "System Health",
     "Doğrulandı": "Verified",
+    // Hedef Pazar & Rakip Haritası v2 — durum etiketleri Türkçe kaynak
+    // metin olarak kodda kullanılıyor, burada sadece EN modu çevirisi var.
+    "Hedef": "Target",
+    "Görüşülüyor": "In Discussion",
+    "Araştırılıyor": "Being Researched",
+    "Bulundu": "Found",
+    "İlk Temas": "First Contact",
+    "Görüşme Yapıldı": "Meeting Held",
     "Test Ediliyor": "Testing",
     "Çalışıyor": "Running",
     "Bağlı": "Connected",
