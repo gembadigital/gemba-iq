@@ -34,6 +34,15 @@ import ProposalFormModal from "./ProposalFormModal";
 import ProposalLetterheadBody from "./ProposalLetterheadBody";
 import { Company } from "./CompaniesView";
 import { CrmDb } from "../lib/CrmDb";
+// Fix 5 ("user kendi mailini kullanmalı, sadece kendi mailini
+// göndermeli"): this view previously had NO sender-mailbox resolution at
+// all — sendProposalEmail() was called with no `source`, which the server
+// (api/mail/[...action].js sendHandler) treats as "use the shared
+// Organization Mailbox" by default. Resolve the same personal-first
+// preference used by CompanyEmailsTab.tsx/OpportunityDrawerExtension.tsx so
+// proposal e-mails go out from the sender's own address by default too.
+import { fetchPersonalMailbox } from "../lib/personalMailbox";
+import { fetchOrganizationMailbox } from "../lib/organizationMailbox";
 import LossReasonModal, { LossReasonResult } from "./shared/LossReasonModal";
 import { generateProposalPdfBlobUrl, generateProposalPdfBlob } from "../lib/proposalPdf";
 import { renderElementToPdfBase64, base64ToBlob } from "../lib/htmlToPdf";
@@ -138,15 +147,42 @@ export default function ProposalManagementView() {
   // GlobalSearchBar's proposal search results and by the Fırsat drawer's
   // now-clickable "Teklif No" column, so both entry points land on the same
   // real record instead of the drawer's own, separate proposal view.
+  //
+  // Fix 3 ("müşteri kartında teklifler kısmında verilen teklifler
+  // tıklanmıyor"): the raw event-listener path above has a mount-order race
+  // — App.tsx only reads detail.tab and switches the active tab, which
+  // mounts THIS component for the first time; by the time this effect's
+  // listener registers, the original CustomEvent has already fired and is
+  // gone, so detail.id is silently lost and no proposal ever opens. The
+  // clicking components (CompanyDetailView, DealManagementView) now persist
+  // the target id via CrmDb.setKv("crm_active_proposal_id", ...) BEFORE
+  // dispatching — mirroring CompaniesView.tsx's already-working
+  // crm_active_target_id pattern — so we can also pick it up here on mount,
+  // independent of whether the live event was missed.
   useEffect(() => {
-    const handleNavigate = (e: Event) => {
-      const detail = (e as CustomEvent).detail;
-      if (!detail || detail.tab !== "proposal-management" || detail.type !== "proposal" || !detail.id) return;
-      const match = CrmDb.getProposals().find((p) => p.id === detail.id);
-      if (match) {
-        setSelectedProposalForDetail(match);
+    const openFromPendingId = () => {
+      const pendingId = CrmDb.getKv("crm_active_proposal_id", "");
+      if (pendingId) {
+        const match = CrmDb.getProposals().find((p) => p.id === pendingId);
+        if (match) {
+          setSelectedProposalForDetail(match);
+        }
+        CrmDb.setKv("crm_active_proposal_id", "");
       }
     };
+    const handleNavigate = (e: Event) => {
+      const detail = (e as CustomEvent).detail;
+      if (detail && detail.tab === "proposal-management" && detail.type === "proposal" && detail.id) {
+        const match = CrmDb.getProposals().find((p) => p.id === detail.id);
+        if (match) {
+          setSelectedProposalForDetail(match);
+        }
+      }
+      // Also check the KV fallback every time a navigate event fires (covers
+      // the case where this component was already mounted before the click).
+      openFromPendingId();
+    };
+    openFromPendingId();
     window.addEventListener("crm-navigate", handleNavigate);
     return () => window.removeEventListener("crm-navigate", handleNavigate);
   }, []);
@@ -215,6 +251,30 @@ export default function ProposalManagementView() {
   const [attachCustom, setAttachCustom] = useState<string[]>([]);
   const [customFileText, setCustomFileText] = useState("");
   const [isEmailGenerating, setIsEmailGenerating] = useState(false);
+
+  // Fix 5: which mailbox proposal e-mails actually send from — prefers the
+  // signed-in user's own Personal Mailbox, falls back to the Organization
+  // Mailbox only if no personal mailbox is connected (mirrors
+  // CompanyEmailsTab.tsx / OpportunityDrawerExtension.tsx / ServicesView.tsx).
+  const [proposalSendSource, setProposalSendSource] = useState<"organization" | "personal" | undefined>(undefined);
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      const [personalResult, orgResult] = await Promise.allSettled([
+        fetchPersonalMailbox(),
+        fetchOrganizationMailbox(),
+      ]);
+      if (cancelled) return;
+      if (personalResult.status === "fulfilled" && personalResult.value.status === "Connected") {
+        setProposalSendSource("personal");
+      } else if (orgResult.status === "fulfilled" && orgResult.value.mailbox.status === "Connected") {
+        setProposalSendSource("organization");
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   // AI Strategic Analysis Side Drawer States
   const [analyzingProposal, setAnalyzingProposal] = useState<Proposal | null>(null);
@@ -415,6 +475,11 @@ export default function ProposalManagementView() {
           ...(attachWord ? [`Proposal_${sendingProposal.proposalNumber}_${sendingProposal.currentVersion}.docx`] : []),
           ...attachCustom,
         ],
+        // Fix 5: send from the resolved personal-first mailbox instead of
+        // silently falling through to the server's Organization Mailbox
+        // default (which non-ADMIN users are no longer allowed to use for
+        // interactive sends — see api/mail/[...action].js sendHandler).
+        source: proposalSendSource,
       });
 
       setProposals((prev) => prev.map((p) => (p.id === updated.id ? updated : p)));
@@ -1732,8 +1797,15 @@ export default function ProposalManagementView() {
                   
                   <div className="space-y-2.5">
                     {Object.entries(selectedProposalForDetail.options || {}).map(([key, rawOpt]) => {
-                      const opt = rawOpt as { manDays: number; dailyRate: number; expenses: number };
-                      const totalCost = opt.manDays * opt.dailyRate + opt.expenses;
+                      const opt = rawOpt as { manDays: number; dailyRate: number; expenses: number; rows?: { id: string; item: string; dailyRate: number; manDays: number }[] };
+                      // Kullanıcı hatası düzeltmesi: rows (gerçek satır bazlı
+                      // hizmet kalemleri) varsa toplam ve içerik oradan
+                      // hesaplanır — sihirbazdaki ile birebir aynı. Eski
+                      // kayıtlarda rows yoksa özet alanlara geri düşülür.
+                      const hasRows = Array.isArray(opt.rows) && opt.rows.length > 0;
+                      const totalCost = hasRows
+                        ? (opt.rows || []).reduce((sum, r) => sum + r.dailyRate * r.manDays, 0) + (opt.expenses || 0)
+                        : opt.manDays * opt.dailyRate + opt.expenses;
                       return (
                         <div
                           key={key}
@@ -1746,20 +1818,33 @@ export default function ProposalManagementView() {
                             </span>
                           </div>
 
-                          <div className="grid grid-cols-3 gap-2 text-[10px] text-slate-500">
-                            <div>
-                              <span className="block text-[8px] text-slate-400 font-mono uppercase">{t("Days")}</span>
-                              <span className="font-bold text-slate-750 dark:text-zinc-300">{opt.manDays} {t("Days")}</span>
+                          {hasRows ? (
+                            <div className="space-y-1">
+                              {(opt.rows || []).map((row) => (
+                                <div key={row.id} className="flex items-center justify-between text-[10px] text-slate-500 gap-2">
+                                  <span className="text-slate-600 dark:text-zinc-300 truncate">{row.item}</span>
+                                  <span className="font-mono font-bold text-slate-750 dark:text-zinc-300 flex-shrink-0">
+                                    {row.manDays} {t("Days")} × {selectedProposalForDetail.currency}{row.dailyRate}
+                                  </span>
+                                </div>
+                              ))}
                             </div>
-                            <div>
-                              <span className="block text-[8px] text-slate-400 font-mono uppercase">{t("Daily Rate")}</span>
-                              <span className="font-bold text-slate-750 dark:text-zinc-300">{selectedProposalForDetail.currency}{opt.dailyRate}</span>
+                          ) : (
+                            <div className="grid grid-cols-3 gap-2 text-[10px] text-slate-500">
+                              <div>
+                                <span className="block text-[8px] text-slate-400 font-mono uppercase">{t("Days")}</span>
+                                <span className="font-bold text-slate-750 dark:text-zinc-300">{opt.manDays} {t("Days")}</span>
+                              </div>
+                              <div>
+                                <span className="block text-[8px] text-slate-400 font-mono uppercase">{t("Daily Rate")}</span>
+                                <span className="font-bold text-slate-750 dark:text-zinc-300">{selectedProposalForDetail.currency}{opt.dailyRate}</span>
+                              </div>
+                              <div>
+                                <span className="block text-[8px] text-slate-400 font-mono uppercase">{t("Expenses")}</span>
+                                <span className="font-bold text-slate-750 dark:text-zinc-300">{selectedProposalForDetail.currency}{opt.expenses}</span>
+                              </div>
                             </div>
-                            <div>
-                              <span className="block text-[8px] text-slate-400 font-mono uppercase">{t("Expenses")}</span>
-                              <span className="font-bold text-slate-750 dark:text-zinc-300">{selectedProposalForDetail.currency}{opt.expenses}</span>
-                            </div>
-                          </div>
+                          )}
                         </div>
                       );
                     })}

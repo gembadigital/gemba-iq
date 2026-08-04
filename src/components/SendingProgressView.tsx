@@ -332,7 +332,13 @@ export default function SendingProgressView({
                   recipient: recipient.Email,
                   subject: mergedSubject,
                   body: mergedBody,
-                  attachments
+                  attachments,
+                  // Fix 5: bulk campaign/mail-merge broadcasts are
+                  // legitimately org-branded (see api/mail/[...action].js
+                  // sendHandler) — unlike a regular user's 1:1 proposal or
+                  // deal correspondence, which must go out from their own
+                  // Personal Mailbox, not the shared inbox.
+                  purpose: "campaign",
                 })
               });
             };

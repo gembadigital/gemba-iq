@@ -728,6 +728,74 @@ export default function DocumentExplorer({
         </div>
       </section>
 
+      {/* Fix 4 ("Belgeler kısmına pdf teklif yüklendiğinde üzerine tıklandığında
+          ön izleme ile teklif içeriği görülebilmeli"): compact mode (used
+          exclusively by the company card's Belgeler tab) previously had NO
+          preview UI at all — clicking a document only set selectedDoc for a
+          visual highlight, since the entire preview <aside> below was gated
+          behind {!compact}. A fixed sticky sidebar doesn't fit well inside a
+          narrow embedded tab, so instead we show the same preview content
+          (image / PDF iframe) in a centered modal overlay when compact. */}
+      {compact && selectedDoc && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4" onClick={() => setSelectedDoc(null)}>
+          <div
+            className="w-full max-w-lg rounded-2xl bg-white dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 p-5 space-y-4"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-start justify-between gap-2">
+              <div>
+                <h3 className="font-bold text-sm text-slate-900 dark:text-zinc-100 break-words">{selectedDoc.filename}</h3>
+                <p className="text-xs text-slate-500 mt-1">
+                  {folderLabel(selectedDoc.folder, lang)} · v{selectedDoc.version}
+                </p>
+              </div>
+              <button type="button" onClick={() => setSelectedDoc(null)} className="text-slate-400 hover:text-slate-600">
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            <div className="rounded-xl border border-slate-200 dark:border-zinc-800 bg-slate-50 dark:bg-zinc-900/40 min-h-[320px] overflow-hidden">
+              {!previewUrl && (
+                <div className="h-[320px] flex items-center justify-center text-sm text-slate-500">
+                  <Loader2 className="w-4 h-4 animate-spin mr-2" />
+                  {t("Loading documents...")}
+                </div>
+              )}
+              {previewUrl && isImageExtension(selectedDoc.extension) && (
+                <img src={previewUrl} alt={selectedDoc.filename} className="w-full h-[320px] object-contain" />
+              )}
+              {previewUrl && isPdfExtension(selectedDoc.extension) && (
+                <iframe src={previewUrl} title={selectedDoc.filename} className="w-full h-[420px]" />
+              )}
+              {previewUrl && !isImageExtension(selectedDoc.extension) && !isPdfExtension(selectedDoc.extension) && (
+                <div className="h-[320px] flex items-center justify-center text-sm text-slate-500">
+                  {t("No preview available for this file type")}
+                </div>
+              )}
+            </div>
+
+            <div className="grid grid-cols-2 gap-2">
+              <button
+                type="button"
+                onClick={() => void handleDownload(selectedDoc)}
+                className="inline-flex items-center justify-center gap-1 px-3 py-2 rounded-xl border text-xs font-semibold"
+              >
+                <Download className="w-3.5 h-3.5" />
+                {t("Download")}
+              </button>
+              <button
+                type="button"
+                onClick={() => setSelectedDoc(null)}
+                className="inline-flex items-center justify-center gap-1 px-3 py-2 rounded-xl border text-xs font-semibold"
+              >
+                <X className="w-3.5 h-3.5" />
+                {t("Close")}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {!compact && (
         <aside className="rounded-2xl border border-slate-200 dark:border-zinc-800 bg-white dark:bg-[#0f0f11] p-4 h-fit xl:sticky xl:top-4">
           {!selectedDoc ? (

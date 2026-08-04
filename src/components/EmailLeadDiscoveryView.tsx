@@ -94,7 +94,7 @@ export default function EmailLeadDiscoveryView({
   onAddTargetAccount
 }: EmailLeadDiscoveryViewProps) {
   const { t } = useLanguage();
-  const { actorName } = useOrganization();
+  const { actorName, isAdmin } = useOrganization();
 
   // Tab/State states
   const [connections, setConnections] = useState<MailboxConnection[]>([]);
@@ -315,7 +315,14 @@ export default function EmailLeadDiscoveryView({
 
         const nextConnections: MailboxConnection[] = [];
 
-        if (orgResult.status === "fulfilled") {
+        // Fix 5 ("user olarak bağlanan kişi, info@gembapartner.com adresine
+        // gelen mailleri görememeli"): the shared Organization Mailbox inbox
+        // is only offered as a scannable connection to ADMINs here. A
+        // regular USER should only ever see/scan their own Personal
+        // Mailbox — the org mailbox stays reserved for admin-level oversight
+        // and for the automated task-reminder engine (TasksView), which
+        // sends through a dedicated server-side path, not this scan UI.
+        if (isAdmin && orgResult.status === "fulfilled") {
           const { mailbox, session: orgSession } = orgResult.value;
           if (orgSession && mailbox.status === "Connected") {
             setSession(orgSession);

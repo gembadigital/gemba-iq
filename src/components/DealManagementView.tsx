@@ -524,6 +524,9 @@ export default function DealManagementView({ initialTab = "dashboard", onNavigat
       alert(t("Could not find the linked proposal record."));
       return;
     }
+    // Fix 3: persist target id before dispatch (mount-order race workaround
+    // — see ProposalManagementView.tsx's crm-navigate effect for details).
+    CrmDb.setKv("crm_active_proposal_id", matched.id);
     window.dispatchEvent(
       new CustomEvent("crm-navigate", { detail: { tab: "proposal-management", id: matched.id, type: "proposal" } })
     );

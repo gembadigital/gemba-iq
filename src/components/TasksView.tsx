@@ -386,14 +386,20 @@ export default function TasksView() {
     };
   }, []);
 
-  // Which mailbox actually delivers task notification e-mails. Mirrors the
-  // Proposal Management sender logic: prefer the signed-in user's own
-  // connected Personal Mailbox, fall back to the shared Organization
-  // Mailbox, and if neither is connected, sends are honestly marked
-  // "skipped" instead of silently failing against an unconfigured mailbox
-  // (which is what happened before — dispatchNotificationEmail always
-  // called /api/mail/send with no `source`, which defaults to the
-  // Organization Mailbox even when only a Personal Mailbox was connected).
+  // Which mailbox actually delivers task notification e-mails.
+  //
+  // Fix 5 ("sistem maili sadece hatırlatmalar için otomatik olarak devreye
+  // girmeli" — the system/org mailbox should only automatically kick in for
+  // reminders): task reminder/escalation e-mails are transactional system
+  // notifications, not personal correspondence, so they now PREFER the
+  // shared Organization Mailbox (the one legitimate, exclusive use case the
+  // user specified for it), falling back to the assignee's own Personal
+  // Mailbox only if no organization mailbox is connected. This is the
+  // deliberate opposite of interactive sends (proposals, deal e-mails
+  // elsewhere in the app), which always prefer the user's Personal Mailbox
+  // — see ServicesView.tsx/CompanyEmailsTab.tsx/OpportunityDrawerExtension.tsx.
+  // If neither is connected, sends are honestly marked "skipped" instead of
+  // silently failing against an unconfigured mailbox.
   const [mailSenderSource, setMailSenderSource] = useState<"personal" | "organization" | null>(null);
   useEffect(() => {
     let cancelled = false;
@@ -403,10 +409,10 @@ export default function TasksView() {
         fetchOrganizationMailbox(),
       ]);
       if (cancelled) return;
-      if (personalResult.status === "fulfilled" && personalResult.value.status === "Connected") {
-        setMailSenderSource("personal");
-      } else if (orgResult.status === "fulfilled" && orgResult.value.mailbox.status === "Connected") {
+      if (orgResult.status === "fulfilled" && orgResult.value.mailbox.status === "Connected") {
         setMailSenderSource("organization");
+      } else if (personalResult.status === "fulfilled" && personalResult.value.status === "Connected") {
+        setMailSenderSource("personal");
       } else {
         setMailSenderSource(null);
       }
@@ -583,6 +589,11 @@ export default function TasksView() {
           subject: notif.subject,
           body: notif.bodyHtml,
           source: mailSenderSource,
+          // Fix 5: tells the server this is an automated system reminder
+          // (not an interactive send), so it's allowed through the
+          // Organization Mailbox even when the person triggering it isn't
+          // an ADMIN — see api/mail/[...action].js sendHandler.
+          purpose: "reminder",
         }),
       });
 

@@ -1213,19 +1213,23 @@ export function ProposalContractSection({
       ]);
       if (cancelled) return;
 
+      // Fix 5 ("user kendi mailini kullanmalı, sadece kendi mailini
+      // göndermeli"): personal listed (and thus defaulted to, via
+      // options[0]) BEFORE organization — mirrors ServicesView.tsx's
+      // already-correct proposal-sender picker (Item 21).
       const options: { source: "organization" | "personal"; label: string; email: string }[] = [];
-      if (orgResult.status === "fulfilled" && orgResult.value.mailbox.status === "Connected") {
-        options.push({
-          source: "organization",
-          label: t("Organization Mailbox"),
-          email: orgResult.value.mailbox.mailbox_email || orgResult.value.mailbox.organizationMailbox || "",
-        });
-      }
       if (personalResult.status === "fulfilled" && personalResult.value.status === "Connected") {
         options.push({
           source: "personal",
           label: t("My Personal Mailbox"),
           email: personalResult.value.mailbox_address || "",
+        });
+      }
+      if (orgResult.status === "fulfilled" && orgResult.value.mailbox.status === "Connected") {
+        options.push({
+          source: "organization",
+          label: t("Organization Mailbox"),
+          email: orgResult.value.mailbox.mailbox_email || orgResult.value.mailbox.organizationMailbox || "",
         });
       }
       setSenderOptions(options);

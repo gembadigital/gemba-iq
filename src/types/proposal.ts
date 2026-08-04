@@ -31,6 +31,21 @@ export interface ProposalTemplate {
   updatedAt?: string;
 }
 
+// Tek bir hizmet kalemi (Teklif Oluştur sihirbazındaki PricingRow ile aynı
+// şekil) — bir opsiyonun gerçek satır bazlı içeriği. Eskiden bu satırlar
+// kaydedilmiyordu, sadece ortalama günlük ücret × toplam adam-gün olarak
+// kaydediliyordu; bu da sihirbazda gösterilen tutardan farklı bir toplamla
+// sonuçlanabiliyordu (kullanıcı hatası: "farklı içerik ve tutarlarda kayıt
+// ediliyor"). rows alanı eklendi ki gerçek hizmet kalemleri ve gerçek toplam
+// (sum(dailyRate*manDays)) korunsun ve PDF/teklif ekranlarında sihirbazdaki
+// ile birebir aynı içerik gösterilebilsin.
+export interface ProposalOptionRow {
+  id: string;
+  item: string;
+  dailyRate: number;
+  manDays: number;
+}
+
 export interface ProposalOption {
   training: boolean;
   consulting: boolean;
@@ -38,6 +53,7 @@ export interface ProposalOption {
   manDays: number;
   dailyRate: number;
   expenses: number;
+  rows?: ProposalOptionRow[]; // Gerçek hizmet kalemleri (varsa toplam hesaplamada öncelikli kullanılır)
 }
 
 export interface ProposalVersion {

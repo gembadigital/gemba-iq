@@ -188,6 +188,12 @@ export default function GlobalSearchBar() {
     } else {
       CrmDb.setKv("crm_deal_management_subtab", "board");
     }
+    // Fix 3: ProposalManagementView reads this specific key (not the generic
+    // crm_active_target_id, which is shared across many other tabs/types) to
+    // work around the same crm-navigate mount-order race.
+    if (result.type === "proposal") {
+      CrmDb.setKv("crm_active_proposal_id", result.targetId);
+    }
 
     // Trigger global navigation event
     const event = new CustomEvent("crm-navigate", {

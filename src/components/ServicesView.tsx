@@ -72,6 +72,14 @@ import { useOrganization } from "../lib/OrganizationContext";
 import { fetchOrganizationMailbox } from "../lib/organizationMailbox";
 import { fetchPersonalMailbox } from "../lib/personalMailbox";
 import { getSupabase } from "../lib/supabaseClient";
+// Item 2 (Fix 2): "CRM'e kaydet" anında, Teklif Yönetimi'nde görülen PDF ile
+// aynı, gerçek markalı (letterhead) PDF'i üretip Documents'a kalıcı olarak
+// saklamak için — Teklif Yönetimi/Fırsat çekmecesi zaten bu aynı yolu
+// kullanıyor (bkz. useProposalPdfCapture.tsx), burada da tekrar kullanılıyor
+// ki üç ayrı PDF üretici arasında içerik farkı kalmasın.
+import { useProposalPdfCapture } from "../lib/useProposalPdfCapture";
+import { storeProposalPdf } from "../lib/proposalService";
+import { formatSystemNumber } from "../lib/currencyHelper";
 
 // --- CORE INTERFACES ---
 interface ServiceCard {
@@ -463,9 +471,13 @@ export default function ServicesView({
   defaultTab?: "cards" | "wizard"; 
   showSwitcher?: boolean;
 }) {
-  const { t } = useLanguage();
+  const { t, lang } = useLanguage();
   const { actorName, actorEmail } = useOrganization();
   const [activeTab, setActiveTab] = useState<"cards" | "wizard">(defaultTab);
+  // Fix 2: aynı markalı (letterhead) PDF üretici — Teklif Yönetimi/Fırsat
+  // çekmecesi ile aynı görsel çıktı, "CRM'e Kaydet" anında üretilip
+  // Documents'a saklanıyor.
+  const { capture: capturePdfForSave, captureNode: pdfCaptureNode } = useProposalPdfCapture(t, formatSystemNumber);
 
   useEffect(() => {
     setActiveTab(defaultTab);
@@ -1845,21 +1857,43 @@ export default function ServicesView({
     const proposalId = "prop-" + Date.now();
     const cleanSeq = parseInt(seqNumber) || 44;
 
-    // Derived totals from active option pricing rows
+    // Derived totals from active option pricing rows — bu formül sihirbazın
+    // önizleme/PDF çıktısında her opsiyon için gösterdiği ile BİREBİR aynı
+    // (subtotal = sum(dailyRate*manDays)).
     const calculatedPrice1 = option1Rows.reduce((acc, row) => acc + (row.dailyRate * row.manDays), 0);
     const calculatedPrice2 = option2Rows.reduce((acc, row) => acc + (row.dailyRate * row.manDays), 0);
     const calculatedPrice3 = option3Rows.reduce((acc, row) => acc + (row.dailyRate * row.manDays), 0);
 
-    const priceList = [
-      option1Active ? calculatedPrice1 : 0,
-      option2Active ? calculatedPrice2 : 0,
-      option3Active ? calculatedPrice3 : 0
-    ];
-    const totalBudget = Math.max(...priceList, 0);
+    // Kullanıcı hatası: "farklı içerik ve tutarlarda kayıt ediliyor" — kök
+    // neden, kaydedilen "teklif tutarı" Math.max(...) ile AKTİF opsiyonlar
+    // arasından en pahalısını seçip diğerini sessizce göz ardı ediyordu.
+    // Sihirbazın kendi metni opsiyonları "birbirinin alternatifi" olarak
+    // tanımlıyor (bkz. TİCARİ ALTERNATİF BİLGİLENDİRMESİ), bu yüzden
+    // kaydedilecek tek "teklif tutarı" olarak İLK aktif opsiyonun gerçek
+    // toplamı kullanılıyor — deterministik ve sihirbazda o opsiyon için
+    // gösterilen tutarla birebir aynı. Her opsiyonun kendi gerçek tutarı da
+    // ayrıca aşağıdaki "rows" alanında (satır bazlı) korunuyor, böylece
+    // Teklif Yönetimi'ndeki opsiyon kartları da doğru gösterebiliyor.
+    const totalBudget = option1Active
+      ? calculatedPrice1
+      : option2Active
+      ? calculatedPrice2
+      : option3Active
+      ? calculatedPrice3
+      : 0;
     const taxes = totalBudget * 0.20;
     const grandTotal = totalBudget + taxes;
 
-    // Create Options definitions mapped for Proposal Management Schema
+    const toOptionRows = (rows: PricingRow[]) =>
+      rows.map((r) => ({ id: r.id, item: r.item, dailyRate: r.dailyRate, manDays: r.manDays }));
+
+    // Create Options definitions mapped for Proposal Management Schema.
+    // Kullanıcı hatası: kaydedilen içerik sihirbazdakinden farklı görünüyordu
+    // çünkü sadece ORTALAMA günlük ücret × TOPLAM adam-gün kaydediliyordu,
+    // gerçek satır bazlı hizmet kalemleri (item/dailyRate/manDays) hiç
+    // saklanmıyordu. Artık "rows" alanında gerçek satırlar da korunuyor;
+    // dailyRate/manDays özet alanları eski kayıtlarla geriye dönük uyumluluk
+    // için hâlâ dolduruluyor.
     const mappedOptions: { [key: string]: any } = {};
     if (option1Active) {
       mappedOptions["Option 1"] = {
@@ -1868,7 +1902,8 @@ export default function ServicesView({
         expenses: 0,
         workshop: false,
         dailyRate: option1Rows.length ? Math.round(option1Rows.reduce((s, r) => s + (r.dailyRate || 0), 0) / option1Rows.length) : 0,
-        manDays: option1Rows.reduce((s, r) => s + (r.manDays || 0), 0)
+        manDays: option1Rows.reduce((s, r) => s + (r.manDays || 0), 0),
+        rows: toOptionRows(option1Rows)
       };
     }
     if (option2Active) {
@@ -1878,7 +1913,8 @@ export default function ServicesView({
         expenses: 0,
         workshop: false,
         dailyRate: option2Rows.length ? Math.round(option2Rows.reduce((s, r) => s + (r.dailyRate || 0), 0) / option2Rows.length) : 0,
-        manDays: option2Rows.reduce((s, r) => s + (r.manDays || 0), 0)
+        manDays: option2Rows.reduce((s, r) => s + (r.manDays || 0), 0),
+        rows: toOptionRows(option2Rows)
       };
     }
     if (option3Active) {
@@ -1888,7 +1924,8 @@ export default function ServicesView({
         expenses: 0,
         workshop: false,
         dailyRate: option3Rows.length ? Math.round(option3Rows.reduce((s, r) => s + (r.dailyRate || 0), 0) / option3Rows.length) : 0,
-        manDays: option3Rows.reduce((s, r) => s + (r.manDays || 0), 0)
+        manDays: option3Rows.reduce((s, r) => s + (r.manDays || 0), 0),
+        rows: toOptionRows(option3Rows)
       };
     }
 
@@ -1898,10 +1935,28 @@ export default function ServicesView({
     // into the wizard's options/pricing — so Teklif Yönetimi's Word/PDF
     // export always looked unrelated to the real proposal content. Pull
     // the real, user-edited option names/descriptions/terms instead.
+    //
+    // Kullanıcı hatası: "services" alanı sadece opsiyon başlıklarını
+    // ("Option 1" gibi) içeriyordu — gerçek hizmet içeriği değildi. Artık
+    // aktif opsiyonların gerçek satır kalemi adları (tekilleştirilmiş) bu
+    // alana yazılıyor; hiç satır yoksa (kenar durum) opsiyon başlıklarına
+    // geri düşülüyor.
     const realServicesList: string[] = [];
-    if (option1Active && option1Name.trim()) realServicesList.push(option1Name.trim());
-    if (option2Active && option2Name.trim()) realServicesList.push(option2Name.trim());
-    if (option3Active && option3Name.trim()) realServicesList.push(option3Name.trim());
+    const activeRowSets: PricingRow[][] = [];
+    if (option1Active) activeRowSets.push(option1Rows);
+    if (option2Active) activeRowSets.push(option2Rows);
+    if (option3Active) activeRowSets.push(option3Rows);
+    activeRowSets.forEach((rows) => {
+      rows.forEach((row) => {
+        const label = row.item?.trim();
+        if (label && !realServicesList.includes(label)) realServicesList.push(label);
+      });
+    });
+    if (realServicesList.length === 0) {
+      if (option1Active && option1Name.trim()) realServicesList.push(option1Name.trim());
+      if (option2Active && option2Name.trim()) realServicesList.push(option2Name.trim());
+      if (option3Active && option3Name.trim()) realServicesList.push(option3Name.trim());
+    }
     if (realServicesList.length === 0 && selectedService?.name) {
       realServicesList.push(selectedService.name);
     }
@@ -2041,7 +2096,7 @@ export default function ServicesView({
   // default mail handler configured show a blocking native prompt while the
   // SPA underneath sits frozen. None of that popup/navigation juggling
   // happens here anymore — saving is just saving.
-  const handleCreateAndSaveProposal = (silent = false) => {
+  const handleCreateAndSaveProposal = async (silent = false) => {
     if (savedProposalInfo && savedProposalInfo.number === proposalNumber) {
       if (!silent) {
         setToastMessage(t("This proposal is already saved in the system. (PROP-{number})").replace("{number}", savedProposalInfo.number));
@@ -2053,6 +2108,24 @@ export default function ServicesView({
     setSavedProposalInfo({ number: proposalNumber });
     if (!silent) {
       setToastMessage(t("Proposal and opportunity saved!"));
+    }
+
+    // Fix 2 ("teklif yönetiminde gösterilen pdf hala hatalı"): CRM'e Kaydet
+    // anında, Teklif Yönetimi'nin kendi görüntüleme akışıyla birebir aynı
+    // markalı (letterhead) PDF'i üretip Documents'a saklıyoruz. Böylece
+    // Teklif Yönetimi ilk açıldığında kayıt anındaki gerçek içerikle üretilmiş
+    // PDF'i gösterebilir (kendi yeniden üretimi hâlâ bir fallback olarak
+    // kalır, ama artık kaynak veri kayıt anında da persist ediliyor).
+    // Kaydetme akışını bloklamasın diye hata sessizce yutuluyor — kullanıcı
+    // teklif/fırsat kaydının başarıyla oluştuğunu zaten üstteki toast'tan
+    // görüyor.
+    try {
+      const pdfResult = await capturePdfForSave(result.newProposal);
+      if (pdfResult) {
+        await storeProposalPdf(result.newProposal, lang, pdfResult.blob);
+      }
+    } catch (err) {
+      console.error("Proposal PDF store-on-save failed:", err);
     }
   };
 
@@ -2523,7 +2596,11 @@ export default function ServicesView({
 
   return (
     <div className="w-full text-slate-700 dark:text-slate-300 antialiased font-sans flex flex-col space-y-6">
-      
+      {/* Fix 2: off-screen, branded PDF capture node (see useProposalPdfCapture) —
+          used by handleCreateAndSaveProposal to persist the exact same PDF
+          Teklif Yönetimi shows, at CRM'e Kaydet time. */}
+      {pdfCaptureNode}
+
       {/* HEADER CARD */}
       <div className="bg-white dark:bg-[#1b1a19] p-5 rounded-lg border border-[#EDEBE9] dark:border-[#323130] shadow-sm relative overflow-hidden">
         <div className="absolute top-0 left-0 right-0 h-1.5 bg-gradient-to-r from-emerald-500 via-[#0078D4] to-blue-500" />

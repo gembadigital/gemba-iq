@@ -133,15 +133,47 @@ export default function ProposalLetterheadBody({
             <tbody>
               {Object.keys(doc.options).map((key) => {
                 const opt = doc.options[key];
-                const total = opt.manDays * opt.dailyRate + opt.expenses;
+                // Kullanıcı hatası düzeltmesi: artık gerçek satır bazlı
+                // hizmet kalemleri (opt.rows) varsa bunlar birebir gösterilir
+                // ve toplam bu satırlardan hesaplanır — sihirbazın kendi
+                // önizlemesindeki içerik/tutar ile birebir aynı. Eski
+                // kayıtlarda rows yoksa (geriye dönük uyumluluk) özet
+                // satıra geri düşülür.
+                const hasRows = Array.isArray(opt.rows) && opt.rows.length > 0;
+                const total = hasRows
+                  ? (opt.rows || []).reduce((sum, r) => sum + r.dailyRate * r.manDays, 0) + (opt.expenses || 0)
+                  : opt.manDays * opt.dailyRate + opt.expenses;
                 return (
-                  <tr key={key} className="border-b border-slate-100 dark:border-zinc-800/60 hover:bg-slate-50/50 dark:hover:bg-zinc-800/20 transition-colors">
-                    <td className="p-3 font-bold text-slate-800 dark:text-zinc-100">{key}</td>
-                    <td className="p-3 text-right font-semibold text-slate-700 dark:text-zinc-300">{formatSystemNumber(opt.manDays)} Days</td>
-                    <td className="p-3 text-right text-slate-700 dark:text-zinc-300">{doc.currency} {formatSystemNumber(opt.dailyRate)}</td>
-                    <td className="p-3 text-right text-slate-700 dark:text-zinc-300">{doc.currency} {formatSystemNumber(opt.expenses)}</td>
-                    <td className="p-3 text-right font-extrabold text-emerald-600 dark:text-emerald-400">{doc.currency} {formatSystemNumber(total)}</td>
-                  </tr>
+                  <React.Fragment key={key}>
+                    <tr className="border-b border-slate-100 dark:border-zinc-800/60 bg-slate-50/70 dark:bg-zinc-850/40">
+                      {hasRows ? (
+                        <td className="p-3 font-bold text-slate-800 dark:text-zinc-100" colSpan={5}>{key}</td>
+                      ) : (
+                        <>
+                          <td className="p-3 font-bold text-slate-800 dark:text-zinc-100">{key}</td>
+                          <td className="p-3 text-right font-semibold text-slate-700 dark:text-zinc-300">{formatSystemNumber(opt.manDays)} Days</td>
+                          <td className="p-3 text-right text-slate-700 dark:text-zinc-300">{doc.currency} {formatSystemNumber(opt.dailyRate)}</td>
+                          <td className="p-3 text-right text-slate-700 dark:text-zinc-300">{doc.currency} {formatSystemNumber(opt.expenses)}</td>
+                          <td className="p-3 text-right font-extrabold text-emerald-600 dark:text-emerald-400">{doc.currency} {formatSystemNumber(total)}</td>
+                        </>
+                      )}
+                    </tr>
+                    {hasRows && (opt.rows || []).map((row) => (
+                      <tr key={row.id} className="border-b border-slate-100 dark:border-zinc-800/60 hover:bg-slate-50/50 dark:hover:bg-zinc-800/20 transition-colors">
+                        <td className="p-3 pl-6 text-slate-700 dark:text-zinc-300">{row.item}</td>
+                        <td className="p-3 text-right text-slate-700 dark:text-zinc-300">{formatSystemNumber(row.manDays)} Days</td>
+                        <td className="p-3 text-right text-slate-700 dark:text-zinc-300">{doc.currency} {formatSystemNumber(row.dailyRate)}</td>
+                        <td className="p-3 text-right text-slate-400">—</td>
+                        <td className="p-3 text-right font-semibold text-slate-700 dark:text-zinc-300">{doc.currency} {formatSystemNumber(row.dailyRate * row.manDays)}</td>
+                      </tr>
+                    ))}
+                    {hasRows && (
+                      <tr className="border-b border-slate-200 dark:border-zinc-800 bg-emerald-50/20 dark:bg-emerald-950/10">
+                        <td className="p-3 text-right font-bold text-slate-600 dark:text-zinc-300" colSpan={4}>{t("Option Est")}</td>
+                        <td className="p-3 text-right font-extrabold text-emerald-600 dark:text-emerald-400">{doc.currency} {formatSystemNumber(total)}</td>
+                      </tr>
+                    )}
+                  </React.Fragment>
                 );
               })}
             </tbody>

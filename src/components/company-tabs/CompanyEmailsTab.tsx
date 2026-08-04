@@ -76,15 +76,17 @@ export default function CompanyEmailsTab({
       ]);
       if (cancelled) return;
 
+      // Fix 5 ("user kendi mailini kullanmalı, sadece kendi mailini
+      // göndermeli"): personal listed (and thus defaulted to, via
+      // options[0]) BEFORE organization — mirrors ServicesView.tsx's
+      // already-correct proposal-sender picker (Item 21). The Organization
+      // Mailbox stays available as an explicit fallback/choice, not the
+      // default, for the rare case a user needs to send as the shared
+      // address (e.g. no personal mailbox connected yet).
       const options: SenderOption[] = [];
+      let orgEmailForBcc = "";
       if (orgResult.status === "fulfilled" && orgResult.value.mailbox.status === "Connected") {
-        const orgEmail = orgResult.value.mailbox.mailbox_email || orgResult.value.mailbox.organizationMailbox || "";
-        options.push({
-          source: "organization",
-          label: t("Organization Mailbox"),
-          email: orgEmail,
-        });
-        setSystemBccEmail(orgEmail);
+        orgEmailForBcc = orgResult.value.mailbox.mailbox_email || orgResult.value.mailbox.organizationMailbox || "";
       }
       if (personalResult.status === "fulfilled" && personalResult.value.status === "Connected") {
         options.push({
@@ -92,6 +94,14 @@ export default function CompanyEmailsTab({
           label: t("My Personal Mailbox"),
           email: personalResult.value.mailbox_address || "",
         });
+      }
+      if (orgEmailForBcc) {
+        options.push({
+          source: "organization",
+          label: t("Organization Mailbox"),
+          email: orgEmailForBcc,
+        });
+        setSystemBccEmail(orgEmailForBcc);
       }
       setSenderOptions(options);
       setSelectedSender(options[0]?.source || "");

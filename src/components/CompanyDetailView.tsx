@@ -363,11 +363,16 @@ export default function CompanyDetailView({
                     {CrmDb.getProposalsByCompany(company.id).map((prop: any) => (
                       <tr
                         key={prop.id}
-                        onClick={() =>
+                        onClick={() => {
+                          // Fix 3: persist the target id BEFORE dispatching so
+                          // ProposalManagementView can pick it up even if it
+                          // isn't mounted yet at dispatch time (mount-order
+                          // race — see its crm-navigate effect for details).
+                          CrmDb.setKv("crm_active_proposal_id", prop.id);
                           window.dispatchEvent(
                             new CustomEvent("crm-navigate", { detail: { tab: "proposal-management", id: prop.id, type: "proposal" } })
-                          )
-                        }
+                          );
+                        }}
                         className="hover:bg-slate-50/40 dark:hover:bg-zinc-900/40 cursor-pointer"
                         title={t("Click to view proposal summary and PDF file")}
                       >
