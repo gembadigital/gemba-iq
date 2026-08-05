@@ -2114,6 +2114,7 @@ export const uiDictionaryTR: Record<string, string> = {
   "Versions": "Sürümler",
   "Select a document to preview": "Önizleme için bir belge seçin",
   "No preview available for this file type": "Bu dosya türü için önizleme yok",
+  "Expand preview": "Önizlemeyi Büyüt",
   "Upload new version": "Yeni sürüm yükle",
   "Version History": "Sürüm Geçmişi",
   "Action failed.": "İşlem başarısız.",

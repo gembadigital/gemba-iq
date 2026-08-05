@@ -11,6 +11,7 @@ import {
   History,
   Home,
   Loader2,
+  Maximize2,
   MoveRight,
   Pencil,
   Search,
@@ -76,6 +77,13 @@ export default function DocumentExplorer({
   );
   const [selectedDoc, setSelectedDoc] = useState<EnterpriseDocument | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+  // "büyük ekranda görsel bir şekilde gözlemlenebilmeli" — a large,
+  // near-fullscreen preview shared by both compact mode (company card's
+  // Belgeler tab) and the standalone Documents page, so any PDF/image can be
+  // reviewed without downloading it first. Compact mode opens straight into
+  // this on click; the standard page's small sidebar preview gets an
+  // explicit "büyüt" (expand) button that opens the same large view.
+  const [fullScreenPreview, setFullScreenPreview] = useState(false);
   const [versions, setVersions] = useState<EnterpriseDocument[]>([]);
   const [showVersions, setShowVersions] = useState(false);
   const [isDragOver, setIsDragOver] = useState(false);
@@ -664,7 +672,14 @@ export default function DocumentExplorer({
                 >
                   <button
                     type="button"
-                    onClick={() => setSelectedDoc(doc)}
+                    onClick={() => {
+                      setSelectedDoc(doc);
+                      // Compact mode (company card's Belgeler tab) has no
+                      // sidebar preview panel, so clicking a document opens
+                      // straight into the large preview instead of just
+                      // highlighting it.
+                      if (compact) setFullScreenPreview(true);
+                    }}
                     className="w-full text-left"
                   >
                     <div className="flex items-start gap-3">
@@ -728,69 +743,73 @@ export default function DocumentExplorer({
         </div>
       </section>
 
-      {/* Fix 4 ("Belgeler kısmına pdf teklif yüklendiğinde üzerine tıklandığında
-          ön izleme ile teklif içeriği görülebilmeli"): compact mode (used
-          exclusively by the company card's Belgeler tab) previously had NO
-          preview UI at all — clicking a document only set selectedDoc for a
-          visual highlight, since the entire preview <aside> below was gated
-          behind {!compact}. A fixed sticky sidebar doesn't fit well inside a
-          narrow embedded tab, so instead we show the same preview content
-          (image / PDF iframe) in a centered modal overlay when compact. */}
-      {compact && selectedDoc && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4" onClick={() => setSelectedDoc(null)}>
+      {/* "büyük ekranda görsel bir şekilde gözlemlenebilmeli" — a single,
+          large, near-fullscreen preview shared by compact mode (company
+          card's Belgeler tab, which has no room for a sidebar) and the
+          standalone Documents page (whose small 220px sidebar preview gets
+          an explicit "büyüt" button below that opens this same view). No
+          download required to actually see the content. */}
+      {fullScreenPreview && selectedDoc && (
+        <div
+          className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-3 md:p-6"
+          onClick={() => {
+            setFullScreenPreview(false);
+            if (compact) setSelectedDoc(null);
+          }}
+        >
           <div
-            className="w-full max-w-lg rounded-2xl bg-white dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 p-5 space-y-4"
+            className="w-full h-full max-w-[1400px] rounded-2xl bg-white dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 p-4 md:p-5 flex flex-col gap-3"
             onClick={(e) => e.stopPropagation()}
           >
-            <div className="flex items-start justify-between gap-2">
-              <div>
-                <h3 className="font-bold text-sm text-slate-900 dark:text-zinc-100 break-words">{selectedDoc.filename}</h3>
+            <div className="flex items-start justify-between gap-2 flex-shrink-0">
+              <div className="min-w-0">
+                <h3 className="font-bold text-base text-slate-900 dark:text-zinc-100 break-words">{selectedDoc.filename}</h3>
                 <p className="text-xs text-slate-500 mt-1">
-                  {folderLabel(selectedDoc.folder, lang)} · v{selectedDoc.version}
+                  {folderLabel(selectedDoc.folder, lang)} · v{selectedDoc.version} · {formatFileSize(selectedDoc.file_size)}
                 </p>
               </div>
-              <button type="button" onClick={() => setSelectedDoc(null)} className="text-slate-400 hover:text-slate-600">
-                <X className="w-4 h-4" />
-              </button>
+              <div className="flex items-center gap-2 flex-shrink-0">
+                <button
+                  type="button"
+                  onClick={() => void handleDownload(selectedDoc)}
+                  className="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl border text-xs font-semibold"
+                >
+                  <Download className="w-3.5 h-3.5" />
+                  {t("Download")}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setFullScreenPreview(false);
+                    if (compact) setSelectedDoc(null);
+                  }}
+                  className="text-slate-400 hover:text-slate-600 p-1"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
             </div>
 
-            <div className="rounded-xl border border-slate-200 dark:border-zinc-800 bg-slate-50 dark:bg-zinc-900/40 min-h-[320px] overflow-hidden">
+            <div className="flex-1 min-h-0 rounded-xl border border-slate-200 dark:border-zinc-800 bg-slate-50 dark:bg-zinc-900/40 overflow-hidden">
               {!previewUrl && (
-                <div className="h-[320px] flex items-center justify-center text-sm text-slate-500">
+                <div className="h-full flex items-center justify-center text-sm text-slate-500">
                   <Loader2 className="w-4 h-4 animate-spin mr-2" />
                   {t("Loading documents...")}
                 </div>
               )}
               {previewUrl && isImageExtension(selectedDoc.extension) && (
-                <img src={previewUrl} alt={selectedDoc.filename} className="w-full h-[320px] object-contain" />
+                <div className="h-full w-full flex items-center justify-center overflow-auto p-2">
+                  <img src={previewUrl} alt={selectedDoc.filename} className="max-w-full max-h-full object-contain" />
+                </div>
               )}
               {previewUrl && isPdfExtension(selectedDoc.extension) && (
-                <iframe src={previewUrl} title={selectedDoc.filename} className="w-full h-[420px]" />
+                <iframe src={previewUrl} title={selectedDoc.filename} className="w-full h-full" />
               )}
               {previewUrl && !isImageExtension(selectedDoc.extension) && !isPdfExtension(selectedDoc.extension) && (
-                <div className="h-[320px] flex items-center justify-center text-sm text-slate-500">
+                <div className="h-full flex items-center justify-center text-sm text-slate-500">
                   {t("No preview available for this file type")}
                 </div>
               )}
-            </div>
-
-            <div className="grid grid-cols-2 gap-2">
-              <button
-                type="button"
-                onClick={() => void handleDownload(selectedDoc)}
-                className="inline-flex items-center justify-center gap-1 px-3 py-2 rounded-xl border text-xs font-semibold"
-              >
-                <Download className="w-3.5 h-3.5" />
-                {t("Download")}
-              </button>
-              <button
-                type="button"
-                onClick={() => setSelectedDoc(null)}
-                className="inline-flex items-center justify-center gap-1 px-3 py-2 rounded-xl border text-xs font-semibold"
-              >
-                <X className="w-3.5 h-3.5" />
-                {t("Close")}
-              </button>
             </div>
           </div>
         </div>
@@ -816,9 +835,25 @@ export default function DocumentExplorer({
                 </button>
               </div>
 
-              <div className="rounded-xl border border-slate-200 dark:border-zinc-800 bg-slate-50 dark:bg-zinc-900/40 min-h-[220px] overflow-hidden">
+              <div className="relative rounded-xl border border-slate-200 dark:border-zinc-800 bg-slate-50 dark:bg-zinc-900/40 min-h-[220px] overflow-hidden">
+                {previewUrl && (isImageExtension(selectedDoc.extension) || isPdfExtension(selectedDoc.extension)) && (
+                  <button
+                    type="button"
+                    onClick={() => setFullScreenPreview(true)}
+                    title={t("Expand preview")}
+                    className="absolute top-2 right-2 z-10 inline-flex items-center gap-1 px-2 py-1.5 rounded-lg bg-white/90 dark:bg-zinc-900/90 border border-slate-200 dark:border-zinc-700 text-[11px] font-semibold shadow-sm hover:bg-white dark:hover:bg-zinc-900"
+                  >
+                    <Maximize2 className="w-3.5 h-3.5" />
+                    {t("Expand preview")}
+                  </button>
+                )}
                 {previewUrl && isImageExtension(selectedDoc.extension) && (
-                  <img src={previewUrl} alt={selectedDoc.filename} className="w-full h-[220px] object-contain" />
+                  <img
+                    src={previewUrl}
+                    alt={selectedDoc.filename}
+                    className="w-full h-[220px] object-contain cursor-zoom-in"
+                    onClick={() => setFullScreenPreview(true)}
+                  />
                 )}
                 {previewUrl && isPdfExtension(selectedDoc.extension) && (
                   <iframe src={previewUrl} title={selectedDoc.filename} className="w-full h-[220px]" />
