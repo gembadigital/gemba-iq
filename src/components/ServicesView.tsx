@@ -1075,10 +1075,17 @@ export default function ServicesView({
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ pastedContent: rawPastedHtml }),
       });
+      const data = await response.json().catch(() => ({}));
+      // Item ("Teklif oluşturma tablo dönüştürme API hatası"): this used to
+      // throw a fixed generic "API sunucu hatası oluştu." on any non-2xx
+      // response, discarding the server's real error message (e.g. missing
+      // GEMINI_API_KEY, or the new clear timeout message from
+      // generateWithRetry) — so the user only ever saw an unhelpful generic
+      // alert no matter what actually failed. Now the real message is
+      // surfaced.
       if (!response.ok) {
-        throw new Error("API sunucu hatası oluştu.");
+        throw new Error(data?.error || "API sunucu hatası oluştu.");
       }
-      const data = await response.json();
       if (data.htmlTable) {
         setEditTableHtml(data.htmlTable);
         setPastePrompt(false);
@@ -1114,10 +1121,10 @@ export default function ServicesView({
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ pastedContent: wizardRawPastedHtml }),
       });
+      const data = await response.json().catch(() => ({}));
       if (!response.ok) {
-        throw new Error("API sunucu hatası oluştu.");
+        throw new Error(data?.error || "API sunucu hatası oluştu.");
       }
-      const data = await response.json();
       if (data.htmlTable) {
         setWizardTableHtml(data.htmlTable);
         setWizardPastePrompt(false);
