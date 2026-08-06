@@ -22,50 +22,43 @@ export default function ProposalLetterheadBody({
   t: (s: string) => string;
   formatSystemNumber: (n: number) => string;
 }) {
+  // Kullanıcı talebi ("teklif yönet sayfasındaki teklif pdf... anlaşılır
+  // değil... sadece page.png şablonuna müşteri adı ve kontakt kişinin
+  // yazdığı alan ve teklif içeriğini göstersin. geri kalan cover page ve
+  // tanımlara gerek yok."): html2canvas-pro yakalaması güvenilir olmadığında
+  // (25s timeout / DOM hazır değil) bu belge eski jsPDF üretecine
+  // (proposalPdf.ts) düşüyordu — o üretec HTML formatlı description/
+  // methodology/projectPlan/timeline alanlarını hiç ayrıştırmadan ham metin
+  // olarak çiziyordu (`<h2>PROJE TANIMI...</h2>` gibi etiketlerin harf harf
+  // göründüğü kırık çıktı) ve kendi jenerik ince renkli çubuk "kapağını"
+  // kullanıyordu. Kalıcı çözüm: bu bileşenden "kapak" (coverImage/coverPage
+  // özel başlık) ve "tanımlar" (Description/Methodology/Project Plan/
+  // Timeline — projenin amacı/kapsamı gibi serbest metin AI çıktısı barındıran
+  // bölümler) tamamen kaldırıldı. Sayfa arka planı artık teklifin kendi
+  // page.png şablonu (doc.pageImage — ServicesView'daki sihirbazda seçilen
+  // hizmetin yüklediği aynı marka şablonu, proposal oluşturulurken zaten
+  // kaydediliyor) üzerine tam sayfa (background-size: 100% 100%) olarak
+  // uygulanıyor; şablon yüklenmemişse genel /page.png'ye (boş/şeffaf) düşer.
+  // Kalan içerik sadece: müşteri adı + ilgili kişi, hizmetler, fiyatlandırma
+  // tablosu, toplamlar, şartlar ve imza alanları — kullanıcının "geri kalan
+  // cover page ve tanımlara gerek yok" ifadesiyle SADECE bu iki bölüm grubunu
+  // (kapak ve tanımlar) hariç tuttuğu, diğer her şeyin (fiyat/şartlar/imza)
+  // kaldığı şeklinde yorumlandı.
+  const pageTemplateUrl = doc.pageImage || "/page.png";
+
   return (
-    <div className="bg-white dark:bg-zinc-900 border border-slate-200 rounded-lg p-10 max-w-4xl mx-auto shadow space-y-6 text-sm text-slate-800 dark:text-zinc-200 leading-relaxed font-sans relative">
+    <div
+      className="bg-white dark:bg-zinc-900 border border-slate-200 rounded-lg p-10 max-w-4xl mx-auto shadow space-y-6 text-sm text-slate-800 dark:text-zinc-200 leading-relaxed font-sans relative"
+      style={{
+        backgroundImage: `url(${pageTemplateUrl})`,
+        backgroundSize: "100% 100%",
+        backgroundRepeat: "no-repeat",
+        backgroundColor: "#ffffff",
+      }}
+    >
 
-      {/* Custom Page Letterhead Header if present */}
-      {doc.pageImage && (
-        <div className="absolute top-4 right-4 max-h-12 overflow-hidden opacity-80">
-          <img src={doc.pageImage} alt="page letterhead" referrerPolicy="no-referrer" className="h-10 object-contain" />
-        </div>
-      )}
-
-      {/* Cover Image or Standard Header */}
-      {doc.coverImage ? (
-        <div className="border-b pb-5 flex flex-col items-center justify-center gap-2">
-          <img src={doc.coverImage} alt="cover letterhead" referrerPolicy="no-referrer" className="max-h-48 object-contain" />
-          <div className="text-center text-[10px] text-slate-450 font-mono mt-2">
-            <p>{t("Date:")} {doc.date} | {t("Ref:")} PROP-{doc.proposalNumber} | {t("Status:")} {doc.status}</p>
-          </div>
-        </div>
-      ) : (
-        /* Header Logo */
-        <div className="border-b pb-5 flex justify-between items-start">
-          <div>
-            <h3 className="font-black text-emerald-600 tracking-widest text-lg">GEMBA PARTNER</h3>
-            <p className="text-[10px] text-slate-400 uppercase font-mono tracking-wider mt-0.5">{t("Lean Operations & Strategy Advisory Group")}</p>
-          </div>
-          <div className="text-right text-[10px] text-slate-450 font-mono">
-            <p>{t("Date:")} {doc.date}</p>
-            <p>{t("Ref:")} PROP-{doc.proposalNumber}</p>
-            <p>{t("Status:")} {doc.status}</p>
-          </div>
-        </div>
-      )}
-
-      {/* Custom Headline / Cover Text */}
-      {doc.coverPage && (
-        <div className="bg-slate-50 dark:bg-zinc-850 p-4 rounded-xl border-l-4 border-l-purple-600 text-center">
-          <h2 className="text-md font-extrabold text-purple-800 dark:text-purple-400 font-mono">
-            {doc.coverPage}
-          </h2>
-        </div>
-      )}
-
-      {/* Cover Headline */}
-      <div className="text-center py-4 space-y-1">
+      {/* Müşteri adı + ilgili kişi (kullanıcının açıkça istediği tek "başlık" alanı) */}
+      <div className="text-center py-4 space-y-1 border-b pb-5">
         <h1 className="text-lg font-black tracking-tight text-slate-900 dark:text-zinc-100 uppercase font-mono">
           {doc.proposalSubject}
         </h1>
@@ -73,36 +66,6 @@ export default function ProposalLetterheadBody({
           {t("Prepared For:")} <strong>{doc.companyName}</strong> | {t("Attn:")} {doc.contactPerson}
         </p>
       </div>
-
-      {/* Description */}
-      <div className="space-y-2 border-l-4 border-l-emerald-500 pl-4 bg-slate-50 dark:bg-black/10 py-2">
-        <h4 className="font-mono text-[10px] text-slate-450 uppercase font-bold tracking-wider">{t("1. Opportunity Focus Statement")}</h4>
-        <p className="text-xs italic text-slate-600 dark:text-zinc-350">{doc.description || t("Field walkthrough on bottleneck areas.")}</p>
-      </div>
-
-      {/* Methodology (Render HTML tables securely) */}
-      {doc.methodology && (
-        <div className="space-y-2">
-          <h4 className="font-mono text-[10px] text-slate-450 uppercase font-bold tracking-wider">{t("2. Lean Methodology & Structural Approach")}</h4>
-          <div className="text-xs text-slate-700 dark:text-zinc-300 border dark:border-zinc-800 p-4 rounded-xl bg-slate-50/50 dark:bg-zinc-900/40 overflow-x-auto prose dark:prose-invert max-w-none" dangerouslySetInnerHTML={{ __html: doc.methodology }} />
-        </div>
-      )}
-
-      {/* Project Plan (Render HTML tables securely) */}
-      {doc.projectPlan && (
-        <div className="space-y-2">
-          <h4 className="font-mono text-[10px] text-slate-450 uppercase font-bold tracking-wider">{t("3. Phase-by-Phase Project Plan")}</h4>
-          <div className="text-xs text-slate-700 dark:text-zinc-300 border dark:border-zinc-800 p-4 rounded-xl bg-slate-50/50 dark:bg-zinc-900/40 overflow-x-auto prose dark:prose-invert max-w-none" dangerouslySetInnerHTML={{ __html: doc.projectPlan }} />
-        </div>
-      )}
-
-      {/* Timeline (Render HTML tables securely) */}
-      {doc.timeline && (
-        <div className="space-y-2">
-          <h4 className="font-mono text-[10px] text-slate-450 uppercase font-bold tracking-wider">{t("4. Timeline & Sprints Milestones")}</h4>
-          <div className="text-xs text-slate-700 dark:text-zinc-300 border dark:border-zinc-800 p-4 rounded-xl bg-slate-50/50 dark:bg-zinc-900/40 overflow-x-auto prose dark:prose-invert max-w-none" dangerouslySetInnerHTML={{ __html: doc.timeline }} />
-        </div>
-      )}
 
       {/* Services Grid */}
       <div className="space-y-2">
