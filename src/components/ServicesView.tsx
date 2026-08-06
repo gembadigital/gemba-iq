@@ -3320,7 +3320,7 @@ export default function ServicesView({
                                     // "Müşteri İlgili Kişi" is NOT company-specific — it's the logged-in
                                     // user's own name (see the actorName effect above), so it's
                                     // intentionally left untouched here.
-                                    const primaryContact = CrmDb.getContactsByCompany(c.id)[0];
+                                    const primaryContact = CrmDb.getPrimaryContact(c.id);
                                     const contactFullName = primaryContact
                                       ? `${primaryContact.firstName} ${primaryContact.lastName}`.trim()
                                       : "";

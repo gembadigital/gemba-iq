@@ -373,8 +373,7 @@ export default function ProposalFormModal({
     if (selectedCompanyId && !selectedContactId) {
       const comp = companies.find((c) => c.id === selectedCompanyId);
       if (comp) {
-        const realContacts = CrmDb.getContactsByCompany(selectedCompanyId);
-        const primaryContact = realContacts[0];
+        const primaryContact = CrmDb.getPrimaryContact(selectedCompanyId);
         if (primaryContact) {
           setContactPerson(`${primaryContact.firstName} ${primaryContact.lastName}`.trim());
           setContactEmail(primaryContact.email || "");

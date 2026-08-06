@@ -2857,7 +2857,7 @@ export default function DealManagementView({ initialTab = "dashboard", onNavigat
                           value={dealFormState.companyId || dealFormState.companyName}
                           onChange={(company) => {
                             const companyContacts = CrmDb.getContactsByCompany(company.id);
-                            const primaryContact = companyContacts[0];
+                            const primaryContact = CrmDb.getPrimaryContact(company.id);
                             setDealFormState({
                               ...dealFormState,
                               companyId: company.id,

@@ -155,6 +155,9 @@ const dictionary: Record<Language, Record<string, string>> = {
     "Customer Segment": "Müşteri Tipi",
     "No contacts registered for this company yet.": "Bu şirkete ait herhangi bir kişi kaydı bulunmamaktadır.",
     "No Title Specified": "Belirtilmemiş Ünvan",
+    "Primary Contact": "Asıl Kişi",
+    "Set as Primary Contact": "Asıl Kişi Yap",
+    "Primary Contact Changed": "Asıl Kişi Değiştirildi",
     ...uiDictionaryTR,
   },
   EN: {

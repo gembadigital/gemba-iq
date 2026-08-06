@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { CrmDb, Contact } from "../../lib/CrmDb";
-import { Plus, Trash2, Edit2, Mail, Phone, Users, X, Check, Search, User } from "lucide-react";
+import { Plus, Trash2, Edit2, Mail, Phone, Users, X, Check, Search, User, Star } from "lucide-react";
 import { useLanguage } from "../../lib/LanguageContext";
 
 interface CompanyContactsTabProps {
@@ -134,6 +134,24 @@ export default function CompanyContactsTab({
     reloadContacts();
   };
 
+  // Kullanıcı hatası düzeltmesi ("teklif oluştur çağrısı yapıldığında
+  // irtibat kişisi farklı isimle çıkıyor"): şirkete birden fazla kişi
+  // eklendiğinde hangisinin Teklif Oluştur/Fırsat formu gibi yerlerde
+  // otomatik doldurulacak "asıl irtibat kişisi" olduğunu artık kullanıcı
+  // burada elle işaretleyebiliyor (CrmDb.getPrimaryContact bu işareti
+  // öncelikli okur).
+  const handleSetPrimary = (contact: Contact) => {
+    CrmDb.setPrimaryContact(companyId, contact.id);
+    if (onLogTimelineEvent) {
+      onLogTimelineEvent(
+        t("Primary Contact Changed"),
+        `${contact.firstName} ${contact.lastName}`,
+        "system"
+      );
+    }
+    reloadContacts();
+  };
+
   const handleDeleteContact = (id: string, name: string) => {
     if (confirm(t("Are you sure you want to delete {name}?").replace("{name}", name))) {
       const list = CrmDb.getContacts();
@@ -151,16 +169,21 @@ export default function CompanyContactsTab({
     }
   };
 
-  const filteredContacts = contacts.filter(c => {
-    const term = searchQuery.toLowerCase();
-    return (
-      c.firstName.toLowerCase().includes(term) ||
-      c.lastName.toLowerCase().includes(term) ||
-      c.email.toLowerCase().includes(term) ||
-      (c.phone && c.phone.includes(term)) ||
-      (c.department && c.department.toLowerCase().includes(term))
-    );
-  });
+  const filteredContacts = contacts
+    .filter(c => {
+      const term = searchQuery.toLowerCase();
+      return (
+        c.firstName.toLowerCase().includes(term) ||
+        c.lastName.toLowerCase().includes(term) ||
+        c.email.toLowerCase().includes(term) ||
+        (c.phone && c.phone.includes(term)) ||
+        (c.department && c.department.toLowerCase().includes(term))
+      );
+    })
+    // Asıl kişi listenin en üstünde görünsün — hangi kişinin Teklif
+    // Oluştur/Fırsat formu gibi yerlerde otomatik kullanılacağı burada
+    // görsel olarak net olsun diye.
+    .sort((a, b) => (b.isPrimary ? 1 : 0) - (a.isPrimary ? 1 : 0));
 
   return (
     <div className="space-y-4 font-sans text-xs">
@@ -303,7 +326,11 @@ export default function CompanyContactsTab({
           {filteredContacts.map((contact) => (
             <div
               key={contact.id}
-              className="p-4 bg-white dark:bg-[#151515] border border-slate-100 dark:border-zinc-800/80 rounded-xl hover:shadow-md transition-all flex justify-between items-start"
+              className={`p-4 bg-white dark:bg-[#151515] border rounded-xl hover:shadow-md transition-all flex justify-between items-start ${
+                contact.isPrimary
+                  ? "border-amber-300 dark:border-amber-700/60 ring-1 ring-amber-200 dark:ring-amber-800/40"
+                  : "border-slate-100 dark:border-zinc-800/80"
+              }`}
             >
               <div className="space-y-2 min-w-0 flex-1">
                 <div className="flex items-center gap-2">
@@ -311,8 +338,14 @@ export default function CompanyContactsTab({
                     {contact.firstName[0]}{contact.lastName[0]}
                   </div>
                   <div className="truncate">
-                    <h5 className="font-bold text-slate-800 dark:text-zinc-200 text-xs truncate">
+                    <h5 className="font-bold text-slate-800 dark:text-zinc-200 text-xs truncate flex items-center gap-1.5">
                       {contact.firstName} {contact.lastName}
+                      {contact.isPrimary && (
+                        <span className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded-full bg-amber-50 dark:bg-amber-950/30 text-amber-600 dark:text-amber-400 text-[9px] font-bold uppercase tracking-wide shrink-0">
+                          <Star className="w-2.5 h-2.5 fill-current" />
+                          {t("Primary Contact")}
+                        </span>
+                      )}
                     </h5>
                     <span className="text-[10px] text-slate-400 block truncate">{contact.department || t("No Title Specified")}</span>
                   </div>
@@ -341,6 +374,16 @@ export default function CompanyContactsTab({
               </div>
 
               <div className="flex items-center gap-1.5 shrink-0 ml-2">
+                {!contact.isPrimary && (
+                  <button
+                    type="button"
+                    onClick={() => handleSetPrimary(contact)}
+                    className="p-1.5 bg-slate-50 dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 text-slate-400 hover:text-amber-500 dark:text-zinc-500 dark:hover:text-amber-400 rounded transition-colors cursor-pointer"
+                    title={t("Set as Primary Contact")}
+                  >
+                    <Star className="w-3 h-3" />
+                  </button>
+                )}
                 <button
                   type="button"
                   onClick={() => handleOpenEdit(contact)}

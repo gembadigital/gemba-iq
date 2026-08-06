@@ -55,6 +55,18 @@ export interface Contact {
   leadStatus: string;
   leadSegment: string;
   isSelected?: boolean;
+  // Kullanıcı hatası düzeltmesi ("müşteriler irtibat kişisi karta girildiği
+  // halde, teklif oluştur çağrısı yapıldığında irtibat kişisi farklı isimle
+  // çıkıyor"): bir şirketin birden fazla kişisi olabiliyor (Contact[]),
+  // ancak hiçbir yerde "asıl/güncel irtibat kişisi" işareti yoktu — Teklif
+  // Oluştur, Fırsat formu, Müşteri Detayı gibi her tüketici kör bir şekilde
+  // getContactsByCompany(id)[0] (dizinin ilk elemanı) kullanıyordu. Bir
+  // şirkete sonradan yeni bir kişi eklendiğinde (ör. "Deniz Erol"), eski
+  // kişi ("Semih Kaçar") hâlâ dizinin başında kalıyor ve teklifte o
+  // görünmeye devam ediyordu. isPrimary + createdAt ile artık gerçek bir
+  // "asıl kişi" kavramı var; bkz. getPrimaryContact/setPrimaryContact.
+  isPrimary?: boolean;
+  createdAt?: string;
 }
 
 export interface CrmEmail {
@@ -418,8 +430,34 @@ export const CrmDb = {
     return this.getContacts().filter((c) => c.companyId === companyId);
   },
 
+  // Kullanıcı hatası düzeltmesi: "asıl irtibat kişisi"ni dizinin ilk
+  // elemanı yerine gerçek bir işaretle belirler. Öncelik sırası: 1) açıkça
+  // isPrimary=true işaretlenmiş kişi, 2) en son eklenen/oluşturulan kişi
+  // (createdAt'e göre), 3) (createdAt hiçbirinde yoksa — çok eski kayıtlar)
+  // dizideki son eleman, ki bu da index 0'dan daha isabetlidir çünkü yeni
+  // kişiler her zaman createContact() ile dizinin sonuna eklenir.
+  getPrimaryContact(companyId: string): Contact | undefined {
+    const contacts = this.getContactsByCompany(companyId);
+    if (contacts.length === 0) return undefined;
+    const flagged = contacts.find((c) => c.isPrimary);
+    if (flagged) return flagged;
+    const withDates = contacts.filter((c) => !!c.createdAt);
+    if (withDates.length > 0) {
+      return [...withDates].sort((a, b) => new Date(b.createdAt!).getTime() - new Date(a.createdAt!).getTime())[0];
+    }
+    return contacts[contacts.length - 1];
+  },
+
+  setPrimaryContact(companyId: string, contactId: string) {
+    const contacts = this.getContacts().map((c) =>
+      c.companyId === companyId ? { ...c, isPrimary: c.id === contactId } : c
+    );
+    this.saveContacts(contacts);
+  },
+
   createContact(contactData: Partial<Contact>): Contact {
     const contacts = this.getContacts();
+    const isFirstContactForCompany = !contacts.some((c) => c.companyId === contactData.companyId);
     const newContact: Contact = {
       id: contactData.id || `contact-${Date.now()}-${Math.floor(Math.random() * 1000)}`,
       companyId: contactData.companyId || "",
@@ -430,6 +468,12 @@ export const CrmDb = {
       department: contactData.department || "Operations",
       leadStatus: contactData.leadStatus || "New",
       leadSegment: contactData.leadSegment || "Standard",
+      // İlk kişi otomatik "asıl kişi" olur; sonrakiler kullanıcı elle
+      // "Ana Kişi Yap" demediği sürece isPrimary=false kalır (bkz.
+      // CompanyContactsTab.tsx) — bu sayede yeni bir kişi eklemek sessizce
+      // eski "asıl kişi"nin yerini almaz, kullanıcı bilerek değiştirir.
+      isPrimary: contactData.isPrimary ?? isFirstContactForCompany,
+      createdAt: contactData.createdAt || new Date().toISOString(),
     };
     contacts.push(newContact);
     this.saveContacts(contacts);

@@ -408,8 +408,8 @@ export default function CompanyDetailView({
             companyId={company.id}
             lang={lang}
             companyName={company.name}
-            contactPersonName={CrmDb.getContactsByCompany(company.id)[0]?.firstName || "Yetkili"}
-            contactEmail={CrmDb.getContactsByCompany(company.id)[0]?.email || ""}
+            contactPersonName={CrmDb.getPrimaryContact(company.id)?.firstName || "Yetkili"}
+            contactEmail={CrmDb.getPrimaryContact(company.id)?.email || ""}
             onLogTimelineEvent={handleLogTimelineDirect}
           />
         )}
