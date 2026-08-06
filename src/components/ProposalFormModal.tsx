@@ -288,10 +288,10 @@ export default function ProposalFormModal({
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ pastedContent: rawPastedHtml }),
       });
+      const data = await response.json().catch(() => ({}));
       if (!response.ok) {
-        throw new Error(t("A server error occurred."));
+        throw new Error(data?.error || t("A server error occurred."));
       }
-      const data = await response.json();
       if (data.htmlTable) {
         if (targetFieldForAi === "methodology") setMethodology(data.htmlTable);
         else if (targetFieldForAi === "projectPlan") setProjectPlan(data.htmlTable);
