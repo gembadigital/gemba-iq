@@ -734,6 +734,11 @@ export default function ServicesView({
   const [proposalNumber, setProposalNumber] = useState("");
   const [isDuplicateNumber, setIsDuplicateNumber] = useState(false);
   const [isNumberManuallyEdited, setIsNumberManuallyEdited] = useState(false);
+  // Kullanıcı talebi: Teklif Yönetimi > "Revize Et" ile bu sihirbaza
+  // yönlendirilen mevcut teklifin id'si — doluysa buildAndPersistProposal
+  // yeni kayıt yerine bu id'yi koruyarak günceller (bkz. loadProposalForRevision
+  // aşağıda, ve handleCreateAndSaveProposal içindeki kullanım).
+  const [revisingProposalId, setRevisingProposalId] = useState<string | null>(null);
 
   // Dynamic proposal sequence calculation from proposal archive
   useEffect(() => {
@@ -779,16 +784,21 @@ export default function ServicesView({
   const [wizardRawPastedHtml, setWizardRawPastedHtml] = useState("");
   const [isWizardAiConverting, setIsWizardAiConverting] = useState(false);
 
-  // Duplicate proposal number warning checker
+  // Duplicate proposal number warning checker. Revizyon modunda (bkz.
+  // revisingProposalId) yüklenen teklifin KENDİ numarası listede zaten var
+  // olacağı için (kendisi), o kaydı hariç tutuyoruz — yoksa her revizyonda
+  // yanlışlıkla "bu numara zaten kullanılıyor" uyarısı çıkardı.
   useEffect(() => {
     if (proposalNumber) {
       const list = CrmDb.getProposals();
-      const duplicate = list.some((p: any) => p.proposalNumber === proposalNumber);
+      const duplicate = list.some(
+        (p: any) => p.proposalNumber === proposalNumber && p.id !== revisingProposalId
+      );
       setIsDuplicateNumber(duplicate);
     } else {
       setIsDuplicateNumber(false);
     }
-  }, [proposalNumber]);
+  }, [proposalNumber, revisingProposalId]);
 
   useEffect(() => {
     const companies = CrmDb.getCompanies();
@@ -966,6 +976,93 @@ export default function ServicesView({
       return copy.map(r => ({ ...r, dailyRate: rate }));
     });
   };
+
+  // Kullanıcı talebi: "teklif bir kere oluşturulduktan sonra revize
+  // edilemiyor... Teklif yönetiminde ilgili teklifi revize et seçeneği
+  // koyarsan otomatik olarak teklif oluştura yönlendirir. tüm teklif
+  // formatı o müşteri için geri gelir... kaldığı yerden devam etsin."
+  const loadProposalForRevision = (proposal: any) => {
+    setRevisingProposalId(proposal.id);
+    setClientTitle(proposal.companyName || "");
+    setIsShortNameManuallyEdited(false);
+    setClientAddress(proposal.clientAddress || "");
+    setProposalDate(proposal.date || new Date().toISOString().split("T")[0]);
+    setAssignedPm(proposal.owner || "");
+    setClientContactPerson(proposal.contactPerson || "");
+    setClientContactEmail(proposal.contactEmail || "");
+    setMailSubject(proposal.proposalSubject || "");
+    // Teklif no elle düzeltilebilsin diye otomatik yeniden numaralamayı
+    // (aşağıdaki "Sync proposal number" effect'i) kilitliyoruz — yüklenen
+    // numara olduğu gibi kalır, kullanıcı isterse manuel değiştirir.
+    setProposalNumber(proposal.proposalNumber || "");
+    setIsNumberManuallyEdited(true);
+    setWizardTermsAndConditions(proposal.terms || "");
+    setWizardCoverPage(proposal.coverPage || "");
+
+    // Hizmet kartı birebir id olarak saklanmıyor; kayıtlı hizmet adlarından
+    // en iyi eşleşen kartı bulmaya çalış (bulunamazsa mevcut seçim kalır).
+    const matchingCard = serviceCards.find((c) =>
+      (proposal.services || []).some((s: string) => s === c.name)
+    );
+    if (matchingCard) setSelectedCardId(matchingCard.id);
+
+    const opts = proposal.options || {};
+    const toRows = (rows: any[]): PricingRow[] =>
+      Array.isArray(rows) && rows.length > 0
+        ? rows.map((r: any, i: number) => ({
+            id: r.id || `rev-${i}-${Date.now()}`,
+            item: r.item || "",
+            dailyRate: r.dailyRate || 0,
+            manDays: r.manDays || 0,
+          }))
+        : [];
+
+    if (opts["Option 1"]) {
+      setOption1Active(true);
+      const rows = toRows(opts["Option 1"].rows);
+      if (rows.length > 0) setOption1Rows(rows);
+    } else {
+      setOption1Active(false);
+    }
+    if (opts["Option 2"]) {
+      setOption2Active(true);
+      const rows = toRows(opts["Option 2"].rows);
+      if (rows.length > 0) setOption2Rows(rows);
+    } else {
+      setOption2Active(false);
+    }
+    if (opts["Option 3"]) {
+      setOption3Active(true);
+      const rows = toRows(opts["Option 3"].rows);
+      if (rows.length > 0) setOption3Rows(rows);
+    } else {
+      setOption3Active(false);
+    }
+
+    setActiveTab("wizard");
+    setWizardStep(1);
+    setToastMessage(t("Loaded existing proposal for revision: {number}").replace("{number}", proposal.proposalNumber || ""));
+    setTimeout(() => setToastMessage(null), 3000);
+  };
+
+  // Teklif Yönetimi'nden "Revize Et" tıklandığında (CrmDb.setKv("crm_revise_proposal_id", id)
+  // + crm-navigate) buraya düşer — hem ilk mount'ta (mount-order race'i
+  // önlemek için, CompaniesView'daki kurulu desenle aynı) hem de sekme zaten
+  // açıkken gelen crm-navigate olayında kontrol edilir.
+  useEffect(() => {
+    const openFromPendingId = () => {
+      const pendingId = CrmDb.getKv("crm_revise_proposal_id", "");
+      if (pendingId) {
+        const match = CrmDb.getProposals().find((p: any) => p.id === pendingId);
+        if (match) loadProposalForRevision(match);
+        CrmDb.setKv("crm_revise_proposal_id", "");
+      }
+    };
+    openFromPendingId();
+    window.addEventListener("crm-navigate", openFromPendingId);
+    return () => window.removeEventListener("crm-navigate", openFromPendingId);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [serviceCards]);
 
   const [activeOptionTab, setActiveOptionTab] = useState<1 | 2 | 3>(1);
   const [letterheadId, setLetterheadId] = useState("classic_blue");
@@ -1854,13 +1951,19 @@ export default function ServicesView({
   // Builds the Proposal + Deal records and writes them into CrmDb. Shared by
   // the plain "Save" action and the real e-mail send action below, so both
   // paths persist exactly the same data instead of duplicating this logic.
-  const buildAndPersistProposal = (): { newProposal: any; newDeal: any } | null => {
+  const buildAndPersistProposal = (saveAsDraft = false): { newProposal: any; newDeal: any } | null => {
     if (!clientTitle.trim()) {
       alert(t("Please fill in the Client Legal Name field!"));
       return null;
     }
 
-    const proposalId = "prop-" + Date.now();
+    // Kullanıcı talebi: "revize et" ile buraya yönlendirilmişse, YENİ bir
+    // kayıt açmak yerine mevcut teklifi (aynı id, artan versiyon) güncelle —
+    // bkz. loadProposalForRevision / revisingProposalId tanımı yukarıda.
+    const existingProposal = revisingProposalId
+      ? CrmDb.getProposals().find((p: any) => p.id === revisingProposalId)
+      : undefined;
+    const proposalId = existingProposal?.id || "prop-" + Date.now();
     const cleanSeq = parseInt(seqNumber) || 44;
 
     // Derived totals from active option pricing rows — bu formül sihirbazın
@@ -1989,11 +2092,25 @@ export default function ServicesView({
       ? CrmDb.createCompany({ name: clientTitle.trim(), billingAddress: clientAddress || "" })
       : null;
 
+    // Revizyonda versiyon numarasını artır (v1.0 -> v1.1, v2.3 -> v2.4 vb.);
+    // yeni kayıtta her zaman v1.0'dan başla. Taslak olarak kaydedilirse
+    // durum her zaman "Draft" kalır (kullanıcı talebi: "Taslak Oluştur"
+    // butonu); revizyonda ise önceki durum "Draft" değilse "Sent" olarak
+    // işaretlenir ki Teklif Yönetimi'nde "revize edildi, tekrar gönderilmeyi
+    // bekliyor" ayrımı yapılabilsin — ama bu basit sürümde önceki statüyü
+    // koruyoruz, sadece taslak bayrağı override eder.
+    const prevVersionNum = existingProposal?.currentVersion
+      ? parseFloat(String(existingProposal.currentVersion).replace(/^v/i, "")) || 1.0
+      : 1.0;
+    const nextVersionNum = existingProposal ? Math.round((prevVersionNum + 0.1) * 10) / 10 : 1.0;
+    const nextVersionLabel = `v${nextVersionNum.toFixed(1)}`;
+    const resolvedStatus = saveAsDraft ? "Draft" : (existingProposal ? (existingProposal.status || "Draft") : "Draft");
+
     const newProposal = {
       id: proposalId,
       sequenceNo: cleanSeq,
       proposalNumber: proposalNumber,
-      companyId: linkedCompany?.id || "comp-" + Date.now(),
+      companyId: linkedCompany?.id || existingProposal?.companyId || "comp-" + Date.now(),
       companyName: clientTitle,
       contactPerson: clientContactPerson,
       contactEmail: clientContactEmail,
@@ -2002,7 +2119,7 @@ export default function ServicesView({
       currency: "₺" as const,
       owner: assignedPm,
       description: realDescription,
-      status: "Draft",
+      status: resolvedStatus,
       services: realServicesList,
       terms: wizardTermsAndConditions || "",
       coverPage: wizardCoverPage || "",
@@ -2019,13 +2136,16 @@ export default function ServicesView({
       totalBudget: totalBudget,
       taxes: taxes,
       grandTotal: grandTotal,
-      currentVersion: "v1.0",
+      currentVersion: nextVersionLabel,
       versions: [
+        ...(existingProposal?.versions || []),
         {
-          version: "v1.0",
+          version: nextVersionLabel,
           date: proposalDate,
-          reason: "İlk oluşturma",
-          changes: "Teklif Sihirbazı (Proposal Wizard) ile otomatik oluşturuldu.",
+          reason: existingProposal ? "Revizyon" : "İlk oluşturma",
+          changes: existingProposal
+            ? "Teklif, Teklif Yönetimi > Revize Et üzerinden sihirbazda güncellendi."
+            : "Teklif Sihirbazı (Proposal Wizard) ile otomatik oluşturuldu.",
           owner: assignedPm,
           subject: mailSubject.trim() || selectedService?.name || "Yalın Dönüşüm Hizmeti",
           currency: "₺",
@@ -2036,20 +2156,26 @@ export default function ServicesView({
           grandTotal: grandTotal
         }
       ],
-      createdBy: assignedPm,
+      createdBy: existingProposal?.createdBy || assignedPm,
       lastUpdate: new Date().toISOString()
     };
 
     // Save/push into Proposal Management list ("crm_proposals")
     let proposalsList = CrmDb.getProposals();
-    // Prevent duplicate number rows
-    proposalsList = proposalsList.filter((p: any) => p.proposalNumber !== proposalNumber);
+    // Mevcut kaydı (id ile) veya aynı teklif numarasına sahip başka bir
+    // kaydı (mükerrer numara) listeden çıkar, sonra güncel/yeni kaydı başa ekle.
+    proposalsList = proposalsList.filter((p: any) => p.id !== proposalId && p.proposalNumber !== proposalNumber);
     proposalsList.unshift(newProposal);
     CrmDb.saveProposals(proposalsList);
 
     // Save/push into Deal Management Pipeline list ("smart_mailmerge_deals")
+    // Revizyonda aynı fırsat kaydını YENİDEN kullan (id korunur) — her
+    // revizyonda mükerrer bir Fırsat kartı oluşmasın diye.
+    const existingDeal = existingProposal
+      ? CrmDb.getDeals().find((d: any) => d.proposalNumber === existingProposal.proposalNumber)
+      : undefined;
     const newDeal: any = {
-      id: "deal-" + Date.now(),
+      id: existingDeal?.id || "deal-" + Date.now(),
       dealName: `${clientTitle} - ${selectedService?.name || "Yalın Danışmanlık"} Projesi`,
       companyId: linkedCompany?.id || undefined,
       companyName: clientTitle,
@@ -2085,8 +2211,10 @@ export default function ServicesView({
     };
 
     let dealsList = CrmDb.getDeals();
-    // Avoid double creation of same sequence
-    dealsList = dealsList.filter((d: any) => d.proposalNumber !== proposalNumber);
+    // Avoid double creation of same sequence — hem eski numarayla eşleşeni
+    // (mükerrer teklif no) hem de revizyonda yeniden kullanılan asıl fırsat
+    // kaydını (id ile) çıkar, sonra güncel/yeni fırsatı başa ekle.
+    dealsList = dealsList.filter((d: any) => d.id !== newDeal.id && d.proposalNumber !== proposalNumber);
     dealsList.unshift(newDeal);
     CrmDb.saveDeals(dealsList);
 
@@ -2103,15 +2231,22 @@ export default function ServicesView({
   // SPA underneath sits frozen. None of that popup/navigation juggling
   // happens here anymore — saving is just saving.
   const handleCreateAndSaveProposal = async (silent = false) => {
-    if (savedProposalInfo && savedProposalInfo.number === proposalNumber) {
+    if (savedProposalInfo && savedProposalInfo.number === proposalNumber && !revisingProposalId) {
       if (!silent) {
         setToastMessage(t("This proposal is already saved in the system. (PROP-{number})").replace("{number}", savedProposalInfo.number));
       }
       return;
     }
-    const result = buildAndPersistProposal();
+    const result = buildAndPersistProposal(false);
     if (!result) return;
     setSavedProposalInfo({ number: proposalNumber });
+    // Kaydetme tamamlandı — bu artık "revize edilen" değil, güncel/kayıtlı
+    // teklif olduğundan revisingProposalId sıfırlanır. Aksi halde aynı
+    // wizard oturumunda bir sonraki "CRM'e Kaydet" yine bu id'yi yeniden
+    // kullanmaya devam eder ki bu doğrudur; ama kullanıcı proposalNumber'ı
+    // elle değiştirip TAMAMEN yeni bir teklif başlatmak isterse karışıklığı
+    // önlemek için id referansını temizliyoruz.
+    setRevisingProposalId(null);
     if (!silent) {
       setToastMessage(t("Proposal and opportunity saved!"));
     }
@@ -2133,6 +2268,22 @@ export default function ServicesView({
     } catch (err) {
       console.error("Proposal PDF store-on-save failed:", err);
     }
+  };
+
+  // Kullanıcı talebi: "teklif oluşturda taslak oluştur butonu koyarsan
+  // teklif yönetimi Teklif konusu segmesinde [Taslak] Teklif konusu olarak
+  // gözükür." — bu, buildAndPersistProposal'ı saveAsDraft=true ile çağırıp
+  // status'u her zaman "Draft" olarak zorlar (revizyon olsa bile), PDF
+  // üretmez (taslak henüz gönderime hazır değildir) ve wizard'da kalınır.
+  const handleSaveAsDraft = () => {
+    const result = buildAndPersistProposal(true);
+    if (!result) return;
+    setSavedProposalInfo({ number: proposalNumber });
+    // Aynı taslağı tekrar tekrar "Taslak Oluştur"a basınca her seferinde
+    // mükerrer kayıt açmak yerine güncellemeye devam etsin diye id'yi
+    // referans olarak tutuyoruz.
+    setRevisingProposalId(result.newProposal.id);
+    setToastMessage(t("Saved as draft."));
   };
 
   // Opens the user's chosen external mail client (Outlook desktop/web, Gmail)
@@ -4019,6 +4170,17 @@ export default function ServicesView({
                         <Save className="w-4 h-4 text-blue-100" /> {t("Create Proposal & Save to CRM")}
                       </>
                     )}
+                  </button>
+
+                  {/* Kullanıcı talebi: "teklif oluşturda taslak oluştur
+                      butonu koyarsan teklif yönetimi Teklif konusu
+                      segmesinde [Taslak] Teklif konusu olarak gözükür." */}
+                  <button
+                    type="button"
+                    onClick={handleSaveAsDraft}
+                    className="w-full h-[44px] px-6 py-2.5 text-slate-700 dark:text-slate-200 font-semibold rounded-md flex items-center justify-center gap-2 transition-colors border border-[#EDEBE9] dark:border-[#323130] bg-white dark:bg-transparent hover:bg-slate-50 dark:hover:bg-white/5 cursor-pointer text-[13px]"
+                  >
+                    <FileText className="w-4 h-4" /> {t("Save as Draft")}
                   </button>
                 </div>
               )}

@@ -335,7 +335,32 @@ export default function ProposalManagementView() {
     }
   };
 
-  // Revision / Version Control Trigger
+  // Kullanıcı talebi: "teklif bir kere oluşturulduktan sonra revize
+  // edilemiyor... teklif oluşturmada ilgili müşteri için teklif kaydı yok.
+  // her seferinde sıfırdan teklif oluşturuyor. Teklif yönetiminde ilgili
+  // teklifi revize et seçeneği koyarsan otomatik olarak teklif oluştura
+  // yönlendirir. tüm teklif formatı o müşteri için geri gelir."
+  //
+  // Eskiden bu buton (handleOpenRevisionModal) sadece küçük bir metin
+  // modalı açıp "reason/changes" alanları isteyip mevcut teklifi olduğu
+  // gibi klonluyordu — Teklif Oluştur sihirbazına hiç dönmüyordu, yani
+  // kullanıcı içeriği elle tekrar girmek zorunda kalıyordu. Artık ilgili
+  // teklifin id'sini CrmDb KV'ye yazıp (CompaniesView/ProposalManagementView
+  // içinde zaten kullanılan crm-navigate + pending-id deseniyle aynı),
+  // Teklif Oluştur sekmesine (App.tsx'te "create-proposal") yönlendiriyor;
+  // ServicesView.tsx bu KV anahtarını okuyup sihirbazın TÜM alanlarını
+  // (müşteri, sorumlu, teklif no, kapak/şartlar, opsiyonlar/fiyatlandırma)
+  // geri dolduruyor ve kaydedince yeni bir kayıt değil AYNI teklifi
+  // güncelliyor (bkz. ServicesView.tsx revisingProposalId).
+  const handleReviseInWizard = (proposal: Proposal) => {
+    CrmDb.setKv("crm_revise_proposal_id", proposal.id);
+    window.dispatchEvent(new CustomEvent("crm-navigate", { detail: { tab: "create-proposal" } }));
+  };
+
+  // Eski "Klonla & Revizyon Oluştur" akışı — artık kullanılmıyor (yukarıdaki
+  // handleReviseInWizard ile değiştirildi), ama createProposalRevision alt
+  // yapısı (versiyon geçmişi) başka bir yerden tekrar çağrılabilir diye
+  // dokunulmadan bırakıldı.
   const handleOpenRevisionModal = (proposal: Proposal) => {
     setRevisingProposal(proposal);
     setRevisionNotes("");
@@ -981,7 +1006,7 @@ export default function ProposalManagementView() {
                       </div>
                     </td>
                     <td className="p-3 max-w-sm truncate text-slate-650 dark:text-zinc-300" title={p.proposalSubject}>
-                      {p.proposalSubject}
+                      {p.status === "Draft" ? `[${t("Draft")}] ${p.proposalSubject}` : p.proposalSubject}
                     </td>
                     <td className="p-3">
                       <div className="text-[10px] text-slate-500">{t("Owner")}: {p.owner}</div>
@@ -1037,11 +1062,11 @@ export default function ProposalManagementView() {
                           <Edit className="w-3.5 h-3.5" />
                         </button>
  
-                        {/* Clone Revision Button */}
+                        {/* Revize Et — Teklif Oluştur sihirbazına yönlendirip tüm alanları geri yükler */}
                         <button
-                          onClick={() => handleOpenRevisionModal(p)}
+                          onClick={() => handleReviseInWizard(p)}
                           className="p-1.5 hover:bg-emerald-50 text-emerald-600 dark:hover:bg-green-955/20 rounded cursor-pointer"
-                          title={t("Clone & create new revision (V2, V3 etc.)")}
+                          title={t("Revise this proposal in the wizard")}
                         >
                           <RefreshCw className="w-3.5 h-3.5" />
                         </button>
