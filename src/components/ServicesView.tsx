@@ -1749,8 +1749,7 @@ export default function ServicesView({
       <div style="margin-top: 25px; display: flex; justify-content: space-between; font-family: Arial, sans-serif; pointer-events: auto;">
         <div style="width: 46%; font-size: 8.5pt; box-sizing: border-box;">
           <p style="font-weight: bold; color: #b91c1c; margin: 0 0 3px 0; text-transform: uppercase; border-bottom: 1px solid #cbd5e1; padding-bottom: 2px; font-family: Arial; letter-spacing: 0.5px;">TEKLİF HAZIRLAYAN</p>
-          <p style="margin: 2px 0; color: #1e293b; font-weight: bold; font-family: Arial;">Gemba Partner Gelişim Grubu</p>
-          <p style="margin: 0 0 6px 0; color: #64748b; font-size: 7.5pt; font-family: Arial;">Kaizen Management Consulting</p>
+          <p style="margin: 2px 0 6px 0; color: #1e293b; font-weight: bold; font-family: Arial;">Gemba Partner Mühendislik ve Yazılım A.Ş</p>
           <div style="height: 40px; border-bottom: 1px dashed #cbd5e1; margin-top: 5px; position: relative; background-color: #fcfcfc;">
             <span style="position: absolute; bottom: 3px; right: 6px; font-size: 7.5px; color: #94a3b8; font-style: italic; font-weight: bold; font-family: Arial;">İMZA / KAŞE</span>
           </div>
