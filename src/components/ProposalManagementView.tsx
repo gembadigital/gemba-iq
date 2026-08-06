@@ -1006,7 +1006,15 @@ export default function ProposalManagementView() {
                       </div>
                     </td>
                     <td className="p-3 max-w-sm truncate text-slate-650 dark:text-zinc-300" title={p.proposalSubject}>
-                      {p.status === "Draft" ? `[${t("Draft")}] ${p.proposalSubject}` : p.proposalSubject}
+                      {/* Kullanıcı hatası: "eski tekliflerin hepsine [Taslak]
+                          takısı konulmuş" — kök neden, sihirbaz TÜM
+                          teklifleri her zaman status="Draft" ile
+                          kaydediyordu (ayrı, eski bir davranış), bu yüzden
+                          etiketi status'a bağlamak geçmişteki her teklifi
+                          yanlışlıkla taslak gösteriyordu. Artık yalnızca
+                          "Taslak Oluştur" butonuyla açıkça işaretlenen
+                          (isDraft === true) kayıtlar prefix alıyor. */}
+                      {p.isDraft === true ? `[${t("Draft")}] ${p.proposalSubject}` : p.proposalSubject}
                     </td>
                     <td className="p-3">
                       <div className="text-[10px] text-slate-500">{t("Owner")}: {p.owner}</div>

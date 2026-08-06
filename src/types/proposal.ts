@@ -101,6 +101,13 @@ export interface Proposal {
   description: string;
   status: "Draft" | "Sent" | "Under Evaluation" | "Revision Requested" | "Accepted" | "Rejected" | "Cancelled";
   approvalStatus?: ProposalApprovalStatus;
+  // Kullanıcı hatası: "eski tekliflerin hepsine [Taslak] takısı konulmuş" —
+  // kök neden, sihirbaz her zaman status="Draft" ile kaydediyordu (ayrı,
+  // eski bir davranış), bu yüzden [Taslak] etiketini status alanına
+  // bağlamak TÜM geçmiş teklifleri yanlışlıkla taslak gösteriyordu. Bu yeni
+  // alan yalnızca "Taslak Oluştur" butonuyla AÇIKÇA kaydedilen teklifler
+  // için true olarak set edilir; eski kayıtlarda undefined/false kalır.
+  isDraft?: boolean;
   wordTemplateId?: string;
   
   rejectedReason?: string;

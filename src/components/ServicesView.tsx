@@ -2105,6 +2105,12 @@ export default function ServicesView({
     const nextVersionNum = existingProposal ? Math.round((prevVersionNum + 0.1) * 10) / 10 : 1.0;
     const nextVersionLabel = `v${nextVersionNum.toFixed(1)}`;
     const resolvedStatus = saveAsDraft ? "Draft" : (existingProposal ? (existingProposal.status || "Draft") : "Draft");
+    // Kullanıcı hatası: "eski tekliflerin hepsine [Taslak] takısı konulmuş"
+    // — [Taslak] etiketi artık status="Draft" yerine bu açık bayrağa
+    // bağlanıyor (bkz. types/proposal.ts). "Taslak Oluştur" butonuyla
+    // kaydedilirse true; normal "CRM'e Kaydet" ile kaydedilirse (revizyon
+    // dahil) false — eski/genel "Draft" statüsü artık bu etiketi tetiklemez.
+    const resolvedIsDraft = saveAsDraft;
 
     const newProposal = {
       id: proposalId,
@@ -2120,6 +2126,7 @@ export default function ServicesView({
       owner: assignedPm,
       description: realDescription,
       status: resolvedStatus,
+      isDraft: resolvedIsDraft,
       services: realServicesList,
       terms: wizardTermsAndConditions || "",
       coverPage: wizardCoverPage || "",
