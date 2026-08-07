@@ -3,6 +3,7 @@ import { Company, CustomFieldDefinition } from "./CompaniesView";
 import { useLanguage } from "../lib/LanguageContext";
 import { getSystemCurrency, formatSystemNumber } from "../lib/currencyHelper";
 import { CrmDb } from "../lib/CrmDb";
+import { getTenantActorName } from "../lib/tenantStorage";
 import {
   Building,
   Phone,
@@ -19,7 +20,8 @@ import {
   CalendarClock,
   ArrowLeft,
   X,
-  FileCheck2
+  FileCheck2,
+  Search
 } from "lucide-react";
 
 // Sub-tabs modular components imports
@@ -54,6 +56,29 @@ export default function CompanyDetailView({
 }: CompanyDetailViewProps) {
   const [detailTab, setDetailTab] = useState("overview");
   const { t } = useLanguage();
+
+  // Kullanıcı talebi: "Denetim günlüğünü kaldır. yerine şirket ile ilgili
+  // yapılan araştırma bilgilerinin girileceği Faaliyet Bilgileri segmesi
+  // ekle. buraya not ekleme özelliği olsun. girilen her notun yanında kimin
+  // tarafından girildi, giriş tarihi olsun." — serbest metin not girişi,
+  // aynı Denetim Günlüğü'nün kullandığı basit KV-tabanlı liste deseniyle
+  // (crm_company_research_notes_${companyId}) saklanıyor.
+  const [researchNoteText, setResearchNoteText] = useState("");
+
+  const handleAddResearchNote = () => {
+    const trimmed = researchNoteText.trim();
+    if (!trimmed) return;
+    const key = `crm_company_research_notes_${company.id}`;
+    const notes = CrmDb.getKv<any[]>(key, []);
+    notes.unshift({
+      id: `research-${Date.now()}`,
+      note: trimmed,
+      user: getTenantActorName(),
+      timestamp: new Date().toISOString()
+    });
+    CrmDb.setKv(key, notes);
+    setResearchNoteText("");
+  };
 
   // Localization utilities for database fields
   const getTranslatedValue = (value: string | undefined, field: string) => {
@@ -230,7 +255,7 @@ export default function CompanyDetailView({
           { id: "documents", label: t("Documents"), icon: <Paperclip className="w-3.5 h-3.5" /> },
           { id: "meetings", label: t("Meetings"), icon: <CalendarClock className="w-3.5 h-3.5" /> },
           { id: "revenue", label: t("Revenue Ledger"), icon: <DollarSign className="w-3.5 h-3.5" /> },
-          { id: "audit", label: t("Audit Log History"), icon: <Layers className="w-3.5 h-3.5" /> }
+          { id: "research", label: t("Research & Activity Info"), icon: <Search className="w-3.5 h-3.5" /> }
         ].map((tab) => {
           const active = detailTab === tab.id;
           return (
@@ -445,52 +470,63 @@ export default function CompanyDetailView({
           />
         )}
 
-        {/* Tab 10: Audit Log / Change History */}
-        {detailTab === "audit" && (
+        {/* Tab 10: Faaliyet Bilgileri (Research & Activity Info) — kullanıcı
+            talebi: "Denetim günlüğünü kaldır. yerine şirket ile ilgili
+            yapılan araştırma bilgilerinin girileceği Faaliyet Bilgileri
+            segmesi ekle. buraya not ekleme özelliği olsun. girilen her
+            notun yanında kimin tarafından girildi, giriş tarihi olsun." */}
+        {detailTab === "research" && (
           <div className="bg-white dark:bg-[#151515] p-5 rounded-xl border border-slate-100 dark:border-zinc-800/80 space-y-4">
             <div className="flex items-center justify-between border-b border-slate-150 dark:border-zinc-800 pb-2">
               <h4 className="text-xs font-bold uppercase text-slate-800 dark:text-zinc-200 tracking-wider font-mono">
-                {t("Field Change Audit & History Ledger")}
+                {t("Research & Activity Info")}
               </h4>
             </div>
 
-            {(() => {
-              const logs = CrmDb.getKv<any[]>(`crm_company_audit_logs_${company.id}`, []);
+            <div className="space-y-2">
+              <textarea
+                value={researchNoteText}
+                onChange={(e) => setResearchNoteText(e.target.value)}
+                placeholder={t("Add a research or activity note about this company...")}
+                className="w-full p-2.5 bg-white dark:bg-zinc-800 border border-slate-205 dark:border-zinc-700 rounded-lg text-xs text-slate-700 dark:text-zinc-200 focus:outline-none focus:border-blue-400 min-h-[80px] resize-y"
+              />
+              <div className="flex justify-end">
+                <button
+                  type="button"
+                  onClick={handleAddResearchNote}
+                  disabled={!researchNoteText.trim()}
+                  className="px-3.5 py-1.5 bg-[#0078D4] hover:bg-[#106ebe] disabled:opacity-40 disabled:cursor-not-allowed text-white rounded-lg font-bold text-xs cursor-pointer transition-colors"
+                >
+                  {t("Add Note")}
+                </button>
+              </div>
+            </div>
 
-              if (logs.length === 0) {
+            {(() => {
+              const notes = CrmDb.getKv<any[]>(`crm_company_research_notes_${company.id}`, []);
+
+              if (notes.length === 0) {
                 return (
                   <div className="p-10 text-center text-slate-400">
-                    {t("No change audit logs registered for this company profile yet.")}
+                    {t("No research or activity notes recorded for this company yet.")}
                   </div>
                 );
               }
 
               return (
-                <div className="overflow-x-auto border border-slate-100 dark:border-zinc-800 rounded-lg">
-                  <table className="w-full text-left border-collapse text-xs font-sans">
-                    <thead>
-                      <tr className="bg-slate-50 dark:bg-zinc-900 border-b border-slate-150 dark:border-zinc-850 text-[10px] font-mono uppercase font-bold text-slate-400">
-                        <th className="p-3 pl-4">{t("Field / Property")}</th>
-                        <th className="p-3">{t("Old Value")}</th>
-                        <th className="p-3">{t("New Value")}</th>
-                        <th className="p-3">{t("User")}</th>
-                        <th className="p-3 text-right pr-4">{t("Timestamp")}</th>
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y divide-slate-50 dark:divide-zinc-850 text-slate-700 dark:text-zinc-300">
-                      {logs.map((log: any) => (
-                        <tr key={log.id} className="hover:bg-slate-50/50 dark:hover:bg-zinc-900/30">
-                          <td className="p-3 pl-4 font-bold text-slate-800 dark:text-zinc-200">{log.field}</td>
-                          <td className="p-3 font-mono text-rose-500 bg-rose-50/10 line-through truncate max-w-[150px]">{log.oldValue}</td>
-                          <td className="p-3 font-mono text-emerald-600 bg-emerald-50/10 truncate max-w-[150px] font-bold">{log.newValue}</td>
-                          <td className="p-3 font-semibold">{log.user || "Atakan Zehir"}</td>
-                          <td className="p-3 text-right pr-4 font-mono text-[10px] text-slate-400">
-                            {new Date(log.timestamp).toLocaleString(lang === "TR" ? "tr-TR" : "en-US")}
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
+                <div className="space-y-2.5">
+                  {notes.map((n: any) => (
+                    <div key={n.id} className="p-3 bg-slate-50/60 dark:bg-zinc-900/40 border border-slate-100 dark:border-zinc-800/60 rounded-lg">
+                      <p className="text-[13px] text-slate-700 dark:text-zinc-200 leading-relaxed whitespace-pre-wrap font-sans">
+                        {n.note}
+                      </p>
+                      <div className="mt-1.5 text-[10px] text-slate-500 dark:text-zinc-400 font-mono flex items-center gap-1.5">
+                        <span className="font-bold">{n.user || "-"}</span>
+                        <span>&middot;</span>
+                        <span>{new Date(n.timestamp).toLocaleString(lang === "TR" ? "tr-TR" : "en-US")}</span>
+                      </div>
+                    </div>
+                  ))}
                 </div>
               );
             })()}

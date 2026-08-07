@@ -601,6 +601,12 @@ export default function CompaniesView() {
       // Append custom fields
       newComp.customFields = formState.customFields || {};
       setCompanies(prev => [newComp, ...prev]);
+
+      // Kullanıcı talebi: "yeni müşteri ekledikten sonra yeni eklenen
+      // müşteri kartı açılmalıdır." — oluşturulan kaydın detay görünümü
+      // otomatik olarak açılıyor (aynı selectedCompany state, listedeki
+      // satırlara tıklamayla aynı mekanizma).
+      setSelectedCompany(newComp);
     }
 
     setIsFormOpen(false);

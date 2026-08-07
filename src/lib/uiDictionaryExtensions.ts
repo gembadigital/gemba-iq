@@ -1823,6 +1823,14 @@ export const uiDictionaryTR: Record<string, string> = {
   "Field Change Audit & History Ledger": "Şirket Özellikleri Değişim / Denetim Geçmişi",
   "No change audit logs registered for this company profile yet.": "Herhangi bir profil düzenleme veya değişiklik geçmişi bulunmamaktadır.",
 
+  // Kullanıcı talebi: "Denetim günlüğünü kaldır. yerine şirket ile ilgili
+  // yapılan araştırma bilgilerinin girileceği Faaliyet Bilgileri segmesi
+  // ekle." — Denetim Günlüğü tab'ının yerini alan yeni not/araştırma sekmesi.
+  "Research & Activity Info": "Faaliyet Bilgileri",
+  "Add a research or activity note about this company...": "Bu şirketle ilgili araştırma/faaliyet notu ekleyin...",
+  "Add Note": "Not Ekle",
+  "No research or activity notes recorded for this company yet.": "Bu şirket için henüz herhangi bir faaliyet notu girilmemiş.",
+
   // Revenue Management
   "Revenue & Consultant Capacity Management": "Gelir ve Danışman Kapasite Yönetimi",
   "Monitor gross margins, billable consultant man-days, lost opportunity bench values, and leverage advanced AI forecasts.": "Brüt marjları, faturalandırılabilir danışman adam-günlerini, kaybedilen fırsat yedek kulübesi değerlerini izleyin ve gelişmiş yapay zeka tahminlerinden yararlanın.",
