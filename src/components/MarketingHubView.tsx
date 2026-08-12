@@ -127,6 +127,14 @@ const CHART_COLORS = {
 
 const PIE_COLORS = [CHART_COLORS.blue, CHART_COLORS.emerald, CHART_COLORS.amber, CHART_COLORS.rose, CHART_COLORS.indigo, CHART_COLORS.purple, "#14b8a6", "#f97316"];
 
+const STAGE_ACCENT_COLORS = [
+  { topBorder: "border-t-blue-500", text: "text-blue-600 dark:text-blue-400", badge: "bg-blue-100 text-blue-800 dark:bg-blue-950/40 dark:text-blue-300" },
+  { topBorder: "border-t-indigo-500", text: "text-indigo-600 dark:text-indigo-400", badge: "bg-indigo-100 text-indigo-800 dark:bg-indigo-950/40 dark:text-indigo-300" },
+  { topBorder: "border-t-purple-500", text: "text-purple-600 dark:text-purple-400", badge: "bg-purple-100 text-purple-800 dark:bg-purple-950/40 dark:text-purple-300" },
+  { topBorder: "border-t-amber-500", text: "text-amber-600 dark:text-amber-400", badge: "bg-amber-100 text-amber-800 dark:bg-amber-950/40 dark:text-amber-300" },
+  { topBorder: "border-t-emerald-500", text: "text-emerald-600 dark:text-emerald-400", badge: "bg-emerald-100 text-emerald-800 dark:bg-emerald-950/40 dark:text-emerald-300" },
+];
+
 const formatCurrencyShort = (value: number): string => {
   if (!value) return "₺0";
   if (value >= 1000000) return `₺${(value / 1000000).toFixed(1)}M`;
