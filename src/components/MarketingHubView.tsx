@@ -173,15 +173,58 @@ export default function MarketingHubView({ initialSubTab, onNavigateToTab }: Mar
   // component her navigasyonda `key` ile yeniden mount ediliyor ve
   // initialSubTab prop'undan başlangıç durumunu alıyor.
   const [activeSubTab] = useState<MarketingSubTab>(initialSubTab || "overview");
-
   const [accounts, setAccounts] = useState<TargetAccount[]>([]);
   const [companies, setCompanies] = useState<Company[]>([]);
   const [deals, setDeals] = useState<Deal[]>([]);
   const [proposals, setProposals] = useState<Proposal[]>([]);
   const [goals, setGoals] = useState<StrategicGoal[]>([]);
   const [reportInsights, setReportInsights] = useState<MarketingReportInsight[]>([]);
-
   const [toast, setToast] = useState<{ msg: string; type: "success" | "info" | "error" } | null>(null);
+
+  // BD Pipeline States
+  const [bdActiveStages, setBdActiveStages] = useState<string[]>(() => {
+    const saved = CrmDb.getKv<string[]>(BD_STAGES_KEY, []);
+    return saved && saved.length > 0 ? saved : [...BD_PIPELINE_STAGES];
+  });
+  const [bdStageMetadata, setBdStageMetadata] = useState<Record<string, { collapsed: boolean; description: string }>>(() => {
+    const saved = CrmDb.getKv<Record<string, { collapsed: boolean; description: string }>>(BD_STAGE_META_KEY, {});
+    return saved && Object.keys(saved).length > 0 ? saved : { ...BD_INITIAL_STAGE_METADATA };
+  });
+  const [bdActiveStageMenu, setBdActiveStageMenu] = useState<string | null>(null);
+  const [bdIsAddingStage, setBdIsAddingStage] = useState(false);
+  const [bdNewStageName, setBdNewStageName] = useState("");
+  const [bdRenamingStage, setBdRenamingStage] = useState<string | null>(null);
+  const [bdRenameValue, setBdRenameValue] = useState("");
+  const [bdDeletingStage, setBdDeletingStage] = useState<string | null>(null);
+  const [bdDeleteMigrationTarget, setBdDeleteMigrationTarget] = useState("");
+  const [bdKanbanSearch, setBdKanbanSearch] = useState("");
+
+  // Target Accounts & Competitor Map States
+  const [startMode, setStartMode] = useState<"customer" | "manual">("customer");
+  const [selectedSourceCompanyId, setSelectedSourceCompanyId] = useState<string>("");
+  const [customerSearchQuery, setCustomerSearchQuery] = useState("");
+  const [showCustomerSuggestions, setShowCustomerSuggestions] = useState(false);
+  const [showTargetForm, setShowTargetForm] = useState(false);
+  const [targetFormDraft, setTargetFormDraft] = useState({
+    companyName: "",
+    industryTag: "",
+    subIndustry: "",
+    city: "",
+    websiteUrl: "",
+    analysisNotes: "",
+    contactFullName: "",
+    contactTitle: "",
+    contactPhone: "",
+    contactEmail: "",
+    contactLinkedin: "",
+  });
+  const [targetSectorFilter, setTargetSectorFilter] = useState("");
+  const [targetSearch, setTargetSearch] = useState("");
+  const [expandedAccountId, setExpandedAccountId] = useState<string | null>(null);
+  const [contactDraftByAccount, setContactDraftByAccount] = useState<Record<string, Partial<TargetContact>>>({});
+  const [showContactFormFor, setShowContactFormFor] = useState<string | null>(null);
+  const [pendingLeadPrompt, setPendingLeadPrompt] = useState<{ accountId: string; contactId: string } | null>(null);
+
   const triggerToast = (msg: string, type: "success" | "info" | "error" = "success") => {
     setToast({ msg, type });
     setTimeout(() => setToast(null), 3500);
@@ -304,25 +347,7 @@ export default function MarketingHubView({ initialSubTab, onNavigateToTab }: Mar
     [lossAnalysis, t]
   );
 
-  // --- İş Geliştirme Pipeline'ı: Fırsat Yönetimi Kanban panosuyla AYNI
-  // yapı/format/menü özellikleri (stage ekleme/gizleme/silme/yeniden
-  // adlandırma + sürükle-bırak) — aşamalar artık sabit değil, kullanıcı
-  // tarafından yapılandırılabilir ve CrmDb'de kalıcı tutulur.
-  const [bdActiveStages, setBdActiveStages] = useState<string[]>(() => {
-    const saved = CrmDb.getKv<string[]>(BD_STAGES_KEY, []);
-    return saved && saved.length > 0 ? saved : [...BD_PIPELINE_STAGES];
-  });
-  const [bdStageMetadata, setBdStageMetadata] = useState<Record<string, { collapsed: boolean; description: string }>>(() => {
-    const saved = CrmDb.getKv<Record<string, { collapsed: boolean; description: string }>>(BD_STAGE_META_KEY, {});
-    return saved && Object.keys(saved).length > 0 ? saved : { ...BD_INITIAL_STAGE_METADATA };
-  });
-  const [bdActiveStageMenu, setBdActiveStageMenu] = useState<string | null>(null);
-  const [bdIsAddingStage, setBdIsAddingStage] = useState(false);
-  const [bdNewStageName, setBdNewStageName] = useState("");
-  const [bdRenamingStage, setBdRenamingStage] = useState<string | null>(null);
-  const [bdRenameValue, setBdRenameValue] = useState("");
-  const [bdDeletingStage, setBdDeletingStage] = useState<string | null>(null);
-  const [bdDeleteMigrationTarget, setBdDeleteMigrationTarget] = useState("");
+  // --- İş Geliştirme Pipeline'ı: Target Account.bdPipelineStage'e göre grupla ---
 
   useEffect(() => {
     CrmDb.setKv(BD_STAGES_KEY, bdActiveStages);
@@ -425,40 +450,6 @@ export default function MarketingHubView({ initialSubTab, onNavigateToTab }: Mar
   );
 
   // --- Hedef Pazar & Rakip Haritası state/handlers (v2) ---
-  // İki başlangıç yolu: (1) mevcut müşteri üzerinden — sektörü otomatik alır,
-  // aynı sektördeki kayıtlı hedef/rakip firmaları "Rakip Haritası" olarak
-  // listeler; (2) doğrudan yeni hedef firma — rakip analizi şart değil.
-  const [startMode, setStartMode] = useState<"customer" | "manual">("customer");
-  const [selectedSourceCompanyId, setSelectedSourceCompanyId] = useState<string>("");
-  // Müşteri seçici artık tüm müşterileri listeleyen bir dropdown değil,
-  // isim yazıldıkça otomatik tamamlayan bir arama kutusu.
-  const [customerSearchQuery, setCustomerSearchQuery] = useState("");
-  const [showCustomerSuggestions, setShowCustomerSuggestions] = useState(false);
-  const [showTargetForm, setShowTargetForm] = useState(false);
-  const [targetFormDraft, setTargetFormDraft] = useState({
-    companyName: "",
-    industryTag: "",
-    subIndustry: "",
-    city: "",
-    websiteUrl: "",
-    analysisNotes: "",
-    // Hızlı "Rakip/Hedef Firma Ekle" formunda ilk kontaktı da tek adımda
-    // girebilmek için (opsiyonel) — doldurulursa firmayla birlikte bir
-    // TargetContact oluşturulur ve e-posta varsa lead adayına dönüştürme
-    // istemi açılır.
-    contactFullName: "",
-    contactTitle: "",
-    contactPhone: "",
-    contactEmail: "",
-    contactLinkedin: "",
-  });
-  const [targetSectorFilter, setTargetSectorFilter] = useState("");
-  const [targetSearch, setTargetSearch] = useState("");
-  const [bdKanbanSearch, setBdKanbanSearch] = useState("");
-  const [expandedAccountId, setExpandedAccountId] = useState<string | null>(null);
-  const [contactDraftByAccount, setContactDraftByAccount] = useState<Record<string, Partial<TargetContact>>>({});
-  const [showContactFormFor, setShowContactFormFor] = useState<string | null>(null);
-  const [pendingLeadPrompt, setPendingLeadPrompt] = useState<{ accountId: string; contactId: string } | null>(null);
 
   const selectedSourceCompany = useMemo(
     () => companies.find((c) => c.id === selectedSourceCompanyId) || null,
