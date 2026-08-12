@@ -31,9 +31,9 @@ import {
   Mail,
   MapPin,
   ExternalLink,
-  Zap,
   Building2,
   User,
+  RotateCcw,
 } from "lucide-react";
 import {
   ResponsiveContainer,
@@ -74,6 +74,7 @@ import type { Proposal } from "../types/proposal";
 // pipeline aşaması alanlarıyla genişletilmiş halini) kullanıyor. Böylece bir
 // firma iki kez girilmiyor.
 const TARGET_ACCOUNTS_KEY = "crm_target_accounts";
+const DELETED_ACCOUNTS_KEY = "crm_deleted_target_accounts";
 const STRATEGIC_GOALS_KEY = "crm_strategic_goals";
 const REPORT_INSIGHTS_KEY = "crm_marketing_report_insights";
 
@@ -187,7 +188,14 @@ export default function MarketingHubView({ initialSubTab, onNavigateToTab }: Mar
   const [proposals, setProposals] = useState<Proposal[]>([]);
   const [goals, setGoals] = useState<StrategicGoal[]>([]);
   const [reportInsights, setReportInsights] = useState<MarketingReportInsight[]>([]);
-  const [toast, setToast] = useState<{ msg: string; type: "success" | "info" | "error" } | null>(null);
+  const [deletedAccounts, setDeletedAccounts] = useState<TargetAccount[]>([]);
+  const [showDeletedModal, setShowDeletedModal] = useState(false);
+  const [toast, setToast] = useState<{
+    msg: string;
+    type: "success" | "info" | "error";
+    onUndo?: () => void;
+    undoLabel?: string;
+  } | null>(null);
 
   // BD Pipeline States
   const [bdActiveStages, setBdActiveStages] = useState<string[]>(() => {
@@ -233,9 +241,14 @@ export default function MarketingHubView({ initialSubTab, onNavigateToTab }: Mar
   const [showContactFormFor, setShowContactFormFor] = useState<string | null>(null);
   const [pendingLeadPrompt, setPendingLeadPrompt] = useState<{ accountId: string; contactId: string } | null>(null);
 
-  const triggerToast = (msg: string, type: "success" | "info" | "error" = "success") => {
-    setToast({ msg, type });
-    setTimeout(() => setToast(null), 3500);
+  const triggerToast = (
+    msg: string,
+    type: "success" | "info" | "error" = "success",
+    onUndo?: () => void,
+    undoLabel?: string
+  ) => {
+    setToast({ msg, type, onUndo, undoLabel });
+    setTimeout(() => setToast(null), onUndo ? 6500 : 3500);
   };
 
   useEffect(() => {
@@ -245,6 +258,7 @@ export default function MarketingHubView({ initialSubTab, onNavigateToTab }: Mar
     if (raw.length !== clean.length) {
       CrmDb.setKv(TARGET_ACCOUNTS_KEY, clean);
     }
+    setDeletedAccounts(CrmDb.getKv<TargetAccount[]>(DELETED_ACCOUNTS_KEY, []));
     setCompanies(CrmDb.getCompanies());
     setDeals(CrmDb.getDeals());
     setProposals(CrmDb.getProposals());
@@ -760,16 +774,44 @@ export default function MarketingHubView({ initialSubTab, onNavigateToTab }: Mar
 
   const deleteTargetAccount = async (id: string) => {
     const account = accounts.find((a) => a.id === id);
+    if (!account) return;
     const ok = await confirm({
       title: t("Remove Target"),
-      message: t("Are you sure you want to delete {name} and all associated proposals/deals?").replace("{name}", account?.companyName || ""),
+      message: t("Are you sure you want to delete {name}? You can undo or restore it later from Trash.").replace("{name}", account.companyName || ""),
       confirmLabel: t("Delete"),
       cancelLabel: t("Cancel"),
       danger: true,
     });
     if (!ok) return;
-    persistAccounts(accounts.filter((a) => a.id !== id));
-    triggerToast(t("Account removed from database."), "info");
+
+    const updated = accounts.filter((a) => a.id !== id);
+    persistAccounts(updated);
+
+    const updatedDeleted = [account, ...deletedAccounts.filter((d) => d.id !== id)];
+    setDeletedAccounts(updatedDeleted);
+    CrmDb.setKv(DELETED_ACCOUNTS_KEY, updatedDeleted);
+
+    if (expandedAccountId === id) {
+      setExpandedAccountId(null);
+    }
+
+    triggerToast(
+      t("'{name}' silindi.").replace("{name}", account.companyName),
+      "info",
+      () => restoreTargetAccount(account),
+      t("Geri Al")
+    );
+  };
+
+  const restoreTargetAccount = (accountToRestore: TargetAccount) => {
+    const restored = deduplicateTargetAccounts([accountToRestore, ...accounts]);
+    persistAccounts(restored);
+
+    const updatedDeleted = deletedAccounts.filter((d) => d.id !== accountToRestore.id);
+    setDeletedAccounts(updatedDeleted);
+    CrmDb.setKv(DELETED_ACCOUNTS_KEY, updatedDeleted);
+
+    triggerToast(t("'{name}' başarıyla geri yüklendi!").replace("{name}", accountToRestore.companyName), "success");
   };
 
   const createReviewReminderTask = (account: TargetAccount) => {
@@ -1238,7 +1280,7 @@ export default function MarketingHubView({ initialSubTab, onNavigateToTab }: Mar
       {toast && (
         <div
           id="marketing-hub-toast"
-          className={`fixed bottom-6 right-6 z-50 p-4 rounded-lg shadow-xl border flex items-center gap-3 animate-bounce max-w-sm ${
+          className={`fixed bottom-6 right-6 z-50 p-4 rounded-xl shadow-2xl border flex items-center gap-3 animate-bounce max-w-md ${
             toast.type === "success"
               ? "bg-emerald-50 dark:bg-emerald-950 border-emerald-300 dark:border-emerald-800 text-emerald-800 dark:text-emerald-200"
               : toast.type === "error"
@@ -1247,7 +1289,20 @@ export default function MarketingHubView({ initialSubTab, onNavigateToTab }: Mar
           }`}
         >
           <Check className="w-5 h-5 flex-shrink-0" />
-          <span className="text-xs font-semibold">{toast.msg}</span>
+          <span className="text-xs font-semibold flex-1">{toast.msg}</span>
+          {toast.onUndo && (
+            <button
+              type="button"
+              onClick={() => {
+                toast.onUndo?.();
+                setToast(null);
+              }}
+              className="px-3 py-1 bg-[#0078D4] hover:bg-[#106ebe] text-white text-xs font-bold rounded-lg cursor-pointer transition-all flex items-center gap-1 shrink-0 shadow-sm"
+            >
+              <RotateCcw className="w-3.5 h-3.5" />
+              <span>{toast.undoLabel || t("Geri Al")}</span>
+            </button>
+          )}
         </div>
       )}
 
@@ -1847,6 +1902,15 @@ export default function MarketingHubView({ initialSubTab, onNavigateToTab }: Mar
                     </option>
                   ))}
                 </select>
+                <button
+                  type="button"
+                  onClick={() => setShowDeletedModal(true)}
+                  className="text-xs font-bold bg-[#FAF9F8] hover:bg-[#EDEBE9] dark:bg-[#252423] dark:hover:bg-[#323130] text-slate-700 dark:text-slate-200 px-3 py-2 border border-[#EDEBE9] dark:border-[#323130] rounded-xl flex items-center gap-1.5 cursor-pointer transition-all shadow-xs"
+                  title={t("Silinen hedef firmaları görüntüle ve geri yükle")}
+                >
+                  <RotateCcw className="w-3.5 h-3.5 text-amber-500" />
+                  <span>{t("Çöp Kutusu / Silinenler")} ({deletedAccounts.length})</span>
+                </button>
               </div>
             </div>
             <div className="bg-white dark:bg-[#1b1a19] border border-[#EDEBE9] dark:border-[#323130] rounded-2xl overflow-hidden">
@@ -2857,6 +2921,78 @@ export default function MarketingHubView({ initialSubTab, onNavigateToTab }: Mar
                   </div>
                 </div>
 
+                {/* Status & Stage Revision Control Box */}
+                <div className="bg-emerald-50/50 dark:bg-emerald-950/20 border border-emerald-200 dark:border-emerald-900/50 rounded-xl p-4 space-y-3">
+                  <h4 className="text-xs font-bold text-slate-800 dark:text-slate-200 uppercase tracking-wider font-mono flex items-center justify-between border-b border-emerald-200/60 dark:border-emerald-900/60 pb-2">
+                    <span className="flex items-center gap-2">
+                      <TrendingUp className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
+                      {t("Firma Durum Revizyonu & Lead Aşaması")}
+                    </span>
+                    <span className="text-[10px] font-mono text-emerald-700 dark:text-emerald-400 font-bold bg-white dark:bg-black/20 px-2 py-0.5 rounded border border-emerald-200 dark:border-emerald-800">
+                      {t("Durumu İstediğiniz An Değiştirin")}
+                    </span>
+                  </h4>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                    <div>
+                      <label className="text-[10px] font-bold uppercase text-slate-400 block mb-1">{t("İlişki Durumu (Status)")}</label>
+                      <select
+                        value={status}
+                        onChange={(e) => {
+                          const newRel = e.target.value;
+                          if (newRel === "Müşteri") {
+                            updateAccountField(account.id, { leadStatus: "Won", leadSegment: "Hot" });
+                          } else if (newRel === "Görüşülüyor") {
+                            updateAccountField(account.id, { leadStatus: "Contacted", leadSegment: "Warm" });
+                          } else {
+                            updateAccountField(account.id, { leadStatus: "New", leadSegment: "Cold" });
+                          }
+                          triggerToast(t("Firma durum revizyonu güncellendi."), "success");
+                        }}
+                        className="w-full p-2 border border-emerald-300 dark:border-emerald-800 rounded-lg bg-white dark:bg-[#252423] text-xs font-bold text-emerald-700 dark:text-emerald-400 outline-none cursor-pointer"
+                      >
+                        <option value="Hedef">{t("Hedef")}</option>
+                        <option value="Görüşülüyor">{t("Görüşülüyor")}</option>
+                        <option value="Müşteri">{t("Müşteri")}</option>
+                      </select>
+                    </div>
+
+                    <div>
+                      <label className="text-[10px] font-bold uppercase text-slate-400 block mb-1">{t("Lead Segmenti")}</label>
+                      <select
+                        value={account.leadSegment || "Cold"}
+                        onChange={(e) => {
+                          updateAccountField(account.id, { leadSegment: e.target.value as any });
+                          triggerToast(t("Lead segmenti güncellendi."), "success");
+                        }}
+                        className="w-full p-2 border border-slate-300 dark:border-slate-700 rounded-lg bg-white dark:bg-[#252423] text-xs font-semibold outline-none cursor-pointer"
+                      >
+                        <option value="Cold">Cold ({t("Soğuk")})</option>
+                        <option value="Warm">Warm ({t("Ilık")})</option>
+                        <option value="Hot">Hot ({t("Sıcak")})</option>
+                      </select>
+                    </div>
+
+                    <div>
+                      <label className="text-[10px] font-bold uppercase text-slate-400 block mb-1">{t("Pipeline Aşaması")}</label>
+                      <select
+                        value={account.bdPipelineStage || bdActiveStages[0]}
+                        onChange={(e) => {
+                          handleStageChange(account.id, e.target.value);
+                          triggerToast(t("Pipeline aşaması güncellendi."), "success");
+                        }}
+                        className="w-full p-2 border border-slate-300 dark:border-slate-700 rounded-lg bg-white dark:bg-[#252423] text-xs font-semibold outline-none cursor-pointer"
+                      >
+                        {bdActiveStages.map((stg) => (
+                          <option key={stg} value={stg}>
+                            {t(stg)}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                  </div>
+                </div>
+
                 {/* Primary Target Stakeholder Contact Box (Hedef Hesaplar Eşleşmesi) */}
                 <div className="bg-blue-50/60 dark:bg-blue-950/20 border border-blue-200 dark:border-blue-900/50 rounded-xl p-4 space-y-3">
                   <h4 className="text-xs font-bold text-slate-800 dark:text-slate-200 uppercase tracking-wider font-mono flex items-center justify-between border-b border-blue-200/60 dark:border-blue-900/60 pb-2">
@@ -3194,6 +3330,66 @@ export default function MarketingHubView({ initialSubTab, onNavigateToTab }: Mar
             </div>
           );
         })()}
+      {/* Trash Bin Modal / Silinen Firmalar */}
+      {showDeletedModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6 bg-black/60 backdrop-blur-xs overflow-y-auto animate-fade-in">
+          <div className="bg-white dark:bg-[#1b1a19] border border-[#EDEBE9] dark:border-[#323130] rounded-2xl shadow-2xl p-6 space-y-4 text-xs max-w-2xl w-full max-h-[85vh] overflow-y-auto my-auto relative border-t-4 border-t-amber-500">
+            <div className="flex items-center justify-between border-b border-[#EDEBE9] dark:border-[#323130] pb-3">
+              <div className="flex items-center gap-2">
+                <RotateCcw className="w-5 h-5 text-amber-500" />
+                <h3 className="text-sm font-bold text-slate-800 dark:text-slate-100">{t("Silinen Hedef Firmalar (Çöp Kutusu)")}</h3>
+                <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-amber-100 text-amber-700 dark:bg-amber-950/30 dark:text-amber-400">
+                  {deletedAccounts.length} {t("firma")}
+                </span>
+              </div>
+              <button
+                type="button"
+                onClick={() => setShowDeletedModal(false)}
+                className="text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 p-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            <div className="space-y-2 max-h-[60vh] overflow-y-auto">
+              {deletedAccounts.map((acc) => (
+                <div key={acc.id} className="bg-[#FAF9F8] dark:bg-[#201f1e] p-3 rounded-xl border border-[#EDEBE9] dark:border-[#323130] flex items-center justify-between gap-3">
+                  <div>
+                    <h5 className="font-bold text-slate-800 dark:text-slate-100 text-xs">{acc.companyName}</h5>
+                    <p className="text-[10px] text-slate-400">
+                      {[acc.industryTag, acc.city || acc.locationMain, acc.contactName ? `${acc.contactName} ${acc.contactSurname || ""}` : null].filter(Boolean).join(" · ")}
+                    </p>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => restoreTargetAccount(acc)}
+                    className="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold rounded-lg flex items-center gap-1.5 cursor-pointer shadow-xs transition-all"
+                  >
+                    <RotateCcw className="w-3.5 h-3.5" />
+                    <span>{t("Geri Yükle")}</span>
+                  </button>
+                </div>
+              ))}
+
+              {deletedAccounts.length === 0 && (
+                <div className="p-8 text-center text-slate-400 text-xs">
+                  {t("Silinen firma bulunmuyor. Çöp kutunuz temiz!")}
+                </div>
+              )}
+            </div>
+
+            <div className="border-t border-[#EDEBE9] dark:border-[#323130] pt-3 flex justify-end">
+              <button
+                type="button"
+                onClick={() => setShowDeletedModal(false)}
+                className="px-4 py-2 bg-slate-100 hover:bg-slate-200 dark:bg-[#252423] dark:hover:bg-[#323130] text-slate-700 dark:text-slate-200 font-bold rounded-xl text-xs cursor-pointer"
+              >
+                {t("Kapat")}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
