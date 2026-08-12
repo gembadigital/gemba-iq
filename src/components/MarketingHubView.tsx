@@ -134,6 +134,30 @@ const formatCurrencyShort = (value: number): string => {
   return `₺${value.toFixed(0)}`;
 };
 
+export function getTargetPrimaryContact(
+  account: TargetAccount,
+  fallbackTitle = "Kalite / Operasyon Direktörü",
+  fallbackDept = "Operasyonel Mükemmellik"
+) {
+  const firstArrayContact = account.contacts && account.contacts.length > 0 ? account.contacts[0] : null;
+  const firstName = account.contactName || (firstArrayContact ? firstArrayContact.fullName.split(" ")[0] : "");
+  const lastName = account.contactSurname || (firstArrayContact ? firstArrayContact.fullName.split(" ").slice(1).join(" ") : "");
+  const fullName = [firstName, lastName].filter(Boolean).join(" ") || firstArrayContact?.fullName || fallbackTitle;
+  const email = account.contactEmail || firstArrayContact?.email || `opex@${(account.companyName || "").toLowerCase().replace(/[^a-z0-9]/g, "")}.com`;
+  const department = account.department || firstArrayContact?.department || firstArrayContact?.title || fallbackDept;
+  return { firstName, lastName, fullName, email, department };
+}
+
+export function getRelationshipStatus(
+  account: TargetAccount,
+  companies: Company[] = []
+): "Hedef" | "Görüşülüyor" | "Müşteri" {
+  const isCustomer = companies.some((c) => normalizeTrKey(c.name) === normalizeTrKey(account.companyName));
+  if (isCustomer) return "Müşteri";
+  if (account.bdPipelineStage && account.bdPipelineStage !== "Yeni") return "Görüşülüyor";
+  return "Hedef";
+}
+
 interface MarketingHubViewProps {
   initialSubTab?: MarketingSubTab;
   onNavigateToTab?: (tab: string) => void;
@@ -496,26 +520,7 @@ export default function MarketingHubView({ initialSubTab, onNavigateToTab }: Mar
     return accounts.filter((a) => normalizeTrKey(a.industryTag) === key);
   }, [accounts, selectedSourceCompany]);
 
-  // Durum: Hedef / Görüşülüyor / Müşteri — "Müşteri" mevcut Companies
-  // kaydıyla TR-duyarsız isim eşleşmesinden otomatik tespit edilir (aynı
-  // firma iki kez CRM'e girilmez, sadece durumu değişir).
-  const getRelationshipStatus = (account: TargetAccount): "Hedef" | "Görüşülüyor" | "Müşteri" => {
-    const isCustomer = companies.some((c) => normalizeTrKey(c.name) === normalizeTrKey(account.companyName));
-    if (isCustomer) return "Müşteri";
-    if (account.bdPipelineStage && account.bdPipelineStage !== "Yeni") return "Görüşülüyor";
-    return "Hedef";
-  };
-
-  // Hedef Hesaplar kartıyla Hedef Pazar / Rakip Haritası arasında yetkili ve email eşleştirmesi
-  const getTargetPrimaryContact = (account: TargetAccount) => {
-    const firstArrayContact = account.contacts && account.contacts.length > 0 ? account.contacts[0] : null;
-    const firstName = account.contactName || (firstArrayContact ? firstArrayContact.fullName.split(" ")[0] : "");
-    const lastName = account.contactSurname || (firstArrayContact ? firstArrayContact.fullName.split(" ").slice(1).join(" ") : "");
-    const fullName = [firstName, lastName].filter(Boolean).join(" ") || firstArrayContact?.fullName || t("Quality / Operations Director");
-    const email = account.contactEmail || firstArrayContact?.email || `opex@${account.companyName.toLowerCase().replace(/[^a-z0-9]/g, "")}.com`;
-    const department = account.department || firstArrayContact?.department || firstArrayContact?.title || t("Operational Excellence");
-    return { firstName, lastName, fullName, email, department };
-  };
+  // (getTargetPrimaryContact & getRelationshipStatus top-level module seviyesine taşındı)
 
   const resetTargetForm = () =>
     setTargetFormDraft({
@@ -1598,7 +1603,7 @@ export default function MarketingHubView({ initialSubTab, onNavigateToTab }: Mar
                         </thead>
                         <tbody className="divide-y divide-[#EDEBE9] dark:divide-[#323130]">
                           {competitorsForSelectedCompany.map((account) => {
-                            const status = getRelationshipStatus(account);
+                            const status = getRelationshipStatus(account, companies);
                             const primaryContact = getTargetPrimaryContact(account);
                             const contactCount = (account.contacts?.length || 0) || (account.contactEmail ? 1 : 0);
                             return (
@@ -1820,7 +1825,7 @@ export default function MarketingHubView({ initialSubTab, onNavigateToTab }: Mar
             (() => {
               const account = accounts.find((a) => a.id === expandedAccountId);
               if (!account) return null;
-              const status = getRelationshipStatus(account);
+              const status = getRelationshipStatus(account, companies);
               const primaryContact = getTargetPrimaryContact(account);
               const contactDraft = contactDraftByAccount[account.id] || { status: "Araştırılıyor" };
               return (
@@ -2246,7 +2251,7 @@ export default function MarketingHubView({ initialSubTab, onNavigateToTab }: Mar
                 </thead>
                 <tbody className="divide-y divide-[#EDEBE9] dark:divide-[#323130]">
                   {filteredAccounts.map((account) => {
-                    const status = getRelationshipStatus(account);
+                    const status = getRelationshipStatus(account, companies);
                     const primaryContact = getTargetPrimaryContact(account);
                     const contactCount = (account.contacts?.length || 0) || (account.contactEmail ? 1 : 0);
                     return (
