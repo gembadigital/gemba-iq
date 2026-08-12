@@ -475,6 +475,17 @@ export default function MarketingHubView({ initialSubTab, onNavigateToTab }: Mar
     return "Hedef";
   };
 
+  // Hedef Hesaplar kartıyla Hedef Pazar / Rakip Haritası arasında yetkili ve email eşleştirmesi
+  const getTargetPrimaryContact = (account: TargetAccount) => {
+    const firstArrayContact = account.contacts && account.contacts.length > 0 ? account.contacts[0] : null;
+    const firstName = account.contactName || (firstArrayContact ? firstArrayContact.fullName.split(" ")[0] : "");
+    const lastName = account.contactSurname || (firstArrayContact ? firstArrayContact.fullName.split(" ").slice(1).join(" ") : "");
+    const fullName = [firstName, lastName].filter(Boolean).join(" ") || firstArrayContact?.fullName || t("Quality / Operations Director");
+    const email = account.contactEmail || firstArrayContact?.email || `opex@${account.companyName.toLowerCase().replace(/[^a-z0-9]/g, "")}.com`;
+    const department = account.department || firstArrayContact?.department || firstArrayContact?.title || t("Operational Excellence");
+    return { firstName, lastName, fullName, email, department };
+  };
+
   const resetTargetForm = () =>
     setTargetFormDraft({
       companyName: "",
@@ -1547,6 +1558,8 @@ export default function MarketingHubView({ initialSubTab, onNavigateToTab }: Mar
                           <tr className="bg-[#FAF9F8] dark:bg-[#201f1e] text-[10px] font-bold text-slate-450 uppercase border-b border-[#EDEBE9] dark:border-[#323130]">
                             <th className="p-3">{t("Company Name")}</th>
                             <th className="p-3">{t("City")}</th>
+                            <th className="p-3">{t("Contact Name")}</th>
+                            <th className="p-3">{t("Contact Email")}</th>
                             <th className="p-3">{t("Status")}</th>
                             <th className="p-3">{t("Contact Count")}</th>
                             <th className="p-3">{t("Last Action")}</th>
@@ -1555,6 +1568,8 @@ export default function MarketingHubView({ initialSubTab, onNavigateToTab }: Mar
                         <tbody className="divide-y divide-[#EDEBE9] dark:divide-[#323130]">
                           {competitorsForSelectedCompany.map((account) => {
                             const status = getRelationshipStatus(account);
+                            const primaryContact = getTargetPrimaryContact(account);
+                            const contactCount = (account.contacts?.length || 0) || (account.contactEmail ? 1 : 0);
                             return (
                               <tr
                                 key={account.id}
@@ -1562,7 +1577,9 @@ export default function MarketingHubView({ initialSubTab, onNavigateToTab }: Mar
                                 className="cursor-pointer hover:bg-[#FAF9F8] dark:hover:bg-[#201f1e]"
                               >
                                 <td className="p-3 font-semibold text-slate-700 dark:text-slate-200">{account.companyName}</td>
-                                <td className="p-3">{account.city || "—"}</td>
+                                <td className="p-3">{account.city || account.locationMain || "—"}</td>
+                                <td className="p-3 font-medium text-slate-700 dark:text-slate-200">{primaryContact.fullName}</td>
+                                <td className="p-3 font-mono text-[#0078D4] dark:text-brand-400 font-semibold">{primaryContact.email}</td>
                                 <td className="p-3">
                                   <span
                                     className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
@@ -1576,14 +1593,14 @@ export default function MarketingHubView({ initialSubTab, onNavigateToTab }: Mar
                                     {t(status)}
                                   </span>
                                 </td>
-                                <td className="p-3">{account.contacts?.length || 0}</td>
-                                <td className="p-3">{account.lastContactDate || "—"}</td>
+                                <td className="p-3 font-mono font-bold text-[#0078D4]">{contactCount}</td>
+                                <td className="p-3">{account.lastContactDate || account.analysisDate || "—"}</td>
                               </tr>
                             );
                           })}
                           {competitorsForSelectedCompany.length === 0 && (
                             <tr>
-                              <td colSpan={5} className="p-6 text-center text-slate-400">
+                              <td colSpan={7} className="p-6 text-center text-slate-400">
                                 {t("No competitors tracked in this sector yet. Add one above.")}
                               </td>
                             </tr>
@@ -1773,9 +1790,10 @@ export default function MarketingHubView({ initialSubTab, onNavigateToTab }: Mar
               const account = accounts.find((a) => a.id === expandedAccountId);
               if (!account) return null;
               const status = getRelationshipStatus(account);
+              const primaryContact = getTargetPrimaryContact(account);
               const contactDraft = contactDraftByAccount[account.id] || { status: "Araştırılıyor" };
               return (
-                <div className="bg-white dark:bg-[#1b1a19] border border-[#0078D4]/30 rounded-2xl shadow-md p-5 space-y-5 text-xs">
+                <div className="bg-white dark:bg-[#1b1a19] border border-[#0078D4]/30 rounded-2xl shadow-md p-5 space-y-5 text-xs animate-fade-in">
                   <div className="flex items-start justify-between">
                     <div>
                       <div className="flex items-center gap-2">
@@ -1812,6 +1830,99 @@ export default function MarketingHubView({ initialSubTab, onNavigateToTab }: Mar
                     </div>
                   </div>
 
+                  {/* Highlights Summary Banner */}
+                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5 bg-[#FAF9F8] dark:bg-[#201f1e] p-3 rounded-xl border border-[#EDEBE9] dark:border-[#323130]">
+                    <div className="text-center p-1.5 border-r border-slate-200 dark:border-[#323130]">
+                      <span className="text-[9px] uppercase font-bold text-slate-400 font-mono block">{t("Opportunity Score")}</span>
+                      <span className="text-sm font-extrabold text-[#0078D4] dark:text-brand-400 block mt-0.5">% {account.riskScore || 70}</span>
+                    </div>
+                    <div className="text-center p-1.5 border-r border-slate-200 dark:border-[#323130]">
+                      <span className="text-[9px] uppercase font-bold text-slate-400 font-mono block">{t("Company Size")}</span>
+                      <span className="text-xs font-semibold text-slate-700 dark:text-slate-200 block mt-0.5 truncate">{account.companySize || account.employeeCountLabel || t("750+ Employees")}</span>
+                    </div>
+                    <div className="text-center p-1.5 border-r border-slate-200 dark:border-[#323130]">
+                      <span className="text-[9px] uppercase font-bold text-slate-400 font-mono block">{t("Main Location")}</span>
+                      <span className="text-xs font-semibold text-slate-700 dark:text-slate-200 block mt-0.5 truncate">{account.locationMain || account.city || t("Not specified")}</span>
+                    </div>
+                    <div className="text-center p-1.5">
+                      <span className="text-[9px] uppercase font-bold text-slate-400 font-mono block">{t("Lead Segment")}</span>
+                      <span className="text-xs font-bold text-emerald-600 dark:text-emerald-400 block mt-0.5 truncate">{account.leadSegment || "Cold"} ({account.leadStatus || "New"})</span>
+                    </div>
+                  </div>
+
+                  {/* Primary Target Stakeholder Contact Box (Hedef Hesaplar Eşleşmesi) */}
+                  <div className="bg-blue-50/60 dark:bg-blue-950/20 border border-blue-200 dark:border-blue-900/50 rounded-xl p-4 space-y-3">
+                    <h4 className="text-xs font-bold text-slate-800 dark:text-slate-200 uppercase tracking-wider font-mono flex items-center justify-between border-b border-blue-200/60 dark:border-blue-900/60 pb-2">
+                      <span className="flex items-center gap-2">
+                        <Users className="w-4 h-4 text-[#0078D4]" />
+                        {t("Target Stakeholder Contact Details (Primary Contact)")}
+                      </span>
+                      <span className="text-[10px] font-mono text-[#0078D4] dark:text-brand-400 font-bold bg-white dark:bg-black/20 px-2 py-0.5 rounded border border-blue-200 dark:border-blue-800">
+                        {t("Synced with Target Accounts")}
+                      </span>
+                    </h4>
+
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                      <div>
+                        <label className="text-[10px] font-bold uppercase text-slate-400 block mb-1">{t("First Name")}</label>
+                        <input
+                          type="text"
+                          defaultValue={account.contactName || primaryContact.firstName}
+                          onBlur={(e) => updateAccountField(account.id, { contactName: e.target.value })}
+                          placeholder={t("First Name")}
+                          className="w-full p-2 border border-slate-300 dark:border-slate-700 rounded bg-white dark:bg-[#252423] text-xs font-semibold outline-none focus:border-[#0078D4]"
+                        />
+                      </div>
+                      <div>
+                        <label className="text-[10px] font-bold uppercase text-slate-400 block mb-1">{t("Surname")}</label>
+                        <input
+                          type="text"
+                          defaultValue={account.contactSurname || primaryContact.lastName}
+                          onBlur={(e) => updateAccountField(account.id, { contactSurname: e.target.value })}
+                          placeholder={t("Surname")}
+                          className="w-full p-2 border border-slate-300 dark:border-slate-700 rounded bg-white dark:bg-[#252423] text-xs font-semibold outline-none focus:border-[#0078D4]"
+                        />
+                      </div>
+                      <div>
+                        <label className="text-[10px] font-bold uppercase text-[#0078D4] dark:text-brand-400 block mb-1">{t("Designated Contact Email")} *</label>
+                        <input
+                          type="email"
+                          defaultValue={account.contactEmail || primaryContact.email}
+                          onBlur={(e) => {
+                            const newEmail = e.target.value;
+                            updateAccountField(account.id, { contactEmail: newEmail });
+                            if (newEmail.trim()) {
+                              try {
+                                CrmDb.upsertLeadProfile({
+                                  firstName: account.contactName || primaryContact.firstName,
+                                  lastName: account.contactSurname || primaryContact.lastName,
+                                  email: newEmail.trim(),
+                                  company: account.companyName,
+                                  department: account.department || primaryContact.department,
+                                  industry: account.industryTag,
+                                });
+                              } catch (err) {
+                                console.error(err);
+                              }
+                            }
+                          }}
+                          placeholder="email@company.com"
+                          className="w-full p-2 border border-[#0078D4] dark:border-brand-500 rounded bg-white dark:bg-[#252423] text-xs font-mono font-bold text-[#0078D4] dark:text-brand-400 outline-none focus:ring-1 focus:ring-[#0078D4]"
+                        />
+                      </div>
+                      <div>
+                        <label className="text-[10px] font-bold uppercase text-slate-400 block mb-1">{t("Department / Role")}</label>
+                        <input
+                          type="text"
+                          defaultValue={account.department || primaryContact.department}
+                          onBlur={(e) => updateAccountField(account.id, { department: e.target.value })}
+                          placeholder={t("Department")}
+                          className="w-full p-2 border border-slate-300 dark:border-slate-700 rounded bg-white dark:bg-[#252423] text-xs outline-none focus:border-[#0078D4]"
+                        />
+                      </div>
+                    </div>
+                  </div>
+
                   {/* Firma Bilgileri */}
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                     <div>
@@ -1842,11 +1953,11 @@ export default function MarketingHubView({ initialSubTab, onNavigateToTab }: Mar
                       />
                     </div>
                     <div>
-                      <label className="text-[10px] font-bold text-slate-400 uppercase block mb-1">{t("City")}</label>
+                      <label className="text-[10px] font-bold text-slate-400 uppercase block mb-1">{t("City / Address")}</label>
                       <input
                         type="text"
-                        defaultValue={account.city || ""}
-                        onBlur={(e) => updateAccountField(account.id, { city: e.target.value })}
+                        defaultValue={account.city || account.locationMain || ""}
+                        onBlur={(e) => updateAccountField(account.id, { city: e.target.value, locationMain: e.target.value })}
                         className="w-full p-2 border border-[#EDEBE9] dark:border-[#323130] bg-[#faf9f8] dark:bg-[#252423] rounded outline-none focus:border-[#0078D4]"
                       />
                     </div>
@@ -1854,8 +1965,8 @@ export default function MarketingHubView({ initialSubTab, onNavigateToTab }: Mar
                       <label className="text-[10px] font-bold text-slate-400 uppercase block mb-1">{t("Employee Count (optional)")}</label>
                       <input
                         type="text"
-                        defaultValue={account.employeeCountLabel || ""}
-                        onBlur={(e) => updateAccountField(account.id, { employeeCountLabel: e.target.value })}
+                        defaultValue={account.companySize || account.employeeCountLabel || ""}
+                        onBlur={(e) => updateAccountField(account.id, { companySize: e.target.value, employeeCountLabel: e.target.value })}
                         className="w-full p-2 border border-[#EDEBE9] dark:border-[#323130] bg-[#faf9f8] dark:bg-[#252423] rounded outline-none focus:border-[#0078D4]"
                       />
                     </div>
@@ -2095,6 +2206,8 @@ export default function MarketingHubView({ initialSubTab, onNavigateToTab }: Mar
                   <tr className="bg-[#FAF9F8] dark:bg-[#201f1e] text-[10px] font-bold text-slate-450 uppercase border-b border-[#EDEBE9] dark:border-[#323130]">
                     <th className="p-3">{t("Company Name")}</th>
                     <th className="p-3">{t("Sector")}</th>
+                    <th className="p-3">{t("Contact Name")}</th>
+                    <th className="p-3">{t("Contact Email")}</th>
                     <th className="p-3">{t("Status")}</th>
                     <th className="p-3">{t("Contact Count")}</th>
                     <th className="p-3"></th>
@@ -2103,10 +2216,14 @@ export default function MarketingHubView({ initialSubTab, onNavigateToTab }: Mar
                 <tbody className="divide-y divide-[#EDEBE9] dark:divide-[#323130]">
                   {filteredAccounts.map((account) => {
                     const status = getRelationshipStatus(account);
+                    const primaryContact = getTargetPrimaryContact(account);
+                    const contactCount = (account.contacts?.length || 0) || (account.contactEmail ? 1 : 0);
                     return (
                       <tr key={account.id} onClick={() => setExpandedAccountId(account.id)} className="cursor-pointer hover:bg-[#FAF9F8] dark:hover:bg-[#201f1e]">
                         <td className="p-3 font-semibold text-slate-700 dark:text-slate-200">{account.companyName}</td>
                         <td className="p-3">{account.industryTag}</td>
+                        <td className="p-3 font-medium text-slate-700 dark:text-slate-200">{primaryContact.fullName}</td>
+                        <td className="p-3 font-mono text-[#0078D4] dark:text-brand-400 font-semibold">{primaryContact.email}</td>
                         <td className="p-3">
                           <span
                             className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
@@ -2120,7 +2237,7 @@ export default function MarketingHubView({ initialSubTab, onNavigateToTab }: Mar
                             {t(status)}
                           </span>
                         </td>
-                        <td className="p-3">{account.contacts?.length || 0}</td>
+                        <td className="p-3 font-mono font-bold text-[#0078D4]">{contactCount}</td>
                         <td className="p-3 text-right">
                           <button
                             type="button"
@@ -2138,7 +2255,7 @@ export default function MarketingHubView({ initialSubTab, onNavigateToTab }: Mar
                   })}
                   {filteredAccounts.length === 0 && (
                     <tr>
-                      <td colSpan={5} className="p-6 text-center text-slate-400">
+                      <td colSpan={7} className="p-6 text-center text-slate-400">
                         {t("No target companies yet. Add your first one above.")}
                       </td>
                     </tr>
