@@ -2,7 +2,7 @@ import { Company } from "../components/CompaniesView";
 import { Deal, ProjectRecord } from "../components/DealManagementView";
 import type { Task, TaskColumn, TaskNotification, NotificationSettings } from "../components/TasksView";
 import { Proposal } from "../types/proposal";
-import type { LeadProfile } from "../types";
+import type { LeadProfile, TargetAccount, TargetContact } from "../types";
 import { getTenantActorName, getActiveOrganizationId } from "./tenantStorage";
 import {
   type CrmSnapshot,
@@ -41,6 +41,62 @@ export function normalizeTrKey(input: string | undefined | null): string {
     .join("")
     .replace(/\s+/g, " ")
     .trim();
+}
+
+export function deduplicateTargetAccounts(list: TargetAccount[]): TargetAccount[] {
+  if (!Array.isArray(list)) return [];
+  const map = new Map<string, TargetAccount>();
+  for (const item of list) {
+    if (!item || !item.companyName) continue;
+    const key = normalizeTrKey(item.companyName);
+    if (!key) continue;
+    if (!map.has(key)) {
+      map.set(key, { ...item, contacts: item.contacts ? [...item.contacts] : [] });
+    } else {
+      const existing = map.get(key)!;
+      existing.websiteUrl = existing.websiteUrl || item.websiteUrl;
+      existing.industryTag = existing.industryTag || item.industryTag;
+      existing.subIndustry = existing.subIndustry || item.subIndustry;
+      existing.city = existing.city || item.city;
+      existing.locationMain = existing.locationMain || item.locationMain;
+      existing.companySize = existing.companySize || item.companySize;
+      existing.contactName = existing.contactName || item.contactName;
+      existing.contactSurname = existing.contactSurname || item.contactSurname;
+      existing.contactEmail = existing.contactEmail || item.contactEmail;
+      existing.department = existing.department || item.department;
+      existing.leadStatus = existing.leadStatus || item.leadStatus;
+      existing.leadSegment = existing.leadSegment || item.leadSegment;
+      existing.riskScore = existing.riskScore || item.riskScore;
+      existing.aiAnalysisSummary = existing.aiAnalysisSummary || item.aiAnalysisSummary;
+      existing.draftTemplates = existing.draftTemplates || item.draftTemplates;
+      existing.analysisSource = existing.analysisSource || item.analysisSource;
+      existing.analysisDate = existing.analysisDate || item.analysisDate;
+      existing.rawOutput = existing.rawOutput || item.rawOutput;
+      existing.discoveredFromCompanyId = existing.discoveredFromCompanyId || item.discoveredFromCompanyId;
+      existing.discoveredFromCompanyName = existing.discoveredFromCompanyName || item.discoveredFromCompanyName;
+      
+      if (item.analysisNotes && !existing.analysisNotes?.includes(item.analysisNotes)) {
+        existing.analysisNotes = existing.analysisNotes
+          ? `${existing.analysisNotes}\n${item.analysisNotes}`
+          : item.analysisNotes;
+      }
+      
+      const existingContacts = existing.contacts || [];
+      const itemContacts = item.contacts || [];
+      const mergedContacts = [...existingContacts];
+      for (const ic of itemContacts) {
+        const contactDup = mergedContacts.some(
+          c => (ic.email && c.email?.toLowerCase().trim() === ic.email.toLowerCase().trim()) ||
+               normalizeTrKey(c.fullName) === normalizeTrKey(ic.fullName)
+        );
+        if (!contactDup) {
+          mergedContacts.push(ic);
+        }
+      }
+      existing.contacts = mergedContacts;
+    }
+  }
+  return Array.from(map.values()).map((a, idx) => ({ ...a, no: idx + 1 }));
 }
 
 export interface Contact {

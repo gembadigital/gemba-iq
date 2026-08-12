@@ -51,7 +51,7 @@ import {
 } from "../types";
 import { useLanguage } from "../lib/LanguageContext";
 import { useOrganization } from "../lib/OrganizationContext";
-import { CrmDb, normalizeTrKey } from "../lib/CrmDb";
+import { CrmDb, normalizeTrKey, deduplicateTargetAccounts } from "../lib/CrmDb";
 import { getActiveOrganizationId } from "../lib/tenantStorage";
 import { ConfirmModal } from "./shared/ConfirmModal";
 import { useConfirm } from "../lib/useConfirm";
@@ -156,7 +156,12 @@ export default function MarketingHubView({ initialSubTab, onNavigateToTab }: Mar
   };
 
   useEffect(() => {
-    setAccounts(CrmDb.getKv<TargetAccount[]>(TARGET_ACCOUNTS_KEY, []));
+    const raw = CrmDb.getKv<TargetAccount[]>(TARGET_ACCOUNTS_KEY, []);
+    const clean = deduplicateTargetAccounts(raw);
+    setAccounts(clean);
+    if (raw.length !== clean.length) {
+      CrmDb.setKv(TARGET_ACCOUNTS_KEY, clean);
+    }
     setCompanies(CrmDb.getCompanies());
     setDeals(CrmDb.getDeals());
     setProposals(CrmDb.getProposals());
@@ -165,8 +170,9 @@ export default function MarketingHubView({ initialSubTab, onNavigateToTab }: Mar
   }, []);
 
   const persistAccounts = (updated: TargetAccount[]) => {
+    const clean = deduplicateTargetAccounts(updated);
     const organizationId = getActiveOrganizationId();
-    const scoped = updated.map((a) => ({ ...a, organization_id: organizationId || a.organization_id }));
+    const scoped = clean.map((a) => ({ ...a, organization_id: organizationId || a.organization_id }));
     setAccounts(scoped);
     CrmDb.setKv(TARGET_ACCOUNTS_KEY, scoped);
   };
@@ -514,6 +520,60 @@ export default function MarketingHubView({ initialSubTab, onNavigateToTab }: Mar
           updatedAt: now,
         }
       : null;
+
+    // Hedef Firma Listesinde aynı firma var mı kontrol et (TR karakter duyarsız)
+    const inputKey = normalizeTrKey(targetFormDraft.companyName);
+    const existingIndex = accounts.findIndex((a) => normalizeTrKey(a.companyName) === inputKey);
+
+    if (existingIndex !== -1) {
+      const existing = accounts[existingIndex];
+      const updatedAccount: TargetAccount = {
+        ...existing,
+        websiteUrl: targetFormDraft.websiteUrl.trim() || existing.websiteUrl,
+        industryTag: industryTag || existing.industryTag,
+        subIndustry: isFromCustomer
+          ? selectedSourceCompany!.subIndustry || existing.subIndustry
+          : targetFormDraft.subIndustry.trim() || existing.subIndustry,
+        city: isFromCustomer
+          ? selectedSourceCompany!.billingCity || existing.city
+          : targetFormDraft.city.trim() || existing.city,
+        analysisNotes: targetFormDraft.analysisNotes.trim()
+          ? existing.analysisNotes
+            ? `${existing.analysisNotes}\n${targetFormDraft.analysisNotes.trim()}`
+            : targetFormDraft.analysisNotes.trim()
+          : existing.analysisNotes,
+        discoveredFromCompanyId: isFromCustomer ? selectedSourceCompany!.id : existing.discoveredFromCompanyId,
+        discoveredFromCompanyName: isFromCustomer ? selectedSourceCompany!.name : existing.discoveredFromCompanyName,
+      };
+
+      if (firstContact) {
+        const existingContacts = existing.contacts || [];
+        const contactExists = existingContacts.some(
+          (c) =>
+            (firstContact.email && c.email?.toLowerCase().trim() === firstContact.email.toLowerCase().trim()) ||
+            normalizeTrKey(c.fullName) === normalizeTrKey(firstContact.fullName)
+        );
+        if (!contactExists) {
+          updatedAccount.contacts = [...existingContacts, firstContact];
+        }
+      }
+
+      const updatedList = accounts.map((a, idx) => (idx === existingIndex ? updatedAccount : a));
+      persistAccounts(updatedList);
+      resetTargetForm();
+      setShowTargetForm(false);
+      setExpandedAccountId(existing.id);
+
+      triggerToast(
+        t("'{name}' is already in Target Accounts registry. Existing record loaded & updated.").replace("{name}", existing.companyName),
+        "info"
+      );
+
+      if (firstContact) {
+        setPendingLeadPrompt({ accountId: existing.id, contactId: firstContact.id });
+      }
+      return;
+    }
 
     const added: TargetAccount = {
       id: `target_${Date.now()}_${Math.floor(Math.random() * 1000)}`,
@@ -1546,11 +1606,19 @@ export default function MarketingHubView({ initialSubTab, onNavigateToTab }: Mar
                     <label className="text-[10px] font-bold text-slate-400 uppercase block mb-1">{t("Company Name *")}</label>
                     <input
                       type="text"
+                      list="existing-target-accounts-list"
                       value={targetFormDraft.companyName}
                       onChange={(e) => setTargetFormDraft({ ...targetFormDraft, companyName: e.target.value })}
                       className="w-full p-2 border border-[#EDEBE9] dark:border-[#323130] bg-white dark:bg-[#252423] rounded outline-none focus:border-[#0078D4]"
                       required
                     />
+                    <datalist id="existing-target-accounts-list">
+                      {accounts.map((a) => (
+                        <option key={a.id} value={a.companyName}>
+                          {a.companyName} ({a.industryTag || t("Target Company")})
+                        </option>
+                      ))}
+                    </datalist>
                   </div>
                   {startMode === "manual" ? (
                     <div>

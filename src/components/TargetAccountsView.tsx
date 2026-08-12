@@ -33,7 +33,7 @@ import {
 } from "lucide-react";
 import { TargetAccount, Recipient } from "../types";
 import { useLanguage } from "../lib/LanguageContext";
-import { CrmDb } from "../lib/CrmDb";
+import { CrmDb, normalizeTrKey, deduplicateTargetAccounts } from "../lib/CrmDb";
 import { getActiveOrganizationId } from "../lib/tenantStorage";
 import { ConfirmModal } from "./shared/ConfirmModal";
 import { useConfirm } from "../lib/useConfirm";
@@ -121,13 +121,19 @@ export default function TargetAccountsView({
   // Uses the same crm_target_accounts key that LeadProfilesView.tsx and
   // AISalesAssistant.tsx write to, so records pushed from either screen show up here.
   useEffect(() => {
-    setAccounts(CrmDb.getKv<TargetAccount[]>(TARGET_ACCOUNTS_KEY, []));
+    const raw = CrmDb.getKv<TargetAccount[]>(TARGET_ACCOUNTS_KEY, []);
+    const clean = deduplicateTargetAccounts(raw);
+    setAccounts(clean);
+    if (raw.length !== clean.length) {
+      CrmDb.setKv(TARGET_ACCOUNTS_KEY, clean);
+    }
   }, []);
 
   // Persist the registry through the active organization's CRM auxiliary record.
   const updateAccountsAndPersist = (updated: TargetAccount[]) => {
+    const clean = deduplicateTargetAccounts(updated);
     const organizationId = getActiveOrganizationId();
-    const scopedAccounts = updated.map((account) => ({
+    const scopedAccounts = clean.map((account) => ({
       ...account,
       organization_id: organizationId || account.organization_id,
     }));
@@ -144,6 +150,13 @@ export default function TargetAccountsView({
     e.preventDefault();
     if (!newAccount.companyName.trim()) {
       triggerToast(t("Company name is strictly required."), "error");
+      return;
+    }
+
+    const inputKey = normalizeTrKey(newAccount.companyName);
+    const existingIndex = accounts.findIndex((a) => normalizeTrKey(a.companyName) === inputKey);
+    if (existingIndex !== -1) {
+      triggerToast(t("'{name}' already exists in Target Accounts list.").replace("{name}", accounts[existingIndex].companyName), "error");
       return;
     }
 
