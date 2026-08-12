@@ -2662,8 +2662,48 @@ export const uiDictionaryTR: Record<string, string> = {
   "Leads Generated": "Oluşturulan Lead'ler",
   "Contacts converted to leads": "Lead'e dönüştürülen kontaktlar",
 
+  // Marketing & Business Development Hub - Full i18n Dictionary
+  "Marketing & BD Hub": "Pazarlama ve İş Geliştirme Merkezi",
+
+  // BD Stages & Descriptions
+  "Sektör eşleşmesiyle bulunan yeni hedef/rakip firma": "Sektör eşleşmesiyle bulunan yeni hedef/rakip firma",
+  "Karar vericiyle LinkedIn üzerinden bağlantı kuruldu": "Karar vericiyle LinkedIn üzerinden bağlantı kuruldu",
+  "İlk mesaj/InMail gönderildi": "İlk mesaj/InMail gönderildi",
+  "Soğuk e-posta gönderildi": "Soğuk e-posta gönderildi",
+  "Telefonla ilk temas kuruldu": "Telefonla ilk temas kuruldu",
+  "Görüşme/toplantı tarihi netleşti": "Görüşme/toplantı tarihi netleşti",
+  "Görüşme tamamlandı — Fırsat Yönetimi'ne otomatik transfer edilir": "Görüşme tamamlandı — Fırsat Yönetimi'ne otomatik transfer edilir",
+
+  "New target/competitor company found via sector match": "Sektör eşleşmesiyle bulunan yeni hedef/rakip firma",
+  "Connection established with decision maker via LinkedIn": "Karar vericiyle LinkedIn üzerinden bağlantı kuruldu",
+  "First message/InMail sent": "İlk mesaj/InMail gönderildi",
+  "Cold email sent": "Soğuk e-posta gönderildi",
+  "Initial phone contact made": "Telefonla ilk temas kuruldu",
+  "Meeting/discussion date finalized": "Görüşme/toplantı tarihi netleşti",
+  "Meeting completed — Automatically transferred to Deal Management": "Görüşme tamamlandı — Fırsat Yönetimi'ne otomatik transfer edilir",
+
+  // 2026 UI Banner & Control Terms
+  "Pipeline Target Companies": "Pipeline Hedef Firmaları",
+  "Avg Opportunity Score": "Ortalama Fırsat Skoru",
+  "Promoted to Deals": "Fırsata Dönüşenler",
+  "High Opportunity Leads": "Yüksek Potansiyelli Leadler",
+  "Live search company, contact name, email, or city in Kanban...": "Kanban'da firma, yetkili adı, e-posta veya şehir ara...",
+  "Showing {count} companies in active stages": "Aktif aşamalarda {count} firma gösteriliyor",
+  "New stage name (e.g., Demoseminar, Offer Sent)": "Yeni aşama adı (örneğin: Demoseminer, Teklif İletildi)",
+  "Add Stage": "Aşama Ekle",
+  "Deal Transfer": "Fırsat Transferi",
+  "Promoted to Deal": "Fırsata Dönüştü",
+  "Move to Previous Stage": "Önceki Aşamaya Taşı",
+  "Move to Next Stage": "Sonraki Aşamaya Taşı",
+  "Drag target company here": "Hedef firmayı buraya sürükleyin",
+  "or use quick add above": "veya yukarıdaki hızlı eklemeyi kullanın",
+  "Target Stakeholder Contact Details (Primary Contact)": "Hedef Paydaş Yetkili İrtibat Bilgileri (Ana Yetkili)",
+  "Synced with Target Accounts": "Hedef Hesaplar ile Eşleşti",
+  "Designated Contact Email": "Atanan İrtibat E-postası",
+  "Open Customer Detail Card": "Müşteri Detay Kartını Aç",
 };
 
-export const uiDictionaryEN: Record<string, string> = Object.fromEntries(
-  Object.keys(uiDictionaryTR).map((key) => [key, key])
-);
+export const uiDictionaryEN: Record<string, string> = Object.fromEntries([
+  ...Object.entries(uiDictionaryTR).map(([enKey, trVal]) => [trVal, enKey]),
+  ...Object.keys(uiDictionaryTR).map((enKey) => [enKey, enKey]),
+]);
