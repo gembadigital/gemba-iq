@@ -15,6 +15,7 @@ import {
   Check,
   Calendar,
   ChevronRight,
+  ChevronLeft,
   Clock,
   AlertTriangle,
   Loader2,
@@ -26,6 +27,13 @@ import {
   Users,
   Flag,
   MoreVertical,
+  GripVertical,
+  Mail,
+  MapPin,
+  ExternalLink,
+  Zap,
+  Building2,
+  User,
 } from "lucide-react";
 import {
   ResponsiveContainer,
@@ -306,13 +314,35 @@ export default function MarketingHubView({ initialSubTab, onNavigateToTab }: Mar
       map[s] = [];
     });
     const firstStage = bdActiveStages[0] || "Yeni";
+    const q = bdKanbanSearch.trim().toLowerCase();
+
     accounts.forEach((a) => {
       const stage = a.bdPipelineStage && bdActiveStages.includes(a.bdPipelineStage) ? a.bdPipelineStage : firstStage;
       if (!map[stage]) map[stage] = [];
-      map[stage].push(a);
+
+      if (q) {
+        const primaryContact = getTargetPrimaryContact(a);
+        const match =
+          a.companyName.toLowerCase().includes(q) ||
+          (a.industryTag && a.industryTag.toLowerCase().includes(q)) ||
+          (a.city && a.city.toLowerCase().includes(q)) ||
+          (primaryContact.fullName && primaryContact.fullName.toLowerCase().includes(q)) ||
+          (primaryContact.email && primaryContact.email.toLowerCase().includes(q));
+        if (match) map[stage].push(a);
+      } else {
+        map[stage].push(a);
+      }
     });
     return map;
-  }, [accounts, bdActiveStages]);
+  }, [accounts, bdActiveStages, bdKanbanSearch]);
+
+  const bdPipelineStats = useMemo(() => {
+    const total = accounts.length;
+    const highOpp = accounts.filter((a) => (a.riskScore || 70) >= 75).length;
+    const promoted = accounts.filter((a) => Boolean(a.promotedToDealId)).length;
+    const avgScore = total > 0 ? Math.round(accounts.reduce((acc, a) => acc + (a.riskScore || 70), 0) / total) : 70;
+    return { total, highOpp, promoted, avgScore };
+  }, [accounts]);
 
   // Dönüşüm hunisi: pipeline aşamaları + son adım olarak Fırsat Yönetimi'ne
   // otomatik transfer edilen (soğuk temastan sıcak temasa geçen) firma
@@ -400,6 +430,7 @@ export default function MarketingHubView({ initialSubTab, onNavigateToTab }: Mar
   });
   const [targetSectorFilter, setTargetSectorFilter] = useState("");
   const [targetSearch, setTargetSearch] = useState("");
+  const [bdKanbanSearch, setBdKanbanSearch] = useState("");
   const [expandedAccountId, setExpandedAccountId] = useState<string | null>(null);
   const [contactDraftByAccount, setContactDraftByAccount] = useState<Record<string, Partial<TargetContact>>>({});
   const [showContactFormFor, setShowContactFormFor] = useState<string | null>(null);
@@ -2268,47 +2299,98 @@ export default function MarketingHubView({ initialSubTab, onNavigateToTab }: Mar
       )}
 
       {activeSubTab === "bd-pipeline" && (
-        <div className="space-y-4">
-          <ChartCard title={t("Business Development Funnel")} subtitle={t("Target companies by pipeline stage")} height="h-[260px]">
-            <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={funnelChartData} margin={{ left: 0, right: 10, top: 5, bottom: 0 }}>
-                <CartesianGrid strokeDasharray="3 3" opacity={0.1} />
-                <XAxis dataKey="stage" fontSize={9} tickLine={false} interval={0} angle={-15} textAnchor="end" height={50} />
-                <YAxis fontSize={9} tickLine={false} allowDecimals={false} />
-                <Tooltip />
-                <Bar dataKey="count" name={t("Target Companies")} fill={CHART_COLORS.indigo} radius={[4, 4, 0, 0]} barSize={28} />
-              </BarChart>
-            </ResponsiveContainer>
-          </ChartCard>
+        <div className="space-y-5 animate-fade-in">
+          {/* 2026 UI/UX Modern KPI Stats Banner */}
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3.5">
+            <div className="bg-white dark:bg-[#1b1a19] border border-[#EDEBE9] dark:border-[#323130] p-4 rounded-2xl shadow-sm hover:shadow-md transition-all flex items-center justify-between">
+              <div>
+                <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 font-mono block">{t("Pipeline Target Companies")}</span>
+                <span className="text-xl font-extrabold text-slate-800 dark:text-slate-100 block mt-1">{bdPipelineStats.total}</span>
+              </div>
+              <div className="w-10 h-10 rounded-xl bg-blue-50 dark:bg-blue-950/40 text-[#0078D4] dark:text-brand-400 flex items-center justify-center">
+                <Target className="w-5 h-5" />
+              </div>
+            </div>
 
-          <div className="flex items-center justify-between gap-2 flex-wrap">
-            <p className="text-[11px] text-slate-500">
-              {t("Drag a company between stages, or use a column's menu to rename, collapse, or delete it. Reaching the final stage automatically promotes the company to Deal Management.")}
-            </p>
-            <div className="flex items-center gap-2 flex-shrink-0">
+            <div className="bg-white dark:bg-[#1b1a19] border border-[#EDEBE9] dark:border-[#323130] p-4 rounded-2xl shadow-sm hover:shadow-md transition-all flex items-center justify-between">
+              <div>
+                <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 font-mono block">{t("Avg Opportunity Score")}</span>
+                <span className="text-xl font-extrabold text-emerald-600 dark:text-emerald-400 block mt-1">% {bdPipelineStats.avgScore}</span>
+              </div>
+              <div className="w-10 h-10 rounded-xl bg-emerald-50 dark:bg-emerald-950/40 text-emerald-600 dark:text-emerald-400 flex items-center justify-center">
+                <Zap className="w-5 h-5" />
+              </div>
+            </div>
+
+            <div className="bg-white dark:bg-[#1b1a19] border border-[#EDEBE9] dark:border-[#323130] p-4 rounded-2xl shadow-sm hover:shadow-md transition-all flex items-center justify-between">
+              <div>
+                <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 font-mono block">{t("Promoted to Deals")}</span>
+                <span className="text-xl font-extrabold text-indigo-600 dark:text-indigo-400 block mt-1">{bdPipelineStats.promoted}</span>
+              </div>
+              <div className="w-10 h-10 rounded-xl bg-indigo-50 dark:bg-indigo-950/40 text-indigo-600 dark:text-indigo-400 flex items-center justify-center">
+                <Briefcase className="w-5 h-5" />
+              </div>
+            </div>
+
+            <div className="bg-white dark:bg-[#1b1a19] border border-[#EDEBE9] dark:border-[#323130] p-4 rounded-2xl shadow-sm hover:shadow-md transition-all flex items-center justify-between">
+              <div>
+                <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 font-mono block">{t("High Opportunity Leads")}</span>
+                <span className="text-xl font-extrabold text-amber-600 dark:text-amber-400 block mt-1">{bdPipelineStats.highOpp}</span>
+              </div>
+              <div className="w-10 h-10 rounded-xl bg-amber-50 dark:bg-amber-950/40 text-amber-600 dark:text-amber-400 flex items-center justify-center">
+                <Sparkles className="w-5 h-5" />
+              </div>
+            </div>
+          </div>
+
+          {/* Top Control Bar & Live Search */}
+          <div className="bg-white dark:bg-[#1b1a19] border border-[#EDEBE9] dark:border-[#323130] p-3.5 rounded-2xl flex flex-wrap items-center justify-between gap-3 shadow-sm">
+            <div className="flex items-center gap-3 flex-1 min-w-[260px]">
+              <div className="relative flex-1 max-w-md">
+                <Search className="w-4 h-4 text-slate-400 absolute left-3 top-2.5" />
+                <input
+                  type="text"
+                  placeholder={t("Live search company, contact name, email, or city in Kanban...")}
+                  value={bdKanbanSearch}
+                  onChange={(e) => setBdKanbanSearch(e.target.value)}
+                  className="w-full bg-[#FAF9F8] dark:bg-[#252423] border border-[#EDEBE9] dark:border-[#323130] text-xs rounded-xl pl-9 pr-8 py-2 outline-none focus:border-[#0078D4] focus:ring-1 focus:ring-[#0078D4]"
+                />
+                {bdKanbanSearch && (
+                  <button type="button" onClick={() => setBdKanbanSearch("")} className="absolute right-2.5 top-2.5 text-slate-400 hover:text-slate-600 cursor-pointer">
+                    <X className="w-3.5 h-3.5" />
+                  </button>
+                )}
+              </div>
+              <span className="text-[11px] font-medium text-slate-500 hidden sm:inline-block">
+                {t("Showing {count} companies in active stages").replace("{count}", String(accounts.length))}
+              </span>
+            </div>
+
+            <div className="flex items-center gap-2">
               <button
                 type="button"
                 onClick={() => setBdIsAddingStage(true)}
-                className="px-3 py-1.5 border border-[#EDEBE9] dark:border-[#323130] rounded-lg text-xs font-bold text-slate-600 dark:text-slate-300 hover:bg-[#FAF9F8] dark:hover:bg-[#252423] flex items-center gap-1 cursor-pointer"
+                className="px-3.5 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold shadow-sm transition-all flex items-center gap-1.5 cursor-pointer"
               >
-                <Plus className="w-3.5 h-3.5 text-emerald-600" />
+                <Plus className="w-4 h-4" />
                 <span>{t("+ Custom Stage")}</span>
               </button>
               {onNavigateToTab && (
                 <button
                   type="button"
                   onClick={() => onNavigateToTab("deal-management")}
-                  className="text-xs font-bold bg-[#FAF9F8] hover:bg-[#EDEBE9] dark:bg-[#252423] dark:hover:bg-[#323130] text-slate-700 dark:text-slate-200 px-3 py-2 border border-[#EDEBE9] dark:border-[#323130] rounded flex items-center gap-1.5 cursor-pointer"
+                  className="px-3.5 py-2 bg-[#FAF9F8] dark:bg-[#252423] hover:bg-[#EDEBE9] dark:hover:bg-[#323130] text-slate-700 dark:text-slate-200 border border-[#EDEBE9] dark:border-[#323130] rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer"
                 >
-                  <Briefcase className="w-3.5 h-3.5" />
+                  <Briefcase className="w-4 h-4 text-[#0078D4]" />
                   <span>{t("Deal Management")}</span>
                 </button>
               )}
             </div>
           </div>
 
+          {/* Custom Stage Modal / Input Form */}
           {bdIsAddingStage && (
-            <div className="bg-[#FAF9F8] dark:bg-[#201f1e] border border-[#0078D4]/30 rounded-xl p-3 flex items-center gap-2">
+            <div className="bg-[#FAF9F8] dark:bg-[#201f1e] border border-[#0078D4]/30 rounded-2xl p-4 flex items-center gap-3 shadow-md animate-fade-in">
               <input
                 type="text"
                 autoFocus
@@ -2321,11 +2403,11 @@ export default function MarketingHubView({ initialSubTab, onNavigateToTab }: Mar
                     setBdNewStageName("");
                   }
                 }}
-                placeholder={t("New stage name")}
-                className="flex-1 p-2 text-xs border border-[#EDEBE9] dark:border-[#323130] bg-white dark:bg-[#252423] rounded outline-none focus:border-[#0078D4]"
+                placeholder={t("New stage name (e.g., Demoseminar, Offer Sent)")}
+                className="flex-1 p-2.5 text-xs border border-[#EDEBE9] dark:border-[#323130] bg-white dark:bg-[#252423] rounded-xl outline-none focus:border-[#0078D4]"
               />
-              <button type="button" onClick={handleBdAddStage} className="text-xs font-bold bg-emerald-600 hover:bg-emerald-700 text-white px-3 py-2 rounded cursor-pointer">
-                {t("Add")}
+              <button type="button" onClick={handleBdAddStage} className="text-xs font-bold bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2.5 rounded-xl cursor-pointer">
+                {t("Add Stage")}
               </button>
               <button
                 type="button"
@@ -2333,15 +2415,16 @@ export default function MarketingHubView({ initialSubTab, onNavigateToTab }: Mar
                   setBdIsAddingStage(false);
                   setBdNewStageName("");
                 }}
-                className="text-xs font-bold text-slate-500 px-3 py-2 cursor-pointer"
+                className="text-xs font-bold text-slate-500 px-3 py-2.5 cursor-pointer"
               >
                 {t("Cancel")}
               </button>
             </div>
           )}
 
+          {/* Delete Stage Form */}
           {bdDeletingStage && (
-            <form onSubmit={handleBdConfirmDeleteStage} className="bg-rose-50 dark:bg-rose-950/20 border border-rose-200 dark:border-rose-900 rounded-xl p-3 space-y-2">
+            <form onSubmit={handleBdConfirmDeleteStage} className="bg-rose-50 dark:bg-rose-950/20 border border-rose-200 dark:border-rose-900 rounded-2xl p-4 space-y-3 animate-fade-in">
               <p className="text-xs font-bold text-rose-800 dark:text-rose-300">
                 {t("Delete stage")} "{t(bdDeletingStage)}"?
               </p>
@@ -2351,7 +2434,7 @@ export default function MarketingHubView({ initialSubTab, onNavigateToTab }: Mar
                   <select
                     value={bdDeleteMigrationTarget}
                     onChange={(e) => setBdDeleteMigrationTarget(e.target.value)}
-                    className="text-xs p-1.5 border border-[#EDEBE9] dark:border-[#323130] bg-white dark:bg-[#252423] rounded outline-none"
+                    className="text-xs p-2 border border-[#EDEBE9] dark:border-[#323130] bg-white dark:bg-[#252423] rounded-xl outline-none"
                   >
                     {bdActiveStages
                       .filter((s) => s !== bdDeletingStage)
@@ -2364,21 +2447,24 @@ export default function MarketingHubView({ initialSubTab, onNavigateToTab }: Mar
                 </div>
               )}
               <div className="flex items-center gap-2">
-                <button type="submit" className="text-xs font-bold bg-rose-600 hover:bg-rose-700 text-white px-3 py-1.5 rounded cursor-pointer">
-                  {t("Delete")}
+                <button type="submit" className="text-xs font-bold bg-rose-600 hover:bg-rose-700 text-white px-4 py-2 rounded-xl cursor-pointer">
+                  {t("Delete Stage")}
                 </button>
-                <button type="button" onClick={() => setBdDeletingStage(null)} className="text-xs font-bold text-slate-500 px-3 py-1.5 cursor-pointer">
+                <button type="button" onClick={() => setBdDeletingStage(null)} className="text-xs font-bold text-slate-500 px-3 py-2 cursor-pointer">
                   {t("Cancel")}
                 </button>
               </div>
             </form>
           )}
 
-          <div className="flex gap-3 overflow-x-auto pb-2">
-            {bdActiveStages.map((stage) => {
+          {/* 2026 UI/UX Kanban Columns Board Container */}
+          <div className="flex gap-4 overflow-x-auto pb-4 pt-1 items-start min-h-[550px] scrollbar-thin">
+            {bdActiveStages.map((stage, stageIndex) => {
               const stageAccounts = pipelineByStage[stage] || [];
               const isCollapsed = !!bdStageMetadata[stage]?.collapsed;
               const isFinalStage = stage === bdActiveStages[bdActiveStages.length - 1];
+              const accentColor = STAGE_ACCENT_COLORS[stageIndex % STAGE_ACCENT_COLORS.length];
+
               return (
                 <div
                   key={stage}
@@ -2392,13 +2478,16 @@ export default function MarketingHubView({ initialSubTab, onNavigateToTab }: Mar
                       handleBdCardDrop(e, stage);
                     }
                   }}
-                  className={`flex-shrink-0 ${isCollapsed ? "w-12" : "w-64"} bg-[#FAF9F8] dark:bg-[#201f1e] border border-[#EDEBE9] dark:border-[#323130] rounded-2xl transition-all`}
+                  className={`flex-shrink-0 ${
+                    isCollapsed ? "w-14" : "w-72"
+                  } bg-[#FAF9F8] dark:bg-[#1e1d1c] border border-[#EDEBE9] dark:border-[#323130] border-t-4 ${accentColor.topBorder} rounded-2xl shadow-sm transition-all duration-200 flex flex-col`}
                 >
+                  {/* Column Header */}
                   <div className="p-3 border-b border-[#EDEBE9] dark:border-[#323130] cursor-move select-none">
                     {isCollapsed ? (
-                      <button type="button" onClick={() => toggleBdCollapseStage(stage)} className="w-full flex flex-col items-center gap-1.5 cursor-pointer">
-                        <span className="text-[9px] font-bold text-slate-500 dark:text-slate-400">{stageAccounts.length}</span>
-                        <span className="text-[10px] font-bold text-slate-600 dark:text-slate-300 [writing-mode:vertical-rl] whitespace-nowrap">{t(stage)}</span>
+                      <button type="button" onClick={() => toggleBdCollapseStage(stage)} className="w-full flex flex-col items-center gap-2 cursor-pointer py-2">
+                        <span className={`text-[11px] font-extrabold px-2 py-0.5 rounded-full ${accentColor.badge}`}>{stageAccounts.length}</span>
+                        <span className="text-[11px] font-bold text-slate-700 dark:text-slate-300 [writing-mode:vertical-rl] whitespace-nowrap">{t(stage)}</span>
                       </button>
                     ) : bdRenamingStage === stage ? (
                       <input
@@ -2411,42 +2500,47 @@ export default function MarketingHubView({ initialSubTab, onNavigateToTab }: Mar
                           if (e.key === "Escape") setBdRenamingStage(null);
                         }}
                         onBlur={() => handleBdRenameStage(stage, bdRenameValue)}
-                        className="w-full text-[11px] font-bold p-1 border border-[#0078D4] bg-white dark:bg-[#252423] rounded outline-none"
+                        className="w-full text-xs font-bold p-1.5 border border-[#0078D4] bg-white dark:bg-[#252423] rounded-lg outline-none"
                       />
                     ) : (
                       <div className="relative">
                         <div className="flex items-center justify-between gap-1.5">
-                          <div className="flex items-center gap-1.5 min-w-0">
-                            <span className="text-[11px] font-bold text-slate-700 dark:text-slate-200 truncate">{t(stage)}</span>
-                            <span className="text-[10px] bg-slate-200 dark:bg-[#323130] text-slate-600 dark:text-slate-300 rounded-full px-2 py-0.5 flex-shrink-0">
+                          <div className="flex items-center gap-2 min-w-0">
+                            <span className="text-[10px] font-mono font-bold text-slate-400">{stageIndex + 1}.</span>
+                            <h4 className="text-xs font-bold text-slate-800 dark:text-slate-100 truncate">{t(stage)}</h4>
+                            <span className={`text-[10px] font-extrabold px-2 py-0.5 rounded-full flex-shrink-0 ${accentColor.badge}`}>
                               {stageAccounts.length}
                             </span>
-                            {isFinalStage && (
-                              <span
-                                title={t("Reaching this stage automatically promotes the company to Deal Management.")}
-                                className="text-[9px] font-bold text-indigo-600 dark:text-indigo-400 flex-shrink-0"
-                              >
-                                → {t("FY")}
-                              </span>
-                            )}
                           </div>
                           <button
                             type="button"
                             onClick={() => setBdActiveStageMenu(bdActiveStageMenu === stage ? null : stage)}
-                            className="text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 cursor-pointer flex-shrink-0 p-0.5"
+                            className="text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 cursor-pointer flex-shrink-0 p-1 rounded-md hover:bg-slate-200 dark:hover:bg-[#323130]"
                           >
-                            <MoreVertical className="w-3.5 h-3.5" />
+                            <MoreVertical className="w-4 h-4" />
                           </button>
                         </div>
+
+                        {/* Stage Description / Final Tag Sub-header */}
+                        <div className="flex items-center justify-between mt-1 text-[10px] text-slate-400 font-medium">
+                          <span className="truncate">{bdStageMetadata[stage]?.description || t("Stage")}</span>
+                          {isFinalStage && (
+                            <span className="text-[9px] font-bold text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/40 px-1.5 py-0.5 rounded flex-shrink-0">
+                              → {t("Deal Transfer")}
+                            </span>
+                          )}
+                        </div>
+
+                        {/* Column Dropdown Menu */}
                         {bdActiveStageMenu === stage && (
-                          <div className="absolute z-20 top-full right-0 mt-1 w-40 bg-white dark:bg-[#1b1a19] border border-[#EDEBE9] dark:border-[#323130] rounded-lg shadow-lg p-1 space-y-0.5">
+                          <div className="absolute z-20 top-full right-0 mt-1 w-44 bg-white dark:bg-[#1b1a19] border border-[#EDEBE9] dark:border-[#323130] rounded-xl shadow-xl p-1.5 space-y-1 text-xs animate-fade-in">
                             <button
                               type="button"
                               onClick={() => {
                                 toggleBdCollapseStage(stage);
                                 setBdActiveStageMenu(null);
                               }}
-                              className="w-full text-left px-2 py-1.5 text-[11px] text-slate-600 dark:text-slate-300 hover:bg-[#FAF9F8] dark:hover:bg-[#252423] rounded cursor-pointer"
+                              className="w-full text-left px-2.5 py-1.5 text-slate-600 dark:text-slate-300 hover:bg-[#FAF9F8] dark:hover:bg-[#252423] rounded-lg cursor-pointer"
                             >
                               {t("Collapse Stage")}
                             </button>
@@ -2457,7 +2551,7 @@ export default function MarketingHubView({ initialSubTab, onNavigateToTab }: Mar
                                 setBdRenameValue(stage);
                                 setBdActiveStageMenu(null);
                               }}
-                              className="w-full text-left px-2 py-1.5 text-[11px] text-slate-600 dark:text-slate-300 hover:bg-[#FAF9F8] dark:hover:bg-[#252423] rounded cursor-pointer"
+                              className="w-full text-left px-2.5 py-1.5 text-slate-600 dark:text-slate-300 hover:bg-[#FAF9F8] dark:hover:bg-[#252423] rounded-lg cursor-pointer"
                             >
                               {t("Rename Stage")}
                             </button>
@@ -2467,7 +2561,7 @@ export default function MarketingHubView({ initialSubTab, onNavigateToTab }: Mar
                                 handleBdDeleteStage(stage);
                                 setBdActiveStageMenu(null);
                               }}
-                              className="w-full text-left px-2 py-1.5 text-[11px] text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/20 rounded cursor-pointer"
+                              className="w-full text-left px-2.5 py-1.5 text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/20 rounded-lg cursor-pointer font-semibold"
                             >
                               {t("Delete Stage")}
                             </button>
@@ -2476,25 +2570,115 @@ export default function MarketingHubView({ initialSubTab, onNavigateToTab }: Mar
                       </div>
                     )}
                   </div>
+
+                  {/* Column Cards Container */}
                   {!isCollapsed && (
-                    <div className="p-2 space-y-2 min-h-[80px] max-h-[420px] overflow-y-auto">
-                      {stageAccounts.map((account) => (
-                        <div
-                          key={account.id}
-                          draggable
-                          onDragStart={(e) => handleBdCardDragStart(e, account.id)}
-                          className="bg-white dark:bg-[#1b1a19] border border-[#EDEBE9] dark:border-[#323130] rounded p-2.5 shadow-sm space-y-1 cursor-grab active:cursor-grabbing hover:shadow-md transition-all"
-                        >
-                          <div className="text-[11px] font-bold text-slate-800 dark:text-slate-100 truncate">{account.companyName}</div>
-                          <div className="text-[10px] text-slate-450 truncate">{account.industryTag}</div>
-                          {account.promotedToDealId && (
-                            <span className="inline-block text-[9px] font-bold px-1.5 py-0.5 rounded-full bg-indigo-100 text-indigo-700 dark:bg-indigo-950/30 dark:text-indigo-400">
-                              {t("Promoted to Deal Management")}
-                            </span>
-                          )}
+                    <div className="p-2.5 space-y-2.5 min-h-[140px] max-h-[560px] overflow-y-auto w-full scrollbar-thin">
+                      {stageAccounts.map((account) => {
+                        const primaryContact = getTargetPrimaryContact(account);
+                        return (
+                          <div
+                            key={account.id}
+                            draggable
+                            onDragStart={(e) => handleBdCardDragStart(e, account.id)}
+                            className="group bg-white dark:bg-[#1b1a19] border border-[#EDEBE9] dark:border-[#323130] rounded-xl p-3 shadow-sm hover:shadow-lg hover:-translate-y-0.5 transition-all duration-200 space-y-2.5 cursor-grab active:cursor-grabbing border-l-4 border-l-[#0078D4]"
+                          >
+                            {/* Card Top Header: Drag Handle + Company Name + Detail Trigger */}
+                            <div className="flex items-start justify-between gap-1.5">
+                              <div className="flex items-center gap-1.5 min-w-0 flex-1">
+                                <GripVertical className="w-3.5 h-3.5 text-slate-300 group-hover:text-slate-400 flex-shrink-0" />
+                                <h5
+                                  onClick={() => setExpandedAccountId(account.id)}
+                                  className="text-xs font-bold text-slate-800 dark:text-slate-100 hover:text-[#0078D4] dark:hover:text-brand-400 cursor-pointer truncate"
+                                  title={account.companyName}
+                                >
+                                  {account.companyName}
+                                </h5>
+                              </div>
+                              <button
+                                type="button"
+                                onClick={() => setExpandedAccountId(account.id)}
+                                className="text-slate-300 hover:text-[#0078D4] dark:hover:text-brand-400 cursor-pointer p-0.5 flex-shrink-0"
+                                title={t("Open Customer Detail Card")}
+                              >
+                                <ExternalLink className="w-3.5 h-3.5" />
+                              </button>
+                            </div>
+
+                            {/* Sector & City Pills */}
+                            <div className="flex items-center gap-1.5 flex-wrap text-[10px]">
+                              <span className="bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 font-semibold px-2 py-0.5 rounded-md truncate max-w-[140px]">
+                                {account.industryTag || t("General Industry")}
+                              </span>
+                              {(account.city || account.locationMain) && (
+                                <span className="text-slate-400 flex items-center gap-0.5">
+                                  <MapPin className="w-3 h-3 text-slate-400" />
+                                  {account.city || account.locationMain}
+                                </span>
+                              )}
+                            </div>
+
+                            {/* Contact Info Card Block */}
+                            <div className="bg-[#FAF9F8] dark:bg-[#252423] p-2 rounded-lg border border-slate-100 dark:border-slate-800/80 space-y-1 text-[10px]">
+                              <div className="flex items-center gap-1.5 text-slate-700 dark:text-slate-200 font-semibold truncate">
+                                <User className="w-3 h-3 text-[#0078D4] flex-shrink-0" />
+                                <span className="truncate">{primaryContact.fullName}</span>
+                              </div>
+                              <div className="flex items-center gap-1.5 text-[#0078D4] dark:text-brand-400 font-mono font-medium truncate">
+                                <Mail className="w-3 h-3 flex-shrink-0 text-slate-400" />
+                                <span className="truncate">{primaryContact.email}</span>
+                              </div>
+                            </div>
+
+                            {/* Badges: Opportunity Score & Promoted Tag */}
+                            <div className="flex items-center justify-between gap-1 flex-wrap pt-0.5">
+                              <span className="text-[9px] font-extrabold px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-400 border border-emerald-200/50 dark:border-emerald-800/50">
+                                % {account.riskScore || 70} {t("Opportunity Score")}
+                              </span>
+
+                              {account.promotedToDealId && (
+                                <span className="text-[9px] font-bold px-2 py-0.5 rounded-full bg-indigo-100 text-indigo-700 dark:bg-indigo-950/40 dark:text-indigo-300">
+                                  {t("Promoted to Deal")} ✓
+                                </span>
+                              )}
+                            </div>
+
+                            {/* 1-Click Quick Stage Advancement Footer */}
+                            <div className="flex items-center justify-between border-t border-[#EDEBE9] dark:border-[#323130] pt-2 text-[10px] text-slate-400">
+                              <button
+                                type="button"
+                                disabled={stageIndex === 0}
+                                onClick={() => handleStageChange(account.id, bdActiveStages[stageIndex - 1])}
+                                className="p-1 hover:bg-slate-100 dark:hover:bg-slate-800 rounded disabled:opacity-30 disabled:cursor-not-allowed cursor-pointer text-slate-500"
+                                title={t("Move to Previous Stage")}
+                              >
+                                <ChevronLeft className="w-3.5 h-3.5" />
+                              </button>
+
+                              <span className="font-mono text-[9px] font-bold text-slate-400">
+                                {stageIndex + 1} / {bdActiveStages.length}
+                              </span>
+
+                              <button
+                                type="button"
+                                disabled={stageIndex === bdActiveStages.length - 1}
+                                onClick={() => handleStageChange(account.id, bdActiveStages[stageIndex + 1])}
+                                className="p-1 hover:bg-blue-50 dark:hover:bg-blue-950/30 rounded disabled:opacity-30 disabled:cursor-not-allowed cursor-pointer text-[#0078D4]"
+                                title={t("Move to Next Stage")}
+                              >
+                                <ChevronRight className="w-3.5 h-3.5" />
+                              </button>
+                            </div>
+                          </div>
+                        );
+                      })}
+
+                      {stageAccounts.length === 0 && (
+                        <div className="border-2 border-dashed border-slate-200 dark:border-slate-800 rounded-xl p-6 text-center text-slate-400 text-[11px] font-medium my-2">
+                          <p>{t("Drag target company here")}</p>
+                          <span className="text-[9px] text-slate-400 block mt-1">{t("or use quick add above")}</span>
                         </div>
-                      ))}
-                      {stageAccounts.length === 0 && <p className="text-[10px] text-slate-400 text-center py-4">{t("No companies in this stage yet.")}</p>}
+                      )}
                     </div>
                   )}
                 </div>
