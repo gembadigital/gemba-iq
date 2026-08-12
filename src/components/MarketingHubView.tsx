@@ -1818,425 +1818,7 @@ export default function MarketingHubView({ initialSubTab, onNavigateToTab }: Mar
             </div>
           )}
 
-          {/* 3. Rakip/Hedef Firma Kartı — hem Rakip Haritası hem de Tüm Hedef
-              Firmalar listesinden tek bir paylaşılan detay panelini açar. */}
-          {expandedAccountId &&
-            (() => {
-              const account = accounts.find((a) => a.id === expandedAccountId);
-              if (!account) return null;
-              const status = getRelationshipStatus(account, companies);
-              const primaryContact = getTargetPrimaryContact(account);
-              const contactDraft = contactDraftByAccount[account.id] || { status: "Araştırılıyor" };
-              return (
-                <div className="bg-white dark:bg-[#1b1a19] border border-[#0078D4]/30 rounded-2xl shadow-md p-5 space-y-5 text-xs animate-fade-in">
-                  <div className="flex items-start justify-between">
-                    <div>
-                      <div className="flex items-center gap-2">
-                        <h3 className="text-sm font-bold text-slate-800 dark:text-slate-100">{account.companyName}</h3>
-                        <span
-                          className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
-                            status === "Müşteri"
-                              ? "bg-emerald-100 text-emerald-700 dark:bg-emerald-950/30 dark:text-emerald-400"
-                              : status === "Görüşülüyor"
-                              ? "bg-amber-100 text-amber-700 dark:bg-amber-950/30 dark:text-amber-400"
-                              : "bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-300"
-                          }`}
-                        >
-                          {t(status)}
-                        </span>
-                      </div>
-                      {account.discoveredFromCompanyName && (
-                        <p className="text-[10px] text-slate-450 mt-1">
-                          {t("Discovered via")}: {account.discoveredFromCompanyName}
-                        </p>
-                      )}
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <button
-                        type="button"
-                        onClick={() => {
-                          triggerToast(t("Firma ve müşteri kartı bilgileri başarıyla kaydedildi."), "success");
-                          setExpandedAccountId(null);
-                        }}
-                        className="px-3.5 py-1.5 bg-[#0078D4] hover:bg-[#106ebe] text-white text-xs font-bold rounded-xl flex items-center gap-1.5 shadow-sm cursor-pointer transition-all"
-                      >
-                        <Save className="w-3.5 h-3.5" />
-                        <span>{t("Düzenlemeyi Kaydet")}</span>
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => deleteTargetAccount(account.id)}
-                        className="text-slate-400 hover:text-rose-600 cursor-pointer p-1.5 rounded-lg hover:bg-rose-50 dark:hover:bg-rose-950/30"
-                        title={t("Delete Company")}
-                      >
-                        <Trash2 className="w-4 h-4" />
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => setExpandedAccountId(null)}
-                        className="text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 cursor-pointer p-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800"
-                      >
-                        <X className="w-4 h-4" />
-                      </button>
-                    </div>
-                  </div>
-
-                  {/* Highlights Summary Banner */}
-                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5 bg-[#FAF9F8] dark:bg-[#201f1e] p-3 rounded-xl border border-[#EDEBE9] dark:border-[#323130]">
-                    <div className="text-center p-1.5 border-r border-slate-200 dark:border-[#323130]">
-                      <span className="text-[9px] uppercase font-bold text-slate-400 font-mono block">{t("Opportunity Score")}</span>
-                      <span className="text-sm font-extrabold text-[#0078D4] dark:text-brand-400 block mt-0.5">% {account.riskScore || 70}</span>
-                    </div>
-                    <div className="text-center p-1.5 border-r border-slate-200 dark:border-[#323130]">
-                      <span className="text-[9px] uppercase font-bold text-slate-400 font-mono block">{t("Company Size")}</span>
-                      <span className="text-xs font-semibold text-slate-700 dark:text-slate-200 block mt-0.5 truncate">{account.companySize || account.employeeCountLabel || t("750+ Employees")}</span>
-                    </div>
-                    <div className="text-center p-1.5 border-r border-slate-200 dark:border-[#323130]">
-                      <span className="text-[9px] uppercase font-bold text-slate-400 font-mono block">{t("Main Location")}</span>
-                      <span className="text-xs font-semibold text-slate-700 dark:text-slate-200 block mt-0.5 truncate">{account.locationMain || account.city || t("Not specified")}</span>
-                    </div>
-                    <div className="text-center p-1.5">
-                      <span className="text-[9px] uppercase font-bold text-slate-400 font-mono block">{t("Lead Segment")}</span>
-                      <span className="text-xs font-bold text-emerald-600 dark:text-emerald-400 block mt-0.5 truncate">{account.leadSegment || "Cold"} ({account.leadStatus || "New"})</span>
-                    </div>
-                  </div>
-
-                  {/* Primary Target Stakeholder Contact Box (Hedef Hesaplar Eşleşmesi) */}
-                  <div className="bg-blue-50/60 dark:bg-blue-950/20 border border-blue-200 dark:border-blue-900/50 rounded-xl p-4 space-y-3">
-                    <h4 className="text-xs font-bold text-slate-800 dark:text-slate-200 uppercase tracking-wider font-mono flex items-center justify-between border-b border-blue-200/60 dark:border-blue-900/60 pb-2">
-                      <span className="flex items-center gap-2">
-                        <Users className="w-4 h-4 text-[#0078D4]" />
-                        {t("Target Stakeholder Contact Details (Primary Contact)")}
-                      </span>
-                      <span className="text-[10px] font-mono text-[#0078D4] dark:text-brand-400 font-bold bg-white dark:bg-black/20 px-2 py-0.5 rounded border border-blue-200 dark:border-blue-800">
-                        {t("Synced with Target Accounts")}
-                      </span>
-                    </h4>
-
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                      <div>
-                        <label className="text-[10px] font-bold uppercase text-slate-400 block mb-1">{t("First Name")}</label>
-                        <input
-                          type="text"
-                          defaultValue={account.contactName || primaryContact.firstName}
-                          onBlur={(e) => updateAccountField(account.id, { contactName: e.target.value })}
-                          placeholder={t("First Name")}
-                          className="w-full p-2 border border-slate-300 dark:border-slate-700 rounded bg-white dark:bg-[#252423] text-xs font-semibold outline-none focus:border-[#0078D4]"
-                        />
-                      </div>
-                      <div>
-                        <label className="text-[10px] font-bold uppercase text-slate-400 block mb-1">{t("Surname")}</label>
-                        <input
-                          type="text"
-                          defaultValue={account.contactSurname || primaryContact.lastName}
-                          onBlur={(e) => updateAccountField(account.id, { contactSurname: e.target.value })}
-                          placeholder={t("Surname")}
-                          className="w-full p-2 border border-slate-300 dark:border-slate-700 rounded bg-white dark:bg-[#252423] text-xs font-semibold outline-none focus:border-[#0078D4]"
-                        />
-                      </div>
-                      <div>
-                        <label className="text-[10px] font-bold uppercase text-[#0078D4] dark:text-brand-400 block mb-1">{t("Designated Contact Email")} *</label>
-                        <input
-                          type="email"
-                          defaultValue={account.contactEmail || primaryContact.email}
-                          onBlur={(e) => {
-                            const newEmail = e.target.value;
-                            updateAccountField(account.id, { contactEmail: newEmail });
-                            if (newEmail.trim()) {
-                              try {
-                                CrmDb.upsertLeadProfile({
-                                  firstName: account.contactName || primaryContact.firstName,
-                                  lastName: account.contactSurname || primaryContact.lastName,
-                                  email: newEmail.trim(),
-                                  company: account.companyName,
-                                  department: account.department || primaryContact.department,
-                                  industry: account.industryTag,
-                                });
-                              } catch (err) {
-                                console.error(err);
-                              }
-                            }
-                          }}
-                          placeholder="email@company.com"
-                          className="w-full p-2 border border-[#0078D4] dark:border-brand-500 rounded bg-white dark:bg-[#252423] text-xs font-mono font-bold text-[#0078D4] dark:text-brand-400 outline-none focus:ring-1 focus:ring-[#0078D4]"
-                        />
-                      </div>
-                      <div>
-                        <label className="text-[10px] font-bold uppercase text-slate-400 block mb-1">{t("Department / Role")}</label>
-                        <input
-                          type="text"
-                          defaultValue={account.department || primaryContact.department}
-                          onBlur={(e) => updateAccountField(account.id, { department: e.target.value })}
-                          placeholder={t("Department")}
-                          className="w-full p-2 border border-slate-300 dark:border-slate-700 rounded bg-white dark:bg-[#252423] text-xs outline-none focus:border-[#0078D4]"
-                        />
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Firma Bilgileri */}
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                    <div>
-                      <label className="text-[10px] font-bold text-slate-400 uppercase block mb-1">{t("Website URL")}</label>
-                      <input
-                        type="text"
-                        defaultValue={account.websiteUrl || ""}
-                        onBlur={(e) => updateAccountField(account.id, { websiteUrl: e.target.value })}
-                        className="w-full p-2 border border-[#EDEBE9] dark:border-[#323130] bg-[#faf9f8] dark:bg-[#252423] rounded outline-none focus:border-[#0078D4]"
-                      />
-                    </div>
-                    <div>
-                      <label className="text-[10px] font-bold text-slate-400 uppercase block mb-1">{t("Industry / Sector")}</label>
-                      <input
-                        type="text"
-                        defaultValue={account.industryTag || ""}
-                        onBlur={(e) => updateAccountField(account.id, { industryTag: e.target.value })}
-                        className="w-full p-2 border border-[#EDEBE9] dark:border-[#323130] bg-[#faf9f8] dark:bg-[#252423] rounded outline-none focus:border-[#0078D4]"
-                      />
-                    </div>
-                    <div>
-                      <label className="text-[10px] font-bold text-slate-400 uppercase block mb-1">{t("Sub-Sector")}</label>
-                      <input
-                        type="text"
-                        defaultValue={account.subIndustry || ""}
-                        onBlur={(e) => updateAccountField(account.id, { subIndustry: e.target.value })}
-                        className="w-full p-2 border border-[#EDEBE9] dark:border-[#323130] bg-[#faf9f8] dark:bg-[#252423] rounded outline-none focus:border-[#0078D4]"
-                      />
-                    </div>
-                    <div>
-                      <label className="text-[10px] font-bold text-slate-400 uppercase block mb-1">{t("City / Address")}</label>
-                      <input
-                        type="text"
-                        defaultValue={account.city || account.locationMain || ""}
-                        onBlur={(e) => updateAccountField(account.id, { city: e.target.value, locationMain: e.target.value })}
-                        className="w-full p-2 border border-[#EDEBE9] dark:border-[#323130] bg-[#faf9f8] dark:bg-[#252423] rounded outline-none focus:border-[#0078D4]"
-                      />
-                    </div>
-                    <div>
-                      <label className="text-[10px] font-bold text-slate-400 uppercase block mb-1">{t("Employee Count (optional)")}</label>
-                      <input
-                        type="text"
-                        defaultValue={account.companySize || account.employeeCountLabel || ""}
-                        onBlur={(e) => updateAccountField(account.id, { companySize: e.target.value, employeeCountLabel: e.target.value })}
-                        className="w-full p-2 border border-[#EDEBE9] dark:border-[#323130] bg-[#faf9f8] dark:bg-[#252423] rounded outline-none focus:border-[#0078D4]"
-                      />
-                    </div>
-                    <div>
-                      <label className="text-[10px] font-bold text-slate-400 uppercase block mb-1">{t("Next Review / Contact Date")}</label>
-                      <input
-                        type="date"
-                        defaultValue={account.nextReviewDate || ""}
-                        onBlur={(e) => updateAccountField(account.id, { nextReviewDate: e.target.value })}
-                        className="w-full p-2 border border-[#EDEBE9] dark:border-[#323130] bg-[#faf9f8] dark:bg-[#252423] rounded outline-none focus:border-[#0078D4]"
-                      />
-                    </div>
-                    <div className="sm:col-span-2">
-                      <label className="text-[10px] font-bold text-slate-400 uppercase block mb-1">{t("Company Analysis Notes")}</label>
-                      <textarea
-                        defaultValue={account.analysisNotes || ""}
-                        onBlur={(e) => updateAccountField(account.id, { analysisNotes: e.target.value })}
-                        className="w-full p-2 border border-[#EDEBE9] dark:border-[#323130] bg-[#faf9f8] dark:bg-[#252423] rounded outline-none h-20 resize-none focus:border-[#0078D4]"
-                      />
-                    </div>
-                  </div>
-                  <button
-                    type="button"
-                    onClick={() => createReviewReminderTask(account)}
-                    className="text-[11px] font-bold text-[#0078D4] hover:underline flex items-center gap-1 cursor-pointer"
-                  >
-                    <Calendar className="w-3.5 h-3.5" />
-                    {t("Create Reminder Task")}
-                  </button>
-
-                  {/* Kontakt Yönetimi */}
-                  <div className="border-t border-[#EDEBE9] dark:border-[#323130] pt-4">
-                    <div className="flex items-center justify-between mb-3">
-                      <label className="text-[10px] font-bold text-slate-400 uppercase">{t("Contact Management")}</label>
-                      <button
-                        type="button"
-                        onClick={() => (showContactFormFor === account.id ? setShowContactFormFor(null) : openContactForm(account.id))}
-                        className="text-[11px] font-bold text-[#0078D4] hover:underline cursor-pointer flex items-center gap-1"
-                      >
-                        <Plus className="w-3 h-3" />
-                        {t("Add Contact")}
-                      </button>
-                    </div>
-
-                    {showContactFormFor === account.id && (
-                      <div className="bg-[#FAF9F8] dark:bg-[#201f1e] rounded-xl p-3 mb-3 grid grid-cols-1 sm:grid-cols-2 gap-2">
-                        <input
-                          type="text"
-                          placeholder={t("Full Name *")}
-                          value={contactDraft.fullName || ""}
-                          onChange={(e) => updateContactDraft(account.id, { fullName: e.target.value })}
-                          className="p-2 border border-[#EDEBE9] dark:border-[#323130] bg-white dark:bg-[#252423] rounded outline-none focus:border-[#0078D4]"
-                        />
-                        <input
-                          type="text"
-                          placeholder={t("Title")}
-                          value={contactDraft.title || ""}
-                          onChange={(e) => updateContactDraft(account.id, { title: e.target.value })}
-                          className="p-2 border border-[#EDEBE9] dark:border-[#323130] bg-white dark:bg-[#252423] rounded outline-none focus:border-[#0078D4]"
-                        />
-                        <input
-                          type="text"
-                          placeholder={t("Department")}
-                          value={contactDraft.department || ""}
-                          onChange={(e) => updateContactDraft(account.id, { department: e.target.value })}
-                          className="p-2 border border-[#EDEBE9] dark:border-[#323130] bg-white dark:bg-[#252423] rounded outline-none focus:border-[#0078D4]"
-                        />
-                        <input
-                          type="text"
-                          placeholder={t("Phone")}
-                          value={contactDraft.phone || ""}
-                          onChange={(e) => updateContactDraft(account.id, { phone: e.target.value })}
-                          className="p-2 border border-[#EDEBE9] dark:border-[#323130] bg-white dark:bg-[#252423] rounded outline-none focus:border-[#0078D4]"
-                        />
-                        <input
-                          type="email"
-                          placeholder={t("Email")}
-                          value={contactDraft.email || ""}
-                          onChange={(e) => updateContactDraft(account.id, { email: e.target.value })}
-                          className="p-2 border border-[#EDEBE9] dark:border-[#323130] bg-white dark:bg-[#252423] rounded outline-none focus:border-[#0078D4]"
-                        />
-                        <input
-                          type="text"
-                          placeholder={t("LinkedIn")}
-                          value={contactDraft.linkedin || ""}
-                          onChange={(e) => updateContactDraft(account.id, { linkedin: e.target.value })}
-                          className="p-2 border border-[#EDEBE9] dark:border-[#323130] bg-white dark:bg-[#252423] rounded outline-none focus:border-[#0078D4]"
-                        />
-                        <input
-                          type="text"
-                          placeholder={t("Source")}
-                          value={contactDraft.source || ""}
-                          onChange={(e) => updateContactDraft(account.id, { source: e.target.value })}
-                          className="p-2 border border-[#EDEBE9] dark:border-[#323130] bg-white dark:bg-[#252423] rounded outline-none focus:border-[#0078D4]"
-                        />
-                        <select
-                          value={contactDraft.status || "Araştırılıyor"}
-                          onChange={(e) => updateContactDraft(account.id, { status: e.target.value as TargetContact["status"] })}
-                          className="p-2 border border-[#EDEBE9] dark:border-[#323130] bg-white dark:bg-[#252423] rounded outline-none"
-                        >
-                          {(["Araştırılıyor", "Bulundu", "Doğrulandı", "İlk Temas", "Görüşme Yapıldı"] as const).map((s) => (
-                            <option key={s} value={s}>
-                              {t(s)}
-                            </option>
-                          ))}
-                        </select>
-                        <div className="sm:col-span-2 flex justify-end">
-                          <button
-                            type="button"
-                            onClick={() => handleAddContact(account.id)}
-                            className="text-xs font-bold bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2 rounded flex items-center gap-1 cursor-pointer"
-                          >
-                            <Check className="w-4 h-4" />
-                            <span>{t("Save Contact")}</span>
-                          </button>
-                        </div>
-                      </div>
-                    )}
-
-                    {pendingLeadPrompt && pendingLeadPrompt.accountId === account.id && (
-                      <div className="bg-blue-50 dark:bg-blue-950/20 border border-blue-200 dark:border-blue-900 rounded-lg p-3 mb-3 flex items-center justify-between gap-3">
-                        <span className="text-[11px] font-semibold text-blue-800 dark:text-blue-300">{t("Create this contact as a lead?")}</span>
-                        <div className="flex items-center gap-2 flex-shrink-0">
-                          <button
-                            type="button"
-                            onClick={() => convertContactToLead(pendingLeadPrompt.accountId, pendingLeadPrompt.contactId)}
-                            className="text-[11px] font-bold bg-[#0078D4] hover:bg-[#106ebe] text-white px-3 py-1.5 rounded cursor-pointer"
-                          >
-                            {t("Yes")}
-                          </button>
-                          <button
-                            type="button"
-                            onClick={() => setPendingLeadPrompt(null)}
-                            className="text-[11px] font-bold bg-white dark:bg-[#252423] border border-[#EDEBE9] dark:border-[#323130] text-slate-600 dark:text-slate-300 px-3 py-1.5 rounded cursor-pointer"
-                          >
-                            {t("No")}
-                          </button>
-                        </div>
-                      </div>
-                    )}
-
-                    <div className="space-y-2">
-                      {(account.contacts || []).map((contact) => (
-                        <div key={contact.id} className="bg-[#FAF9F8] dark:bg-[#201f1e] rounded-lg p-3 flex items-start justify-between gap-3">
-                          <div className="min-w-0">
-                            <div className="flex items-center gap-2 flex-wrap">
-                              <span className="font-bold text-slate-800 dark:text-slate-100">{contact.fullName}</span>
-                              {contact.leadProfileId && (
-                                <span className="text-[9px] font-bold px-1.5 py-0.5 rounded-full bg-emerald-100 text-emerald-700 dark:bg-emerald-950/30 dark:text-emerald-400">
-                                  {t("Lead")} ✓
-                                </span>
-                              )}
-                            </div>
-                            <div className="text-[10px] text-slate-450 mt-0.5">
-                              {[contact.title, contact.department].filter(Boolean).join(" · ") || "—"}
-                            </div>
-                            <div className="text-[10px] text-slate-450 mt-0.5 flex flex-wrap gap-x-3">
-                              {contact.email && <span>{contact.email}</span>}
-                              {contact.phone && <span>{contact.phone}</span>}
-                              {contact.linkedin && <span>{contact.linkedin}</span>}
-                            </div>
-                          </div>
-                          <div className="flex flex-col items-end gap-1.5 flex-shrink-0">
-                            <select
-                              value={contact.status}
-                              onChange={(e) => updateContact(account.id, contact.id, { status: e.target.value as TargetContact["status"] })}
-                              className="text-[10px] p-1.5 border border-[#EDEBE9] dark:border-[#323130] bg-white dark:bg-[#252423] rounded outline-none cursor-pointer"
-                            >
-                              {(["Araştırılıyor", "Bulundu", "Doğrulandı", "İlk Temas", "Görüşme Yapıldı"] as const).map((s) => (
-                                <option key={s} value={s}>
-                                  {t(s)}
-                                </option>
-                              ))}
-                            </select>
-                            <div className="flex items-center gap-2">
-                              {!contact.leadProfileId && (
-                                <button
-                                  type="button"
-                                  onClick={() => convertContactToLead(account.id, contact.id)}
-                                  className="text-[10px] font-bold text-[#0078D4] hover:underline cursor-pointer"
-                                >
-                                  {t("Create Lead")}
-                                </button>
-                              )}
-                              <button
-                                type="button"
-                                onClick={() => deleteContact(account.id, contact.id)}
-                                className="text-slate-400 hover:text-rose-600 cursor-pointer"
-                              >
-                                <Trash2 className="w-3.5 h-3.5" />
-                              </button>
-                            </div>
-                          </div>
-                        </div>
-                      ))}
-                      {(account.contacts || []).length === 0 && (
-                        <p className="text-slate-400 text-[11px]">{t("No contacts added yet.")}</p>
-                      )}
-                    </div>
-                  </div>
-
-                  {/* Footer Save & Complete Action */}
-                  <div className="border-t border-[#EDEBE9] dark:border-[#323130] pt-4 flex items-center justify-between">
-                    <span className="text-[10px] text-slate-400 font-mono">ID: {account.id}</span>
-                    <button
-                      type="button"
-                      onClick={() => {
-                        triggerToast(t("Firma ve müşteri kartı bilgileri başarıyla kaydedildi."), "success");
-                        setExpandedAccountId(null);
-                      }}
-                      className="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold rounded-xl flex items-center gap-1.5 shadow-sm cursor-pointer transition-all"
-                    >
-                      <Check className="w-4 h-4" />
-                      <span>{t("Tamamla & Kaydet")}</span>
-                    </button>
-                  </div>
-                </div>
-              );
-            })()}
+          {/* (expandedAccountId modal diyaloğu tüm sekmelerde çalışacak şekilde bileşen sonuna taşındı) */}
 
           {/* Tüm Hedef Firmalar */}
           <div className="space-y-3">
@@ -2633,7 +2215,7 @@ export default function MarketingHubView({ initialSubTab, onNavigateToTab }: Mar
                             onDragStart={(e) => handleBdCardDragStart(e, account.id)}
                             className="group bg-white dark:bg-[#1b1a19] border border-[#EDEBE9] dark:border-[#323130] rounded-xl p-3 shadow-sm hover:shadow-lg hover:-translate-y-0.5 transition-all duration-200 space-y-2.5 cursor-grab active:cursor-grabbing border-l-4 border-l-[#0078D4]"
                           >
-                            {/* Card Top Header: Drag Handle + Company Name + Active Edit Button */}
+                            {/* Card Top Header: Drag Handle + Company Name + Gray Edit Icon */}
                             <div className="flex items-start justify-between gap-1.5">
                               <div className="flex items-center gap-1.5 min-w-0 flex-1">
                                 <GripVertical className="w-3.5 h-3.5 text-slate-300 group-hover:text-slate-400 flex-shrink-0 cursor-grab" />
@@ -2651,11 +2233,10 @@ export default function MarketingHubView({ initialSubTab, onNavigateToTab }: Mar
                                   e.stopPropagation();
                                   setExpandedAccountId(account.id);
                                 }}
-                                className="px-2 py-1 bg-blue-50 hover:bg-blue-100 dark:bg-blue-950/40 dark:hover:bg-blue-900/60 text-[#0078D4] dark:text-brand-400 text-[10px] font-bold rounded-lg flex items-center gap-1 cursor-pointer transition-colors flex-shrink-0 border border-blue-200/50 dark:border-blue-800/50 shadow-xs"
+                                className="text-slate-400 hover:text-[#0078D4] dark:hover:text-brand-400 cursor-pointer p-1 rounded hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors flex-shrink-0"
                                 title={t("Edit Target Account Details")}
                               >
-                                <Edit className="w-3 h-3" />
-                                <span>{t("Düzenle")}</span>
+                                <Edit className="w-3.5 h-3.5" />
                               </button>
                             </div>
 
@@ -3175,6 +2756,444 @@ export default function MarketingHubView({ initialSubTab, onNavigateToTab }: Mar
           </div>
         </div>
       )}
+      {/* Global Target Company Edit Modal Overlay (Accessible across all sub-tabs including BD Pipeline) */}
+      {expandedAccountId &&
+        (() => {
+          const account = accounts.find((a) => a.id === expandedAccountId);
+          if (!account) return null;
+          const status = getRelationshipStatus(account, companies);
+          const primaryContact = getTargetPrimaryContact(account);
+          const contactDraft = contactDraftByAccount[account.id] || { status: "Araştırılıyor" };
+
+          return (
+            <div className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6 bg-black/60 backdrop-blur-xs overflow-y-auto animate-fade-in">
+              <div className="bg-white dark:bg-[#1b1a19] border border-[#EDEBE9] dark:border-[#323130] rounded-2xl shadow-2xl p-6 space-y-5 text-xs max-w-3xl w-full max-h-[90vh] overflow-y-auto my-auto relative border-t-4 border-t-[#0078D4]">
+                <div className="flex items-start justify-between border-b border-[#EDEBE9] dark:border-[#323130] pb-3">
+                  <div className="space-y-1 flex-1 pr-4">
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <span className="text-[11px] font-mono font-bold text-[#0078D4] dark:text-brand-400 bg-blue-50 dark:bg-blue-950/40 px-2.5 py-0.5 rounded-lg border border-blue-200 dark:border-blue-800 flex items-center gap-1.5">
+                        <Edit className="w-3.5 h-3.5" />
+                        {t("Hedef Firma & Müşteri Kartı Düzenleme")}
+                      </span>
+                      <span
+                        className={`text-[10px] font-bold px-2.5 py-0.5 rounded-full ${
+                          status === "Müşteri"
+                            ? "bg-emerald-100 text-emerald-700 dark:bg-emerald-950/30 dark:text-emerald-400"
+                            : status === "Görüşülüyor"
+                            ? "bg-amber-100 text-amber-700 dark:bg-amber-950/30 dark:text-amber-400"
+                            : "bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-300"
+                        }`}
+                      >
+                        {t(status)}
+                      </span>
+                    </div>
+                    <div className="pt-1">
+                      <label className="text-[10px] font-bold text-slate-400 uppercase block mb-1">{t("Company Name")} *</label>
+                      <input
+                        type="text"
+                        defaultValue={account.companyName || ""}
+                        onBlur={(e) => {
+                          const newName = e.target.value.trim();
+                          if (newName && newName !== account.companyName) {
+                            updateAccountField(account.id, { companyName: newName });
+                          }
+                        }}
+                        className="w-full p-2 border border-[#EDEBE9] dark:border-[#323130] bg-[#faf9f8] dark:bg-[#252423] rounded-xl outline-none focus:border-[#0078D4] font-bold text-sm text-slate-800 dark:text-slate-100"
+                      />
+                    </div>
+                    {account.discoveredFromCompanyName && (
+                      <p className="text-[10px] text-slate-400">
+                        {t("Discovered via")}: {account.discoveredFromCompanyName}
+                      </p>
+                    )}
+                  </div>
+                  <div className="flex items-center gap-2 flex-shrink-0">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        triggerToast(t("Firma ve müşteri kartı bilgileri başarıyla kaydedildi."), "success");
+                        setExpandedAccountId(null);
+                      }}
+                      className="px-3.5 py-2 bg-[#0078D4] hover:bg-[#106ebe] text-white text-xs font-bold rounded-xl flex items-center gap-1.5 shadow-sm cursor-pointer transition-all"
+                    >
+                      <Save className="w-3.5 h-3.5" />
+                      <span>{t("Düzenlemeyi Kaydet")}</span>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => deleteTargetAccount(account.id)}
+                      className="text-slate-400 hover:text-rose-600 cursor-pointer p-1.5 rounded-lg hover:bg-rose-50 dark:hover:bg-rose-950/30"
+                      title={t("Delete Company")}
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setExpandedAccountId(null)}
+                      className="text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 cursor-pointer p-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800"
+                    >
+                      <X className="w-4 h-4" />
+                    </button>
+                  </div>
+                </div>
+
+                {/* Highlights Summary Banner */}
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5 bg-[#FAF9F8] dark:bg-[#201f1e] p-3 rounded-xl border border-[#EDEBE9] dark:border-[#323130]">
+                  <div className="text-center p-1.5 border-r border-slate-200 dark:border-[#323130]">
+                    <span className="text-[9px] uppercase font-bold text-slate-400 font-mono block">{t("Opportunity Score")}</span>
+                    <span className="text-sm font-extrabold text-[#0078D4] dark:text-brand-400 block mt-0.5">% {account.riskScore || 70}</span>
+                  </div>
+                  <div className="text-center p-1.5 border-r border-slate-200 dark:border-[#323130]">
+                    <span className="text-[9px] uppercase font-bold text-slate-400 font-mono block">{t("Company Size")}</span>
+                    <span className="text-xs font-semibold text-slate-700 dark:text-slate-200 block mt-0.5 truncate">{account.companySize || account.employeeCountLabel || t("750+ Employees")}</span>
+                  </div>
+                  <div className="text-center p-1.5 border-r border-slate-200 dark:border-[#323130]">
+                    <span className="text-[9px] uppercase font-bold text-slate-400 font-mono block">{t("Main Location")}</span>
+                    <span className="text-xs font-semibold text-slate-700 dark:text-slate-200 block mt-0.5 truncate">{account.locationMain || account.city || t("Not specified")}</span>
+                  </div>
+                  <div className="text-center p-1.5">
+                    <span className="text-[9px] uppercase font-bold text-slate-400 font-mono block">{t("Lead Segment")}</span>
+                    <span className="text-xs font-bold text-emerald-600 dark:text-emerald-400 block mt-0.5 truncate">{account.leadSegment || "Cold"} ({account.leadStatus || "New"})</span>
+                  </div>
+                </div>
+
+                {/* Primary Target Stakeholder Contact Box (Hedef Hesaplar Eşleşmesi) */}
+                <div className="bg-blue-50/60 dark:bg-blue-950/20 border border-blue-200 dark:border-blue-900/50 rounded-xl p-4 space-y-3">
+                  <h4 className="text-xs font-bold text-slate-800 dark:text-slate-200 uppercase tracking-wider font-mono flex items-center justify-between border-b border-blue-200/60 dark:border-blue-900/60 pb-2">
+                    <span className="flex items-center gap-2">
+                      <Users className="w-4 h-4 text-[#0078D4]" />
+                      {t("Target Stakeholder Contact Details (Primary Contact)")}
+                    </span>
+                    <span className="text-[10px] font-mono text-[#0078D4] dark:text-brand-400 font-bold bg-white dark:bg-black/20 px-2 py-0.5 rounded border border-blue-200 dark:border-blue-800">
+                      {t("Synced with Target Accounts")}
+                    </span>
+                  </h4>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div>
+                      <label className="text-[10px] font-bold uppercase text-slate-400 block mb-1">{t("First Name")}</label>
+                      <input
+                        type="text"
+                        defaultValue={account.contactName || primaryContact.firstName}
+                        onBlur={(e) => updateAccountField(account.id, { contactName: e.target.value })}
+                        placeholder={t("First Name")}
+                        className="w-full p-2 border border-slate-300 dark:border-slate-700 rounded bg-white dark:bg-[#252423] text-xs font-semibold outline-none focus:border-[#0078D4]"
+                      />
+                    </div>
+                    <div>
+                      <label className="text-[10px] font-bold uppercase text-slate-400 block mb-1">{t("Surname")}</label>
+                      <input
+                        type="text"
+                        defaultValue={account.contactSurname || primaryContact.lastName}
+                        onBlur={(e) => updateAccountField(account.id, { contactSurname: e.target.value })}
+                        placeholder={t("Surname")}
+                        className="w-full p-2 border border-slate-300 dark:border-slate-700 rounded bg-white dark:bg-[#252423] text-xs font-semibold outline-none focus:border-[#0078D4]"
+                      />
+                    </div>
+                    <div>
+                      <label className="text-[10px] font-bold uppercase text-[#0078D4] dark:text-brand-400 block mb-1">{t("Designated Contact Email")} *</label>
+                      <input
+                        type="email"
+                        defaultValue={account.contactEmail || primaryContact.email}
+                        onBlur={(e) => {
+                          const newEmail = e.target.value;
+                          updateAccountField(account.id, { contactEmail: newEmail });
+                          if (newEmail.trim()) {
+                            try {
+                              CrmDb.upsertLeadProfile({
+                                firstName: account.contactName || primaryContact.firstName,
+                                lastName: account.contactSurname || primaryContact.lastName,
+                                email: newEmail.trim(),
+                                company: account.companyName,
+                                department: account.department || primaryContact.department,
+                                industry: account.industryTag,
+                              });
+                            } catch (err) {
+                              console.error(err);
+                            }
+                          }
+                        }}
+                        placeholder="email@company.com"
+                        className="w-full p-2 border border-[#0078D4] dark:border-brand-500 rounded bg-white dark:bg-[#252423] text-xs font-mono font-bold text-[#0078D4] dark:text-brand-400 outline-none focus:ring-1 focus:ring-[#0078D4]"
+                      />
+                    </div>
+                    <div>
+                      <label className="text-[10px] font-bold uppercase text-slate-400 block mb-1">{t("Department / Role")}</label>
+                      <input
+                        type="text"
+                        defaultValue={account.department || primaryContact.department}
+                        onBlur={(e) => updateAccountField(account.id, { department: e.target.value })}
+                        placeholder={t("Department")}
+                        className="w-full p-2 border border-slate-300 dark:border-slate-700 rounded bg-white dark:bg-[#252423] text-xs outline-none focus:border-[#0078D4]"
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                {/* Firma Bilgileri */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <div>
+                    <label className="text-[10px] font-bold text-slate-400 uppercase block mb-1">{t("Website URL")}</label>
+                    <input
+                      type="text"
+                      defaultValue={account.websiteUrl || ""}
+                      onBlur={(e) => updateAccountField(account.id, { websiteUrl: e.target.value })}
+                      className="w-full p-2 border border-[#EDEBE9] dark:border-[#323130] bg-[#faf9f8] dark:bg-[#252423] rounded outline-none focus:border-[#0078D4]"
+                    />
+                  </div>
+                  <div>
+                    <label className="text-[10px] font-bold text-slate-400 uppercase block mb-1">{t("Industry / Sector")}</label>
+                    <input
+                      type="text"
+                      defaultValue={account.industryTag || ""}
+                      onBlur={(e) => updateAccountField(account.id, { industryTag: e.target.value })}
+                      className="w-full p-2 border border-[#EDEBE9] dark:border-[#323130] bg-[#faf9f8] dark:bg-[#252423] rounded outline-none focus:border-[#0078D4]"
+                    />
+                  </div>
+                  <div>
+                    <label className="text-[10px] font-bold text-slate-400 uppercase block mb-1">{t("Sub-Sector")}</label>
+                    <input
+                      type="text"
+                      defaultValue={account.subIndustry || ""}
+                      onBlur={(e) => updateAccountField(account.id, { subIndustry: e.target.value })}
+                      className="w-full p-2 border border-[#EDEBE9] dark:border-[#323130] bg-[#faf9f8] dark:bg-[#252423] rounded outline-none focus:border-[#0078D4]"
+                    />
+                  </div>
+                  <div>
+                    <label className="text-[10px] font-bold text-slate-400 uppercase block mb-1">{t("City / Address")}</label>
+                    <input
+                      type="text"
+                      defaultValue={account.city || account.locationMain || ""}
+                      onBlur={(e) => updateAccountField(account.id, { city: e.target.value, locationMain: e.target.value })}
+                      className="w-full p-2 border border-[#EDEBE9] dark:border-[#323130] bg-[#faf9f8] dark:bg-[#252423] rounded outline-none focus:border-[#0078D4]"
+                    />
+                  </div>
+                  <div>
+                    <label className="text-[10px] font-bold text-slate-400 uppercase block mb-1">{t("Employee Count (optional)")}</label>
+                    <input
+                      type="text"
+                      defaultValue={account.companySize || account.employeeCountLabel || ""}
+                      onBlur={(e) => updateAccountField(account.id, { companySize: e.target.value, employeeCountLabel: e.target.value })}
+                      className="w-full p-2 border border-[#EDEBE9] dark:border-[#323130] bg-[#faf9f8] dark:bg-[#252423] rounded outline-none focus:border-[#0078D4]"
+                    />
+                  </div>
+                  <div>
+                    <label className="text-[10px] font-bold text-slate-400 uppercase block mb-1">{t("Next Review / Contact Date")}</label>
+                    <input
+                      type="date"
+                      defaultValue={account.nextReviewDate || ""}
+                      onBlur={(e) => updateAccountField(account.id, { nextReviewDate: e.target.value })}
+                      className="w-full p-2 border border-[#EDEBE9] dark:border-[#323130] bg-[#faf9f8] dark:bg-[#252423] rounded outline-none focus:border-[#0078D4]"
+                    />
+                  </div>
+                  <div className="sm:col-span-2">
+                    <label className="text-[10px] font-bold text-slate-400 uppercase block mb-1">{t("Company Analysis Notes")}</label>
+                    <textarea
+                      defaultValue={account.analysisNotes || ""}
+                      onBlur={(e) => updateAccountField(account.id, { analysisNotes: e.target.value })}
+                      className="w-full p-2 border border-[#EDEBE9] dark:border-[#323130] bg-[#faf9f8] dark:bg-[#252423] rounded outline-none h-20 resize-none focus:border-[#0078D4]"
+                    />
+                  </div>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => createReviewReminderTask(account)}
+                  className="text-[11px] font-bold text-[#0078D4] hover:underline flex items-center gap-1 cursor-pointer"
+                >
+                  <Calendar className="w-3.5 h-3.5" />
+                  {t("Create Reminder Task")}
+                </button>
+
+                {/* Kontakt Yönetimi */}
+                <div className="border-t border-[#EDEBE9] dark:border-[#323130] pt-4">
+                  <div className="flex items-center justify-between mb-3">
+                    <label className="text-[10px] font-bold text-slate-400 uppercase">{t("Contact Management")}</label>
+                    <button
+                      type="button"
+                      onClick={() => (showContactFormFor === account.id ? setShowContactFormFor(null) : openContactForm(account.id))}
+                      className="text-[11px] font-bold text-[#0078D4] hover:underline cursor-pointer flex items-center gap-1"
+                    >
+                      <Plus className="w-3 h-3" />
+                      {t("Add Contact")}
+                    </button>
+                  </div>
+
+                  {showContactFormFor === account.id && (
+                    <div className="bg-[#FAF9F8] dark:bg-[#201f1e] rounded-xl p-3 mb-3 grid grid-cols-1 sm:grid-cols-2 gap-2">
+                      <input
+                        type="text"
+                        placeholder={t("Full Name *")}
+                        value={contactDraft.fullName || ""}
+                        onChange={(e) => updateContactDraft(account.id, { fullName: e.target.value })}
+                        className="p-2 border border-[#EDEBE9] dark:border-[#323130] bg-white dark:bg-[#252423] rounded outline-none focus:border-[#0078D4]"
+                      />
+                      <input
+                        type="text"
+                        placeholder={t("Title")}
+                        value={contactDraft.title || ""}
+                        onChange={(e) => updateContactDraft(account.id, { title: e.target.value })}
+                        className="p-2 border border-[#EDEBE9] dark:border-[#323130] bg-white dark:bg-[#252423] rounded outline-none focus:border-[#0078D4]"
+                      />
+                      <input
+                        type="text"
+                        placeholder={t("Department")}
+                        value={contactDraft.department || ""}
+                        onChange={(e) => updateContactDraft(account.id, { department: e.target.value })}
+                        className="p-2 border border-[#EDEBE9] dark:border-[#323130] bg-white dark:bg-[#252423] rounded outline-none focus:border-[#0078D4]"
+                      />
+                      <input
+                        type="text"
+                        placeholder={t("Phone")}
+                        value={contactDraft.phone || ""}
+                        onChange={(e) => updateContactDraft(account.id, { phone: e.target.value })}
+                        className="p-2 border border-[#EDEBE9] dark:border-[#323130] bg-white dark:bg-[#252423] rounded outline-none focus:border-[#0078D4]"
+                      />
+                      <input
+                        type="email"
+                        placeholder={t("Email")}
+                        value={contactDraft.email || ""}
+                        onChange={(e) => updateContactDraft(account.id, { email: e.target.value })}
+                        className="p-2 border border-[#EDEBE9] dark:border-[#323130] bg-white dark:bg-[#252423] rounded outline-none focus:border-[#0078D4]"
+                      />
+                      <input
+                        type="text"
+                        placeholder={t("LinkedIn")}
+                        value={contactDraft.linkedin || ""}
+                        onChange={(e) => updateContactDraft(account.id, { linkedin: e.target.value })}
+                        className="p-2 border border-[#EDEBE9] dark:border-[#323130] bg-white dark:bg-[#252423] rounded outline-none focus:border-[#0078D4]"
+                      />
+                      <input
+                        type="text"
+                        placeholder={t("Source")}
+                        value={contactDraft.source || ""}
+                        onChange={(e) => updateContactDraft(account.id, { source: e.target.value })}
+                        className="p-2 border border-[#EDEBE9] dark:border-[#323130] bg-white dark:bg-[#252423] rounded outline-none focus:border-[#0078D4]"
+                      />
+                      <select
+                        value={contactDraft.status || "Araştırılıyor"}
+                        onChange={(e) => updateContactDraft(account.id, { status: e.target.value as TargetContact["status"] })}
+                        className="p-2 border border-[#EDEBE9] dark:border-[#323130] bg-white dark:bg-[#252423] rounded outline-none"
+                      >
+                        {(["Araştırılıyor", "Bulundu", "Doğrulandı", "İlk Temas", "Görüşme Yapıldı"] as const).map((s) => (
+                          <option key={s} value={s}>
+                            {t(s)}
+                          </option>
+                        ))}
+                      </select>
+                      <div className="sm:col-span-2 flex justify-end">
+                        <button
+                          type="button"
+                          onClick={() => handleAddContact(account.id)}
+                          className="text-xs font-bold bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2 rounded flex items-center gap-1 cursor-pointer"
+                        >
+                          <Check className="w-4 h-4" />
+                          <span>{t("Save Contact")}</span>
+                        </button>
+                      </div>
+                    </div>
+                  )}
+
+                  {pendingLeadPrompt && pendingLeadPrompt.accountId === account.id && (
+                    <div className="bg-blue-50 dark:bg-blue-950/20 border border-blue-200 dark:border-blue-900 rounded-lg p-3 mb-3 flex items-center justify-between gap-3">
+                      <span className="text-[11px] font-semibold text-blue-800 dark:text-blue-300">{t("Create this contact as a lead?")}</span>
+                      <div className="flex items-center gap-2 flex-shrink-0">
+                        <button
+                          type="button"
+                          onClick={() => convertContactToLead(pendingLeadPrompt.accountId, pendingLeadPrompt.contactId)}
+                          className="text-[11px] font-bold bg-[#0078D4] hover:bg-[#106ebe] text-white px-3 py-1.5 rounded cursor-pointer"
+                        >
+                          {t("Yes")}
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => setPendingLeadPrompt(null)}
+                          className="text-[11px] font-bold bg-white dark:bg-[#252423] border border-[#EDEBE9] dark:border-[#323130] text-slate-600 dark:text-slate-300 px-3 py-1.5 rounded cursor-pointer"
+                        >
+                          {t("No")}
+                        </button>
+                      </div>
+                    </div>
+                  )}
+
+                  <div className="space-y-2">
+                    {(account.contacts || []).map((contact) => (
+                      <div key={contact.id} className="bg-[#FAF9F8] dark:bg-[#201f1e] rounded-lg p-3 flex items-start justify-between gap-3">
+                        <div className="min-w-0">
+                          <div className="flex items-center gap-2 flex-wrap">
+                            <span className="font-bold text-slate-800 dark:text-slate-100">{contact.fullName}</span>
+                            {contact.leadProfileId && (
+                              <span className="text-[9px] font-bold px-1.5 py-0.5 rounded-full bg-emerald-100 text-emerald-700 dark:bg-emerald-950/30 dark:text-emerald-400">
+                                {t("Lead")} ✓
+                              </span>
+                            )}
+                          </div>
+                          <div className="text-[10px] text-slate-450 mt-0.5">
+                            {[contact.title, contact.department].filter(Boolean).join(" · ") || "—"}
+                          </div>
+                          <div className="text-[10px] text-slate-450 mt-0.5 flex flex-wrap gap-x-3">
+                            {contact.email && <span>{contact.email}</span>}
+                            {contact.phone && <span>{contact.phone}</span>}
+                            {contact.linkedin && <span>{contact.linkedin}</span>}
+                          </div>
+                        </div>
+                        <div className="flex flex-col items-end gap-1.5 flex-shrink-0">
+                          <select
+                            value={contact.status}
+                            onChange={(e) => updateContact(account.id, contact.id, { status: e.target.value as TargetContact["status"] })}
+                            className="text-[10px] p-1.5 border border-[#EDEBE9] dark:border-[#323130] bg-white dark:bg-[#252423] rounded outline-none cursor-pointer"
+                          >
+                            {(["Araştırılıyor", "Bulundu", "Doğrulandı", "İlk Temas", "Görüşme Yapıldı"] as const).map((s) => (
+                              <option key={s} value={s}>
+                                {t(s)}
+                              </option>
+                            ))}
+                          </select>
+                          <div className="flex items-center gap-2">
+                            {!contact.leadProfileId && (
+                              <button
+                                type="button"
+                                onClick={() => convertContactToLead(account.id, contact.id)}
+                                className="text-[10px] font-bold text-[#0078D4] hover:underline cursor-pointer"
+                              >
+                                {t("Create Lead")}
+                              </button>
+                            )}
+                            <button
+                              type="button"
+                              onClick={() => deleteContact(account.id, contact.id)}
+                              className="text-slate-400 hover:text-rose-600 cursor-pointer"
+                            >
+                              <Trash2 className="w-3.5 h-3.5" />
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                    {(account.contacts || []).length === 0 && (
+                      <p className="text-slate-400 text-[11px]">{t("No contacts added yet.")}</p>
+                    )}
+                  </div>
+                </div>
+
+                {/* Footer Save & Complete Action */}
+                <div className="border-t border-[#EDEBE9] dark:border-[#323130] pt-4 flex items-center justify-between">
+                  <span className="text-[10px] text-slate-400 font-mono">ID: {account.id}</span>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      triggerToast(t("Firma ve müşteri kartı bilgileri başarıyla kaydedildi."), "success");
+                      setExpandedAccountId(null);
+                    }}
+                    className="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold rounded-xl flex items-center gap-1.5 shadow-sm cursor-pointer transition-all"
+                  >
+                    <Check className="w-4 h-4" />
+                    <span>{t("Tamamla & Kaydet")}</span>
+                  </button>
+                </div>
+              </div>
+            </div>
+          );
+        })()}
     </div>
   );
 }
