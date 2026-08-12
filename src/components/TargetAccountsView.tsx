@@ -98,8 +98,10 @@ export default function TargetAccountsView({
   const [editingAccountId, setEditingAccountId] = useState<string | null>(null);
   const [editForm, setEditForm] = useState<TargetAccount | null>(null);
 
-  // Selected details drawer sidebar
+  // Selected details drawer sidebar & drawer inline edit state
   const [selectedAccount, setSelectedAccount] = useState<TargetAccount | null>(null);
+  const [isDrawerEditing, setIsDrawerEditing] = useState(false);
+  const [drawerEditForm, setDrawerEditForm] = useState<TargetAccount | null>(null);
 
   // Wide View layout state
   const [isWide, setIsWide] = useState(false);
@@ -222,7 +224,11 @@ export default function TargetAccountsView({
   // Inline action editing
   const startEditingAccount = (account: TargetAccount) => {
     setEditingAccountId(account.id);
-    setEditForm({ ...account });
+    const fallbackEmail = `opex@${account.companyName.toLowerCase().replace(/[^a-z0-9]/g, "")}.com`;
+    setEditForm({ 
+      ...account, 
+      contactEmail: account.contactEmail || fallbackEmail 
+    });
   };
 
   const saveEditedAccount = () => {
@@ -255,6 +261,53 @@ export default function TargetAccountsView({
 
     setEditingAccountId(null);
     setEditForm(null);
+    triggerToast(t("Target account details updated successfully."), "success");
+  };
+
+  const startDrawerEditing = () => {
+    if (!selectedAccount) return;
+    const fallbackEmail = `opex@${selectedAccount.companyName.toLowerCase().replace(/[^a-z0-9]/g, "")}.com`;
+    setDrawerEditForm({
+      ...selectedAccount,
+      contactEmail: selectedAccount.contactEmail || fallbackEmail,
+    });
+    setIsDrawerEditing(true);
+  };
+
+  const cancelDrawerEditing = () => {
+    setIsDrawerEditing(false);
+    setDrawerEditForm(null);
+  };
+
+  const saveDrawerEditing = () => {
+    if (!drawerEditForm) return;
+    if (!drawerEditForm.companyName.trim()) {
+      triggerToast(t("Company Name is a validation prerequisite."), "error");
+      return;
+    }
+
+    const updated = accounts.map(a => a.id === drawerEditForm.id ? drawerEditForm : a);
+    updateAccountsAndPersist(updated);
+    setSelectedAccount(drawerEditForm);
+
+    const autoFallbackEmail = `opex@${drawerEditForm.companyName.toLowerCase().replace(/[^a-z0-9]/g, "")}.com`;
+    if (drawerEditForm.contactEmail && drawerEditForm.contactEmail.trim() && drawerEditForm.contactEmail.trim() !== autoFallbackEmail) {
+      try {
+        CrmDb.upsertLeadProfile({
+          firstName: drawerEditForm.contactName,
+          lastName: drawerEditForm.contactSurname,
+          email: drawerEditForm.contactEmail,
+          company: drawerEditForm.companyName,
+          department: drawerEditForm.department,
+          industry: drawerEditForm.industryTag,
+        });
+      } catch (err) {
+        console.error("Auto sync to Lead database failed:", err);
+      }
+    }
+
+    setIsDrawerEditing(false);
+    setDrawerEditForm(null);
     triggerToast(t("Target account details updated successfully."), "success");
   };
 
@@ -1052,6 +1105,7 @@ export default function TargetAccountsView({
                 <th className="p-3">{t("Industry")}</th>
                 <th className="p-3">{t("Contact Name")}</th>
                 <th className="p-3">{t("Contact Surname")}</th>
+                <th className="p-3">{t("Contact Email")}</th>
                 <th className="p-3">{t("Department")}</th>
                 <th className="p-3">{t("Address")}</th>
                 <th className="p-3">{t("Lead Status")}</th>
@@ -1174,6 +1228,23 @@ export default function TargetAccountsView({
                         )}
                       </td>
 
+                      {/* CONTACT EMAIL COLUMN */}
+                      <td className="p-3 text-slate-700 dark:text-slate-200">
+                        {isEditing && editForm ? (
+                          <input
+                            type="email"
+                            value={editForm.contactEmail || ""}
+                            onChange={(e) => setEditForm({ ...editForm, contactEmail: e.target.value })}
+                            placeholder="email@company.com"
+                            className="p-1 text-xs border border-[#0078D4] dark:border-brand-500 rounded bg-white dark:bg-[#252423] outline-none min-w-[130px]"
+                          />
+                        ) : (
+                          <span className="font-mono text-[11px] text-[#0078D4] dark:text-brand-400 font-semibold truncate block max-w-[140px]" title={contactEmail}>
+                            {contactEmail}
+                          </span>
+                        )}
+                      </td>
+
                       {/* DEPARTMENT */}
                       <td className="p-3 text-slate-600 dark:text-slate-300">
                         {isEditing && editForm ? (
@@ -1184,10 +1255,7 @@ export default function TargetAccountsView({
                             className="p-1 text-xs border border-slate-300 rounded bg-white dark:bg-[#252423]"
                           />
                         ) : (
-                          <div className="space-y-0.5 max-w-[120px] truncate">
-                            <span className="italic truncate block">{deptStr}</span>
-                            <span className="text-[10px] block opacity-70 truncate" title={contactEmail}>{contactEmail}</span>
-                          </div>
+                          <span className="italic truncate block max-w-[120px]" title={deptStr}>{deptStr}</span>
                         )}
                       </td>
 
@@ -1368,7 +1436,7 @@ export default function TargetAccountsView({
                 })
               ) : (
                 <tr>
-                  <td colSpan={12} className="p-10 text-center text-slate-400 dark:text-slate-500">
+                  <td colSpan={13} className="p-10 text-center text-slate-400 dark:text-slate-500">
                     <Database className="w-8 h-8 mx-auto opacity-30 mb-2 animate-pulse-subtle" />
                     <span className="text-xs">{t("No matching target company matches selected filters.")}</span>
                   </td>
@@ -1426,7 +1494,7 @@ export default function TargetAccountsView({
 
       {/* Drawer / Detail View Modal Sidebar */}
       {selectedAccount && (
-        <div className="fixed inset-0 bg-black/60 backdrop-blur-xs z-50 flex justify-end animate-fade-in" onClick={() => setSelectedAccount(null)} role="dialog" aria-modal="true">
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-xs z-50 flex justify-end animate-fade-in" onClick={() => { setSelectedAccount(null); setIsDrawerEditing(false); setDrawerEditForm(null); }} role="dialog" aria-modal="true">
           <div 
             className="w-full max-w-2xl bg-white dark:bg-[#1b1a19] h-full shadow-2xl flex flex-col overflow-hidden border-l border-[#EDEBE9] dark:border-[#323130]"
             onClick={(e) => e.stopPropagation()}
@@ -1439,7 +1507,7 @@ export default function TargetAccountsView({
                 </div>
                 <div>
                   <h3 className="text-sm font-extrabold text-slate-800 dark:text-slate-100 font-display">
-                    {selectedAccount.companyName.toUpperCase()} - {t("DEEP RESEARCH & DOSSIER")}
+                    {selectedAccount.companyName.toUpperCase()} - {isDrawerEditing ? t("MÜŞTERİ BİLGİLERİNİ DÜZENLE") : t("DEEP RESEARCH & DOSSIER")}
                   </h3>
                   <p className="text-[10px] text-slate-400 font-sans mt-0.5 flex items-center gap-3">
                     <span>{t("Source:")} <b className="text-[#0078D4] dark:text-brand-400">{selectedAccount.analysisSource || t("AI Integration")}</b></span>
@@ -1449,167 +1517,437 @@ export default function TargetAccountsView({
                 </div>
               </div>
 
-              <button
-                type="button"
-                onClick={() => setSelectedAccount(null)}
-                className="p-1.5 hover:bg-slate-100 dark:hover:bg-black/20 rounded-full text-slate-400 hover:text-slate-700 dark:hover:text-white transition-colors cursor-pointer"
-                aria-label={t("Close")}
-              >
-                <X className="w-5 h-5" />
-              </button>
+              <div className="flex items-center gap-2">
+                {!isDrawerEditing ? (
+                  <button
+                    type="button"
+                    onClick={startDrawerEditing}
+                    className="flex items-center gap-1.5 px-3 py-1.5 bg-[#0078D4]/10 hover:bg-[#0078D4]/20 text-[#0078D4] dark:text-brand-300 border border-[#0078D4]/30 rounded-lg text-xs font-bold transition-all cursor-pointer"
+                    title={t("Edit Customer Info")}
+                  >
+                    <Edit className="w-3.5 h-3.5" />
+                    <span>{t("Edit Customer Info")}</span>
+                  </button>
+                ) : (
+                  <button
+                    type="button"
+                    onClick={cancelDrawerEditing}
+                    className="flex items-center gap-1 px-2.5 py-1.5 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 rounded-lg text-xs font-bold transition-all cursor-pointer"
+                  >
+                    <X className="w-3.5 h-3.5" />
+                    <span>{t("Cancel")}</span>
+                  </button>
+                )}
+
+                <button
+                  type="button"
+                  onClick={() => { setSelectedAccount(null); setIsDrawerEditing(false); setDrawerEditForm(null); }}
+                  className="p-1.5 hover:bg-slate-100 dark:hover:bg-black/20 rounded-full text-slate-400 hover:text-slate-700 dark:hover:text-white transition-colors cursor-pointer ml-1"
+                  aria-label={t("Close")}
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
             </div>
 
             {/* Modal Body scrollable area */}
             <div className="flex-1 overflow-y-auto px-6 py-5 space-y-5 font-sans">
               
-              {/* Stats highlights banner */}
-              <div className="grid grid-cols-3 gap-2.5 bg-[#FAF9F8] dark:bg-[#201f1e] p-3 rounded-xl border border-[#EDEBE9] dark:border-[#323130]">
-                <div className="text-center p-1.5 border-r border-slate-200 dark:border-[#323130]">
-                  <span className="text-[9px] uppercase font-bold text-slate-400 font-mono block">{t("Opportunity Score")}</span>
-                  <span className="text-sm font-extrabold text-[#0078D4] dark:text-brand-400 block mt-0.5">% {selectedAccount.riskScore || 75}</span>
-                </div>
-                <div className="text-center p-1.5 border-r border-slate-200 dark:border-[#323130]">
-                  <span className="text-[9px] uppercase font-bold text-slate-400 font-mono block">{t("Company Size")}</span>
-                  <span className="text-xs font-semibold text-slate-700 dark:text-slate-200 block mt-0.5 truncate">{selectedAccount.companySize || t("750+ Employees")}</span>
-                </div>
-                <div className="text-center p-1.5">
-                  <span className="text-[9px] uppercase font-bold text-slate-400 font-mono block">{t("Main Location")}</span>
-                  <span className="text-xs font-semibold text-slate-700 dark:text-slate-200 block mt-0.5 truncate">{selectedAccount.locationMain || t("Not specified")}</span>
-                </div>
-              </div>
+              {isDrawerEditing && drawerEditForm ? (
+                /* EDIT FORM IN DRAWER MODE */
+                <div className="space-y-4 text-xs animate-fade-in">
+                  
+                  {/* Company & Industry info */}
+                  <div className="bg-[#FAF9F8] dark:bg-black/10 p-4 rounded-xl border border-[#EDEBE9] dark:border-[#323130] space-y-3">
+                    <h4 className="text-xs font-bold text-slate-800 dark:text-slate-200 uppercase tracking-wider font-mono flex items-center gap-2 border-b border-slate-200 dark:border-slate-800 pb-2">
+                      <Building className="w-4 h-4 text-[#0078D4]" />
+                      {t("Company & Sector Information")}
+                    </h4>
+                    
+                    <div className="grid grid-cols-2 gap-3">
+                      <div>
+                        <label className="text-[10px] font-bold uppercase text-slate-400 block mb-1">{t("Company Name")} *</label>
+                        <input
+                          type="text"
+                          value={drawerEditForm.companyName}
+                          onChange={(e) => setDrawerEditForm({ ...drawerEditForm, companyName: e.target.value })}
+                          className="w-full p-2 border border-slate-300 dark:border-slate-700 rounded bg-white dark:bg-[#252423] text-xs font-semibold outline-none focus:border-[#0078D4]"
+                        />
+                      </div>
 
-              {/* Website links row */}
-              <div className="p-3 bg-blue-500/5 rounded-xl border border-blue-500/10 text-xs flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <Building className="w-4 h-4 text-[#0078D4] shrink-0" />
-                  <span className="font-bold text-slate-700 dark:text-slate-300">{t("Website URL:")}</span>
-                  <a 
-                    href={selectedAccount.websiteUrl} 
-                    target="_blank" 
-                    referrerPolicy="no-referrer"
-                    className="text-[#0078D4] dark:text-brand-400 font-bold hover:underline"
-                  >
-                    {selectedAccount.websiteUrl}
-                  </a>
-                </div>
-                <span className="font-mono text-[9px] text-slate-400 bg-white dark:bg-black/10 px-2 py-0.5 border border-[#EDEBE9] dark:border-[#323130] rounded-full">
-                  {t("Corporate Portal")}
-                </span>
-              </div>
+                      <div>
+                        <label className="text-[10px] font-bold uppercase text-slate-400 block mb-1">{t("Website URL")}</label>
+                        <input
+                          type="text"
+                          value={drawerEditForm.websiteUrl}
+                          onChange={(e) => setDrawerEditForm({ ...drawerEditForm, websiteUrl: e.target.value })}
+                          className="w-full p-2 border border-slate-300 dark:border-slate-700 rounded bg-white dark:bg-[#252423] text-xs outline-none focus:border-[#0078D4]"
+                        />
+                      </div>
 
-              {/* Contact Information Block */}
-              <div className="space-y-2">
-                <h4 className="text-xs font-bold text-slate-800 dark:text-slate-200 uppercase tracking-wider font-mono flex items-center gap-2 border-b border-slate-100 dark:border-slate-800 pb-1.5">
-                  <Users className="w-4 h-4 text-emerald-500" />
-                  {t("Target Stakeholder Contact Details")}
-                </h4>
-                <div className="bg-[#FAF9F8] dark:bg-black/10 p-4 rounded-xl border border-[#EDEBE9] dark:border-[#323130] text-xs space-y-2 font-sans">
-                  <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <span className="text-[10px] uppercase font-bold tracking-brand text-slate-400 block">{t("First Name")}</span>
-                      <span className="font-semibold text-slate-700 dark:text-slate-200">{selectedAccount.contactName || t("Quality / Operations")}</span>
-                    </div>
-                    <div>
-                      <span className="text-[10px] uppercase font-bold tracking-brand text-slate-400 block">{t("Surname")}</span>
-                      <span className="font-semibold text-slate-700 dark:text-slate-200">{selectedAccount.contactSurname || t("Director")}</span>
-                    </div>
-                    <div>
-                      <span className="text-[10px] uppercase font-bold tracking-brand text-slate-400 block">{t("Designated Email")}</span>
-                      <span className="font-mono text-[#0078D4] dark:text-brand-400 font-bold">{selectedAccount.contactEmail || t("N/A")}</span>
-                    </div>
-                    <div>
-                      <span className="text-[10px] uppercase font-bold tracking-brand text-slate-400 block">{t("Department / Role")}</span>
-                      <span className="font-medium text-slate-750 dark:text-slate-300">{selectedAccount.department || t("Operational Excellence")}</span>
+                      <div>
+                        <label className="text-[10px] font-bold uppercase text-slate-400 block mb-1">{t("Industry Tag")}</label>
+                        <input
+                          type="text"
+                          value={drawerEditForm.industryTag}
+                          onChange={(e) => setDrawerEditForm({ ...drawerEditForm, industryTag: e.target.value })}
+                          className="w-full p-2 border border-slate-300 dark:border-slate-700 rounded bg-white dark:bg-[#252423] text-xs outline-none focus:border-[#0078D4]"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="text-[10px] font-bold uppercase text-slate-400 block mb-1">{t("Company Size")}</label>
+                        <input
+                          type="text"
+                          value={drawerEditForm.companySize}
+                          onChange={(e) => setDrawerEditForm({ ...drawerEditForm, companySize: e.target.value })}
+                          className="w-full p-2 border border-slate-300 dark:border-slate-700 rounded bg-white dark:bg-[#252423] text-xs outline-none focus:border-[#0078D4]"
+                        />
+                      </div>
+
+                      <div className="col-span-2">
+                        <label className="text-[10px] font-bold uppercase text-slate-400 block mb-1">{t("Main Address / Location")}</label>
+                        <input
+                          type="text"
+                          value={drawerEditForm.locationMain}
+                          onChange={(e) => setDrawerEditForm({ ...drawerEditForm, locationMain: e.target.value })}
+                          className="w-full p-2 border border-slate-300 dark:border-slate-700 rounded bg-white dark:bg-[#252423] text-xs outline-none focus:border-[#0078D4]"
+                        />
+                      </div>
                     </div>
                   </div>
-                </div>
-              </div>
 
-              {/* Kalite Riskleri ve Lean Fırsatları Details Section */}
-              <div className="space-y-2">
-                <h4 className="text-xs font-bold text-slate-800 dark:text-slate-200 uppercase tracking-wider font-mono flex items-center gap-2 border-b border-slate-100 dark:border-slate-800 pb-1.5">
-                  <Layers className="w-4 h-4 text-amber-500" />
-                  {t("Quality Risks & Lean Opportunities (AI Analysis)")}
-                </h4>
-                <div className="bg-[#FAF9F8] dark:bg-black/10 p-4 rounded-xl border border-[#EDEBE9] dark:border-[#323130] text-xs leading-relaxed text-slate-700 dark:text-slate-300 whitespace-pre-wrap font-sans">
-                  {selectedAccount.aiAnalysisSummary}
-                </div>
-              </div>
+                  {/* Contact Info Editing */}
+                  <div className="bg-[#FAF9F8] dark:bg-black/10 p-4 rounded-xl border border-[#EDEBE9] dark:border-[#323130] space-y-3">
+                    <h4 className="text-xs font-bold text-slate-800 dark:text-slate-200 uppercase tracking-wider font-mono flex items-center gap-2 border-b border-slate-200 dark:border-slate-800 pb-2">
+                      <Users className="w-4 h-4 text-emerald-500" />
+                      {t("Target Stakeholder Contact Details")}
+                    </h4>
 
-              {/* Üretilen E-posta Taslakları outreach template */}
-              <div className="space-y-2">
-                <h4 className="text-xs font-bold text-slate-800 dark:text-slate-200 uppercase tracking-wider font-mono flex items-center gap-2 border-b border-slate-100 dark:border-slate-800 pb-1.5">
-                  <Mail className="w-4 h-4 text-blue-500" />
-                  {t("Pre-compiled Outreach Template (Outbox Copy)")}
-                </h4>
-                <div className="bg-[#FAF9F8] dark:bg-black/10 p-4 rounded-xl border border-[#EDEBE9] dark:border-[#323130] text-xs leading-relaxed text-slate-700 dark:text-slate-300 whitespace-pre-wrap font-mono select-all relative">
-                  <p className="font-medium text-slate-400 text-[10px] uppercase tracking-wider select-none mb-2 pb-1 border-b border-dashed border-slate-200 dark:border-slate-800">
-                    {t("Outreach Campaign Template")}
-                  </p>
-                  {selectedAccount.draftTemplates}
-                </div>
-              </div>
+                    <div className="grid grid-cols-2 gap-3">
+                      <div>
+                        <label className="text-[10px] font-bold uppercase text-slate-400 block mb-1">{t("Contact Name")}</label>
+                        <input
+                          type="text"
+                          value={drawerEditForm.contactName || ""}
+                          onChange={(e) => setDrawerEditForm({ ...drawerEditForm, contactName: e.target.value })}
+                          className="w-full p-2 border border-slate-300 dark:border-slate-700 rounded bg-white dark:bg-[#252423] text-xs font-semibold outline-none focus:border-[#0078D4]"
+                        />
+                      </div>
 
-              {/* Raw Groundings output */}
-              {selectedAccount.rawOutput && (
-                <div className="space-y-2">
-                  <h4 className="text-xs font-bold text-slate-800 dark:text-slate-200 uppercase tracking-wider font-mono flex items-center gap-2 border-b border-slate-100 dark:border-slate-800 pb-1.5">
-                    <FileText className="w-4 h-4 text-emerald-500" />
-                    {t("Cyber Search Grounding & Raw Output")}
-                  </h4>
-                  <div className="bg-slate-50 dark:bg-black/30 p-4 rounded-xl border border-slate-200 dark:border-slate-800 text-[11px] leading-relaxed text-slate-500 dark:text-slate-400 whitespace-pre-line font-mono max-h-[300px] overflow-y-auto">
-                    {selectedAccount.rawOutput}
+                      <div>
+                        <label className="text-[10px] font-bold uppercase text-slate-400 block mb-1">{t("Contact Surname")}</label>
+                        <input
+                          type="text"
+                          value={drawerEditForm.contactSurname || ""}
+                          onChange={(e) => setDrawerEditForm({ ...drawerEditForm, contactSurname: e.target.value })}
+                          className="w-full p-2 border border-slate-300 dark:border-slate-700 rounded bg-white dark:bg-[#252423] text-xs outline-none focus:border-[#0078D4]"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="text-[10px] font-bold uppercase text-[#0078D4] dark:text-brand-400 block mb-1">{t("Designated Contact Email")} *</label>
+                        <input
+                          type="email"
+                          value={drawerEditForm.contactEmail || ""}
+                          onChange={(e) => setDrawerEditForm({ ...drawerEditForm, contactEmail: e.target.value })}
+                          placeholder="email@company.com"
+                          className="w-full p-2 border border-[#0078D4] dark:border-brand-500 rounded bg-white dark:bg-[#252423] text-xs font-mono font-bold text-[#0078D4] dark:text-brand-400 outline-none focus:ring-1 focus:ring-[#0078D4]"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="text-[10px] font-bold uppercase text-slate-400 block mb-1">{t("Department / Role")}</label>
+                        <input
+                          type="text"
+                          value={drawerEditForm.department || ""}
+                          onChange={(e) => setDrawerEditForm({ ...drawerEditForm, department: e.target.value })}
+                          className="w-full p-2 border border-slate-300 dark:border-slate-700 rounded bg-white dark:bg-[#252423] text-xs outline-none focus:border-[#0078D4]"
+                        />
+                      </div>
+                    </div>
                   </div>
+
+                  {/* Status, Segment & Risk Score */}
+                  <div className="bg-[#FAF9F8] dark:bg-black/10 p-4 rounded-xl border border-[#EDEBE9] dark:border-[#323130] space-y-3">
+                    <h4 className="text-xs font-bold text-slate-800 dark:text-slate-200 uppercase tracking-wider font-mono flex items-center gap-2 border-b border-slate-200 dark:border-slate-800 pb-2">
+                      <TrendingUp className="w-4 h-4 text-amber-500" />
+                      {t("Lead Status, Segment & Opportunity Score")}
+                    </h4>
+
+                    <div className="grid grid-cols-3 gap-3">
+                      <div>
+                        <label className="text-[10px] font-bold uppercase text-slate-400 block mb-1">{t("Lead Status")}</label>
+                        <select
+                          value={drawerEditForm.leadStatus || "New"}
+                          onChange={(e) => setDrawerEditForm({ ...drawerEditForm, leadStatus: e.target.value })}
+                          className="w-full p-2 border border-slate-300 dark:border-slate-700 rounded bg-white dark:bg-[#252423] text-xs outline-none focus:border-[#0078D4]"
+                        >
+                          <option value="New">{t("New")}</option>
+                          <option value="Contacted">{t("Contacted")}</option>
+                          <option value="Nurturing">{t("Nurturing")}</option>
+                          <option value="Disqualified">{t("Disqualified")}</option>
+                        </select>
+                      </div>
+
+                      <div>
+                        <label className="text-[10px] font-bold uppercase text-slate-400 block mb-1">{t("Lead Segment")}</label>
+                        <select
+                          value={drawerEditForm.leadSegment || "Cold"}
+                          onChange={(e) => setDrawerEditForm({ ...drawerEditForm, leadSegment: e.target.value })}
+                          className="w-full p-2 border border-slate-300 dark:border-slate-700 rounded bg-white dark:bg-[#252423] text-xs outline-none focus:border-[#0078D4]"
+                        >
+                          <option value="Hot Lead">{t("Hot Lead")}</option>
+                          <option value="Warm Lead">{t("Warm Lead")}</option>
+                          <option value="Cold">{t("Cold")}</option>
+                        </select>
+                      </div>
+
+                      <div>
+                        <label className="text-[10px] font-bold uppercase text-slate-400 block mb-1">{t("Opportunity Score (%)")}</label>
+                        <input
+                          type="number"
+                          value={drawerEditForm.riskScore || 70}
+                          onChange={(e) => setDrawerEditForm({ ...drawerEditForm, riskScore: Number(e.target.value) })}
+                          min="1"
+                          max="100"
+                          className="w-full p-2 border border-slate-300 dark:border-slate-700 rounded bg-white dark:bg-[#252423] text-xs font-mono font-bold outline-none focus:border-[#0078D4]"
+                        />
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Summaries & Templates */}
+                  <div className="bg-[#FAF9F8] dark:bg-black/10 p-4 rounded-xl border border-[#EDEBE9] dark:border-[#323130] space-y-3">
+                    <h4 className="text-xs font-bold text-slate-800 dark:text-slate-200 uppercase tracking-wider font-mono flex items-center gap-2 border-b border-slate-200 dark:border-slate-800 pb-2">
+                      <Layers className="w-4 h-4 text-blue-500" />
+                      {t("AI Analysis & Outreach Template")}
+                    </h4>
+
+                    <div className="space-y-3">
+                      <div>
+                        <label className="text-[10px] font-bold uppercase text-slate-400 block mb-1">{t("AI Analysis Summary (Quality Risks & Lean Opportunities)")}</label>
+                        <textarea
+                          rows={3}
+                          value={drawerEditForm.aiAnalysisSummary || ""}
+                          onChange={(e) => setDrawerEditForm({ ...drawerEditForm, aiAnalysisSummary: e.target.value })}
+                          className="w-full p-2 border border-slate-300 dark:border-slate-700 rounded bg-white dark:bg-[#252423] text-xs leading-relaxed outline-none focus:border-[#0078D4]"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="text-[10px] font-bold uppercase text-slate-400 block mb-1">{t("Pre-compiled Outreach Template")}</label>
+                        <textarea
+                          rows={4}
+                          value={drawerEditForm.draftTemplates || ""}
+                          onChange={(e) => setDrawerEditForm({ ...drawerEditForm, draftTemplates: e.target.value })}
+                          className="w-full p-2 border border-slate-300 dark:border-slate-700 rounded bg-white dark:bg-[#252423] text-xs font-mono leading-relaxed outline-none focus:border-[#0078D4]"
+                        />
+                      </div>
+                    </div>
+                  </div>
+
                 </div>
+              ) : (
+                /* READ-ONLY DOSSIER VIEW */
+                <>
+                  {/* Stats highlights banner */}
+                  <div className="grid grid-cols-3 gap-2.5 bg-[#FAF9F8] dark:bg-[#201f1e] p-3 rounded-xl border border-[#EDEBE9] dark:border-[#323130]">
+                    <div className="text-center p-1.5 border-r border-slate-200 dark:border-[#323130]">
+                      <span className="text-[9px] uppercase font-bold text-slate-400 font-mono block">{t("Opportunity Score")}</span>
+                      <span className="text-sm font-extrabold text-[#0078D4] dark:text-brand-400 block mt-0.5">% {selectedAccount.riskScore || 75}</span>
+                    </div>
+                    <div className="text-center p-1.5 border-r border-slate-200 dark:border-[#323130]">
+                      <span className="text-[9px] uppercase font-bold text-slate-400 font-mono block">{t("Company Size")}</span>
+                      <span className="text-xs font-semibold text-slate-700 dark:text-slate-200 block mt-0.5 truncate">{selectedAccount.companySize || t("750+ Employees")}</span>
+                    </div>
+                    <div className="text-center p-1.5">
+                      <span className="text-[9px] uppercase font-bold text-slate-400 font-mono block">{t("Main Location")}</span>
+                      <span className="text-xs font-semibold text-slate-700 dark:text-slate-200 block mt-0.5 truncate">{selectedAccount.locationMain || t("Not specified")}</span>
+                    </div>
+                  </div>
+
+                  {/* Website links row */}
+                  <div className="p-3 bg-blue-500/5 rounded-xl border border-blue-500/10 text-xs flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <Building className="w-4 h-4 text-[#0078D4] shrink-0" />
+                      <span className="font-bold text-slate-700 dark:text-slate-300">{t("Website URL:")}</span>
+                      <a 
+                        href={selectedAccount.websiteUrl} 
+                        target="_blank" 
+                        referrerPolicy="no-referrer"
+                        className="text-[#0078D4] dark:text-brand-400 font-bold hover:underline"
+                      >
+                        {selectedAccount.websiteUrl}
+                      </a>
+                    </div>
+                    <span className="font-mono text-[9px] text-slate-400 bg-white dark:bg-black/10 px-2 py-0.5 border border-[#EDEBE9] dark:border-[#323130] rounded-full">
+                      {t("Corporate Portal")}
+                    </span>
+                  </div>
+
+                  {/* Contact Information Block */}
+                  <div className="space-y-2">
+                    <h4 className="text-xs font-bold text-slate-800 dark:text-slate-200 uppercase tracking-wider font-mono flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-1.5">
+                      <span className="flex items-center gap-2">
+                        <Users className="w-4 h-4 text-emerald-500" />
+                        {t("Target Stakeholder Contact Details")}
+                      </span>
+                      <button
+                        type="button"
+                        onClick={startDrawerEditing}
+                        className="text-[10px] font-bold text-[#0078D4] hover:underline cursor-pointer flex items-center gap-1"
+                      >
+                        <Edit className="w-3 h-3" />
+                        <span>{t("Edit")}</span>
+                      </button>
+                    </h4>
+                    <div className="bg-[#FAF9F8] dark:bg-black/10 p-4 rounded-xl border border-[#EDEBE9] dark:border-[#323130] text-xs space-y-2 font-sans">
+                      <div className="grid grid-cols-2 gap-4">
+                        <div>
+                          <span className="text-[10px] uppercase font-bold tracking-brand text-slate-400 block">{t("First Name")}</span>
+                          <span className="font-semibold text-slate-700 dark:text-slate-200">{selectedAccount.contactName || t("Quality / Operations")}</span>
+                        </div>
+                        <div>
+                          <span className="text-[10px] uppercase font-bold tracking-brand text-slate-400 block">{t("Surname")}</span>
+                          <span className="font-semibold text-slate-700 dark:text-slate-200">{selectedAccount.contactSurname || t("Director")}</span>
+                        </div>
+                        <div>
+                          <span className="text-[10px] uppercase font-bold tracking-brand text-slate-400 block">{t("Designated Email")}</span>
+                          <span className="font-mono text-[#0078D4] dark:text-brand-400 font-bold">{selectedAccount.contactEmail || t("N/A")}</span>
+                        </div>
+                        <div>
+                          <span className="text-[10px] uppercase font-bold tracking-brand text-slate-400 block">{t("Department / Role")}</span>
+                          <span className="font-medium text-slate-750 dark:text-slate-300">{selectedAccount.department || t("Operational Excellence")}</span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Kalite Riskleri ve Lean Fırsatları Details Section */}
+                  <div className="space-y-2">
+                    <h4 className="text-xs font-bold text-slate-800 dark:text-slate-200 uppercase tracking-wider font-mono flex items-center gap-2 border-b border-slate-100 dark:border-slate-800 pb-1.5">
+                      <Layers className="w-4 h-4 text-amber-500" />
+                      {t("Quality Risks & Lean Opportunities (AI Analysis)")}
+                    </h4>
+                    <div className="bg-[#FAF9F8] dark:bg-black/10 p-4 rounded-xl border border-[#EDEBE9] dark:border-[#323130] text-xs leading-relaxed text-slate-700 dark:text-slate-300 whitespace-pre-wrap font-sans">
+                      {selectedAccount.aiAnalysisSummary}
+                    </div>
+                  </div>
+
+                  {/* Üretilen E-posta Taslakları outreach template */}
+                  <div className="space-y-2">
+                    <h4 className="text-xs font-bold text-slate-800 dark:text-slate-200 uppercase tracking-wider font-mono flex items-center gap-2 border-b border-slate-100 dark:border-slate-800 pb-1.5">
+                      <Mail className="w-4 h-4 text-blue-500" />
+                      {t("Pre-compiled Outreach Template (Outbox Copy)")}
+                    </h4>
+                    <div className="bg-[#FAF9F8] dark:bg-black/10 p-4 rounded-xl border border-[#EDEBE9] dark:border-[#323130] text-xs leading-relaxed text-slate-700 dark:text-slate-300 whitespace-pre-wrap font-mono select-all relative">
+                      <p className="font-medium text-slate-400 text-[10px] uppercase tracking-wider select-none mb-2 pb-1 border-b border-dashed border-slate-200 dark:border-slate-800">
+                        {t("Outreach Campaign Template")}
+                      </p>
+                      {selectedAccount.draftTemplates}
+                    </div>
+                  </div>
+
+                  {/* Raw Groundings output */}
+                  {selectedAccount.rawOutput && (
+                    <div className="space-y-2">
+                      <h4 className="text-xs font-bold text-slate-800 dark:text-slate-200 uppercase tracking-wider font-mono flex items-center gap-2 border-b border-slate-100 dark:border-slate-800 pb-1.5">
+                        <FileText className="w-4 h-4 text-emerald-500" />
+                        {t("Cyber Search Grounding & Raw Output")}
+                      </h4>
+                      <div className="bg-slate-50 dark:bg-black/30 p-4 rounded-xl border border-slate-200 dark:border-slate-800 text-[11px] leading-relaxed text-slate-500 dark:text-slate-400 whitespace-pre-line font-mono max-h-[300px] overflow-y-auto">
+                        {selectedAccount.rawOutput}
+                      </div>
+                    </div>
+                  )}
+                </>
               )}
+
             </div>
 
             {/* Modal actions row */}
             <div className="px-6 py-4 bg-[#FAF9F8] dark:bg-[#201f1e] border-t border-[#EDEBE9] dark:border-[#323130] flex flex-wrap items-center justify-between gap-3 shrink-0">
-              <button
-                onClick={() => setSelectedAccount(null)}
-                className="px-4 py-2 hover:bg-slate-200 dark:hover:bg-slate-800 rounded-lg text-xs font-bold text-slate-600 dark:text-slate-300 transition-colors border border-slate-200 dark:border-[#323130] cursor-pointer"
-              >
-                {t("Close")}
-              </button>
+              {isDrawerEditing ? (
+                <>
+                  <button
+                    type="button"
+                    onClick={cancelDrawerEditing}
+                    className="px-4 py-2 hover:bg-slate-200 dark:hover:bg-slate-800 rounded-lg text-xs font-bold text-slate-600 dark:text-slate-300 transition-colors border border-slate-200 dark:border-[#323130] cursor-pointer"
+                  >
+                    {t("Cancel")}
+                  </button>
 
-              <button
-                onClick={() => {
-                  const contactFirstName = selectedAccount.contactName || "Kalite / Operasyon";
-                  const contactLastName = selectedAccount.contactSurname || "Direktörü";
-                  const contactEmail = selectedAccount.contactEmail || `opex@${selectedAccount.companyName.toLowerCase().replace(/[^a-z0-9]/g, "")}.com`;
-                  const deptStr = selectedAccount.department || "Operational Excellence";
-                  const addrStr = selectedAccount.locationMain || "Belirtilmemiş";
+                  <button
+                    type="button"
+                    onClick={saveDrawerEditing}
+                    className="px-5 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold rounded-lg shadow-sm flex items-center gap-1.5 transition-all cursor-pointer"
+                  >
+                    <Check className="w-4 h-4" />
+                    <span>{t("Save Customer Info")}</span>
+                  </button>
+                </>
+              ) : (
+                <>
+                  <div className="flex items-center gap-2">
+                    <button
+                      type="button"
+                      onClick={() => { setSelectedAccount(null); setIsDrawerEditing(false); setDrawerEditForm(null); }}
+                      className="px-4 py-2 hover:bg-slate-200 dark:hover:bg-slate-800 rounded-lg text-xs font-bold text-slate-600 dark:text-slate-300 transition-colors border border-slate-200 dark:border-[#323130] cursor-pointer"
+                    >
+                      {t("Close")}
+                    </button>
 
-                  const mapped: Recipient = {
-                    id: `rec_target_${Date.now()}`,
-                    FirstName: contactFirstName,
-                    LastName: contactLastName,
-                    Email: contactEmail,
-                    Company: selectedAccount.companyName,
-                    Department: deptStr,
-                    Address: addrStr,
-                    Industry: selectedAccount.industryTag,
-                    ScheduledDate: "",
-                    CustomField1: `Öncelik Riski: %${selectedAccount.riskScore}`,
-                    CustomField2: `Kaynak: ${selectedAccount.analysisSource || "Manual Detail"}`,
-                    CustomField3: `Segment: ${selectedAccount.leadSegment || "Warm"}`,
-                    status: "idle",
-                    openCount: 0
-                  };
+                    <button
+                      type="button"
+                      onClick={startDrawerEditing}
+                      className="px-4 py-2 bg-[#FAF9F8] dark:bg-[#252423] hover:bg-slate-100 text-[#0078D4] text-xs font-bold rounded-lg border border-[#0078D4]/30 flex items-center gap-1.5 transition-all cursor-pointer"
+                    >
+                      <Edit className="w-3.5 h-3.5" />
+                      <span>{t("Edit Customer Info")}</span>
+                    </button>
+                  </div>
 
-                  onPushToMailMerge([mapped]);
-                  setSelectedAccount(null);
-                  triggerToast(
-                    t("{name} contact pushed directly to outbox campaign!").replace("{name}", selectedAccount.companyName),
-                    "success"
-                  );
-                }}
-                className="px-4 py-2 bg-[#0078D4] hover:bg-[#106ebe] text-white text-xs font-bold rounded-lg shadow-sm flex items-center gap-1.5 transition-all cursor-pointer"
-              >
-                <Mail className="w-3.5 h-3.5" />
-                {t("Send to Recipient List and Design Campaign")}
-              </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const contactFirstName = selectedAccount.contactName || "Kalite / Operasyon";
+                      const contactLastName = selectedAccount.contactSurname || "Direktörü";
+                      const contactEmail = selectedAccount.contactEmail || `opex@${selectedAccount.companyName.toLowerCase().replace(/[^a-z0-9]/g, "")}.com`;
+                      const deptStr = selectedAccount.department || "Operational Excellence";
+                      const addrStr = selectedAccount.locationMain || "Belirtilmemiş";
+
+                      const mapped: Recipient = {
+                        id: `rec_target_${Date.now()}`,
+                        FirstName: contactFirstName,
+                        LastName: contactLastName,
+                        Email: contactEmail,
+                        Company: selectedAccount.companyName,
+                        Department: deptStr,
+                        Address: addrStr,
+                        Industry: selectedAccount.industryTag,
+                        ScheduledDate: "",
+                        CustomField1: `Öncelik Riski: %${selectedAccount.riskScore}`,
+                        CustomField2: `Kaynak: ${selectedAccount.analysisSource || "Manual Detail"}`,
+                        CustomField3: `Segment: ${selectedAccount.leadSegment || "Warm"}`,
+                        status: "idle",
+                        openCount: 0
+                      };
+
+                      onPushToMailMerge([mapped]);
+                      setSelectedAccount(null);
+                      triggerToast(
+                        t("{name} contact pushed directly to outbox campaign!").replace("{name}", selectedAccount.companyName),
+                        "success"
+                      );
+                    }}
+                    className="px-4 py-2 bg-[#0078D4] hover:bg-[#106ebe] text-white text-xs font-bold rounded-lg shadow-sm flex items-center gap-1.5 transition-all cursor-pointer"
+                  >
+                    <Mail className="w-3.5 h-3.5" />
+                    {t("Send to Recipient List and Design Campaign")}
+                  </button>
+                </>
+              )}
             </div>
           </div>
         </div>
