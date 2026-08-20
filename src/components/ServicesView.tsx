@@ -1395,9 +1395,91 @@ export default function ServicesView({
     }
     const tableIsTooLong = effortTableRowsCount > 4;
 
+    // Dynamically chunk cover letter text into clean A4 pages (max 13 lines per page)
+    const rawCoverText = wizardCoverPage || selectedService?.defaultCoverPage || "";
+
+    const splitTextToA4PageChunks = (text: string, maxLines: number = 13): string[] => {
+      if (!text || !text.trim()) return [""];
+      const blocks = text.split(/[\r\n]+/);
+      const pages: string[] = [];
+      let currentChunkHtml: string[] = [];
+      let currentLines = 0;
+
+      for (const block of blocks) {
+        const trimmed = block.trim();
+        if (!trimmed) continue;
+
+        const alphaOnly = trimmed.replace(/[^a-zA-ZĞÜŞİÖÇIğüşiöçı]/g, "").trim();
+        const isHeading = (alphaOnly.length > 3 && alphaOnly.toUpperCase() === alphaOnly) || trimmed.startsWith("#") || trimmed.endsWith(":");
+        const estLines = isHeading ? 2 : Math.max(1, Math.ceil(trimmed.length / 65));
+
+        if (currentLines + estLines <= maxLines) {
+          if (isHeading) {
+            const hText = trimmed.replace(/^#+\s*/, "").replace(/:$/, "");
+            currentChunkHtml.push(`<h3 style="font-family: Arial, sans-serif; font-size: 11pt; font-weight: bold; color: #b91c1c; margin-top: 14px; margin-bottom: 6px; text-transform: uppercase; border-bottom: 1px solid #f1f5f9; padding-bottom: 2px;">${hText}</h3>`);
+          } else {
+            currentChunkHtml.push(`<p style="font-family: Arial, sans-serif; font-size: 9.5pt; line-height: 1.5; color: #334155; margin-bottom: 8px; text-align: justify;">${trimmed}</p>`);
+          }
+          currentLines += estLines;
+        } else {
+          // Split paragraph at sentence boundary if possible
+          const availableLines = maxLines - currentLines;
+          if (availableLines >= 2 && !isHeading) {
+            const sentences = trimmed.match(/[^.!?]+[.!?]+(\s+|$)|[^.!?]+$/g) || [trimmed];
+            const p1: string[] = [];
+            const p2: string[] = [];
+            let p1Lines = 0;
+
+            for (const s of sentences) {
+              const sLines = Math.max(1, Math.ceil(s.length / 65));
+              if (p1Lines + sLines <= availableLines) {
+                p1.push(s);
+                p1Lines += sLines;
+              } else {
+                p2.push(s);
+              }
+            }
+
+            if (p1.length > 0 && p2.length > 0) {
+              currentChunkHtml.push(`<p style="font-family: Arial, sans-serif; font-size: 9.5pt; line-height: 1.5; color: #334155; margin-bottom: 8px; text-align: justify;">${p1.join("").trim()}</p>`);
+              pages.push(currentChunkHtml.join(""));
+              currentChunkHtml = [];
+
+              const p2Text = p2.join("").trim();
+              const p2Lines = Math.max(1, Math.ceil(p2Text.length / 65));
+              currentChunkHtml.push(`<p style="font-family: Arial, sans-serif; font-size: 9.5pt; line-height: 1.5; color: #334155; margin-bottom: 8px; text-align: justify;">${p2Text}</p>`);
+              currentLines = p2Lines;
+              continue;
+            }
+          }
+
+          if (currentChunkHtml.length > 0) {
+            pages.push(currentChunkHtml.join(""));
+            currentChunkHtml = [];
+          }
+
+          if (isHeading) {
+            const hText = trimmed.replace(/^#+\s*/, "").replace(/:$/, "");
+            currentChunkHtml.push(`<h3 style="font-family: Arial, sans-serif; font-size: 11pt; font-weight: bold; color: #b91c1c; margin-top: 14px; margin-bottom: 6px; text-transform: uppercase; border-bottom: 1px solid #f1f5f9; padding-bottom: 2px;">${hText}</h3>`);
+          } else {
+            currentChunkHtml.push(`<p style="font-family: Arial, sans-serif; font-size: 9.5pt; line-height: 1.5; color: #334155; margin-bottom: 8px; text-align: justify;">${trimmed}</p>`);
+          }
+          currentLines = estLines;
+        }
+      }
+
+      if (currentChunkHtml.length > 0) {
+        pages.push(currentChunkHtml.join(""));
+      }
+
+      return pages.length > 0 ? pages : [""];
+    };
+
+    const coverPageChunks = splitTextToA4PageChunks(rawCoverText, 13);
+
     // Calculate total pages dynamically
     let totalPages = 1; // Cover Page
-    let coverLetterPages = 1;
+    let coverLetterPages = coverPageChunks.length;
     totalPages += coverLetterPages; // Cover Letter Page count
 
     let effortPages = tableIsTooLong ? 2 : 1;
@@ -1419,14 +1501,17 @@ export default function ServicesView({
     // Styles block at the very top of compiled HTML
     fullHtmlString += `
       <style>
+        @page {
+          size: A4 portrait;
+          margin: 0;
+        }
+        body {
+          margin: 0;
+          padding: 0;
+          background-color: #f8fafc;
+        }
         .a4-page {
-          width: 210mm;
-          height: 297mm;
           box-sizing: border-box;
-          position: relative;
-          background-color: white;
-          margin: 0 auto 30px auto;
-          box-shadow: 0 4px 15px rgba(0,0,0,0.1);
           font-family: 'Arial', sans-serif;
           color: #1e293b;
           page-break-after: always;
@@ -1500,13 +1585,13 @@ export default function ServicesView({
               <td style="font-weight: normal; padding: 2px 0; border: none; font-size: 12.5pt; font-family: Arial; color: #1e293b;">${(clientTitle || "MÜŞTERİ TANIMI").toUpperCase()}</td>
             </tr>
             <tr style="border: none;">
-              <td style="font-weight: bold; padding: 2px 0; border: none; font-size: 12.5pt; font-family: Arial; color: #475569;">TEKLİF KONUSU</td>
-              <td style="font-weight: bold; padding: 2px 0; border: none; font-size: 12.5pt; font-family: Arial; color: #475569;">:</td>
+              <td style="width: 48mm; font-weight: bold; padding: 2px 0; border: none; font-size: 12.5pt; font-family: Arial; color: #475569;">TEKLİF KONUSU</td>
+              <td style="width: 5mm; font-weight: bold; padding: 2px 0; border: none; font-size: 12.5pt; font-family: Arial; color: #475569;">:</td>
               <td style="font-weight: normal; padding: 2px 0; border: none; font-size: 12.5pt; font-family: Arial; color: #1e293b;">${(selectedService?.name || "YALIN DÖNÜŞÜM HİZMETLERİ").toUpperCase()}</td>
             </tr>
             <tr style="border: none;">
-              <td style="font-weight: bold; padding: 2px 0; border: none; font-size: 12.5pt; font-family: Arial; color: #475569;">TARİH / TEKLİF NO</td>
-              <td style="font-weight: bold; padding: 2px 0; border: none; font-size: 12.5pt; font-family: Arial; color: #475569;">:</td>
+              <td style="width: 48mm; font-weight: bold; padding: 2px 0; border: none; font-size: 12.5pt; font-family: Arial; color: #475569;">TARİH / TEKLİF NO</td>
+              <td style="width: 5mm; font-weight: bold; padding: 2px 0; border: none; font-size: 12.5pt; font-family: Arial; color: #475569;">:</td>
               <td style="font-weight: normal; padding: 2px 0; border: none; font-size: 12.5pt; font-family: Arial; color: #1e293b;">${formattedProposalDate} / ${formattedProposalNo}</td>
             </tr>
           </table>
@@ -1581,39 +1666,18 @@ export default function ServicesView({
       `;
     };
 
-    // ---------------- PAGE 2 – COVER LETTER ----------------
-    // Parse cover letter content to apply paragraph blocks & style fully capitalized headers
-    const parseCoverLetterBody = (text: string) => {
-      if (!text) return "";
-      const blocks = text.split(/[\r\n]+/);
-      return blocks.map(block => {
-        const trimmed = block.trim();
-        if (!trimmed) return "";
-        
-        const alphaOnly = trimmed.replace(/[^a-zA-ZĞÜŞİÖÇIğüşiöçı]/g, "").trim();
-        const isUppercase = alphaOnly.length > 3 && alphaOnly.toUpperCase() === alphaOnly;
 
-        if (isUppercase) {
-          return `<h3 style="font-family: Arial, sans-serif; font-size: 11pt; font-weight: bold; color: #b91c1c; margin-top: 14px; margin-bottom: 6px; text-transform: uppercase; border-bottom: 1px solid #f1f5f9; padding-bottom: 2px;">${trimmed}</h3>`;
-        } else {
-          return `<p style="font-family: Arial, sans-serif; font-size: 9.5pt; line-height: 1.5; color: #334155; margin-bottom: 8px; text-align: justify;">${trimmed}</p>`;
-        }
-      }).join("");
-    };
-
-    // Kullanıcı talebi: kapak mektubundaki sabit "SAYIN YETKİLİ," selamlaması
-    // kaldırıldı — jenerik/kişiselleştirilmemiş bir hitap olduğu için (gerçek
-    // ilgili kişi adı zaten teklifin başka yerlerinde ve e-posta gövdesinde
-    // kullanılıyor). Kapak mektubu artık doğrudan kullanıcının girdiği/
-    // seçtiği içerikle başlıyor.
-    const coverLetterContent = `
-      <div style="font-family: Arial, sans-serif; font-size: 9.5pt; color: #334155; line-height: 1.5;">
-        ${parseCoverLetterBody(wizardCoverPage || selectedService?.defaultCoverPage || "")}
-      </div>
-    `;
-
-    fullHtmlString += createA4PageContent(currentCalculatedPageIndex, totalPages, "ÖN KAPAK VE TAKDİM", coverLetterContent);
-    currentCalculatedPageIndex++;
+    // ---------------- COVER LETTER PAGES (DYNAMIC MULTI-PAGE CHUNKS) ----------------
+    coverPageChunks.forEach((chunkHtml, idx) => {
+      const pageTitle = idx === 0 ? "ÖN KAPAK VE TAKDİM" : "TAKDİM MEKTUBU (DEVAMI)";
+      const coverLetterContent = `
+        <div style="font-family: Arial, sans-serif; font-size: 9.5pt; color: #334155; line-height: 1.5;">
+          ${chunkHtml}
+        </div>
+      `;
+      fullHtmlString += createA4PageContent(currentCalculatedPageIndex, totalPages, pageTitle, coverLetterContent);
+      currentCalculatedPageIndex++;
+    });
 
     // ---------------- PAGE 3 – EFFORT TABLE ----------------
     const styleTableForA4Print = (rawTableHtml: string) => {
