@@ -25,6 +25,7 @@ import {
   CheckCircle,
   Percent,
   Users,
+  Zap,
   Flag,
   MoreVertical,
   GripVertical,
