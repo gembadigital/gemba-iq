@@ -1646,9 +1646,21 @@ export default function ServicesView({
     const customCoverImage = inMemoryCoverTemplates[selectedCardId] || Object.values(inMemoryCoverTemplates)[0];
     const hasCustomCover = !!customCoverImage;
     
+    // Kullanıcı hatası: "cover png ve page png şablonları yazdırmada
+    // kaybolmuş" — kök neden, bir önceki düzeltmede yazdırma penceresine
+    // kopyalanan uygulama CSS'i içinde index.css'teki genel "Print
+    // Overrides" kuralı (@media print { div { background: #fff !important
+    // } }) da geliyor — bu kural DİĞER (tablo/liste) ekranların yazdırma
+    // çıktısını sadeleştirmek için var, ama ".a4-page" da bir div olduğundan
+    // arka plan resmini (cover.png/page.png/özel şablon) !important ile
+    // siliyordu. Inline stil normalde kazanır ama !important'lı bir
+    // stylesheet kuralına karşı kazanamaz — çözüm, buradaki arka plan
+    // deklarasyonlarını da !important yapmak (inline !important, aynı
+    // önem katmanında selector tabanlı kurallardan her zaman daha
+    // spesifiktir, böylece kazanır).
     const coverBgStyle = hasCustomCover
-      ? `background-image: url(${customCoverImage}); background-size: 100% 100%;`
-      : `background-image: url('/cover.png'); background-size: 100% 100%; background-color: #ffffff;`;
+      ? `background-image: url(${customCoverImage}) !important; background-size: 100% 100% !important;`
+      : `background-image: url('/cover.png') !important; background-size: 100% 100% !important; background-color: #ffffff !important;`;
 
     const formattedProposalNo = proposalNumber || `GEM-TEK-${new Date().getFullYear()}-${selectedService.code || "100"}`;
     const formattedProposalDate = proposalDate ? proposalDate.split("-").reverse().join(".") : new Date().toLocaleDateString("tr-TR");
@@ -1711,9 +1723,13 @@ export default function ServicesView({
       const customPageImage = inMemoryPageTemplates[selectedCardId] || Object.values(inMemoryPageTemplates)[0];
       const hasCustomPage = !!customPageImage;
       
+      // Bkz. coverBgStyle üzerindeki not: aynı sebeple (index.css'teki genel
+      // "@media print { div { background: ... !important } }" kuralı)
+      // burada da arka plan deklarasyonları !important yapılıyor, yoksa
+      // yazdırmada page.png/özel şablon kayboluyordu.
       const bgStyle = hasCustomPage
-        ? `background-image: url(${customPageImage}); background-size: 100% 100%; background-repeat: no-repeat;`
-        : `background-image: url('/page.png'); background-size: 100% 100%; background-repeat: no-repeat; background-color: #ffffff;`;
+        ? `background-image: url(${customPageImage}) !important; background-size: 100% 100% !important; background-repeat: no-repeat !important;`
+        : `background-image: url('/page.png') !important; background-size: 100% 100% !important; background-repeat: no-repeat !important; background-color: #ffffff !important;`;
 
       return `
         <div class="a4-page" style="${bgStyle} width: 210mm; height: 297mm; position: relative; font-family: 'Arial', sans-serif; box-sizing: border-box; page-break-after: always; padding: 38mm 20mm 30mm 20mm; margin: 0 auto 30px auto; background-color: #ffffff; box-shadow: 0 4px 15px rgba(0,0,0,0.1); overflow: hidden;">
