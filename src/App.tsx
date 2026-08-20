@@ -115,6 +115,7 @@ const ACTIVE_TABS = [
   "todo-list",
   "contract-manager",
   "documents",
+  "marketing-ai-coach",
   "marketing-overview",
   "marketing-industry-intel",
   "marketing-target-market",
@@ -429,6 +430,7 @@ export default function App() {
     }
     if (
       [
+        "marketing-ai-coach",
         "marketing-overview",
         "marketing-industry-intel",
         "marketing-target-market",
@@ -753,6 +755,7 @@ export default function App() {
       "create-proposal": { parent: "Deal Management", child: "Create Proposal" },
       "todo-list": { parent: "CRM", child: "Tasks" },
       "documents": { parent: "CRM", child: "Documents" },
+      "marketing-ai-coach": { parent: "Marketing & Business Development", child: "AI Marketing Coach" },
       "marketing-overview": { parent: "Marketing & Business Development", child: "Marketing Hub Overview" },
       "marketing-industry-intel": { parent: "Marketing & Business Development", child: "Industry Intelligence" },
       "marketing-target-market": { parent: "Marketing & Business Development", child: "Target Market & Competitor Map" },
@@ -1177,6 +1180,12 @@ export default function App() {
                   {!sidebarCollapsed && (
                     <div className="absolute left-[34px] top-0 bottom-0 w-[1px] bg-[#EDEBE9] dark:bg-[#323130] z-10" />
                   )}
+                  <SidebarButton
+                    id="marketing-ai-coach"
+                    icon={isNotionMode ? <span className="text-base">🤖</span> : <Sparkles className="w-[20px] h-[20px] flex-shrink-0 text-amber-500" />}
+                    label="AI Marketing Coach"
+                    isSubmenu={true}
+                  />
                   <SidebarButton
                     id="marketing-overview"
                     icon={isNotionMode ? <span className="text-base">📊</span> : <LayoutDashboard className="w-[20px] h-[20px] flex-shrink-0" />}
@@ -1909,6 +1918,10 @@ export default function App() {
 
             {activeTab === "documents" && (
               <DocumentsView />
+            )}
+
+            {activeTab === "marketing-ai-coach" && (
+              <MarketingHubView key="marketing-ai-coach" initialSubTab="marketing-ai-coach" onNavigateToTab={(tab) => setActiveTab(tab as any)} />
             )}
 
             {activeTab === "marketing-overview" && (

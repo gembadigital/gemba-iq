@@ -2701,6 +2701,33 @@ export const uiDictionaryTR: Record<string, string> = {
   "Synced with Target Accounts": "Hedef Hesaplar ile Eşleşti",
   "Designated Contact Email": "Atanan İrtibat E-postası",
   "Open Customer Detail Card": "Müşteri Detay Kartını Aç",
+
+  // AI Marketing Coach Dictionary Terms
+  "AI Marketing Coach": "AI Marketing Coach",
+  "Pazarlama & İş Geliştirme AI Yönetici Paneli": "Marketing & Business Development AI Executive Panel",
+  "Mevcut müşteri, fırsat, teklif ve hedef firma verilerinizi analiz ederek haftalık aksiyon planı oluşturan, görev dağıtan ve gerçekleşmeyen hedefleri takip eden akıllı AI yöneticiniz.": "Your smart AI manager that analyzes your current customer, opportunity, proposal, and target company data to build a weekly action plan, assign tasks, and track unachieved goals.",
+  "AI Yönetici Raporu": "AI Executive Report",
+  "Yeni AI Planı Oluştur": "Generate New AI Plan",
+  "Analiz Ediliyor...": "Analyzing...",
+  "AI YÖNETİCİ NOTU & YOL HARİTASI": "AI MANAGER NOTE & ROADMAP",
+  "Bu Haftanın Hedefleri": "This Week's Targets",
+  "Gerçekleşen Görevler": "Accomplished Tasks",
+  "Hedef Başarı Oranı": "Target Success Rate",
+  "Açık Fırsat Hacmi": "Open Opportunities Volume",
+  "AI Yönetici Uyarıları": "AI Executive Alerts",
+  "Kritik AI Uyarıları & Aksiyon Bekleyen Durumlar": "Critical AI Alerts & Pending Action Items",
+  "Öncelikli Aksiyon Gerektirir": "Requires Priority Action",
+  "Haftalık Öncelikli Aksiyon Planı (AI Tarafından Sıralanmış)": "Weekly Priority Action Plan (Sorted by AI)",
+  "Ekip Görev Dağılımı & Günlük Plan": "Team Task Assignment & Daily Schedule",
+  "Haftalık Aksiyon Listesi": "Weekly Action List",
+  "Odak Alanları": "Focus Areas",
+  "Müşteri Rakipleri Hedefleme": "Customer Competitors Targeting",
+  "Pazarlama & Dijital Kampanya": "Marketing & Digital Campaign",
+  "Web & SEO İçerik Stratejisi": "Web & SEO Content Strategy",
+  "AI Marketing Manager — Haftalık Yönetici Raporu": "AI Marketing Manager — Weekly Executive Report",
+  "1. GEÇEN HAFTA DEĞERLENDİRMESİ": "1. LAST WEEK EVALUATION",
+  "2. BU HAFTANIN EN ÖNEMLİ 5 ÖNCELİĞİ": "2. THIS WEEK'S TOP 5 PRIORITIES",
+  "3. YÖNETİCİ UYARILARI & KRİTİK RİSKLER": "3. EXECUTIVE ALERTS & CRITICAL RISKS",
 };
 
 export const uiDictionaryEN: Record<string, string> = Object.fromEntries([
