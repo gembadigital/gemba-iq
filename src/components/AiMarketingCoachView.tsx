@@ -330,10 +330,12 @@ export default function AiMarketingCoachView({ onNavigateToTab }: AiMarketingCoa
                               className={`text-[9px] font-bold px-2 py-0.5 rounded ${
                                 task.priority === "High"
                                   ? "bg-rose-100 text-rose-700 dark:bg-rose-950/30 dark:text-rose-400"
-                                  : "bg-amber-100 text-amber-700 dark:bg-amber-950/30 dark:text-amber-400"
+                                  : task.priority === "Medium"
+                                  ? "bg-amber-100 text-amber-700 dark:bg-amber-950/30 dark:text-amber-400"
+                                  : "bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300"
                               }`}
                             >
-                              {task.priority === "High" ? "Yüksek" : "Orta"}
+                              {task.priority === "High" ? "Yüksek" : task.priority === "Medium" ? "Orta" : "Düşük"}
                             </span>
                           </div>
 

@@ -42,16 +42,10 @@ export function generateWeeklyAiPlan(forceRegenerate: boolean = false): AiCoachW
   const targetAccounts: TargetAccount[] = CrmDb.getKv<TargetAccount[]>("crm_target_accounts", []);
   const deals: Deal[] = CrmDb.getDeals();
   const proposals: Proposal[] = CrmDb.getProposals();
-  const existingTasks: Task[] = CrmDb.getTasks();
   const reportInsights: MarketingReportInsight[] = CrmDb.getKv<MarketingReportInsight[]>("crm_marketing_report_insights", []);
-  const campaigns: any[] = CrmDb.getKv<any[]>("crm_marketing_campaigns", []);
 
-  // Team users (Default: Atakan & Ersin)
-  const teamMembers = ["Atakan", "Ersin"];
-
-  const generatedTasks: AiCoachTask[] = [];
+  const rawTasks: AiCoachTask[] = [];
   const generatedAlerts: AiCoachAlert[] = [];
-  let taskIdCounter = 1;
 
   const now = new Date();
 
@@ -68,7 +62,7 @@ export function generateWeeklyAiPlan(forceRegenerate: boolean = false): AiCoachW
     
     if (daysDiff >= 15) {
       const isUrgent = daysDiff >= 20;
-      generatedTasks.push({
+      rawTasks.push({
         id: `ai-task-prop-${prop.id}`,
         title: `${prop.companyName || "Müşteri"} teklifini takip et (${daysDiff} gündür cevapsız)`,
         description: `${prop.title || "Teklif"} tutarı: ${prop.totalAmount ? `₺${prop.totalAmount.toLocaleString("tr-TR")}` : "Belirtilmemiş"}. Son temas ${daysDiff} gün önce. Müşteri yetkilisi ile telefon görüşmesi yapıp karar sürecini netleştir.`,
@@ -114,7 +108,7 @@ export function generateWeeklyAiPlan(forceRegenerate: boolean = false): AiCoachW
     const daysDiff = Math.floor((now.getTime() - dealDate.getTime()) / (1000 * 3600 * 24));
 
     if (daysDiff >= 14) {
-      generatedTasks.push({
+      rawTasks.push({
         id: `ai-task-deal-${deal.id}`,
         title: `${deal.companyName || deal.title} fırsatını yeniden temas et (${daysDiff} gündür hareketsiz)`,
         description: `Fırsat değeri: ${deal.value ? `₺${deal.value.toLocaleString("tr-TR")}` : "₺0"}, Aşama: ${deal.stage}. Müşteri temsilcisiyle iletişime geçip sonraki aksiyonu belirle.`,
@@ -149,7 +143,6 @@ export function generateWeeklyAiPlan(forceRegenerate: boolean = false): AiCoachW
   // =========================================================================
   // PRIORITY 3: Mevcut müşterilerin rakipleri ve hedefleme
   // =========================================================================
-  // Find sectors of existing customers
   const customerSectors = Array.from(new Set(companies.map((c) => c.industry).filter(Boolean)));
   
   customerSectors.forEach((sector) => {
@@ -162,7 +155,7 @@ export function generateWeeklyAiPlan(forceRegenerate: boolean = false): AiCoachW
       const custNames = existingCustInSector.map((c) => c.name).join(", ");
       const firstTargetComp = targetCompInSector[0];
 
-      generatedTasks.push({
+      rawTasks.push({
         id: `ai-task-comp-target-${firstTargetComp.id}`,
         title: `${sector} sektöründeki ${custNames} müşterisinin rakiplerini araştır (${firstTargetComp.companyName})`,
         description: `${sector} sektöründe aktif müşterilerimiz (${custNames}) bulunuyor. Bu sektördeki rakip firma olan ${firstTargetComp.companyName} için karar verici profil araştırması yap ve kontakt ekle.`,
@@ -192,7 +185,7 @@ export function generateWeeklyAiPlan(forceRegenerate: boolean = false): AiCoachW
   if (newTargetAccounts.length > 0) {
     const topTargets = newTargetAccounts.slice(0, 3);
     topTargets.forEach((tgt, idx) => {
-      generatedTasks.push({
+      rawTasks.push({
         id: `ai-task-target-outreach-${tgt.id}`,
         title: `${tgt.companyName} karar vericilerini araştır ve 1. temas kur`,
         description: `Sektör: ${tgt.industryTag || "Genel İmalat"}, Şehir: ${tgt.city || tgt.locationMain || "Belirtilmemiş"}. LinkedIn InMail veya soğuk e-posta ile tanıtım dokümanı ilet.`,
@@ -211,7 +204,6 @@ export function generateWeeklyAiPlan(forceRegenerate: boolean = false): AiCoachW
       });
     });
   } else {
-    // Alert & task: Need more target companies in CRM
     generatedAlerts.push({
       id: "ai-alert-need-targets",
       severity: "warning",
@@ -222,8 +214,8 @@ export function generateWeeklyAiPlan(forceRegenerate: boolean = false): AiCoachW
       actionType: "add_target",
     });
 
-    generatedTasks.push({
-      id: `ai-task-add-new-targets-${Date.now()}`,
+    rawTasks.push({
+      id: `ai-task-add-new-targets-static`,
       title: "5 Yeni Hedef Firma ekle ve sektörel eşleştirme yap",
       description: "Hedef Pazar & Rakip Haritası modülüne imalat/sanayi sektöründen 5 yeni hedef firma kaydı gir.",
       category: "market_research",
@@ -242,7 +234,6 @@ export function generateWeeklyAiPlan(forceRegenerate: boolean = false): AiCoachW
   // =========================================================================
   // PRIORITY 5: Pazarlama Kampanyaları
   // =========================================================================
-  // Check sector density
   const sectorCountMap: Record<string, number> = {};
   targetAccounts.forEach((t) => {
     if (t.industryTag) {
@@ -253,8 +244,8 @@ export function generateWeeklyAiPlan(forceRegenerate: boolean = false): AiCoachW
   const sortedSectors = Object.entries(sectorCountMap).sort((a, b) => b[1] - a[1]);
   const dominantSector = sortedSectors[0] ? sortedSectors[0][0] : "Otomotiv / İmalat";
 
-  generatedTasks.push({
-    id: `ai-task-campaign-${Date.now()}`,
+  rawTasks.push({
+    id: `ai-task-campaign-${normalizeTrKey(dominantSector)}`,
     title: `${dominantSector} sektörüne özel LinkedIn ve E-Posta Kampanyası kurgula`,
     description: `${dominantSector} sektöründe ${sectorCountMap[dominantSector] || 5}+ hedef firmamız var. "OEE ve Kapasite Kayıplarını Azaltma" temalı içerik ve kampanya taslağı oluştur.`,
     category: "marketing",
@@ -275,8 +266,8 @@ export function generateWeeklyAiPlan(forceRegenerate: boolean = false): AiCoachW
   const seoInsight = reportInsights.length > 0 ? reportInsights[0] : null;
   const seoTopic = seoInsight?.topKeywords?.[0] || "Operasyonel Mükemmellik ve Dijital Dönüşüm";
 
-  generatedTasks.push({
-    id: `ai-task-seo-${Date.now()}`,
+  rawTasks.push({
+    id: `ai-task-seo-${normalizeTrKey(seoTopic)}`,
     title: `'${seoTopic}' konusunda SEO uyumlu blog içeriği hazırla`,
     description: `Gemba Partner web sitesi için '${seoTopic}' odaklı 800 kelimelik teknik vaka çalışması ve blog yazısı kaleme al.`,
     category: "digital_marketing",
@@ -304,8 +295,8 @@ export function generateWeeklyAiPlan(forceRegenerate: boolean = false): AiCoachW
 
     const topReason = Object.entries(lostReasonsMap).sort((a, b) => b[1] - a[1])[0];
     if (topReason) {
-      generatedTasks.push({
-        id: `ai-task-lost-analysis-${Date.now()}`,
+      rawTasks.push({
+        id: `ai-task-lost-analysis-${normalizeTrKey(topReason[0])}`,
         title: `Kaybedilen fırsatları analiz et (En sık neden: ${topReason[0]})`,
         description: `Son dönemde ${lostDeals.length} fırsat kaybedildi. Kayıp nedeni '${topReason[0]}' olan ${topReason[1]} teklif için alternatif paket ve fiyatlandırma stratejisini incele.`,
         category: "market_research",
@@ -319,6 +310,21 @@ export function generateWeeklyAiPlan(forceRegenerate: boolean = false): AiCoachW
         status: "not_started",
         sourceJustification: `Kaybedilen Fırsatlar Analizi: Kaybedilen ${lostDeals.length} tekliften ${topReason[1]} tanesi '${topReason[0]}' sebebiyle kaybedildi.`,
       });
+    }
+  }
+
+  // =========================================================================
+  // TASK DEDUPLICATION (MÜKERRERLİK İPTALİ)
+  // Deduplicate tasks by normalized title & explicit ID before output
+  // =========================================================================
+  const generatedTasks: AiCoachTask[] = [];
+  const seenTaskKeys = new Set<string>();
+
+  for (const task of rawTasks) {
+    const key = normalizeTrKey(task.title);
+    if (!seenTaskKeys.has(key)) {
+      seenTaskKeys.add(key);
+      generatedTasks.push(task);
     }
   }
 
@@ -356,10 +362,10 @@ export function generateWeeklyAiPlan(forceRegenerate: boolean = false): AiCoachW
     },
   };
 
-  // Sync tasks into real CrmDb Task Management System (`TasksView.tsx`)
+  // Sync tasks into real CrmDb Task Management System (`TasksView.tsx`) with deduplication
   syncGeneratedTasksToCrmTasks(generatedTasks);
 
-  // Build Executive Report
+  // Build Executive Report in 100% Turkish
   const executiveReport: AiExecutiveReport = {
     lastWeekSummary: {
       accomplishedHighlights: [
@@ -432,7 +438,9 @@ export function syncPlanTaskStatuses(plan: AiCoachWeeklyPlan): AiCoachWeeklyPlan
   let completedCount = 0;
 
   const updatedPriorityTasks = plan.priorityTasks.map((task) => {
-    const matchedCrmTask = crmTasks.find((t) => t.id === task.syncedTaskId || t.title === task.title);
+    const matchedCrmTask = crmTasks.find(
+      (t) => t.id === task.syncedTaskId || normalizeTrKey(t.title) === normalizeTrKey(task.title)
+    );
     if (matchedCrmTask && (matchedCrmTask.status === "completed" || matchedCrmTask.status === "Tamamlandı")) {
       completedCount++;
       return { ...task, status: "completed" as const };
@@ -451,11 +459,32 @@ export function syncPlanTaskStatuses(plan: AiCoachWeeklyPlan): AiCoachWeeklyPlan
   };
 }
 
-// Write generated AI tasks into existing CrmDb Task Management System (`TasksView.tsx`)
+// Write generated AI tasks into existing CrmDb Task Management System (`TasksView.tsx`) with strict deduplication
 function syncGeneratedTasksToCrmTasks(aiTasks: AiCoachTask[]) {
+  const existingCrmTasks = CrmDb.getTasks();
+  
+  // Filter out any duplicate tasks in CrmDb that share identical titles
+  const cleanCrmTasks: Task[] = [];
+  const seenCrmTitles = new Set<string>();
+
+  for (const task of existingCrmTasks) {
+    const key = normalizeTrKey(task.title);
+    if (!seenCrmTitles.has(key)) {
+      seenCrmTitles.add(key);
+      cleanCrmTasks.push(task);
+    }
+  }
+
+  // Save cleaned CrmDb task list if duplicates were purged
+  if (cleanCrmTasks.length !== existingCrmTasks.length) {
+    CrmDb.saveTasks(cleanCrmTasks);
+  }
+
   aiTasks.forEach((t) => {
-    const existingCrmTasks = CrmDb.getTasks();
-    const existing = existingCrmTasks.find((ct) => ct.id === t.id || ct.title === t.title);
+    const currentTasks = CrmDb.getTasks();
+    const existing = currentTasks.find(
+      (ct) => ct.id === t.id || normalizeTrKey(ct.title) === normalizeTrKey(t.title)
+    );
     
     if (!existing) {
       const crmTask: Task = {
