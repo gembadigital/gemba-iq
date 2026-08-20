@@ -1807,22 +1807,55 @@ export default function ServicesView({
         .filter(Boolean);
     };
 
-    const styleTableForA4Print = (rawTableHtml: string) => {
+    // Kullanıcı talebi: "efor tablosu iki sayfaya taştı. tek sayfada
+    // topla." — sabit tek bir punto/dolgu yerine, en okunaklıdan en sıkışığa
+    // doğru sıralı bir "tier" listesi tanımlanıyor. Aşağıdaki sayfalama
+    // adımında her tier sırayla denenip GERÇEK render yüksekliği ölçülüyor;
+    // tabloyu tek sayfaya sığdıran EN OKUNAKLI tier seçiliyor. Hiçbir tier
+    // sığdıramazsa (aşırı uzun tablo), önceki talep gereği ("hiçbir madde
+    // kaybolmasın") en sıkışık tier ile çok sayfaya bölünmeye geri düşülüyor
+    // — böylece içerik asla kırpılmıyor, ama normal boyuttaki tablolar artık
+    // gereksiz yere ikinci sayfaya taşmıyor.
+    const EFFORT_TABLE_TIERS: { fontSize: string; headerFontSize: string; cellPadding: string; lineHeight: string }[] = [
+      { fontSize: "7.5pt", headerFontSize: "8pt", cellPadding: "2.5px 4px", lineHeight: "1.15" },
+      { fontSize: "7pt", headerFontSize: "7.5pt", cellPadding: "2px 3px", lineHeight: "1.1" },
+      { fontSize: "6.5pt", headerFontSize: "7pt", cellPadding: "1.5px 3px", lineHeight: "1.05" },
+      { fontSize: "6pt", headerFontSize: "6.5pt", cellPadding: "1px 2px", lineHeight: "1" },
+    ];
+
+    const styleTableForA4Print = (rawTableHtml: string, tier: typeof EFFORT_TABLE_TIERS[number] = EFFORT_TABLE_TIERS[0]) => {
       if (!rawTableHtml) return "<p style='font-style: italic; color: #94a3b8;'>Efor tablosu bulunmamaktadır.</p>";
       const parser = new DOMParser();
       const doc = parser.parseFromString(rawTableHtml, "text/html");
       const table = doc.querySelector("table");
       if (table) {
-        table.setAttribute("style", "width: 100%; border-collapse: collapse; font-family: Arial, sans-serif; font-size: 7.5pt; border: 1px solid #cbd5e1; margin-top: 5px;");
+        table.setAttribute("style", `width: 100%; border-collapse: collapse; font-family: Arial, sans-serif; font-size: ${tier.fontSize}; border: 1px solid #cbd5e1; margin-top: 5px;`);
         table.querySelectorAll("th, td").forEach(cell => {
           const isHeader = cell.tagName === "TH";
           const cellStyle = cell.getAttribute("style") || "";
 
-          cell.setAttribute("style", `border: 1px solid #cbd5e1; padding: 2.5px 4px !important; line-height: 1.15 !important; text-align: left; font-family: Arial, sans-serif; font-size: ${isHeader ? "8pt" : "7.5pt"}; font-weight: ${isHeader ? "bold" : "normal"}; ${isHeader ? "background-color: #f1f5f9; color: #1e293b;" : ""}; ${cellStyle}`);
+          cell.setAttribute("style", `border: 1px solid #cbd5e1; padding: ${tier.cellPadding} !important; line-height: ${tier.lineHeight} !important; text-align: left; font-family: Arial, sans-serif; font-size: ${isHeader ? tier.headerFontSize : tier.fontSize}; font-weight: ${isHeader ? "bold" : "normal"}; ${isHeader ? "background-color: #f1f5f9; color: #1e293b;" : ""}; ${cellStyle}`);
         });
         return doc.body.innerHTML;
       }
       return rawTableHtml;
+    };
+
+    // Bir tablonun (thead+tbody dahil) TAM render yüksekliğini ölçer —
+    // tier seçiminde "tek sayfaya sığıyor mu?" testinde kullanılıyor.
+    const measureTableTotalHeightPx = (styledTableHtml: string): number => {
+      if (typeof document === "undefined") return 0;
+      const probe = document.createElement("div");
+      probe.style.position = "fixed";
+      probe.style.left = "-99999px";
+      probe.style.top = "0";
+      probe.style.width = `${INNER_CONTENT_WIDTH_PX}px`;
+      probe.style.visibility = "hidden";
+      document.body.appendChild(probe);
+      probe.innerHTML = styledTableHtml;
+      const h = probe.querySelector("table")?.offsetHeight || probe.offsetHeight;
+      document.body.removeChild(probe);
+      return h;
     };
 
     // ---------------- GERÇEK SAYFALAMA GEÇİŞİ ----------------
@@ -1837,13 +1870,35 @@ export default function ServicesView({
       ? packBlocksIntoPages(coverLetterBlocks, INNER_CONTENT_HEIGHT_PX)
       : [""];
 
-    // Efor tablosu: satır sayısı ne olursa olsun, TÜM satırlar gerçek
-    // yüksekliklerine göre ihtiyaç kadar tabloya/sayfaya bölünüyor — eskiden
-    // en fazla 2 sayfa varsayımı vardı ve fazlası kırpılıyordu.
-    const styledEffortTable = styleTableForA4Print(wizardTableHtml || "");
-    const effortTablePages = wizardTableHtml
-      ? paginateTableRows(styledEffortTable, INNER_CONTENT_HEIGHT_PX - SECTION_HEADING_RESERVE_PX)
-      : [styledEffortTable];
+    // Kullanıcı talebi: "efor tablosu iki sayfaya taştı. tek sayfada
+    // topla." — önce EFFORT_TABLE_TIERS listesindeki her punto/dolgu
+    // seçeneği sırayla denenip tablonun GERÇEK render yüksekliği
+    // ölçülüyor; tabloyu tek sayfaya sığdıran EN OKUNAKLI (ilk uyan) tier
+    // seçiliyor. Bu sayede normal uzunluktaki tablolar artık gereksiz
+    // yere ikinci sayfaya taşmıyor. Yalnızca en sıkışık tier'de bile
+    // sığmayan (aşırı uzun) bir tablo varsa, önceki talep gereği ("hiçbir
+    // madde kaybolmasın") çok sayfaya bölünmeye geri düşülüyor — içerik
+    // hiçbir zaman kırpılmıyor.
+    let styledEffortTable = styleTableForA4Print(wizardTableHtml || "");
+    let effortTablePages: string[] = [styledEffortTable];
+    if (wizardTableHtml) {
+      const effortBudgetPx = INNER_CONTENT_HEIGHT_PX - SECTION_HEADING_RESERVE_PX;
+      let fitOnOnePage = false;
+      for (const tier of EFFORT_TABLE_TIERS) {
+        const candidate = styleTableForA4Print(wizardTableHtml, tier);
+        if (measureTableTotalHeightPx(candidate) <= effortBudgetPx) {
+          styledEffortTable = candidate;
+          effortTablePages = [candidate];
+          fitOnOnePage = true;
+          break;
+        }
+      }
+      if (!fitOnOnePage) {
+        const tightestTier = EFFORT_TABLE_TIERS[EFFORT_TABLE_TIERS.length - 1];
+        styledEffortTable = styleTableForA4Print(wizardTableHtml, tightestTier);
+        effortTablePages = paginateTableRows(styledEffortTable, effortBudgetPx);
+      }
+    }
 
     // Şartlar & İmza: aynı overflow:hidden kırpma hatası bu bölümde de
     // vardı ("max-height: 120mm; overflow-y: hidden") — artık burada da
