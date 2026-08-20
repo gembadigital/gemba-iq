@@ -2642,10 +2642,29 @@ export default function ServicesView({
     const printWindow = window.open("", "_blank");
     if (!printWindow) return;
 
+    // Kullanıcı hatası: "pdf ön izlemede hizmet kataloğuna girilen bütün
+    // bilgiler tam yer alırken yazdırma fonksiyonunda bilgiler çıkmıyor" —
+    // kök neden, bu yeni açılan boş pencerenin uygulamanın gerçek CSS'ini
+    // (Tailwind utility sınıfları, index.css, fontlar vb.) HİÇ İÇERMEMESİ.
+    // Sadece küçük bir inline <style> bloğu (sayfa boyutu/margin resetleri)
+    // vardı — ekrandaki canlı önizleme (liveAssemblyHtml, assembleDocument
+    // çıktısı) ile AYNI HTML yazdırılıyordu ama class ile stillenen hiçbir
+    // öğe (ör. hizmet kataloğu içeriğinden gelen Tailwind class'ları) bu
+    // pencerede görünmüyordu — içerik DOM'da vardı ama stilsiz/görünmez
+    // kalıyordu. Çözüm: ana sayfanın gerçek <link rel="stylesheet"> ve
+    // <style> etiketlerini olduğu gibi yeni pencereye kopyalamak — böylece
+    // yazdırma çıktısı ekrandaki önizlemeyle birebir aynı CSS'i kullanır.
+    const appStylesheets = Array.from(
+      document.querySelectorAll('link[rel="stylesheet"], style')
+    )
+      .map((el) => el.outerHTML)
+      .join("\n");
+
     printWindow.document.write(`
       <html>
         <head>
           <title>${clientShortName}_${proposalNumber}</title>
+          ${appStylesheets}
           <style>
             @media print {
               @page {
@@ -2676,8 +2695,37 @@ export default function ServicesView({
           </div>
           <script>
             window.onload = function() {
-              window.print();
-              setTimeout(function() { window.close(); }, 500);
+              // Kopyalanan <link rel="stylesheet"> etiketlerinin gerçekten
+              // yüklenmesini bekle — aksi halde window.onload bazı
+              // tarayıcılarda stylesheet indirmesi tamamlanmadan tetiklenip
+              // yazdırma yine stilsiz/eksik çıkabilir.
+              var sheets = Array.prototype.slice.call(document.querySelectorAll('link[rel="stylesheet"]'));
+              var pending = sheets.filter(function(l) { return !l.sheet; }).length;
+              var alreadyPrinted = false;
+              function go() {
+                if (alreadyPrinted) return;
+                alreadyPrinted = true;
+                window.print();
+                setTimeout(function() { window.close(); }, 500);
+              }
+              if (pending === 0) {
+                setTimeout(go, 50);
+              } else {
+                var remaining = pending;
+                sheets.forEach(function(l) {
+                  if (l.sheet) return;
+                  l.addEventListener('load', function() {
+                    remaining--;
+                    if (remaining <= 0) setTimeout(go, 50);
+                  });
+                  l.addEventListener('error', function() {
+                    remaining--;
+                    if (remaining <= 0) setTimeout(go, 50);
+                  });
+                });
+                // Güvenlik ağı: 2sn içinde yüklenmezse yine de yazdır.
+                setTimeout(go, 2000);
+              }
             };
           </script>
         </body>
