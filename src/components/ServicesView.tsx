@@ -977,11 +977,30 @@ export default function ServicesView({
     });
   };
 
+  // Kullanıcı hatası: "teklifi revize et fonksiyonu sadece müşteri ismine
+  // göre teklif bilgilerini getiriyor. opsiyonları, opsiyon içeriklerini,
+  // birim fiyat vb gibi bilgileri getirmiyor." Kök neden: aşağıdaki
+  // "Auto-sync cover letter whenever chosen card changes" effect'i
+  // (bkz. [selectedCardId, selectedService] dependency'li useEffect),
+  // loadProposalForRevision'ın setSelectedCardId çağrısı yüzünden HEMEN
+  // ardından tekrar tetikleniyor ve az önce yüklenen opsiyon adı/açıklama/
+  // satır/kapak verisini o hizmet kartının kayıtlı ŞABLON varsayılanlarıyla
+  // sessizce EZİYORDU — bu yüzden sadece o effect'in dokunmadığı alanlar
+  // (müşteri adı, tarih, sorumlu vb.) doğru geliyordu. Bu ref, revizyon
+  // yüklemesinden hemen sonra o effect'in bir kerelik bu ezme davranışını
+  // atlamasını sağlar (bkz. effect içindeki kullanım).
+  const skipTemplateAutoSyncRef = useRef(false);
+
   // Kullanıcı talebi: "teklif bir kere oluşturulduktan sonra revize
   // edilemiyor... Teklif yönetiminde ilgili teklifi revize et seçeneği
   // koyarsan otomatik olarak teklif oluştura yönlendirir. tüm teklif
   // formatı o müşteri için geri gelir... kaldığı yerden devam etsin."
   const loadProposalForRevision = (proposal: any) => {
+    // Hizmet kartı eşleşip setSelectedCardId çağrılırsa aşağıdaki auto-sync
+    // effect'i tetiklenecek — bu bayrak o effect'e "bu sefer şablon
+    // varsayılanlarıyla ezme" der (effect kendini bir kerelik tüketip false'a
+    // döndürür).
+    skipTemplateAutoSyncRef.current = true;
     setRevisingProposalId(proposal.id);
     setClientTitle(proposal.companyName || "");
     setIsShortNameManuallyEdited(false);
@@ -1017,8 +1036,20 @@ export default function ServicesView({
           }))
         : [];
 
+    // Kullanıcı hatası: "opsiyonları, opsiyon içeriklerini, birim fiyat vb
+    // gibi bilgileri getirmiyor" — kök neden, kaydedilen opsiyon nesnesinde
+    // sadece satırlar (rows) vardı, opsiyonun kendi başlığı (name) ve
+    // açıklama metni (desc) hiç saklanmıyordu; bu yüzden geri yüklerken
+    // eski/varsayılan başlık-açıklama kalıyordu. Artık her ikisi de
+    // buildAndPersistProposal içinde kaydediliyor (bkz. mappedOptions),
+    // burada da geri okunuyor. Eski (bu düzeltmeden önce kaydedilmiş)
+    // teklifler için name/desc alanları boş gelebilir — bu durumda mevcut
+    // (şablon) değer korunur, üzerine boş yazılmaz.
     if (opts["Option 1"]) {
       setOption1Active(true);
+      if (opts["Option 1"].name) setOption1Name(opts["Option 1"].name);
+      if (opts["Option 1"].desc) setOption1Desc(opts["Option 1"].desc);
+      if (opts["Option 1"].duration) setOption1Duration(opts["Option 1"].duration);
       const rows = toRows(opts["Option 1"].rows);
       if (rows.length > 0) setOption1Rows(rows);
     } else {
@@ -1026,6 +1057,9 @@ export default function ServicesView({
     }
     if (opts["Option 2"]) {
       setOption2Active(true);
+      if (opts["Option 2"].name) setOption2Name(opts["Option 2"].name);
+      if (opts["Option 2"].desc) setOption2Desc(opts["Option 2"].desc);
+      if (opts["Option 2"].duration) setOption2Duration(opts["Option 2"].duration);
       const rows = toRows(opts["Option 2"].rows);
       if (rows.length > 0) setOption2Rows(rows);
     } else {
@@ -1033,6 +1067,9 @@ export default function ServicesView({
     }
     if (opts["Option 3"]) {
       setOption3Active(true);
+      if (opts["Option 3"].name) setOption3Name(opts["Option 3"].name);
+      if (opts["Option 3"].desc) setOption3Desc(opts["Option 3"].desc);
+      if (opts["Option 3"].duration) setOption3Duration(opts["Option 3"].duration);
       const rows = toRows(opts["Option 3"].rows);
       if (rows.length > 0) setOption3Rows(rows);
     } else {
@@ -1043,6 +1080,16 @@ export default function ServicesView({
     setWizardStep(1);
     setToastMessage(t("Loaded existing proposal for revision: {number}").replace("{number}", proposal.proposalNumber || ""));
     setTimeout(() => setToastMessage(null), 3000);
+
+    // Güvenlik ağı: eşleşen hizmet kartı bulunamadıysa VEYA zaten seçili
+    // olan kartla aynıysa, yukarıdaki auto-sync effect'i hiç yeniden
+    // tetiklenmeyeceği için skipTemplateAutoSyncRef bayrağını hiçbir zaman
+    // tüketmeyecek — bu durumda bayrak takılı kalıp sonraki, tamamen
+    // alakasız bir hizmet kartı değişiminde (kullanıcı elle başka kart
+    // seçtiğinde) o senkronu yanlışlıkla atlayabilirdi. Bir sonraki
+    // event loop turunda, effect zaten tüketmişse bu no-op'tur; tüketmediyse
+    // bayrağı burada temizleyerek sızıntıyı önler.
+    setTimeout(() => { skipTemplateAutoSyncRef.current = false; }, 0);
   };
 
   // Teklif Yönetimi'nden "Revize Et" tıklandığında (CrmDb.setKv("crm_revise_proposal_id", id)
@@ -1341,11 +1388,25 @@ export default function ServicesView({
   };
 
   // Auto-sync cover letter whenever chosen card changes
+  //
+  // Kullanıcı hatası: "teklifi revize et fonksiyonu sadece müşteri ismine
+  // göre teklif bilgilerini getiriyor. opsiyonları, opsiyon içeriklerini,
+  // birim fiyat vb gibi bilgileri getirmiyor." Kök neden: loadProposalForRevision
+  // doğru opsiyon adı/açıklama/satır verisini yükledikten hemen sonra,
+  // kendi setSelectedCardId çağrısı bu effect'i TEKRAR tetikliyordu — bu
+  // effect de o hizmet kartının kayıtlı ŞABLON varsayılanlarını (varsa)
+  // üzerine yazarak az önce yüklenen gerçek müşteri/teklif verisini
+  // sessizce eziyordu. skipTemplateAutoSyncRef, revizyon yüklemesinden
+  // hemen sonraki bu bir kerelik tetiklenmeyi atlar (bkz. loadProposalForRevision).
   useEffect(() => {
     if (selectedService) {
+      if (skipTemplateAutoSyncRef.current) {
+        skipTemplateAutoSyncRef.current = false;
+        return;
+      }
       setWizardCoverPage(selectedService.defaultCoverPage);
       setWizardTableHtml(selectedService.activityTableHtml || "");
-      
+
       // Pre-populate service-specific defaults if they have been custom saved
       if (selectedService.option1Active !== undefined) setOption1Active(selectedService.option1Active);
       if (selectedService.option1Name) setOption1Name(selectedService.option1Name);
@@ -2192,6 +2253,12 @@ export default function ServicesView({
     // saklanmıyordu. Artık "rows" alanında gerçek satırlar da korunuyor;
     // dailyRate/manDays özet alanları eski kayıtlarla geriye dönük uyumluluk
     // için hâlâ dolduruluyor.
+    // Kullanıcı hatası: "teklifi revize et fonksiyonu ... opsiyonları,
+    // opsiyon içeriklerini, birim fiyat vb gibi bilgileri getirmiyor" — kök
+    // neden, buraya kadar sadece satır bazlı kalemler (rows) kaydediliyordu;
+    // opsiyonun kendi başlığı (name) ve açıklama metni (desc/duration) hiç
+    // saklanmıyordu, bu yüzden revizyonda geri yüklenecek bir şey yoktu.
+    // Artık üçü de kaydediliyor (bkz. loadProposalForRevision).
     const mappedOptions: { [key: string]: any } = {};
     if (option1Active) {
       mappedOptions["Option 1"] = {
@@ -2199,6 +2266,9 @@ export default function ServicesView({
         consulting: true,
         expenses: 0,
         workshop: false,
+        name: option1Name,
+        desc: option1Desc,
+        duration: option1Duration,
         dailyRate: option1Rows.length ? Math.round(option1Rows.reduce((s, r) => s + (r.dailyRate || 0), 0) / option1Rows.length) : 0,
         manDays: option1Rows.reduce((s, r) => s + (r.manDays || 0), 0),
         rows: toOptionRows(option1Rows)
@@ -2210,6 +2280,9 @@ export default function ServicesView({
         consulting: true,
         expenses: 0,
         workshop: false,
+        name: option2Name,
+        desc: option2Desc,
+        duration: option2Duration,
         dailyRate: option2Rows.length ? Math.round(option2Rows.reduce((s, r) => s + (r.dailyRate || 0), 0) / option2Rows.length) : 0,
         manDays: option2Rows.reduce((s, r) => s + (r.manDays || 0), 0),
         rows: toOptionRows(option2Rows)
@@ -2221,6 +2294,9 @@ export default function ServicesView({
         consulting: true,
         expenses: 0,
         workshop: false,
+        name: option3Name,
+        desc: option3Desc,
+        duration: option3Duration,
         dailyRate: option3Rows.length ? Math.round(option3Rows.reduce((s, r) => s + (r.dailyRate || 0), 0) / option3Rows.length) : 0,
         manDays: option3Rows.reduce((s, r) => s + (r.manDays || 0), 0),
         rows: toOptionRows(option3Rows)
