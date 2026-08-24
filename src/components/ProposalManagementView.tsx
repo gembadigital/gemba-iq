@@ -308,6 +308,21 @@ export default function ProposalManagementView() {
       if (editingProposal) {
         const updated = await updateEnterpriseProposal({ ...proposalData, id: editingProposal.id });
         setProposals((prev) => prev.map((p) => (p.id === updated.id ? updated : p)));
+        // Kullanıcı hatası: "teklif yönetimi seçili teklif adı -> teklif
+        // detaylarını düzenle fonksiyonu, düzenleme yapıldıktan sonra
+        // kaydet fonksiyonu çalışmıyor." Kök neden: kayıt aslında
+        // Supabase'e ve `proposals` listesine doğru şekilde yazılıyordu,
+        // ama satıra tıklayınca açılan "Teklif Özeti" panelinin state'i
+        // (`selectedProposalForDetail`) DÜZENLEME MODALINDAN bağımsız, eski
+        // (stale) bir kopya olarak kalıyordu — bu yüzden kullanıcı Kaydet'e
+        // bastıktan sonra hâlâ açık/az önce açılmış olan özet panelinde
+        // değişiklikler hiç görünmüyordu ve "kaydetme çalışmıyor" izlenimi
+        // veriyordu. Onay durumu değişikliklerinde (handleSetApproval)
+        // zaten bu senkronizasyon yapılıyordu; aynı düzeltme burada da
+        // uygulanıyor.
+        if (selectedProposalForDetail?.id === updated.id) {
+          setSelectedProposalForDetail(updated);
+        }
       } else {
         const created = await createEnterpriseProposal(proposalData);
         setProposals((prev) => [...prev, created]);
