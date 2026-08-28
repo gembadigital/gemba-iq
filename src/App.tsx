@@ -783,7 +783,7 @@ export default function App() {
   const breadcrumbs = getBreadcrumbs(activeTab);
 
   return (
-    <div className={`min-h-screen flex transition-colors duration-300 ${isNotionMode ? "bg-white dark:bg-[#191919] font-sans text-[#37352f] dark:text-[#dfdfde]" : "bg-[#F3F2F1] dark:bg-[#11100f]"}`}>
+    <div className={`h-screen overflow-hidden flex transition-colors duration-300 ${isNotionMode ? "bg-white dark:bg-[#191919] font-sans text-[#37352f] dark:text-[#dfdfde]" : "bg-[#F3F2F1] dark:bg-[#11100f]"}`}>
       
       {/* Mobil/tablet hamburger çekmecesi için arka plan örtüsü (<1024px).
           Sadece çekmece açıkken render edilir; tıklanınca kapatır. */}
@@ -1386,7 +1386,7 @@ export default function App() {
       </aside>
 
       {/* Main Panel Content Stage */}
-      <main className={`flex-1 flex flex-col min-w-0 transition-colors ${
+      <main className={`flex-1 flex flex-col min-w-0 min-h-0 overflow-hidden transition-colors ${
         layoutTheme === "saas"
           ? "bg-[#FAFAFA] dark:bg-[#09090b]"
           : layoutTheme === "notion"
@@ -1809,7 +1809,7 @@ export default function App() {
         </div>
 
         {/* Core Main Container */}
-        <div className="max-w-7xl mx-auto w-full px-6 py-6 space-y-6">
+        <div className="max-w-7xl mx-auto w-full px-6 py-6 space-y-6 flex-1 min-h-0 overflow-y-auto">
 
           {/* Content Routing tabs container */}
           <div className="transition-all duration-300">
