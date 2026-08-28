@@ -6,6 +6,20 @@ import {
   handleMailboxError,
   sendOrganizationMailboxTest,
 } from "../../lib/server/organizationMailbox.js";
+import {
+  integrationCompanyCreate,
+  integrationCompanySearch,
+  integrationCompanyGet,
+  integrationCompanyUpdate,
+  integrationContactCreate,
+  integrationContactSearch,
+  integrationDealCreate,
+  integrationDealUpdate,
+  integrationDealSearch,
+  integrationTaskCreate,
+  integrationTaskUpdate,
+  integrationTaskSearch,
+} from "../../lib/server/integrationApi.js";
 
 // Consolidated into a single Vercel catch-all route (covers
 // /api/organization/mailbox, /api/organization/members/role,
@@ -235,5 +249,23 @@ export default async function handler(request, response) {
   if (action === "mailbox") return mailboxHandler(request, response);
   if (action === "members-role") return membersRoleHandler(request, response);
   if (action === "members-delete") return membersDeleteHandler(request, response);
+
+  // OpenClaw (harici AI agent) entegrasyon uç noktaları. Bunlar Supabase
+  // Auth oturumu değil, kendi Bearer API key mekanizmasını kullanır — bkz.
+  // lib/server/integrationApi.js. Mevcut mailbox/members action'larıyla
+  // hiçbir paylaşımlı state yok.
+  if (action === "integration-company-create") return integrationCompanyCreate(request, response);
+  if (action === "integration-company-search") return integrationCompanySearch(request, response);
+  if (action === "integration-company-get") return integrationCompanyGet(request, response);
+  if (action === "integration-company-update") return integrationCompanyUpdate(request, response);
+  if (action === "integration-contact-create") return integrationContactCreate(request, response);
+  if (action === "integration-contact-search") return integrationContactSearch(request, response);
+  if (action === "integration-deal-create") return integrationDealCreate(request, response);
+  if (action === "integration-deal-update") return integrationDealUpdate(request, response);
+  if (action === "integration-deal-search") return integrationDealSearch(request, response);
+  if (action === "integration-task-create") return integrationTaskCreate(request, response);
+  if (action === "integration-task-update") return integrationTaskUpdate(request, response);
+  if (action === "integration-task-search") return integrationTaskSearch(request, response);
+
   return response.status(404).json({ error: "Unknown organization endpoint." });
 }

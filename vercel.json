@@ -25,6 +25,19 @@
     { "source": "/api/organization/members/role", "destination": "/api/organization/[...action]?action=members-role" },
     { "source": "/api/organization/members/delete", "destination": "/api/organization/[...action]?action=members-delete" },
 
+    { "source": "/api/organization/integration/companies", "destination": "/api/organization/[...action]?action=integration-company-create" },
+    { "source": "/api/organization/integration/companies/search", "destination": "/api/organization/[...action]?action=integration-company-search" },
+    { "source": "/api/organization/integration/companies/get", "destination": "/api/organization/[...action]?action=integration-company-get" },
+    { "source": "/api/organization/integration/companies/update", "destination": "/api/organization/[...action]?action=integration-company-update" },
+    { "source": "/api/organization/integration/contacts", "destination": "/api/organization/[...action]?action=integration-contact-create" },
+    { "source": "/api/organization/integration/contacts/search", "destination": "/api/organization/[...action]?action=integration-contact-search" },
+    { "source": "/api/organization/integration/deals", "destination": "/api/organization/[...action]?action=integration-deal-create" },
+    { "source": "/api/organization/integration/deals/update", "destination": "/api/organization/[...action]?action=integration-deal-update" },
+    { "source": "/api/organization/integration/deals/search", "destination": "/api/organization/[...action]?action=integration-deal-search" },
+    { "source": "/api/organization/integration/tasks", "destination": "/api/organization/[...action]?action=integration-task-create" },
+    { "source": "/api/organization/integration/tasks/update", "destination": "/api/organization/[...action]?action=integration-task-update" },
+    { "source": "/api/organization/integration/tasks/search", "destination": "/api/organization/[...action]?action=integration-task-search" },
+
     { "source": "/((?!assets/|api/|design-preview/).*)", "destination": "/index.html" }
   ]
 }
