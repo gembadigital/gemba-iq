@@ -244,6 +244,17 @@ export default function MarketingHubView({ initialSubTab, onNavigateToTab }: Mar
   const [showContactFormFor, setShowContactFormFor] = useState<string | null>(null);
   const [pendingLeadPrompt, setPendingLeadPrompt] = useState<{ accountId: string; contactId: string } | null>(null);
 
+  // Kullanıcı talebi: "mevcut müşteri seçilmeli->müşterinin sektörüne göre
+  // rakip analizi yaparak rakip firmalarını çıkartmalı ve seçilen rakipleri
+  // listeye almalı" — seçili müşterinin sektöründe gerçek (Google Search ile
+  // doğrulanmış, uydurulmamış) rakip firmaları bulup, kullanıcının seçtiklerini
+  // tek tıkla Hedef Firma listesine ekleyen AI destekli rakip keşfi.
+  const [aiCompetitorLoading, setAiCompetitorLoading] = useState(false);
+  const [aiCompetitorError, setAiCompetitorError] = useState("");
+  const [aiCompetitorResults, setAiCompetitorResults] = useState<any[]>([]);
+  const [selectedAiCompetitorKeys, setSelectedAiCompetitorKeys] = useState<Set<string>>(new Set());
+  const [showAiCompetitorPanel, setShowAiCompetitorPanel] = useState(false);
+
   const triggerToast = (
     msg: string,
     type: "success" | "info" | "error" = "success",
@@ -671,6 +682,140 @@ export default function MarketingHubView({ initialSubTab, onNavigateToTab }: Mar
     if (firstContact) {
       setPendingLeadPrompt({ accountId: added.id, contactId: firstContact.id });
     }
+  };
+
+  // Kullanıcı talebi: seçili müşterinin sektörüne göre AI ile gerçek rakip
+  // firmaları bul. Uydurma sonuç göstermemek için mevcut /api/gemini/
+  // company-search endpoint'i kullanılıyor — bu endpoint Gemini'nin gerçek
+  // Google Search aracıyla (grounding) doğrulanmış firmalar döndürüyor,
+  // CompanyDiscoveryView.tsx'teki "Google'da Ara" akışıyla aynı altyapı.
+  const handleFindCompetitorsWithAi = async () => {
+    if (!selectedSourceCompany) return;
+    setShowAiCompetitorPanel(true);
+    setAiCompetitorLoading(true);
+    setAiCompetitorError("");
+    setAiCompetitorResults([]);
+    setSelectedAiCompetitorKeys(new Set());
+
+    const sectorLabel = [selectedSourceCompany.industry, selectedSourceCompany.subIndustry]
+      .filter(Boolean)
+      .join(" / ");
+    const query = `"${sectorLabel}" sektöründe Türkiye'de üretim yapan, "${selectedSourceCompany.name}" firmasına rakip olabilecek imalatçı/üretici firmalar${
+      selectedSourceCompany.billingCity ? ` (tercihen ${selectedSourceCompany.billingCity} ve çevresi, olmazsa Türkiye geneli)` : ""
+    }`;
+
+    try {
+      const res = await fetch("/api/gemini/company-search", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ query }),
+      });
+
+      if (!res.headers.get("content-type")?.includes("application/json")) {
+        throw new Error(t("Server returned an unexpected response. Please try again."));
+      }
+      const data = await res.json();
+      if (!res.ok || !data.success || !data.response) {
+        throw new Error(data.error || t("Search request failed."));
+      }
+
+      const cleaned = String(data.response).replace(/```json/gi, "").replace(/```/g, "").trim();
+      const parsed = JSON.parse(cleaned);
+      if (!Array.isArray(parsed)) {
+        throw new Error(t("Invalid response format."));
+      }
+
+      const selfKey = normalizeTrKey(selectedSourceCompany.name);
+      const existingKeys = new Set(accounts.map((a) => normalizeTrKey(a.companyName)));
+      const filtered = parsed.filter((c: any) => {
+        const key = normalizeTrKey(c?.name || "");
+        return key && key !== selfKey;
+      });
+
+      setAiCompetitorResults(filtered);
+      if (filtered.length === 0) {
+        setAiCompetitorError(t("No verified competitor companies found for this sector."));
+      } else {
+        const preselect = new Set(
+          filtered
+            .filter((c: any) => !existingKeys.has(normalizeTrKey(c.name || "")))
+            .map((c: any) => String(c.id || c.name))
+        );
+        setSelectedAiCompetitorKeys(preselect);
+      }
+    } catch (err) {
+      console.error("Competitor AI search failed:", err);
+      setAiCompetitorResults([]);
+      setAiCompetitorError(err instanceof Error && err.message ? err.message : t("Could not fetch verified competitor data."));
+    } finally {
+      setAiCompetitorLoading(false);
+    }
+  };
+
+  const toggleAiCompetitorSelection = (key: string) => {
+    setSelectedAiCompetitorKeys((prev) => {
+      const next = new Set(prev);
+      if (next.has(key)) next.delete(key);
+      else next.add(key);
+      return next;
+    });
+  };
+
+  // Seçilen AI rakiplerini tek adımda Hedef Firma listesine ekler — aynı
+  // crm_target_accounts kaydını kullanır (persistAccounts zaten
+  // deduplicateTargetAccounts ile firma adı bazında mükerrer kaydı otomatik
+  // birleştirir), böylece Hedef Hesaplar, İş Geliştirme Pipeline'ı ve BD KPI
+  // sayfaları da anında aynı veriyi görür.
+  const handleAddSelectedAiCompetitors = () => {
+    if (!selectedSourceCompany) return;
+    const toAdd = aiCompetitorResults.filter((c: any) => selectedAiCompetitorKeys.has(String(c.id || c.name)));
+    if (toAdd.length === 0) {
+      triggerToast(t("Please select at least one competitor."), "error");
+      return;
+    }
+
+    const now = new Date().toLocaleString("tr-TR");
+    const additions: TargetAccount[] = toAdd
+      .filter((c: any) => c?.name && String(c.name).trim())
+      .map((c: any, idx: number) => {
+        const name = String(c.name).trim();
+        const website = c.website
+          ? (String(c.website).startsWith("http") ? String(c.website) : `https://${c.website}`)
+          : `https://www.${name.toLowerCase().replace(/[^a-z0-9]/g, "")}.com`;
+        return {
+          id: `target_${Date.now()}_${idx}_${Math.floor(Math.random() * 10000)}`,
+          no: accounts.length + idx + 1,
+          companyName: name,
+          websiteUrl: website,
+          industryTag: selectedSourceCompany.industry || t("General Industry"),
+          subIndustry: selectedSourceCompany.subIndustry || "",
+          city: c.city || selectedSourceCompany.billingCity || "",
+          companySize: c.size || "",
+          locationMain: c.region || "",
+          leadStatus: "New",
+          leadSegment: "Cold",
+          riskScore: 70,
+          aiAnalysisSummary: c.snippet || c.description || "",
+          draftTemplates: "",
+          analysisSource: t("Marketing Hub — AI Competitor Analysis"),
+          analysisDate: now,
+          rawOutput: JSON.stringify(c),
+          analysisNotes: c.notes || "",
+          bdPipelineStage: bdActiveStages[0] || "Yeni",
+          sourceType: "customer",
+          discoveredFromCompanyId: selectedSourceCompany.id,
+          discoveredFromCompanyName: selectedSourceCompany.name,
+          contacts: [],
+        } as TargetAccount;
+      });
+
+    persistAccounts([...accounts, ...additions]);
+    triggerToast(
+      t("{count} competitor(s) added to Target Accounts registry").replace("{count}", String(additions.length)),
+      "success"
+    );
+    setAiCompetitorResults((prev) => prev.filter((c: any) => !selectedAiCompetitorKeys.has(String(c.id || c.name))));
+    setSelectedAiCompetitorKeys(new Set());
   };
 
   const updateAccountField = (id: string, patch: Partial<TargetAccount>) => {
@@ -1635,25 +1780,138 @@ export default function MarketingHubView({ initialSubTab, onNavigateToTab }: Mar
                       </div>
                     </div>
 
-                    <div className="flex items-center justify-between">
+                    <div className="flex items-center justify-between gap-2 flex-wrap">
                       <h3 className="text-xs font-bold text-slate-700 dark:text-slate-200 uppercase">
                         {t("Competitor Map")}{" "}
                         <span className="text-slate-400 font-normal normal-case">
                           ({t("companies operating in the same sector")}: {selectedSourceCompany.industry})
                         </span>
                       </h3>
-                      <button
-                        type="button"
-                        onClick={() => {
-                          resetTargetForm();
-                          setShowTargetForm(!showTargetForm);
-                        }}
-                        className="text-xs font-bold bg-[#0078D4] hover:bg-[#106ebe] text-white px-3 py-2 rounded flex items-center gap-1.5 cursor-pointer"
-                      >
-                        <Plus className="w-3.5 h-3.5" />
-                        <span>{showTargetForm ? t("Cancel") : t("Add New Competitor")}</span>
-                      </button>
+                      <div className="flex items-center gap-2">
+                        <button
+                          type="button"
+                          onClick={handleFindCompetitorsWithAi}
+                          disabled={aiCompetitorLoading}
+                          className={`text-xs font-bold px-3 py-2 rounded flex items-center gap-1.5 ${
+                            aiCompetitorLoading
+                              ? "bg-slate-200 dark:bg-[#323130] text-slate-400 cursor-not-allowed"
+                              : "bg-purple-600 hover:bg-purple-700 text-white cursor-pointer"
+                          }`}
+                        >
+                          {aiCompetitorLoading ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Sparkles className="w-3.5 h-3.5" />}
+                          <span>{aiCompetitorLoading ? t("Analyzing...") : t("Find Competitors with AI")}</span>
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            resetTargetForm();
+                            setShowTargetForm(!showTargetForm);
+                          }}
+                          className="text-xs font-bold bg-[#0078D4] hover:bg-[#106ebe] text-white px-3 py-2 rounded flex items-center gap-1.5 cursor-pointer"
+                        >
+                          <Plus className="w-3.5 h-3.5" />
+                          <span>{showTargetForm ? t("Cancel") : t("Add New Competitor")}</span>
+                        </button>
+                      </div>
                     </div>
+
+                    {/* AI Rakip Analizi Sonuç Paneli — kullanıcı talebi:
+                        "mevcut müşteri seçilmeli->müşterinin sektörüne göre
+                        rakip analizi yaparak rakip firmalarını çıkartmalı ve
+                        seçilen rakipleri listeye almalı" */}
+                    {showAiCompetitorPanel && (
+                      <div className="bg-purple-50/50 dark:bg-purple-950/10 border border-purple-200 dark:border-purple-900/40 rounded-xl p-4 space-y-3">
+                        <div className="flex items-center justify-between">
+                          <h4 className="text-[11px] font-bold text-purple-700 dark:text-purple-300 uppercase flex items-center gap-1.5">
+                            <Sparkles className="w-3.5 h-3.5" />
+                            {t("AI Competitor Analysis")}
+                          </h4>
+                          <button
+                            type="button"
+                            onClick={() => setShowAiCompetitorPanel(false)}
+                            className="text-slate-400 hover:text-slate-600 cursor-pointer"
+                            aria-label={t("Close")}
+                          >
+                            <X className="w-3.5 h-3.5" />
+                          </button>
+                        </div>
+
+                        {aiCompetitorLoading && (
+                          <div className="flex items-center gap-2 text-xs text-slate-500 py-3">
+                            <Loader2 className="w-4 h-4 animate-spin" />
+                            <span>{t("Searching real, verified companies in this sector...")}</span>
+                          </div>
+                        )}
+
+                        {!aiCompetitorLoading && aiCompetitorError && (
+                          <p className="text-[11px] text-rose-600">{aiCompetitorError}</p>
+                        )}
+
+                        {!aiCompetitorLoading && aiCompetitorResults.length > 0 && (
+                          <>
+                            <div className="space-y-1.5 max-h-72 overflow-y-auto">
+                              {aiCompetitorResults.map((c: any) => {
+                                const key = String(c.id || c.name);
+                                const alreadyInList = accounts.some((a) => normalizeTrKey(a.companyName) === normalizeTrKey(c.name || ""));
+                                const checked = selectedAiCompetitorKeys.has(key);
+                                return (
+                                  <label
+                                    key={key}
+                                    className={`flex items-start gap-2.5 p-2.5 rounded-lg border text-xs cursor-pointer transition-colors ${
+                                      checked
+                                        ? "bg-white dark:bg-[#1b1a19] border-purple-300 dark:border-purple-800"
+                                        : "bg-white/60 dark:bg-[#1b1a19]/60 border-transparent hover:border-purple-200 dark:hover:border-purple-900"
+                                    }`}
+                                  >
+                                    <input
+                                      type="checkbox"
+                                      checked={checked}
+                                      onChange={() => toggleAiCompetitorSelection(key)}
+                                      className="mt-0.5 cursor-pointer"
+                                    />
+                                    <div className="flex-1 min-w-0">
+                                      <div className="flex items-center gap-2 flex-wrap">
+                                        <span className="font-bold text-slate-700 dark:text-slate-200">{c.name}</span>
+                                        {c.city && <span className="text-[10px] text-slate-400">· {c.city}</span>}
+                                        {c.website && (
+                                          <span className="text-[10px] text-[#0078D4] font-mono">{c.website}</span>
+                                        )}
+                                        {alreadyInList && (
+                                          <span className="text-[9px] font-bold px-1.5 py-0.5 rounded-full bg-emerald-100 text-emerald-700 dark:bg-emerald-950/30 dark:text-emerald-400">
+                                            {t("Already in Target Accounts")}
+                                          </span>
+                                        )}
+                                      </div>
+                                      {(c.snippet || c.description) && (
+                                        <p className="text-[10px] text-slate-500 mt-0.5">{c.snippet || c.description}</p>
+                                      )}
+                                    </div>
+                                  </label>
+                                );
+                              })}
+                            </div>
+                            <div className="flex items-center justify-between pt-1">
+                              <span className="text-[10px] text-slate-400">
+                                {t("{count} selected").replace("{count}", String(selectedAiCompetitorKeys.size))}
+                              </span>
+                              <button
+                                type="button"
+                                onClick={handleAddSelectedAiCompetitors}
+                                disabled={selectedAiCompetitorKeys.size === 0}
+                                className={`text-xs font-bold px-3 py-2 rounded flex items-center gap-1.5 ${
+                                  selectedAiCompetitorKeys.size === 0
+                                    ? "bg-slate-200 dark:bg-[#323130] text-slate-400 cursor-not-allowed"
+                                    : "bg-emerald-600 hover:bg-emerald-700 text-white cursor-pointer"
+                                }`}
+                              >
+                                <Check className="w-3.5 h-3.5" />
+                                <span>{t("Add Selected to Target Accounts")}</span>
+                              </button>
+                            </div>
+                          </>
+                        )}
+                      </div>
+                    )}
 
                     <div className="bg-white dark:bg-[#1b1a19] border border-[#EDEBE9] dark:border-[#323130] rounded-xl overflow-hidden">
                       <table className="w-full text-left border-collapse text-xs">

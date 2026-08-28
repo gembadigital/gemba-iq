@@ -428,6 +428,23 @@ export const uiDictionaryTR: Record<string, string> = {
   "Competitor Map": "Rakip Haritası",
   "companies operating in the same sector": "bu sektörde faaliyet gösteren firmalar",
   "Add New Competitor": "Yeni Rakip Firma Ekle",
+  // AI destekli rakip analizi (kullanıcı talebi: "mevcut müşteri
+  // seçilmeli->müşterinin sektörüne göre rakip analizi yaparak rakip
+  // firmalarını çıkartmalı ve seçilen rakipleri listeye almalı")
+  "Find Competitors with AI": "AI ile Rakip Bul",
+  "AI Competitor Analysis": "AI Rakip Analizi",
+  "Searching real, verified companies in this sector...": "Bu sektördeki gerçek, doğrulanmış firmalar aranıyor...",
+  "No verified competitor companies found for this sector.": "Bu sektör için doğrulanmış rakip firma bulunamadı.",
+  "Already in Target Accounts": "Zaten Hedef Hesaplarda",
+  "{count} selected": "{count} seçildi",
+  "Add Selected to Target Accounts": "Seçilenleri Hedef Hesaplara Ekle",
+  "Please select at least one competitor.": "Lütfen en az bir rakip firma seçin.",
+  "{count} competitor(s) added to Target Accounts registry": "{count} rakip firma Hedef Hesaplar listesine eklendi",
+  "Marketing Hub — AI Competitor Analysis": "Pazarlama Merkezi — AI Rakip Analizi",
+  "Server returned an unexpected response. Please try again.": "Sunucu beklenmeyen bir yanıt döndürdü. Lütfen tekrar deneyin.",
+  "Search request failed.": "Arama isteği başarısız oldu.",
+  "Invalid response format.": "Geçersiz yanıt formatı.",
+  "Could not fetch verified competitor data.": "Doğrulanmış rakip firma verisi alınamadı.",
   "Contact Count": "Kontakt Sayısı",
   "Last Action": "Son İşlem",
   "No competitors tracked in this sector yet. Add one above.": "Bu sektörde henüz takip edilen rakip yok. Yukarıdan ekleyin.",

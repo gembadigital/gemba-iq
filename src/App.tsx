@@ -419,17 +419,18 @@ export default function App() {
     if (["services", "deal-management", "proposal-management", "create-proposal", "sales-dashboard"].includes(activeTab)) {
       setDealsMenuExpanded(true);
     }
-    if (["companies-registry", "company-discovery", "target-accounts"].includes(activeTab)) {
+    if (["companies-registry", "company-discovery"].includes(activeTab)) {
       setCompaniesMenuExpanded(true);
     }
     if (["lead-generator", "lead-profiles", "ai-sales-assistant"].includes(activeTab)) {
       setLeadsMenuExpanded(true);
     }
-    if (["campaign-manager", "dashboard", "designer", "progress", "history"].includes(activeTab)) {
+    if (["dashboard", "designer", "progress", "history"].includes(activeTab)) {
       setCampaignMenuExpanded(true);
     }
     if (
       [
+        "target-accounts",
         "marketing-ai-coach",
         "marketing-overview",
         "marketing-industry-intel",
@@ -438,6 +439,7 @@ export default function App() {
         "marketing-growth-health",
         "marketing-digital-intel",
         "marketing-kpi-okr",
+        "campaign-manager",
       ].includes(activeTab)
     ) {
       setMarketingMenuExpanded(true);
@@ -746,7 +748,7 @@ export default function App() {
       "lead-profiles": { parent: "Lead Discovery", child: "Lead Profiles" },
       "lead-generator": { parent: "Lead Discovery", child: "Lead Mail Generator" },
       "ai-sales-assistant": { parent: "Lead Discovery", child: "AI Sales Assistant" },
-      "target-accounts": { parent: "Companies & Targets", child: "Target Accounts" },
+      "target-accounts": { parent: "Marketing & Business Development", child: "Target Accounts" },
       "companies-registry": { parent: "Companies & Targets", child: "Customers" },
       "services": { parent: "Deal Management", child: "Services" },
       "sales-dashboard": { parent: "Deal Management", child: "Sales Dashboard" },
@@ -764,7 +766,7 @@ export default function App() {
       "marketing-digital-intel": { parent: "Marketing & Business Development", child: "Digital Marketing Intelligence" },
       "marketing-kpi-okr": { parent: "Marketing & Business Development", child: "BD KPIs, Win/Loss & OKR" },
       "contract-manager": { parent: "CRM", child: "Contract Manager" },
-      "campaign-manager": { parent: "Campaign", child: "Campaign Manager" },
+      "campaign-manager": { parent: "Marketing & Business Development", child: "Campaign Manager" },
       "dashboard": { parent: "Campaign", child: "Campaign Dashboard" },
       "designer": { parent: "Campaign", child: "Mail Merge Builder" },
       "progress": { parent: "Campaign", child: "Merge Sending Queue" },
@@ -1026,13 +1028,6 @@ export default function App() {
                     activeBorderClass="border-l-amber-500"
                     isSubmenu={true}
                   />
-
-                  <SidebarButton
-                    id="target-accounts"
-                    icon={isNotionMode ? <span className="text-base">🎯</span> : <Target className="w-[20px] h-[20px] flex-shrink-0 text-blue-500" />}
-                    label="Target Accounts"
-                    isSubmenu={true}
-                  />
                 </div>
               )}
             </div>
@@ -1181,6 +1176,12 @@ export default function App() {
                     <div className="absolute left-[34px] top-0 bottom-0 w-[1px] bg-[#EDEBE9] dark:bg-[#323130] z-10" />
                   )}
                   <SidebarButton
+                    id="target-accounts"
+                    icon={isNotionMode ? <span className="text-base">🎯</span> : <Target className="w-[20px] h-[20px] flex-shrink-0 text-blue-500" />}
+                    label="Target Accounts"
+                    isSubmenu={true}
+                  />
+                  <SidebarButton
                     id="marketing-ai-coach"
                     icon={isNotionMode ? <span className="text-base">🤖</span> : <Sparkles className="w-[20px] h-[20px] flex-shrink-0 text-amber-500" />}
                     label="AI Marketing Coach"
@@ -1226,6 +1227,12 @@ export default function App() {
                     id="marketing-kpi-okr"
                     icon={isNotionMode ? <span className="text-base">🏆</span> : <Award className="w-[20px] h-[20px] flex-shrink-0 text-purple-500" />}
                     label="BD KPIs, Win/Loss & OKR"
+                    isSubmenu={true}
+                  />
+                  <SidebarButton
+                    id="campaign-manager"
+                    icon={isNotionMode ? <span className="text-base">📅</span> : <Calendar className="w-[20px] h-[20px] flex-shrink-0 text-blue-550" />}
+                    label="Campaign Manager"
                     isSubmenu={true}
                   />
                 </div>
@@ -1282,13 +1289,6 @@ export default function App() {
                   {!sidebarCollapsed && (
                     <div className="absolute left-[34px] top-0 bottom-0 w-[1px] bg-[#EDEBE9] dark:bg-[#323130] z-10" />
                   )}
-                  <SidebarButton
-                    id="campaign-manager"
-                    icon={isNotionMode ? <span className="text-base">📅</span> : <Calendar className="w-[20px] h-[20px] flex-shrink-0 text-blue-550" />}
-                    label="Campaign Manager"
-                    isSubmenu={true}
-                  />
-
                   <SidebarButton
                     id="dashboard"
                     icon={isNotionMode ? <span className="text-base">📊</span> : <LayoutDashboard className="w-[20px] h-[20px] flex-shrink-0" />}
