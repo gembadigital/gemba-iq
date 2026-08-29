@@ -75,6 +75,7 @@ Content-Type: application/json
 | `deals:write` | Fırsat oluşturma/güncelleme |
 | `tasks:read` | Görev arama |
 | `tasks:write` | Görev oluşturma/güncelleme |
+| `mail:send` | Organizasyon Microsoft 365 kutusundan e-posta gönderme |
 | `*` | Tüm scope'lar (yalnızca tam güvenilen entegrasyonlar için önerilir) |
 
 ## 4. Base URL
@@ -195,6 +196,27 @@ Aynı şirket içinde email (yoksa telefon) eşleşmesiyle duplicate kontrolü y
 **Güncelle** — `PATCH /tasks/update?id=task-...` (`tasks:write`) — örn. `{ "status": "done" }`
 
 **Ara** — `GET /tasks/search?company_id=...&status=todo&assignee=...` (`tasks:read`)
+
+### Mail (organizasyon kutusu)
+
+**Gönder** — `POST /mail/send` (`mail:send`)
+
+```json
+// Request
+{
+  "to": "musteri@example.com",
+  "cc": ["ikinci@example.com"],
+  "subject": "Teklif takibi",
+  "html": "<p>Merhaba, teklifimizi inceleme fırsatınız oldu mu?</p>"
+}
+```
+
+```json
+// Response 200
+{ "sent": true, "from": "satis@sirketiniz.com", "to": "musteri@example.com", "subject": "Teklif takibi" }
+```
+
+Organizasyonun Microsoft 365 kutusu bağlı değilse veya Azure kimlik bilgileri eksikse `400` döner. Gönderim, Gemba IQ'nun mevcut Microsoft Graph mail servisi üzerinden yapılır — OpenClaw'a hiçbir Microsoft/Azure kimlik bilgisi verilmez.
 
 ## 6. Hata formatı
 

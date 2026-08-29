@@ -19,6 +19,7 @@ import {
   integrationTaskCreate,
   integrationTaskUpdate,
   integrationTaskSearch,
+  integrationMailSend,
 } from "../../lib/server/integrationApi.js";
 
 // Consolidated into a single Vercel catch-all route (covers
@@ -266,6 +267,7 @@ export default async function handler(request, response) {
   if (action === "integration-task-create") return integrationTaskCreate(request, response);
   if (action === "integration-task-update") return integrationTaskUpdate(request, response);
   if (action === "integration-task-search") return integrationTaskSearch(request, response);
+  if (action === "integration-mail-send") return integrationMailSend(request, response);
 
   return response.status(404).json({ error: "Unknown organization endpoint." });
 }

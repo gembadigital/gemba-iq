@@ -38,6 +38,8 @@
     { "source": "/api/organization/integration/tasks/update", "destination": "/api/organization/[...action]?action=integration-task-update" },
     { "source": "/api/organization/integration/tasks/search", "destination": "/api/organization/[...action]?action=integration-task-search" },
 
+    { "source": "/api/organization/integration/mail/send", "destination": "/api/organization/[...action]?action=integration-mail-send" },
+
     { "source": "/((?!assets/|api/|design-preview/).*)", "destination": "/index.html" }
   ]
 }
