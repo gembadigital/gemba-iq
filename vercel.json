@@ -40,6 +40,14 @@
 
     { "source": "/api/organization/integration/mail/send", "destination": "/api/organization/[...action]?action=integration-mail-send" },
 
+    { "source": "/api/organization/integration/leads/search", "destination": "/api/organization/[...action]?action=integration-lead-search" },
+    { "source": "/api/organization/integration/outreach", "destination": "/api/organization/[...action]?action=integration-outreach-create" },
+    { "source": "/api/organization/integration/outreach/search", "destination": "/api/organization/[...action]?action=integration-outreach-search" },
+    { "source": "/api/organization/integration/outreach/update", "destination": "/api/organization/[...action]?action=integration-outreach-update" },
+    { "source": "/api/organization/integration/outreach/send", "destination": "/api/organization/[...action]?action=integration-outreach-send" },
+
+    { "source": "/api/organization/outreach-send-internal", "destination": "/api/organization/[...action]?action=outreach-send-internal" },
+
     { "source": "/((?!assets/|api/|design-preview/).*)", "destination": "/index.html" }
   ]
 }

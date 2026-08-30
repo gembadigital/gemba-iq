@@ -1,7 +1,8 @@
 import React, { useState } from "react";
 import { CrmDb, Contact } from "../../lib/CrmDb";
-import { Plus, Trash2, Edit2, Mail, Phone, Users, X, Check, Search, User, Star } from "lucide-react";
+import { Plus, Trash2, Edit2, Mail, Phone, Users, X, Check, Search, User, Star, Send } from "lucide-react";
 import { useLanguage } from "../../lib/LanguageContext";
+import { createOutreachDraft } from "../../lib/outreachService";
 
 interface CompanyContactsTabProps {
   companyId: string;
@@ -33,6 +34,36 @@ export default function CompanyContactsTab({
 
   const reloadContacts = () => {
     setContacts(CrmDb.getContactsByCompany(companyId));
+  };
+
+  // "Yeniden temas listesine ekle" - see gorev6-panel-ekrani-SPEC.md §4.
+  const [outreachBusyContactId, setOutreachBusyContactId] = useState<string | null>(null);
+  const [outreachMessage, setOutreachMessage] = useState<string | null>(null);
+  const handleAddContactToOutreach = async (contact: Contact) => {
+    if (!contact.email) return;
+    setOutreachBusyContactId(contact.id);
+    setOutreachMessage(null);
+    try {
+      const company = CrmDb.getCompanyById(companyId);
+      const template = CrmDb.getKv<{ subject: string; bodyHtml: string }>("outreach_template", {
+        subject: "Gemba Partner - Yeniden Görüşelim mi?",
+        bodyHtml: "<p>Merhaba,</p><p>Bir süredir görüşmediğimizi fark ettim, kısa bir güncelleme için müsait olduğunuzda görüşmek isteriz.</p>",
+      });
+      await createOutreachDraft({
+        companyId,
+        leadProfileIds: [],
+        recipients: [{ name: `${contact.firstName} ${contact.lastName}`.trim(), email: contact.email }],
+        subject: template.subject,
+        bodyHtml: template.bodyHtml,
+        source: "manual-panel",
+      });
+      setOutreachMessage(t("{name} added to the re-engagement approval list.").replace("{name}", company?.name || contact.email));
+    } catch (error) {
+      setOutreachMessage(error instanceof Error ? error.message : String(error));
+    } finally {
+      setOutreachBusyContactId(null);
+      setTimeout(() => setOutreachMessage(null), 4000);
+    }
   };
 
   const handleOpenAdd = () => {
@@ -384,6 +415,17 @@ export default function CompanyContactsTab({
                     <Star className="w-3 h-3" />
                   </button>
                 )}
+                {contact.email && (
+                  <button
+                    type="button"
+                    onClick={() => handleAddContactToOutreach(contact)}
+                    disabled={outreachBusyContactId === contact.id}
+                    className="p-1.5 bg-slate-50 dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 text-slate-400 hover:text-green-600 dark:text-zinc-500 dark:hover:text-green-400 rounded transition-colors cursor-pointer disabled:opacity-60"
+                    title={t("Add to the re-engagement approval list")}
+                  >
+                    <Send className="w-3 h-3" />
+                  </button>
+                )}
                 <button
                   type="button"
                   onClick={() => handleOpenEdit(contact)}
@@ -403,6 +445,12 @@ export default function CompanyContactsTab({
               </div>
             </div>
           ))}
+        </div>
+      )}
+
+      {outreachMessage && (
+        <div className="fixed bottom-4 right-4 bg-green-600 text-white text-[11px] font-bold px-3.5 py-2 rounded-lg shadow-lg z-50">
+          {outreachMessage}
         </div>
       )}
 

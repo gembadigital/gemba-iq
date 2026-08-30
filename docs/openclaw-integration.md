@@ -36,6 +36,11 @@ adımlarla elle oluşturun:
            'deals:read','deals:write','tasks:read','tasks:write'],
      '<admin_user_id>'
    );
+
+> Not: `mail:send`, `leads:read`, `outreach:read`, `outreach:write` ve
+> `outreach:send` scope'ları buraya dahil değildir — bunlar, ilgili
+> özellik gerçekten kullanılmaya başlanacağı zaman ayrı bir `update`
+> sorgusuyla eklenir (bkz. §3).
    ```
 
 3. Adım 1'de yazdırılan **RAW KEY**'i OpenClaw'ın konfigürasyonuna girin. Bu
@@ -76,6 +81,10 @@ Content-Type: application/json
 | `tasks:read` | Görev arama |
 | `tasks:write` | Görev oluşturma/güncelleme |
 | `mail:send` | Organizasyon Microsoft 365 kutusundan e-posta gönderme |
+| `leads:read` | Aday Profilleri (Lead Profiles) arama/görüntüleme |
+| `outreach:read` | Yeniden Temas taslaklarını listeleme |
+| `outreach:write` | Yeniden Temas taslağı oluşturma/güncelleme |
+| `outreach:send` | Onaylanmış bir Yeniden Temas taslağını gerçekten gönderme |
 | `*` | Tüm scope'lar (yalnızca tam güvenilen entegrasyonlar için önerilir) |
 
 ## 4. Base URL
@@ -218,7 +227,122 @@ Aynı şirket içinde email (yoksa telefon) eşleşmesiyle duplicate kontrolü y
 
 Organizasyonun Microsoft 365 kutusu bağlı değilse veya Azure kimlik bilgileri eksikse `400` döner. Gönderim, Gemba IQ'nun mevcut Microsoft Graph mail servisi üzerinden yapılır — OpenClaw'a hiçbir Microsoft/Azure kimlik bilgisi verilmez.
 
-## 6. Hata formatı
+## 6. Yeniden Temas (Re-engagement)
+
+Daha önce temas kurulmuş ama soğuyan fırsatları veya ılık/sıcak adayları
+yeniden canlandırmak için kullanılan onay kuyruğu. `mail:send`'den farklı
+olarak burada gönderim, insan onayından SONRA gerçekleşir — agent hiçbir
+zaman bu akışta doğrudan, onaysız mail göndermez.
+
+### Aday Profilleri arama
+
+**Ara** — `GET /leads/search?segment=Warm,Hot&company=Viko` (`leads:read`)
+
+`segment` virgülle ayrılmış bir veya daha fazla değer alır: `Cold`, `Warm`,
+`Hot`. `company` parametresi opsiyoneldir, firma adına göre (case-insensitive,
+kısmi eşleşme) filtreler.
+
+```json
+{
+  "results": [
+    {
+      "id": "lead-...",
+      "firstName": "Deniz",
+      "lastName": "Erol",
+      "email": "deniz.erol@viko.com.tr",
+      "company": "Viko by Panasonic",
+      "leadSegment": "Warm",
+      "leadStatus": "Contacted"
+    }
+  ],
+  "count": 1
+}
+```
+
+### Taslak oluştur
+
+**Oluştur** — `POST /outreach` (`outreach:write`)
+
+```json
+// Request
+{
+  "companyId": "company-...",           // opsiyonel
+  "dealId": "deal-...",                  // opsiyonel, kaynak bir fırsatsa
+  "leadProfileIds": ["lead-..."],        // opsiyonel, kaynak Aday Profilleriyse
+  "recipients": [
+    { "name": "Deniz Erol", "email": "deniz.erol@viko.com.tr" }
+  ],
+  "subject": "Gemba Partner - Yeniden Görüşelim mi?",
+  "bodyHtml": "<p>Merhaba Deniz Bey,...</p>",
+  "source": "manual-telegram"
+}
+```
+
+```json
+// Response 201
+{ "created": true, "id": "outreach-1735...-a1b2c3d4", "data": { "...": "...", "status": "pending" } }
+```
+
+Yeni bir taslak her zaman `status: "pending"` ile başlar.
+
+### Taslakları listele
+
+**Ara** — `GET /outreach/search?status=pending` (`outreach:read`)
+
+### Taslak güncelle (onay/red)
+
+**Güncelle** — `PATCH /outreach/update?id=outreach-...` (`outreach:write`)
+
+```json
+// Onaylama örneği
+{ "status": "approved", "approvedBy": "Atakan Zehir" }
+```
+
+```json
+// Reddetme örneği
+{ "status": "rejected", "rejectedReason": "Yanlış kişi seçilmiş" }
+```
+
+### Onaylanmış taslağı gönder
+
+**Gönder** — `POST /outreach/send?id=outreach-...` (`outreach:send`)
+
+Taslağın `status`'u `"approved"` DEĞİLSE `409` döner — bu, agent'ın veya
+başka bir çağıranın onaysız bir taslağı yanlışlıkla göndermesini API
+seviyesinde engeller.
+
+```json
+// Response 200
+{
+  "sent": true,
+  "sender": "info@gembapartner.com",
+  "timestamp": "2026-09-01T08:00:00.000Z"
+}
+```
+
+Başarılı gönderimde otomatik olarak:
+- Taslağın `status`'u `"sent"`, `sentAt` doldurulur.
+- `dealId` verilmişse, o fırsatın `lastContactDate` alanı bugüne güncellenir
+  (aşamasına dokunulmaz).
+- İlgili şirketin Etkinlikler (Activities) geçmişine "Yeniden temas maili
+  gönderildi" kaydı düşülür.
+
+409 (uygun olmayan durum) dışında, hata formatı diğer tüm endpoint'lerle
+aynıdır (bkz. §7 Hata formatı).
+
+> **Güvenlik notu:** `outreach:write` skopu, bir taslağın `status`'unu
+> `"approved"` yapmaya da yetiyor — yani aynı API key'e hem `outreach:write`
+> hem `outreach:send` verilirse, agent teknik olarak kendi taslağını
+> kendi onaylayıp hemen gönderebilir; API seviyesindeki `409` kontrolü
+> sadece "onaysız" taslakları durdurur, "kimin onayladığını" doğrulamaz.
+> Gerçek bir insan-onayı garantisi istiyorsanız, OpenClaw'ın entegrasyon
+> key'ine `outreach:send` scope'unu VERMEYİN — gönderim SADECE panelin
+> kendi oturum-bazlı `outreach-send-internal` route'u üzerinden yapılsın
+> (bkz. panel dokümantasyonu). Bu durumda agent taslak oluşturup
+> `outreach:read` ile durumu izleyebilir, ama gönderim daima panelden bir
+> insan tarafından tetiklenir.
+
+## 7. Hata formatı
 
 Tüm hata yanıtları aynı şekli kullanır:
 
@@ -235,7 +359,7 @@ Tüm hata yanıtları aynı şekli kullanır:
 | 409 | Duplicate kayıt tespit edildi (`upsert:true` ile aşılabilir) |
 | 500 | Sunucu/veritabanı hatası |
 
-## 7. Notlar
+## 8. Notlar
 
 - Tüm yazma işlemleri o API key'in bağlı olduğu **tek** organizasyona kilitlidir — key başka bir organizasyonun verisini asla göremez/değiştiremez.
 - `data` içine otomatik olarak `integrationSource: "openclaw"` ve `integrationCredentialId` eklenir — hangi kaydın hangi entegrasyon üzerinden geldiğini ayırt etmek için.

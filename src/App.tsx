@@ -13,6 +13,7 @@ import CompaniesView from "./components/CompaniesView";
 import ProposalManagementView from "./components/ProposalManagementView";
 import TasksView from "./components/TasksView";
 import ContractManagerView from "./components/ContractManagerView";
+import OutreachApprovalView from "./components/OutreachApprovalView";
 import DocumentsView from "./components/documents/DocumentsView";
 import ServicesView from "./components/ServicesView";
 import RevenueManagementView from "./components/RevenueManagementView";
@@ -123,6 +124,7 @@ const ACTIVE_TABS = [
   "marketing-growth-health",
   "marketing-digital-intel",
   "marketing-kpi-okr",
+  "outreach-approval",
   "administration",
 ] as const;
 type ActiveTab = typeof ACTIVE_TABS[number];
@@ -440,6 +442,7 @@ export default function App() {
         "marketing-digital-intel",
         "marketing-kpi-okr",
         "campaign-manager",
+        "outreach-approval",
       ].includes(activeTab)
     ) {
       setMarketingMenuExpanded(true);
@@ -767,6 +770,7 @@ export default function App() {
       "marketing-kpi-okr": { parent: "Marketing & Business Development", child: "BD KPIs, Win/Loss & OKR" },
       "contract-manager": { parent: "CRM", child: "Contract Manager" },
       "campaign-manager": { parent: "Marketing & Business Development", child: "Campaign Manager" },
+      "outreach-approval": { parent: "Marketing & Business Development", child: "Re-engagement Approval List" },
       "dashboard": { parent: "Campaign", child: "Campaign Dashboard" },
       "designer": { parent: "Campaign", child: "Mail Merge Builder" },
       "progress": { parent: "Campaign", child: "Merge Sending Queue" },
@@ -1233,6 +1237,12 @@ export default function App() {
                     id="campaign-manager"
                     icon={isNotionMode ? <span className="text-base">📅</span> : <Calendar className="w-[20px] h-[20px] flex-shrink-0 text-blue-550" />}
                     label="Campaign Manager"
+                    isSubmenu={true}
+                  />
+                  <SidebarButton
+                    id="outreach-approval"
+                    icon={isNotionMode ? <span className="text-base">📨</span> : <Mail className="w-[20px] h-[20px] flex-shrink-0 text-green-600" />}
+                    label="Re-engagement Approval List"
                     isSubmenu={true}
                   />
                 </div>
@@ -1954,6 +1964,10 @@ export default function App() {
 
             {activeTab === "contract-manager" && (
               <ContractManagerView />
+            )}
+
+            {activeTab === "outreach-approval" && (
+              <OutreachApprovalView />
             )}
 
             {activeTab === "campaign-manager" && (

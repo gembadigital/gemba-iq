@@ -49,6 +49,7 @@ import {
 import SalesDashboardView, { isLostStage } from "./SalesDashboardView";
 import { jsPDF } from "jspdf";
 import { CrmDb } from "../lib/CrmDb";
+import { createOutreachDraft } from "../lib/outreachService";
 import CompanyAutocomplete from "./CompanyAutocomplete";
 import LossReasonModal, { LossReasonResult } from "./shared/LossReasonModal";
 import {
@@ -224,6 +225,11 @@ export interface Deal {
   lossReasonNote?: string;
   nextContactReminderStart?: string;
   nextContactReminderEnd?: string;
+
+  // Set automatically when a "Yeniden Temas" (re-engagement) outreach draft
+  // tied to this deal is successfully sent (see performOutreachSend in
+  // lib/server/integrationApi.js). Stage is deliberately left untouched.
+  lastContactDate?: string;
 
   // Metadata logs
   activities?: { id: string; date: string; title: string; type: string }[];
@@ -1836,6 +1842,49 @@ export default function DealManagementView({ initialTab = "dashboard", onNavigat
     });
   };
 
+  // "Yeniden temas listesine ekle" - see gorev6-panel-ekrani-SPEC.md §4.
+  // Reads the saved outreach template (kvStore key "outreach_template",
+  // edited from the OutreachApprovalView panel), fills in the deal's
+  // company/contact info, and inserts a new pending outreach_drafts row.
+  const [outreachAddBusy, setOutreachAddBusy] = useState(false);
+  const [outreachAddMessage, setOutreachAddMessage] = useState<string | null>(null);
+  const handleAddSelectedDealsToOutreach = async () => {
+    if (selectedDealIds.length === 0) return;
+    setOutreachAddBusy(true);
+    setOutreachAddMessage(null);
+    try {
+      const template = CrmDb.getKv<{ subject: string; bodyHtml: string }>("outreach_template", {
+        subject: "Gemba Partner - Yeniden Görüşelim mi?",
+        bodyHtml: "<p>Merhaba,</p><p>Bir süredir görüşmediğimizi fark ettim, kısa bir güncelleme için müsait olduğunuzda görüşmek isteriz.</p>",
+      });
+      const targets = deals.filter((d) => selectedDealIds.includes(d.id) && d.contactEmail);
+      let created = 0;
+      for (const deal of targets) {
+        // eslint-disable-next-line no-await-in-loop
+        await createOutreachDraft({
+          companyId: deal.companyId || null,
+          dealId: deal.id,
+          recipients: [{ name: deal.contactPerson || deal.companyName, email: deal.contactEmail as string }],
+          subject: template.subject,
+          bodyHtml: template.bodyHtml,
+          source: "manual-panel",
+        });
+        created += 1;
+      }
+      setOutreachAddMessage(
+        created > 0
+          ? t("{count} record(s) added to the re-engagement list.").replace("{count}", String(created))
+          : t("Selected deals have no contact email, nothing was added.")
+      );
+      setSelectedDealIds([]);
+    } catch (error) {
+      setOutreachAddMessage(error instanceof Error ? error.message : String(error));
+    } finally {
+      setOutreachAddBusy(false);
+      setTimeout(() => setOutreachAddMessage(null), 4000);
+    }
+  };
+
   // Switcher UI
   return (
     <div className="space-y-6">
@@ -2131,6 +2180,16 @@ export default function DealManagementView({ initialTab = "dashboard", onNavigat
                     </button>
                     <button
                       type="button"
+                      onClick={handleAddSelectedDealsToOutreach}
+                      disabled={outreachAddBusy}
+                      className="px-3 py-1.5 bg-green-600 hover:bg-green-700 disabled:opacity-60 text-white rounded-lg text-[11px] font-bold flex items-center gap-1.5 cursor-pointer shadow-xs"
+                      title={t("Add to the re-engagement approval list")}
+                    >
+                      <Mail className="w-3.5 h-3.5" />
+                      {t("Add to Re-engagement List")}
+                    </button>
+                    <button
+                      type="button"
                       onClick={handleBulkDeleteDeals}
                       className="px-3 py-1.5 bg-rose-600 hover:bg-rose-700 text-white rounded-lg text-[11px] font-bold flex items-center gap-1.5 cursor-pointer shadow-xs"
                     >
@@ -2138,6 +2197,11 @@ export default function DealManagementView({ initialTab = "dashboard", onNavigat
                       {t("Delete Selected")}
                     </button>
                   </div>
+                </div>
+              )}
+              {outreachAddMessage && (
+                <div className="px-4 py-1.5 bg-green-50 dark:bg-green-950/20 border-b border-green-100 dark:border-green-900/40 text-[11px] font-semibold text-green-700 dark:text-green-400">
+                  {outreachAddMessage}
                 </div>
               )}
               <div className="overflow-x-auto">

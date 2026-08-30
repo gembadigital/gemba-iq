@@ -20,6 +20,12 @@ import {
   integrationTaskUpdate,
   integrationTaskSearch,
   integrationMailSend,
+  integrationLeadSearch,
+  integrationOutreachCreate,
+  integrationOutreachSearch,
+  integrationOutreachUpdate,
+  integrationOutreachSend,
+  performOutreachSend,
 } from "../../lib/server/integrationApi.js";
 
 // Consolidated into a single Vercel catch-all route (covers
@@ -239,6 +245,76 @@ export async function membersDeleteHandler(request, response) {
   return response.status(200).json({ success: true });
 }
 
+// Panelden (oturum açmış CRM kullanıcısı) tetiklenen gönderim. OpenClaw'ın
+// entegrasyon API key'ini HİÇ kullanmaz — bilinçli olarak farklı bir kimlik
+// doğrulama yolu (Supabase kullanıcı oturumu) üzerinden çalışır, böylece
+// OpenClaw'ın entegrasyon key'ine outreach:send scope'u verilmese bile
+// panelden insan onaylı gönderim her zaman mümkün olur (bkz.
+// docs/openclaw-integration.md §6 güvenlik notu ve gorev6-panel-ekrani-SPEC.md §3).
+// İş mantığının kendisi lib/server/integrationApi.js'deki
+// performOutreachSend() ile paylaşılıyor — kod tekrarı yok.
+export async function outreachSendInternalHandler(request, response) {
+  if (request.method !== "POST") {
+    response.setHeader("Allow", "POST");
+    return response.status(405).json({ error: "Method not allowed" });
+  }
+
+  const authHeader = request.headers.authorization || "";
+  if (!authHeader.startsWith("Bearer ")) {
+    return response.status(401).json({ error: "Unauthorized" });
+  }
+
+  const { supabaseUrl, anonKey, serviceKey } = getSupabaseConfig();
+  if (!supabaseUrl || !anonKey || !serviceKey) {
+    return response.status(503).json({ error: "Outreach sending is not configured." });
+  }
+
+  const id = String(request.body?.id || "").trim();
+  if (!id) {
+    return response.status(400).json({ error: "'id' is required." });
+  }
+
+  const accessToken = authHeader.slice(7);
+  const userClient = createClient(supabaseUrl, anonKey, {
+    global: { headers: { Authorization: `Bearer ${accessToken}` } },
+  });
+
+  const {
+    data: { user },
+    error: userError,
+  } = await userClient.auth.getUser();
+
+  if (userError || !user) {
+    return response.status(401).json({ error: "Unauthorized" });
+  }
+
+  const adminClient = createClient(supabaseUrl, serviceKey, {
+    auth: { autoRefreshToken: false, persistSession: false },
+  });
+
+  const { data: membership, error: membershipError } = await adminClient
+    .from("organization_members")
+    .select("organization_id")
+    .eq("user_id", user.id)
+    .order("created_at", { ascending: true })
+    .limit(1)
+    .maybeSingle();
+
+  if (membershipError) {
+    return response.status(400).json({ error: membershipError.message });
+  }
+  if (!membership?.organization_id) {
+    return response.status(400).json({ error: "No active organization found." });
+  }
+
+  try {
+    const result = await performOutreachSend(adminClient, membership.organization_id, id);
+    return response.status(200).json({ sent: true, sender: result.sender, timestamp: result.timestamp });
+  } catch (error) {
+    return response.status(error.status || 500).json({ error: error.message || "Mail send failed." });
+  }
+}
+
 export default async function handler(request, response) {
   // Vercel's zero-config file-system routing for [...bracket] dynamic
   // functions only auto-populates req.query for Next.js projects. This is a
@@ -268,6 +344,12 @@ export default async function handler(request, response) {
   if (action === "integration-task-update") return integrationTaskUpdate(request, response);
   if (action === "integration-task-search") return integrationTaskSearch(request, response);
   if (action === "integration-mail-send") return integrationMailSend(request, response);
+  if (action === "integration-lead-search") return integrationLeadSearch(request, response);
+  if (action === "integration-outreach-create") return integrationOutreachCreate(request, response);
+  if (action === "integration-outreach-search") return integrationOutreachSearch(request, response);
+  if (action === "integration-outreach-update") return integrationOutreachUpdate(request, response);
+  if (action === "integration-outreach-send") return integrationOutreachSend(request, response);
+  if (action === "outreach-send-internal") return outreachSendInternalHandler(request, response);
 
   return response.status(404).json({ error: "Unknown organization endpoint." });
 }
