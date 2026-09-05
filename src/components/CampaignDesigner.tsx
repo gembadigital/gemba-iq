@@ -28,9 +28,9 @@ import {
   Maximize2,
   Minimize2,
   Download,
-  ShieldCheck,
   ShieldAlert,
-  ShieldX,
+  CheckCircle2,
+  XCircle,
   Loader2
 } from "lucide-react";
 
@@ -554,6 +554,34 @@ export default function CampaignDesigner({
     setRecipients(recipients.filter((r) => !invalidIds.has(r.id)));
   };
 
+  // E-posta doğrulama sonucuna göre onay (yeşil check) / ret (kırmızı X) rozeti.
+  // Henüz doğrulanmamış (veya doğrulama sırasında değiştirilmiş) e-postalar için
+  // hiçbir rozet göstermiyoruz — sadece "E-postaları Doğrula" çalıştırıldıktan
+  // sonra elde bulunan sonuçlar işaretleniyor.
+  const renderEmailVerificationBadge = (email?: string) => {
+    const v = emailVerification.get(String(email || "").trim());
+    if (!v) return null;
+    if (isInvalidVerificationStatus(v.status)) {
+      return (
+        <span title={t("Invalid email")}>
+          <XCircle className="w-3.5 h-3.5 text-red-500 shrink-0" />
+        </span>
+      );
+    }
+    if (v.status === "DISPOSABLE" || v.validations?.is_disposable || v.validations?.is_role_based) {
+      return (
+        <span title={t("Disposable or role-based email")}>
+          <ShieldAlert className="w-3.5 h-3.5 text-amber-500 shrink-0" />
+        </span>
+      );
+    }
+    return (
+      <span title={t("Valid email")}>
+        <CheckCircle2 className="w-3.5 h-3.5 text-green-500 shrink-0" />
+      </span>
+    );
+  };
+
   // Trigger merge tag insertions at cursor point
   const insertMergeTag = (tagName: string) => {
     const textRef = textAreaRef.current;
@@ -825,7 +853,7 @@ title={t("Export current Recipient list to CSV")}
                     {isVerifyingEmails ? (
                       <Loader2 className="w-4 h-4 text-white animate-spin" />
                     ) : (
-                      <ShieldCheck className="w-4 h-4 text-white" />
+                      <CheckCircle2 className="w-4 h-4 text-white" />
                     )}
                     <span>{t("Verify Emails")}</span>
                   </button>
@@ -834,7 +862,7 @@ title={t("Export current Recipient list to CSV")}
 
               {verifyError && (
                 <div className="px-3 py-2 bg-rose-50 dark:bg-rose-950/30 border border-rose-200 dark:border-rose-900/50 text-rose-700 dark:text-rose-400 text-xs font-semibold rounded flex items-center gap-1.5">
-                  <ShieldX className="w-3.5 h-3.5 shrink-0" />
+                  <XCircle className="w-3.5 h-3.5 shrink-0" />
                   {verifyError}
                 </div>
               )}
@@ -843,7 +871,7 @@ title={t("Export current Recipient list to CSV")}
                 <div className="px-3 py-2 bg-slate-50 dark:bg-[#11100f] border border-[#EDEBE9] dark:border-[#323130] rounded flex flex-wrap items-center justify-between gap-2 text-xs">
                   <div className="flex items-center gap-3">
                     <span className="flex items-center gap-1 font-bold text-emerald-600 dark:text-emerald-400">
-                      <ShieldCheck className="w-3.5 h-3.5" />
+                      <CheckCircle2 className="w-3.5 h-3.5" />
                       {emailVerificationSummary.valid} {t("Valid")}
                     </span>
                     {emailVerificationSummary.disposable > 0 && (
@@ -854,7 +882,7 @@ title={t("Export current Recipient list to CSV")}
                     )}
                     {emailVerificationSummary.invalid > 0 && (
                       <span className="flex items-center gap-1 font-bold text-rose-600 dark:text-rose-400">
-                        <ShieldX className="w-3.5 h-3.5" />
+                        <XCircle className="w-3.5 h-3.5" />
                         {emailVerificationSummary.invalid} {t("Invalid")}
                       </span>
                     )}
@@ -1052,12 +1080,17 @@ placeholder={t("e.g., 2026-06-15")}
                                   </div>
                                 </td>
                                 <td className="p-1 min-w-[120px]" onClick={(e) => e.stopPropagation()}>
-                                  <input
-                                    type="email"
-                                    value={rec.Email}
-                                    onChange={(e) => handleUpdateRecipientField(rec.id, "Email", e.target.value)}
-                                    className="w-full px-1.5 py-1 text-xs font-mono border border-slate-300 dark:border-[#323130] bg-white dark:bg-[#11100f] rounded text-slate-800 dark:text-slate-200 focus:outline-none focus:border-[#0078D4]"
-                                  />
+                                  <div className="relative">
+                                    <input
+                                      type="email"
+                                      value={rec.Email}
+                                      onChange={(e) => handleUpdateRecipientField(rec.id, "Email", e.target.value)}
+                                      className="w-full px-1.5 py-1 pr-6 text-xs font-mono border border-slate-300 dark:border-[#323130] bg-white dark:bg-[#11100f] rounded text-slate-800 dark:text-slate-200 focus:outline-none focus:border-[#0078D4]"
+                                    />
+                                    <span className="absolute right-1.5 top-1/2 -translate-y-1/2">
+                                      {renderEmailVerificationBadge(rec.Email)}
+                                    </span>
+                                  </div>
                                 </td>
                                 <td className="p-1 min-w-[80px]" onClick={(e) => e.stopPropagation()}>
                                   <input
@@ -1133,29 +1166,7 @@ placeholder={t("e.g., 2026-06-15")}
                                 <td className="p-3 font-mono text-[11px] text-slate-500 dark:text-slate-400">
                                   <span className="inline-flex items-center gap-1">
                                     {rec.Email}
-                                    {(() => {
-                                      const v = emailVerification.get(String(rec.Email || "").trim());
-                                      if (!v) return null;
-                                      if (isInvalidVerificationStatus(v.status)) {
-                                        return (
-                                          <span title={t("Invalid email")}>
-                                            <ShieldX className="w-3.5 h-3.5 text-rose-500 shrink-0" />
-                                          </span>
-                                        );
-                                      }
-                                      if (v.status === "DISPOSABLE" || v.validations?.is_disposable || v.validations?.is_role_based) {
-                                        return (
-                                          <span title={t("Disposable or role-based email")}>
-                                            <ShieldAlert className="w-3.5 h-3.5 text-amber-500 shrink-0" />
-                                          </span>
-                                        );
-                                      }
-                                      return (
-                                        <span title={t("Valid email")}>
-                                          <ShieldCheck className="w-3.5 h-3.5 text-emerald-500 shrink-0" />
-                                        </span>
-                                      );
-                                    })()}
+                                    {renderEmailVerificationBadge(rec.Email)}
                                   </span>
                                 </td>
                                 <td className="p-3 truncate max-w-[100px]">{rec.Company || "-"}</td>
