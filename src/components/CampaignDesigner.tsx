@@ -717,8 +717,16 @@ title={t("Export current Recipient list to CSV")}
           ) : (
             // Recipients Table view
             <div className="space-y-4">
-              {/* TOP OF RECIPIENTS SHEET CONTROLS */}
-              <div className="p-3 border border-[#EDEBE9] dark:border-[#323130] rounded bg-[#FAF9F8] dark:bg-[#201f1e] flex flex-wrap items-center justify-between gap-3 shadow-xs">
+              {/* TOP OF RECIPIENTS SHEET CONTROLS
+                  Kullanıcı hatası: "listede ekranı genişlet fonksiyonu çalıştıktan sonra
+                  ekran tekrardan daraltma fonksiyonu gözükmüyor."
+                  Kök neden: bu araç çubuğu, genişletilmiş (isListExpanded) modda
+                  overflow-y-auto olan dış kapsayıcının normal bir alt öğesiydi — liste
+                  aşağı kaydırıldığında (özellikle çok sayıda alıcı varken) daraltma
+                  butonunu içeren bu satır da ekranın dışına kayıyor, geri dönecek sabit
+                  bir kontrol kalmıyordu. Genişletilmiş moddayken sticky top-0 yapılarak
+                  kaydırma sırasında her zaman görünür kalması sağlandı. */}
+              <div className={`p-3 border border-[#EDEBE9] dark:border-[#323130] rounded bg-[#FAF9F8] dark:bg-[#201f1e] flex flex-wrap items-center justify-between gap-3 shadow-xs ${isListExpanded ? "sticky top-0 z-10" : ""}`}>
                 <div className="flex items-center gap-1.5">
                   <FileSpreadsheet className="w-4 h-4 text-[#0078D4]" />
                   <span className="text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-widest font-mono">
