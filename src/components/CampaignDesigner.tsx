@@ -4,6 +4,7 @@ import { getCampaignTranslation } from "./campaignI18n";
 import { Recipient, AttachmentFile } from "../types";
 import { parseSpreadsheet } from "../utils/excelImport";
 import { CrmDb } from "../lib/CrmDb";
+import { verifyEmails, EmailVerificationResult } from "../lib/emailVerifierService";
 import * as XLSX from "xlsx";
 import {
   Upload,
@@ -26,7 +27,11 @@ import {
   Save,
   Maximize2,
   Minimize2,
-  Download
+  Download,
+  ShieldCheck,
+  ShieldAlert,
+  ShieldX,
+  Loader2
 } from "lucide-react";
 
 interface CampaignDesignerProps {
@@ -58,6 +63,15 @@ export default function CampaignDesigner({
   const t = (key: string) => getCampaignTranslation(lang, key) ?? globalT(key) ?? key;
   const [dragActive, setDragActive] = useState(false);
   const [isListExpanded, setIsListExpanded] = useState(false);
+  // "Repo değerlendirmesi" görevi: umuterturk/email-verifier tabanlı ücretsiz
+  // genel API (rapid-email-verifier.fly.dev) ile alıcı listesini kampanya
+  // gönderilmeden önce doğrulama. Sonuçlar e-posta (trim edilmiş) anahtarıyla
+  // tutulur, kayıt id'siyle değil — aynı e-posta birden fazla satırda olsa
+  // bile tek bir doğrulama sonucu paylaşılır (upstream servisin kendi batch
+  // optimizasyonuyla tutarlı).
+  const [emailVerification, setEmailVerification] = useState<Map<string, EmailVerificationResult>>(new Map());
+  const [isVerifyingEmails, setIsVerifyingEmails] = useState(false);
+  const [verifyError, setVerifyError] = useState<string | null>(null);
   const [attachmentDragActive, setAttachmentDragActive] = useState(false);
   const [selectedPreviewIndex, setSelectedPreviewIndex] = useState(0);
   const [importError, setImportError] = useState<string | null>(null);
@@ -496,6 +510,50 @@ export default function CampaignDesigner({
     setImportError(null);
   };
 
+  // Alıcı listesindeki tüm e-postaları rapid-email-verifier üzerinden
+  // doğrular (100'lük gruplar halinde, servis içinde otomatik böler).
+  const handleVerifyEmails = async () => {
+    if (recipients.length === 0) return;
+    setIsVerifyingEmails(true);
+    setVerifyError(null);
+    try {
+      const results = await verifyEmails(recipients.map((r) => r.Email));
+      setEmailVerification(results);
+    } catch (error) {
+      setVerifyError(error instanceof Error ? error.message : String(error));
+    } finally {
+      setIsVerifyingEmails(false);
+    }
+  };
+
+  const isInvalidVerificationStatus = (status?: string) =>
+    status === "INVALID_FORMAT" || status === "INVALID_DOMAIN" || status === "INVALID_MAILBOX";
+
+  const emailVerificationSummary = React.useMemo(() => {
+    if (emailVerification.size === 0) return null;
+    let invalid = 0;
+    let disposable = 0;
+    let valid = 0;
+    recipients.forEach((r) => {
+      const result = emailVerification.get(String(r.Email || "").trim());
+      if (!result) return;
+      if (isInvalidVerificationStatus(result.status)) invalid += 1;
+      else if (result.validations?.is_disposable) disposable += 1;
+      else valid += 1;
+    });
+    return { invalid, disposable, valid };
+  }, [emailVerification, recipients]);
+
+  const handleRemoveInvalidEmails = () => {
+    const invalidIds = new Set(
+      recipients
+        .filter((r) => isInvalidVerificationStatus(emailVerification.get(String(r.Email || "").trim())?.status))
+        .map((r) => r.id)
+    );
+    if (invalidIds.size === 0) return;
+    setRecipients(recipients.filter((r) => !invalidIds.has(r.id)));
+  };
+
   // Trigger merge tag insertions at cursor point
   const insertMergeTag = (tagName: string) => {
     const textRef = textAreaRef.current;
@@ -755,8 +813,64 @@ title={t("Export current Recipient list to CSV")}
                     <Download className="w-4 h-4 text-white animate-bounce" style={{ animationDuration: "2.5s" }} />
                     <span>{t("Download XLS (Excel)")}</span>
                   </button>
+
+                  {/* 3. E-posta Doğrulama (umuterturk/email-verifier tabanlı ücretsiz genel API) */}
+                  <button
+                    type="button"
+                    onClick={handleVerifyEmails}
+                    disabled={isVerifyingEmails}
+                    className="text-xs font-bold bg-indigo-600 hover:bg-indigo-700 disabled:opacity-60 text-white px-3 py-1.5 rounded flex items-center gap-1.5 cursor-pointer transition-all shadow-sm hover:scale-[1.02]"
+                    title={t("Check syntax, domain, and mailbox validity for every recipient email")}
+                  >
+                    {isVerifyingEmails ? (
+                      <Loader2 className="w-4 h-4 text-white animate-spin" />
+                    ) : (
+                      <ShieldCheck className="w-4 h-4 text-white" />
+                    )}
+                    <span>{t("Verify Emails")}</span>
+                  </button>
                 </div>
               </div>
+
+              {verifyError && (
+                <div className="px-3 py-2 bg-rose-50 dark:bg-rose-950/30 border border-rose-200 dark:border-rose-900/50 text-rose-700 dark:text-rose-400 text-xs font-semibold rounded flex items-center gap-1.5">
+                  <ShieldX className="w-3.5 h-3.5 shrink-0" />
+                  {verifyError}
+                </div>
+              )}
+
+              {emailVerificationSummary && !verifyError && (
+                <div className="px-3 py-2 bg-slate-50 dark:bg-[#11100f] border border-[#EDEBE9] dark:border-[#323130] rounded flex flex-wrap items-center justify-between gap-2 text-xs">
+                  <div className="flex items-center gap-3">
+                    <span className="flex items-center gap-1 font-bold text-emerald-600 dark:text-emerald-400">
+                      <ShieldCheck className="w-3.5 h-3.5" />
+                      {emailVerificationSummary.valid} {t("Valid")}
+                    </span>
+                    {emailVerificationSummary.disposable > 0 && (
+                      <span className="flex items-center gap-1 font-bold text-amber-600 dark:text-amber-400">
+                        <ShieldAlert className="w-3.5 h-3.5" />
+                        {emailVerificationSummary.disposable} {t("Disposable")}
+                      </span>
+                    )}
+                    {emailVerificationSummary.invalid > 0 && (
+                      <span className="flex items-center gap-1 font-bold text-rose-600 dark:text-rose-400">
+                        <ShieldX className="w-3.5 h-3.5" />
+                        {emailVerificationSummary.invalid} {t("Invalid")}
+                      </span>
+                    )}
+                  </div>
+                  {emailVerificationSummary.invalid > 0 && (
+                    <button
+                      type="button"
+                      onClick={handleRemoveInvalidEmails}
+                      className="text-[11px] font-bold text-rose-600 hover:text-rose-700 dark:text-rose-400 px-2.5 py-1 border border-rose-200 dark:border-rose-900/50 rounded hover:bg-rose-50 dark:hover:bg-rose-950/20 transition-all cursor-pointer flex items-center gap-1"
+                    >
+                      <Trash2 className="w-3 h-3" />
+                      {t("Remove Invalid Emails")}
+                    </button>
+                  )}
+                </div>
+              )}
 
               {/* Batch Filtering & Selection Panel */}
               <div className="bg-slate-50 dark:bg-[#11100f] p-4 rounded border border-[#EDEBE9] dark:border-[#323130] space-y-3">
@@ -1017,7 +1131,32 @@ placeholder={t("e.g., 2026-06-15")}
                                   {rec.FirstName} {rec.LastName}
                                 </td>
                                 <td className="p-3 font-mono text-[11px] text-slate-500 dark:text-slate-400">
-                                  {rec.Email}
+                                  <span className="inline-flex items-center gap-1">
+                                    {rec.Email}
+                                    {(() => {
+                                      const v = emailVerification.get(String(rec.Email || "").trim());
+                                      if (!v) return null;
+                                      if (isInvalidVerificationStatus(v.status)) {
+                                        return (
+                                          <span title={t("Invalid email")}>
+                                            <ShieldX className="w-3.5 h-3.5 text-rose-500 shrink-0" />
+                                          </span>
+                                        );
+                                      }
+                                      if (v.status === "DISPOSABLE" || v.validations?.is_disposable || v.validations?.is_role_based) {
+                                        return (
+                                          <span title={t("Disposable or role-based email")}>
+                                            <ShieldAlert className="w-3.5 h-3.5 text-amber-500 shrink-0" />
+                                          </span>
+                                        );
+                                      }
+                                      return (
+                                        <span title={t("Valid email")}>
+                                          <ShieldCheck className="w-3.5 h-3.5 text-emerald-500 shrink-0" />
+                                        </span>
+                                      );
+                                    })()}
+                                  </span>
                                 </td>
                                 <td className="p-3 truncate max-w-[100px]">{rec.Company || "-"}</td>
                                 <td className="p-3 truncate max-w-[120px]" title={rec.Address}>{rec.Address || "-"}</td>

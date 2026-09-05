@@ -47,6 +47,7 @@
     { "source": "/api/organization/integration/outreach/send", "destination": "/api/organization/[...action]?action=integration-outreach-send" },
 
     { "source": "/api/organization/outreach-send-internal", "destination": "/api/organization/[...action]?action=outreach-send-internal" },
+    { "source": "/api/organization/email-verify-batch", "destination": "/api/organization/[...action]?action=email-verify-batch" },
 
     { "source": "/((?!assets/|api/|design-preview/).*)", "destination": "/index.html" }
   ]

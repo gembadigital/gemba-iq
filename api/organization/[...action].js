@@ -315,6 +315,83 @@ export async function outreachSendInternalHandler(request, response) {
   }
 }
 
+// "Repo değerlendirmesi" görevi: umuterturk/email-verifier (MIT lisans,
+// https://github.com/umuterturk/email-verifier) — kullanıcı onayıyla, kendi
+// altyapımıza bir kopyasını kurmak yerine yazarın ücretsiz genel API'sini
+// (rapid-email-verifier.fly.dev) kullanmayı tercih ettik. Bu üçüncü taraf
+// bağımlılığı bilerek kabul edildi: kesinti/SLA riski bize ait değil, veri
+// (sadece e-posta adresleri, başka hiçbir alan) o servise gidiyor. Bu proxy
+// action'ı olmadan istemci tarayıcısından doğrudan çağrı CORS'a takılabilir
+// ve rastgele internet kullanıcılarının Gemba IQ'yu üçüncü taraf servise
+// ücretsiz bir vekil (proxy) olarak kötüye kullanmasını önlemek için oturum
+// doğrulaması zorunlu tutuluyor — Gemba'nın kendi Supabase kullanıcı
+// oturumu dışında hiçbir çağrıya izin verilmiyor.
+const EMAIL_VERIFIER_BATCH_URL = "https://rapid-email-verifier.fly.dev/api/validate/batch";
+const EMAIL_VERIFIER_MAX_BATCH = 100; // upstream servisin kendi sınırı
+
+export async function emailVerifyBatchHandler(request, response) {
+  if (request.method !== "POST") {
+    response.setHeader("Allow", "POST");
+    return response.status(405).json({ error: "Method not allowed" });
+  }
+
+  const authHeader = request.headers.authorization || "";
+  if (!authHeader.startsWith("Bearer ")) {
+    return response.status(401).json({ error: "Unauthorized" });
+  }
+
+  const { supabaseUrl, anonKey } = getSupabaseConfig();
+  if (!supabaseUrl || !anonKey) {
+    return response.status(503).json({ error: "Email verification is not configured." });
+  }
+
+  const emails = Array.isArray(request.body?.emails)
+    ? request.body.emails.map((e) => String(e || "").trim()).filter(Boolean)
+    : [];
+
+  if (emails.length === 0) {
+    return response.status(400).json({ error: "'emails' (non-empty array) is required." });
+  }
+  if (emails.length > EMAIL_VERIFIER_MAX_BATCH) {
+    return response.status(400).json({
+      error: `A maximum of ${EMAIL_VERIFIER_MAX_BATCH} emails can be verified per request.`,
+    });
+  }
+
+  const accessToken = authHeader.slice(7);
+  const userClient = createClient(supabaseUrl, anonKey, {
+    global: { headers: { Authorization: `Bearer ${accessToken}` } },
+  });
+
+  const {
+    data: { user },
+    error: userError,
+  } = await userClient.auth.getUser();
+
+  if (userError || !user) {
+    return response.status(401).json({ error: "Unauthorized" });
+  }
+
+  try {
+    const upstreamResponse = await fetch(EMAIL_VERIFIER_BATCH_URL, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ emails }),
+    });
+
+    if (!upstreamResponse.ok) {
+      return response
+        .status(502)
+        .json({ error: `Email verification service returned ${upstreamResponse.status}.` });
+    }
+
+    const data = await upstreamResponse.json();
+    return response.status(200).json(data);
+  } catch (error) {
+    return response.status(502).json({ error: error.message || "Email verification service unreachable." });
+  }
+}
+
 export default async function handler(request, response) {
   // Vercel's zero-config file-system routing for [...bracket] dynamic
   // functions only auto-populates req.query for Next.js projects. This is a
@@ -350,6 +427,7 @@ export default async function handler(request, response) {
   if (action === "integration-outreach-update") return integrationOutreachUpdate(request, response);
   if (action === "integration-outreach-send") return integrationOutreachSend(request, response);
   if (action === "outreach-send-internal") return outreachSendInternalHandler(request, response);
+  if (action === "email-verify-batch") return emailVerifyBatchHandler(request, response);
 
   return response.status(404).json({ error: "Unknown organization endpoint." });
 }

@@ -2781,6 +2781,17 @@ export const uiDictionaryTR: Record<string, string> = {
   "{count} record(s) added to the re-engagement list.": "{count} kayıt yeniden temas listesine eklendi.",
   "Selected deals have no contact email, nothing was added.": "Seçili fırsatların e-posta adresi yok, hiçbir şey eklenmedi.",
   "{name} added to the re-engagement approval list.": "{name} yeniden temas onay listesine eklendi.",
+
+  // Akıllı E-posta Birleştirici (CampaignDesigner) — e-posta doğrulama modülü
+  "Verify Emails": "E-postaları Doğrula",
+  "Check syntax, domain, and mailbox validity for every recipient email": "Her alıcı e-postası için biçim, alan adı ve kutu geçerliliğini kontrol et",
+  "Valid": "Geçerli",
+  "Disposable": "Tek kullanımlık",
+  "Invalid": "Geçersiz",
+  "Remove Invalid Emails": "Geçersiz E-postaları Kaldır",
+  "Invalid email": "Geçersiz e-posta",
+  "Disposable or role-based email": "Tek kullanımlık veya role bağlı e-posta",
+  "Valid email": "Geçerli e-posta",
 };
 
 export const uiDictionaryEN: Record<string, string> = Object.fromEntries([
