@@ -2792,6 +2792,12 @@ export const uiDictionaryTR: Record<string, string> = {
   "Invalid email": "Geçersiz e-posta",
   "Disposable or role-based email": "Tek kullanımlık veya role bağlı e-posta",
   "Valid email": "Geçerli e-posta",
+
+  // Aday Profilleri — mükerrer e-posta filtresi
+  "Duplicate Emails ({count})": "Mükerrer E-postalar ({count})",
+  "No duplicate emails found": "Mükerrer e-posta bulunamadı",
+  "Show only records with a duplicate email address": "Sadece mükerrer e-posta adresi olan kayıtları göster",
+  "This email is registered {count} times": "Bu e-posta {count} kez kayıtlı",
 };
 
 export const uiDictionaryEN: Record<string, string> = Object.fromEntries([

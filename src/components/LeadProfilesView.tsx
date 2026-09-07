@@ -22,7 +22,8 @@ import {
   FileText,
   Maximize2,
   Minimize2,
-  Mail
+  Mail,
+  AlertTriangle
 } from "lucide-react";
 import { LeadProfile, Recipient } from "../types";
 import EmailLeadDiscoveryView from "./EmailLeadDiscoveryView";
@@ -82,6 +83,7 @@ export default function LeadProfilesView({
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("");
   const [segmentFilter, setSegmentFilter] = useState("");
+  const [showDuplicatesOnly, setShowDuplicatesOnly] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(50);
   
@@ -563,6 +565,27 @@ export default function LeadProfilesView({
   const newLeadsCount = profiles.filter(p => p.leadStatus?.toLowerCase() === "new").length;
   const selectedCount = profiles.filter(p => p.isSelected).length;
 
+  // Aynı e-posta adresiyle kaç kez kayıt açılmış — normalize edilmiş (trim + lowercase)
+  // e-posta -> tekrar sayısı haritası. 1'den fazla geçen her e-posta "mükerrer" sayılır.
+  const emailOccurrenceCounts = React.useMemo(() => {
+    const counts = new Map<string, number>();
+    profiles.forEach(p => {
+      const key = p.email?.trim().toLowerCase();
+      if (!key) return;
+      counts.set(key, (counts.get(key) || 0) + 1);
+    });
+    return counts;
+  }, [profiles]);
+
+  const duplicateProfilesCount = React.useMemo(() => {
+    let count = 0;
+    profiles.forEach(p => {
+      const key = p.email?.trim().toLowerCase();
+      if (key && (emailOccurrenceCounts.get(key) || 0) > 1) count += 1;
+    });
+    return count;
+  }, [profiles, emailOccurrenceCounts]);
+
   // Search filtering logics
   const filteredProfiles = profiles.filter(p => {
     const matchesSearch = 
@@ -575,8 +598,10 @@ export default function LeadProfilesView({
     
     const matchesStatus = !statusFilter || p.leadStatus?.toLowerCase() === statusFilter.toLowerCase();
     const matchesSegment = !segmentFilter || p.leadSegment?.toLowerCase() === segmentFilter.toLowerCase();
+    const emailKey = p.email?.trim().toLowerCase();
+    const matchesDuplicate = !showDuplicatesOnly || (!!emailKey && (emailOccurrenceCounts.get(emailKey) || 0) > 1);
 
-    return matchesSearch && matchesStatus && matchesSegment;
+    return matchesSearch && matchesStatus && matchesSegment && matchesDuplicate;
   });
 
   // Pagination calculation
@@ -1119,6 +1144,27 @@ export default function LeadProfilesView({
               <option value="Warm Lead">{t("Warm Lead")}</option>
               <option value="Cold">{t("Cold")}</option>
             </select>
+
+            <button
+              type="button"
+              onClick={() => setShowDuplicatesOnly(v => !v)}
+              disabled={duplicateProfilesCount === 0}
+              title={
+                duplicateProfilesCount === 0
+                  ? t("No duplicate emails found")
+                  : t("Show only records with a duplicate email address")
+              }
+              className={`text-xs font-bold px-2.5 py-1.5 border rounded flex items-center gap-1.5 transition-all ${
+                duplicateProfilesCount === 0
+                  ? "bg-slate-50 dark:bg-[#252423] text-slate-400 border-[#EDEBE9] dark:border-[#323130] cursor-not-allowed opacity-60"
+                  : showDuplicatesOnly
+                  ? "bg-amber-500 hover:bg-amber-600 text-white border-amber-600 cursor-pointer shadow-sm"
+                  : "bg-amber-50 hover:bg-amber-100 text-amber-700 border-amber-200 dark:bg-amber-950/20 dark:text-amber-400 dark:border-amber-900 cursor-pointer"
+              }`}
+            >
+              <AlertTriangle className="w-3.5 h-3.5" />
+              <span>{t("Duplicate Emails ({count})").replace("{count}", String(duplicateProfilesCount))}</span>
+            </button>
           </div>
 
           <div className="flex items-center gap-2.5 w-full md:w-auto justify-end">
@@ -1249,7 +1295,19 @@ export default function LeadProfilesView({
                             className="bg-white dark:bg-[#252423] p-1 border border-slate-300 dark:border-[#323130] rounded w-48 outline-none"
                           />
                         ) : (
-                          <span className="text-[#0078D4] hover:underline cursor-pointer">{p.email}</span>
+                          <span className="inline-flex items-center gap-1.5">
+                            <span className="text-[#0078D4] hover:underline cursor-pointer">{p.email}</span>
+                            {(() => {
+                              const key = p.email?.trim().toLowerCase();
+                              const occurrences = key ? emailOccurrenceCounts.get(key) || 0 : 0;
+                              if (occurrences <= 1) return null;
+                              return (
+                                <span title={t("This email is registered {count} times").replace("{count}", String(occurrences))}>
+                                  <AlertTriangle className="w-3.5 h-3.5 text-amber-500 shrink-0" />
+                                </span>
+                              );
+                            })()}
+                          </span>
                         )}
                       </td>
 
