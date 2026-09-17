@@ -772,7 +772,7 @@ export default function EmailLeadDiscoveryView({
   const newContactsCount = discoveredLeads.length;
   const newCompaniesCount = new Set(discoveredLeads.map(l => l.company)).size;
   const missingInCRMCount = discoveredLeads.filter(l => l.status === "new").length;
-  const mostActiveContact = discoveredLeads.reduce((prev, current) => (prev.interactionsCount > current.interactionsCount) ? prev : current, discoveredLeads[0] || { name: "Yok", interactionsCount: 0 });
+  const mostActiveContact = discoveredLeads.reduce((prev, current) => (prev.interactionsCount > current.interactionsCount) ? prev : current, discoveredLeads[0] || { name: "Yok", interactionsCount: 0, company: "" });
   const unmanagedRelationshipsCount = discoveredLeads.filter(l => l.relationshipScore < 60).length;
 
   return (

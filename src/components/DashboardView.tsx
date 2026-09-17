@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { useLanguage } from "../lib/LanguageContext";
 import { getCampaignTranslation, TRACKING_SERVICES } from "./campaignI18n";
-import { DashboardStats, AuditLog } from "../types";
+import { DashboardStats, Campaign } from "../types";
 import {
   LayoutDashboard,
   Mail,
@@ -30,7 +30,7 @@ import {
 
 interface DashboardViewProps {
   stats: DashboardStats;
-  logs: AuditLog[];
+  logs: Campaign[];
   onNavigateToDesigner: () => void;
   trackingService: string;
   setTrackingService: (val: string) => void;
@@ -54,7 +54,7 @@ export default function DashboardView({
         name: log.subject.length > 15 ? log.subject.substring(0, 15) + "..." : log.subject,
         Success: log.successCount,
         Failed: log.failedCount,
-        Total: log.recipientCount
+        Total: log.recipients.length
       }))
     : [
         { name: t("Campaign {n}").replace("{n}", "1"), Success: 12, Failed: 1, Total: 13 },

@@ -900,7 +900,6 @@ export function OpexAssessmentSection({ deal, onUpdateDeal, lang, t, readOnly = 
               }
             }}
             className="w-full min-h-[160px] max-h-[300px] overflow-y-auto p-3 border border-slate-250 dark:border-zinc-755 bg-slate-50/20 dark:bg-[#121211] text-slate-800 dark:text-zinc-200 rounded-lg outline-none focus:ring-1 focus:ring-indigo-500 font-sans leading-relaxed text-xs"
-            placeholder={t("Start typing consultant notes here...")}
             dangerouslySetInnerHTML={{ __html: editorContent || (notes[0] ? notes[0].content : "") }}
           />
 

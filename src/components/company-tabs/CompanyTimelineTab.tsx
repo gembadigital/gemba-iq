@@ -184,7 +184,7 @@ export default function CompanyTimelineTab({
         metadata: { status: prop.status }
       });
 
-      if (prop.status === "Approved" || prop.status === "Accepted" || prop.status === "Signed") {
+      if (prop.status === "Accepted") {
         items.push({
           id: `prop-ok-${prop.id}`,
           type: "opex",
@@ -193,7 +193,7 @@ export default function CompanyTimelineTab({
           date: new Date(new Date(formattedDate).getTime() + 2 * 24 * 3600 * 1000).toISOString(),
           user: "Client Approver"
         });
-      } else if (prop.status === "Rejected" || prop.status === "Declined") {
+      } else if (prop.status === "Rejected") {
         items.push({
           id: `prop-fail-${prop.id}`,
           type: "system",

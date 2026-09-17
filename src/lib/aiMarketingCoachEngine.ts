@@ -53,19 +53,19 @@ export function generateWeeklyAiPlan(forceRegenerate: boolean = false): AiCoachW
   // PRIORITY 1: Cevap bekleyen sıcak teklifler (>15 gün)
   // =========================================================================
   const pendingProposals = proposals.filter(
-    (p) => p.status === "Sent" || p.status === "Teklif İletildi" || p.status === "Revize Edildi"
+    (p) => p.status === "Sent" || p.status === "Revision Requested"
   );
 
   pendingProposals.forEach((prop) => {
-    const propDate = prop.createdAt ? new Date(prop.createdAt) : prop.sentDate ? new Date(prop.sentDate) : new Date(now.getTime() - 20 * 86400000);
+    const propDate = prop.date ? new Date(prop.date) : prop.lastUpdate ? new Date(prop.lastUpdate) : new Date(now.getTime() - 20 * 86400000);
     const daysDiff = Math.floor((now.getTime() - propDate.getTime()) / (1000 * 3600 * 24));
-    
+
     if (daysDiff >= 15) {
       const isUrgent = daysDiff >= 20;
       rawTasks.push({
         id: `ai-task-prop-${prop.id}`,
         title: `${prop.companyName || "Müşteri"} teklifini takip et (${daysDiff} gündür cevapsız)`,
-        description: `${prop.title || "Teklif"} tutarı: ${prop.totalAmount ? `₺${prop.totalAmount.toLocaleString("tr-TR")}` : "Belirtilmemiş"}. Son temas ${daysDiff} gün önce. Müşteri yetkilisi ile telefon görüşmesi yapıp karar sürecini netleştir.`,
+        description: `${prop.proposalSubject || "Teklif"} tutarı: ${prop.grandTotal ? `₺${prop.grandTotal.toLocaleString("tr-TR")}` : "Belirtilmemiş"}. Son temas ${daysDiff} gün önce. Müşteri yetkilisi ile telefon görüşmesi yapıp karar sürecini netleştir.`,
         category: "sales_opportunity",
         categoryLabel: "Satış / Fırsat Yönetimi",
         priority: isUrgent ? "High" : "Medium",
@@ -104,14 +104,14 @@ export function generateWeeklyAiPlan(forceRegenerate: boolean = false): AiCoachW
   );
 
   openDeals.forEach((deal) => {
-    const dealDate = deal.lastContactDate ? new Date(deal.lastContactDate) : deal.createdAt ? new Date(deal.createdAt) : new Date(now.getTime() - 16 * 86400000);
+    const dealDate = deal.lastContactDate ? new Date(deal.lastContactDate) : new Date(now.getTime() - 16 * 86400000);
     const daysDiff = Math.floor((now.getTime() - dealDate.getTime()) / (1000 * 3600 * 24));
 
     if (daysDiff >= 14) {
       rawTasks.push({
         id: `ai-task-deal-${deal.id}`,
-        title: `${deal.companyName || deal.title} fırsatını yeniden temas et (${daysDiff} gündür hareketsiz)`,
-        description: `Fırsat değeri: ${deal.value ? `₺${deal.value.toLocaleString("tr-TR")}` : "₺0"}, Aşama: ${deal.stage}. Müşteri temsilcisiyle iletişime geçip sonraki aksiyonu belirle.`,
+        title: `${deal.companyName || deal.dealName} fırsatını yeniden temas et (${daysDiff} gündür hareketsiz)`,
+        description: `Fırsat değeri: ${deal.opportunityValue ? `₺${deal.opportunityValue.toLocaleString("tr-TR")}` : "₺0"}, Aşama: ${deal.stage}. Müşteri temsilcisiyle iletişime geçip sonraki aksiyonu belirle.`,
         category: "sales_opportunity",
         categoryLabel: "Satış / Fırsat Yönetimi",
         priority: "High",
@@ -124,15 +124,15 @@ export function generateWeeklyAiPlan(forceRegenerate: boolean = false): AiCoachW
         relatedDealId: deal.id,
         targetGoal: "Fırsat aşamasını ilerlet",
         status: "not_started",
-        sourceJustification: `Canlı Fırsat Verisi: ${deal.companyName || deal.title} fırsatı ${daysDiff} gündür temas görmedi.`,
+        sourceJustification: `Canlı Fırsat Verisi: ${deal.companyName || deal.dealName} fırsatı ${daysDiff} gündür temas görmedi.`,
       });
 
       generatedAlerts.push({
         id: `ai-alert-deal-${deal.id}`,
         severity: "warning",
         category: "Durağan Fırsat",
-        title: `Hareketsiz Fırsat: ${deal.companyName || deal.title}`,
-        message: `${deal.companyName || deal.title} fırsatında ${daysDiff} gündür hiçbir aksiyon alınmadı.`,
+        title: `Hareketsiz Fırsat: ${deal.companyName || deal.dealName}`,
+        message: `${deal.companyName || deal.dealName} fırsatında ${daysDiff} gündür hiçbir aksiyon alınmadı.`,
         sourceJustification: `Fırsat ID: ${deal.id} - Son temas: ${deal.lastContactDate || "Yok"}`,
         actionType: "recontact_deal",
         actionTargetId: deal.id,
@@ -264,7 +264,7 @@ export function generateWeeklyAiPlan(forceRegenerate: boolean = false): AiCoachW
   // PRIORITY 6: SEO / İçerik Aksiyonları
   // =========================================================================
   const seoInsight = reportInsights.length > 0 ? reportInsights[0] : null;
-  const seoTopic = seoInsight?.topKeywords?.[0] || "Operasyonel Mükemmellik ve Dijital Dönüşüm";
+  const seoTopic = seoInsight?.keywords?.[0] || "Operasyonel Mükemmellik ve Dijital Dönüşüm";
 
   rawTasks.push({
     id: `ai-task-seo-${normalizeTrKey(seoTopic)}`,
@@ -395,14 +395,14 @@ export function generateWeeklyAiPlan(forceRegenerate: boolean = false): AiCoachW
       marketingActions: ["Sektörel LinkedIn Kampanyası", "SEO Blog Yazımı"],
     },
     executiveAlerts: {
-      criticalProposals: pendingProposals.map((p) => `${p.companyName || "Müşteri"}: ₺${p.totalAmount?.toLocaleString("tr-TR") || 0}`),
+      criticalProposals: pendingProposals.map((p) => `${p.companyName || "Müşteri"}: ₺${p.grandTotal?.toLocaleString("tr-TR") || 0}`),
       delayedTasks: generatedAlerts.filter((a) => a.severity === "critical").map((a) => a.message),
       targetDeviations: generatedAlerts.filter((a) => a.severity === "warning").map((a) => a.message),
-      opportunityLossRisks: openDeals.filter((d) => Number(d.value) > 100000).map((d) => `${d.companyName || d.title} (${d.stage})`),
+      opportunityLossRisks: openDeals.filter((d) => Number(d.opportunityValue) > 100000).map((d) => `${d.companyName || d.dealName} (${d.stage})`),
     },
   };
 
-  const openDealsTotalVal = openDeals.reduce((sum, d) => sum + (Number(d.value) || 0), 0);
+  const openDealsTotalVal = openDeals.reduce((sum, d) => sum + (Number(d.opportunityValue) || 0), 0);
 
   const newWeeklyPlan: AiCoachWeeklyPlan = {
     id: `ai-plan-${currentWeekLabel.replace(/\s+/g, "")}`,

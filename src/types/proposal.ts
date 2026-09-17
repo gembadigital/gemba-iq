@@ -109,6 +109,9 @@ export interface Proposal {
   // için true olarak set edilir; eski kayıtlarda undefined/false kalır.
   isDraft?: boolean;
   wordTemplateId?: string;
+  // Soft-delete flag (Admin recover flow, see OpportunityDrawerExtension.tsx
+  // handleDeleteProposal/handleRecoverProposal). undefined/false = active.
+  isDeleted?: boolean;
   
   rejectedReason?: string;
   cancelledReason?: string;

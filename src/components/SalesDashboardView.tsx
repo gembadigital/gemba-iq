@@ -55,36 +55,13 @@ import {
   ReferenceLine
 } from "recharts";
 import { CrmDb } from "../lib/CrmDb";
+// Deal öncesi burada ayrı, dar bir kopyası vardı; DealManagementView.tsx'teki
+// gerçek Deal ile alan bazında sürüklenip (ör. opexScore eksikliği) prop
+// geçişlerinde tip hatalarına yol açıyordu. Artık tek kaynaktan (canonical)
+// içe aktarılıyor.
+import type { Deal } from "./DealManagementView";
 
-// Reuse Deal interface structure from parent
-export interface Deal {
-  id: string;
-  dealName?: string;
-  companyName: string;
-  contactPerson: string;
-  contactEmail?: string;
-  contactPhone?: string;
-  opportunityValue: number;
-  expectedCloseDate: string;
-  opportunityScore: number;
-  winProbability: number;
-  currentStageDuration: number;
-  priority: "Low" | "Medium" | "High";
-  industry: string;
-  stage: string;
-  owner?: string;
-  pipeline?: string;
-  description?: string;
-  leadSource?: string;
-  proposalNumber?: string;
-  manDay?: string | number;
-  contactSubject?: string;
-  products?: string;
-  region?: string;
-  businessUnit?: string;
-  createdDate?: string;
-  meetings?: { id: string; date: string; title: string; result: string }[];
-}
+export type { Deal };
 
 interface SalesDashboardProps {
   deals: Deal[];
@@ -1666,7 +1643,7 @@ export default function SalesDashboardView({ deals, onSelectDeal }: SalesDashboa
                 </defs>
                 <CartesianGrid strokeDasharray="3 3" opacity={0.1} />
                 <XAxis dataKey="name" fontSize={9} tickLine={false} />
-                <YAxis fontSize={9} tickLine={false} format={(v: any) => `$${v / 1000}k`} />
+                <YAxis fontSize={9} tickLine={false} tickFormatter={(v: any) => `$${v / 1000}k`} />
                 <Tooltip formatter={(value: any) => formatCur(value)} />
                 <Legend wrapperStyle={{ fontSize: 9 }} />
                 <Area type="monotone" dataKey="proposal" name={lang === "TR" ? "Gönderilen Teklifler" : "Proposal Sent"} stroke="#3b82f6" strokeWidth={2} fillOpacity={1} fill="url(#colorProposal)" />
@@ -1718,7 +1695,7 @@ export default function SalesDashboardView({ deals, onSelectDeal }: SalesDashboa
             <ResponsiveContainer width="100%" height="90%">
               <BarChart data={topicsData} layout="vertical" margin={{ left: 10, right: 10, top: 0, bottom: 0 }}>
                 <CartesianGrid strokeDasharray="3 3" opacity={0.1} />
-                <XAxis type="number" fontSize={8} tickLine={false} formatter={(v: any) => `$${v / 1000}k`} />
+                <XAxis type="number" fontSize={8} tickLine={false} tickFormatter={(v: any) => `$${v / 1000}k`} />
                 <YAxis dataKey="subject" type="category" fontSize={8} axisLine={false} tickLine={false} width={100} />
                 <Tooltip formatter={(value: any) => typeof value === "number" ? formatCur(value) : value} />
                 <Bar dataKey="revenue" name={t("Revenue Generated")} fill="#0078D4" barSize={12} radius={[0, 4, 4, 0]} />
@@ -1837,7 +1814,7 @@ export default function SalesDashboardView({ deals, onSelectDeal }: SalesDashboa
               <ComposedChart data={forecastChartData}>
                 <CartesianGrid strokeDasharray="3 3" opacity={0.1} />
                 <XAxis dataKey="month" fontSize={9} tickLine={false} />
-                <YAxis fontSize={9} tickLine={false} format={(v: any) => `$${v / 1000}k`} />
+                <YAxis fontSize={9} tickLine={false} tickFormatter={(v: any) => `$${v / 1000}k`} />
                 <Tooltip formatter={(value: any) => formatCur(value)} />
                 <Legend wrapperStyle={{ fontSize: 9 }} />
                 <Bar dataKey="pipeline" name={t("Current Active Pipeline")} fill="#3b82f6" opacity={0.8} barSize={25} />

@@ -179,7 +179,7 @@ export default function App() {
   useEffect(() => {
     const saved = CrmDb.getKv<Record<string, any> | null>(ADMIN_ORG_SETTINGS_KEY, null);
     if (saved) {
-      const merged = {
+      const merged: Record<string, any> = {
         ...saved,
         name: organization?.name || saved.name,
         phone: organization?.phone || saved.phone || "",

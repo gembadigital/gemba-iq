@@ -161,6 +161,8 @@ export interface Deal {
   manDay?: string;
   contactSubject?: string;
   products?: string;
+  region?: string;
+  businessUnit?: string;
   otherEmails?: string[];
 
   // Editable OPEX & Contract fields
@@ -235,6 +237,7 @@ export interface Deal {
   activities?: { id: string; date: string; title: string; type: string }[];
   meetings?: { id: string; date: string; title: string; result: string }[];
   documents?: { id: string; name: string; size: string; link: string }[];
+  dealNotes?: { id: string; date: string; text: string }[];
   stageHistory?: {
     stage: string;
     date: string;
@@ -981,6 +984,7 @@ export default function DealManagementView({ initialTab = "dashboard", onNavigat
       owner: "GP",
       dealName: "",
       companyName: "",
+      companyId: "",
       contactPerson: "",
       contactEmail: "",
       contactPhone: "",
@@ -1021,6 +1025,7 @@ export default function DealManagementView({ initialTab = "dashboard", onNavigat
       owner: "GP",
       dealName: "",
       companyName: "",
+      companyId: "",
       contactPerson: "",
       contactEmail: "",
       contactPhone: "",
