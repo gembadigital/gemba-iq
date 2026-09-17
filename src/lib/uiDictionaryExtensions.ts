@@ -2798,6 +2798,8 @@ export const uiDictionaryTR: Record<string, string> = {
   "No duplicate emails found": "Mükerrer e-posta bulunamadı",
   "Show only records with a duplicate email address": "Sadece mükerrer e-posta adresi olan kayıtları göster",
   "This email is registered {count} times": "Bu e-posta {count} kez kayıtlı",
+  "Delete {count} selected draft(s)?": "Seçili {count} taslak silinsin mi?",
+  "Bulk deleted by user": "Kullanıcı tarafından toplu silindi",
 };
 
 export const uiDictionaryEN: Record<string, string> = Object.fromEntries([

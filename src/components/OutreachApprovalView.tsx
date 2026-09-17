@@ -70,6 +70,7 @@ export default function OutreachApprovalView() {
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [busyId, setBusyId] = useState<string | null>(null);
+  const [bulkBusy, setBulkBusy] = useState(false);
   const [editingDraft, setEditingDraft] = useState<OutreachDraft | null>(null);
   const [editSubject, setEditSubject] = useState("");
   const [editBody, setEditBody] = useState("");
@@ -154,6 +155,28 @@ export default function OutreachApprovalView() {
     for (const draft of targets) {
       // eslint-disable-next-line no-await-in-loop
       await handleSend(draft);
+    }
+  };
+
+  const handleBulkReject = async () => {
+    const targets = drafts.filter((d) => selectedIds.includes(d.id) && d.status === "pending");
+    if (targets.length === 0) return;
+    if (!window.confirm(t("Delete {count} selected draft(s)?").replace("{count}", String(targets.length)))) {
+      return;
+    }
+    setBulkBusy(true);
+    setErrorMessage(null);
+    try {
+      for (const draft of targets) {
+        // eslint-disable-next-line no-await-in-loop
+        await rejectOutreachDraft(draft.id, t("Bulk deleted by user"));
+      }
+      setSelectedIds([]);
+      await loadDrafts();
+    } catch (error) {
+      setErrorMessage(error instanceof Error ? error.message : String(error));
+    } finally {
+      setBulkBusy(false);
     }
   };
 
@@ -310,15 +333,26 @@ export default function OutreachApprovalView() {
           </div>
         </div>
         {selectedIds.length > 0 && (
-          <button
-            type="button"
-            onClick={handleBulkSend}
-            disabled={busyId !== null}
-            className="px-4 py-1.5 bg-green-600 hover:bg-green-700 disabled:opacity-60 text-white font-bold rounded-lg text-xs flex items-center gap-1.5 cursor-pointer shadow-sm transition-all"
-          >
-            <Send className="w-3.5 h-3.5" />
-            {t("Send Selected")} ({selectedIds.length})
-          </button>
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={handleBulkReject}
+              disabled={busyId !== null || bulkBusy}
+              className="px-4 py-1.5 bg-rose-600 hover:bg-rose-700 disabled:opacity-60 text-white font-bold rounded-lg text-xs flex items-center gap-1.5 cursor-pointer shadow-sm transition-all"
+            >
+              <Ban className="w-3.5 h-3.5" />
+              {t("Delete Selected")} ({selectedIds.length})
+            </button>
+            <button
+              type="button"
+              onClick={handleBulkSend}
+              disabled={busyId !== null || bulkBusy}
+              className="px-4 py-1.5 bg-green-600 hover:bg-green-700 disabled:opacity-60 text-white font-bold rounded-lg text-xs flex items-center gap-1.5 cursor-pointer shadow-sm transition-all"
+            >
+              <Send className="w-3.5 h-3.5" />
+              {t("Send Selected")} ({selectedIds.length})
+            </button>
+          </div>
         )}
       </div>
 
@@ -384,13 +418,13 @@ export default function OutreachApprovalView() {
                       <td className="p-4 text-xs text-slate-600 dark:text-zinc-300">
                         {(draft.recipients || []).map((r) => r.name || r.email).join(", ") || "—"}
                       </td>
-                      <td className="p-4 text-xs text-slate-600 dark:text-zinc-300 max-w-xs">
+                      <td className="p-4 text-xs text-slate-600 dark:text-zinc-300 max-w-xs overflow-hidden">
                         <button
                           type="button"
                           onClick={() => setExpandedId(expandedId === draft.id ? null : draft.id)}
-                          className="text-left hover:underline cursor-pointer flex items-center gap-1"
+                          className="w-full text-left hover:underline cursor-pointer flex items-center gap-1"
                         >
-                          <span className="truncate">{draft.subject}</span>
+                          <span className="truncate min-w-0 flex-1">{draft.subject}</span>
                           <ChevronDown className={`w-3 h-3 shrink-0 transition-transform ${expandedId === draft.id ? "rotate-180" : ""}`} />
                         </button>
                       </td>

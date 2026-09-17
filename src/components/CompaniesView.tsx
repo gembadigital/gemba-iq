@@ -394,6 +394,14 @@ export default function CompaniesView() {
     return CrmDb.findPossibleDuplicateCompanies(formState.name, editingCompany?.id);
   }, [isFormOpen, formState.name, editingCompany?.id, companies]);
 
+  // "Tüm Sorumlular" filtresi sabit iki isimle (Atakan Zehir / GP Sales)
+  // sınırlıydı, ama listede hesap temsilcisi olarak farklı isimler de
+  // kayıtlı olabiliyor — filtre artık listede fiilen var olan tüm isimleri
+  // gösteriyor.
+  const uniqueOwners = useMemo(() => {
+    return Array.from(new Set(companies.map(c => c.accountOwner).filter(Boolean))).sort();
+  }, [companies]);
+
   const filteredCompanies = useMemo(() => {
     let result = [...companies];
 
@@ -423,6 +431,16 @@ export default function CompaniesView() {
     result.sort((a, b) => {
       let valA = a[sortBy];
       let valB = b[sortBy];
+
+      // annualRevenue "1,000,000" gibi virgüllü formatlanmış bir metin olarak
+      // saklanıyor — düz string karşılaştırması "20,000,000" gibi değerleri
+      // "500,000"den küçük gösterirdi (karakter bazlı kıyas). Sayısal kıyas
+      // için virgülleri temizleyip sayıya çeviriyoruz.
+      if (sortBy === "annualRevenue") {
+        const numA = parseFloat(String(valA || "0").replace(/,/g, "")) || 0;
+        const numB = parseFloat(String(valB || "0").replace(/,/g, "")) || 0;
+        return sortOrder === "asc" ? numA - numB : numB - numA;
+      }
 
       if (typeof valA === "string") {
         valA = valA.toLowerCase();
@@ -878,6 +896,7 @@ export default function CompaniesView() {
                     <option value="Lead">{t("Lead")}</option>
                     <option value="Prospect">{t("Prospect")}</option>
                     <option value="Active Customer">{t("Active")}</option>
+                    <option value="Former Customer">{t("Former Customer")}</option>
                   </select>
 
                   <select
@@ -886,8 +905,9 @@ export default function CompaniesView() {
                     className="p-2 bg-slate-50 dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 rounded-lg focus:outline-none col-span-2 md:col-span-1"
                   >
                     <option value="All">{t("All Owners")}</option>
-                    <option value="Atakan Zehir">Atakan Zehir</option>
-                    <option value="GP Sales">GP Sales</option>
+                    {uniqueOwners.map(owner => (
+                      <option key={owner} value={owner}>{owner}</option>
+                    ))}
                   </select>
                 </div>
 
@@ -1027,7 +1047,7 @@ export default function CompaniesView() {
               gerçekten tam ekran genişletme yapıyor (eskiden sadece kendi
               rengini değiştiriyordu, tabloya hiçbir etkisi yoktu). */}
           <div className={isFullWidthTable
-            ? "fixed inset-0 z-40 bg-white dark:bg-[#131313] p-4 overflow-y-auto animate-fadeIn"
+            ? "fixed inset-0 z-[60] bg-white dark:bg-[#131313] p-4 overflow-y-auto animate-fadeIn"
             : "bg-white dark:bg-[#131313] rounded-xl border border-slate-100 dark:border-zinc-900/80 shadow-[0_1px_3px_rgba(0,0,0,0.02)] overflow-hidden"
           }>
             {isFullWidthTable && (
@@ -1070,14 +1090,24 @@ export default function CompaniesView() {
                         {sortBy === "industry" && (sortOrder === "asc" ? <ChevronUp className="w-3.5 h-3.5" /> : <ChevronDown className="w-3.5 h-3.5" />)}
                       </div>
                     </th>
-                    <th className="p-3">{t("Location")}</th>
+                    <th className="p-3 cursor-pointer select-none hover:bg-slate-100/50" onClick={() => handleSort("billingCity")}>
+                      <div className="flex items-center gap-1">
+                        <span>{t("Location")}</span>
+                        {sortBy === "billingCity" && (sortOrder === "asc" ? <ChevronUp className="w-3.5 h-3.5" /> : <ChevronDown className="w-3.5 h-3.5" />)}
+                      </div>
+                    </th>
                     <th className="p-3 cursor-pointer select-none hover:bg-slate-100/50" onClick={() => handleSort("employeeCount")}>
                       <div className="flex items-center gap-1">
                         <span>{t("Employees")}</span>
                         {sortBy === "employeeCount" && (sortOrder === "asc" ? <ChevronUp className="w-3.5 h-3.5" /> : <ChevronDown className="w-3.5 h-3.5" />)}
                       </div>
                     </th>
-                    <th className="p-3">{t("Revenue Pattern")}</th>
+                    <th className="p-3 cursor-pointer select-none hover:bg-slate-100/50" onClick={() => handleSort("annualRevenue")}>
+                      <div className="flex items-center gap-1">
+                        <span>{t("Revenue Pattern")}</span>
+                        {sortBy === "annualRevenue" && (sortOrder === "asc" ? <ChevronUp className="w-3.5 h-3.5" /> : <ChevronDown className="w-3.5 h-3.5" />)}
+                      </div>
+                    </th>
                     <th className="p-3">{t("Status")}</th>
                     <th className="p-3">{t("Account Owner")}</th>
                     <th className="p-3 cursor-pointer select-none hover:bg-slate-100/50" onClick={() => handleSort("healthScore")}>
@@ -1347,6 +1377,7 @@ export default function CompaniesView() {
                     <option value="Lead">{t("Lead")}</option>
                     <option value="Prospect">{t("Prospect")}</option>
                     <option value="Active Customer">{t("Active Customer")}</option>
+                    <option value="Former Customer">{t("Former Customer")}</option>
                     <option value="Inactive">{t("Inactive")}</option>
                   </select>
                 </div>
