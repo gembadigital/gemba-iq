@@ -1686,13 +1686,19 @@ export default function ServicesView({
           </div>
         ` : ""}
 
-        <!-- Title Zone -->
-        <div style="position: absolute; top: 160mm; left: 0; right: 0; text-align: center; font-family: Arial, sans-serif; font-size: 18pt; font-weight: bold; color: #1a202c; letter-spacing: 1.5px; text-transform: uppercase;">
+        <!-- Title Zone
+             background: transparent !important eklendi — index.css'teki genel
+             "Print Overrides" kuralı (@media print { div { background: #ffffff
+             !important } }) bu div'e de uygulanıyordu; div left:0/right:0 tam
+             sayfa genişliğinde olduğundan, yazdırmada cover.png'nin sol
+             kenarındaki dekoratif çizginin üzerine tam bu satır hizasında
+             beyaz bir kesik/blok biniyordu. -->
+        <div style="position: absolute; top: 160mm; left: 0; right: 0; text-align: center; font-family: Arial, sans-serif; font-size: 18pt; font-weight: bold; color: #1a202c; letter-spacing: 1.5px; text-transform: uppercase; background: transparent !important;">
           HİZMET TEKLİFİ
         </div>
 
-        <!-- Metadata Information Zone -->
-        <div style="position: absolute; top: 200mm; left: 35mm; right: 25mm; font-family: Arial, sans-serif; font-size: 13pt; color: #1a202c; line-height: 2;">
+        <!-- Metadata Information Zone (aynı sebeple background: transparent !important) -->
+        <div style="position: absolute; top: 200mm; left: 35mm; right: 25mm; font-family: Arial, sans-serif; font-size: 13pt; color: #1a202c; line-height: 2; background: transparent !important;">
           <table style="width: 100%; border-collapse: collapse; border: none;">
             <tr style="border: none;">
               <td style="width: 48mm; font-weight: bold; padding: 2px 0; border: none; font-size: 12.5pt; font-family: Arial; color: #475569;">FİRMA ADI</td>

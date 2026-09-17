@@ -2446,7 +2446,7 @@ export default function MarketingHubView({ initialSubTab, onNavigateToTab }: Mar
                     }
                   }}
                   className={`flex-shrink-0 ${
-                    isCollapsed ? "w-14" : "w-72"
+                    isCollapsed ? "w-14 overflow-hidden" : "w-72"
                   } bg-[#FAF9F8] dark:bg-[#1e1d1c] border border-[#EDEBE9] dark:border-[#323130] border-t-4 ${accentColor.topBorder} rounded-2xl shadow-sm transition-all duration-200 flex flex-col`}
                 >
                   {/* Column Header */}
@@ -2472,9 +2472,9 @@ export default function MarketingHubView({ initialSubTab, onNavigateToTab }: Mar
                     ) : (
                       <div className="relative">
                         <div className="flex items-center justify-between gap-1.5">
-                          <div className="flex items-center gap-2 min-w-0">
-                            <span className="text-[10px] font-mono font-bold text-slate-400">{stageIndex + 1}.</span>
-                            <h4 className="text-xs font-bold text-slate-800 dark:text-slate-100 truncate">{t(stage)}</h4>
+                          <div className="flex items-center gap-2 min-w-0 flex-1">
+                            <span className="text-[10px] font-mono font-bold text-slate-400 flex-shrink-0">{stageIndex + 1}.</span>
+                            <h4 className="text-xs font-bold text-slate-800 dark:text-slate-100 truncate min-w-0 flex-1">{t(stage)}</h4>
                             <span className={`text-[10px] font-extrabold px-2 py-0.5 rounded-full flex-shrink-0 ${accentColor.badge}`}>
                               {stageAccounts.length}
                             </span>
@@ -2490,7 +2490,7 @@ export default function MarketingHubView({ initialSubTab, onNavigateToTab }: Mar
 
                         {/* Stage Description / Final Tag Sub-header */}
                         <div className="flex items-center justify-between mt-1 text-[10px] text-slate-400 font-medium">
-                          <span className="truncate">{bdStageMetadata[stage]?.description || t("Stage")}</span>
+                          <span className="truncate min-w-0 flex-1">{bdStageMetadata[stage]?.description || t("Stage")}</span>
                           {isFinalStage && (
                             <span className="text-[9px] font-bold text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/40 px-1.5 py-0.5 rounded flex-shrink-0">
                               → {t("Deal Transfer")}
