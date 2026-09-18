@@ -28,6 +28,9 @@ import { useAuth } from "./lib/AuthContext";
 import { useOrganization } from "./lib/OrganizationContext";
 import { CrmDb } from "./lib/CrmDb";
 import type { TaskNotification } from "./components/TasksView";
+import { scanDealStageReminders } from "./lib/dealReminderEngine";
+import { detectMailSenderSource, fetchOrgMembersSafe, type MailSenderSource } from "./lib/notificationMailer";
+import type { OrganizationDirectoryMember } from "./types/organization";
 import { getDisplayInitials } from "./lib/authHelpers";
 import { useOrganizationMailboxController } from "./lib/useOrganizationMailboxController";
 import { useNavigate } from "react-router-dom";
@@ -229,7 +232,7 @@ export default function App() {
   // notifications addressed to the signed-in user's own account e-mail are
   // shown here — e.g. "you were just assigned a task" or a due-date/overdue
   // reminder for a task that belongs to them.
-  const buildBellNotifications = (): Array<{ id: string; textKey: string; timeKey: string; read: boolean }> => {
+  const buildBellNotifications = (): Array<{ id: string; textKey: string; timeKey: string; read: boolean; dealId?: string }> => {
     const myEmail = (actorEmail || "").trim().toLowerCase();
     if (!myEmail) return [];
     const describe = (n: TaskNotification): string => {
@@ -242,6 +245,8 @@ export default function App() {
           return `"${n.taskTitle}" görevi gecikti.`;
         case "escalation":
           return `"${n.taskTitle}" görevi için eskalasyon bildirimi.`;
+        case "deal_stage_stale":
+          return `"${n.taskTitle}" fırsatı aşamasında beklemede — hatırlatma.`;
         case "daily_summary":
         default:
           return n.subject || `"${n.taskTitle}" ile ilgili bildirim.`;
@@ -251,10 +256,10 @@ export default function App() {
       .filter((n) => (n.recipientEmail || "").trim().toLowerCase() === myEmail)
       .sort((a, b) => (a.createdAt < b.createdAt ? 1 : -1))
       .slice(0, 25)
-      .map((n) => ({ id: n.id, textKey: describe(n), timeKey: n.createdAt, read: n.isRead }));
+      .map((n) => ({ id: n.id, textKey: describe(n), timeKey: n.createdAt, read: n.isRead, dealId: n.dealId }));
   };
 
-  const [notifications, setNotifications] = useState<Array<{ id: string; textKey: string; timeKey: string; read: boolean }>>(
+  const [notifications, setNotifications] = useState<Array<{ id: string; textKey: string; timeKey: string; read: boolean; dealId?: string }>>(
     () => buildBellNotifications()
   );
 
@@ -264,17 +269,49 @@ export default function App() {
   // is opened.
   const refreshBellNotifications = () => setNotifications(buildBellNotifications());
 
+  // Fırsat aşama hatırlatma motoru (dealReminderEngine.ts) için gerekli:
+  // organizasyon dizini (fırsat sahibinin e-postasını çözmek için) ve
+  // hangi gerçek posta kutusunun bağlı olduğu. TasksView.tsx'teki aynı
+  // tespitle birebir aynı (paylaşılan notificationMailer.ts üzerinden).
+  const [orgMembersForReminders, setOrgMembersForReminders] = useState<OrganizationDirectoryMember[]>([]);
+  const [mailSenderSourceForReminders, setMailSenderSourceForReminders] = useState<MailSenderSource>(null);
   useEffect(() => {
-    const intervalId = window.setInterval(() => {
+    let cancelled = false;
+    fetchOrgMembersSafe().then((members) => { if (!cancelled) setOrgMembersForReminders(members); });
+    detectMailSenderSource().then((source) => { if (!cancelled) setMailSenderSourceForReminders(source); });
+    return () => { cancelled = true; };
+  }, []);
+
+  useEffect(() => {
+    const runScan = () => {
       CrmDb.hydrateFromSupabase()
-        .then(() => refreshBellNotifications())
+        .then(() => {
+          refreshBellNotifications();
+          // Kullanıcının şu an hangi sayfada olduğundan bağımsız çalışır —
+          // fırsat sahibi Fırsat Yönetimi'ni açık tutmasa bile hatırlatma
+          // (mail + zil) üretilsin diye App.tsx seviyesinde (global) çağrılıyor.
+          return scanDealStageReminders({
+            orgMembers: orgMembersForReminders,
+            mailSenderSource: mailSenderSourceForReminders,
+          });
+        })
+        .then((result) => {
+          if (result.created.length > 0) refreshBellNotifications();
+        })
         .catch(() => {
           // Non-fatal: keep showing whatever was last loaded.
         });
-    }, 3 * 60 * 1000);
-    return () => window.clearInterval(intervalId);
+    };
+    // İlk taramayı hemen (organizasyon dizini/mailbox tespiti tamamlandıktan
+    // kısa süre sonra) yap, sonra periyodik olarak tekrarla.
+    const timeoutId = window.setTimeout(runScan, 5000);
+    const intervalId = window.setInterval(runScan, 3 * 60 * 1000);
+    return () => {
+      window.clearTimeout(timeoutId);
+      window.clearInterval(intervalId);
+    };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [actorEmail]);
+  }, [actorEmail, orgMembersForReminders, mailSenderSourceForReminders]);
 
   // Persists read/unread state back to the shared task-notification store so
   // it's consistent with the Tasks page's own notification list.
@@ -1496,7 +1533,7 @@ export default function App() {
                             setNotifications(notifications.map(item => item.id === n.id ? { ...item, read: true } : item));
                             persistBellReadState((item) => item.id === n.id ? { ...item, isRead: true } : item);
                             setIsNotificationsOpen(false);
-                            setActiveTab("todo-list");
+                            setActiveTab(n.dealId ? "deal-management" : "todo-list");
                           }}
                           className={`px-4 py-3 border-b border-slate-50 dark:border-zinc-805/50 last:border-0 hover:bg-slate-50 dark:hover:bg-zinc-800/30 cursor-pointer transition-all flex items-start gap-2 ${
                             !n.read ? "bg-indigo-50/20 dark:bg-indigo-950/10 font-medium" : ""

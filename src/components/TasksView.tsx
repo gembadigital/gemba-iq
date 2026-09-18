@@ -1,12 +1,15 @@
 import React, { useState, useEffect, useRef } from "react";
 import { useLanguage } from "../lib/LanguageContext";
 import { useOrganization } from "../lib/OrganizationContext";
-import { getSupabase } from "../lib/supabaseClient";
 import { CrmDb } from "../lib/CrmDb";
 import { fetchOrganizationDirectory } from "../lib/invitationService";
 import type { OrganizationDirectoryMember } from "../types/organization";
-import { fetchPersonalMailbox } from "../lib/personalMailbox";
-import { fetchOrganizationMailbox } from "../lib/organizationMailbox";
+import {
+  detectMailSenderSource,
+  resolveMemberEmail,
+  dispatchNotificationEmail as sharedDispatchNotificationEmail,
+  type MailSenderSource,
+} from "../lib/notificationMailer";
 import { 
   CheckSquare, 
   CheckCircle, 
@@ -74,9 +77,12 @@ const NOTIFICATION_ENGINE_INTERVAL_MINUTES = 20;
 
 export interface TaskNotification {
   id: string;
-  taskId: string;
+  taskId?: string;
+  // Fırsat aşama hatırlatma motorunun (dealReminderEngine.ts) ürettiği
+  // bildirimler bir görevden değil doğrudan bir fırsattan gelir.
+  dealId?: string;
   taskTitle: string;
-  type: "due_soon" | "overdue" | "escalation" | "daily_summary" | "assigned";
+  type: "due_soon" | "overdue" | "escalation" | "daily_summary" | "assigned" | "deal_stage_stale";
   recipientName: string;
   recipientRole: string;
   recipientEmail: string;
@@ -400,23 +406,12 @@ export default function TasksView() {
   // — see ServicesView.tsx/CompanyEmailsTab.tsx/OpportunityDrawerExtension.tsx.
   // If neither is connected, sends are honestly marked "skipped" instead of
   // silently failing against an unconfigured mailbox.
-  const [mailSenderSource, setMailSenderSource] = useState<"personal" | "organization" | null>(null);
+  const [mailSenderSource, setMailSenderSource] = useState<MailSenderSource>(null);
   useEffect(() => {
     let cancelled = false;
-    (async () => {
-      const [personalResult, orgResult] = await Promise.allSettled([
-        fetchPersonalMailbox(),
-        fetchOrganizationMailbox(),
-      ]);
-      if (cancelled) return;
-      if (orgResult.status === "fulfilled" && orgResult.value.mailbox.status === "Connected") {
-        setMailSenderSource("organization");
-      } else if (personalResult.status === "fulfilled" && personalResult.value.status === "Connected") {
-        setMailSenderSource("personal");
-      } else {
-        setMailSenderSource(null);
-      }
-    })();
+    detectMailSenderSource().then((source) => {
+      if (!cancelled) setMailSenderSource(source);
+    });
     return () => {
       cancelled = true;
     };
@@ -562,53 +557,8 @@ export default function TasksView() {
   // Mailbox — this was the source of the reminder simulation, and later of
   // task-assignment emails never actually going out.
   const dispatchNotificationEmail = async (notif: TaskNotification): Promise<TaskNotification> => {
-    if (!notif.recipientEmail || !notif.recipientEmail.includes("@")) {
-      return { ...notif, status: "skipped" };
-    }
-    if (!mailSenderSource) {
-      return {
-        ...notif,
-        status: "failed",
-        errorNote: "Bağlı bir posta kutusu yok (Kişisel veya Kurumsal Microsoft 365 mailbox bağlantısı gerekli).",
-      };
-    }
-    try {
-      const supabase = getSupabase();
-      const {
-        data: { session },
-      } = supabase ? await supabase.auth.getSession() : { data: { session: null } };
-
-      const res = await fetch("/api/mail/send", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          ...(session?.access_token ? { Authorization: `Bearer ${session.access_token}` } : {}),
-        },
-        body: JSON.stringify({
-          recipient: notif.recipientEmail,
-          subject: notif.subject,
-          body: notif.bodyHtml,
-          source: mailSenderSource,
-          // Fix 5: tells the server this is an automated system reminder
-          // (not an interactive send), so it's allowed through the
-          // Organization Mailbox even when the person triggering it isn't
-          // an ADMIN — see api/mail/[...action].js sendHandler.
-          purpose: "reminder",
-        }),
-      });
-
-      if (!res.ok) {
-        const payload = await res.json().catch(() => ({}));
-        return { ...notif, status: "failed", errorNote: payload?.error || "Mail delivery failed." };
-      }
-      return { ...notif, status: "sent" };
-    } catch (err) {
-      return {
-        ...notif,
-        status: "failed",
-        errorNote: err instanceof Error ? err.message : "Network error while sending mail.",
-      };
-    }
+    const result = await sharedDispatchNotificationEmail(notif, mailSenderSource);
+    return { ...notif, ...result };
   };
 
   // Resolves the real address to send a task notification to. Prefers the
@@ -620,12 +570,8 @@ export default function TasksView() {
   // named person can still be a real, currently registered user with a
   // valid email visible in Admin > Settings, even though this one task
   // record never captured it.
-  const resolveAssigneeEmail = (name?: string, storedEmail?: string): string => {
-    if (storedEmail && storedEmail.includes("@")) return storedEmail;
-    if (!name) return "";
-    const member = orgMembers.find((m) => (m.full_name?.trim() || m.email) === name);
-    return member?.email || "";
-  };
+  const resolveAssigneeEmail = (name?: string, storedEmail?: string): string =>
+    resolveMemberEmail(name, storedEmail, orgMembers);
 
   // Fires immediately when a task is created with an assignee, or when an
   // existing task's assignee changes (reassignment). This is separate from
@@ -2124,10 +2070,16 @@ export default function TasksView() {
                       ? "bg-amber-50 dark:bg-amber-955 text-amber-600 dark:text-amber-400 border border-amber-200/50"
                       : n.type === "overdue"
                       ? "bg-rose-50 dark:bg-rose-955 text-rose-600 dark:text-rose-400 border border-rose-200/50"
+                      : n.type === "deal_stage_stale"
+                      ? "bg-blue-50 dark:bg-blue-955 text-blue-600 dark:text-blue-400 border border-blue-200/50"
                       : "bg-purple-50 dark:bg-purple-955 text-purple-600 dark:text-purple-400 border border-purple-200/50";
 
                   const typeLabel =
-                    n.type === "assigned" ? t("Task Assignment") : n.type === "due_soon" ? t("Upcoming") : n.type === "overdue" ? t("Overdue") : t("Escalation");
+                    n.type === "assigned" ? t("Task Assignment")
+                    : n.type === "due_soon" ? t("Upcoming")
+                    : n.type === "overdue" ? t("Overdue")
+                    : n.type === "deal_stage_stale" ? t("Deal Stage Reminder")
+                    : t("Escalation");
 
                   return (
                     <div 

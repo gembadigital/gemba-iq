@@ -53,6 +53,11 @@ import { createOutreachDraft } from "../lib/outreachService";
 import CompanyAutocomplete from "./CompanyAutocomplete";
 import LossReasonModal, { LossReasonResult } from "./shared/LossReasonModal";
 import {
+  getDealStageReminderSettings,
+  saveDealStageReminderSettings,
+  type DealStageReminderRule,
+} from "../lib/dealReminderEngine";
+import {
   TimelineActivitiesSection,
   OpexAssessmentSection,
   ProposalContractSection,
@@ -767,6 +772,15 @@ export default function DealManagementView({ initialTab = "dashboard", onNavigat
   const [isRenamingStagePopup, setIsRenamingStagePopup] = useState<string | null>(null);
   const [renameStageInput, setRenameStageInput] = useState("");
   const [isDeletingStagePopup, setIsDeletingStagePopup] = useState<string | null>(null);
+
+  // Aşama bazlı hatırlatma ayarları (kullanıcı talebi: "her bir fırsat
+  // aşamasında hatırlatma süresi ve frekansı elle kurulmalıdır").
+  const [reminderSettingsPopup, setReminderSettingsPopup] = useState<string | null>(null);
+  const [reminderSettingsForm, setReminderSettingsForm] = useState<DealStageReminderRule>({
+    enabled: false,
+    thresholdDays: 7,
+    frequencyDays: 7,
+  });
   const [deleteStageTargetMigration, setDeleteStageTargetMigration] = useState<string>("");
 
   // CRM follow-up reminder mailbox states
@@ -2597,6 +2611,19 @@ export default function DealManagementView({ initialTab = "dashboard", onNavigat
                                   >
                                     <span>✏️ {t("Rename Stage")}</span>
                                   </button>
+                                  <button
+                                    type="button"
+                                    onClick={() => {
+                                      const existing = getDealStageReminderSettings()[stage];
+                                      setReminderSettingsForm(existing || { enabled: false, thresholdDays: 7, frequencyDays: 7 });
+                                      setReminderSettingsPopup(stage);
+                                      setActiveStageMenu(null);
+                                      setStageMenuPos(null);
+                                    }}
+                                    className="w-full text-left px-3 py-1.5 text-xs text-slate-700 dark:text-zinc-300 hover:bg-slate-50 dark:hover:bg-zinc-800 flex items-center gap-1.5 cursor-pointer"
+                                  >
+                                    <span>🔔 {t("Reminder Settings")}</span>
+                                  </button>
                                   <div className="border-t my-1 dark:border-zinc-800"></div>
                                   <button
                                     type="button"
@@ -4395,6 +4422,83 @@ export default function DealManagementView({ initialTab = "dashboard", onNavigat
                 className="px-4 py-1.5 bg-[#0078D4] hover:bg-blue-600 text-white rounded font-bold cursor-pointer"
               >
                 {t("Apply Rename")}
+              </button>
+            </div>
+          </form>
+        </div>
+      )}
+
+      {/* Aşama hatırlatma ayarları popup */}
+      {reminderSettingsPopup && (
+        <div className="fixed inset-0 bg-[#0c0c0c]/50 dark:bg-[#000000]/70 backdrop-blur-xs flex items-center justify-center z-50 p-4" role="dialog" aria-modal="true">
+          <form
+            onSubmit={(e) => {
+              e.preventDefault();
+              const all = getDealStageReminderSettings();
+              saveDealStageReminderSettings({ ...all, [reminderSettingsPopup]: reminderSettingsForm });
+              setReminderSettingsPopup(null);
+            }}
+            className="bg-white dark:bg-[#151515] w-full max-w-sm rounded-xl border border-slate-205 dark:border-zinc-800 p-5 space-y-4 animate-in fade-in zoom-in-95"
+          >
+            <h3 className="font-bold text-slate-800 dark:text-zinc-100 text-xs uppercase tracking-wide font-mono">
+              🔔 {t('Reminder Settings: "{stage}"').replace("{stage}", reminderSettingsPopup)}
+            </h3>
+            <p className="text-[11px] text-slate-500 dark:text-zinc-400">
+              {t("A deal that has been sitting in this stage will trigger both an e-mail and a bell notification to its owner.")}
+            </p>
+
+            <label className="flex items-center gap-2 text-xs font-bold text-slate-700 dark:text-zinc-300 cursor-pointer">
+              <input
+                type="checkbox"
+                checked={reminderSettingsForm.enabled}
+                onChange={(e) => setReminderSettingsForm((prev) => ({ ...prev, enabled: e.target.checked }))}
+                className="cursor-pointer"
+              />
+              {t("Enable reminders for this stage")}
+            </label>
+
+            <div>
+              <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1">
+                {t("Send first reminder after (days)")}
+              </label>
+              <input
+                type="number"
+                min={1}
+                required
+                disabled={!reminderSettingsForm.enabled}
+                value={reminderSettingsForm.thresholdDays}
+                onChange={(e) => setReminderSettingsForm((prev) => ({ ...prev, thresholdDays: Math.max(1, Number(e.target.value) || 1) }))}
+                className="w-full bg-[#fbfbfb] dark:bg-zinc-800 border border-slate-200 dark:border-zinc-700 rounded-lg p-2 text-xs outline-none disabled:opacity-50"
+              />
+            </div>
+
+            <div>
+              <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1">
+                {t("Repeat every (days, 0 = only once)")}
+              </label>
+              <input
+                type="number"
+                min={0}
+                disabled={!reminderSettingsForm.enabled}
+                value={reminderSettingsForm.frequencyDays}
+                onChange={(e) => setReminderSettingsForm((prev) => ({ ...prev, frequencyDays: Math.max(0, Number(e.target.value) || 0) }))}
+                className="w-full bg-[#fbfbfb] dark:bg-zinc-800 border border-slate-200 dark:border-zinc-700 rounded-lg p-2 text-xs outline-none disabled:opacity-50"
+              />
+            </div>
+
+            <div className="flex justify-end gap-2 text-xs pt-1">
+              <button
+                type="button"
+                onClick={() => setReminderSettingsPopup(null)}
+                className="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 dark:bg-zinc-800 dark:hover:bg-zinc-700 text-slate-600 dark:text-zinc-300 rounded font-bold cursor-pointer"
+              >
+                {t("Cancel")}
+              </button>
+              <button
+                type="submit"
+                className="px-4 py-1.5 bg-[#0078D4] hover:bg-blue-600 text-white rounded font-bold cursor-pointer"
+              >
+                {t("Save")}
               </button>
             </div>
           </form>

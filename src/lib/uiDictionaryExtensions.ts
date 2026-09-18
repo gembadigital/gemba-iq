@@ -2800,6 +2800,16 @@ export const uiDictionaryTR: Record<string, string> = {
   "This email is registered {count} times": "Bu e-posta {count} kez kayıtlı",
   "Delete {count} selected draft(s)?": "Seçili {count} taslak silinsin mi?",
   "Bulk deleted by user": "Kullanıcı tarafından toplu silindi",
+
+  // Fırsat Yönetimi — aşama bazlı hatırlatma ayarları
+  "Reminder Settings": "Hatırlatma Ayarları",
+  'Reminder Settings: "{stage}"': 'Hatırlatma Ayarları: "{stage}"',
+  "A deal that has been sitting in this stage will trigger both an e-mail and a bell notification to its owner.":
+    "Bu aşamada bekleyen bir fırsat, sahibine hem e-posta hem de zil bildirimi gönderir.",
+  "Enable reminders for this stage": "Bu aşama için hatırlatmaları etkinleştir",
+  "Send first reminder after (days)": "İlk hatırlatmayı şu kadar gün sonra gönder",
+  "Repeat every (days, 0 = only once)": "Şu kadar günde bir tekrarla (0 = sadece bir kez)",
+  "Deal Stage Reminder": "Fırsat Aşama Hatırlatması",
 };
 
 export const uiDictionaryEN: Record<string, string> = Object.fromEntries([
