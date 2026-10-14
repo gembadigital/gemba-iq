@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import DashboardView from "./components/DashboardView";
 import CampaignDesigner from "./components/CampaignDesigner";
 import SendingProgressView from "./components/SendingProgressView";
@@ -282,9 +282,25 @@ export default function App() {
     return () => { cancelled = true; };
   }, []);
 
+  // Egress fix: this tick used to call CrmDb.hydrateFromSupabase() with no
+  // arguments every 3 minutes, which re-pulled every row's full `data`
+  // payload for all 5 CRM tables, UNCONDITIONALLY, from every open tab —
+  // the dominant driver of the Supabase Free-plan egress quota (5 GB/month)
+  // being exhausted in ~12 days. hydrateFromSupabase() now does a delta
+  // sync internally once the cache is warm (see CrmDb.ts), so this call
+  // already shrank from "full table reload" to "only rows changed since
+  // last sync" — no change needed here for that part. What's added below:
+  //   1. Skip the tick entirely while the tab is in the background
+  //      (document.hidden) — a hidden tab still burning its 3-minute cycle
+  //      was pure waste; sync once immediately when it becomes visible again.
+  //   2. Force a full reload every 10th tick (~30 min) as a defensive
+  //      resync against drift (e.g. a row whose updated_at didn't move for
+  //      some reason) — full reloads are now rare instead of constant.
+  const tickCountRef = useRef(0);
   useEffect(() => {
-    const runScan = () => {
-      CrmDb.hydrateFromSupabase()
+    const runScan = (forceFull: boolean) => {
+      if (document.hidden) return;
+      CrmDb.hydrateFromSupabase(undefined, { force: forceFull })
         .then(() => {
           refreshBellNotifications();
           // Kullanıcının şu an hangi sayfada olduğundan bağımsız çalışır —
@@ -302,11 +318,20 @@ export default function App() {
           // Non-fatal: keep showing whatever was last loaded.
         });
     };
+    const tick = () => {
+      tickCountRef.current += 1;
+      runScan(tickCountRef.current % 10 === 0);
+    };
+    const handleVisibilityChange = () => {
+      if (!document.hidden) runScan(false);
+    };
+    document.addEventListener("visibilitychange", handleVisibilityChange);
     // İlk taramayı hemen (organizasyon dizini/mailbox tespiti tamamlandıktan
     // kısa süre sonra) yap, sonra periyodik olarak tekrarla.
-    const timeoutId = window.setTimeout(runScan, 5000);
-    const intervalId = window.setInterval(runScan, 3 * 60 * 1000);
+    const timeoutId = window.setTimeout(tick, 5000);
+    const intervalId = window.setInterval(tick, 3 * 60 * 1000);
     return () => {
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
       window.clearTimeout(timeoutId);
       window.clearInterval(intervalId);
     };
