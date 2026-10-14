@@ -7,7 +7,9 @@ import { getTenantActorName, getActiveOrganizationId } from "./tenantStorage";
 import {
   type CrmSnapshot,
   type OrgAuxiliaryData,
+  type CrmDelta,
   loadOrganizationCrm,
+  loadOrganizationCrmDelta,
   persistAuxiliary,
   persistCompanies,
   persistContacts,
@@ -246,6 +248,53 @@ function applySnapshot(snapshot: CrmSnapshot) {
   cache.loaded = true;
 }
 
+// Egress fix: merges a delta (only rows changed since the last sync, plus
+// each table's full current id set) into the already-loaded cache, instead
+// of replacing it wholesale like applySnapshot() does for a full load.
+// Upserts changed rows by id, then drops any cached row whose id is no
+// longer in currentIds (covers deletions a delta query can't otherwise see
+// — see loadOrganizationCrmDelta's comment in crmSupabaseService.ts).
+function mergeById<T extends { id: string }>(existing: T[], changed: T[], currentIds: Set<string>): T[] {
+  const byId = new Map(existing.map((item) => [item.id, item]));
+  for (const item of changed) byId.set(item.id, item);
+  const merged: T[] = [];
+  for (const [id, item] of byId) {
+    if (currentIds.has(id)) merged.push(item);
+  }
+  return merged;
+}
+
+function applyDeltaSnapshot(delta: CrmDelta) {
+  cache.companies = mergeById(
+    cache.companies,
+    delta.companies.map((c) => ({ ...c, customFields: c.customFields || {} })),
+    delta.currentIds.companies
+  );
+  cache.contacts = mergeById(cache.contacts, delta.contacts, delta.currentIds.contacts);
+  cache.deals = mergeById(cache.deals, delta.deals, delta.currentIds.deals);
+  cache.proposals = mergeById(cache.proposals, delta.proposals, delta.currentIds.proposals);
+  cache.tasks = mergeById(cache.tasks, delta.tasks, delta.currentIds.tasks);
+
+  // null means the __org_auxiliary__ row's updated_at didn't move since the
+  // last sync — leave the cached blob (emails/activities/kvStore/etc) as-is.
+  if (delta.auxiliary) {
+    cache.auxiliary = delta.auxiliary;
+    cache.emails = delta.auxiliary.emails || [];
+    cache.activities = delta.auxiliary.activities || [];
+    cache.projects = delta.auxiliary.projects || [];
+    cache.documents = delta.auxiliary.crmDocuments || [];
+  }
+  cache.loaded = true;
+}
+
+// Tracks which organization and timestamp the cache was last synced against,
+// so hydrateFromSupabase() below knows whether a delta sync is valid (same
+// org, already loaded once) or a full load is required (first load ever, or
+// the active organization changed since the last sync — a delta computed
+// against the WRONG org's last-sync timestamp would silently skip almost all
+// of the new org's data).
+let lastSync: { organizationId: string; syncedAt: string } | null = null;
+
 function joinDealsWithCompanies(deals: Deal[]): Deal[] {
   const companies = cache.companies;
   return deals.map((deal) => {
@@ -286,9 +335,25 @@ export const CrmDb = {
     return cache.loaded;
   },
 
-  async hydrateFromSupabase(organizationId?: string): Promise<void> {
-    const snapshot = await loadOrganizationCrm(organizationId);
-    applySnapshot(snapshot);
+  // options.force=true always does a full reload (used for the periodic
+  // defensive re-sync in App.tsx). Otherwise: a delta sync runs whenever the
+  // cache is already loaded AND the last sync was against this same
+  // organization; any other case (first load, org switch, or a cache that
+  // was reset) falls back to a full load, same as before this fix.
+  async hydrateFromSupabase(organizationId?: string, options?: { force?: boolean }): Promise<void> {
+    const orgId = organizationId || getActiveOrganizationId();
+    const canDelta = !options?.force && cache.loaded && !!orgId && lastSync?.organizationId === orgId;
+
+    if (!canDelta) {
+      const snapshot = await loadOrganizationCrm(organizationId);
+      applySnapshot(snapshot);
+      lastSync = orgId ? { organizationId: orgId, syncedAt: new Date().toISOString() } : null;
+      return;
+    }
+
+    const delta = await loadOrganizationCrmDelta(lastSync!.syncedAt, organizationId);
+    applyDeltaSnapshot(delta);
+    lastSync = { organizationId: orgId!, syncedAt: delta.syncedAt };
   },
 
   resetCache(): void {
@@ -302,6 +367,7 @@ export const CrmDb = {
     cache.activities = [];
     cache.documents = [];
     cache.tasks = [];
+    lastSync = null;
   },
 
   getKv<T>(key: string, fallback: T): T {
