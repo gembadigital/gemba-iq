@@ -1,16 +1,27 @@
-// Fırsat Yönetimi (Deal Management) — aşama bazlı hatırlatma motoru.
+// Fırsat Yönetimi (Deal Management) — aşama bazlı hatırlatma motoru (İSTEMCİ tarafı).
 //
 // Kullanıcı talebi: "Fırsat yönetiminde her bir aşamada hatırlatma özelliği
 // olmalı ve bu özellik kullanıcılara mail atmalı... bu hatırlatmalar her bir
 // fırsat aşamasında hatırlatma süresi ve frekansı elle kurulmalıdır."
 //
-// TasksView.tsx'teki mevcut görev hatırlatma/eskalasyon motoruyla AYNI temel
-// mekanizmayı kullanır (aynı gerçek posta kutusu bağlantısı — bkz.
-// notificationMailer.ts —, aynı TaskNotification deposu, dolayısıyla aynı
-// üst menü zil ikonu) ama görevlerden bağımsız, doğrudan fırsat/aşama
-// verisine dayanır: bir fırsat, kendi aşamasının yapılandırılmış "eşik günü"
-// kadar süredir o aşamada bekliyorsa ilk hatırlatma, ardından yapılandırılmış
-// "frekans" gün aralığıyla tekrarlanan hatırlatmalar üretir.
+// GÜNCELLEME (sunucu cron'u eklendi — bkz. lib/server/dealReminderCron.js):
+// Bu dosya artık TEK hatırlatma yolu değil. Asıl (idempotent, DB-garantili,
+// kullanıcı uygulamayı açmasa bile çalışan) tarama artık GÜNDE BİR KEZ
+// sunucuda (Vercel cron) çalışıyor ve deal_stage_reminder_log tablosuna
+// yazıyor (bkz. supabase/migrations/014_deal_stage_reminder_log.sql). Bu
+// istemci motoru, sunucu cron'u üretimde doğrulanana kadar bir GEÇİŞ
+// KATMANI olarak (crm_deal_stage_reminder_client_scan_enabled bayrağıyla,
+// varsayılan AÇIK) hâlâ çalışıyor — kullanıcı sunucu tarafını doğruladıktan
+// sonra bu bayrağı kapatıp bu motoru devre dışı bırakabilir. İki motor da
+// aktifken AYNI gün için mükerrer e-posta riski YOKTUR (sunucu tarafı DB
+// unique kısıtı ikinci denemeyi sessizce engeller), ama zil ikonunda aynı
+// durağan fırsat için İKİ ayrı bildirim görünebilir (biri bu dosyadan/
+// taskNotifications'tan, biri sunucudan/deal_stage_reminder_log'dan) —
+// bayrak kapatılana kadar kabul edilen, geçici bir çakışma.
+//
+// Hesaplama mantığı (gün sayısı, "yakalama" kuralı, e-posta şablonu)
+// kopyala-yapıştır yerine lib/dealReminderShared.js'den içe aktarılıyor —
+// sunucudaki cron ile TAM AYNI sonucu üretmesi garanti edilsin diye.
 //
 // "Kaybedildi" fırsatlar için tekrar-temas hatırlatması ZATEN mevcuttu
 // (bkz. DealManagementView.tsx handleLossReasonConfirm → CrmDb.upsertTask
@@ -28,6 +39,15 @@ import {
   dispatchNotificationEmail,
   type MailSenderSource,
 } from "./notificationMailer";
+import { getSupabase } from "./supabaseClient";
+import {
+  istanbulDateParts,
+  getStageEntryDateParts,
+  daysBetweenParts,
+  shouldFireNow as shouldFireNowShared,
+  formatDealLabel,
+  buildReminderEmail,
+} from "../../lib/dealReminderShared.js";
 
 export interface DealStageReminderRule {
   enabled: boolean;
@@ -41,6 +61,11 @@ export type DealStageReminderSettings = Record<string, DealStageReminderRule>;
 
 const DEAL_STAGE_REMINDER_SETTINGS_KEY = "crm_deal_stage_reminder_settings";
 
+// Geçiş bayrağı: sunucu cron'u (lib/server/dealReminderCron.js) doğrulanana
+// kadar istemci taramasının da çalışıp çalışmayacağını kontrol eder.
+// Varsayılan true (bayrak hiç ayarlanmamışsa, mevcut davranış korunur).
+const CLIENT_SCAN_ENABLED_KEY = "crm_deal_stage_reminder_client_scan_enabled";
+
 export function getDealStageReminderSettings(): DealStageReminderSettings {
   return CrmDb.getKv<DealStageReminderSettings>(DEAL_STAGE_REMINDER_SETTINGS_KEY, {});
 }
@@ -49,105 +74,28 @@ export function saveDealStageReminderSettings(settings: DealStageReminderSetting
   CrmDb.setKv(DEAL_STAGE_REMINDER_SETTINGS_KEY, settings);
 }
 
-// stageHistory tarihleri toLocaleDateString("tr-TR") ile "gg.aa.yyyy"
-// formatında saklanıyor (bkz. DealManagementView.tsx handleDealDropOnStage).
-function parseTrDate(value: string | undefined): Date | null {
-  if (!value) return null;
-  const parts = value.split(".");
-  if (parts.length !== 3) return null;
-  const day = Number(parts[0]);
-  const month = Number(parts[1]);
-  const year = Number(parts[2]);
-  if (!day || !month || !year) return null;
-  const date = new Date(year, month - 1, day);
-  return Number.isNaN(date.getTime()) ? null : date;
+export function isClientScanEnabled(): boolean {
+  return CrmDb.getKv<boolean>(CLIENT_SCAN_ENABLED_KEY, true);
 }
 
-function daysBetween(from: Date, to: Date): number {
-  const a = new Date(from.getFullYear(), from.getMonth(), from.getDate());
-  const b = new Date(to.getFullYear(), to.getMonth(), to.getDate());
-  return Math.floor((b.getTime() - a.getTime()) / 86400000);
-}
-
-// Fırsatın MEVCUT aşamasına en son ne zaman girdiğini stageHistory'den okur.
-// stageHistory yoksa/eşleşmiyorsa null döner — bu durumda hatırlatma
-// gönderilmez (yanlış bir tarihle spam yapmaktansa hiç göndermemek tercih
-// edilir; bkz. handleDealDropOnStage'in her aşama değişiminde bir kayıt
-// eklediği — sadece çok eski/CSV ile içe aktarılmış kayıtlarda eksik olabilir).
-export function getStageEntryDate(deal: Deal): Date | null {
-  const entries = (deal.stageHistory || []).filter((h) => h.stage === deal.stage);
-  if (entries.length === 0) return null;
-  return parseTrDate(entries[entries.length - 1].date);
+export function setClientScanEnabled(enabled: boolean): void {
+  CrmDb.setKv(CLIENT_SCAN_ENABLED_KEY, enabled);
 }
 
 export function getDaysInCurrentStage(deal: Deal, now: Date = new Date()): number | null {
-  const enteredAt = getStageEntryDate(deal);
+  const enteredAt = getStageEntryDateParts(deal);
   if (!enteredAt) return null;
-  return daysBetween(enteredAt, now);
-}
-
-// Sunucu tarafı bir zamanlayıcı (cron) yok — bu tarama sadece uygulama bir
-// tarayıcı sekmesinde açıkken (App.tsx'teki periyodik döngü ile) çalışır.
-// Bu yüzden "tam eşik gününde" bir eşleşme aramak yerine (kullanıcı o gün
-// uygulamayı hiç açmamışsa hatırlatma tamamen kaçırılırdı), bildirim
-// GEÇMİŞİNE bakarak "yakalama" mantığı kullanılıyor: bu aşamaya girdikten
-// sonra hiç hatırlatma gönderilmemişse ve eşik gün aşılmışsa hemen gönder;
-// daha önce gönderilmişse son gönderimden bu yana geçen gün frekansı
-// karşılıyorsa tekrar gönder.
-function shouldFireNow(
-  deal: Deal,
-  rule: DealStageReminderRule,
-  enteredAt: Date,
-  daysInStage: number,
-  existingNotifications: TaskNotification[],
-  now: Date
-): boolean {
-  if (daysInStage < rule.thresholdDays) return false;
-
-  const priorReminders = existingNotifications.filter(
-    (n) => n.type === "deal_stage_stale" && n.dealId === deal.id && new Date(n.createdAt) >= enteredAt
-  );
-  if (priorReminders.length === 0) return true;
-
-  if (!rule.frequencyDays || rule.frequencyDays <= 0) return false; // "sadece bir kez" ve zaten gönderilmiş
-
-  const lastReminder = priorReminders.reduce((latest, n) => (n.createdAt > latest.createdAt ? n : latest));
-  const daysSinceLast = daysBetween(new Date(lastReminder.createdAt), now);
-  return daysSinceLast >= rule.frequencyDays;
-}
-
-function formatDealLabel(deal: Deal): string {
-  return deal.dealName || deal.companyName || "Fırsat";
-}
-
-function buildEmail(deal: Deal, daysInStage: number): { subject: string; bodyHtml: string } {
-  const label = formatDealLabel(deal);
-  const subject = `Hatırlatma: "${label}" fırsatı ${daysInStage} gündür "${deal.stage}" aşamasında bekliyor`;
-  const bodyHtml = `
-    <div style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; max-width: 600px; margin: 0 auto; padding: 25px; border: 1px solid #FDE7E9; border-radius: 8px; background-color: #ffffff; color: #323130;">
-      <h2 style="font-size: 16px; color: #0078D4; margin-top: 0;">Fırsat Aşama Hatırlatması</h2>
-      <p style="font-size: 14px; line-height: 1.6;"><b>${label}</b> (${deal.companyName || "-"}) fırsatı, <b>${daysInStage} gündür</b> <b>"${deal.stage}"</b> aşamasında bekliyor.</p>
-      <table style="width: 100%; border-collapse: collapse; margin: 16px 0; font-size: 13px;">
-        <tr><td style="padding: 4px 0; color: #605e5c;">Fırsat</td><td style="padding: 4px 0; font-weight: 600;">${label}</td></tr>
-        <tr><td style="padding: 4px 0; color: #605e5c;">Firma</td><td style="padding: 4px 0; font-weight: 600;">${deal.companyName || "-"}</td></tr>
-        <tr><td style="padding: 4px 0; color: #605e5c;">Aşama</td><td style="padding: 4px 0; font-weight: 600;">${deal.stage}</td></tr>
-        <tr><td style="padding: 4px 0; color: #605e5c;">Aşamada geçen süre</td><td style="padding: 4px 0; font-weight: 600; color: #a80000;">${daysInStage} gün</td></tr>
-        <tr><td style="padding: 4px 0; color: #605e5c;">Fırsat değeri</td><td style="padding: 4px 0; font-weight: 600;">${deal.opportunityValue ? deal.opportunityValue.toLocaleString("tr-TR") : "-"}</td></tr>
-      </table>
-      <p style="font-size: 13px; color: #605e5c;">Bu fırsatı Gemba IQ &gt; Fırsat Yönetimi'nden inceleyip sonraki aksiyonu belirleyin.</p>
-    </div>
-  `;
-  return { subject, bodyHtml };
+  return daysBetweenParts(enteredAt, istanbulDateParts(now));
 }
 
 export interface DealReminderScanResult {
   created: TaskNotification[];
 }
 
-// Ana tarama fonksiyonu — App.tsx tarafından periyodik olarak (görev
-// hatırlatma motorunun 3 dakikalık senkronizasyon döngüsüyle birlikte)
-// çağrılır. Yeni bildirimleri hem CrmDb'ye (zil ikonu için) kalıcı olarak
-// yazar hem de gerçek e-postalarını gönderir.
+// Ana tarama fonksiyonu — App.tsx tarafından periyodik olarak çağrılır,
+// SADECE isClientScanEnabled() true ise (App.tsx bu kontrolü kendisi yapar).
+// Yeni bildirimleri hem CrmDb'ye (zil ikonu için) kalıcı olarak yazar hem de
+// gerçek e-postalarını gönderir.
 export async function scanDealStageReminders(params: {
   orgMembers: OrganizationDirectoryMember[];
   mailSenderSource: MailSenderSource;
@@ -159,7 +107,8 @@ export async function scanDealStageReminders(params: {
   const existingNotifications = CrmDb.getTaskNotifications();
 
   const now = new Date();
-  const todayIso = now.toISOString().slice(0, 10);
+  const nowParts = istanbulDateParts(now);
+  const todayIso = `${nowParts.year}-${String(nowParts.month).padStart(2, "0")}-${String(nowParts.day).padStart(2, "0")}`;
   // Aynı gün içindeki tekrarlanan tarama turlarının (3 dakikada bir) aynı
   // hatırlatmayı defalarca üretmesini engeller — TasksView'ın triggerKey
   // desenindeki gibi.
@@ -171,16 +120,21 @@ export async function scanDealStageReminders(params: {
     const rule = settings[deal.stage];
     if (!rule || !rule.enabled) continue;
 
-    const enteredAt = getStageEntryDate(deal);
+    const enteredAt = getStageEntryDateParts(deal);
     if (!enteredAt) continue;
-    const daysInStage = daysBetween(enteredAt, now);
-    if (!shouldFireNow(deal, rule, enteredAt, daysInStage, existingNotifications, now)) continue;
+    const daysInStage = daysBetweenParts(enteredAt, nowParts);
+
+    const priorReminderDateParts = existingNotifications
+      .filter((n) => n.type === "deal_stage_stale" && n.dealId === deal.id && new Date(n.createdAt) >= new Date(Date.UTC(enteredAt.year, enteredAt.month - 1, enteredAt.day)))
+      .map((n) => istanbulDateParts(new Date(n.createdAt)));
+
+    if (!shouldFireNowShared(rule, enteredAt, daysInStage, priorReminderDateParts, nowParts)) continue;
 
     const triggerKey = `deal-stage-${deal.id}-${deal.stage}-${todayIso}`;
     if (existingTriggerKeys.has(triggerKey)) continue;
 
     const recipientEmail = resolveMemberEmail(deal.owner, undefined, params.orgMembers);
-    const { subject, bodyHtml } = buildEmail(deal, daysInStage);
+    const { subject, bodyHtml } = buildReminderEmail(deal, daysInStage);
 
     toCreate.push({
       id: `notif-${triggerKey}`,
@@ -211,4 +165,66 @@ export async function scanDealStageReminders(params: {
   CrmDb.saveTaskNotifications([...existingNotifications, ...sent]);
 
   return { created: sent };
+}
+
+// ---------------------------------------------------------------------------
+// Sunucu cron'unun ürettiği hatırlatmaları (deal_stage_reminder_log) üst
+// menü zil ikonunda göstermek için — App.tsx'in buildBellNotifications'ı
+// sadece taskNotifications'ı (bu dosyanın KENDİ ürettiklerini) biliyordu;
+// artık asıl kaynak sunucu olduğundan zil bu tabloyu da okumalı. Egress
+// fix'inin ruhuna uygun KÜÇÜK, hedefli bir sorgu (sadece kendi e-postası +
+// son 30 gün + limit), RLS (deal_stage_reminder_log_select_org policy) zaten
+// organizasyon sınırını koruyor.
+export interface ServerDealStageReminder {
+  id: string;
+  dealId: string;
+  stage: string;
+  subject: string;
+  status: "pending" | "sent" | "failed" | "skipped";
+  errorNote: string | null;
+  isRead: boolean;
+  createdAt: string;
+}
+
+export async function fetchServerDealStageReminders(
+  recipientEmail: string,
+  sinceDaysAgo = 30
+): Promise<ServerDealStageReminder[]> {
+  const client = getSupabase();
+  if (!client || !recipientEmail) return [];
+  const sinceIso = new Date(Date.now() - sinceDaysAgo * 86400000).toISOString();
+  const { data, error } = await client
+    .from("deal_stage_reminder_log")
+    .select("id, deal_id, stage, subject, status, error_note, is_read, created_at")
+    .eq("recipient_email", recipientEmail)
+    .gte("created_at", sinceIso)
+    .order("created_at", { ascending: false })
+    .limit(25);
+  if (error || !data) return [];
+  return data.map((row) => ({
+    id: row.id,
+    dealId: row.deal_id,
+    stage: row.stage,
+    subject: row.subject || "",
+    status: row.status,
+    errorNote: row.error_note,
+    isRead: row.is_read,
+    createdAt: row.created_at,
+  }));
+}
+
+export async function markServerDealStageReminderRead(id: string): Promise<void> {
+  const client = getSupabase();
+  if (!client) return;
+  await client.from("deal_stage_reminder_log").update({ is_read: true }).eq("id", id);
+}
+
+export async function markAllServerDealStageRemindersRead(recipientEmail: string): Promise<void> {
+  const client = getSupabase();
+  if (!client || !recipientEmail) return;
+  await client
+    .from("deal_stage_reminder_log")
+    .update({ is_read: true })
+    .eq("recipient_email", recipientEmail)
+    .eq("is_read", false);
 }
