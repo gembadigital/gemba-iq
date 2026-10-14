@@ -27,6 +27,7 @@ import {
   integrationOutreachSend,
   performOutreachSend,
 } from "../../lib/server/integrationApi.js";
+import { dealStageReminderScanHandler } from "../../lib/server/dealReminderCron.js";
 
 // Consolidated into a single Vercel catch-all route (covers
 // /api/organization/mailbox, /api/organization/members/role,
@@ -428,6 +429,7 @@ export default async function handler(request, response) {
   if (action === "integration-outreach-send") return integrationOutreachSend(request, response);
   if (action === "outreach-send-internal") return outreachSendInternalHandler(request, response);
   if (action === "email-verify-batch") return emailVerifyBatchHandler(request, response);
+  if (action === "deal-stage-reminder-scan") return dealStageReminderScanHandler(request, response);
 
   return response.status(404).json({ error: "Unknown organization endpoint." });
 }

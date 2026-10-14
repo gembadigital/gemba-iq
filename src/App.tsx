@@ -28,7 +28,14 @@ import { useAuth } from "./lib/AuthContext";
 import { useOrganization } from "./lib/OrganizationContext";
 import { CrmDb } from "./lib/CrmDb";
 import type { TaskNotification } from "./components/TasksView";
-import { scanDealStageReminders } from "./lib/dealReminderEngine";
+import {
+  scanDealStageReminders,
+  isClientScanEnabled,
+  fetchServerDealStageReminders,
+  markServerDealStageReminderRead,
+  markAllServerDealStageRemindersRead,
+  type ServerDealStageReminder,
+} from "./lib/dealReminderEngine";
 import { detectMailSenderSource, fetchOrgMembersSafe, type MailSenderSource } from "./lib/notificationMailer";
 import type { OrganizationDirectoryMember } from "./types/organization";
 import { getDisplayInitials } from "./lib/authHelpers";
@@ -232,7 +239,9 @@ export default function App() {
   // notifications addressed to the signed-in user's own account e-mail are
   // shown here — e.g. "you were just assigned a task" or a due-date/overdue
   // reminder for a task that belongs to them.
-  const buildBellNotifications = (): Array<{ id: string; textKey: string; timeKey: string; read: boolean; dealId?: string }> => {
+  type BellNotification = { id: string; textKey: string; timeKey: string; read: boolean; dealId?: string; source: "task" | "server" };
+
+  const buildTaskBellNotifications = (): BellNotification[] => {
     const myEmail = (actorEmail || "").trim().toLowerCase();
     if (!myEmail) return [];
     const describe = (n: TaskNotification): string => {
@@ -256,18 +265,49 @@ export default function App() {
       .filter((n) => (n.recipientEmail || "").trim().toLowerCase() === myEmail)
       .sort((a, b) => (a.createdAt < b.createdAt ? 1 : -1))
       .slice(0, 25)
-      .map((n) => ({ id: n.id, textKey: describe(n), timeKey: n.createdAt, read: n.isRead, dealId: n.dealId }));
+      .map((n) => ({ id: n.id, textKey: describe(n), timeKey: n.createdAt, read: n.isRead, dealId: n.dealId, source: "task" as const }));
   };
 
-  const [notifications, setNotifications] = useState<Array<{ id: string; textKey: string; timeKey: string; read: boolean; dealId?: string }>>(
-    () => buildBellNotifications()
+  // Sunucu cron'unun ürettiği fırsat aşama hatırlatmaları
+  // (deal_stage_reminder_log) — bkz. dealReminderEngine.ts. Görev tabanlı
+  // bildirimlerle (yukarıdaki) aynı zil listesinde, "source" alanıyla
+  // ayırt edilerek birleştiriliyor (okundu işaretleme farklı depolara
+  // yazdığı için hangi kaynaktan geldiğini bilmemiz gerekiyor).
+  const describeServerReminder = (n: ServerDealStageReminder): string =>
+    n.subject || `"${n.stage}" aşamasındaki bir fırsat için hatırlatma.`;
+
+  const buildServerBellNotifications = async (): Promise<BellNotification[]> => {
+    const myEmail = (actorEmail || "").trim();
+    if (!myEmail) return [];
+    const rows = await fetchServerDealStageReminders(myEmail);
+    return rows.map((n) => ({
+      id: `server-${n.id}`,
+      textKey: describeServerReminder(n),
+      timeKey: n.createdAt,
+      read: n.isRead,
+      dealId: n.dealId,
+      source: "server" as const,
+    }));
+  };
+
+  const [notifications, setNotifications] = useState<BellNotification[]>(
+    () => buildTaskBellNotifications()
   );
 
-  // Re-sync the bell from CrmDb: on the periodic re-hydration below (so
-  // task assignments made in another session while this one stays open
-  // eventually show up here too), and immediately whenever the dropdown
-  // is opened.
-  const refreshBellNotifications = () => setNotifications(buildBellNotifications());
+  // Zili her iki kaynaktan (görevler + sunucu fırsat hatırlatmaları) tazeler:
+  // periyodik yeniden-hidratasyonda (başka bir oturumda yapılan görev
+  // ataması ya da sunucu cron'unun ürettiği hatırlatma zamanla görünsün diye)
+  // ve açılır menü her açıldığında.
+  const refreshBellNotifications = async () => {
+    const [taskBased, serverBased] = await Promise.all([
+      Promise.resolve(buildTaskBellNotifications()),
+      buildServerBellNotifications(),
+    ]);
+    const merged = [...taskBased, ...serverBased]
+      .sort((a, b) => (a.timeKey < b.timeKey ? 1 : -1))
+      .slice(0, 25);
+    setNotifications(merged);
+  };
 
   // Fırsat aşama hatırlatma motoru (dealReminderEngine.ts) için gerekli:
   // organizasyon dizini (fırsat sahibinin e-postasını çözmek için) ve
@@ -302,7 +342,13 @@ export default function App() {
       if (document.hidden) return;
       CrmDb.hydrateFromSupabase(undefined, { force: forceFull })
         .then(() => {
-          refreshBellNotifications();
+          void refreshBellNotifications();
+          // GEÇİŞ BAYRAĞI: asıl hatırlatma taraması artık günde bir kez
+          // sunucuda (Vercel cron, bkz. lib/server/dealReminderCron.js)
+          // çalışıyor. Bu istemci taraması, sunucu doğrulanana kadar
+          // crm_deal_stage_reminder_client_scan_enabled ile açık tutulabilir
+          // (varsayılan: açık) — kapatıldığında burası hiç çalışmaz.
+          if (!isClientScanEnabled()) return { created: [] as TaskNotification[] };
           // Kullanıcının şu an hangi sayfada olduğundan bağımsız çalışır —
           // fırsat sahibi Fırsat Yönetimi'ni açık tutmasa bile hatırlatma
           // (mail + zil) üretilsin diye App.tsx seviyesinde (global) çağrılıyor.
@@ -312,7 +358,7 @@ export default function App() {
           });
         })
         .then((result) => {
-          if (result.created.length > 0) refreshBellNotifications();
+          if (result.created.length > 0) void refreshBellNotifications();
         })
         .catch(() => {
           // Non-fatal: keep showing whatever was last loaded.
@@ -1510,7 +1556,7 @@ export default function App() {
                   setIsUserDropdownOpen(false);
                   setIsLangDropdownOpen(false);
                   setIsSettingsDropdownOpen(false);
-                  if (opening) refreshBellNotifications();
+                  if (opening) void refreshBellNotifications();
                 }}
                 className={`p-2 rounded-lg border transition-all cursor-pointer relative ${
                   isNotificationsOpen
@@ -1536,6 +1582,7 @@ export default function App() {
                           onClick={() => {
                             setNotifications(notifications.map(n => ({ ...n, read: true })));
                             persistBellReadState((n) => ({ ...n, isRead: true }));
+                            void markAllServerDealStageRemindersRead((actorEmail || "").trim());
                           }}
                           className="text-[10px] text-indigo-600 dark:text-indigo-400 hover:underline font-semibold cursor-pointer"
                         >
@@ -1556,7 +1603,11 @@ export default function App() {
                           key={n.id}
                           onClick={() => {
                             setNotifications(notifications.map(item => item.id === n.id ? { ...item, read: true } : item));
-                            persistBellReadState((item) => item.id === n.id ? { ...item, isRead: true } : item);
+                            if (n.source === "server") {
+                              void markServerDealStageReminderRead(n.id.replace(/^server-/, ""));
+                            } else {
+                              persistBellReadState((item) => item.id === n.id ? { ...item, isRead: true } : item);
+                            }
                             setIsNotificationsOpen(false);
                             setActiveTab(n.dealId ? "deal-management" : "todo-list");
                           }}

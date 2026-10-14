@@ -48,7 +48,11 @@
 
     { "source": "/api/organization/outreach-send-internal", "destination": "/api/organization/[...action]?action=outreach-send-internal" },
     { "source": "/api/organization/email-verify-batch", "destination": "/api/organization/[...action]?action=email-verify-batch" },
+    { "source": "/api/organization/deal-stage-reminder-scan", "destination": "/api/organization/[...action]?action=deal-stage-reminder-scan" },
 
     { "source": "/((?!assets/|api/|design-preview/).*)", "destination": "/index.html" }
+  ],
+  "crons": [
+    { "path": "/api/organization/deal-stage-reminder-scan", "schedule": "0 6 * * *" }
   ]
 }
