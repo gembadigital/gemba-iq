@@ -217,6 +217,7 @@ export default function MarketingHubView({ initialSubTab, onNavigateToTab }: Mar
   const [bdDeletingStage, setBdDeletingStage] = useState<string | null>(null);
   const [bdDeleteMigrationTarget, setBdDeleteMigrationTarget] = useState("");
   const [bdKanbanSearch, setBdKanbanSearch] = useState("");
+  const [bdAddCompanyOpen, setBdAddCompanyOpen] = useState(false);
 
   // Target Accounts & Competitor Map States
   const [startMode, setStartMode] = useState<"customer" | "manual">("customer");
@@ -636,6 +637,7 @@ export default function MarketingHubView({ initialSubTab, onNavigateToTab }: Mar
       persistAccounts(updatedList);
       resetTargetForm();
       setShowTargetForm(false);
+      setBdAddCompanyOpen(false);
       setExpandedAccountId(existing.id);
 
       triggerToast(
@@ -677,6 +679,7 @@ export default function MarketingHubView({ initialSubTab, onNavigateToTab }: Mar
     persistAccounts([...accounts, added]);
     resetTargetForm();
     setShowTargetForm(false);
+    setBdAddCompanyOpen(false);
     setExpandedAccountId(added.id);
     triggerToast(t("Added {name} to Target Accounts registry").replace("{name}", added.companyName), "success");
     if (firstContact) {
@@ -2336,6 +2339,18 @@ export default function MarketingHubView({ initialSubTab, onNavigateToTab }: Mar
             <div className="flex items-center gap-2">
               <button
                 type="button"
+                onClick={() => {
+                  setStartMode("manual");
+                  resetTargetForm();
+                  setBdAddCompanyOpen(true);
+                }}
+                className="px-3.5 py-2 bg-[#0078D4] hover:bg-[#106EBE] text-white rounded-xl text-xs font-bold shadow-sm transition-all flex items-center gap-1.5 cursor-pointer"
+              >
+                <Plus className="w-4 h-4" />
+                <span>{t("New Target Company")}</span>
+              </button>
+              <button
+                type="button"
                 onClick={() => setBdIsAddingStage(true)}
                 className="px-3.5 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold shadow-sm transition-all flex items-center gap-1.5 cursor-pointer"
               >
@@ -2422,6 +2437,135 @@ export default function MarketingHubView({ initialSubTab, onNavigateToTab }: Mar
                 </button>
               </div>
             </form>
+          )}
+
+          {/* Yeni hedef firma ekleme (İş Geliştirme Pipeline'dan doğrudan) */}
+          {bdAddCompanyOpen && (
+            <div
+              className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6 bg-black/60 backdrop-blur-xs overflow-y-auto animate-fade-in"
+              onClick={() => setBdAddCompanyOpen(false)}
+            >
+              <form
+                onSubmit={handleCreateTarget}
+                onClick={(ev) => ev.stopPropagation()}
+                className="w-full max-w-2xl bg-white dark:bg-[#1b1a19] border border-[#EDEBE9] dark:border-[#323130] rounded-2xl shadow-2xl p-5 space-y-4"
+              >
+                <div className="flex items-center justify-between">
+                  <h3 className="text-sm font-bold text-slate-800 dark:text-slate-100 flex items-center gap-2">
+                    <Plus className="w-4 h-4 text-[#0078D4]" />
+                    {t("New Target Company")}
+                  </h3>
+                  <button type="button" onClick={() => setBdAddCompanyOpen(false)} className="text-slate-400 hover:text-slate-600 cursor-pointer">
+                    <X className="w-4 h-4" />
+                  </button>
+                </div>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
+                  <div>
+                    <label className="text-[10px] font-bold text-slate-400 uppercase block mb-1">{t("Company Name *")}</label>
+                    <input
+                      type="text"
+                      autoFocus
+                      required
+                      list="bd-existing-target-accounts-list"
+                      value={targetFormDraft.companyName}
+                      onChange={(e) => setTargetFormDraft({ ...targetFormDraft, companyName: e.target.value })}
+                      className="w-full p-2 border border-[#EDEBE9] dark:border-[#323130] bg-white dark:bg-[#252423] rounded outline-none focus:border-[#0078D4]"
+                    />
+                    <datalist id="bd-existing-target-accounts-list">
+                      {accounts.map((a) => (
+                        <option key={a.id} value={a.companyName} />
+                      ))}
+                    </datalist>
+                  </div>
+                  <div>
+                    <label className="text-[10px] font-bold text-slate-400 uppercase block mb-1">{t("Industry / Sector")}</label>
+                    <input
+                      type="text"
+                      list="bd-sector-suggestions"
+                      value={targetFormDraft.industryTag}
+                      onChange={(e) => setTargetFormDraft({ ...targetFormDraft, industryTag: e.target.value })}
+                      className="w-full p-2 border border-[#EDEBE9] dark:border-[#323130] bg-white dark:bg-[#252423] rounded outline-none focus:border-[#0078D4]"
+                    />
+                    <datalist id="bd-sector-suggestions">
+                      {industryStats.map((row) => (
+                        <option key={row.industry} value={row.industry} />
+                      ))}
+                    </datalist>
+                  </div>
+                  <div>
+                    <label className="text-[10px] font-bold text-slate-400 uppercase block mb-1">{t("City")}</label>
+                    <input
+                      type="text"
+                      value={targetFormDraft.city}
+                      onChange={(e) => setTargetFormDraft({ ...targetFormDraft, city: e.target.value })}
+                      className="w-full p-2 border border-[#EDEBE9] dark:border-[#323130] bg-white dark:bg-[#252423] rounded outline-none focus:border-[#0078D4]"
+                    />
+                  </div>
+                  <div>
+                    <label className="text-[10px] font-bold text-slate-400 uppercase block mb-1">{t("Website URL")}</label>
+                    <input
+                      type="text"
+                      value={targetFormDraft.websiteUrl}
+                      onChange={(e) => setTargetFormDraft({ ...targetFormDraft, websiteUrl: e.target.value })}
+                      className="w-full p-2 border border-[#EDEBE9] dark:border-[#323130] bg-white dark:bg-[#252423] rounded outline-none focus:border-[#0078D4]"
+                    />
+                  </div>
+                  <div className="sm:col-span-2">
+                    <label className="text-[10px] font-bold text-slate-400 uppercase block mb-1">{t("Note")}</label>
+                    <textarea
+                      value={targetFormDraft.analysisNotes}
+                      onChange={(e) => setTargetFormDraft({ ...targetFormDraft, analysisNotes: e.target.value })}
+                      className="w-full p-2 border border-[#EDEBE9] dark:border-[#323130] bg-white dark:bg-[#252423] rounded outline-none h-16 resize-none focus:border-[#0078D4]"
+                    />
+                  </div>
+                </div>
+                <div className="border-t border-[#EDEBE9] dark:border-[#323130] pt-3">
+                  <label className="text-[10px] font-bold text-slate-400 uppercase block mb-2">{t("First Contact (optional)")}</label>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
+                    <input
+                      type="text"
+                      placeholder={t("Full Name")}
+                      value={targetFormDraft.contactFullName}
+                      onChange={(e) => setTargetFormDraft({ ...targetFormDraft, contactFullName: e.target.value })}
+                      className="w-full p-2 border border-[#EDEBE9] dark:border-[#323130] bg-white dark:bg-[#252423] rounded outline-none focus:border-[#0078D4]"
+                    />
+                    <input
+                      type="text"
+                      placeholder={t("Title")}
+                      value={targetFormDraft.contactTitle}
+                      onChange={(e) => setTargetFormDraft({ ...targetFormDraft, contactTitle: e.target.value })}
+                      className="w-full p-2 border border-[#EDEBE9] dark:border-[#323130] bg-white dark:bg-[#252423] rounded outline-none focus:border-[#0078D4]"
+                    />
+                    <input
+                      type="text"
+                      placeholder={t("Phone")}
+                      value={targetFormDraft.contactPhone}
+                      onChange={(e) => setTargetFormDraft({ ...targetFormDraft, contactPhone: e.target.value })}
+                      className="w-full p-2 border border-[#EDEBE9] dark:border-[#323130] bg-white dark:bg-[#252423] rounded outline-none focus:border-[#0078D4]"
+                    />
+                    <input
+                      type="email"
+                      placeholder={t("Email")}
+                      value={targetFormDraft.contactEmail}
+                      onChange={(e) => setTargetFormDraft({ ...targetFormDraft, contactEmail: e.target.value })}
+                      className="w-full p-2 border border-[#EDEBE9] dark:border-[#323130] bg-white dark:bg-[#252423] rounded outline-none focus:border-[#0078D4]"
+                    />
+                  </div>
+                  <p className="text-[10px] text-slate-400 mt-1.5">
+                    {t("If you provide an email, you'll be asked whether to create this contact as a lead.")}
+                  </p>
+                </div>
+                <div className="flex items-center justify-end gap-2">
+                  <button type="button" onClick={() => setBdAddCompanyOpen(false)} className="text-xs font-bold text-slate-500 px-3 py-2 cursor-pointer">
+                    {t("Cancel")}
+                  </button>
+                  <button type="submit" className="text-xs font-bold bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2 rounded flex items-center gap-1 cursor-pointer">
+                    <Check className="w-4 h-4" />
+                    <span>{t("Append Target Company")}</span>
+                  </button>
+                </div>
+              </form>
+            </div>
           )}
 
           {/* 2026 UI/UX Kanban Columns Board Container */}
