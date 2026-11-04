@@ -382,15 +382,33 @@ export async function persistTasks(tasks: Task[]) {
   await deleteMissingIds("tasks", tasks.map((t) => t.id));
 }
 
-export async function persistAuxiliary(auxiliary: OrgAuxiliaryData) {
+export async function persistAuxiliary(auxiliary: OrgAuxiliaryData, dirtyKvKeys: string[] = []) {
   const organizationId = await requireOrgId();
   const createdBy = await requireUserId();
+  const client = await requireClient();
+
+  // Sunucudaki güncel blob'u oku; istemcinin değiştirmediği kv anahtarlarını
+  // asla silme/ezme (eski, boş veya yarım cache'ten yazma kaybı koruması).
+  const { data: existing, error } = await client
+    .from("companies")
+    .select("data")
+    .eq("id", AUXILIARY_COMPANY_ID)
+    .eq("organization_id", organizationId)
+    .maybeSingle();
+  if (error) throw new Error(error.message);
+
+  const serverData = ((existing as { data?: Partial<OrgAuxiliaryData> } | null)?.data) || {};
+  const mergedKv: Record<string, unknown> = { ...(serverData.kvStore || {}) };
+  for (const key of dirtyKvKeys) {
+    if (key in auxiliary.kvStore) mergedKv[key] = auxiliary.kvStore[key];
+  }
+
   await upsertRows("companies", [
     {
       id: AUXILIARY_COMPANY_ID,
       organization_id: organizationId,
       created_by: createdBy,
-      data: auxiliary,
+      data: { ...auxiliary, kvStore: mergedKv },
     },
   ]);
 }

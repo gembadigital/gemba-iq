@@ -219,6 +219,32 @@ function persistSoon(fn: () => Promise<void>) {
   void fn().catch((err) => console.error("CRM persist failed:", err));
 }
 
+
+// Veri kaybı koruması: __org_auxiliary__ satırı (kvStore dahil) tek bir JSON
+// blob'u ve eskiden istemcinin bellekteki kopyası sunucudakinin ÜSTÜNE
+// körlemesine yazılıyordu. Yükleme başarısız/yarım kalmış bir istemcideki tek
+// bir setKv() bile Hedef Hesaplar, Aday Profilleri vb. tüm anahtarları siliyordu.
+// Artık (1) cache yüklenmeden hiçbir şey yazılmaz, (2) sadece bu oturumda
+// değişen kv anahtarları (dirty) sunucudaki GÜNCEL blob ile birleştirilir.
+const dirtyKvKeys = new Set<string>();
+
+function persistAux() {
+  if (!cache.loaded) {
+    console.warn("CRM auxiliary persist skipped: cache not loaded yet");
+    return;
+  }
+  const keys = Array.from(dirtyKvKeys);
+  dirtyKvKeys.clear();
+  persistSoon(async () => {
+    try {
+      await persistAuxiliary(cache.auxiliary, keys);
+    } catch (err) {
+      keys.forEach((k) => dirtyKvKeys.add(k));
+      throw err;
+    }
+  });
+}
+
 // Aday Profilleri (Lead Profiles) sayfasının kullandığı tek merkezi
 // kişi/rehber listesi. Şirket kartı (sorumlu/personel), Hedef Müşteri,
 // Fırsat ve Süreç Yönetimi, Teklif Yönetimi/Oluştur gibi uygulamanın her
@@ -377,8 +403,9 @@ export const CrmDb = {
 
   setKv(key: string, value: unknown): void {
     cache.auxiliary.kvStore[key] = value;
+    dirtyKvKeys.add(key);
     syncAuxiliaryFromCache();
-    persistSoon(() => persistAuxiliary(cache.auxiliary));
+    persistAux();
   },
 
   getTaskColumns(): TaskColumn[] {
@@ -388,7 +415,7 @@ export const CrmDb = {
   saveTaskColumns(columns: TaskColumn[]): void {
     cache.auxiliary.taskColumns = columns;
     syncAuxiliaryFromCache();
-    persistSoon(() => persistAuxiliary(cache.auxiliary));
+    persistAux();
   },
 
   getCrmUsers(): string[] {
@@ -398,7 +425,7 @@ export const CrmDb = {
   saveCrmUsers(users: string[]): void {
     cache.auxiliary.crmUsers = users;
     syncAuxiliaryFromCache();
-    persistSoon(() => persistAuxiliary(cache.auxiliary));
+    persistAux();
   },
 
   getNotificationSettings(): NotificationSettings | null {
@@ -408,7 +435,7 @@ export const CrmDb = {
   saveNotificationSettings(settings: NotificationSettings): void {
     cache.auxiliary.notificationSettings = settings;
     syncAuxiliaryFromCache();
-    persistSoon(() => persistAuxiliary(cache.auxiliary));
+    persistAux();
   },
 
   getTaskNotifications(): TaskNotification[] {
@@ -418,7 +445,7 @@ export const CrmDb = {
   saveTaskNotifications(notifications: TaskNotification[]): void {
     cache.auxiliary.taskNotifications = notifications;
     syncAuxiliaryFromCache();
-    persistSoon(() => persistAuxiliary(cache.auxiliary));
+    persistAux();
   },
 
   getPipelineStages(): string[] | null {
@@ -428,7 +455,7 @@ export const CrmDb = {
   savePipelineStages(stages: string[]): void {
     cache.auxiliary.pipelineStages = stages;
     syncAuxiliaryFromCache();
-    persistSoon(() => persistAuxiliary(cache.auxiliary));
+    persistAux();
   },
 
   getStageMetadata(): Record<string, unknown> | null {
@@ -438,7 +465,7 @@ export const CrmDb = {
   saveStageMetadata(metadata: Record<string, unknown>): void {
     cache.auxiliary.stageMetadata = metadata;
     syncAuxiliaryFromCache();
-    persistSoon(() => persistAuxiliary(cache.auxiliary));
+    persistAux();
   },
 
   getLeadSources(): string[] | null {
@@ -448,7 +475,7 @@ export const CrmDb = {
   saveLeadSources(sources: string[]): void {
     cache.auxiliary.leadSources = sources;
     syncAuxiliaryFromCache();
-    persistSoon(() => persistAuxiliary(cache.auxiliary));
+    persistAux();
   },
 
   getCompanyCustomFieldDefs(): unknown[] {
@@ -458,7 +485,7 @@ export const CrmDb = {
   saveCompanyCustomFieldDefs(defs: unknown[]): void {
     cache.auxiliary.companyCustomFieldDefs = defs;
     syncAuxiliaryFromCache();
-    persistSoon(() => persistAuxiliary(cache.auxiliary));
+    persistAux();
   },
 
   getCompanies(): Company[] {
@@ -727,7 +754,7 @@ export const CrmDb = {
   saveProjects(projects: ProjectRecord[]) {
     cache.projects = projects;
     syncAuxiliaryFromCache();
-    persistSoon(() => persistAuxiliary(cache.auxiliary));
+    persistAux();
   },
 
   getProjectsByCompany(companyId: string): ProjectRecord[] {
@@ -741,7 +768,7 @@ export const CrmDb = {
   saveEmails(emails: CrmEmail[]) {
     cache.emails = emails;
     syncAuxiliaryFromCache();
-    persistSoon(() => persistAuxiliary(cache.auxiliary));
+    persistAux();
   },
 
   getEmailsByCompany(companyId: string): CrmEmail[] {
@@ -784,7 +811,7 @@ export const CrmDb = {
   saveDocuments(docs: CrmDocument[]) {
     cache.documents = docs;
     syncAuxiliaryFromCache();
-    persistSoon(() => persistAuxiliary(cache.auxiliary));
+    persistAux();
   },
 
   getDocumentsByCompany(companyId: string): CrmDocument[] {
@@ -818,7 +845,7 @@ export const CrmDb = {
   saveActivities(activities: CrmActivity[]) {
     cache.activities = activities;
     syncAuxiliaryFromCache();
-    persistSoon(() => persistAuxiliary(cache.auxiliary));
+    persistAux();
   },
 
   getActivitiesByCompany(companyId: string): CrmActivity[] {
