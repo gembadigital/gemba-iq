@@ -16,7 +16,10 @@ import {
   persistDeals,
   persistProposals,
   persistTasks,
+  setAuxKvBaseline,
+  type PersistResult,
 } from "./crmSupabaseService";
+import { stableStringify } from "./syncMerge";
 
 // Item 5: "Müşteri sayfasına mükerrer müşteri eklendiğinde, TR karakter
 // örnek: Çelikel, CELiKEL, otomatik tamamlama yaparak, mükerrer olup
@@ -215,8 +218,26 @@ const cache: CrmCache = {
   loaded: false,
 };
 
-function persistSoon(fn: () => Promise<void>) {
-  void fn().catch((err) => console.error("CRM persist failed:", err));
+// Yazma sonucunda çakışma (başkası aynı satırı değiştirmiş) veya engellenen
+// toplu silme varsa: sunucu sürümü kazanır, cache sunucudan tazelenir ve
+// arayüze haber verilir. (Veri kaybı koruması — bkz. syncMerge.ts)
+async function handlePersistResult(result: PersistResult | void) {
+  if (!result || (result.conflictIds.length === 0 && result.blockedDeletes === 0)) return;
+  console.warn("CRM sync: çakışma/engellenen silme", result);
+  if (typeof window !== "undefined") {
+    window.dispatchEvent(new CustomEvent("crm-sync-conflict", { detail: result }));
+  }
+  try {
+    await CrmDb.hydrateFromSupabase(undefined, { force: result.blockedDeletes > 0 });
+  } catch (err) {
+    console.error("CRM sync: çakışma sonrası yenileme başarısız:", err);
+  }
+}
+
+function persistSoon(fn: () => Promise<PersistResult | void>) {
+  void fn()
+    .then(handlePersistResult)
+    .catch((err) => console.error("CRM persist failed:", err));
 }
 
 
@@ -237,7 +258,20 @@ function persistAux() {
   dirtyKvKeys.clear();
   persistSoon(async () => {
     try {
-      await persistAuxiliary(cache.auxiliary, keys);
+      const result = await persistAuxiliary(cache.auxiliary, keys);
+      // Üç yönlü birleştirme sonucu (sunucudaki başkasının eklediği öğeler dahil)
+      // cache'e yalnızca bu arada kullanıcı o anahtarı yeniden değiştirmediyse
+      // uygulanır; baseline cache ile her zaman tutarlı tutulur.
+      for (const key of Object.keys(result.mergedKv)) {
+        const mergedValue = result.mergedKv[key];
+        const unchangedSinceSend = stableStringify(cache.auxiliary.kvStore[key]) === result.sentSigs[key];
+        if (unchangedSinceSend) {
+          if (stableStringify(mergedValue) !== result.sentSigs[key]) cache.auxiliary.kvStore[key] = mergedValue;
+          setAuxKvBaseline(key, mergedValue);
+        } else {
+          setAuxKvBaseline(key, result.sentKv[key]);
+        }
+      }
     } catch (err) {
       keys.forEach((k) => dirtyKvKeys.add(k));
       throw err;

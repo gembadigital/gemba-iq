@@ -5,6 +5,15 @@ import type { Deal, ProjectRecord } from "../components/DealManagementView";
 import type { Task, TaskColumn, TaskNotification, NotificationSettings } from "../components/TasksView";
 import type { Proposal } from "../types/proposal";
 import type { Contact, CrmActivity, CrmDocument, CrmEmail } from "./CrmDb";
+import {
+  diffAgainstBaseline,
+  findConflicts,
+  isSuspiciousBulkDelete,
+  mergeKvStore,
+  pickAuxField,
+  stableStringify,
+  type RowBaseline,
+} from "./syncMerge";
 
 export const AUXILIARY_COMPANY_ID = "__org_auxiliary__";
 
@@ -44,6 +53,68 @@ type Row = {
   deal_id?: string | null;
   contact_id?: string | null;
 };
+
+type CrmTable = "companies" | "contacts" | "deals" | "proposals" | "tasks";
+
+// Veri kaybı koruması (bkz. syncMerge.ts): her tablo için bu istemcinin
+// "bildiği" sunucu durumu — yüklenirken/yazılırken güncellenir. Yazma yalnızca
+// bu durumdan FARKLI satırlara yapılır; silme yalnızca bu durumda bilinen
+// satırlar için yapılır. Böylece eski/eksik bir cache başkasının kayıtlarını
+// ne ezebilir ne silebilir.
+const rowBaselines: Record<CrmTable, RowBaseline> = {
+  companies: new Map(),
+  contacts: new Map(),
+  deals: new Map(),
+  proposals: new Map(),
+  tasks: new Map(),
+};
+
+interface AuxBaseline {
+  kv: Record<string, unknown>; // istemcinin yüklediği kv anahtarlarının derin kopyası
+  fieldSigs: Record<string, string>; // kv dışı üst düzey alanların imzası
+}
+let auxBaseline: AuxBaseline = { kv: {}, fieldSigs: {} };
+
+function deepClone<T>(value: T): T {
+  return value === undefined ? value : (JSON.parse(JSON.stringify(value)) as T);
+}
+
+function buildBaseline<T extends { id: string }>(rows: Row[], map: (row: Row) => T): RowBaseline {
+  const baseline: RowBaseline = new Map();
+  for (const row of rows) {
+    baseline.set(row.id, { sig: stableStringify(map(row)), updatedAt: row.updated_at || null });
+  }
+  return baseline;
+}
+
+function mergeIntoBaseline<T extends { id: string }>(
+  table: CrmTable,
+  changedRows: Row[],
+  map: (row: Row) => T,
+  currentIds: Set<string>
+) {
+  const baseline = rowBaselines[table];
+  for (const row of changedRows) {
+    baseline.set(row.id, { sig: stableStringify(map(row)), updatedAt: row.updated_at || null });
+  }
+  for (const id of Array.from(baseline.keys())) {
+    if (!currentIds.has(id)) baseline.delete(id);
+  }
+}
+
+function setAuxBaselineFrom(auxiliary: OrgAuxiliaryData) {
+  const fieldSigs: Record<string, string> = {};
+  for (const [field, value] of Object.entries(auxiliary)) {
+    if (field === "kvStore") continue;
+    fieldSigs[field] = stableStringify(value);
+  }
+  auxBaseline = { kv: deepClone(auxiliary.kvStore || {}), fieldSigs };
+}
+
+/** CrmDb, birleştirilmiş kv değerini cache'e uyguladıktan sonra baseline'ı günceller. */
+export function setAuxKvBaseline(key: string, value: unknown) {
+  auxBaseline.kv[key] = deepClone(value);
+}
 
 async function requireClient() {
   const client = getSupabase();
@@ -155,14 +226,24 @@ export async function loadOrganizationCrm(organizationId?: string): Promise<CrmS
     ? { ...emptyAuxiliary(), ...(auxiliaryRow.data as Partial<OrgAuxiliaryData>) }
     : emptyAuxiliary();
 
+  const contactRows = (contactsRes.data as Row[]) || [];
+  const dealRows = (dealsRes.data as Row[]) || [];
+  const proposalRows = (proposalsRes.data as Row[]) || [];
+  const taskRows = ((tasksRes.data as Row[]) || []).filter((row) => !row.id.startsWith("__"));
+
+  rowBaselines.companies = buildBaseline(companyRows.filter((row) => row.id !== AUXILIARY_COMPANY_ID), rowToCompany);
+  rowBaselines.contacts = buildBaseline(contactRows, rowToContact);
+  rowBaselines.deals = buildBaseline(dealRows, rowToDeal);
+  rowBaselines.proposals = buildBaseline(proposalRows, rowToProposal);
+  rowBaselines.tasks = buildBaseline(taskRows, rowToTask);
+  setAuxBaselineFrom(auxiliary);
+
   return {
     companies,
-    contacts: ((contactsRes.data as Row[]) || []).map(rowToContact),
-    deals: ((dealsRes.data as Row[]) || []).map(rowToDeal),
-    proposals: ((proposalsRes.data as Row[]) || []).map(rowToProposal),
-    tasks: ((tasksRes.data as Row[]) || [])
-      .filter((row) => !row.id.startsWith("__"))
-      .map(rowToTask),
+    contacts: contactRows.map(rowToContact),
+    deals: dealRows.map(rowToDeal),
+    proposals: proposalRows.map(rowToProposal),
+    tasks: taskRows.map(rowToTask),
     auxiliary,
   };
 }
@@ -225,15 +306,21 @@ export async function loadOrganizationCrmDelta(sinceIso: string, organizationId?
   // better to occasionally re-fetch one row than to risk ever missing one.
   const syncedAt = new Date().toISOString();
 
+  // İstemci saati ile Supabase sunucu saati arasındaki fark yüzünden bir satırın
+  // updated_at değeri `since`'ten önce görünüp hiç çekilmeyebiliyordu (cache
+  // sonsuza dek eski kalır, sonraki kayıt onu ezerdi). 2 dk geri çekerek
+  // örtüşen pencere kullanıyoruz; fazladan birkaç satır çekmek ucuzdur.
+  const sinceWithOverlap = new Date(new Date(sinceIso).getTime() - 2 * 60 * 1000).toISOString();
+
   const [
     companiesRes, contactsRes, dealsRes, proposalsRes, tasksRes,
     companyIdsRes, contactIdsRes, dealIdsRes, proposalIdsRes, taskIdsRes,
   ] = await Promise.all([
-    client.from("companies").select("*").eq("organization_id", orgId).gt("updated_at", sinceIso),
-    client.from("contacts").select("*").eq("organization_id", orgId).gt("updated_at", sinceIso),
-    client.from("deals").select("*").eq("organization_id", orgId).gt("updated_at", sinceIso),
-    client.from("proposals").select("*").eq("organization_id", orgId).gt("updated_at", sinceIso),
-    client.from("tasks").select("*").eq("organization_id", orgId).gt("updated_at", sinceIso),
+    client.from("companies").select("*").eq("organization_id", orgId).gt("updated_at", sinceWithOverlap),
+    client.from("contacts").select("*").eq("organization_id", orgId).gt("updated_at", sinceWithOverlap),
+    client.from("deals").select("*").eq("organization_id", orgId).gt("updated_at", sinceWithOverlap),
+    client.from("proposals").select("*").eq("organization_id", orgId).gt("updated_at", sinceWithOverlap),
+    client.from("tasks").select("*").eq("organization_id", orgId).gt("updated_at", sinceWithOverlap),
     client.from("companies").select("id").eq("organization_id", orgId),
     client.from("contacts").select("id").eq("organization_id", orgId),
     client.from("deals").select("id").eq("organization_id", orgId),
@@ -257,14 +344,24 @@ export async function loadOrganizationCrmDelta(sinceIso: string, organizationId?
 
   const idSet = (res: typeof companyIdsRes) => new Set(((res.data as { id: string }[]) || []).map((r) => r.id));
 
+  const contactRows = (contactsRes.data as Row[]) || [];
+  const dealRows = (dealsRes.data as Row[]) || [];
+  const proposalRows = (proposalsRes.data as Row[]) || [];
+  const taskRows = ((tasksRes.data as Row[]) || []).filter((row) => !row.id.startsWith("__"));
+
+  mergeIntoBaseline("companies", companyRows.filter((row) => row.id !== AUXILIARY_COMPANY_ID), rowToCompany, idSet(companyIdsRes));
+  mergeIntoBaseline("contacts", contactRows, rowToContact, idSet(contactIdsRes));
+  mergeIntoBaseline("deals", dealRows, rowToDeal, idSet(dealIdsRes));
+  mergeIntoBaseline("proposals", proposalRows, rowToProposal, idSet(proposalIdsRes));
+  mergeIntoBaseline("tasks", taskRows, rowToTask, idSet(taskIdsRes));
+  if (auxiliary) setAuxBaselineFrom(auxiliary);
+
   return {
     companies,
-    contacts: ((contactsRes.data as Row[]) || []).map(rowToContact),
-    deals: ((dealsRes.data as Row[]) || []).map(rowToDeal),
-    proposals: ((proposalsRes.data as Row[]) || []).map(rowToProposal),
-    tasks: ((tasksRes.data as Row[]) || [])
-      .filter((row) => !row.id.startsWith("__"))
-      .map(rowToTask),
+    contacts: contactRows.map(rowToContact),
+    deals: dealRows.map(rowToDeal),
+    proposals: proposalRows.map(rowToProposal),
+    tasks: taskRows.map(rowToTask),
     auxiliary,
     currentIds: {
       companies: idSet(companyIdsRes),
@@ -277,84 +374,123 @@ export async function loadOrganizationCrmDelta(sinceIso: string, organizationId?
   };
 }
 
-async function upsertRows(
-  table: "companies" | "contacts" | "deals" | "proposals" | "tasks",
-  rows: Record<string, unknown>[]
-) {
-  if (rows.length === 0) return;
-  const client = await requireClient();
-  const { error } = await client.from(table).upsert(rows, { onConflict: "id" });
-  if (error) throw new Error(error.message);
+export interface PersistResult {
+  /** Başka biri tarafından değiştirildiği için YAZILMAYAN satırlar (sunucu sürümü kazanır). */
+  conflictIds: string[];
+  /** Toplu silme koruması yüzünden engellenen silme sayısı. */
+  blockedDeletes: number;
 }
 
-async function deleteMissingIds(
-  table: "companies" | "contacts" | "deals" | "proposals" | "tasks",
-  keepIds: string[],
-  extraKeepIds: string[] = []
-) {
-  const client = await requireClient();
-  const organizationId = await requireOrgId();
-  const { data, error } = await client
-    .from(table)
-    .select("id")
-    .eq("organization_id", organizationId);
-  if (error) throw new Error(error.message);
+// Aynı tablo için kayıtlar sıraya alınır: ikinci çağrı, birincinin güncellediği
+// baseline'ı görmeden çalışırsa kendi yazdığımız satırlar sahte "çakışma" olur.
+const writeQueues = new Map<string, Promise<unknown>>();
+function enqueueWrite<T>(key: string, fn: () => Promise<T>): Promise<T> {
+  const previous = writeQueues.get(key) || Promise.resolve();
+  const next = previous.catch(() => undefined).then(fn);
+  writeQueues.set(key, next);
+  return next;
+}
 
-  const keep = new Set([...keepIds, ...extraKeepIds]);
-  const toDelete = ((data as { id: string }[]) || [])
-    .map((row) => row.id)
-    .filter((id) => !keep.has(id));
+const UPSERT_CHUNK = 100;
 
-  if (toDelete.length === 0) return;
-  const { error: deleteError } = await client.from(table).delete().in("id", toDelete);
-  if (deleteError) throw new Error(deleteError.message);
+async function persistTable<T extends { id: string }>(
+  table: CrmTable,
+  items: T[],
+  toRow: (item: T, organizationId: string, createdBy: string) => Record<string, unknown>
+): Promise<PersistResult> {
+  return enqueueWrite(table, async () => {
+    const organizationId = await requireOrgId();
+    const createdBy = await requireUserId();
+    const client = await requireClient();
+    const baseline = rowBaselines[table];
+    const result: PersistResult = { conflictIds: [], blockedDeletes: 0 };
+
+    const { changed, removedIds } = diffAgainstBaseline(items, baseline);
+
+    if (changed.length > 0) {
+      // Başkası (başka sekme/kullanıcı/OpenClaw API) bu satırları yüklediğimizden
+      // beri değiştirdiyse sunucu sürümünü EZME — sonraki senkron onu getirir.
+      const knownIds = changed.filter((c) => baseline.has(c.id)).map((c) => c.id);
+      const serverRows: { id: string; updated_at: string }[] = [];
+      for (let i = 0; i < knownIds.length; i += UPSERT_CHUNK) {
+        const { data, error } = await client
+          .from(table)
+          .select("id, updated_at")
+          .eq("organization_id", organizationId)
+          .in("id", knownIds.slice(i, i + UPSERT_CHUNK));
+        if (error) throw new Error(error.message);
+        serverRows.push(...((data as { id: string; updated_at: string }[]) || []));
+      }
+      const conflicts = new Set(findConflicts(changed, baseline, serverRows));
+      result.conflictIds = Array.from(conflicts);
+      const toWrite = changed.filter((c) => !conflicts.has(c.id));
+
+      for (let i = 0; i < toWrite.length; i += UPSERT_CHUNK) {
+        const chunk = toWrite.slice(i, i + UPSERT_CHUNK);
+        const rows = chunk.map((item) => toRow(item, organizationId, createdBy));
+        const { data, error } = await client.from(table).upsert(rows, { onConflict: "id" }).select("id, updated_at");
+        if (error) throw new Error(error.message);
+        const updatedById = new Map(((data as { id: string; updated_at: string }[]) || []).map((r) => [r.id, r.updated_at]));
+        for (const item of chunk) {
+          baseline.set(item.id, { sig: stableStringify(item), updatedAt: updatedById.get(item.id) || null });
+        }
+      }
+    }
+
+    if (removedIds.length > 0) {
+      if (isSuspiciousBulkDelete(removedIds.length, baseline.size)) {
+        // Boş/yarım yüklenmiş bir cache tabloyu silmesin. Cache'i sunucudan
+        // yeniden yüklemesi için çağırana haber verilir.
+        console.error(
+          `CRM: ${table} için ${removedIds.length}/${baseline.size} satırlık toplu silme engellendi (veri kaybı koruması).`
+        );
+        result.blockedDeletes = removedIds.length;
+      } else {
+        const { error } = await client
+          .from(table)
+          .delete()
+          .eq("organization_id", organizationId)
+          .in("id", removedIds);
+        if (error) throw new Error(error.message);
+        for (const id of removedIds) baseline.delete(id);
+      }
+    }
+
+    return result;
+  });
 }
 
 export async function persistCompanies(companies: Company[]) {
-  const organizationId = await requireOrgId();
-  const createdBy = await requireUserId();
-  const rows = companies.map((company) => ({
+  return persistTable("companies", companies, (company, organizationId, createdBy) => ({
     id: company.id,
     organization_id: organizationId,
     created_by: createdBy,
     data: company,
   }));
-  await upsertRows("companies", rows);
-  await deleteMissingIds("companies", companies.map((c) => c.id), [AUXILIARY_COMPANY_ID]);
 }
 
 export async function persistContacts(contacts: Contact[]) {
-  const organizationId = await requireOrgId();
-  const createdBy = await requireUserId();
-  const rows = contacts.map((contact) => ({
+  return persistTable("contacts", contacts, (contact, organizationId, createdBy) => ({
     id: contact.id,
     organization_id: organizationId,
     company_id: contact.companyId,
     created_by: createdBy,
     data: contact,
   }));
-  await upsertRows("contacts", rows);
-  await deleteMissingIds("contacts", contacts.map((c) => c.id));
 }
 
 export async function persistDeals(deals: Deal[]) {
-  const organizationId = await requireOrgId();
-  const createdBy = await requireUserId();
-  const rows = deals.map((deal) => ({
+  return persistTable("deals", deals, (deal, organizationId, createdBy) => ({
     id: deal.id,
     organization_id: organizationId,
     company_id: deal.companyId || null,
     created_by: createdBy,
     data: deal,
   }));
-  await upsertRows("deals", rows);
-  await deleteMissingIds("deals", deals.map((d) => d.id));
 }
 
 export async function persistProposals(proposals: Proposal[]) {
-  const organizationId = await requireOrgId();
-  const createdBy = await requireUserId();
-  const rows = proposals.map((proposal) => ({
+  return persistTable("proposals", proposals, (proposal, organizationId, createdBy) => ({
     id: proposal.id,
     organization_id: organizationId,
     company_id: proposal.companyId,
@@ -363,14 +499,10 @@ export async function persistProposals(proposals: Proposal[]) {
     created_by: createdBy,
     data: proposal,
   }));
-  await upsertRows("proposals", rows);
-  await deleteMissingIds("proposals", proposals.map((p) => p.id));
 }
 
 export async function persistTasks(tasks: Task[]) {
-  const organizationId = await requireOrgId();
-  const createdBy = await requireUserId();
-  const rows = tasks.map((task) => ({
+  return persistTable("tasks", tasks, (task, organizationId, createdBy) => ({
     id: task.id,
     organization_id: organizationId,
     company_id: (task as Task & { companyId?: string }).companyId || null,
@@ -378,37 +510,127 @@ export async function persistTasks(tasks: Task[]) {
     created_by: createdBy,
     data: task,
   }));
-  await upsertRows("tasks", rows);
-  await deleteMissingIds("tasks", tasks.map((t) => t.id));
 }
 
-export async function persistAuxiliary(auxiliary: OrgAuxiliaryData, dirtyKvKeys: string[] = []) {
-  const organizationId = await requireOrgId();
-  const createdBy = await requireUserId();
-  const client = await requireClient();
+export interface AuxPersistResult {
+  /** Yazılan (birleştirilmiş) kv değerleri — yalnızca dirty anahtarlar. */
+  mergedKv: Record<string, unknown>;
+  /** Çağrı anında gönderilen kv değerlerinin imzası (cache hâlâ aynı mı diye). */
+  sentSigs: Record<string, string>;
+  /** Gönderilen değer = kopyası (birleşme sonucu cache'e uygulanmazsa baseline için). */
+  sentKv: Record<string, unknown>;
+  skipped: boolean;
+}
 
-  // Sunucudaki güncel blob'u oku; istemcinin değiştirmediği kv anahtarlarını
-  // asla silme/ezme (eski, boş veya yarım cache'ten yazma kaybı koruması).
-  const { data: existing, error } = await client
-    .from("companies")
-    .select("data")
-    .eq("id", AUXILIARY_COMPANY_ID)
-    .eq("organization_id", organizationId)
-    .maybeSingle();
-  if (error) throw new Error(error.message);
+const AUX_FIELDS: (keyof OrgAuxiliaryData)[] = [
+  "emails",
+  "activities",
+  "projects",
+  "crmDocuments",
+  "taskColumns",
+  "crmUsers",
+  "notificationSettings",
+  "taskNotifications",
+  "pipelineStages",
+  "stageMetadata",
+  "leadSources",
+  "companyCustomFieldDefs",
+];
 
-  const serverData = ((existing as { data?: Partial<OrgAuxiliaryData> } | null)?.data) || {};
-  const mergedKv: Record<string, unknown> = { ...(serverData.kvStore || {}) };
+// __org_auxiliary__ satırı tek JSON blob'u. Yazma:
+//  1) sunucudaki GÜNCEL blob okunur (updated_at ile birlikte),
+//  2) kv'de yalnızca bu oturumda değişen (dirty) anahtarlar uygulanır; id'li
+//     diziler (hedef hesaplar, aday profilleri ...) üç yönlü birleştirilir,
+//  3) kv dışı alanlar istemci DEĞİŞTİRMEDİYSE sunucudaki değer korunur,
+//  4) yazma updated_at karşılaştırmalı (compare-and-swap); araya başkası
+//     girerse blob yeniden okunup birleştirme tekrarlanır.
+export async function persistAuxiliary(auxiliary: OrgAuxiliaryData, dirtyKvKeys: string[] = []): Promise<AuxPersistResult> {
+  // Çağrı anının anlık görüntüsü: await'ler sırasında cache değişebilir.
+  const mineKv: Record<string, unknown> = {};
+  const sentSigs: Record<string, string> = {};
   for (const key of dirtyKvKeys) {
-    if (key in auxiliary.kvStore) mergedKv[key] = auxiliary.kvStore[key];
+    if (key in auxiliary.kvStore) {
+      mineKv[key] = deepClone(auxiliary.kvStore[key]);
+      sentSigs[key] = stableStringify(auxiliary.kvStore[key]);
+    }
   }
+  const mineFields: Record<string, unknown> = {};
+  for (const field of AUX_FIELDS) mineFields[field] = deepClone(auxiliary[field]);
 
-  await upsertRows("companies", [
-    {
-      id: AUXILIARY_COMPANY_ID,
-      organization_id: organizationId,
-      created_by: createdBy,
-      data: { ...auxiliary, kvStore: mergedKv },
-    },
-  ]);
+  return enqueueWrite("auxiliary", async () => {
+    const organizationId = await requireOrgId();
+    const createdBy = await requireUserId();
+    const client = await requireClient();
+
+    for (let attempt = 0; attempt < 4; attempt += 1) {
+      const { data: existing, error } = await client
+        .from("companies")
+        .select("data, updated_at")
+        .eq("id", AUXILIARY_COMPANY_ID)
+        .eq("organization_id", organizationId)
+        .maybeSingle();
+      if (error) throw new Error(error.message);
+
+      const serverData = ((existing as { data?: Partial<OrgAuxiliaryData> } | null)?.data) || {};
+      const { merged, changedByMerge } = mergeKvStore(
+        (serverData.kvStore as Record<string, unknown>) || {},
+        mineKv,
+        auxBaseline.kv,
+        Object.keys(mineKv)
+      );
+      void changedByMerge;
+
+      const nextData: Record<string, unknown> = { ...serverData };
+      for (const field of AUX_FIELDS) {
+        nextData[field] = pickAuxField(
+          field,
+          mineFields[field],
+          auxBaseline.fieldSigs,
+          (serverData as Record<string, unknown>)[field],
+          field in serverData
+        );
+      }
+      nextData.kvStore = merged;
+
+      const mergedKv: Record<string, unknown> = {};
+      for (const key of Object.keys(mineKv)) mergedKv[key] = merged[key];
+      const buildResult = (skipped: boolean): AuxPersistResult => ({ mergedKv, sentSigs, sentKv: mineKv, skipped });
+
+      if (existing && stableStringify(nextData) === stableStringify(serverData)) {
+        // Sunucudaki blob zaten istenen halde: gereksiz yazma yok.
+        return buildResult(true);
+      }
+
+      if (!existing) {
+        const { error: insertError } = await client.from("companies").upsert(
+          [{ id: AUXILIARY_COMPANY_ID, organization_id: organizationId, created_by: createdBy, data: nextData }],
+          { onConflict: "id" }
+        );
+        if (insertError) throw new Error(insertError.message);
+      } else {
+        // Son denemede updated_at kilidi bırakılır: blob az önce taze okunup
+        // birleştirildi, kalan yarış penceresi milisaniyeler; ama olası bir
+        // zaman damgası biçim uyuşmazlığı kv kayıtlarını tamamen durdurmamalı.
+        const useCas = attempt < 3;
+        let updateQuery = client
+          .from("companies")
+          .update({ data: nextData })
+          .eq("id", AUXILIARY_COMPANY_ID)
+          .eq("organization_id", organizationId);
+        if (useCas) updateQuery = updateQuery.eq("updated_at", (existing as { updated_at: string }).updated_at);
+        const { data: updated, error: updateError } = await updateQuery.select("id");
+        if (updateError) throw new Error(updateError.message);
+        if (!updated || updated.length === 0) continue; // araya başkası girdi: yeniden oku + birleştir
+      }
+
+      // İstemcinin değiştirdiği kv dışı alanlar artık sunucuyla aynı.
+      for (const field of AUX_FIELDS) {
+        if (stableStringify(nextData[field]) === stableStringify(mineFields[field])) {
+          auxBaseline.fieldSigs[field] = stableStringify(mineFields[field]);
+        }
+      }
+      return buildResult(false);
+    }
+    throw new Error("CRM auxiliary kaydı sürekli çakıştı; yazma vazgeçildi (veri korundu).");
+  });
 }
