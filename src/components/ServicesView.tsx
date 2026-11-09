@@ -1308,9 +1308,9 @@ export default function ServicesView({
     // ortadan kalkıyor.
     const mmToPx = (mm: number) => (mm * 96) / 25.4;
     // "Safe Content Zone" boyutu: createA4PageContent aşağıda
-    // padding: 38mm 20mm 30mm 20mm kullanıyor -> içerik kutusu 170mm x 229mm.
+    // padding: 38mm 20mm 36mm 20mm kullanıyor -> içerik kutusu 170mm x 223mm.
     const INNER_CONTENT_WIDTH_PX = mmToPx(170);
-    const INNER_CONTENT_HEIGHT_PX = mmToPx(229);
+    const INNER_CONTENT_HEIGHT_PX = mmToPx(223);
     // Efor tablosu / şartlar sayfalarında, ölçülen bloklardan AYRI olarak
     // uygulamanın eklediği statik bir <h3> başlık (+ isteğe bağlı kısa bir
     // giriş paragrafı) de yer kaplar; bu, o sayfalar için kullanılabilir
@@ -1419,8 +1419,8 @@ export default function ServicesView({
     `;
 
     // ---------------- PAGE 1 – COVER PAGE ----------------
-    // Check if there is an uploaded cover PNG background, or fall back to any other uploaded cover in A4 PNG Engine, or cover.png / default cover
-    const customCoverImage = inMemoryCoverTemplates[selectedCardId] || Object.values(inMemoryCoverTemplates)[0];
+    // Use this service’s uploaded template, otherwise the bundled corporate cover.
+    const customCoverImage = inMemoryCoverTemplates[selectedCardId];
     const hasCustomCover = !!customCoverImage;
     
     // Kullanıcı hatası: "cover png ve page png şablonları yazdırmada
@@ -1442,26 +1442,11 @@ export default function ServicesView({
     const formattedProposalNo = proposalNumber || `GEM-TEK-${new Date().getFullYear()}-${selectedService.code || "100"}`;
     const formattedProposalDate = proposalDate ? proposalDate.split("-").reverse().join(".") : new Date().toLocaleDateString("tr-TR");
 
-    // We output default cover branding only if neither custom cover nor default cover.png loads successfully.
-    // However, our CSS specifies background-image: url('/cover.png') as standard cover.
+    // Both the bundled and uploaded templates already contain the branding.
     const coverPageHtml = `
       <div class="a4-page" style="${coverBgStyle} width: 210mm; height: 297mm; position: relative; font-family: 'Arial', sans-serif; box-sizing: border-box; page-break-after: always; padding: 0; margin: 0 auto; background-color: #ffffff; box-shadow: 0 4px 15px rgba(0,0,0,0.1); overflow: hidden;">
         
-        <!-- Default Cover Decorative Elements fallback (Only displayed if no custom image is uploaded and cover.png is missing) -->
-        ${!hasCustomCover ? `
-          <!-- Top Left curved grey accent -->
-          <div style="position: absolute; left: 0; top: 0; width: 33mm; height: 110mm; background-color: #9ea1a2; border-bottom-right-radius: 120% 100%; pointer-events: none; opacity: 0.15;"></div>
-          
-          <!-- Bottom Left curved red accent -->
-          <div style="position: absolute; left: 0; bottom: 0; width: 33mm; height: 160mm; background-color: #d61a21; border-top-right-radius: 120% 100%; pointer-events: none; z-index: 5; opacity: 0.15;"></div>
-
-          <!-- Central Corporate Logo -->
-          <div style="position: absolute; top: 110mm; left: 50%; transform: translateX(-50%); text-align: center; width: 100%; pointer-events: none;">
-            <div style="display: flex; align-items: center; justify-content: center; gap: 12px; margin-bottom: 5px;">
-              <img src="${logoImage}" style="height: 14mm; width: auto; object-fit: contain;" alt="Gemba Logo" referrerPolicy="no-referrer" />
-            </div>
-          </div>
-        ` : ""}
+        <!-- Branding is already included in cover.png / the uploaded template. -->
 
         <!-- Title Zone
              background: transparent !important eklendi — index.css'teki genel
@@ -1503,7 +1488,7 @@ export default function ServicesView({
 
     // Helper to format inner page structured blocks
     const createA4PageContent = (pageIndex: number, maxPages: number, pageTitle: string, contentHtml: string) => {
-      const customPageImage = inMemoryPageTemplates[selectedCardId] || Object.values(inMemoryPageTemplates)[0];
+      const customPageImage = inMemoryPageTemplates[selectedCardId];
       const hasCustomPage = !!customPageImage;
       
       // Bkz. coverBgStyle üzerindeki not: aynı sebeple (index.css'teki genel
@@ -1515,47 +1500,12 @@ export default function ServicesView({
         : `background-image: url('/page.png') !important; background-size: 100% 100% !important; background-repeat: no-repeat !important; background-color: #ffffff !important;`;
 
       return `
-        <div class="a4-page" style="${bgStyle} width: 210mm; height: 297mm; position: relative; font-family: 'Arial', sans-serif; box-sizing: border-box; page-break-after: always; padding: 38mm 20mm 30mm 20mm; margin: 0 auto 30px auto; background-color: #ffffff; box-shadow: 0 4px 15px rgba(0,0,0,0.1); overflow: hidden;">
+        <div class="a4-page" style="${bgStyle} width: 210mm; height: 297mm; position: relative; font-family: 'Arial', sans-serif; box-sizing: border-box; page-break-after: always; padding: 38mm 20mm 36mm 20mm; margin: 0 auto 30px auto; background-color: #ffffff; box-shadow: 0 4px 15px rgba(0,0,0,0.1); overflow: hidden;">
           
-          <!-- Default Background Overlay (Only if no custom background has been uploaded) -->
-          ${!hasCustomPage ? `
-            <!-- Header and Logo -->
-            <div style="position: absolute; left: 20mm; top: 13mm; display: flex; align-items: center; justify-content: space-between; right: 20mm; font-family: Arial, sans-serif; pointer-events: none;">
-              <div style="display: flex; align-items: center; gap: 6px;">
-                <img src="${logoImage}" style="height: 6mm; width: auto; object-fit: contain;" alt="Gemba Logo" referrerPolicy="no-referrer" />
-                <div>
-                  <span style="font-weight: bold; font-size: 9.5pt; color: #1e293b; letter-spacing: 0.5px;">GEMBA PARTNER</span>
-                  <span style="font-size: 6pt; color: #94a3b8; display: block; font-weight: 500; font-family: Arial; letter-spacing: 0.5px; margin-top: -1px;">KAIZEN MANAGEMENT CONSULTING</span>
-                </div>
-              </div>
-              <div style="text-align: right; font-size: 8.5pt; font-weight: bold; color: #64748b; letter-spacing: 0.5px; text-transform: uppercase;">
-                ${pageTitle}
-              </div>
-            </div>
-            
-            <!-- Header grey/red lines -->
-            <div style="position: absolute; left: 20mm; right: 20mm; top: 30mm; height: 1px; background-color: #cbd5e1; pointer-events: none;"></div>
-            <div style="position: absolute; left: 20mm; width: 45mm; top: 30mm; height: 1.5px; background-color: #d61a21; pointer-events: none;"></div>
-
-            <!-- Footer horizontal line -->
-            <div style="position: absolute; left: 20mm; right: 20mm; bottom: 25mm; height: 1px; background-color: #cbd5e1; pointer-events: none;"></div>
-            <div style="position: absolute; left: 20mm; width: 45mm; bottom: 25mm; height: 1.5px; background-color: #d61a21; pointer-events: none;"></div>
-
-            <!-- Footer details -->
-            <div style="position: absolute; left: 20mm; right: 20mm; bottom: 12mm; display: flex; justify-content: space-between; font-family: Arial, sans-serif; font-size: 6.5pt; color: #475569; pointer-events: none; line-height: 1.3;">
-              <div>
-                <span style="font-weight: bold; color: #1e293b; font-size: 7.5pt; font-family: Arial;">GEMBA PARTNER MÜHENDİSLİK VE YAZILIM A.Ş</span><br/>
-                <span style="color: #64748b; font-family: Arial;">📍 Esentepe, Milangaz Cd. Monumento Plaza No: 75 / 70, 34870, Kartal İstanbul</span>
-              </div>
-              <div style="text-align: right; color: #64748b; font-family: Arial;">
-                <span>📞 +90 216 2120877 &nbsp; ✉️ info@gembapartner.com</span><br/>
-                <span>🌐 www.gembadigital.tr</span>
-              </div>
-            </div>
-          ` : ""}
+          <!-- Header, logo and footer are already included in the page template. -->
 
           <!-- Page Number Overlay (Applied on custom pages too to ensure proper tracking) -->
-          <div style="position: absolute; right: 20mm; bottom: 12mm; font-family: Arial, sans-serif; font-size: 7.5pt; color: #475569; font-weight: bold; pointer-events: none;">
+          <div style="position: absolute; right: 20mm; bottom: 31mm; font-family: Arial, sans-serif; font-size: 7.5pt; color: #475569; font-weight: bold; pointer-events: none;">
             Sayfa ${pageIndex} / ${maxPages}
           </div>
 
@@ -2234,8 +2184,8 @@ export default function ServicesView({
       // Teklif Yönetimi'nin PDF/e-posta/önizleme akışları bu yüzden hep
       // varsayılan (bazen uyumsuz/yeşil) şablona düşüyordu. Artık gerçek
       // kullanılan görsel, kayıtla birlikte kalıcı olarak saklanıyor.
-      coverImage: inMemoryCoverTemplates[selectedCardId] || Object.values(inMemoryCoverTemplates)[0] || undefined,
-      pageImage: inMemoryPageTemplates[selectedCardId] || Object.values(inMemoryPageTemplates)[0] || undefined,
+      coverImage: inMemoryCoverTemplates[selectedCardId] || "/cover.png",
+      pageImage: inMemoryPageTemplates[selectedCardId] || "/page.png",
       options: mappedOptions,
       totalBudget: totalBudget,
       taxes: taxes,

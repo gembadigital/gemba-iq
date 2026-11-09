@@ -7,7 +7,7 @@
 header{position:sticky;top:0;background:#fff;border-bottom:1px solid #cbd5e1;padding:16px 24px;z-index:2;display:flex;align-items:center;gap:20px;flex-wrap:wrap}
 h1{font-size:20px;margin:0}select{padding:9px;max-width:420px;border:1px solid #cbd5e1;border-radius:5px}
 #status{font-weight:bold}#results{margin:20px auto;width:794px;background:white;padding:20px;line-height:1.6}
-.page{position:relative;width:210mm;height:297mm;margin:20px auto;background:#fff;padding:38mm 20mm 30mm;box-shadow:0 2px 12px #0002;overflow:hidden}
+.page{position:relative;width:210mm;height:297mm;margin:20px auto;background:#fff;padding:38mm 20mm 36mm;box-shadow:0 2px 12px #0002;overflow:hidden}
 .brand{position:absolute;top:15mm;left:20mm;right:20mm;border-bottom:1px solid #cbd5e1;padding-bottom:12px;color:#475569;letter-spacing:.5px}
 .brand b{color:#d61a21}.content{width:170mm;display:flow-root}.content h2{font-size:11pt;margin:0 0 12px;border-bottom:1px solid #cbd5e1;padding-bottom:4px}
 footer{position:absolute;bottom:15mm;left:20mm;right:20mm;border-top:1px solid #cbd5e1;padding-top:10px;display:flex;justify-content:space-between;font-size:9px;color:#64748b}
@@ -18,7 +18,7 @@ footer{position:absolute;bottom:15mm;left:20mm;right:20mm;border-top:1px solid #
 <script type="module">
 import {paginateProposalTables,styleProposalActivityTables,PROPOSAL_TABLE_TIERS} from '../src/lib/proposalTableLayout.ts';
 import cards from '../src/data/serviceCatalog.json';
-const width=170*96/25.4,budget=(229-22)*96/25.4;
+const width=170*96/25.4,budget=(223-22)*96/25.4;
 const ready=cards.filter(c=>c.definitionStatus==='ready');
 const reports=[];
 const fixtures=new Map();
@@ -43,7 +43,7 @@ document.getElementById('results').textContent=reports.map(r=>`${r.code}: ${r.pa
 const selector=document.getElementById('service');
 ready.forEach(c=>selector.add(new Option(`[${c.code}] ${c.name}`,c.code)));
 const escape=s=>s.replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll('>','&gt;');
-function show(){const card=ready.find(c=>c.code===selector.value);const cover=card.defaultCoverPage.split('\n').filter(Boolean).map(s=>`<p style="font-size:9.5pt;line-height:1.5;margin:0 0 8px">${escape(s)}</p>`).join('');const texts=[];const probe=document.createElement('div');probe.style.cssText=`width:${width}px;position:absolute;left:-9999px;display:flow-root`;document.body.appendChild(probe);let current='';for(const para of Array.from(new DOMParser().parseFromString(cover,'text/html').body.children)){probe.innerHTML=current+para.outerHTML;if(probe.getBoundingClientRect().height>229*96/25.4&&current){texts.push(current);current=''}current+=para.outerHTML}if(current)texts.push(current);probe.remove();const content=[...texts,...fixtures.get(card.code).map(s=>'<h2>Süreç ve faaliyet detayları</h2>'+s)];document.getElementById('pages').innerHTML=content.map((s,i)=>`<section class="page"><div class="brand">GEMBA <b>PARTNER</b> · ${card.code} / ${escape(card.name)}</div><div class="content">${s}</div><footer><span>Gemba Partner · Hizmet Tanım Kartı</span><span>${i+1} / ${content.length}</span></footer></section>`).join('');}
+function show(){const card=ready.find(c=>c.code===selector.value);const cover=card.defaultCoverPage.split('\n').filter(Boolean).map(s=>`<p style="font-size:9.5pt;line-height:1.5;margin:0 0 8px">${escape(s)}</p>`).join('');const texts=[];const probe=document.createElement('div');probe.style.cssText=`width:${width}px;position:absolute;left:-9999px;display:flow-root`;document.body.appendChild(probe);let current='';for(const para of Array.from(new DOMParser().parseFromString(cover,'text/html').body.children)){probe.innerHTML=current+para.outerHTML;if(probe.getBoundingClientRect().height>223*96/25.4&&current){texts.push(current);current=''}current+=para.outerHTML}if(current)texts.push(current);probe.remove();const content=[...texts,...fixtures.get(card.code).map(s=>'<h2>Süreç ve faaliyet detayları</h2>'+s)];document.getElementById('pages').innerHTML=content.map((s,i)=>`<section class="page"><div class="brand">GEMBA <b>PARTNER</b> · ${card.code} / ${escape(card.name)}</div><div class="content">${s}</div><footer><span>Gemba Partner · Hizmet Tanım Kartı</span><span>${i+1} / ${content.length}</span></footer></section>`).join('');}
 selector.value=new URLSearchParams(location.search).get('code')||'201';selector.addEventListener('change',show);show();
 </script>
 </html>
