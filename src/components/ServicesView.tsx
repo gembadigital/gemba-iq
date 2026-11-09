@@ -81,16 +81,24 @@ import { useProposalPdfCapture } from "../lib/useProposalPdfCapture";
 import { storeProposalPdf } from "../lib/proposalService";
 import { formatSystemNumber } from "../lib/currencyHelper";
 
+import importedServiceCatalog from "../data/serviceCatalog.json";
+import { paginateProposalTables, styleProposalActivityTables, PROPOSAL_TABLE_TIERS } from "../lib/proposalTableLayout";
+
 // --- CORE INTERFACES ---
 interface ServiceCard {
   id: string;
   name: string;
-  category: "PROJE" | "ANALİZ" | "KOÇLUK" | "GEMBA TEKNİK" | "EĞİTİM";
+  category: "PROJE" | "ANALİZ & RAPORLAMA" | "ANALİZ" | "KOÇLUK" | "GEMBA TEKNİK" | "EĞİTİM";
   code: string;
   defaultCoverPage: string;
   activityTableHtml: string;
   defaultTermsAndConditions?: string;
   docxTemplateName?: string;
+  definitionStatus?: "ready" | "missing";
+  sourceFile?: string;
+  sourceCoverPages?: number[];
+  sourceActivityPages?: number[];
+  catalogWarning?: string;
   option1Active?: boolean;
   option1Name?: string;
   option1Desc?: string;
@@ -108,183 +116,8 @@ interface ServiceCard {
   option3Rows?: PricingRow[];
 }
 
-// Predefined 10 Services
-const DEFAULT_SERVICE_CARDS: ServiceCard[] = [
-  {
-    id: "yalin-uretim",
-    name: "YALIN ÜRETİM DÖNÜŞÜM PROJESİ",
-    category: "PROJE",
-    code: "201",
-    defaultCoverPage: `YALIN ÜRETİM DÖNÜŞÜM PROJESİ
-Gemba Operasyonel Mükemmellik & İşbirlikçi Dönüşüm Programı
-Bu çalışma, firma süreçlerindeki israfları tespit etmek, değer akışını optimize etmek ve sürekli iyileştirme kültürü (Kaizen) yerleştirmek amacıyla tasarlanmıştır.`,
-    activityTableHtml: `
-      <table style="border-collapse: collapse; width: 100%; border: 1px solid #cbd5e1; font-family: sans-serif; font-size: 11px;">
-        <thead>
-          <tr style="background-color: #f1f5f9; border-bottom: 2px solid #cbd5e1;">
-            <th style="border: 1px solid #cbd5e1; padding: 10px; text-align: left; font-weight: bold; width: 20%;">Fazlar / Milestones</th>
-            <th style="border: 1px solid #cbd5e1; padding: 10px; text-align: left; font-weight: bold; width: 45%;">Faaliyet Detayları ve Çalışma Başlıkları</th>
-            <th style="border: 1px solid #cbd5e1; padding: 10px; text-align: left; font-weight: bold; width: 15%;">Sorumlu</th>
-            <th style="border: 1px solid #cbd5e1; padding: 10px; text-align: center; font-weight: bold; width: 20%;">Efor (Adam/Gün)</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr>
-            <td rowspan="2" style="border: 1px solid #cbd5e1; padding: 8px; font-weight: bold; background-color: #fafafa; vertical-align: middle;">Faz 1: Teşhis & Hazırlık</td>
-            <td style="border: 1px solid #cbd5e1; padding: 8px; vertical-align: top;">Görsel yönetim analizi, mevcut durum 5S denetimi ve israf tespit saha yürüyüşleri.</td>
-            <td style="border: 1px solid #cbd5e1; padding: 8px; vertical-align: top;">Gemba Danışmanı</td>
-            <td style="border: 1px solid #cbd5e1; padding: 8px; text-align: center; font-weight: bold; vertical-align: middle;">12 Adam/Gün</td>
-          </tr>
-          <tr>
-            <td style="border: 1px solid #cbd5e1; padding: 8px; vertical-align: top;">Üst Yönetim Hizalaması ve Dönüşüm Yol Haritası (VSM) hazırlanması.</td>
-            <td style="border: 1px solid #cbd5e1; padding: 8px; vertical-align: top;">Kıdemli Danışman</td>
-            <td style="border: 1px solid #cbd5e1; padding: 8px; text-align: center; font-weight: bold; vertical-align: middle;">8 Adam/Gün</td>
-          </tr>
-          <tr>
-            <td rowspan="2" style="border: 1px solid #cbd5e1; padding: 8px; font-weight: bold; background-color: #fafafa; vertical-align: middle;">Faz 2: Kaizen & Uygulama</td>
-            <td style="border: 1px solid #cbd5e1; padding: 8px; vertical-align: top;">Süreç Hızlandırma Kaizen Atölyesi (Saha içi 5 günlük yoğun iyileştirme).</td>
-            <td style="border: 1px solid #cbd5e1; padding: 8px; vertical-align: top;">Proje Ekibi & Koç</td>
-            <td style="border: 1px solid #cbd5e1; padding: 8px; text-align: center; font-weight: bold; vertical-align: middle;">15 Adam/Gün</td>
-          </tr>
-          <tr>
-            <td style="border: 1px solid #cbd5e1; padding: 8px; vertical-align: top;">Standart iş talimatları (Yamazumi) ve yeni hat dengeleme uygulamaları.</td>
-            <td style="border: 1px solid #cbd5e1; padding: 8px; vertical-align: top;">Yalın Uzmanı</td>
-            <td style="border: 1px solid #cbd5e1; padding: 8px; text-align: center; font-weight: bold; vertical-align: middle;">10 Adam/Gün</td>
-          </tr>
-        </tbody>
-      </table>
-    `,
-    defaultTermsAndConditions: `1. İşbu çalışma teklifi kapsamındaki ödemeler %50 sipariş onayı ile birlikte fatura karşılığında nakden, bakiye %50 ise nihai teslimat raporunun onaylanmasını müteakip 15 gün içerisinde banka havalesi ile ödenecektir.
-2. İşbu teklifteki bütçe bedellerine %20 KDV dahil değildir. Faturalandırma tarihindeki yasal KDV oranı uygulanacaktır.
-3. Çalışmanın gerçekleştirileceği tesisler dışındaki seyahat, konaklama ve yemek masrafları, belge asılları üzerinden müşteriye aynen yansıtılır.`
-  },
-  {
-    id: "opex-assessment",
-    name: "OPEX ASSESSMENT (OPERASYONEL MÜKEMMELLİK)",
-    category: "ANALİZ",
-    code: "101",
-    defaultCoverPage: `OPEX ASSESSMENT
-Operasyonel Olgunluk Seviyesi Belirleme Raporu
-İşletmenizin yalın yönetim, verimlilik ve kalite parametreleri altında global iyi uygulamalara göre kıyaslama (benchmarking) ve analiz çalışması teklifidir.`,
-    activityTableHtml: `
-      <table style="border-collapse: collapse; width: 100%; border: 1px solid #cbd5e1; font-family: sans-serif; font-size: 11px;">
-        <thead>
-          <tr style="background-color: #e2f0d9; border-bottom: 2px solid #a9d18e;">
-            <th style="border: 1px solid #cbd5e1; padding: 10px; text-align: left; font-weight: bold; width: 30%;">Analiz Alanı (Silo)</th>
-            <th style="border: 1px solid #cbd5e1; padding: 10px; text-align: left; font-weight: bold; width: 50%;">Değerlendirme Kriterleri / Metot</th>
-            <th style="border: 1px solid #cbd5e1; padding: 10px; text-align: center; font-weight: bold; width: 20%;">Adam/Gün</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr>
-            <td style="border: 1px solid #cbd5e1; padding: 8px; font-weight: bold;">Liderlik ve Kültür</td>
-            <td style="border: 1px solid #cbd5e1; padding: 8px;">Takım yapısı, öneri sistemleri, yönetim anayasası ve Gemba gelişim takipleri anketi.</td>
-            <td style="border: 1px solid #cbd5e1; padding: 8px; text-align: center; font-weight: bold;">3 Adam/Gün</td>
-          </tr>
-          <tr>
-            <td style="border: 1px solid #cbd5e1; padding: 8px; font-weight: bold;">Saha Yönetim Standartları</td>
-            <td style="border: 1px solid #cbd5e1; padding: 8px;">5S, görsel göstergeler, otonom bakım ve yerinde kalite kontrol altyapı denetimleri.</td>
-            <td style="border: 1px solid #cbd5e1; padding: 8px; text-align: center; font-weight: bold;">5 Adam/Gün</td>
-          </tr>
-        </tbody>
-      </table>
-    `,
-    defaultTermsAndConditions: `1. Analiz çalışması bedeli, raporun teslim edildiği gün peşin olarak fatura edilir. Ödeme vadesi fatura tarihinden itibaren 5 takvim günüdür.
-2. Belirtilen fiyatlara %20 KDV dâhil değildir.
-3. Analiz boyunca edinilen veriler ve ticari sırlar Gemba Partner gizlilik taahhüdü altındadır.`
-  },
-  {
-    id: "lean-logistics",
-    name: "LEAN LOGISTICS ASSESSMENT",
-    category: "ANALİZ",
-    code: "102",
-    defaultCoverPage: `LEAN LOGISTICS ASSESSMENT
-Lojistik Depolama ve İç Akış Süreçleri Tasarımı`,
-    activityTableHtml: `
-      <table style="border-collapse: collapse; width: 100%; border: 1px solid #cbd5e1; font-family: sans-serif; font-size: 11px;">
-        <thead>
-          <tr style="background-color: #fef3c7; border-bottom: 2px solid #f59e0b;">
-            <th style="border: 1px solid #cbd5e1; padding: 8px; text-align: left;">Süreç</th>
-            <th style="border: 1px solid #cbd5e1; padding: 8px; text-align: left;">Detaylar</th>
-            <th style="border: 1px solid #cbd5e1; padding: 8px; text-align: center;">Efor</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr>
-            <td style="border: 1px solid #cbd5e1; padding: 8px; font-weight: bold;">Depo Yerleşim Analizi</td>
-            <td style="border: 1px solid #cbd5e1; padding: 8px;">Mal kabul, adresleme ve FIFO kurallarına uygun depolama alanı israf haritalama.</td>
-            <td style="border: 1px solid #cbd5e1; padding: 8px; text-align: center;">4 Adam/Gün</td>
-          </tr>
-        </tbody>
-      </table>
-    `,
-    defaultTermsAndConditions: `1. Ödeme Şartı: %100 çalışma tamamlandığında teslim edilen raporla birlikte fatura edilir, vadesi 7 gündür.
-2. Detaylı bütçeler net tutarlar olup KDV ayrıca ilave edilir.`
-  },
-  {
-    id: "ofis-opex",
-    name: "OFIS OPEX ASSESSMENT",
-    category: "ANALİZ",
-    code: "103",
-    defaultCoverPage: "OFİS OPERASYONEL MÜKEMMELLİK DEĞERLENDİRMESİ",
-    activityTableHtml: "<table><tr><td>Ofis süreçlerinde israf ve dijital olgunluk endeksi ölçümü.</td></tr></table>",
-    defaultTermsAndConditions: "1. Peşin ödemeli çalışmadır. KDV dahil değildir."
-  },
-  {
-    id: "tpm-uygulama",
-    name: "TPM UYGULAMA (TOPLAM VERİMLİ BAKIM)",
-    category: "PROJE",
-    code: "202",
-    defaultCoverPage: "OPEX VE TPM (TOPLAM VERİMLİ BAKIM) PROJESİ",
-    activityTableHtml: "<table><tr><td>Otonom bakım ve arıza giderme yöntemleri kurulumu.</td></tr></table>",
-    defaultTermsAndConditions: "1. Aylık hakediş usulü fatura edilir. Net vadeli ödeme alınır."
-  },
-  {
-    id: "yalin-tedarik",
-    name: "YALIN TEDARİK ZİNCİRİ YÖNETİMİ",
-    category: "PROJE",
-    code: "203",
-    defaultCoverPage: "YALIN TEDARİK ZİNCİRİ VE KANBAN ENTEGRASYONU",
-    activityTableHtml: "<table><tr><td>Çekme sistemi altyapısı ve süpermarket süreç tasarımı.</td></tr></table>",
-    defaultTermsAndConditions: "1. Proje başlangıcında %50, kalanı kapanışta havale ile ödenir."
-  },
-  {
-    id: "layout-planlama",
-    name: "YERLEŞİM PLANLAMA / LAYOUT TASARIMI",
-    category: "PROJE",
-    code: "204",
-    defaultCoverPage: "YERLEŞİM PLANLAMA & FABRİKA YOL HARİTASI",
-    activityTableHtml: "<table><tr><td>Spagetti diyagramı analizi ve tesis içi malzeme akış simülasyonu.</td></tr></table>",
-    defaultTermsAndConditions: "1. Tasarım onayı sonrası %100 tahsilat ile tamamlanır."
-  },
-  {
-    id: "problem-cozme",
-    name: "PROBLEM ÇÖZME ÇALIŞMALARI (A3 & 8D)",
-    category: "KOÇLUK",
-    code: "301",
-    defaultCoverPage: "PROBLEM ÇÖZME VE KÖK NEDEN ANALİZ KOÇLUĞU",
-    activityTableHtml: "<table><tr><td>Saha ekiplerine yönelik 5 Neden ve Balık Kılçığı mentörlüğü.</td></tr></table>",
-    defaultTermsAndConditions: "1. Eğitim kiti teslimiyle havale vadeli faturalandırılır."
-  },
-  {
-    id: "liderlik-calismalari",
-    name: "LİDERLİK ÇALIŞMALARI VE SAHA YÖNETİMİ",
-    category: "KOÇLUK",
-    code: "302",
-    defaultCoverPage: "LİDERLİK GELİŞİM PROGRAMI VE MENTÖRLÜK",
-    activityTableHtml: "<table><tr><td>Mavi ve beyaz yaka liderleri için günlük yönetim sistemleri.</td></tr></table>",
-    defaultTermsAndConditions: "1. Aylık periyotlar halinde fatura edilir. KDV hariçtir."
-  },
-  {
-    id: "ofis-kaizen",
-    name: "OFİS KAIZEN DESTEKLERİ",
-    category: "PROJE",
-    code: "205",
-    defaultCoverPage: "HİZMET VE OFİS SÜREÇLERİNDE KAIZEN DESTEKLERİ",
-    activityTableHtml: "<table><tr><td>Bilgi akış haritalama (makro-mikro) ve onay darboğazları tespiti.</td></tr></table>",
-    defaultTermsAndConditions: "1. Sipariş kaydında %50, kalanı atölye bitiminde ödenir."
-  }
-];
+// Product codes and template content from the supplied master catalog.
+const DEFAULT_SERVICE_CARDS = importedServiceCatalog as ServiceCard[];
 
 const LETTERHEADS = [
   {
@@ -1287,16 +1120,22 @@ export default function ServicesView({
 
   const saveEditedCard = () => {
     if (!selectedEditCardId) return;
+    const normalizedCode = editCode.trim();
+    if (!normalizedCode || serviceCards.some(card => card.id !== selectedEditCardId && card.code.trim() === normalizedCode)) {
+      setToastMessage("Ürün kodu boş veya başka bir hizmette kullanılıyor. Benzersiz bir ürün kodu girin.");
+      return;
+    }
     setServiceCards(prev => prev.map(c => {
       if (c.id === selectedEditCardId) {
         return {
           ...c,
           name: editName,
           category: editCategory,
-          code: editCode,
+          code: normalizedCode,
           defaultCoverPage: editCoverPage,
           activityTableHtml: editTableHtml,
-          defaultTermsAndConditions: editTerms
+          defaultTermsAndConditions: editTerms,
+          definitionStatus: editCoverPage.trim() && editTableHtml.trim() ? "ready" : "missing"
         };
       }
       return c;
@@ -1409,21 +1248,21 @@ export default function ServicesView({
 
       // Pre-populate service-specific defaults if they have been custom saved
       if (selectedService.option1Active !== undefined) setOption1Active(selectedService.option1Active);
-      if (selectedService.option1Name) setOption1Name(selectedService.option1Name);
-      if (selectedService.option1Desc) setOption1Desc(selectedService.option1Desc);
-      if (selectedService.option1Duration) setOption1Duration(selectedService.option1Duration);
+      if (selectedService.option1Name !== undefined) setOption1Name(selectedService.option1Name);
+      if (selectedService.option1Desc !== undefined) setOption1Desc(selectedService.option1Desc);
+      if (selectedService.option1Duration !== undefined) setOption1Duration(selectedService.option1Duration);
       if (selectedService.option1Rows) setOption1Rows(selectedService.option1Rows);
 
       if (selectedService.option2Active !== undefined) setOption2Active(selectedService.option2Active);
-      if (selectedService.option2Name) setOption2Name(selectedService.option2Name);
-      if (selectedService.option2Desc) setOption2Desc(selectedService.option2Desc);
-      if (selectedService.option2Duration) setOption2Duration(selectedService.option2Duration);
+      if (selectedService.option2Name !== undefined) setOption2Name(selectedService.option2Name);
+      if (selectedService.option2Desc !== undefined) setOption2Desc(selectedService.option2Desc);
+      if (selectedService.option2Duration !== undefined) setOption2Duration(selectedService.option2Duration);
       if (selectedService.option2Rows) setOption2Rows(selectedService.option2Rows);
 
       if (selectedService.option3Active !== undefined) setOption3Active(selectedService.option3Active);
-      if (selectedService.option3Name) setOption3Name(selectedService.option3Name);
-      if (selectedService.option3Desc) setOption3Desc(selectedService.option3Desc);
-      if (selectedService.option3Duration) setOption3Duration(selectedService.option3Duration);
+      if (selectedService.option3Name !== undefined) setOption3Name(selectedService.option3Name);
+      if (selectedService.option3Desc !== undefined) setOption3Desc(selectedService.option3Desc);
+      if (selectedService.option3Duration !== undefined) setOption3Duration(selectedService.option3Duration);
       if (selectedService.option3Rows) setOption3Rows(selectedService.option3Rows);
     }
   }, [selectedCardId, selectedService]);
@@ -1524,77 +1363,12 @@ export default function ServicesView({
 
     // Bir <table>'ın satırlarını (her sayfada <thead> tekrar edilerek)
     // gerçek satır yüksekliğine göre birden fazla tabloya/sayfaya böler.
-    const paginateTableRows = (styledTableHtml: string, maxHeightPx: number): string[] => {
-      if (typeof document === "undefined") return [styledTableHtml];
-      const parser = new DOMParser();
-      const doc = parser.parseFromString(styledTableHtml, "text/html");
-      const table = doc.querySelector("table");
-      if (!table) return [styledTableHtml];
+    const paginateTableRows = (styledTableHtml: string, maxHeightPx: number): string[] =>
+      paginateProposalTables(styledTableHtml, INNER_CONTENT_WIDTH_PX, maxHeightPx);
 
-      const theadEl = table.querySelector("thead");
-      const theadHtml = theadEl ? theadEl.outerHTML : "";
-      const tbodyEl = table.querySelector("tbody");
-      const rows = tbodyEl ? Array.from(tbodyEl.querySelectorAll("tr")) : Array.from(table.querySelectorAll("tr"));
-      if (rows.length === 0) return [styledTableHtml];
-
-      const rowsHtml = rows.map((r) => r.outerHTML);
-      const tableOpenTagMatch = table.outerHTML.match(/^<table[^>]*>/);
-      const tableOpenTag = tableOpenTagMatch ? tableOpenTagMatch[0] : "<table>";
-
-      const probe = document.createElement("div");
-      probe.style.position = "fixed";
-      probe.style.left = "-99999px";
-      probe.style.top = "0";
-      probe.style.width = `${INNER_CONTENT_WIDTH_PX}px`;
-      probe.style.visibility = "hidden";
-      document.body.appendChild(probe);
-
-      probe.innerHTML = `${tableOpenTag}${theadHtml}<tbody></tbody></table>`;
-      const theadOnlyHeight = probe.querySelector("table")?.offsetHeight || 0;
-
-      const rowHeights = rowsHtml.map((rowHtml) => {
-        probe.innerHTML = `${tableOpenTag}${theadHtml}<tbody>${rowHtml}</tbody></table>`;
-        const totalH = probe.querySelector("table")?.offsetHeight || 0;
-        return Math.max(1, totalH - theadOnlyHeight);
-      });
-      document.body.removeChild(probe);
-
-      const pages: string[] = [];
-      let currentRows: string[] = [];
-      let currentHeight = theadOnlyHeight;
-      rowsHtml.forEach((rowHtml, i) => {
-        const h = rowHeights[i];
-        if (currentRows.length > 0 && currentHeight + h > maxHeightPx) {
-          pages.push(`${tableOpenTag}${theadHtml}<tbody>${currentRows.join("")}</tbody></table>`);
-          currentRows = [];
-          currentHeight = theadOnlyHeight;
-        }
-        currentRows.push(rowHtml);
-        currentHeight += h;
-      });
-      if (currentRows.length > 0) {
-        pages.push(`${tableOpenTag}${theadHtml}<tbody>${currentRows.join("")}</tbody></table>`);
-      }
-      return pages.length > 0 ? pages : [`${tableOpenTag}${theadHtml}<tbody></tbody></table>`];
-    };
-
-    // Count rows in the effort table to decide if a dedicated intro page
-    // should precede the (now dynamically paginated) table.
-    let effortTableRowsCount = 0;
-    try {
-      const parser = new DOMParser();
-      const doc = parser.parseFromString(wizardTableHtml || "", "text/html");
-      const tbody = doc.querySelector("tbody");
-      if (tbody) {
-        effortTableRowsCount = tbody.querySelectorAll("tr").length;
-      } else {
-        effortTableRowsCount = doc.querySelectorAll("tr").length;
-      }
-    } catch (e) {
-      console.error(e);
-    }
-    const tableIsTooLong = effortTableRowsCount > 4;
-    const showEffortIntroPage = tableIsTooLong;
+    // Keep the activity introduction beside its table, avoiding a mostly
+    // empty page between the scope and the actual work plan.
+    const showEffortIntroPage = false;
 
     const activeOptions: number[] = [];
     if (option1Active) activeOptions.push(1);
@@ -1618,6 +1392,8 @@ export default function ServicesView({
           font-family: 'Arial', sans-serif;
           color: #1e293b;
           page-break-after: always;
+          overflow-wrap: anywhere;
+          word-break: normal;
         }
         @media print {
           body {
@@ -1822,30 +1598,8 @@ export default function ServicesView({
     // kaybolmasın") en sıkışık tier ile çok sayfaya bölünmeye geri düşülüyor
     // — böylece içerik asla kırpılmıyor, ama normal boyuttaki tablolar artık
     // gereksiz yere ikinci sayfaya taşmıyor.
-    const EFFORT_TABLE_TIERS: { fontSize: string; headerFontSize: string; cellPadding: string; lineHeight: string }[] = [
-      { fontSize: "7.5pt", headerFontSize: "8pt", cellPadding: "2.5px 4px", lineHeight: "1.15" },
-      { fontSize: "7pt", headerFontSize: "7.5pt", cellPadding: "2px 3px", lineHeight: "1.1" },
-      { fontSize: "6.5pt", headerFontSize: "7pt", cellPadding: "1.5px 3px", lineHeight: "1.05" },
-      { fontSize: "6pt", headerFontSize: "6.5pt", cellPadding: "1px 2px", lineHeight: "1" },
-    ];
-
-    const styleTableForA4Print = (rawTableHtml: string, tier: typeof EFFORT_TABLE_TIERS[number] = EFFORT_TABLE_TIERS[0]) => {
-      if (!rawTableHtml) return "<p style='font-style: italic; color: #94a3b8;'>Efor tablosu bulunmamaktadır.</p>";
-      const parser = new DOMParser();
-      const doc = parser.parseFromString(rawTableHtml, "text/html");
-      const table = doc.querySelector("table");
-      if (table) {
-        table.setAttribute("style", `width: 100%; border-collapse: collapse; font-family: Arial, sans-serif; font-size: ${tier.fontSize}; border: 1px solid #cbd5e1; margin-top: 5px;`);
-        table.querySelectorAll("th, td").forEach(cell => {
-          const isHeader = cell.tagName === "TH";
-          const cellStyle = cell.getAttribute("style") || "";
-
-          cell.setAttribute("style", `border: 1px solid #cbd5e1; padding: ${tier.cellPadding} !important; line-height: ${tier.lineHeight} !important; text-align: left; font-family: Arial, sans-serif; font-size: ${isHeader ? tier.headerFontSize : tier.fontSize}; font-weight: ${isHeader ? "bold" : "normal"}; ${isHeader ? "background-color: #f1f5f9; color: #1e293b;" : ""}; ${cellStyle}`);
-        });
-        return doc.body.innerHTML;
-      }
-      return rawTableHtml;
-    };
+    const EFFORT_TABLE_TIERS = PROPOSAL_TABLE_TIERS;
+    const styleTableForA4Print = styleProposalActivityTables;
 
     // Bir tablonun (thead+tbody dahil) TAM render yüksekliğini ölçer —
     // tier seçiminde "tek sayfaya sığıyor mu?" testinde kullanılıyor.
@@ -1859,7 +1613,7 @@ export default function ServicesView({
       probe.style.visibility = "hidden";
       document.body.appendChild(probe);
       probe.innerHTML = styledTableHtml;
-      const h = probe.querySelector("table")?.offsetHeight || probe.offsetHeight;
+      const h = probe.getBoundingClientRect().height;
       document.body.removeChild(probe);
       return h;
     };
@@ -2712,7 +2466,7 @@ export default function ServicesView({
     if (wizardStep === 4 && !isAssemblyEditable) {
       setLiveAssemblyHtml(assembleDocument());
     }
-  }, [wizardStep, isAssemblyEditable, selectedCardId, clientTitle, clientAddress, assignedPm, proposalDate, wizardTermsAndConditions, option1Active, option1Name, option1Desc, option1Price, option1Duration, option2Active, option2Name, option2Desc, option2Price, option2Duration, option3Active, option3Name, option3Desc, option3Price, option3Duration, letterheadId, option1Rows, option2Rows, option3Rows, wizardCoverPage]);
+  }, [wizardStep, isAssemblyEditable, selectedCardId, clientTitle, clientAddress, assignedPm, proposalDate, wizardTermsAndConditions, option1Active, option1Name, option1Desc, option1Price, option1Duration, option2Active, option2Name, option2Desc, option2Price, option2Duration, option3Active, option3Name, option3Desc, option3Price, option3Duration, letterheadId, option1Rows, option2Rows, option3Rows, wizardCoverPage, wizardTableHtml]);
 
   // Document Export schemes
   const handlePrint = () => {
@@ -3164,7 +2918,7 @@ export default function ServicesView({
               </h1>
               <p className="text-xs text-slate-550 dark:text-slate-400 mt-0.5 leading-relaxed">
                 {activeTab === "cards" 
-                  ? t("Manage 10 core service cards, copy and clean complex Word tables, and edit proposal templates.")
+                  ? t("Manage service cards, import activity tables, and edit proposal templates.")
                   : t("Design professional multi-option (Option 1-2-3) proposal documents for your clients and export PDF/Word output.")}
               </p>
             </div>
@@ -3245,7 +2999,7 @@ export default function ServicesView({
                 <option value="" className="bg-white dark:bg-[#1b1a19] text-slate-950 dark:text-white font-semibold">-- Bir Hizmet Seçiniz ({serviceCards.length}) --</option>
                 {serviceCards.map((c) => (
                   <option key={c.id} value={c.id} className="bg-white dark:bg-[#1b1a19] text-slate-950 dark:text-white font-semibold">
-                    [{c.code}] {c.name} ({c.category})
+                    [{c.code}] {c.name} ({c.category}){c.definitionStatus === "missing" ? " · Tanım bekleniyor" : ""}
                   </option>
                 ))}
               </select>
@@ -3288,6 +3042,14 @@ export default function ServicesView({
                     <>
                       <div className="font-bold text-slate-800 dark:text-slate-200">{curr.name}</div>
                       <div className="text-slate-500 font-mono text-[10px]">Eşleşen Kod: {curr.code} | Sınıfı: {curr.category}</div>
+                      <div className="text-xs text-slate-600 dark:text-slate-300">
+                        {curr.definitionStatus === "missing"
+                          ? "Tanım kartı bekleniyor: kapak metni ve faaliyet tablosu henüz eklenmedi."
+                          : curr.sourceFile
+                            ? `Kaynak: ${curr.sourceFile} · Kapak: ${(curr.sourceCoverPages || []).join(", ")} · Faaliyet: ${(curr.sourceActivityPages || []).join(", ")}`
+                            : "Manuel hizmet tanımı"}
+                      </div>
+                      {curr.catalogWarning && <div className="text-xs text-amber-700 dark:text-amber-300">{curr.catalogWarning}</div>}
                     </>
                   );
                 })()}
@@ -3344,6 +3106,7 @@ export default function ServicesView({
                       className="w-full bg-slate-50 dark:bg-[#252423] border border-[#EDEBE9] dark:border-[#323130] rounded p-2 text-xs text-slate-900 dark:text-white focus:ring-1 focus:ring-[#0078D4] focus:outline-hidden"
                     >
                       <option value="PROJE" className="bg-white dark:bg-[#1b1a19] text-slate-950 dark:text-white font-semibold">PROJE</option>
+                      <option value="ANALİZ & RAPORLAMA" className="bg-white dark:bg-[#1b1a19] text-slate-950 dark:text-white font-semibold">ANALİZ & RAPORLAMA</option>
                       <option value="ANALİZ" className="bg-white dark:bg-[#1b1a19] text-slate-950 dark:text-white font-semibold">ANALİZ</option>
                       <option value="KOÇLUK" className="bg-white dark:bg-[#1b1a19] text-slate-950 dark:text-white font-semibold">KOÇLUK</option>
                       <option value="GEMBA TEKNİK" className="bg-white dark:bg-[#1b1a19] text-slate-950 dark:text-white font-semibold">GEMBA TEKNİK</option>
