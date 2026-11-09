@@ -82,6 +82,7 @@ import { storeProposalPdf } from "../lib/proposalService";
 import { formatSystemNumber } from "../lib/currencyHelper";
 
 import importedServiceCatalog from "../data/serviceCatalog.json";
+import { serviceDefinitionBlocks } from "../lib/serviceDefinition";
 import { paginateProposalTables, styleProposalActivityTables, PROPOSAL_TABLE_TIERS } from "../lib/proposalTableLayout";
 
 // --- CORE INTERFACES ---
@@ -1520,25 +1521,7 @@ export default function ServicesView({
 
     // ---------------- KAPAK MEKTUBU: bloklara ayır ----------------
     // Parse cover letter content to apply paragraph blocks & style fully capitalized headers
-    const parseCoverLetterBlocks = (text: string): string[] => {
-      if (!text) return [];
-      const blocks = text.split(/[\r\n]+/);
-      return blocks
-        .map((block) => {
-          const trimmed = block.trim();
-          if (!trimmed) return "";
-
-          const alphaOnly = trimmed.replace(/[^a-zA-ZĞÜŞİÖÇIğüşiöçı]/g, "").trim();
-          const isUppercase = alphaOnly.length > 3 && alphaOnly.toUpperCase() === alphaOnly;
-
-          if (isUppercase) {
-            return `<h3 style="font-family: Arial, sans-serif; font-size: 11pt; font-weight: bold; color: #b91c1c; margin-top: 14px; margin-bottom: 6px; text-transform: uppercase; border-bottom: 1px solid #f1f5f9; padding-bottom: 2px;">${trimmed}</h3>`;
-          } else {
-            return `<p style="font-family: Arial, sans-serif; font-size: 9.5pt; line-height: 1.5; color: #334155; margin: 0 0 8px; text-align: justify;">${trimmed}</p>`;
-          }
-        })
-        .filter(Boolean);
-    };
+    const parseCoverLetterBlocks = serviceDefinitionBlocks;
 
     // Kullanıcı talebi: "efor tablosu iki sayfaya taştı. tek sayfada
     // topla." — sabit tek bir punto/dolgu yerine, en okunaklıdan en sıkışığa
@@ -3070,7 +3053,7 @@ export default function ServicesView({
                 <div className="space-y-1.5">
                   <label className="text-[11px] font-bold text-slate-500 dark:text-slate-400 flex items-center gap-1">
                     <Type className="w-3.5 h-3.5" />
-                    Varsayılan Giriş & Kapak Taslak Yazısı (Düz Metin)
+                    Hizmet Tanımı ve Kapak Metni
                   </label>
                   <textarea
                     rows={4}
@@ -3080,9 +3063,17 @@ export default function ServicesView({
                     className="w-full bg-slate-50 dark:bg-[#252423] border border-[#EDEBE9] dark:border-[#323130] rounded p-2.5 text-xs focus:ring-1 focus:ring-[#0078D4] focus:outline-hidden"
                   />
                   <p className="text-[10px] text-slate-450 dark:text-slate-500">
-                    HTML etiketi yazmanıza gerek yok. Tamamı BÜYÜK HARFLE yazılan satırlar otomatik olarak başlık gibi gösterilir, diğer satırlar normal paragraf olur.
+                    Başlıkları ayrı satırlara yazın. Tanım, amaç, kapsam ve çıktı başlıkları otomatik biçimlendirilir; paragraflar ve maddeler ayrı aralıklarla gösterilir.
                   </p>
                 </div>
+
+                <section aria-label="Hizmet tanımı önizlemesi" className="space-y-2">
+                  <p className="text-xs font-bold text-slate-500 dark:text-slate-400">Hizmet Tanımı Önizlemesi</p>
+                  <div
+                    className="bg-white border border-slate-200 rounded-lg p-5 max-w-none break-words"
+                    dangerouslySetInnerHTML={{ __html: serviceDefinitionBlocks(editCoverPage, "screen").join("") || "<p style='color:#64748b;font-size:14px'>Henüz hizmet tanımı eklenmedi.</p>" }}
+                  />
+                </section>
 
                 {/* Activity & Content Table Rich Editor */}
                 <div className="space-y-2">
