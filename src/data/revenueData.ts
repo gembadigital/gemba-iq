@@ -39,6 +39,8 @@ export interface ProjectAssignment {
 }
 
 export interface Invoice {
+  customerShortName?: string; // Explicit accounting alias, used for accepted proposal matching
+  sourceLines?: { description: string; [key: string]: unknown }[];
   id: string;
   invoiceNumber: string; // auto-generated on import — no invoice-code column is required from the source file
   customerName: string;

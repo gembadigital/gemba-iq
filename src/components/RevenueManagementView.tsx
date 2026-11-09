@@ -1,3 +1,4 @@
+import { findAcceptedRevenueProposals } from "../lib/revenueProposalMatch";
 import React, { useState, useMemo, useEffect } from "react";
 import * as XLSX from "xlsx";
 import { useLanguage } from "../lib/LanguageContext";
@@ -115,10 +116,12 @@ export default function RevenueManagementView() {
   // can be cleaned up in bulk instead of one row at a time.
   const [selectedInvoiceIds, setSelectedInvoiceIds] = useState<Set<string>>(new Set());
 
-  const [selectedMonth, setSelectedMonth] = useState<string>("2026-06");
+  const [selectedMonth, setSelectedMonth] = useState<string>(() =>
+    invoices.reduce((latest, invoice) => invoice.month > latest ? invoice.month : latest, "") || new Date().toISOString().slice(0, 7)
+  );
   const [isRangeMode, setIsRangeMode] = useState<boolean>(false);
-  const [rangeStart, setRangeStart] = useState<string>("2026-01");
-  const [rangeEnd, setRangeEnd] = useState<string>("2026-06");
+  const [rangeStart, setRangeStart] = useState<string>(`${selectedMonth.slice(0, 4)}-01`);
+  const [rangeEnd, setRangeEnd] = useState<string>(selectedMonth);
 
   // Dynamic Months Generator starting 2024 to system current date
   const getAvailableMonths = () => {
@@ -497,18 +500,9 @@ export default function RevenueManagementView() {
   // a normalized (trimmed/lowercased, punctuation-insensitive) name match
   // in both directions to absorb formatting differences between the
   // accounting export's customer name and the CRM's company name.
-  const normalizeCompanyName = (s: string) => (s || "").trim().toLowerCase().replace(/[.,]/g, "").replace(/\s+/g, " ");
+  const findAcceptedProposalsForCustomer = (customerName: string): Proposal[] =>
+    findAcceptedRevenueProposals(customerName, invoices, proposals);
 
-  const findAcceptedProposalsForCustomer = (customerName: string): Proposal[] => {
-    const target = normalizeCompanyName(customerName);
-    if (!target) return [];
-    return proposals.filter(p => {
-      if (p.status !== "Accepted") return false;
-      const pName = normalizeCompanyName(p.companyName);
-      if (!pName) return false;
-      return pName === target || pName.includes(target) || target.includes(pName);
-    });
-  };
 
   // Customer Grouping with rankings — revenue and days come from real
   // invoiced billing (the Monthly Billing Invoice Importer Panel), which is
@@ -577,19 +571,21 @@ export default function RevenueManagementView() {
 
     Object.entries(byCustomer).forEach(([customerName, customerInvoices]) => {
       const revenue = customerInvoices.reduce((s, i) => s + i.amount, 0);
-      const days = customerInvoices.reduce((s, i) => s + i.deliveredDays, 0);
       const { cost, costEstimated } = computeCostForCustomerInvoices(customerName, customerInvoices);
 
-      const accepted = findAcceptedProposalsForCustomer(customerName);
-      if (accepted.length === 0) {
-        addToLine(NO_MATCH_LABEL, revenue, days, cost, costEstimated);
-        return;
-      }
-      const totalWeight = accepted.reduce((s, p) => s + Math.max(1, p.grandTotal || p.totalBudget || 1), 0);
-      accepted.forEach(p => {
-        const weight = Math.max(1, p.grandTotal || p.totalBudget || 1) / totalWeight;
-        const label = (p.services && p.services[0]) ? p.services[0] : (p.proposalSubject || t("Other"));
-        addToLine(label, revenue * weight, days * weight, cost * weight, costEstimated);
+      customerInvoices.forEach(invoice => {
+        const accepted = findAcceptedRevenueProposals(customerName, invoices, proposals, invoice.invoiceDate, (invoice.sourceLines || []).map(line => line.description));
+        const invoiceCost = revenue ? cost * invoice.amount / revenue : 0;
+        if (accepted.length === 0) {
+          addToLine(NO_MATCH_LABEL, invoice.amount, invoice.deliveredDays, invoiceCost, costEstimated);
+          return;
+        }
+        const totalWeight = accepted.reduce((s, p) => s + Math.max(1, p.grandTotal || p.totalBudget || 1), 0);
+        accepted.forEach(p => {
+          const weight = Math.max(1, p.grandTotal || p.totalBudget || 1) / totalWeight;
+          const label = (p.services && p.services[0]) ? p.services[0] : (p.proposalSubject || t("Other"));
+          addToLine(label, invoice.amount * weight, invoice.deliveredDays * weight, invoiceCost * weight, costEstimated);
+        });
       });
     });
 
