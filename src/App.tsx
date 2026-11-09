@@ -823,6 +823,9 @@ export default function App() {
     return (
       <button
         id={`sidebar-nav-${id}`}
+        data-ui-nav-item="true"
+        data-active={isActive}
+        data-submenu={isSubmenu}
         disabled={disabled}
         onClick={handleButtonClick}
         className={`w-full max-w-full overflow-hidden flex items-center transition-all group relative cursor-pointer gap-[12px] ${heightClass} ${paddingClass} ${
@@ -911,6 +914,8 @@ export default function App() {
       {/* Dynamic Left Sidebar UI Navigation — <1024px'de sabit (fixed)
           off-canvas çekmece, ≥1024px'de normal statik sidebar */}
       <aside
+        data-ui-sidebar="true"
+        data-collapsed={sidebarCollapsed}
         className={`flex min-h-screen flex-col justify-between overflow-hidden flex-shrink-0 z-50 transition-transform duration-300 ease-out
           fixed inset-y-0 left-0 lg:relative lg:inset-auto
           ${mobileMenuOpen ? "translate-x-0" : "-translate-x-full"} lg:translate-x-0
@@ -1514,7 +1519,7 @@ export default function App() {
       }`}>
         
         {/* COMPACT ENTERPRISE TOP HEADER BAR */}
-        <div className={`h-[72px] min-h-[72px] border-b sticky top-0 z-40 px-3 sm:px-6 flex items-center justify-between gap-2 sm:gap-4 backdrop-blur-md ${
+        <div data-ui-topbar="true" className={`h-[72px] min-h-[72px] border-b sticky top-0 z-40 px-3 sm:px-6 flex items-center justify-between gap-2 sm:gap-4 backdrop-blur-md ${
           layoutTheme === "saas"
             ? "bg-[#FAFAFA]/90 dark:bg-[#09090b]/90 border-slate-200/50 dark:border-zinc-800/50 shadow-[0_1px_2px_rgba(0,0,0,0.015)]"
             : layoutTheme === "notion"
@@ -1541,7 +1546,7 @@ export default function App() {
           </div>
 
           {/* CENTER AREA: Global Search */}
-          <div className="flex-1 max-w-md mx-auto hidden md:block">
+          <div className="flex-1 min-w-0 max-w-md mx-auto hidden md:block">
             <GlobalSearchBar />
           </div>
 
@@ -1825,6 +1830,7 @@ export default function App() {
             <div className="relative">
               <button
                 type="button"
+                data-ui-avatar="true"
                 onClick={() => {
                   setIsUserDropdownOpen(!isUserDropdownOpen);
                   setIsNotificationsOpen(false);

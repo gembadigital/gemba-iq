@@ -794,7 +794,7 @@ export default function CompaniesView() {
   };
 
   return (
-    <div className="p-5 font-sans bg-[#F8F9FA] dark:bg-zinc-950 min-h-screen text-xs space-y-4">
+    <div className="company-registry p-5 font-sans bg-[#F8F9FA] dark:bg-zinc-950 min-h-screen text-xs space-y-4">
       
       {/* -------------------------------------------------------------
           1. COMPANIES LIST PAGE TABLE VIEW

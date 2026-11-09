@@ -1,3 +1,4 @@
+@layer stitch-theme;
 @import url('https://fonts.googleapis.com/css2?family=Inter:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&family=JetBrains+Mono:wght@400;500;600&display=swap');
 @import "tailwindcss";
 
@@ -289,75 +290,75 @@
 /* ==========================================================================
    2026 MODERN SAAS LAYOUT ENGINE (70% Linear, 15% Apple, 10% Notion, 5% Stripe)
    ========================================================================== */
-.saas-layout {
+.saas-layout:not(.gemba-stitch-skin) {
   font-family: "Plus Jakarta Sans", "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif !important;
   letter-spacing: -0.015em;
 }
 
 /* Soft neutral backgrounds (#FAFAFA) and dark high-end charcoal (#09090b) */
-.saas-layout body,
-.saas-layout .min-h-screen,
-.saas-layout main,
-.saas-layout .bg-[#F3F2F1],
-.saas-layout .bg-[#f3f2f1] {
+.saas-layout:not(.gemba-stitch-skin) body,
+.saas-layout:not(.gemba-stitch-skin) .min-h-screen,
+.saas-layout:not(.gemba-stitch-skin) main,
+.saas-layout:not(.gemba-stitch-skin) .bg-[#F3F2F1],
+.saas-layout:not(.gemba-stitch-skin) .bg-[#f3f2f1] {
   background-color: #FAFAFA !important;
   color: #0d0d12 !important;
 }
 
-.saas-layout.dark body,
-.saas-layout.dark .min-h-screen,
-.saas-layout.dark main,
-.saas-layout.dark .bg-[#11100f],
-.saas-layout.dark .bg-[#11100f] {
+.saas-layout:not(.gemba-stitch-skin).dark body,
+.saas-layout:not(.gemba-stitch-skin).dark .min-h-screen,
+.saas-layout:not(.gemba-stitch-skin).dark main,
+.saas-layout:not(.gemba-stitch-skin).dark .bg-[#11100f],
+.saas-layout:not(.gemba-stitch-skin).dark .bg-[#11100f] {
   background-color: #09090b !important;
   color: #fafafa !important;
 }
 
 /* Sidebar Styling: Premium Linear Left rail */
-.saas-layout aside,
-.saas-layout .bg-[#201f1e] {
+.saas-layout:not(.gemba-stitch-skin) aside,
+.saas-layout:not(.gemba-stitch-skin) .bg-[#201f1e] {
   background-color: #ffffff !important;
   border-right: 1px solid rgba(0, 0, 0, 0.14) !important;
   box-shadow: none !important;
   overflow: hidden !important;
 }
 
-.saas-layout aside nav button,
-.saas-layout aside nav [id^="sidebar-nav-"] {
+.saas-layout:not(.gemba-stitch-skin) aside nav button,
+.saas-layout:not(.gemba-stitch-skin) aside nav [id^="sidebar-nav-"] {
   max-width: 100% !important;
 }
 
-.saas-layout.dark aside,
-.saas-layout.dark .bg-[#201f1e] {
+.saas-layout:not(.gemba-stitch-skin).dark aside,
+.saas-layout:not(.gemba-stitch-skin).dark .bg-[#201f1e] {
   background-color: #0c0c0e !important;
   border-right: 1px solid rgba(255, 255, 255, 0.16) !important;
   box-shadow: none !important;
 }
 
 /* Borderless sections & rounded corners 12px for cards */
-.saas-layout .fluent-card,
-.saas-layout div.bg-white:not(button):not(input):not(select):not(textarea):not(a),
-.saas-layout div.rounded-xl:not(button):not(input):not(select):not(textarea):not(a),
-.saas-layout div.rounded-2xl:not(button):not(input):not(select):not(textarea):not(a),
-.saas-layout div.shadow-sm:not(button):not(input):not(select):not(textarea):not(a),
-.saas-layout div.shadow-md:not(button):not(input):not(select):not(textarea):not(a),
-.saas-layout div.shadow-lg:not(button):not(input):not(select):not(textarea):not(a) {
+.saas-layout:not(.gemba-stitch-skin) .fluent-card,
+.saas-layout:not(.gemba-stitch-skin) div.bg-white:not(button):not(input):not(select):not(textarea):not(a),
+.saas-layout:not(.gemba-stitch-skin) div.rounded-xl:not(button):not(input):not(select):not(textarea):not(a),
+.saas-layout:not(.gemba-stitch-skin) div.rounded-2xl:not(button):not(input):not(select):not(textarea):not(a),
+.saas-layout:not(.gemba-stitch-skin) div.shadow-sm:not(button):not(input):not(select):not(textarea):not(a),
+.saas-layout:not(.gemba-stitch-skin) div.shadow-md:not(button):not(input):not(select):not(textarea):not(a),
+.saas-layout:not(.gemba-stitch-skin) div.shadow-lg:not(button):not(input):not(select):not(textarea):not(a) {
   background-color: #ffffff !important;
   border: 1px solid rgba(0, 0, 0, 0.14) !important;
   box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.01), 0 1px 2px -1px rgba(0, 0, 0, 0.01) !important;
   border-radius: 12px !important;
 }
 
-.saas-layout.dark .fluent-card,
-.saas-layout.dark div.bg-white:not(button):not(input):not(select):not(textarea):not(a),
-.saas-layout.dark div.rounded-xl:not(button):not(input):not(select):not(textarea):not(a),
-.saas-layout.dark div.rounded-2xl:not(button):not(input):not(select):not(textarea):not(a),
-.saas-layout.dark div.shadow-sm:not(button):not(input):not(select):not(textarea):not(a),
-.saas-layout.dark div.shadow-md:not(button):not(input):not(select):not(textarea):not(a),
-.saas-layout.dark div.shadow-lg:not(button):not(input):not(select):not(textarea):not(a),
-.saas-layout.dark .bg-[#201f1e],
-.saas-layout.dark .bg-[#252423],
-.saas-layout.dark .bg-[#11100f] {
+.saas-layout:not(.gemba-stitch-skin).dark .fluent-card,
+.saas-layout:not(.gemba-stitch-skin).dark div.bg-white:not(button):not(input):not(select):not(textarea):not(a),
+.saas-layout:not(.gemba-stitch-skin).dark div.rounded-xl:not(button):not(input):not(select):not(textarea):not(a),
+.saas-layout:not(.gemba-stitch-skin).dark div.rounded-2xl:not(button):not(input):not(select):not(textarea):not(a),
+.saas-layout:not(.gemba-stitch-skin).dark div.shadow-sm:not(button):not(input):not(select):not(textarea):not(a),
+.saas-layout:not(.gemba-stitch-skin).dark div.shadow-md:not(button):not(input):not(select):not(textarea):not(a),
+.saas-layout:not(.gemba-stitch-skin).dark div.shadow-lg:not(button):not(input):not(select):not(textarea):not(a),
+.saas-layout:not(.gemba-stitch-skin).dark .bg-[#201f1e],
+.saas-layout:not(.gemba-stitch-skin).dark .bg-[#252423],
+.saas-layout:not(.gemba-stitch-skin).dark .bg-[#11100f] {
   background-color: #121215 !important;
   border: 1px solid rgba(255, 255, 255, 0.16) !important;
   box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px -1px rgba(0, 0, 0, 0.1) !important;
@@ -365,49 +366,49 @@
 }
 
 /* Smooth interactions on cards */
-.saas-layout .fluent-card-hover {
+.saas-layout:not(.gemba-stitch-skin) .fluent-card-hover {
   transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1) !important;
 }
-.saas-layout .fluent-card-hover:hover {
+.saas-layout:not(.gemba-stitch-skin) .fluent-card-hover:hover {
   box-shadow: 0 12px 24px -10px rgba(0, 0, 0, 0.04) !important;
   border-color: rgba(0, 0, 0, 0.22) !important;
   transform: translateY(-1px) !important;
 }
-.saas-layout.dark .fluent-card-hover:hover {
+.saas-layout:not(.gemba-stitch-skin).dark .fluent-card-hover:hover {
   box-shadow: 0 12px 24px -10px rgba(0, 0, 0, 0.4) !important;
   border-color: rgba(255, 255, 255, 0.24) !important;
   transform: translateY(-1px) !important;
 }
 
 /* Inputs, buttons, selections: rounded-xl with subtle shadows */
-.saas-layout button,
-.saas-layout select,
-.saas-layout input,
-.saas-layout textarea {
+.saas-layout:not(.gemba-stitch-skin) button,
+.saas-layout:not(.gemba-stitch-skin) select,
+.saas-layout:not(.gemba-stitch-skin) input,
+.saas-layout:not(.gemba-stitch-skin) textarea {
   border-radius: 10px !important;
   transition: all 0.15s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
-.saas-layout input,
-.saas-layout select,
-.saas-layout textarea {
+.saas-layout:not(.gemba-stitch-skin) input,
+.saas-layout:not(.gemba-stitch-skin) select,
+.saas-layout:not(.gemba-stitch-skin) textarea {
   background-color: #ffffff !important;
   border: 1px solid rgba(0, 0, 0, 0.22) !important;
   box-shadow: 0 1px 2px 0 rgba(0,0,0,0.02) !important;
 }
 
-.saas-layout.dark input,
-.saas-layout.dark select,
-.saas-layout.dark textarea {
+.saas-layout:not(.gemba-stitch-skin).dark input,
+.saas-layout:not(.gemba-stitch-skin).dark select,
+.saas-layout:not(.gemba-stitch-skin).dark textarea {
   background-color: #18181b !important;
   border: 1px solid rgba(255, 255, 255, 0.24) !important;
   box-shadow: none !important;
 }
 
 /* Focus and active states */
-.saas-layout input:focus,
-.saas-layout select:focus,
-.saas-layout textarea:focus {
+.saas-layout:not(.gemba-stitch-skin) input:focus,
+.saas-layout:not(.gemba-stitch-skin) select:focus,
+.saas-layout:not(.gemba-stitch-skin) textarea:focus {
   border-color: #0078D4 !important;
   box-shadow: 0 0 0 2px rgba(0, 120, 212, 0.12) !important;
 }
@@ -416,27 +417,27 @@
 /* Kullanıcı geri bildirimi (2026-07-25): "kenarlıklar çok belirgin değil" —
    bu rgba(0,0,0,0.04)/(255,255,255,0.04) değerleri neredeyse görünmez
    kenarlıklar üretiyordu (kontrast oranı ~1.1:1, WCAG UI-sınır önerisi
-   3:1'in çok altında). .saas-layout App.tsx'te sabit/aktif tema olduğu için
+   3:1'in çok altında). .saas-layout:not(.gemba-stitch-skin) App.tsx'te sabit/aktif tema olduğu için
    (bkz. classList.add("saas-layout")) bu kural her zaman devrede — daha
    belirgin bir opaklığa yükseltildi. */
-.saas-layout .border,
-.saas-layout .border-slate-200,
-.saas-layout .border-[#EDEBE9],
-.saas-layout .border-indigo-200 {
+.saas-layout:not(.gemba-stitch-skin) .border,
+.saas-layout:not(.gemba-stitch-skin) .border-slate-200,
+.saas-layout:not(.gemba-stitch-skin) .border-[#EDEBE9],
+.saas-layout:not(.gemba-stitch-skin) .border-indigo-200 {
   border-color: rgba(0, 0, 0, 0.16) !important;
 }
-.saas-layout.dark .border,
-.saas-layout.dark .border-[#323130],
-.saas-layout.dark .border-slate-800,
-.saas-layout.dark .border-indigo-950\/40 {
+.saas-layout:not(.gemba-stitch-skin).dark .border,
+.saas-layout:not(.gemba-stitch-skin).dark .border-[#323130],
+.saas-layout:not(.gemba-stitch-skin).dark .border-slate-800,
+.saas-layout:not(.gemba-stitch-skin).dark .border-indigo-950\/40 {
   border-color: rgba(255, 255, 255, 0.18) !important;
 }
 
 /* Modern minimal table styles to improve visual density and readability */
-.saas-layout table {
+.saas-layout:not(.gemba-stitch-skin) table {
   border-collapse: collapse !important;
 }
-.saas-layout table th {
+.saas-layout:not(.gemba-stitch-skin) table th {
   background-color: rgba(0, 0, 0, 0.02) !important;
   font-weight: 600 !important;
   font-size: 11px !important;
@@ -445,64 +446,61 @@
   letter-spacing: 0.05em !important;
   border-bottom: 1px solid rgba(0, 0, 0, 0.18) !important;
 }
-.saas-layout.dark table th {
+.saas-layout:not(.gemba-stitch-skin).dark table th {
   background-color: rgba(255, 255, 255, 0.02) !important;
   color: #94a3b8 !important;
   border-bottom: 1px solid rgba(255, 255, 255, 0.2) !important;
 }
-.saas-layout table td {
+.saas-layout:not(.gemba-stitch-skin) table td {
   border-bottom: 1px solid rgba(0, 0, 0, 0.1) !important;
 }
-.saas-layout.dark table td {
+.saas-layout:not(.gemba-stitch-skin).dark table td {
   border-bottom: 1px solid rgba(255, 255, 255, 0.12) !important;
 }
 
 /* Stripe and Linear gradient badges */
-.saas-layout .bg-indigo-500\/10,
-.saas-layout .bg-indigo-50 {
+.saas-layout:not(.gemba-stitch-skin) .bg-indigo-500\/10,
+.saas-layout:not(.gemba-stitch-skin) .bg-indigo-50 {
   background-color: rgba(99, 102, 241, 0.06) !important;
   color: #6366f1 !important;
   border: 1px solid rgba(99, 102, 241, 0.12) !important;
 }
-.saas-layout .bg-emerald-500\/10,
-.saas-layout .bg-emerald-50 {
+.saas-layout:not(.gemba-stitch-skin) .bg-emerald-500\/10,
+.saas-layout:not(.gemba-stitch-skin) .bg-emerald-50 {
   background-color: rgba(16, 185, 129, 0.06) !important;
   color: #10b981 !important;
   border: 1px solid rgba(16, 185, 129, 0.12) !important;
 }
-.saas-layout .bg-amber-500\/10,
-.saas-layout .bg-amber-50 {
+.saas-layout:not(.gemba-stitch-skin) .bg-amber-500\/10,
+.saas-layout:not(.gemba-stitch-skin) .bg-amber-50 {
   background-color: rgba(245, 158, 11, 0.06) !important;
   color: #f59e0b !important;
   border: 1px solid rgba(245, 158, 11, 0.12) !important;
 }
-.saas-layout .bg-rose-500\/10,
-.saas-layout .bg-rose-50 {
+.saas-layout:not(.gemba-stitch-skin) .bg-rose-500\/10,
+.saas-layout:not(.gemba-stitch-skin) .bg-rose-50 {
   background-color: rgba(244, 63, 94, 0.06) !important;
   color: #f43f5e !important;
   border: 1px solid rgba(244, 63, 94, 0.12) !important;
 }
 
-.saas-layout .font-sans {
+.saas-layout:not(.gemba-stitch-skin) .font-sans {
   font-family: "Plus Jakarta Sans", "Inter", sans-serif !important;
 }
 
 /* Force the + Company creation button to always be solid blue with white text */
-div#root:nth-of-type(1) > div:nth-of-type(1) > main:nth-of-type(1) > div:nth-of-type(2) > div:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(2) > button:nth-of-type(3),
 #create-company-btn-action {
   background-color: #0078D4 !important;
   color: #ffffff !important;
   border: 1px solid #005a9e !important;
 }
 
-div#root:nth-of-type(1) > div:nth-of-type(1) > main:nth-of-type(1) > div:nth-of-type(2) > div:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(2) > button:nth-of-type(3):hover,
 #create-company-btn-action:hover {
   background-color: #005a9e !important;
   color: #ffffff !important;
   opacity: 0.95;
 }
 
-div#root:nth-of-type(1) > div:nth-of-type(1) > main:nth-of-type(1) > div:nth-of-type(2) > div:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(2) > button:nth-of-type(3) *,
 #create-company-btn-action * {
   color: #ffffff !important;
 }

@@ -1,9 +1,10 @@
+@layer stitch-theme {
 /* Approved visual layer only. Existing layout and event handlers are unchanged.
-   Repeated root class keeps this layer above the legacy SaaS visual overrides. */
+   The first cascade layer keeps explicit visual overrides above legacy rules. */
 @media screen {
   html.gemba-stitch-skin { color-scheme: light; }
   html.gemba-stitch-skin.dark { color-scheme: dark; }
-  .gemba-stitch-skin.gemba-stitch-skin.gemba-stitch-skin {
+  .gemba-stitch-skin {
     --stitch-canvas: light-dark(#f8f9fd, #151d2c);
     --stitch-surface: light-dark(#ffffff, #1c273a);
     --stitch-field: light-dark(#f7f9fc, #243147);
@@ -15,61 +16,267 @@
     background-color: var(--stitch-canvas);
     font-family: Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
   }
-  .gemba-stitch-skin.gemba-stitch-skin.gemba-stitch-skin :where(#root > .h-screen, #root main) {
+  .gemba-stitch-skin :where(#root > .h-screen, #root main) {
     background-color: var(--stitch-canvas) !important;
   }
-  .gemba-stitch-skin.gemba-stitch-skin.gemba-stitch-skin :where(.font-sans):not(.a4-page, .a4-page *) {
+  .gemba-stitch-skin :where(.font-sans):not(.a4-page, .a4-page *) {
     font-family: Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif !important;
   }
-  .gemba-stitch-skin.gemba-stitch-skin.gemba-stitch-skin :where(.bg-white, .bg-slate-50):not(.a4-page, .a4-page *) {
+  .gemba-stitch-skin :where(.bg-white, .bg-slate-50):not(.a4-page, .a4-page *) {
     background-color: var(--stitch-surface) !important;
   }
-  .gemba-stitch-skin.gemba-stitch-skin.gemba-stitch-skin :where([class*="border-[#EDEBE9]"], [class*="border-slate-200"]):not(.a4-page, .a4-page *) {
+  .gemba-stitch-skin :where([class*="border-[#EDEBE9]"], [class*="border-slate-200"]):not(.a4-page, .a4-page *) {
     border-color: var(--stitch-line) !important;
   }
-  .gemba-stitch-skin.gemba-stitch-skin.gemba-stitch-skin :where(.shadow-sm, .shadow-xs):not(.a4-page, .a4-page *) {
+  .gemba-stitch-skin :where(.shadow-sm, .shadow-xs):not(.a4-page, .a4-page *) {
     box-shadow: 0 1px 3px rgb(15 23 42 / 4%) !important;
   }
-  .gemba-stitch-skin.gemba-stitch-skin.gemba-stitch-skin :where(.rounded-lg, .rounded-xl):not(.a4-page, .a4-page *) {
+  .gemba-stitch-skin :where(.rounded-lg, .rounded-xl):not(.a4-page, .a4-page *) {
     border-radius: 8px !important;
   }
-  .gemba-stitch-skin.gemba-stitch-skin.gemba-stitch-skin :where(h1, h2, h3, [class*="text-slate-900"], [class*="text-slate-800"]):not(.a4-page, .a4-page *) {
+  .gemba-stitch-skin :where(h1, h2, h3, [class*="text-slate-900"], [class*="text-slate-800"]):not(.a4-page, .a4-page *) {
     color: var(--stitch-text) !important;
   }
-  .gemba-stitch-skin.gemba-stitch-skin.gemba-stitch-skin :where(.font-black):not(.a4-page, .a4-page *) {
+  .gemba-stitch-skin :where(.font-black):not(.a4-page, .a4-page *) {
     font-weight: 650 !important;
   }
-  .gemba-stitch-skin.gemba-stitch-skin.gemba-stitch-skin :where([class*="text-slate-500"], [class*="text-slate-450"], [class*="text-slate-550"]):not(.a4-page, .a4-page *) {
+  .gemba-stitch-skin :where([class*="text-slate-500"], [class*="text-slate-450"], [class*="text-slate-550"]):not(.a4-page, .a4-page *) {
     color: var(--stitch-muted) !important;
   }
-  .gemba-stitch-skin.gemba-stitch-skin.gemba-stitch-skin :where(input:not([type="checkbox"]):not([type="radio"]):not([type="file"]), select, textarea):not(.a4-page, .a4-page *) {
+  .gemba-stitch-skin :where(input:not([type="checkbox"]):not([type="radio"]):not([type="file"]), select, textarea):not(.a4-page, .a4-page *) {
     background-color: var(--stitch-field) !important;
     border-color: var(--stitch-line) !important;
     border-radius: 6px !important;
     color: var(--stitch-text) !important;
   }
-  .gemba-stitch-skin.gemba-stitch-skin.gemba-stitch-skin :where(input, select, textarea):focus-visible:not(.a4-page *) {
+  .gemba-stitch-skin :where(input, select, textarea):focus-visible:not(.a4-page *) {
     outline: 2px solid var(--stitch-accent) !important;
     outline-offset: 2px;
   }
-  .gemba-stitch-skin.gemba-stitch-skin.gemba-stitch-skin :where(button[class*="bg-[#0078D4]"], button[class*="bg-blue-600"], button[class*="bg-gradient-to-r"]):not(.a4-page, .a4-page *) {
+  .gemba-stitch-skin :where(button[class*="bg-[#0078D4]"], button[class*="bg-blue-600"], button[class*="bg-gradient-to-r"]):not(.a4-page, .a4-page *) {
     background: var(--stitch-accent) !important;
     border-color: var(--stitch-accent) !important;
     color: #fff !important;
   }
-  .gemba-stitch-skin.gemba-stitch-skin.gemba-stitch-skin :where(button[class*="bg-emerald-600"]):not(.a4-page, .a4-page *) {
+  .gemba-stitch-skin :where(button[class*="bg-emerald-600"]):not(.a4-page, .a4-page *) {
     background-color: #16804a !important;
   }
-  .gemba-stitch-skin.gemba-stitch-skin.gemba-stitch-skin :where([class*="text-[#0078D4]"]):not(.a4-page, .a4-page *) {
+  .gemba-stitch-skin :where([class*="text-[#0078D4]"]):not(.a4-page, .a4-page *) {
     color: var(--stitch-accent) !important;
   }
-  .gemba-stitch-skin.gemba-stitch-skin.gemba-stitch-skin :where(div.absolute.h-1\.5.bg-gradient-to-r):not(.a4-page *) {
+  .gemba-stitch-skin :where(div.absolute.h-1\.5.bg-gradient-to-r):not(.a4-page *) {
     background: var(--stitch-accent) !important;
   }
-  .gemba-stitch-skin.gemba-stitch-skin.gemba-stitch-skin :where(button, input, select, textarea):not(.a4-page, .a4-page *) {
+  .gemba-stitch-skin :where(button, input, select, textarea):not(.a4-page, .a4-page *) {
     font-family: inherit !important;
   }
-  .gemba-stitch-skin.gemba-stitch-skin.gemba-stitch-skin :where(.text-\[9px\], .text-\[10px\], .text-\[11px\]):not(.a4-page, .a4-page *) {
+  .gemba-stitch-skin :where(.text-\[9px\], .text-\[10px\], .text-\[11px\]):not(.a4-page, .a4-page *) {
     font-size: 12px;
   }
+}
+
+/* CRM workspace refresh: presentation hooks only; navigation and field events
+   remain in their existing components. */
+@media screen {
+  .gemba-stitch-skin {
+    --stitch-canvas: light-dark(#f5f6f9, #101623);
+    --stitch-line: light-dark(#e8ebf1, #303b50);
+    --stitch-field: light-dark(#ffffff, #202c40);
+    --stitch-muted: light-dark(#69768c, #a9b6cb);
+    --stitch-nav: #1b2339;
+    --stitch-accent-ink: light-dark(#bd1941, #ff9eb4);
+    --stitch-nav-text: #cad4e5;
+    --stitch-nav-active: #343b59;
+    --stitch-accent-soft: light-dark(#fff0f4, #3d2638);
+    letter-spacing: -.012em;
+  }
+  .gemba-stitch-skin [data-ui-sidebar] {
+    background: var(--stitch-nav) !important;
+    color: var(--stitch-nav-text) !important;
+    border: 0 !important;
+    border-radius: 0 !important;
+    box-shadow: none !important;
+  }
+  @media(min-width:1024px) {
+    .gemba-stitch-skin [data-ui-sidebar][data-collapsed="false"] { width: 250px !important; }
+  }
+  .gemba-stitch-skin [data-ui-sidebar] :where(div,nav) {
+    background: transparent !important;
+    box-shadow: none !important;
+    border-color: #35405a !important;
+  }
+  .gemba-stitch-skin [data-ui-sidebar] :where(h2,span,svg) {
+    color: inherit !important;
+  }
+  .gemba-stitch-skin [data-ui-sidebar] h2 { color: #f4f7ff !important; font-size: 20px !important; letter-spacing: -.7px; }
+  .gemba-stitch-skin [data-ui-sidebar] nav button {
+    color: var(--stitch-nav-text) !important;
+    background: transparent !important;
+    border-color: transparent !important;
+    border-radius: 7px !important;
+    min-height: 40px !important;
+    height: 40px !important;
+    box-shadow: none !important;
+    margin-top: 1px;
+    margin-bottom: 1px;
+  }
+  .gemba-stitch-skin [data-ui-sidebar] nav button > span,
+  .gemba-stitch-skin [data-ui-sidebar] nav button > div > span {
+    font-size: 13px !important;
+    font-weight: 500 !important;
+    letter-spacing: 0;
+  }
+  .gemba-stitch-skin [data-ui-sidebar] nav button:hover:not(:disabled) { background: #29334c !important; color: #fff !important; }
+  .gemba-stitch-skin [data-ui-sidebar] [data-ui-nav-item][data-active="true"] {
+    background: var(--stitch-nav-active) !important;
+    color: #fff !important;
+    border-left-color: #ff6b8d !important;
+    box-shadow: none !important;
+  }
+  .gemba-stitch-skin [data-ui-sidebar] [data-submenu="true"] { padding-left: 40px !important; margin-left: 0 !important; margin-right: 0 !important; }
+  .gemba-stitch-skin [data-ui-sidebar][data-collapsed="true"] [data-submenu="true"] { padding-left: 0 !important; }
+  .gemba-stitch-skin [data-ui-sidebar] svg { stroke-width: 1.7; animation: none !important; }
+  .gemba-stitch-skin [data-ui-topbar] {
+    height: 64px !important;
+    min-height: 64px !important;
+    background: var(--stitch-surface) !important;
+    border-bottom: 1px solid var(--stitch-line) !important;
+    box-shadow: none !important;
+    backdrop-filter: none;
+  }
+  .gemba-stitch-skin [data-ui-topbar] button {
+    border-color: transparent !important;
+    background: transparent !important;
+    box-shadow: none !important;
+  }
+  .gemba-stitch-skin [data-ui-topbar] button:hover { background: var(--stitch-canvas) !important; }
+  .gemba-stitch-skin [data-ui-topbar] input { background: var(--stitch-canvas) !important; border-color: transparent !important; box-shadow: none !important; border-radius: 8px !important; }
+  .gemba-stitch-skin .company-detail {
+    background: transparent !important;
+    border: 0 !important;
+    box-shadow: none !important;
+    border-radius: 0 !important;
+    padding: 0 !important;
+    min-height: auto;
+  }
+  .gemba-stitch-skin .company-detail-header {
+    padding: 22px 24px !important;
+    background: var(--stitch-surface) !important;
+    border: 1px solid var(--stitch-line) !important;
+    border-bottom: 0 !important;
+    border-radius: 12px 12px 0 0 !important;
+    margin-bottom: 0 !important;
+    gap: 16px;
+  }
+  .gemba-stitch-skin .company-monogram {
+    width: 44px;
+    height: 44px;
+    flex-shrink: 0;
+    border-radius: 11px;
+    background: var(--stitch-accent-soft) !important;
+    color: var(--stitch-accent-ink) !important;
+    display: grid;
+    place-items: center;
+    font-size: 17px;
+    font-weight: 650;
+    border: 0 !important;
+  }
+  .gemba-stitch-skin .company-heading h2 {
+    font-size: 21px !important;
+    font-weight: 650 !important;
+    line-height: 1.3;
+    letter-spacing: -.6px;
+  }
+  .gemba-stitch-skin .company-heading :where(span,a) { font-family: inherit !important; }
+  .gemba-stitch-skin .company-heading a { color: var(--stitch-muted) !important; font-size: 12px !important; }
+  .gemba-stitch-skin .company-status { font-size: 11px !important; font-weight: 500 !important; letter-spacing: 0; border: 0 !important; border-radius: 5px !important; }
+  .gemba-stitch-skin .company-profile-edit { background: var(--stitch-surface) !important; border-color: var(--stitch-line) !important; box-shadow: 0 1px 2px #16233808; }
+  .gemba-stitch-skin .company-profile-delete { background: transparent !important; border: 0 !important; }
+  .gemba-stitch-skin .company-detail-tabs {
+    background: var(--stitch-surface) !important;
+    border: 1px solid var(--stitch-line) !important;
+    border-top: 0 !important;
+    border-radius: 0 0 12px 12px;
+    padding: 0 18px !important;
+    margin-top: 0 !important;
+    gap: 14px !important;
+  }
+  .gemba-stitch-skin .company-detail-tabs button {
+    background: transparent !important;
+    border: 0 !important;
+    border-bottom: 2px solid transparent !important;
+    border-radius: 0 !important;
+    color: var(--stitch-muted) !important;
+    box-shadow: none !important;
+    padding: 14px 3px !important;
+    font-size: 13px !important;
+    font-weight: 500 !important;
+  }
+  .gemba-stitch-skin .company-detail-tabs button[data-active="true"] { color: var(--stitch-accent-ink) !important; border-bottom-color: var(--stitch-accent-ink) !important; }
+  .gemba-stitch-skin .company-detail-tabs button:hover { color: var(--stitch-text) !important; }
+  .gemba-stitch-skin .company-detail-tabs svg { width: 16px; height: 16px; stroke-width: 1.7; }
+  .gemba-stitch-skin .company-detail-body { background: transparent !important; border: 0 !important; box-shadow: none !important; padding-top: 6px !important; }
+  .gemba-stitch-skin .company-section {
+    background: var(--stitch-surface) !important;
+    border: 1px solid var(--stitch-line) !important;
+    border-radius: 12px !important;
+    box-shadow: 0 2px 5px #15223703 !important;
+    padding: 22px !important;
+  }
+  .gemba-stitch-skin .company-section-heading { border: 0 !important; padding-bottom: 4px !important; }
+  .gemba-stitch-skin .company-section-heading h4 { font-size: 14px !important; text-transform: none !important; letter-spacing: -.1px !important; font-weight: 600 !important; }
+  .gemba-stitch-skin .company-section-heading svg { color: var(--stitch-muted) !important; width: 17px; height: 17px; stroke-width: 1.8; }
+  .gemba-stitch-skin .company-form-field {
+    background: transparent !important;
+    border: 0 !important;
+    border-radius: 0 !important;
+    box-shadow: none !important;
+    padding: 0 !important;
+  }
+  .gemba-stitch-skin .company-form-field label { text-transform: none !important; font-family: inherit !important; font-size: 12px !important; font-weight: 500 !important; color: var(--stitch-muted) !important; margin-bottom: 6px; }
+  .gemba-stitch-skin .company-form-field :where(input,select,textarea) {
+    background: var(--stitch-field) !important;
+    border: 1px solid var(--stitch-line) !important;
+    border-radius: 7px !important;
+    box-shadow: none !important;
+    font-size: 13px !important;
+    font-weight: 400 !important;
+    line-height: 1.5;
+    padding: 9px 11px !important;
+    min-height: 39px;
+  }
+  .gemba-stitch-skin .company-form-field :where(input,select,textarea):hover { border-color: light-dark(#bdc7d8,#566785) !important; }
+  .gemba-stitch-skin .company-overview :where(.gap-3) { gap: 18px !important; }
+  @media(max-width:640px) {
+    .gemba-stitch-skin .company-detail-header { padding: 16px !important; }
+    .gemba-stitch-skin .company-heading h2 { font-size: 18px !important; }
+    .gemba-stitch-skin .company-section { padding: 16px !important; }
+  }
+}
+
+@media screen {
+  .gemba-stitch-skin .company-detail-tabs button :where(span,svg) { color: inherit !important; }
+  .gemba-stitch-skin [data-ui-sidebar] nav { gap: 12px !important; }
+  .gemba-stitch-skin [data-ui-sidebar] nav [data-active="false"] svg { color: #97a9c9 !important; }
+  .gemba-stitch-skin [data-ui-sidebar] [data-active="true"] svg { color: #ff91aa !important; }
+  .gemba-stitch-skin [data-ui-sidebar] nav button > div { justify-content: flex-start !important; }
+  .gemba-stitch-skin [data-ui-sidebar][data-collapsed="true"] nav button > div { justify-content: center !important; }
+  .gemba-stitch-skin [data-ui-sidebar] #btn-theme-toggle,
+  .gemba-stitch-skin [data-ui-sidebar] #btn-collapse-sidebar { background: #2d3850 !important; color: #dce5f7 !important; border-color: #45526b !important; }
+}
+
+@media screen {
+  .gemba-stitch-skin [data-ui-topbar] button[data-ui-avatar] { background: #343b59 !important; color: #fff !important; border-radius: 50% !important; }
+  .gemba-stitch-skin [data-ui-topbar] > div { min-width: 0; }
+  .gemba-stitch-skin [data-ui-sidebar] img[src="/logos/Gdogo5.png"] { filter: brightness(0) invert(1); opacity: .65; }
+}
+
+@media screen {
+  .gemba-stitch-skin .company-registry { background: var(--stitch-canvas) !important; }
+  .gemba-stitch-skin .company-registry th:not(.a4-page *) { background: var(--stitch-field) !important; color: var(--stitch-muted) !important; text-transform: none !important; font-size: 12px !important; font-weight: 500 !important; letter-spacing: 0 !important; }
+  .gemba-stitch-skin .company-registry td:not(.a4-page *) { border-color: var(--stitch-line) !important; }
+  .gemba-stitch-skin .company-status:not([class*="bg-emerald-"]) { background: light-dark(#f0f0ff,#353654) !important; color: light-dark(#5656ab,#cbccff) !important; font-size: 12px !important; }
+  .gemba-stitch-skin .company-heading > div > span:not(.company-status) { background: var(--stitch-field) !important; color: var(--stitch-muted) !important; font-size: 12px !important; font-weight: 500 !important; }
+}
+
 }

@@ -152,10 +152,10 @@ export default function CompanyDetailView({
   };
 
   return (
-    <div className="bg-[#FAF9F8] dark:bg-[#0B0B0C] min-h-screen p-5 rounded-2xl border border-slate-100 dark:border-zinc-900/60 shadow-lg space-y-4 animate-slideIn">
+    <div className="company-detail bg-[#FAF9F8] dark:bg-[#0B0B0C] min-h-screen p-5 rounded-2xl border border-slate-100 dark:border-zinc-900/60 shadow-lg space-y-4 animate-slideIn">
       
       {/* Header Action breadcrumb */}
-      <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-3 border-b border-slate-100 dark:border-zinc-900/60 pb-4">
+      <div className="company-detail-header flex flex-col md:flex-row items-start md:items-center justify-between gap-3 border-b border-slate-100 dark:border-zinc-900/60 pb-4">
         
         <div className="flex items-start gap-3 w-full md:w-auto">
           {showCloseButtonOnly ? (
@@ -178,12 +178,13 @@ export default function CompanyDetailView({
             </button>
           )}
 
-          <div className="space-y-1 flex-1">
+          <div aria-hidden="true" className="company-monogram">{company.name.slice(0, 2).toLocaleUpperCase(lang === "TR" ? "tr-TR" : "en")}</div>
+          <div className="company-heading space-y-1 flex-1">
             <div className="flex flex-wrap items-center gap-2">
               <h2 className="text-lg font-black text-slate-900 dark:text-white font-display">
                 {company.name}
               </h2>
-              <span className={`inline-block px-2.5 py-0.5 rounded-full text-[9px] font-mono font-bold uppercase tracking-wider ${
+              <span className={`company-status inline-block px-2.5 py-0.5 rounded-full text-[9px] font-mono font-bold uppercase tracking-wider ${
                 company.customerStatus === "Active Customer" || company.customerStatus === "Existing Customer"
                   ? "bg-emerald-50 text-emerald-600 dark:bg-emerald-950/20 dark:text-emerald-400"
                   : "bg-indigo-50 text-indigo-600 dark:bg-indigo-950/20 dark:text-indigo-400"
@@ -222,7 +223,7 @@ export default function CompanyDetailView({
             <button
               type="button"
               onClick={() => onOpenEditForm(company)}
-              className="px-3.5 py-1.5 bg-white hover:bg-slate-50 dark:bg-zinc-900 dark:hover:bg-zinc-800 border border-slate-205 dark:border-zinc-800 text-slate-700 dark:text-zinc-300 rounded-lg font-semibold flex items-center gap-1 cursor-pointer transition-colors text-xs"
+              className="company-profile-edit px-3.5 py-1.5 bg-white hover:bg-slate-50 dark:bg-zinc-900 dark:hover:bg-zinc-800 border border-slate-205 dark:border-zinc-800 text-slate-700 dark:text-zinc-300 rounded-lg font-semibold flex items-center gap-1 cursor-pointer transition-colors text-xs"
             >
               <Edit2 className="w-3.5 h-3.5" />
               <span>{t("Edit Company Profile")}</span>
@@ -233,7 +234,7 @@ export default function CompanyDetailView({
             <button
               type="button"
               onClick={() => onDeleteCompany(company.id, company.name)}
-              className="px-3 py-1.5 bg-rose-50 hover:bg-rose-100 dark:bg-rose-950/20 text-rose-600 dark:text-rose-400 rounded-lg font-bold flex items-center gap-1 cursor-pointer transition-colors text-xs"
+              className="company-profile-delete px-3 py-1.5 bg-rose-50 hover:bg-rose-100 dark:bg-rose-950/20 text-rose-600 dark:text-rose-400 rounded-lg font-bold flex items-center gap-1 cursor-pointer transition-colors text-xs"
             >
               <Trash2 className="w-3.5 h-3.5" />
               <span>{t("Remove Company")}</span>
@@ -244,7 +245,7 @@ export default function CompanyDetailView({
       </div>
 
       {/* CRM Navigation Tabs selectors (10 TAB) */}
-      <div className="overflow-x-auto border-b border-slate-100 dark:border-zinc-900/60 pb-1 flex items-center gap-1 scrollbar-thin z-10 sticky top-0 bg-[#FAF9F8] dark:bg-[#0B0B0C] pt-1">
+      <div className="company-detail-tabs overflow-x-auto border-b border-slate-100 dark:border-zinc-900/60 pb-1 flex items-center gap-1 scrollbar-thin z-10 sticky top-0 bg-[#FAF9F8] dark:bg-[#0B0B0C] pt-1">
         {[
           { id: "overview", label: t("Overview"), icon: <Building className="w-3.5 h-3.5" /> },
           { id: "contacts", label: t("Contacts"), icon: <Users className="w-3.5 h-3.5" /> },
@@ -261,6 +262,7 @@ export default function CompanyDetailView({
           return (
             <button
               key={tab.id}
+              data-active={active}
               type="button"
               onClick={() => setDetailTab(tab.id)}
               className={`px-3.5 py-1.5 rounded-lg font-bold flex items-center gap-1.5 transition-all text-xs cursor-pointer shrink-0 ${
@@ -277,7 +279,7 @@ export default function CompanyDetailView({
       </div>
 
       {/* Render Active Tab */}
-      <div className="bg-[#FAF9F8] dark:bg-[#0B0B0C] min-h-[380px] rounded-xl pt-2 animate-fadeIn">
+      <div className="company-detail-body bg-[#FAF9F8] dark:bg-[#0B0B0C] min-h-[380px] rounded-xl pt-2 animate-fadeIn">
         
         {/* Tab 1: Overview */}
         {detailTab === "overview" && (

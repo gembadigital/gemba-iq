@@ -86,7 +86,7 @@ export default function CompanyOverviewTab({
     isCustom = false
   ) => {
     return (
-      <div className="p-2.5 bg-slate-50/50 dark:bg-zinc-900/40 rounded-lg border border-slate-100 dark:border-zinc-800/50 font-sans text-xs">
+      <div className="company-form-field p-2.5 bg-slate-50/50 dark:bg-zinc-900/40 rounded-lg border border-slate-100 dark:border-zinc-800/50 font-sans text-xs">
         <label className="text-[10px] uppercase font-bold text-slate-400 dark:text-zinc-500 font-mono block mb-1">
           {label}
         </label>
@@ -124,12 +124,12 @@ export default function CompanyOverviewTab({
   };
 
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 font-sans">
+    <div className="company-overview grid grid-cols-1 lg:grid-cols-12 gap-5 font-sans">
       
       {/* LEFT: Core Corporate Registry Details (7 columns) */}
       <div className="lg:col-span-7 space-y-4">
-        <div className="bg-white dark:bg-[#151515] p-5 rounded-xl border border-slate-100 dark:border-zinc-800/80 shadow-[0_1px_3px_rgba(0,0,0,0.02)] space-y-4">
-          <div className="flex items-center gap-2 border-b border-slate-100 dark:border-zinc-800/80 pb-2.5">
+        <div className="company-section bg-white dark:bg-[#151515] p-5 rounded-xl border border-slate-100 dark:border-zinc-800/80 shadow-[0_1px_3px_rgba(0,0,0,0.02)] space-y-4">
+          <div className="company-section-heading flex items-center gap-2 border-b border-slate-100 dark:border-zinc-800/80 pb-2.5">
             <Building className="w-4 h-4 text-[#0078D4]" />
             <h4 className="text-xs font-bold uppercase text-slate-800 dark:text-zinc-200 tracking-wider">
               {t("Company Profile & Identity")}
@@ -195,8 +195,8 @@ export default function CompanyOverviewTab({
         </div>
 
         {/* Address and Tax Information Card */}
-        <div className="bg-white dark:bg-[#151515] p-5 rounded-xl border border-slate-100 dark:border-zinc-800/80 shadow-[0_1px_3px_rgba(0,0,0,0.02)] space-y-4">
-          <div className="flex items-center gap-2 border-b border-slate-100 dark:border-zinc-800/80 pb-2.5">
+        <div className="company-section bg-white dark:bg-[#151515] p-5 rounded-xl border border-slate-100 dark:border-zinc-800/80 shadow-[0_1px_3px_rgba(0,0,0,0.02)] space-y-4">
+          <div className="company-section-heading flex items-center gap-2 border-b border-slate-100 dark:border-zinc-800/80 pb-2.5">
             <MapPin className="w-4 h-4 text-[#0078D4]" />
             <h4 className="text-xs font-bold uppercase text-slate-800 dark:text-zinc-200 tracking-wider">
               {t("Location & Billing Details")}
@@ -221,8 +221,8 @@ export default function CompanyOverviewTab({
       <div className="lg:col-span-5 space-y-4">
         
         {/* Plant Attributes & Lean Profile Card */}
-        <div className="bg-white dark:bg-[#151515] p-5 rounded-xl border border-slate-100 dark:border-zinc-800/80 shadow-[0_1px_3px_rgba(0,0,0,0.02)] space-y-4">
-          <div className="flex items-center gap-2 border-b border-slate-100 dark:border-zinc-800/80 pb-2.5">
+        <div className="company-section bg-white dark:bg-[#151515] p-5 rounded-xl border border-slate-100 dark:border-zinc-800/80 shadow-[0_1px_3px_rgba(0,0,0,0.02)] space-y-4">
+          <div className="company-section-heading flex items-center gap-2 border-b border-slate-100 dark:border-zinc-800/80 pb-2.5">
             <TrendingUp className="w-4 h-4 text-emerald-500" />
             <h4 className="text-xs font-bold uppercase text-slate-800 dark:text-zinc-200 tracking-wider">
               {t("Plant & Lean Production Profile")}
@@ -273,8 +273,8 @@ export default function CompanyOverviewTab({
         {/* ISO Certification & Compliance Card (Item 2: "Sahip Olunan
             Belgeler") — artık her zaman düzenlenebilir bir onay kutusu
             listesi olarak gösteriliyor, ayrı bir "kalem" edit modu yok. */}
-        <div className="bg-white dark:bg-[#151515] p-5 rounded-xl border border-slate-100 dark:border-zinc-800/80 shadow-[0_1px_3px_rgba(0,0,0,0.02)] space-y-3">
-          <div className="flex items-center gap-2 border-b border-slate-100 dark:border-zinc-800/80 pb-2.5">
+        <div className="company-section bg-white dark:bg-[#151515] p-5 rounded-xl border border-slate-100 dark:border-zinc-800/80 shadow-[0_1px_3px_rgba(0,0,0,0.02)] space-y-3">
+          <div className="company-section-heading flex items-center gap-2 border-b border-slate-100 dark:border-zinc-800/80 pb-2.5">
             <Shield className="w-4 h-4 text-blue-500" />
             <h4 className="text-xs font-bold uppercase text-slate-800 dark:text-zinc-200 tracking-wider">
               {t("ISO Certification & Compliance")}
@@ -315,8 +315,8 @@ export default function CompanyOverviewTab({
         </div>
 
         {/* Custom Fields Card */}
-        <div className="bg-white dark:bg-[#151515] p-5 rounded-xl border border-slate-100 dark:border-zinc-800/80 shadow-[0_1px_3px_rgba(0,0,0,0.02)] space-y-4">
-          <div className="flex items-center gap-2 border-b border-slate-100 dark:border-zinc-800/80 pb-2.5">
+        <div className="company-section bg-white dark:bg-[#151515] p-5 rounded-xl border border-slate-100 dark:border-zinc-800/80 shadow-[0_1px_3px_rgba(0,0,0,0.02)] space-y-4">
+          <div className="company-section-heading flex items-center gap-2 border-b border-slate-100 dark:border-zinc-800/80 pb-2.5">
             <Layers className="w-4 h-4 text-purple-500" />
             <h4 className="text-xs font-bold uppercase text-slate-800 dark:text-zinc-200 tracking-wider">
               {t("Custom Corporate Fields")}
