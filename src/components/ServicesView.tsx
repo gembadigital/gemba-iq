@@ -1329,6 +1329,7 @@ export default function ServicesView({
       probe.style.width = `${INNER_CONTENT_WIDTH_PX}px`;
       probe.style.visibility = "hidden";
       probe.style.fontFamily = "Arial, sans-serif";
+      probe.style.display = "flow-root";
       document.body.appendChild(probe);
       const heights = blocksHtml.map((html) => {
         probe.innerHTML = html;
@@ -1583,7 +1584,7 @@ export default function ServicesView({
           if (isUppercase) {
             return `<h3 style="font-family: Arial, sans-serif; font-size: 11pt; font-weight: bold; color: #b91c1c; margin-top: 14px; margin-bottom: 6px; text-transform: uppercase; border-bottom: 1px solid #f1f5f9; padding-bottom: 2px;">${trimmed}</h3>`;
           } else {
-            return `<p style="font-family: Arial, sans-serif; font-size: 9.5pt; line-height: 1.5; color: #334155; margin-bottom: 8px; text-align: justify;">${trimmed}</p>`;
+            return `<p style="font-family: Arial, sans-serif; font-size: 9.5pt; line-height: 1.5; color: #334155; margin: 0 0 8px; text-align: justify;">${trimmed}</p>`;
           }
         })
         .filter(Boolean);
