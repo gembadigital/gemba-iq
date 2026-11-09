@@ -372,4 +372,22 @@
   .gemba-stitch-skin.dark .sales-dashboard :where(.text-rose-500, .text-rose-600) { color: #ffa2af !important; }
 }
 
+/* Sidebar scrollbars follow the menu palette, including hover and dark mode. */
+@media screen {
+  .gemba-stitch-skin [data-ui-sidebar],
+  .gemba-stitch-skin [data-ui-sidebar] * {
+    --stitch-nav-scrollbar: color-mix(in srgb, var(--stitch-nav) 85%, black);
+    scrollbar-color: var(--stitch-nav-scrollbar) var(--stitch-nav) !important;
+    scrollbar-width: thin;
+  }
+  .gemba-stitch-skin [data-ui-sidebar]::-webkit-scrollbar-track,
+  .gemba-stitch-skin [data-ui-sidebar] *::-webkit-scrollbar-track,
+  .gemba-stitch-skin [data-ui-sidebar]::-webkit-scrollbar-corner,
+  .gemba-stitch-skin [data-ui-sidebar] *::-webkit-scrollbar-corner { background: var(--stitch-nav) !important; }
+  .gemba-stitch-skin [data-ui-sidebar]::-webkit-scrollbar-thumb,
+  .gemba-stitch-skin [data-ui-sidebar] *::-webkit-scrollbar-thumb,
+  .gemba-stitch-skin [data-ui-sidebar]::-webkit-scrollbar-thumb:hover,
+  .gemba-stitch-skin [data-ui-sidebar] *::-webkit-scrollbar-thumb:hover { background: var(--stitch-nav-scrollbar) !important; border-radius: 3px; }
+}
+
 }
