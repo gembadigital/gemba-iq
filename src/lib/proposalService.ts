@@ -3,7 +3,7 @@ import { getActiveOrganizationId, getTenantActorName } from "./tenantStorage";
 import { persistProposals } from "./crmSupabaseService";
 import { CrmDb } from "./CrmDb";
 import { applyPlaceholders, extractPlaceholdersFromTemplate } from "./proposalPlaceholderEngine";
-import { generateProposalPdfBlob } from "./proposalPdf";
+
 import { uploadBlobDocument } from "./enterpriseDocumentService";
 import type {
   Proposal,
@@ -340,6 +340,9 @@ export async function createEnterpriseProposal(proposalData: Proposal): Promise<
     taxes: proposalData.taxes,
     grandTotal: proposalData.grandTotal,
     coverPage: proposalData.coverPage,
+    activityTableHtml: proposalData.activityTableHtml,
+    serviceName: proposalData.serviceName,
+    serviceCode: proposalData.serviceCode,
     methodology: proposalData.methodology,
     projectPlan: proposalData.projectPlan,
     timeline: proposalData.timeline,
@@ -403,6 +406,9 @@ export async function createProposalRevision(
     taxes: proposal.taxes,
     grandTotal: proposal.grandTotal,
     coverPage: proposal.coverPage,
+    activityTableHtml: proposal.activityTableHtml,
+    serviceName: proposal.serviceName,
+    serviceCode: proposal.serviceCode,
     methodology: proposal.methodology,
     projectPlan: proposal.projectPlan,
     timeline: proposal.timeline,
@@ -572,10 +578,10 @@ export async function sendProposalEmail(
 // html2canvas-pro render used for "PDF İndir" and the on-screen "Yazdır"
 // preview) pass that exact file through, so the copy auto-stored in
 // Documents visually matches what the user actually sees/downloads/prints.
-// Falls back to the old generic jsPDF renderer only when no capture was
-// possible (e.g. called from a context with no DOM to render into).
+// A missing capture must be retried, never replaced with a different document.
 export async function storeProposalPdf(proposal: Proposal, lang: string, preGeneratedBlob?: Blob): Promise<void> {
-  const blob = preGeneratedBlob || generateProposalPdfBlob(proposal, lang);
+  if (!preGeneratedBlob) throw new Error("Tam teklif PDF dosyası oluşturulmadan kaydedilemez.");
+  const blob = preGeneratedBlob;
   const filename = `Proposal_${proposal.proposalNumber}_${proposal.currentVersion}_${proposal.companyName.replace(/[^a-zA-Z0-9_-]+/g, "_")}.pdf`;
 
   await uploadBlobDocument({

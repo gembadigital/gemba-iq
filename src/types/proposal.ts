@@ -47,6 +47,9 @@ export interface ProposalOptionRow {
 }
 
 export interface ProposalOption {
+  name?: string;
+  desc?: string;
+  duration?: string;
   training: boolean;
   consulting: boolean;
   workshop: boolean;
@@ -72,6 +75,9 @@ export interface ProposalVersion {
   taxes: number;
   grandTotal: number;
   notes?: string;
+  activityTableHtml?: string;
+  serviceName?: string;
+  serviceCode?: string;
   // Custom templates and images
   coverPage?: string;
   methodology?: string;
@@ -147,6 +153,9 @@ export interface Proposal {
   timelineEvents?: ProposalTimelineEvent[];
   auditLog?: ProposalAuditLog[];
 
+  activityTableHtml?: string;
+  serviceName?: string;
+  serviceCode?: string;
   // Custom templates and images
   coverPage?: string;
   methodology?: string;

@@ -1362,50 +1362,7 @@ export function ProposalContractSection({
         document.body.removeChild(a);
         URL.revokeObjectURL(url);
       } else {
-        // Fallback: legacy simple text-only PDF, only if real capture fails
-        const doc = new jsPDF({ orientation: "portrait", unit: "mm", format: "a4" });
-        doc.setFillColor("#0f172a");
-        doc.rect(0, 0, 210, 8, "F");
-        doc.setTextColor("#0f172a");
-        doc.setFont("Helvetica", "bold");
-        doc.setFontSize(14);
-        doc.text("GEMBA PARTNER OPERATIONAL EXCELLENCE B2B PORTAL", 15, 18);
-        doc.setFont("Helvetica", "normal");
-        doc.setFontSize(8);
-        doc.setTextColor("#64748b");
-        doc.text(`Official Proposal Documentation`, 15, 23);
-        doc.line(15, 25, 195, 25);
-        doc.setTextColor("#1e293b");
-        doc.setFontSize(11);
-        doc.setFont("Helvetica", "bold");
-        doc.text(`PROPOSAL NUMBER: #${prop.proposalNumber}`, 15, 33);
-        doc.text(`SUBJECT: ${prop.proposalSubject || "Lean Transformation"}`, 15, 39);
-        doc.setFont("Helvetica", "normal");
-        doc.setFontSize(9);
-        doc.text(`Prepared For: ${prop.companyName}`, 15, 47);
-        doc.text(`Attention: ${prop.contactPerson} (${prop.contactEmail || "N/A"})`, 15, 52);
-        doc.text(`Proposal Date: ${prop.date}`, 15, 57);
-        doc.text(`Prepared By: ${prop.owner || "Gemba Partner Advisor"}`, 15, 62);
-        doc.text(`Current Version: ${prop.currentVersion}`, 15, 67);
-        doc.setFont("Helvetica", "bold");
-        doc.text(`SERVICES INCLUDED:`, 15, 75);
-        doc.setFont("Helvetica", "normal");
-        let y = 80;
-        prop.services.forEach((s) => {
-          doc.text(`- ${s}`, 20, y);
-          y += 5;
-        });
-        y += 5;
-        doc.setFont("Helvetica", "bold");
-        doc.text(`FINANCIAL COMMERCIAL QUOTE:`, 15, y);
-        doc.setFont("Helvetica", "normal");
-        y += 5;
-        doc.text(`Total Base Budget: ${prop.currency || "₺"}${formatSystemNumber(prop.totalBudget)}`, 20, y);
-        y += 5;
-        doc.text(`Discount Applied: ${prop.currency || "₺"}${formatSystemNumber((prop as any).discount || 0)}`, 20, y);
-        y += 5;
-        doc.text(`Grand Total Amount (Inc Taxes): ${prop.currency || "₺"}${formatSystemNumber(prop.grandTotal)}`, 20, y);
-        doc.save(`Proposal_${prop.proposalNumber}_${prop.currentVersion}.pdf`);
+        throw new Error("PDF oluşturulamadı. Önizlemeyi tekrar açıp deneyin.");
       }
 
       // Add Audit
@@ -1594,6 +1551,7 @@ export function ProposalContractSection({
       // Attach the real branded letterhead PDF (same one "İndir" produces),
       // instead of the old drawer behavior of sending with no attachment.
       const captured = await capturePdf(activeProposal).catch(() => null);
+      if (!captured) throw new Error("PDF oluşturulamadı; e-posta gönderilmedi.");
       const attachments = captured
         ? [{ name: captured.filename, contentType: "application/pdf", contentBytes: captured.base64 }]
         : [];

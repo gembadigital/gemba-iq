@@ -44,7 +44,7 @@ import { CrmDb } from "../lib/CrmDb";
 import { fetchPersonalMailbox } from "../lib/personalMailbox";
 import { fetchOrganizationMailbox } from "../lib/organizationMailbox";
 import LossReasonModal, { LossReasonResult } from "./shared/LossReasonModal";
-import { generateProposalPdfBlobUrl, generateProposalPdfBlob } from "../lib/proposalPdf";
+
 import { renderElementToPdfBase64, base64ToBlob } from "../lib/htmlToPdf";
 import {
   createEnterpriseProposal,
@@ -195,15 +195,7 @@ export default function ProposalManagementView() {
     let url = "";
     let cancelled = false;
     if (selectedProposalForDetail) {
-      // Bu çekmece daha önce eski, jenerik jsPDF üretecini (generateProposalPdfBlobUrl)
-      // kullanıyordu — bu yüzden listede bir teklife tıklandığında görünen PDF,
-      // gerçek marka/kapak/logo içeren "Yazdır" önizlemesinden ve indirilen
-      // dosyadan (handleDownloadPdf, captureProposalPdf kullanır) FARKLI bir
-      // belgeydi. Artık aynı gerçek HTML letterhead'i (ProposalLetterheadBody)
-      // html2canvas-pro ile yakalayan captureProposalPdf kullanılıyor, böylece
-      // görüntüleme, indirme ve Documents'a otomatik kaydedilen kopya birbiriyle
-      // tutarlı. Yakalama başarısız olursa (ör. DOM hazır değilse) eski üretece
-      // düşülüyor — görüntüleyici hiçbir zaman tamamen boş kalmasın diye.
+      // Preview, download and stored copy use the complete shared document.
       captureProposalPdf(selectedProposalForDetail)
         .then((captured) => {
           if (cancelled) return;
@@ -212,9 +204,8 @@ export default function ProposalManagementView() {
             setDetailPdfUrl(url);
             void storeProposalPdf(selectedProposalForDetail, lang, captured.blob);
           } else {
-            url = generateProposalPdfBlobUrl(selectedProposalForDetail, lang);
-            setDetailPdfUrl(url);
-            void storeProposalPdf(selectedProposalForDetail, lang);
+            setDetailPdfUrl("");
+            console.error("Teklif PDF oluşturulamadı; önizleme yeniden açılmalı.");
           }
         })
         .catch((err) => {
@@ -407,6 +398,7 @@ export default function ProposalManagementView() {
     const restoredProposal: Proposal = {
       ...proposal,
       currentVersion: ver.version,
+      ...Object.fromEntries(["coverPage", "activityTableHtml", "serviceName", "serviceCode", "methodology", "projectPlan", "timeline", "terms", "coverImage", "pageImage"].filter(key => Object.prototype.hasOwnProperty.call(ver, key)).map(key => [key, ver[key]])),
       proposalSubject: ver.subject,
       currency: ver.currency as any,
       options: ver.options,
@@ -500,7 +492,7 @@ export default function ProposalManagementView() {
             contentBytes: captured.base64,
           });
         } else {
-          alert(t("PDF could not be generated for attachment; sending without a PDF attached."));
+          throw new Error("PDF oluşturulamadı. E-posta gönderilmedi; önizlemeyi tekrar açıp deneyin.");
         }
       }
 
@@ -619,14 +611,14 @@ export default function ProposalManagementView() {
     }
   };
 
-  // Direct PDF download for a saved proposal \u2014 previously the list only
-  // offered a Word (.doc) download; the user asked for PDF to be available
-  // directly instead of Word where possible. Tries the real HTML/CSS
-  // letterhead capture first (matches "Yazd\u0131r"); falls back to the old
-  // jsPDF renderer only if that capture fails, so download never breaks.
+  // Never download a generic fallback that omits proposal sections.
   const handleDownloadPdf = async (proposal: Proposal) => {
     const captured = await captureProposalPdf(proposal).catch(() => null);
-    const blob = captured?.blob || generateProposalPdfBlob(proposal, lang);
+    if (!captured) {
+      alert("PDF oluşturulamadı. Önizlemeyi tekrar açıp deneyin.");
+      return;
+    }
+    const blob = captured.blob;
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;

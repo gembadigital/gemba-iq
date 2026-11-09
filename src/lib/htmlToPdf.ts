@@ -1,65 +1,28 @@
 import { jsPDF } from "jspdf";
 import html2canvas from "html2canvas-pro";
 
-// Shared A4 HTML-to-PDF capture helper — extracted from ServicesView.tsx's
-// battle-tested generateProposalPdfBase64() (same html2canvas-pro options,
-// same page-slicing math, same 25s hard timeout) so that other screens
-// (e.g. ProposalManagementView.tsx's "Teklif Yönetimi" list) can produce a
-// PDF that visually matches the real on-screen HTML/CSS document — instead
-// of a separate, disconnected, hand-drawn jsPDF renderer that doesn't know
-// about the proposal's real content, letterhead colors, or uploaded
-// cover/page images.
+// Capture each actual A4 page separately so preview spacing never becomes
+// extra PDF pages, and letterhead images repeat at the correct position.
 export async function renderElementToPdfBase64(
   sourceEl: HTMLElement,
   filename: string
 ): Promise<{ base64: string; filename: string } | null> {
   const renderPdf = async (): Promise<{ base64: string; filename: string }> => {
-    const canvas = await html2canvas(sourceEl, {
-      scale: 1.5,
-      useCORS: true,
-      backgroundColor: "#ffffff",
-      logging: false,
-      // Bounds any single slow/CORS-blocked image so it can never hang the
-      // whole capture indefinitely (html2canvas's own default is no timeout).
-      imageTimeout: 8000,
-      // Without explicit width/height/windowWidth/windowHeight, html2canvas
-      // sizes its capture viewport to the current browser window instead of
-      // the full (often much taller) document — cutting off multi-page
-      // content instead of capturing all of it.
-      width: sourceEl.scrollWidth,
-      height: sourceEl.scrollHeight,
-      windowWidth: sourceEl.scrollWidth,
-      windowHeight: sourceEl.scrollHeight,
-    });
-
+    await document.fonts.ready;
+    const pages = Array.from(sourceEl.querySelectorAll<HTMLElement>(".a4-page"));
+    if (!pages.length) throw new Error("Teklif sayfaları henüz hazır değil.");
+    await Promise.all(Array.from(sourceEl.querySelectorAll("img")).map(img => img.decode().catch(() => undefined)));
     const pdf = new jsPDF({ unit: "pt", format: "a4" });
-    const pageWidthPt = pdf.internal.pageSize.getWidth();
-    const pageHeightPt = pdf.internal.pageSize.getHeight();
-
-    const pxPerPt = canvas.width / pageWidthPt;
-    const pageHeightPx = Math.max(1, Math.floor(pageHeightPt * pxPerPt));
-
-    const pageCanvas = document.createElement("canvas");
-    pageCanvas.width = canvas.width;
-    const pageCtx = pageCanvas.getContext("2d");
-
-    let renderedPx = 0;
-    let pageIndex = 0;
-    while (renderedPx < canvas.height) {
-      const sliceHeightPx = Math.min(pageHeightPx, canvas.height - renderedPx);
-      pageCanvas.height = sliceHeightPx;
-      pageCtx?.clearRect(0, 0, pageCanvas.width, sliceHeightPx);
-      pageCtx?.drawImage(
-        canvas,
-        0, renderedPx, canvas.width, sliceHeightPx,
-        0, 0, canvas.width, sliceHeightPx
-      );
-      const sliceDataUrl = pageCanvas.toDataURL("image/jpeg", 0.92);
-      const sliceHeightPt = sliceHeightPx / pxPerPt;
-      if (pageIndex > 0) pdf.addPage();
-      pdf.addImage(sliceDataUrl, "JPEG", 0, 0, pageWidthPt, sliceHeightPt);
-      renderedPx += sliceHeightPx;
-      pageIndex++;
+    for (let i = 0; i < pages.length; i++) {
+      const page = pages[i];
+      const canvas = await html2canvas(page, {
+        scale: 1.5, useCORS: true, backgroundColor: "#ffffff", logging: false,
+        imageTimeout: 8000, width: page.offsetWidth, height: page.offsetHeight,
+        windowWidth: Math.max(1024, page.offsetWidth), windowHeight: page.offsetHeight,
+      });
+      if (i) pdf.addPage();
+      pdf.addImage(canvas.toDataURL("image/jpeg", .92), "JPEG", 0, 0,
+        pdf.internal.pageSize.getWidth(), pdf.internal.pageSize.getHeight());
     }
 
     const dataUri = pdf.output("datauristring");
@@ -69,7 +32,7 @@ export async function renderElementToPdfBase64(
 
   try {
     const timeout = new Promise<null>((resolve) => {
-      setTimeout(() => resolve(null), 25000);
+      setTimeout(() => resolve(null), 60000);
     });
     return await Promise.race([renderPdf(), timeout]);
   } catch (err) {

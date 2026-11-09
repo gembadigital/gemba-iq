@@ -53,17 +53,7 @@ import {
   AlertTriangle
 } from "lucide-react";
 import { convertCurrencyToTurkishWords, convertNumberToTurkishWords } from "./ContractManagerView";
-import { jsPDF } from "jspdf";
-// html2canvas-pro (not the plain "html2canvas" package) — this app's CSS is
-// built with Tailwind v4, whose default color palette is defined using
-// modern oklch() color functions. Plain html2canvas 1.4.1 cannot parse
-// oklch()/lab()/lch()/color-mix() and throws when it hits them while
-// resolving computed styles, which is virtually every element here (badges,
-// borders, backgrounds all use Tailwind's default palette) — this is what
-// was actually breaking real proposal PDFs (e.g. "Vakko"), not just the
-// earlier external-logo timeout. html2canvas-pro is a maintained,
-// API-compatible fork that adds support for these color functions.
-import html2canvas from "html2canvas-pro";
+
 import Docxtemplater from "docxtemplater";
 import PizZip from "pizzip";
 import { CrmDb } from "../lib/CrmDb";
@@ -83,7 +73,9 @@ import { formatSystemNumber } from "../lib/currencyHelper";
 
 import importedServiceCatalog from "../data/serviceCatalog.json";
 import { serviceDefinitionBlocks } from "../lib/serviceDefinition";
-import { paginateProposalTables, styleProposalActivityTables, PROPOSAL_TABLE_TIERS } from "../lib/proposalTableLayout";
+import type { ProposalOption } from "../types/proposal";
+import { buildProposalDocument } from "../lib/proposalDocument";
+import { renderElementToPdfBase64 } from "../lib/htmlToPdf";
 
 // --- CORE INTERFACES ---
 interface ServiceCard {
@@ -851,10 +843,12 @@ export default function ServicesView({
     setIsNumberManuallyEdited(true);
     setWizardTermsAndConditions(proposal.terms || "");
     setWizardCoverPage(proposal.coverPage || "");
+    setWizardTableHtml(proposal.activityTableHtml ?? [proposal.methodology, proposal.projectPlan, proposal.timeline].filter(Boolean).join("\n"));
 
     // Hizmet kartı birebir id olarak saklanmıyor; kayıtlı hizmet adlarından
     // en iyi eşleşen kartı bulmaya çalış (bulunamazsa mevcut seçim kalır).
     const matchingCard = serviceCards.find((c) =>
+      (proposal.serviceCode && proposal.serviceCode === c.code) || proposal.serviceName === c.name ||
       (proposal.services || []).some((s: string) => s === c.name)
     );
     if (matchingCard) setSelectedCardId(matchingCard.id);
@@ -1279,622 +1273,24 @@ export default function ServicesView({
 
   const assembleDocument = () => {
     if (!selectedService) return "";
-
-    // ------------------------------------------------------------------
-    // Kullanıcı hatası: "7 sayfalık teklif dosyası 11 sayfaya çıktı...
-    // hizalamada kayma var... yazılı olan maddeler sayfaya sığmadığında
-    // bir sonraki sayfaya aktarma yapmıyordu... hizmet kataloğunda yazan
-    // TÜM maddelerin teklif dosyalarında gözükmesini istiyorum."
-    //
-    // Kök neden: her iç sayfa sabit 297mm yükseklikte ve overflow:hidden
-    // idi; sayfa SAYISI da gerçek içerik yüksekliği hiç ölçülmeden statik
-    // bir formülle (kapak mektubu her zaman 1 sayfa, efor tablosu en
-    // fazla 2 sayfa gibi) belirleniyordu — sığmayan içerik sessizce
-    // kırpılıyordu (Hizmet Kataloğu'ndaki uzun "Proje Tanımı ve Kapsamı /
-    // Amacı / Hedeflenen Çıktılar" gibi bölümler dahil). Ayrıca PDF
-    // üretimi (generateProposalPdfBase64) tüm sayfaları TEK bir canvas
-    // olarak yakalayıp sabit piksel yüksekliğinde diliyordu; sayfalar
-    // arası 30px boşluk bu hesaba hiç dahil edilmediğinden her sayfada
-    // birikimli bir kayma oluşuyor, bu da hem görsel hizalama bozukluğuna
-    // hem de fazladan dilim/sayfa üretilmesine (7 -> 11) yol açıyordu.
-    //
-    // Çözüm: aşağıdaki yardımcılar her blok/tablo satırının GERÇEK render
-    // yüksekliğini (offsetHeight) ölçüp, bir sayfaya sığdığı kadarını
-    // yerleştirip taşanı otomatik olarak bir sonraki sayfaya aktarıyor —
-    // sayfa sayısı artık gerçek içerikten türetiliyor, hiçbir madde
-    // kaybolmuyor. PDF yakalama tarafındaki düzeltme ise
-    // generateProposalPdfBase64 içinde: artık tüm belgeyi tek parça
-    // dilimlemek yerine her ".a4-page" DIV'i ayrı ayrı yakalanıp kendi PDF
-    // sayfası olarak ekleniyor — kayma ve fazladan sayfa sorunu kökten
-    // ortadan kalkıyor.
-    const mmToPx = (mm: number) => (mm * 96) / 25.4;
-    // "Safe Content Zone" boyutu: createA4PageContent aşağıda
-    // padding: 38mm 20mm 36mm 20mm kullanıyor -> içerik kutusu 170mm x 223mm.
-    const INNER_CONTENT_WIDTH_PX = mmToPx(170);
-    const INNER_CONTENT_HEIGHT_PX = mmToPx(223);
-    // Efor tablosu / şartlar sayfalarında, ölçülen bloklardan AYRI olarak
-    // uygulamanın eklediği statik bir <h3> başlık (+ isteğe bağlı kısa bir
-    // giriş paragrafı) de yer kaplar; bu, o sayfalar için kullanılabilir
-    // bütçeden düşülüyor ki ölçüme dahil edilmeyen bu başlık payı sığmayı
-    // bozmasın.
-    const SECTION_HEADING_RESERVE_PX = mmToPx(22);
-
-    // Görünmez bir ölçüm kutusu içinde, verilen HTML parçalarının HER
-    // BİRİNİN gerçek render edilmiş piksel yüksekliğini tek tek ölçer.
-    const measureBlockHeightsPx = (blocksHtml: string[]): number[] => {
-      if (typeof document === "undefined" || blocksHtml.length === 0) return blocksHtml.map(() => 0);
-      const probe = document.createElement("div");
-      probe.style.position = "fixed";
-      probe.style.left = "-99999px";
-      probe.style.top = "0";
-      probe.style.width = `${INNER_CONTENT_WIDTH_PX}px`;
-      probe.style.visibility = "hidden";
-      probe.style.fontFamily = "Arial, sans-serif";
-      probe.style.display = "flow-root";
-      document.body.appendChild(probe);
-      const heights = blocksHtml.map((html) => {
-        probe.innerHTML = html;
-        return probe.offsetHeight;
-      });
-      document.body.removeChild(probe);
-      return heights;
-    };
-
-    // Bağımsız HTML bloklarını (paragraf/başlık gibi), verilen maksimum
-    // yüksekliğe göre açgözlü (greedy) şekilde "sayfalara" paketler —
-    // hiçbir blok atlanmaz, sığmayan blok bir sonraki sayfaya taşınır.
-    const packBlocksIntoPages = (blocksHtml: string[], maxHeightPx: number): string[] => {
-      if (blocksHtml.length === 0) return [""];
-      const heights = measureBlockHeightsPx(blocksHtml);
-      const pages: string[] = [];
-      let currentBlocks: string[] = [];
-      let currentHeight = 0;
-      blocksHtml.forEach((html, i) => {
-        const h = heights[i];
-        if (currentBlocks.length > 0 && currentHeight + h > maxHeightPx) {
-          pages.push(currentBlocks.join(""));
-          currentBlocks = [];
-          currentHeight = 0;
-        }
-        currentBlocks.push(html);
-        currentHeight += h;
-      });
-      if (currentBlocks.length > 0) pages.push(currentBlocks.join(""));
-      return pages.length > 0 ? pages : [""];
-    };
-
-    // Bir <table>'ın satırlarını (her sayfada <thead> tekrar edilerek)
-    // gerçek satır yüksekliğine göre birden fazla tabloya/sayfaya böler.
-    const paginateTableRows = (styledTableHtml: string, maxHeightPx: number): string[] =>
-      paginateProposalTables(styledTableHtml, INNER_CONTENT_WIDTH_PX, maxHeightPx);
-
-    // Keep the activity introduction beside its table, avoiding a mostly
-    // empty page between the scope and the actual work plan.
-    const showEffortIntroPage = false;
-
-    const activeOptions: number[] = [];
-    if (option1Active) activeOptions.push(1);
-    if (option2Active) activeOptions.push(2);
-    if (option3Active) activeOptions.push(3);
-
-    let currentCalculatedPageIndex = 1;
-    let fullHtmlString = "";
-
-    // Styles block at the very top of compiled HTML
-    fullHtmlString += `
-      <style>
-        .a4-page {
-          width: 210mm;
-          height: 297mm;
-          box-sizing: border-box;
-          position: relative;
-          background-color: white;
-          margin: 0 auto 30px auto;
-          box-shadow: 0 4px 15px rgba(0,0,0,0.1);
-          font-family: 'Arial', sans-serif;
-          color: #1e293b;
-          page-break-after: always;
-          overflow-wrap: anywhere;
-          word-break: normal;
-        }
-        @media print {
-          body {
-            background: none !important;
-            padding: 0 !important;
-            margin: 0 !important;
-            -webkit-print-color-adjust: exact !important;
-            print-color-adjust: exact !important;
-          }
-          .a4-page {
-            margin: 0 !important;
-            box-shadow: none !important;
-            border: none !important;
-            page-break-after: always !important;
-            page-break-inside: avoid !important;
-            background-color: #ffffff !important;
-            -webkit-print-color-adjust: exact !important;
-            print-color-adjust: exact !important;
-          }
-        }
-      </style>
-    `;
-
-    // ---------------- PAGE 1 – COVER PAGE ----------------
-    // Use this service’s uploaded template, otherwise the bundled corporate cover.
-    const customCoverImage = inMemoryCoverTemplates[selectedCardId];
-    const hasCustomCover = !!customCoverImage;
-    
-    // Kullanıcı hatası: "cover png ve page png şablonları yazdırmada
-    // kaybolmuş" — kök neden, bir önceki düzeltmede yazdırma penceresine
-    // kopyalanan uygulama CSS'i içinde index.css'teki genel "Print
-    // Overrides" kuralı (@media print { div { background: #fff !important
-    // } }) da geliyor — bu kural DİĞER (tablo/liste) ekranların yazdırma
-    // çıktısını sadeleştirmek için var, ama ".a4-page" da bir div olduğundan
-    // arka plan resmini (cover.png/page.png/özel şablon) !important ile
-    // siliyordu. Inline stil normalde kazanır ama !important'lı bir
-    // stylesheet kuralına karşı kazanamaz — çözüm, buradaki arka plan
-    // deklarasyonlarını da !important yapmak (inline !important, aynı
-    // önem katmanında selector tabanlı kurallardan her zaman daha
-    // spesifiktir, böylece kazanır).
-    const coverBgStyle = hasCustomCover
-      ? `background-image: url(${customCoverImage}) !important; background-size: 100% 100% !important;`
-      : `background-image: url('/cover.png') !important; background-size: 100% 100% !important; background-color: #ffffff !important;`;
-
-    const formattedProposalNo = proposalNumber || `GEM-TEK-${new Date().getFullYear()}-${selectedService.code || "100"}`;
-    const formattedProposalDate = proposalDate ? proposalDate.split("-").reverse().join(".") : new Date().toLocaleDateString("tr-TR");
-
-    // Both the bundled and uploaded templates already contain the branding.
-    const coverPageHtml = `
-      <div class="a4-page" style="${coverBgStyle} width: 210mm; height: 297mm; position: relative; font-family: 'Arial', sans-serif; box-sizing: border-box; page-break-after: always; padding: 0; margin: 0 auto; background-color: #ffffff; box-shadow: 0 4px 15px rgba(0,0,0,0.1); overflow: hidden;">
-        
-        <!-- Branding is already included in cover.png / the uploaded template. -->
-
-        <!-- Title Zone
-             background: transparent !important eklendi — index.css'teki genel
-             "Print Overrides" kuralı (@media print { div { background: #ffffff
-             !important } }) bu div'e de uygulanıyordu; div left:0/right:0 tam
-             sayfa genişliğinde olduğundan, yazdırmada cover.png'nin sol
-             kenarındaki dekoratif çizginin üzerine tam bu satır hizasında
-             beyaz bir kesik/blok biniyordu. -->
-        <div style="position: absolute; top: 160mm; left: 0; right: 0; text-align: center; font-family: Arial, sans-serif; font-size: 18pt; font-weight: bold; color: #1a202c; letter-spacing: 1.5px; text-transform: uppercase; background: transparent !important;">
-          HİZMET TEKLİFİ
-        </div>
-
-        <!-- Metadata Information Zone (aynı sebeple background: transparent !important) -->
-        <div style="position: absolute; top: 200mm; left: 35mm; right: 25mm; font-family: Arial, sans-serif; font-size: 13pt; color: #1a202c; line-height: 2; background: transparent !important;">
-          <table style="width: 100%; border-collapse: collapse; border: none;">
-            <tr style="border: none;">
-              <td style="width: 48mm; font-weight: bold; padding: 2px 0; border: none; font-size: 12.5pt; font-family: Arial; color: #475569;">FİRMA ADI</td>
-              <td style="width: 5mm; font-weight: bold; padding: 2px 0; border: none; font-size: 12.5pt; font-family: Arial; color: #475569;">:</td>
-              <td style="font-weight: normal; padding: 2px 0; border: none; font-size: 12.5pt; font-family: Arial; color: #1e293b;">${(clientTitle || "MÜŞTERİ TANIMI").toUpperCase()}</td>
-            </tr>
-            <tr style="border: none;">
-              <td style="font-weight: bold; padding: 2px 0; border: none; font-size: 12.5pt; font-family: Arial; color: #475569;">TEKLİF KONUSU</td>
-              <td style="font-weight: bold; padding: 2px 0; border: none; font-size: 12.5pt; font-family: Arial; color: #475569;">:</td>
-              <td style="font-weight: normal; padding: 2px 0; border: none; font-size: 12.5pt; font-family: Arial; color: #1e293b;">${(selectedService?.name || "YALIN DÖNÜŞÜM HİZMETLERİ").toUpperCase()}</td>
-            </tr>
-            <tr style="border: none;">
-              <td style="font-weight: bold; padding: 2px 0; border: none; font-size: 12.5pt; font-family: Arial; color: #475569;">TARİH / TEKLİF NO</td>
-              <td style="font-weight: bold; padding: 2px 0; border: none; font-size: 12.5pt; font-family: Arial; color: #475569;">:</td>
-              <td style="font-weight: normal; padding: 2px 0; border: none; font-size: 12.5pt; font-family: Arial; color: #1e293b;">${formattedProposalDate} / ${formattedProposalNo}</td>
-            </tr>
-          </table>
-        </div>
-
-      </div>
-    `;
-
-    fullHtmlString += coverPageHtml;
-    currentCalculatedPageIndex++;
-
-    // Helper to format inner page structured blocks
-    const createA4PageContent = (pageIndex: number, maxPages: number, pageTitle: string, contentHtml: string) => {
-      const customPageImage = inMemoryPageTemplates[selectedCardId];
-      const hasCustomPage = !!customPageImage;
-      
-      // Bkz. coverBgStyle üzerindeki not: aynı sebeple (index.css'teki genel
-      // "@media print { div { background: ... !important } }" kuralı)
-      // burada da arka plan deklarasyonları !important yapılıyor, yoksa
-      // yazdırmada page.png/özel şablon kayboluyordu.
-      const bgStyle = hasCustomPage
-        ? `background-image: url(${customPageImage}) !important; background-size: 100% 100% !important; background-repeat: no-repeat !important;`
-        : `background-image: url('/page.png') !important; background-size: 100% 100% !important; background-repeat: no-repeat !important; background-color: #ffffff !important;`;
-
-      return `
-        <div class="a4-page" style="${bgStyle} width: 210mm; height: 297mm; position: relative; font-family: 'Arial', sans-serif; box-sizing: border-box; page-break-after: always; padding: 38mm 20mm 36mm 20mm; margin: 0 auto 30px auto; background-color: #ffffff; box-shadow: 0 4px 15px rgba(0,0,0,0.1); overflow: hidden;">
-          
-          <!-- Header, logo and footer are already included in the page template. -->
-
-          <!-- Page Number Overlay (Applied on custom pages too to ensure proper tracking) -->
-          <div style="position: absolute; right: 20mm; bottom: 31mm; font-family: Arial, sans-serif; font-size: 7.5pt; color: #475569; font-weight: bold; pointer-events: none;">
-            Sayfa ${pageIndex} / ${maxPages}
-          </div>
-
-          <!-- Safe Content Zone -->
-          <div style="height: 100%; box-sizing: border-box; overflow: hidden; display: flex; flex-direction: column; justify-content: flex-start; line-height: 1.5; font-family: Arial, sans-serif;">
-            ${contentHtml}
-          </div>
-
-        </div>
-      `;
-    };
-
-    // ---------------- KAPAK MEKTUBU: bloklara ayır ----------------
-    // Parse cover letter content to apply paragraph blocks & style fully capitalized headers
-    const parseCoverLetterBlocks = serviceDefinitionBlocks;
-
-    // Kullanıcı talebi: "efor tablosu iki sayfaya taştı. tek sayfada
-    // topla." — sabit tek bir punto/dolgu yerine, en okunaklıdan en sıkışığa
-    // doğru sıralı bir "tier" listesi tanımlanıyor. Aşağıdaki sayfalama
-    // adımında her tier sırayla denenip GERÇEK render yüksekliği ölçülüyor;
-    // tabloyu tek sayfaya sığdıran EN OKUNAKLI tier seçiliyor. Hiçbir tier
-    // sığdıramazsa (aşırı uzun tablo), önceki talep gereği ("hiçbir madde
-    // kaybolmasın") en sıkışık tier ile çok sayfaya bölünmeye geri düşülüyor
-    // — böylece içerik asla kırpılmıyor, ama normal boyuttaki tablolar artık
-    // gereksiz yere ikinci sayfaya taşmıyor.
-    const EFFORT_TABLE_TIERS = PROPOSAL_TABLE_TIERS;
-    const styleTableForA4Print = styleProposalActivityTables;
-
-    // Bir tablonun (thead+tbody dahil) TAM render yüksekliğini ölçer —
-    // tier seçiminde "tek sayfaya sığıyor mu?" testinde kullanılıyor.
-    const measureTableTotalHeightPx = (styledTableHtml: string): number => {
-      if (typeof document === "undefined") return 0;
-      const probe = document.createElement("div");
-      probe.style.position = "fixed";
-      probe.style.left = "-99999px";
-      probe.style.top = "0";
-      probe.style.width = `${INNER_CONTENT_WIDTH_PX}px`;
-      probe.style.visibility = "hidden";
-      document.body.appendChild(probe);
-      probe.innerHTML = styledTableHtml;
-      const h = probe.getBoundingClientRect().height;
-      document.body.removeChild(probe);
-      return h;
-    };
-
-    // ---------------- GERÇEK SAYFALAMA GEÇİŞİ ----------------
-    // Kullanıcı talebi: "Proje teklif dosyalarında Hizmet Kataloğu'ndaki
-    // Projenin Tanımı ve Kapsamı, Projenin Amacı, Hedeflenen Çıktılar gibi
-    // içerikler yazılıysa mutlaka teklif dosyasında olmalı." — kapak
-    // mektubu artık 1 sayfaya sabitlenmiyor, kataloğa girilen TÜM
-    // paragraf/başlıklar gerçek yüksekliklerine göre ihtiyaç kadar sayfaya
-    // yayılıyor.
-    const coverLetterBlocks = parseCoverLetterBlocks(wizardCoverPage || selectedService?.defaultCoverPage || "");
-    const coverLetterPagesContent = coverLetterBlocks.length > 0
-      ? packBlocksIntoPages(coverLetterBlocks, INNER_CONTENT_HEIGHT_PX)
-      : [""];
-
-    // Kullanıcı talebi: "efor tablosu iki sayfaya taştı. tek sayfada
-    // topla." — önce EFFORT_TABLE_TIERS listesindeki her punto/dolgu
-    // seçeneği sırayla denenip tablonun GERÇEK render yüksekliği
-    // ölçülüyor; tabloyu tek sayfaya sığdıran EN OKUNAKLI (ilk uyan) tier
-    // seçiliyor. Bu sayede normal uzunluktaki tablolar artık gereksiz
-    // yere ikinci sayfaya taşmıyor. Yalnızca en sıkışık tier'de bile
-    // sığmayan (aşırı uzun) bir tablo varsa, önceki talep gereği ("hiçbir
-    // madde kaybolmasın") çok sayfaya bölünmeye geri düşülüyor — içerik
-    // hiçbir zaman kırpılmıyor.
-    let styledEffortTable = styleTableForA4Print(wizardTableHtml || "");
-    let effortTablePages: string[] = [styledEffortTable];
-    if (wizardTableHtml) {
-      const effortBudgetPx = INNER_CONTENT_HEIGHT_PX - SECTION_HEADING_RESERVE_PX;
-      let fitOnOnePage = false;
-      for (const tier of EFFORT_TABLE_TIERS) {
-        const candidate = styleTableForA4Print(wizardTableHtml, tier);
-        if (measureTableTotalHeightPx(candidate) <= effortBudgetPx) {
-          styledEffortTable = candidate;
-          effortTablePages = [candidate];
-          fitOnOnePage = true;
-          break;
-        }
-      }
-      if (!fitOnOnePage) {
-        const tightestTier = EFFORT_TABLE_TIERS[EFFORT_TABLE_TIERS.length - 1];
-        styledEffortTable = styleTableForA4Print(wizardTableHtml, tightestTier);
-        effortTablePages = paginateTableRows(styledEffortTable, effortBudgetPx);
-      }
-    }
-
-    // Şartlar & İmza: aynı overflow:hidden kırpma hatası bu bölümde de
-    // vardı ("max-height: 120mm; overflow-y: hidden") — artık burada da
-    // gerçek yüksekliğe göre ihtiyaç kadar sayfaya bölünüyor, imza bloğu
-    // sığdığı sürece son şartlar sayfasında, sığmıyorsa kendi sayfasında
-    // gösteriliyor.
-    const parseTermsBlocks = (textText: string): string[] => {
-      if (!textText) return [];
-      return textText
-        .split("\n")
-        .map((line) => {
-          const trimmed = line.trim();
-          if (!trimmed) return "";
-          return `<p style="margin: 0 0 5px 0; font-size: 8.5pt; line-height: 1.4; color: #334155; font-family: Arial; text-align: justify;">${trimmed}</p>`;
-        })
-        .filter(Boolean);
-    };
-
-    const signatureBlockHtml = `
-      <div style="margin-top: 25px; display: flex; justify-content: space-between; font-family: Arial, sans-serif; pointer-events: auto;">
-        <div style="width: 46%; font-size: 8.5pt; box-sizing: border-box;">
-          <p style="font-weight: bold; color: #b91c1c; margin: 0 0 3px 0; text-transform: uppercase; border-bottom: 1px solid #cbd5e1; padding-bottom: 2px; font-family: Arial; letter-spacing: 0.5px;">TEKLİF HAZIRLAYAN</p>
-          <p style="margin: 2px 0 6px 0; color: #1e293b; font-weight: bold; font-family: Arial;">Gemba Partner Mühendislik ve Yazılım A.Ş</p>
-          <div style="height: 40px; border-bottom: 1px dashed #cbd5e1; margin-top: 5px; position: relative; background-color: #fcfcfc;">
-            <span style="position: absolute; bottom: 3px; right: 6px; font-size: 7.5px; color: #94a3b8; font-style: italic; font-weight: bold; font-family: Arial;">İMZA / KAŞE</span>
-          </div>
-        </div>
-        <div style="width: 46%; font-size: 8.5pt; box-sizing: border-box;">
-          <p style="font-weight: bold; color: #b91c1c; margin: 0 0 3px 0; text-transform: uppercase; border-bottom: 1px solid #cbd5e1; padding-bottom: 2px; font-family: Arial; letter-spacing: 0.5px;">MÜŞTERİ KABUL & ONAY</p>
-          <p style="margin: 2px 0; color: #1e293b; font-weight: bold; font-family: Arial;">${(clientTitle || "Müşteri").toUpperCase()}</p>
-          <p style="margin: 0 0 6px 0; color: #64748b; font-size: 7.5pt; font-family: Arial;">Yetkili: Sn. ${assignedPm}</p>
-          <div style="height: 40px; border-bottom: 1px dashed #cbd5e1; margin-top: 5px; position: relative; background-color: #fcfcfc;">
-            <span style="position: absolute; bottom: 3px; right: 6px; font-size: 7.5px; color: #94a3b8; font-style: italic; font-weight: bold; font-family: Arial;">İMZA / KAŞE</span>
-          </div>
-        </div>
-      </div>
-    `;
-
-    const termsBlocks = parseTermsBlocks(wizardTermsAndConditions || selectedService?.defaultTermsAndConditions || "");
-    const termsBudgetPx = INNER_CONTENT_HEIGHT_PX - SECTION_HEADING_RESERVE_PX;
-    const termsPagesContent = termsBlocks.length > 0 ? packBlocksIntoPages(termsBlocks, termsBudgetPx) : [""];
-    const signatureHeightPx = measureBlockHeightsPx([signatureBlockHtml])[0] || mmToPx(55);
-    const lastTermsPageHtml = termsPagesContent[termsPagesContent.length - 1];
-    const lastTermsPageHeight = measureBlockHeightsPx([lastTermsPageHtml])[0];
-    const signatureOnOwnPage = (lastTermsPageHeight + signatureHeightPx) > termsBudgetPx;
-
-    // Tüm gerçek sayfalama sonuçları elimizde — sayfa sayısını artık
-    // GERÇEK içerikten türetiyoruz (eskiden statik/sabit bir formüldü).
-    let totalPages = 1; // Kapak sayfası
-    totalPages += coverLetterPagesContent.length;
-    if (showEffortIntroPage) totalPages += 1;
-    totalPages += effortTablePages.length;
-    totalPages += activeOptions.length;
-    totalPages += termsPagesContent.length;
-    if (signatureOnOwnPage) totalPages += 1;
-
-    // ---------------- PAGE 2+ – COVER LETTER ----------------
-    coverLetterPagesContent.forEach((pageBlocksHtml, idx) => {
-      const coverLetterContent = `
-        <div style="font-family: Arial, sans-serif; font-size: 9.5pt; color: #334155; line-height: 1.5;">
-          ${pageBlocksHtml || "<p style=\"font-style: italic; color: #94a3b8;\">İçerik girilmemiş.</p>"}
-        </div>
-      `;
-      const pageLabel = idx === 0 ? "ÖN KAPAK VE TAKDİM" : "ÖN KAPAK VE TAKDİM (DEVAMI)";
-      fullHtmlString += createA4PageContent(currentCalculatedPageIndex, totalPages, pageLabel, coverLetterContent);
-      currentCalculatedPageIndex++;
+    const options: Record<string, ProposalOption> = {};
+    const entries = [
+      { active: option1Active, name: option1Name, desc: option1Desc, duration: option1Duration, rows: option1Rows },
+      { active: option2Active, name: option2Name, desc: option2Desc, duration: option2Duration, rows: option2Rows },
+      { active: option3Active, name: option3Name, desc: option3Desc, duration: option3Duration, rows: option3Rows },
+    ];
+    entries.forEach(({ active, ...option }, i) => {
+      if (active) options[`Option ${i + 1}`] = { ...option, training: true, consulting: true, workshop: false, expenses: 0, manDays: 0, dailyRate: 0 };
     });
-
-    // ---------------- EFOR TABLOSU: GİRİŞ SAYFASI (opsiyonel) ----------------
-    if (showEffortIntroPage) {
-      const effortIntroContent = `
-        <div style="font-family: Arial, sans-serif;">
-          <h3 style="font-family: Arial, sans-serif; font-size: 11pt; font-weight: bold; color: #1e293b; margin-top: 0; margin-bottom: 8px; text-transform: uppercase; border-bottom: 2px solid #cbd5e1; padding-bottom: 4px;">1. FAALİYET PLANLAMASI VE EFOR DAĞILIMI</h3>
-          <p style="font-family: Arial, sans-serif; font-size: 10pt; line-height: 1.5; color: #334155; margin-bottom: 16px;">
-            Dönüşüm programı kapsamında planlanan saha içi gelişim faaliyetlerinin kilometre taşları (milestone), çalışma başlıkları ve tahmini efor kırılımlarını içeren yol haritası hazırlanmıştır.
-          </p>
-          <p style="font-family: Arial, sans-serif; font-size: 10pt; line-height: 1.5; color: #475569; margin-bottom: 24px;">
-            Öngörülen çalışma başlıkları kapsamında, süreçlerin mevcut durum analizi, israf tespit turları, hedef durum tasarımı ile saha uygulama ve standartlaştırma adımları izlenecektir.
-          </p>
-          <div style="margin-top: 30px; padding: 16px; border-left: 4px solid #d61a21; background-color: #f8fafc; border-radius: 4px; border: 1px solid #e2e8f0; border-left-width: 4px;">
-            <p style="font-family: Arial, sans-serif; font-size: 10pt; font-weight: bold; color: #d61a21; margin: 0 0 6px 0;">SÜREÇ VE FAALİYET DETAYLARI TABLOSU</p>
-            <p style="font-family: Arial, sans-serif; font-size: 9.5pt; color: #475569; margin: 0; line-height: 1.45;">
-              Belirtilen her bir faz altındaki detaylı faaliyet adımlarını, danışmanlık sorumluluk alanlarını ve adam-gün cinsinden efor kırılımlarını gösteren tablo, sayfa alanının en verimli şekilde kullanılması amacıyla bir sonraki sayfada sunulmuştur.
-            </p>
-          </div>
-        </div>
-      `;
-      fullHtmlString += createA4PageContent(currentCalculatedPageIndex, totalPages, "EFOR PLANLAMASI VE SÜREÇLER", effortIntroContent);
-      currentCalculatedPageIndex++;
-    }
-
-    // ---------------- EFOR TABLOSU: SAYFA(LAR) ----------------
-    effortTablePages.forEach((tableHtml, idx) => {
-      const heading = idx === 0
-        ? (showEffortIntroPage ? "1. DETAYLI FAALİYET VE EFOR TABLOSU" : "1. FAALİYET PLANLAMASI VE EFOR DAĞILIMI")
-        : "1. DETAYLI FAALİYET VE EFOR TABLOSU (DEVAMI)";
-      const introParagraph = (!showEffortIntroPage && idx === 0)
-        ? `<p style="font-family: Arial, sans-serif; font-size: 9.5pt; line-height: 1.4; color: #475569; margin-bottom: 12px;">Planlanan saha içi gelişim faaliyetlerinin kilometre taşları (milestone) ve hedeflenen efor kırılımları aşağıda detaylandırılmıştır:</p>`
-        : "";
-      const effortTableContent = `
-        <div style="font-family: Arial, sans-serif;">
-          <h3 style="font-family: Arial, sans-serif; font-size: 11pt; font-weight: bold; color: #1e293b; margin-top: 0; margin-bottom: 8px; text-transform: uppercase; border-bottom: 2px solid #cbd5e1; padding-bottom: 4px;">${heading}</h3>
-          ${introParagraph}
-          ${tableHtml}
-        </div>
-      `;
-      fullHtmlString += createA4PageContent(currentCalculatedPageIndex, totalPages, idx === 0 ? "EFOR DAĞILIMI VE SÜREÇLER" : "DETAYLI EFOR TABLOSU (DEVAMI)", effortTableContent);
-      currentCalculatedPageIndex++;
+    return buildProposalDocument({
+      proposalNumber, date: proposalDate, companyName: clientTitle, contactPerson: clientContactPerson,
+      proposalSubject: mailSubject || selectedService.name, currency: "₺", options,
+      serviceName: selectedService.name, serviceCode: selectedService.code,
+      coverPage: wizardCoverPage, description: "", activityTableHtml: wizardTableHtml,
+      terms: wizardTermsAndConditions,
+      coverImage: inMemoryCoverTemplates[selectedCardId] || "/cover.png",
+      pageImage: inMemoryPageTemplates[selectedCardId] || "/page.png",
     });
-
-    // ---------------- PAGE 4+ – PROPOSALS ----------------
-    activeOptions.forEach((optionIndex) => {
-      let optName = "";
-      let optDesc = "";
-      let optRows: PricingRow[] = [];
-
-      if (optionIndex === 1) {
-        optName = option1Name;
-        optDesc = option1Desc;
-        optRows = option1Rows;
-      } else if (optionIndex === 2) {
-        optName = option2Name;
-        optDesc = option2Desc;
-        optRows = option2Rows;
-      } else {
-        optName = option3Name;
-        optDesc = option3Desc;
-        optRows = option3Rows;
-      }
-
-      // Build Option Pricing view style
-      const subtotal = optRows.reduce((acc, r) => acc + (r.dailyRate * r.manDays), 0);
-      const kdvAmount = subtotal * 0.20;
-      const grandTotal = subtotal + kdvAmount;
-
-      // Helper for number format of Turkish Lira
-      const liraFormatter = new Intl.NumberFormat("tr-TR", { minimumFractionDigits: 0 });
-
-      // Word number spelling helper for pricing amount
-      const convertNumberToWords = (num: number): string => {
-        const units = ["", "Bir", "İki", "Üç", "Dört", "Beş", "Altı", "Yedi", "Sekiz", "Dokuz"];
-        const tens = ["", "On", "Yirmi", "Otuz", "Kırk", "Elli", "Altmış", "Yetmiş", "Seksen", "Doksan"];
-        const thousands = ["", "Bin", "Milyon", "Milyar"];
-
-        if (num === 0) return "Sıfır";
-
-        let str = "";
-        let integerPart = Math.floor(num);
-
-        let groupIdx = 0;
-        while (integerPart > 0) {
-          let chunk = integerPart % 1000;
-          if (chunk > 0) {
-            let chunkStr = "";
-            let h = Math.floor(chunk / 100);
-            let t = Math.floor((chunk % 100) / 10);
-            let u = chunk % 10;
-
-            if (h > 0) {
-              chunkStr += (h === 1 ? "" : units[h]) + "Yüz";
-            }
-            if (t > 0) {
-              chunkStr += tens[t];
-            }
-            if (u > 0) {
-              // Word 'bir' in singular thousands is omitted e.g. "BirBin" -> "Bin"
-              if (groupIdx === 1 && chunk === 1) {
-                chunkStr += "";
-              } else {
-                chunkStr += units[u];
-              }
-            }
-            chunkStr += thousands[groupIdx];
-            str = chunkStr + str;
-          }
-          integerPart = Math.floor(integerPart / 1000);
-          groupIdx++;
-        }
-        return str + " Türk Lirası";
-      };
-
-      const rowsHtmlStr = optRows.map(r => `
-        <tr style="border-bottom: 1px solid #e2e8f0;">
-          <td style="border: 1px solid #cbd5e1; padding: 6px 8px; font-size: 8.5pt; text-align: left; color: #334155; font-family: Arial;">${r.item}</td>
-          <td style="border: 1px solid #cbd5e1; padding: 6px 8px; font-size: 8.5pt; text-align: right; color: #334155; font-family: Arial;">${liraFormatter.format(r.dailyRate)} TL</td>
-          <td style="border: 1px solid #cbd5e1; padding: 6px 8px; font-size: 8.5pt; text-align: center; color: #334155; font-family: Arial;">${r.manDays}</td>
-          <td style="border: 1px solid #cbd5e1; padding: 6px 8px; font-size: 8.5pt; text-align: right; font-weight: bold; color: #1e293b; font-family: Arial;">${liraFormatter.format(r.dailyRate * r.manDays)} TL</td>
-        </tr>
-      `).join("");
-
-      const proposalOptionPageHtml = `
-        <div style="font-family: Arial, sans-serif;">
-          <!-- Header Client details -->
-          <div style="font-family: Arial, sans-serif; font-size: 9.5pt; line-height: 1.4; color: #1e293b; margin-bottom: 15px; background-color: #f8fafc; border: 1px solid #e2e8f0; padding: 8px 12px; border-radius: 4px;">
-            <table style="width: 100%; border-collapse: collapse; border: none;">
-              <tr style="border: none;">
-                <td style="font-weight: bold; width: 30mm; color: #475569; font-size: 9pt; padding: 2px 0;">FİRMA</td>
-                <td style="font-weight: bold; width: 4mm; color: #475569; font-size: 9pt; padding: 2px 0;">:</td>
-                <td style="font-weight: normal; color: #1e293b; font-size: 9pt; padding: 2px 0;">${(clientTitle || "Müşteri").toUpperCase()}</td>
-              </tr>
-              <tr style="border: none;">
-                <td style="font-weight: bold; color: #475569; font-size: 9pt; padding: 2px 0;">KİME</td>
-                <td style="font-weight: bold; color: #475569; font-size: 9pt; padding: 2px 0;">:</td>
-                <td style="font-weight: normal; color: #1e293b; font-size: 9pt; padding: 2px 0;">Sn. ${assignedPm}</td>
-              </tr>
-              <tr style="border: none;">
-                <td style="font-weight: bold; color: #475569; font-size: 9pt; padding: 2px 0;">TARİH VE NO</td>
-                <td style="font-weight: bold; color: #475569; font-size: 9pt; padding: 2px 0;">:</td>
-                <td style="font-weight: normal; color: #1e293b; font-size: 9pt; padding: 2px 0;">${formattedProposalDate} / ${formattedProposalNo}</td>
-              </tr>
-            </table>
-          </div>
-
-          <!-- Section title -->
-          <h3 style="font-family: Arial, sans-serif; font-size: 11pt; font-weight: bold; color: #b91c1c; margin-top: 0; margin-bottom: 6px; text-transform: uppercase;">2. FİNANSAL DEĞERLENDİRME & TEKLİF SEÇENEKLERİ</h3>
-          
-          <div style="background-color: #fdf2f2; border-left: 3px solid #d61a21; padding: 6px 10px; margin-bottom: 12px;">
-            <strong style="font-size: 9pt; color: #b91c1c; text-transform: uppercase; display: block; margin-bottom: 2px;">SEÇENEK ${optionIndex}: ${optName.toUpperCase()}</strong>
-            <p style="font-size: 8.5pt; color: #475569; line-height: 1.4; margin: 0;">${optDesc}</p>
-          </div>
-
-          <table style="border-collapse: collapse; width: 100%; border: 1px solid #cbd5e1; font-family: Arial, sans-serif; font-size: 8.5pt; margin-bottom: 12px;">
-            <thead>
-              <tr style="background-color: #f8fafc; border-bottom: 2px solid #cbd5e1;">
-                <th style="border: 1px solid #cbd5e1; padding: 6px 8px; font-size: 8.5pt; text-align: left; font-weight: bold; color: #1e293b; font-family: Arial; width: 45%;">Hizmet Kalemi</th>
-                <th style="border: 1px solid #cbd5e1; padding: 6px 8px; font-size: 8.5pt; text-align: right; font-weight: bold; color: #1e293b; font-family: Arial; width: 22%;">Günlük Ücret</th>
-                <th style="border: 1px solid #cbd5e1; padding: 6px 8px; font-size: 8.5pt; text-align: center; font-weight: bold; color: #1e293b; font-family: Arial; width: 13%;">Efor (A/G)</th>
-                <th style="border: 1px solid #cbd5e1; padding: 6px 8px; font-size: 8.5pt; text-align: right; font-weight: bold; color: #1e293b; font-family: Arial; width: 20%;">Bütçe</th>
-              </tr>
-            </thead>
-            <tbody>
-              ${rowsHtmlStr}
-              <tr style="background-color: #f8fafc;">
-                <td colspan="3" style="border: 1px solid #cbd5e1; padding: 5px 8px; text-align: right; font-size: 8.5pt; color: #475569; font-family: Arial;">Seçenek Ara Toplamı (KDV Hariç):</td>
-                <td style="border: 1px solid #cbd5e1; padding: 5px 8px; text-align: right; font-size: 8.5pt; color: #1e293b; font-weight: bold; font-family: Arial;">${liraFormatter.format(subtotal)} TL</td>
-              </tr>
-              <tr style="background-color: #f8fafc;">
-                <td colspan="3" style="border: 1px solid #cbd5e1; padding: 5px 8px; text-align: right; font-size: 8.5pt; color: #475569; font-family: Arial;">KDV (%20):</td>
-                <td style="border: 1px solid #cbd5e1; padding: 5px 8px; text-align: right; font-size: 8.5pt; color: #475569; font-family: Arial;">${liraFormatter.format(kdvAmount)} TL</td>
-              </tr>
-              <tr style="background-color: #f1f5f9; font-weight: bold; border-top: 1.5px solid #94a3b8;">
-                <td colspan="3" style="border: 1px solid #cbd5e1; padding: 6px 8px; text-align: right; font-size: 8.5pt; color: #1e293b; font-family: Arial; text-transform: uppercase;">SEÇENEK TOPLAM BÜTÇESİ (KDV Dahil):</td>
-                <td style="border: 1px solid #cbd5e1; padding: 6px 8px; text-align: right; font-size: 9pt; color: #b91c1c; font-family: Arial; font-weight: bold;">${liraFormatter.format(grandTotal)} TL</td>
-              </tr>
-            </tbody>
-          </table>
-
-          <!-- Spelling explanation bar -->
-          <div style="background-color: #f8fafc; border: 1px solid #cbd5e1; border-radius: 4px; padding: 6px 10px; font-size: 8.5pt; color: #334155; margin-bottom: 12px; font-family: Arial;">
-            <strong>Yazıyla Toplam Tutar:</strong> &nbsp; #${convertNumberToWords(grandTotal).toLocaleUpperCase("tr-TR")}#
-          </div>
-
-          ${activeOptions.length > 1 ? `
-            <div style="background-color: #f0fdf4; border-left: 3px solid #16a34a; padding: 6px 10px; font-size: 8pt; color: #15803d; font-family: Arial;">
-              <strong>TİCARİ ALTERNATİF BİLGİLENDİRMESİ:</strong> Sunulan seçenekler birbirinin tamamlayıcısı değil, alternatifidir. Teklif onayında tercih edilen teklif seçeneği belirtilmelidir.
-            </div>
-          ` : ""}
-        </div>
-      `;
-
-      fullHtmlString += createA4PageContent(currentCalculatedPageIndex, totalPages, `FİNANSAL DEĞERLENDİRME – SEÇENEK ${optionIndex}`, proposalOptionPageHtml);
-      currentCalculatedPageIndex++;
-    });
-
-    // ---------------- PAGE LAST(LAR) – GENERAL TERMS + İMZA ----------------
-    // termsBlocks/termsPagesContent/signatureBlockHtml/signatureOnOwnPage
-    // yukarıda (totalPages hesaplanmadan önce) zaten ölçülüp hazırlandı —
-    // burada sadece gerçek sayfa(lar)ı üretiyoruz.
-    termsPagesContent.forEach((pageHtml, idx) => {
-      const isLastTermsPage = idx === termsPagesContent.length - 1;
-      const heading = idx === 0 ? "3. TİCARİ VE HUKUKİ GENEL ŞARTLAR" : "3. TİCARİ VE HUKUKİ GENEL ŞARTLAR (DEVAMI)";
-      const termsAndConditionsPageHtml = `
-        <div style="font-family: Arial, sans-serif; display: flex; flex-direction: column; justify-content: space-between; height: 100%;">
-          <div>
-            <h3 style="font-family: Arial, sans-serif; font-size: 11pt; font-weight: bold; color: #1e293b; margin-top: 0; margin-bottom: 8px; text-transform: uppercase; border-bottom: 2px solid #cbd5e1; padding-bottom: 4px;">${heading}</h3>
-            <div>
-              ${pageHtml}
-            </div>
-          </div>
-
-          <!-- Signature block placed securely at the bottom of the content zone (only on the last terms page, and only if it actually fits) -->
-          ${isLastTermsPage && !signatureOnOwnPage ? signatureBlockHtml : ""}
-        </div>
-      `;
-      fullHtmlString += createA4PageContent(currentCalculatedPageIndex, totalPages, "GENEL ŞARTLAR VE ONAY", termsAndConditionsPageHtml);
-      currentCalculatedPageIndex++;
-    });
-
-    // Kullanıcı hatası kaynağı: imza bloğu şartlar metninin sonuna
-    // sığmadığında eskiden sessizce kırpılıyordu (overflow:hidden). Artık
-    // sığmıyorsa kendi ayrı sayfasında gösteriliyor, hiçbir zaman kesilmiyor.
-    if (signatureOnOwnPage) {
-      const signatureOnlyPageHtml = `
-        <div style="font-family: Arial, sans-serif; height: 100%; display: flex; flex-direction: column; justify-content: flex-end;">
-          ${signatureBlockHtml}
-        </div>
-      `;
-      fullHtmlString += createA4PageContent(currentCalculatedPageIndex, totalPages, "İMZA VE ONAY", signatureOnlyPageHtml);
-      currentCalculatedPageIndex++;
-    }
-
-    return fullHtmlString;
   };
 
   // Sync email templates changes to local storage
@@ -2160,6 +1556,9 @@ export default function ServicesView({
       services: realServicesList,
       terms: wizardTermsAndConditions || "",
       coverPage: wizardCoverPage || "",
+      activityTableHtml: wizardTableHtml || "",
+      serviceName: selectedService?.name,
+      serviceCode: selectedService?.code,
       // Item: "her ne kadar şablon coverpng ve page.png yüklü olsa da pdf
       // görüntüsü yeşil başka bir şablon çıkıyor" — kök neden, kaydedilen
       // teklif kaydı hiçbir zaman gerçek kapak/sayfa görsellerini
@@ -2190,7 +1589,12 @@ export default function ServicesView({
           services: realServicesList,
           totalBudget: totalBudget,
           taxes: taxes,
-          grandTotal: grandTotal
+          grandTotal: grandTotal,
+          coverPage: wizardCoverPage, activityTableHtml: wizardTableHtml,
+          serviceName: selectedService?.name, serviceCode: selectedService?.code,
+          terms: wizardTermsAndConditions,
+          coverImage: inMemoryCoverTemplates[selectedCardId] || "/cover.png",
+          pageImage: inMemoryPageTemplates[selectedCardId] || "/page.png",
         }
       ],
       createdBy: existingProposal?.createdBy || assignedPm,
@@ -2400,7 +1804,7 @@ export default function ServicesView({
     if (wizardStep === 4 && !isAssemblyEditable) {
       setLiveAssemblyHtml(assembleDocument());
     }
-  }, [wizardStep, isAssemblyEditable, selectedCardId, clientTitle, clientAddress, assignedPm, proposalDate, wizardTermsAndConditions, option1Active, option1Name, option1Desc, option1Price, option1Duration, option2Active, option2Name, option2Desc, option2Price, option2Duration, option3Active, option3Name, option3Desc, option3Price, option3Duration, letterheadId, option1Rows, option2Rows, option3Rows, wizardCoverPage, wizardTableHtml]);
+  }, [wizardStep, isAssemblyEditable, selectedCardId, clientTitle, clientAddress, assignedPm, proposalDate, wizardTermsAndConditions, option1Active, option1Name, option1Desc, option1Price, option1Duration, option2Active, option2Name, option2Desc, option2Price, option2Duration, option3Active, option3Name, option3Desc, option3Price, option3Duration, letterheadId, option1Rows, option2Rows, option3Rows, wizardCoverPage, wizardTableHtml, clientContactPerson, mailSubject, proposalNumber]);
 
   // Document Export schemes
   const handlePrint = () => {
@@ -2611,99 +2015,10 @@ export default function ServicesView({
   };
 
   // Item 20/21: Real in-app proposal sending. Renders the live A4 preview
-  // (assemblyPaperRef) into an actual PDF binary via jsPDF, then sends it as
-  // a genuine Microsoft Graph attachment through the same /api/mail/send
-  // endpoint and sender-mailbox pattern already used in CompanyEmailsTab —
-  // no manual "download + drag into Outlook" step required.
-  // NOTE: this used to call jsPDF's built-in doc.html() helper. That method
-  // renders the source element inside a hidden iframe using its own bundled
-  // html2canvas pass, and in practice its callback would sometimes never
-  // fire at all for this specific A4 assembly (complex nested tables,
-  // Tailwind utility classes, dynamic letterhead colors) — the await below
-  // it would then hang forever, silently freezing whatever screen/button
-  // triggered it (both "PDF İndir", the in-app send, and the external mail
-  // client hand-off all await this function). No PDF ever came out and no
-  // error was ever shown, because the promise never resolved OR rejected.
-  //
-  // Fix: capture the element directly with html2canvas (already a project
-  // dependency) into a single canvas, then slice that canvas into A4-page-
-  // height chunks and place each slice on its own PDF page with addImage —
-  // a much more reliable, widely-used pattern than jsPDF's own .html().
-  // A hard 25s timeout via Promise.race guarantees this function ALWAYS
-  // settles (resolves to null on failure/timeout instead of hanging), so
-  // calling code (loading spinners, "Gönderiliyor..." states) can never get
-  // stuck indefinitely again.
+  // Shared full-document capture, identical to saved proposal previews.
   const generateProposalPdfBase64 = async (): Promise<{ base64: string; filename: string } | null> => {
-    const sourceEl = assemblyPaperRef.current;
-    if (!sourceEl) return null;
-
-    const renderPdf = async (): Promise<{ base64: string; filename: string }> => {
-      // Kullanıcı hatası: "hizalamada kayma var, 7 sayfalık teklif dosyası
-      // 11 sayfaya çıktı." Kök neden: eskiden TÜM belge tek bir dev
-      // canvas olarak yakalanıp sabit piksel yüksekliğinde diliyordu; her
-      // gerçek ".a4-page" arasındaki 30px boşluk (ve kapak sayfasının
-      // farklı yapısı) bu piksel-bölme hesabına hiç dahil edilmediğinden,
-      // her sayfada birikimli bir kayma oluşuyor, bu da hem görsel
-      // hizalama bozukluğuna hem de fazladan sahte "sayfa" üretilmesine
-      // yol açıyordu (assembleDocument artık gerçek içerik yüksekliğine
-      // göre doğru sayıda sayfa üretiyor — bkz. o fonksiyondaki yorumlar
-      // — ama eski dilimleme mantığı bunu bile bozabiliyordu).
-      //
-      // Çözüm: belgeyi tek parça yakalamak yerine, her gerçek ".a4-page"
-      // DIV'ini AYRI AYRI yakalayıp kendi tam PDF sayfası olarak
-      // ekliyoruz. Böylece PDF'teki sayfa sayısı = ekrandaki gerçek sayfa
-      // sayısı olur (birebir), aradaki boşluklar/marginler hiçbir zaman
-      // hesaba karışmaz ve kayma tamamen ortadan kalkar.
-      const pageElements = Array.from(sourceEl.querySelectorAll<HTMLElement>(".a4-page"));
-      const elementsToCapture = pageElements.length > 0 ? pageElements : [sourceEl];
-
-      const pdf = new jsPDF({ unit: "pt", format: "a4" });
-      const pageWidthPt = pdf.internal.pageSize.getWidth();
-      const pageHeightPt = pdf.internal.pageSize.getHeight();
-
-      for (let i = 0; i < elementsToCapture.length; i++) {
-        const pageEl = elementsToCapture[i];
-        const canvas = await html2canvas(pageEl, {
-          scale: 1.5,
-          useCORS: true,
-          backgroundColor: "#ffffff",
-          logging: false,
-          // Without this, html2canvas waits indefinitely (no default timeout)
-          // for every <img>/background-image it needs to embed. A single slow
-          // or CORS-blocked image (e.g. an externally-hosted logo) would hang
-          // the whole render forever. 8s per image is generous but bounded —
-          // a timed-out image is just skipped instead of stalling the PDF.
-          imageTimeout: 8000,
-          // Her sayfa artık kendi gerçek boyutuyla (210mm x 297mm) tek
-          // başına yakalanıyor, tüm belgenin scrollHeight'ı değil — bu
-          // yüzden pencere boyutuna bağlı kırpılma sorunu da bir daha
-          // yaşanmaz.
-          width: pageEl.scrollWidth,
-          height: pageEl.scrollHeight,
-          windowWidth: pageEl.scrollWidth,
-          windowHeight: pageEl.scrollHeight,
-        });
-
-        const imgData = canvas.toDataURL("image/jpeg", 0.92);
-        if (i > 0) pdf.addPage();
-        pdf.addImage(imgData, "JPEG", 0, 0, pageWidthPt, pageHeightPt);
-      }
-
-      const dataUri = pdf.output("datauristring");
-      const base64 = dataUri.split(",")[1] || "";
-      const filename = `${clientShortName || "Teklif"}_${proposalNumber || "000"}.pdf`;
-      return { base64, filename };
-    };
-
-    try {
-      const timeout = new Promise<null>((resolve) => {
-        setTimeout(() => resolve(null), 25000);
-      });
-      return await Promise.race([renderPdf(), timeout]);
-    } catch (err) {
-      console.error("PDF render failed:", err);
-      return null;
-    }
+    const source = assemblyPaperRef.current;
+    return source ? renderElementToPdfBase64(source, `Teklif_${proposalNumber}.pdf`) : null;
   };
 
   // Saves a base64 PDF payload to the user's device as a real file download.
