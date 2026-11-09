@@ -1,0 +1,75 @@
+/* Approved visual layer only. Existing layout and event handlers are unchanged.
+   Repeated root class keeps this layer above the legacy SaaS visual overrides. */
+@media screen {
+  html.gemba-stitch-skin { color-scheme: light; }
+  html.gemba-stitch-skin.dark { color-scheme: dark; }
+  .gemba-stitch-skin.gemba-stitch-skin.gemba-stitch-skin {
+    --stitch-canvas: light-dark(#f8f9fd, #151d2c);
+    --stitch-surface: light-dark(#ffffff, #1c273a);
+    --stitch-field: light-dark(#f7f9fc, #243147);
+    --stitch-line: light-dark(#e2e8f0, #3b4960);
+    --stitch-text: light-dark(#162338, #e8eef9);
+    --stitch-muted: light-dark(#5e6d84, #adbad0);
+    --stitch-accent: #cc2149;
+    color: var(--stitch-text);
+    background-color: var(--stitch-canvas);
+    font-family: Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  }
+  .gemba-stitch-skin.gemba-stitch-skin.gemba-stitch-skin :where(#root > .h-screen, #root main) {
+    background-color: var(--stitch-canvas) !important;
+  }
+  .gemba-stitch-skin.gemba-stitch-skin.gemba-stitch-skin :where(.font-sans):not(.a4-page, .a4-page *) {
+    font-family: Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif !important;
+  }
+  .gemba-stitch-skin.gemba-stitch-skin.gemba-stitch-skin :where(.bg-white, .bg-slate-50):not(.a4-page, .a4-page *) {
+    background-color: var(--stitch-surface) !important;
+  }
+  .gemba-stitch-skin.gemba-stitch-skin.gemba-stitch-skin :where([class*="border-[#EDEBE9]"], [class*="border-slate-200"]):not(.a4-page, .a4-page *) {
+    border-color: var(--stitch-line) !important;
+  }
+  .gemba-stitch-skin.gemba-stitch-skin.gemba-stitch-skin :where(.shadow-sm, .shadow-xs):not(.a4-page, .a4-page *) {
+    box-shadow: 0 1px 3px rgb(15 23 42 / 4%) !important;
+  }
+  .gemba-stitch-skin.gemba-stitch-skin.gemba-stitch-skin :where(.rounded-lg, .rounded-xl):not(.a4-page, .a4-page *) {
+    border-radius: 8px !important;
+  }
+  .gemba-stitch-skin.gemba-stitch-skin.gemba-stitch-skin :where(h1, h2, h3, [class*="text-slate-900"], [class*="text-slate-800"]):not(.a4-page, .a4-page *) {
+    color: var(--stitch-text) !important;
+  }
+  .gemba-stitch-skin.gemba-stitch-skin.gemba-stitch-skin :where(.font-black):not(.a4-page, .a4-page *) {
+    font-weight: 650 !important;
+  }
+  .gemba-stitch-skin.gemba-stitch-skin.gemba-stitch-skin :where([class*="text-slate-500"], [class*="text-slate-450"], [class*="text-slate-550"]):not(.a4-page, .a4-page *) {
+    color: var(--stitch-muted) !important;
+  }
+  .gemba-stitch-skin.gemba-stitch-skin.gemba-stitch-skin :where(input:not([type="checkbox"]):not([type="radio"]):not([type="file"]), select, textarea):not(.a4-page, .a4-page *) {
+    background-color: var(--stitch-field) !important;
+    border-color: var(--stitch-line) !important;
+    border-radius: 6px !important;
+    color: var(--stitch-text) !important;
+  }
+  .gemba-stitch-skin.gemba-stitch-skin.gemba-stitch-skin :where(input, select, textarea):focus-visible:not(.a4-page *) {
+    outline: 2px solid var(--stitch-accent) !important;
+    outline-offset: 2px;
+  }
+  .gemba-stitch-skin.gemba-stitch-skin.gemba-stitch-skin :where(button[class*="bg-[#0078D4]"], button[class*="bg-blue-600"], button[class*="bg-gradient-to-r"]):not(.a4-page, .a4-page *) {
+    background: var(--stitch-accent) !important;
+    border-color: var(--stitch-accent) !important;
+    color: #fff !important;
+  }
+  .gemba-stitch-skin.gemba-stitch-skin.gemba-stitch-skin :where(button[class*="bg-emerald-600"]):not(.a4-page, .a4-page *) {
+    background-color: #16804a !important;
+  }
+  .gemba-stitch-skin.gemba-stitch-skin.gemba-stitch-skin :where([class*="text-[#0078D4]"]):not(.a4-page, .a4-page *) {
+    color: var(--stitch-accent) !important;
+  }
+  .gemba-stitch-skin.gemba-stitch-skin.gemba-stitch-skin :where(div.absolute.h-1\.5.bg-gradient-to-r):not(.a4-page *) {
+    background: var(--stitch-accent) !important;
+  }
+  .gemba-stitch-skin.gemba-stitch-skin.gemba-stitch-skin :where(button, input, select, textarea):not(.a4-page, .a4-page *) {
+    font-family: inherit !important;
+  }
+  .gemba-stitch-skin.gemba-stitch-skin.gemba-stitch-skin :where(.text-\[9px\], .text-\[10px\], .text-\[11px\]):not(.a4-page, .a4-page *) {
+    font-size: 12px;
+  }
+}

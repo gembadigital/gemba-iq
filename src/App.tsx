@@ -1,4 +1,5 @@
 import React, { useEffect, useRef, useState } from "react";
+import "./styles/stitch-theme.css";
 import DashboardView from "./components/DashboardView";
 import CampaignDesigner from "./components/CampaignDesigner";
 import SendingProgressView from "./components/SendingProgressView";
@@ -479,7 +480,7 @@ export default function App() {
   // Effect to toggle Layout classes
   useEffect(() => {
     document.documentElement.classList.remove("notion-layout", "fluent-layout");
-    document.documentElement.classList.add("saas-layout");
+    document.documentElement.classList.add("saas-layout", "gemba-stitch-skin");
     localStorage.setItem("layout-theme", "saas");
   }, []);
 
