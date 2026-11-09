@@ -659,22 +659,22 @@ export default function SalesDashboardView({ deals, onSelectDeal }: SalesDashboa
   const [dashboardPageTab, setDashboardPageTab] = useState<"metrics" | "coach">("metrics");
 
   return (
-    <div className="space-y-6 text-slate-800 dark:text-slate-100 font-sans">
+    <div className="sales-dashboard space-y-6 text-slate-800 dark:text-slate-100 font-sans">
       
       {/* SECTION HEADER / TOP NAV */}
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-white dark:bg-[#1b1a19] border border-[#EDEBE9] dark:border-[#323130] p-5 rounded-2xl shadow-sm relative overflow-hidden">
-        <div className="absolute top-0 left-0 right-0 h-1.5 bg-gradient-to-r from-emerald-500 via-[#0078D4] to-blue-500" />
+      <div className="sales-dashboard-header flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-white dark:bg-[#1b1a19] border border-[#EDEBE9] dark:border-[#323130] p-5 rounded-2xl shadow-sm relative overflow-hidden">
+        <div aria-hidden="true" className="sales-header-stripe absolute top-0 left-0 right-0 h-1.5 bg-gradient-to-r from-emerald-500 via-[#0078D4] to-blue-500" />
         <div>
           <div className="flex items-center gap-2">
-            <span className="p-2 bg-gradient-to-tr from-blue-500 to-indigo-600 rounded-lg text-white shadow-sm">
+            <span className="sales-header-icon p-2 bg-gradient-to-tr from-blue-500 to-indigo-600 rounded-lg text-white shadow-sm">
               <BarChart2 className="w-5 h-5" />
             </span>
             <div>
               <h1 className="text-lg font-extrabold tracking-tight text-slate-900 dark:text-slate-100 uppercase font-sans">
-                {lang === "TR" ? "Satış Performansı Gösterge Paneli" : "Sales Performance Dashboard"}
+                {lang === "TR" ? "Satışa genel bakış" : "Sales overview"}
               </h1>
               <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
-                {lang === "TR" ? "Power BI ve Linear'dan Esinlenen B2B Yönetici Satış İstihbarat Motoru" : "Power BI & Linear.app Inspired B2B Executive Sales Intelligence Engine"}
+                {lang === "TR" ? "Teklifler, satış performansı ve fırsatların durumu tek ekranda." : "Proposals, sales performance and opportunity health at a glance."}
               </p>
             </div>
           </div>
@@ -701,7 +701,7 @@ export default function SalesDashboardView({ deals, onSelectDeal }: SalesDashboa
             }`}
           >
             <Filter className={`w-4 h-4 ${isAnyFilterActive ? "animate-pulse font-bold text-amber-500" : ""}`} />
-            <span>{lang === "TR" ? "İnteraktif Filtreler" : "Interactive Filters"}</span>
+            <span>{lang === "TR" ? "Filtreler" : "Filters"}</span>
             {isAnyFilterActive && (
               <span className="w-2.5 h-2.5 bg-amber-500 rounded-full inline-block" />
             )}
@@ -710,10 +710,11 @@ export default function SalesDashboardView({ deals, onSelectDeal }: SalesDashboa
       </div>
 
       {/* Dynamic Sub-Tabs bar */}
-      <div className="flex items-center border-b border-slate-200/60 dark:border-zinc-800 gap-1.5 select-none bg-slate-50/50 dark:bg-[#121212] p-1 rounded-xl">
+      <div className="sales-dashboard-tabs flex items-center border-b border-slate-200/60 dark:border-zinc-800 gap-1.5 select-none bg-slate-50/50 dark:bg-[#121212] p-1 rounded-xl">
         <button
           type="button"
           onClick={() => setDashboardPageTab("metrics")}
+          aria-pressed={dashboardPageTab === "metrics"}
           className={`px-5 py-2.5 text-xs font-bold rounded-lg transition-all flex items-center gap-2 cursor-pointer ${
             dashboardPageTab === "metrics"
               ? "bg-white dark:bg-zinc-850 text-[#0078D4] dark:text-blue-400 shadow-xs border border-slate-200/40 dark:border-zinc-800 font-extrabold"
@@ -721,12 +722,13 @@ export default function SalesDashboardView({ deals, onSelectDeal }: SalesDashboa
           }`}
         >
           <BarChart2 className="w-4 h-4 text-[#0078D4]" />
-          <span>{lang === "TR" ? "Satış Analiz Paneli" : "Sales Intelligence Dashboard"}</span>
+          <span>{lang === "TR" ? "Genel bakış" : "Overview"}</span>
         </button>
 
         <button
           type="button"
           onClick={() => setDashboardPageTab("coach")}
+          aria-pressed={dashboardPageTab === "coach"}
           className={`px-5 py-2.5 text-xs font-bold rounded-lg transition-all flex items-center gap-2 cursor-pointer ${
             dashboardPageTab === "coach"
               ? "bg-white dark:bg-zinc-850 text-rose-500 border border-slate-200/40 dark:border-zinc-800 font-extrabold"
@@ -751,7 +753,7 @@ export default function SalesDashboardView({ deals, onSelectDeal }: SalesDashboa
               <div className="flex items-center gap-2">
                 <ListFilter className="w-4 h-4 text-slate-500" />
                 <span className="text-sm font-bold uppercase tracking-wider font-sans">
-                  {lang === "TR" ? "Power BI Filtre Paneli" : "Power BI Filter Deck"}
+                  {lang === "TR" ? "Satış filtreleri" : "Sales filters"}
                 </span>
               </div>
               <button
@@ -975,7 +977,7 @@ export default function SalesDashboardView({ deals, onSelectDeal }: SalesDashboa
       )}
 
       {/* SECTION 1 - KPI SUMMARY CARDS */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-6 gap-4">
+      <div className="sales-kpis grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-6 gap-4">
         
         {/* Card 1: Total Proposal Value */}
         <div className="bg-white dark:bg-[#1b1a19] border border-[#EDEBE9] dark:border-[#323130] rounded-2xl p-5 shadow-xs relative overflow-hidden flex flex-col justify-between">
@@ -1097,18 +1099,18 @@ export default function SalesDashboardView({ deals, onSelectDeal }: SalesDashboa
       </div>
 
       {/* EXECUTIVE SALES INTELLIGENCE SECTION */}
-      <div>
+      <div className="sales-insights">
         <div className="flex items-center gap-2 mb-3">
           <Sparkles className="w-4 h-4 text-amber-500 animate-pulse" />
           <h2 className="text-xs font-extrabold uppercase tracking-widest text-slate-500 dark:text-slate-400">
-            {lang === "TR" ? "Yönetici Satış Analitiği (Power BI Pro)" : "Executive Sales Intelligence (Power BI Pro)"}
+            {lang === "TR" ? "Fırsatların sağlığı" : "Opportunity health"}
           </h2>
         </div>
         
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           
           {/* KPI 1 - WEIGHTED PIPELINE VALUE */}
-          <div className="bg-white dark:bg-[#1b1a19] border border-[#EDEBE9] dark:border-[#323130] rounded-2xl p-5 shadow-xs flex flex-col justify-between hover:border-[#0078D4] transition-all cursor-pointer"
+          <button type="button" className="sales-insight-card bg-white dark:bg-[#1b1a19] border border-[#EDEBE9] dark:border-[#323130] rounded-2xl p-5 shadow-xs flex flex-col justify-between hover:border-[#0078D4] transition-all cursor-pointer"
                onClick={() => setActiveDrillDown("weighted")}>
             <div className="flex items-center justify-between">
               <span className="text-[11px] font-extrabold uppercase tracking-widest text-slate-500 dark:text-slate-450 block">
@@ -1147,10 +1149,10 @@ export default function SalesDashboardView({ deals, onSelectDeal }: SalesDashboa
             <div className="pt-3 border-t border-[#EDEBE9] dark:border-[#323130] flex justify-end items-center text-[10px] font-mono text-slate-500">
               <span>{lang === "TR" ? "Olasılığa dayalı" : "Based on probability"}</span>
             </div>
-          </div>
+          </button>
 
           {/* KPI 2 - PROPOSAL CONVERSION RATE */}
-          <div className="bg-white dark:bg-[#1b1a19] border border-[#EDEBE9] dark:border-[#323130] rounded-2xl p-5 shadow-xs flex flex-col justify-between hover:border-emerald-500/80 transition-all cursor-pointer"
+          <button type="button" className="sales-insight-card bg-white dark:bg-[#1b1a19] border border-[#EDEBE9] dark:border-[#323130] rounded-2xl p-5 shadow-xs flex flex-col justify-between hover:border-emerald-500/80 transition-all cursor-pointer"
                onClick={() => setActiveDrillDown("conversion")}>
             <div className="flex items-center justify-between">
               <span className="text-[11px] font-extrabold uppercase tracking-widest text-slate-500 dark:text-slate-450 block">
@@ -1183,7 +1185,7 @@ export default function SalesDashboardView({ deals, onSelectDeal }: SalesDashboa
                     : (lang === "TR" ? "Kritik" : "Critical")}
                 </span>
                 <span className="text-[9px] text-slate-400 font-mono mt-1">
-                  {lang === "TR" ? "Power BI Derecesi" : "Power BI Rank"}
+                  {lang === "TR" ? "Performans düzeyi" : "Performance rating"}
                 </span>
               </div>
             </div>
@@ -1196,10 +1198,10 @@ export default function SalesDashboardView({ deals, onSelectDeal }: SalesDashboa
                 {lang === "TR" ? "Hedef Değer: %40" : "Target Benchmark: 40%"}
               </span>
             </div>
-          </div>
+          </button>
  
           {/* KPI 3 - OPPORTUNITY AGING ANALYSIS */}
-          <div className="bg-white dark:bg-[#1b1a19] border border-[#EDEBE9] dark:border-[#323130] rounded-2xl p-5 shadow-xs flex flex-col justify-between hover:border-yellow-500/85 transition-all cursor-pointer"
+          <button type="button" className="sales-insight-card bg-white dark:bg-[#1b1a19] border border-[#EDEBE9] dark:border-[#323130] rounded-2xl p-5 shadow-xs flex flex-col justify-between hover:border-yellow-500/85 transition-all cursor-pointer"
                onClick={() => setActiveDrillDown("aging")}>
             <div className="flex items-center justify-between">
               <span className="text-[11px] font-extrabold uppercase tracking-widest text-slate-500 dark:text-slate-450 block">
@@ -1238,7 +1240,7 @@ export default function SalesDashboardView({ deals, onSelectDeal }: SalesDashboa
                 {lang === "TR" ? "SLA İhlal Alarmları" : "SLA Breach Alarms"}
               </span>
             </div>
-          </div>
+          </button>
  
         </div>
       </div>
@@ -1483,16 +1485,16 @@ export default function SalesDashboardView({ deals, onSelectDeal }: SalesDashboa
       )}
 
       {/* INTERACTIVE DATA VISUALIZATIONS GRID */}
-      <div className="grid grid-cols-1 md:grid-cols-12 gap-5">
+      <div className="sales-chart-row grid grid-cols-1 md:grid-cols-12 gap-5">
         
         {/* SECTION 2 - SALES FUNNEL */}
-        <div className="bg-white dark:bg-[#1b1a19] border border-[#EDEBE9] dark:border-[#323130] rounded-2xl p-5 shadow-xs md:col-span-6 flex flex-col justify-between">
+        <div className="sales-panel bg-white dark:bg-[#1b1a19] border border-[#EDEBE9] dark:border-[#323130] rounded-2xl p-5 shadow-xs md:col-span-6 flex flex-col justify-between">
           <div>
             <h3 className="text-xs font-black uppercase tracking-widest text-[#0078D4] dark:text-blue-400 mb-1">
-              {lang === "TR" ? "Satış Süreci Akışı (Huni Analizi)" : "Sales Pipeline Flow (Funnel Analytics)"}
+              {lang === "TR" ? "Satış hunisi" : "Sales funnel"}
             </h3>
             <p className="text-[10px] text-slate-400 mb-4">
-              {lang === "TR" ? "Aşama bazında gerçek zamanlı dönüşüm verimliliği ve değer sızıntısı takibi" : "Real-time conversion efficiency and value leakage monitoring by stage"}
+              {lang === "TR" ? "Fırsatların aşamalara göre sayısı ve toplam değeri." : "Opportunity count and total value at each stage."}
             </p>
           </div>
 
@@ -1525,7 +1527,7 @@ export default function SalesDashboardView({ deals, onSelectDeal }: SalesDashboa
         </div>
 
         {/* SECTION 3 - SOLD MAN-DAY PERFORMANCE */}
-        <div className="bg-white dark:bg-[#1b1a19] border border-[#EDEBE9] dark:border-[#323130] rounded-2xl p-5 shadow-xs md:col-span-6 flex flex-col justify-between">
+        <div className="sales-panel bg-white dark:bg-[#1b1a19] border border-[#EDEBE9] dark:border-[#323130] rounded-2xl p-5 shadow-xs md:col-span-6 flex flex-col justify-between">
           <div className="flex justify-between items-center mb-1">
             <h3 className="text-xs font-black uppercase tracking-widest text-[#0078D4] dark:text-blue-400">
               {lang === "TR" ? "Satılan Adam-Gün Performansı" : "Sold Man-Day Performance"}
@@ -1542,7 +1544,7 @@ export default function SalesDashboardView({ deals, onSelectDeal }: SalesDashboa
             </button>
           </div>
           <p className="text-[10px] text-slate-400 mb-4">
-            {lang === "TR" ? "Satılan kümülatif danışman adam-günlerinin idari hedeflere göre takibi" : "Monitoring cumulative sold consultant man-days vs administrative targets"}
+            {lang === "TR" ? "Satılan adam-günlerin dönem hedefiyle karşılaştırması." : "Sold consultant man-days compared with the period target."}
           </p>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 flex-1">
@@ -1598,10 +1600,10 @@ export default function SalesDashboardView({ deals, onSelectDeal }: SalesDashboa
       </div>
 
       {/* SECOND GRAPH ROW (SECTION 4 & 5) */}
-      <div className="grid grid-cols-1 md:grid-cols-12 gap-5">
+      <div className="sales-chart-row grid grid-cols-1 md:grid-cols-12 gap-5">
         
         {/* SECTION 4 - SALES TREND ANALYSIS */}
-        <div className="bg-white dark:bg-[#1b1a19] border border-[#EDEBE9] dark:border-[#323130] rounded-2xl p-5 shadow-xs md:col-span-8 flex flex-col justify-between h-[340px]">
+        <div className="sales-panel bg-white dark:bg-[#1b1a19] border border-[#EDEBE9] dark:border-[#323130] rounded-2xl p-5 shadow-xs md:col-span-8 flex flex-col justify-between h-[340px]">
           <div className="flex justify-between items-center mb-1">
             <div>
               <h3 className="text-xs font-black uppercase tracking-widest text-[#0078D4] dark:text-blue-400">
@@ -1616,13 +1618,14 @@ export default function SalesDashboardView({ deals, onSelectDeal }: SalesDashboa
                 <button
                   key={period}
                   onClick={() => setTrendPeriod(period)}
+                  aria-pressed={trendPeriod === period}
                   className={`px-2.5 py-1 text-[9px] uppercase font-mono font-bold rounded cursor-pointer transition-all ${
                     trendPeriod === period
                       ? "bg-[#0078D4] text-white"
                       : "text-slate-500 hover:text-slate-700"
                   }`}
                 >
-                  {period === "Monthly" ? "M" : period === "Quarterly" ? "Q" : "Y"}
+                  {period === "Monthly" ? (lang === "TR" ? "Aylık" : "Monthly") : period === "Quarterly" ? (lang === "TR" ? "Çeyrek" : "Quarterly") : (lang === "TR" ? "Yıllık" : "Yearly")}
                 </button>
               ))}
             </div>
@@ -1655,7 +1658,7 @@ export default function SalesDashboardView({ deals, onSelectDeal }: SalesDashboa
         </div>
 
         {/* SECTION 5 - CUSTOMER ACQUISITION */}
-        <div className="bg-white dark:bg-[#1b1a19] border border-[#EDEBE9] dark:border-[#323130] rounded-2xl p-5 shadow-xs md:col-span-4 flex flex-col justify-between">
+        <div className="sales-panel bg-white dark:bg-[#1b1a19] border border-[#EDEBE9] dark:border-[#323130] rounded-2xl p-5 shadow-xs md:col-span-4 flex flex-col justify-between">
           <div>
             <h3 className="text-xs font-black uppercase tracking-widest text-[#0078D4] dark:text-blue-400 mb-1">
               {lang === "TR" ? "Yeni Müşteri Kazanımı" : "Customer Acquisition"}
@@ -1679,11 +1682,80 @@ export default function SalesDashboardView({ deals, onSelectDeal }: SalesDashboa
 
       </div>
 
+      {/* SECTION 9 & 10: FORECAST & HEALTH */}
+      <div className="sales-chart-row grid grid-cols-1 md:grid-cols-12 gap-5">
+
+        {/* SECTION 9 - SALES FORECAST */}
+        <div className="sales-panel bg-white dark:bg-[#1b1a19] border border-[#EDEBE9] dark:border-[#323130] rounded-2xl p-5 shadow-xs md:col-span-8 flex flex-col justify-between h-[320px]">
+          <div>
+            <h3 className="text-xs font-black uppercase tracking-widest text-[#0078D4] dark:text-blue-400 mb-1">
+              {t("Sales Forecast Projection Matrix")}
+            </h3>
+            <p className="text-[10px] text-slate-400">{t("Comparing Gross Pipeline Value against Weighted Revenue targets")}</p>
+          </div>
+
+          <div className="flex-1">
+            <ResponsiveContainer width="100%" height="95%">
+              <ComposedChart data={forecastChartData}>
+                <CartesianGrid strokeDasharray="3 3" opacity={0.1} />
+                <XAxis dataKey="month" fontSize={9} tickLine={false} />
+                <YAxis fontSize={9} tickLine={false} tickFormatter={(v: any) => `$${v / 1000}k`} />
+                <Tooltip formatter={(value: any) => formatCur(value)} />
+                <Legend wrapperStyle={{ fontSize: 9 }} />
+                <Bar dataKey="pipeline" name={t("Current Active Pipeline")} fill="#3b82f6" opacity={0.8} barSize={25} />
+                <Line type="monotone" dataKey="weighted" name={t("Weighted Probability Revenue")} stroke="#f59e0b" strokeWidth={2.5} />
+                <Area type="monotone" dataKey="forecast" name={t("Forecast Stretch Buffer")} fill="#8b5cf6" fillOpacity={0.05} stroke="#8b5cf6" strokeWidth={1} />
+              </ComposedChart>
+            </ResponsiveContainer>
+          </div>
+        </div>
+
+        {/* SECTION 10 - OPPORTUNITY HEALTH (AGING LIST) */}
+        <div className="sales-panel bg-white dark:bg-[#1b1a19] border border-[#EDEBE9] dark:border-[#323130] rounded-2xl p-5 shadow-xs md:col-span-4 flex flex-col justify-between h-[320px]">
+          <div>
+            <h3 className="text-xs font-black uppercase tracking-widest text-[#0078D4] dark:text-blue-400 mb-1">
+              {t("Opportunity Aging Categories")}
+            </h3>
+            <p className="text-[10px] text-slate-400 mb-4">{t("Pipeline duration health profiling")}</p>
+          </div>
+
+          <div className="flex-1 flex flex-col justify-around">
+            {agingData.map((item) => {
+              const totalCount = filteredDeals.length || 1;
+              const ratio = Math.round((item.count / totalCount) * 100);
+              return (
+                <div key={item.name} className="space-y-1 text-xs">
+                  <div className="flex justify-between items-center font-semibold">
+                    <span className="flex items-center gap-1.5">
+                      <span className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: item.color }} />
+                      {t(item.name)}
+                    </span>
+                    <span className="font-mono">{item.count} {t("Deals")} ({formatCur(item.value)})</span>
+                  </div>
+                  <div className="w-full bg-slate-100 dark:bg-zinc-800 h-2 rounded-full overflow-hidden">
+                    <div className="h-full rounded-full" style={{ backgroundColor: item.color, width: `${ratio}%` }} />
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+
+      </div>
+
+      <details className="sales-supporting-reports">
+        <summary>
+          <span><strong>{lang === "TR" ? "Detaylı satış raporları" : "Detailed sales reports"}</strong>
+            <span>{lang === "TR" ? "Teklif konuları, toplantılar, ekip performansı ve aktiviteler" : "Proposal topics, meetings, team performance and activities"}</span>
+          </span>
+          <ChevronDown className="w-5 h-5" aria-hidden="true" />
+        </summary>
+        <div className="sales-supporting-body">
       {/* THIRD GRAPH ROW (SECTION 6 & 7) */}
-      <div className="grid grid-cols-1 md:grid-cols-12 gap-5">
+      <div className="sales-chart-row grid grid-cols-1 md:grid-cols-12 gap-5">
         
         {/* SECTION 6 - MOST COMMON PROPOSAL TOPICS */}
-        <div className="bg-white dark:bg-[#1b1a19] border border-[#EDEBE9] dark:border-[#323130] rounded-2xl p-5 shadow-xs md:col-span-6 flex flex-col justify-between h-[320px]">
+        <div className="sales-panel bg-white dark:bg-[#1b1a19] border border-[#EDEBE9] dark:border-[#323130] rounded-2xl p-5 shadow-xs md:col-span-6 flex flex-col justify-between h-[320px]">
           <div>
             <h3 className="text-xs font-black uppercase tracking-widest text-[#0078D4] dark:text-blue-400 mb-1">
               {t("Top 10 Proposal Topics by Revenue")}
@@ -1705,7 +1777,7 @@ export default function SalesDashboardView({ deals, onSelectDeal }: SalesDashboa
         </div>
 
         {/* SECTION 7 - MEETING PERFORMANCE */}
-        <div className="bg-white dark:bg-[#1b1a19] border border-[#EDEBE9] dark:border-[#323130] rounded-2xl p-5 shadow-xs md:col-span-6 flex flex-col justify-between h-[320px]">
+        <div className="sales-panel bg-white dark:bg-[#1b1a19] border border-[#EDEBE9] dark:border-[#323130] rounded-2xl p-5 shadow-xs md:col-span-6 flex flex-col justify-between h-[320px]">
           <div>
             <h3 className="text-xs font-black uppercase tracking-widest text-[#0078D4] dark:text-blue-400 mb-1">
               {t("Monthly Meeting Stats & Trend")}
@@ -1742,7 +1814,7 @@ export default function SalesDashboardView({ deals, onSelectDeal }: SalesDashboa
       </div>
 
       {/* SECTION 8 - TEAM LEADERBOARD */}
-      <div className="bg-white dark:bg-[#1b1a19] border border-[#EDEBE9] dark:border-[#323130] rounded-2xl p-5 shadow-xs">
+      <div className="sales-panel bg-white dark:bg-[#1b1a19] border border-[#EDEBE9] dark:border-[#323130] rounded-2xl p-5 shadow-xs">
         <h3 className="text-xs font-black uppercase tracking-widest text-[#0078D4] dark:text-blue-400 mb-1 flex items-center gap-1.5">
           <Award className="w-4 h-4 text-amber-500 animate-bounce" />
           {t("Sales Account Executive Leaderboard (Performance Ranking)")}
@@ -1797,69 +1869,8 @@ export default function SalesDashboardView({ deals, onSelectDeal }: SalesDashboa
         </div>
       </div>
 
-      {/* SECTION 9 & 10: FORECAST & HEALTH */}
-      <div className="grid grid-cols-1 md:grid-cols-12 gap-5">
-        
-        {/* SECTION 9 - SALES FORECAST */}
-        <div className="bg-white dark:bg-[#1b1a19] border border-[#EDEBE9] dark:border-[#323130] rounded-2xl p-5 shadow-xs md:col-span-8 flex flex-col justify-between h-[320px]">
-          <div>
-            <h3 className="text-xs font-black uppercase tracking-widest text-[#0078D4] dark:text-blue-400 mb-1">
-              {t("Sales Forecast Projection Matrix")}
-            </h3>
-            <p className="text-[10px] text-slate-400">{t("Comparing Gross Pipeline Value against Weighted Revenue targets")}</p>
-          </div>
-
-          <div className="flex-1">
-            <ResponsiveContainer width="100%" height="95%">
-              <ComposedChart data={forecastChartData}>
-                <CartesianGrid strokeDasharray="3 3" opacity={0.1} />
-                <XAxis dataKey="month" fontSize={9} tickLine={false} />
-                <YAxis fontSize={9} tickLine={false} tickFormatter={(v: any) => `$${v / 1000}k`} />
-                <Tooltip formatter={(value: any) => formatCur(value)} />
-                <Legend wrapperStyle={{ fontSize: 9 }} />
-                <Bar dataKey="pipeline" name={t("Current Active Pipeline")} fill="#3b82f6" opacity={0.8} barSize={25} />
-                <Line type="monotone" dataKey="weighted" name={t("Weighted Probability Revenue")} stroke="#f59e0b" strokeWidth={2.5} />
-                <Area type="monotone" dataKey="forecast" name={t("Forecast Stretch Buffer")} fill="#8b5cf6" fillOpacity={0.05} stroke="#8b5cf6" strokeWidth={1} />
-              </ComposedChart>
-            </ResponsiveContainer>
-          </div>
-        </div>
-
-        {/* SECTION 10 - OPPORTUNITY HEALTH (AGING LIST) */}
-        <div className="bg-white dark:bg-[#1b1a19] border border-[#EDEBE9] dark:border-[#323130] rounded-2xl p-5 shadow-xs md:col-span-4 flex flex-col justify-between h-[320px]">
-          <div>
-            <h3 className="text-xs font-black uppercase tracking-widest text-[#0078D4] dark:text-blue-400 mb-1">
-              {t("Opportunity Aging Categories")}
-            </h3>
-            <p className="text-[10px] text-slate-400 mb-4">{t("Pipeline duration health profiling")}</p>
-          </div>
-
-          <div className="flex-1 flex flex-col justify-around">
-            {agingData.map((item) => {
-              const totalCount = filteredDeals.length || 1;
-              const ratio = Math.round((item.count / totalCount) * 100);
-              return (
-                <div key={item.name} className="space-y-1 text-xs">
-                  <div className="flex justify-between items-center font-semibold">
-                    <span className="flex items-center gap-1.5">
-                      <span className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: item.color }} />
-                      {t(item.name)}
-                    </span>
-                    <span className="font-mono">{item.count} {t("Deals")} ({formatCur(item.value)})</span>
-                  </div>
-                  <div className="w-full bg-slate-100 dark:bg-zinc-800 h-2 rounded-full overflow-hidden">
-                    <div className="h-full rounded-full" style={{ backgroundColor: item.color, width: `${ratio}%` }} />
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-        </div>
-
-      </div>
-
       {/* SECTION 11 - ACTIVITY DASHBOARD */}
-      <div className="bg-white dark:bg-[#1b1a19] border border-[#EDEBE9] dark:border-[#323130] rounded-2xl p-5 shadow-xs">
+      <div className="sales-panel bg-white dark:bg-[#1b1a19] border border-[#EDEBE9] dark:border-[#323130] rounded-2xl p-5 shadow-xs">
         <h3 className="text-xs font-black uppercase tracking-widest text-[#0078D4] dark:text-blue-400 mb-1">
           {t("Activity Health & Warning Dashboard")}
         </h3>
@@ -1901,6 +1912,9 @@ export default function SalesDashboardView({ deals, onSelectDeal }: SalesDashboa
           </div>
         </div>
       </div>
+
+        </div>
+      </details>
 
       {/* EDITABLE TARGETS MODAL */}
       {isTargetModalOpen && (

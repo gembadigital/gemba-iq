@@ -279,4 +279,97 @@
   .gemba-stitch-skin .company-heading > div > span:not(.company-status) { background: var(--stitch-field) !important; color: var(--stitch-muted) !important; font-size: 12px !important; font-weight: 500 !important; }
 }
 
+
+/* Sales overview: quiet summary, readable charts, secondary reports on demand. */
+@media screen {
+  .gemba-stitch-skin .sales-dashboard { max-width: 1560px; margin-inline: auto; padding-bottom: 32px; }
+  .gemba-stitch-skin .sales-dashboard-header { background: transparent !important; border: 0 !important; box-shadow: none !important; padding: 4px 0 0 !important; overflow: visible !important; }
+  .gemba-stitch-skin .sales-header-stripe { display: none; }
+  .gemba-stitch-skin .sales-header-icon { background: var(--stitch-surface) !important; color: var(--stitch-accent-ink) !important; border: 1px solid var(--stitch-line); box-shadow: none !important; padding: 12px; border-radius: 12px !important; }
+  .gemba-stitch-skin .sales-dashboard h1 { font-size: 26px !important; font-weight: 650 !important; text-transform: none !important; letter-spacing: -.7px !important; line-height: 1.3 !important; }
+  .gemba-stitch-skin .sales-dashboard-header p { font-size: 13px !important; line-height: 1.6; color: var(--stitch-muted) !important; }
+  .gemba-stitch-skin .sales-dashboard-tabs { border: 0 !important; background: transparent !important; border-radius: 0 !important; padding: 0 !important; gap: 24px !important; border-bottom: 1px solid var(--stitch-line) !important; }
+  .gemba-stitch-skin .sales-dashboard-tabs button { background: transparent !important; border: 0 !important; border-bottom: 2px solid transparent !important; border-radius: 0 !important; padding: 12px 0 !important; color: var(--stitch-muted) !important; font-size: 13px !important; box-shadow: none !important; }
+  .gemba-stitch-skin .sales-dashboard-tabs button[aria-pressed="true"] { border-bottom-color: var(--stitch-accent) !important; color: var(--stitch-accent-ink) !important; }
+  .gemba-stitch-skin .sales-dashboard-tabs button svg { color: inherit !important; }
+  .gemba-stitch-skin .sales-kpis { gap: 0 !important; background: var(--stitch-surface); border: 1px solid var(--stitch-line); border-radius: 14px; overflow: hidden; }
+  .gemba-stitch-skin .sales-kpis > div { border: 0 !important; border-right: 1px solid var(--stitch-line) !important; border-radius: 0 !important; padding: 20px 18px !important; box-shadow: none !important; justify-content: flex-start !important; gap: 4px; min-width: 0; }
+  .gemba-stitch-skin .sales-kpis > div:last-child { border-right: 0 !important; }
+  .gemba-stitch-skin .sales-kpis > div > div:first-child > span { text-transform: none !important; letter-spacing: 0 !important; font-size: 12px !important; font-weight: 500 !important; color: var(--stitch-muted) !important; }
+  .gemba-stitch-skin .sales-kpis > div > div:first-child svg { display: none !important; }
+  .gemba-stitch-skin .sales-kpis > div > div:nth-child(2) { margin-block: 7px 0 !important; }
+  .gemba-stitch-skin .sales-kpis > div > div:nth-child(2) > span:first-child { font-family: inherit !important; font-size: clamp(18px,1.6vw,25px) !important; font-weight: 650 !important; letter-spacing: -.6px !important; line-height: 1.3 !important; overflow-wrap: anywhere; color: var(--stitch-text) !important; font-variant-numeric: tabular-nums; }
+  .gemba-stitch-skin .sales-kpis > div:nth-child(2) > div:nth-child(2) > span:first-child { color: light-dark(#16804a,#64dca0) !important; }
+  .gemba-stitch-skin .sales-kpis > div:nth-child(3) > div:nth-child(2) > span:first-child { color: light-dark(#b63e52,#ffa2af) !important; }
+  .gemba-stitch-skin .sales-kpis > div > div:nth-child(2) > span + span { font-size: 11px !important; line-height: 1.5; color: var(--stitch-muted) !important; }
+  .gemba-stitch-skin .sales-kpis > div > div:last-child:not(:nth-child(2)) { font-size: 10px !important; font-weight: 500 !important; font-family: inherit !important; margin-top: 3px; }
+  .gemba-stitch-skin .sales-insights > div:first-child svg { display: none !important; }
+  .gemba-stitch-skin .sales-insights h2 { font-size: 15px !important; font-weight: 600 !important; text-transform: none !important; letter-spacing: -.2px !important; }
+  .gemba-stitch-skin .sales-insight-card { background: var(--stitch-surface) !important; border: 1px solid var(--stitch-line) !important; border-radius: 12px !important; text-align: left; padding: 18px 20px !important; box-shadow: none !important; color: var(--stitch-text) !important; white-space: normal !important; min-width: 0; }
+  .gemba-stitch-skin .sales-insight-card:hover { border-color: var(--stitch-accent) !important; box-shadow: 0 4px 14px rgb(15 23 42 / 5%) !important; }
+  .gemba-stitch-skin .sales-insight-card:focus-visible, .gemba-stitch-skin .sales-supporting-reports > summary:focus-visible { outline: 2px solid var(--stitch-accent); outline-offset: 3px; }
+  .gemba-stitch-skin .sales-insight-card > div:first-child > span:first-child { font-size: 12px !important; font-weight: 500 !important; letter-spacing: 0 !important; text-transform: none !important; color: var(--stitch-muted) !important; }
+  .gemba-stitch-skin .sales-insight-card > div:nth-child(2) { margin-block: 14px !important; }
+  .gemba-stitch-skin .sales-insight-card .font-mono { font-family: inherit !important; font-variant-numeric: tabular-nums; }
+  .gemba-stitch-skin .sales-insight-card > div:last-child { border-top-color: var(--stitch-line) !important; padding-top: 10px !important; font-weight: 400 !important; }
+  .gemba-stitch-skin .sales-dashboard .animate-pulse, .gemba-stitch-skin .sales-dashboard .animate-bounce, .gemba-stitch-skin .sales-dashboard .animate-ping { animation: none !important; }
+  .gemba-stitch-skin .sales-chart-row { gap: 20px !important; }
+  .gemba-stitch-skin .sales-chart-row > div, .gemba-stitch-skin .sales-panel { min-width: 0; }
+  .gemba-stitch-skin .sales-panel { background: var(--stitch-surface) !important; border: 1px solid var(--stitch-line) !important; padding: 24px !important; border-radius: 14px !important; box-shadow: none !important; }
+  .gemba-stitch-skin .sales-panel h3 { color: var(--stitch-text) !important; font-size: 15px !important; font-weight: 600 !important; text-transform: none !important; letter-spacing: -.2px !important; line-height: 1.5 !important; }
+  .gemba-stitch-skin .sales-panel p { font-size: 12px !important; color: var(--stitch-muted) !important; line-height: 1.6; }
+  .gemba-stitch-skin .sales-panel .font-mono { font-family: inherit !important; font-variant-numeric: tabular-nums; }
+  .gemba-stitch-skin .sales-panel .recharts-text { font-size: 11px !important; fill: var(--stitch-muted); }
+  .gemba-stitch-skin .sales-panel .recharts-legend-wrapper { font-size: 11px !important; }
+  .gemba-stitch-skin .sales-panel .recharts-default-tooltip { background: var(--stitch-surface) !important; border: 1px solid var(--stitch-line) !important; border-radius: 8px; color: var(--stitch-text) !important; }
+  .gemba-stitch-skin .sales-supporting-reports { border: 1px solid var(--stitch-line); border-radius: 14px; background: var(--stitch-surface); }
+  .gemba-stitch-skin .sales-supporting-reports > summary { list-style: none; display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 22px 24px; cursor: pointer; color: var(--stitch-text); }
+  .gemba-stitch-skin .sales-supporting-reports > summary::-webkit-details-marker { display: none; }
+  .gemba-stitch-skin .sales-supporting-reports strong { display: block; font-size: 15px; font-weight: 600; }
+  .gemba-stitch-skin .sales-supporting-reports summary span > span { display: block; font-size: 12px; color: var(--stitch-muted); margin-top: 4px; }
+  .gemba-stitch-skin .sales-supporting-reports[open] > summary svg { transform: rotate(180deg); }
+  .gemba-stitch-skin .sales-supporting-body { padding: 0 20px 20px; display: grid; gap: 20px; }
+  .gemba-stitch-skin .sales-supporting-body table { font-size: 12px; }
+  .gemba-stitch-skin .sales-supporting-body th { text-transform: none !important; letter-spacing: 0 !important; }
+}
+@media screen and (max-width: 1279px) {
+  .gemba-stitch-skin .sales-kpis { grid-template-columns: repeat(3,minmax(0,1fr)) !important; }
+  .gemba-stitch-skin .sales-kpis > div:nth-child(3) { border-right: 0 !important; }
+  .gemba-stitch-skin .sales-kpis > div:nth-child(n+4) { border-top: 1px solid var(--stitch-line) !important; }
+}
+@media screen and (max-width: 1023px) {
+  .gemba-stitch-skin .sales-chart-row { grid-template-columns: minmax(0,1fr) !important; }
+  .gemba-stitch-skin .sales-chart-row > div { grid-column: auto !important; }
+  .gemba-stitch-skin .sales-insights > .grid { grid-template-columns: minmax(0,1fr) !important; }
+}
+@media screen and (max-width: 639px) {
+  .gemba-stitch-skin .sales-dashboard h1 { font-size: 22px !important; }
+  .gemba-stitch-skin .sales-header-icon { display: none !important; }
+  .gemba-stitch-skin .sales-dashboard-tabs { gap: 18px !important; }
+  .gemba-stitch-skin .sales-dashboard-tabs button { font-size: 12px !important; }
+  .gemba-stitch-skin .sales-kpis { grid-template-columns: repeat(2,minmax(0,1fr)) !important; }
+  .gemba-stitch-skin .sales-kpis > div { padding: 16px !important; }
+  .gemba-stitch-skin .sales-kpis > div:nth-child(3) { border-right: 1px solid var(--stitch-line) !important; }
+  .gemba-stitch-skin .sales-kpis > div:nth-child(2n) { border-right: 0 !important; }
+  .gemba-stitch-skin .sales-kpis > div:nth-child(n+3) { border-top: 1px solid var(--stitch-line) !important; }
+  .gemba-stitch-skin .sales-panel { padding: 18px !important; }
+  .gemba-stitch-skin .sales-panel > .flex { flex-wrap: wrap; gap: 8px; }
+  .gemba-stitch-skin .sales-panel .space-y-3 > .space-y-1 > .flex { flex-wrap: wrap; gap: 4px; }
+  .gemba-stitch-skin .sales-supporting-reports > summary { padding: 18px; }
+  .gemba-stitch-skin .sales-supporting-body { padding-inline: 10px; }
+}
+
+@media screen {
+  .gemba-stitch-skin .sales-panel button { background: var(--stitch-field) !important; color: var(--stitch-muted) !important; border-color: var(--stitch-line) !important; }
+  .gemba-stitch-skin .sales-panel button[aria-pressed="true"] { background: var(--stitch-text) !important; color: var(--stitch-surface) !important; }
+  .gemba-stitch-skin .sales-panel button :where(span,svg) { color: inherit !important; }
+}
+
+@media screen {
+  .gemba-stitch-skin .sales-dashboard :where([class*="text-[#0078D4]"]) { color: var(--stitch-accent-ink) !important; }
+  .gemba-stitch-skin .sales-panel :where([class*="text-slate-700"], [class*="text-slate-600"]) { color: var(--stitch-text) !important; }
+  .gemba-stitch-skin.dark .sales-dashboard :where(.text-emerald-500, .text-emerald-600) { color: #64dca0 !important; }
+  .gemba-stitch-skin.dark .sales-dashboard :where(.text-rose-500, .text-rose-600) { color: #ffa2af !important; }
+}
+
 }
