@@ -19,10 +19,24 @@ export function proposalTextBlocks(raw = "", legal = false): string[] {
   parsed.querySelectorAll("p,div,li,tr").forEach(el => el.append("\n"));
   let text = parsed.body.textContent || "";
   if (legal) {
-    // Preserve every clause; only separate a short label from its body.
-    text = text.replace(/^(\s*(?:\d+[.)]\s*)?)(KDV|Masraflar|Faturalandırma|Ödeme|Teklif geçerlilik süresi|Geçerlilik|Gizlilik|Fikri mülkiyet|İptal|Sorumluluk|Yetkili mahkeme)\s*[:：–—-]\s*/gim, "$1### $2\n");
-    text = text.replace(/^\s*\d+[.)]\s*### /gm, "### ");
-    text = text.replace(/^\s*(?:\d+[.)]\s*)?(KDV|Masraflar|Faturalandırma|Ödeme|Teklif geçerlilik süresi|Gizlilik)\s*$/gim, "### $1");
+    // Compact numbered clauses; preserve the approved wording and numbers.
+    const blocks: string[] = [];
+    const label = /^(?:KDV|Masraflar|Ulaşım ve Konaklama Giderleri|Faturalandırma|Ödeme(?: Koşulları)?|Teklif [Gg]eçerlilik [Ss]üresi|Geçerlilik|Eğitim ve Çalışma Takvimi|Hizmet Kapsamı|Teklif Onayı|Gizlilik|Fikri mülkiyet|İptal|Sorumluluk|Yetkili mahkeme)$/i;
+    const title = (value: string) => `<h3 style="font:700 10pt/1.3 Arial!important;color:#111827!important;margin:7px 0 2px!important;padding:0!important;border:0!important;overflow-wrap:anywhere;break-after:avoid">${escape(value)}</h3>`;
+    const paragraph = (value: string) => `<p style="font:10pt/1.35 Arial!important;color:#111827!important;margin:0 0 4px!important;padding:0!important;overflow-wrap:anywhere">${escape(value)}</p>`;
+    for (const raw of text.split(/[\r\n]+/)) {
+      const line = raw.trim();
+      if (!line) continue;
+      const explicit = /^#{1,6}\s+/.test(line);
+      const content = line.replace(/^#{1,6}\s+/, "");
+      const clause = content.match(/^((?:\d+[.)]\s*)?)([^:：]{1,100})[:：]\s*(.*)$/);
+      if (clause && (clause[1] || label.test(clause[2].trim()))) {
+        blocks.push(title(clause[1] + clause[2].trim() + ":"));
+        if (clause[3]) blocks.push(paragraph(clause[3]));
+      } else if (explicit || label.test(content) || /^\d+[.)]\s+.{1,80}:?$/.test(content)) blocks.push(title(content));
+      else blocks.push(paragraph(content));
+    }
+    return blocks;
   }
   return serviceDefinitionBlocks(text);
 }
@@ -111,10 +125,14 @@ export function buildProposalDocument(doc: ProposalDocument): string {
       html: heading(label + (i ? " (devamı)" : "")) + (inlineDescription && !i ? details.join("") : "") + html + (i === tablePages.length - 1 ? amountWords : "") + alternatives,
     }));
   });
-  const signatures = `<div data-signatures="true" style="display:flex;gap:24px;margin-top:auto;padding-top:22px;font:9pt/1.4 Arial"><div style="flex:1"><h3 style="font-size:10pt;color:#b91c1c;margin:0 0 10px">TEKLİF HAZIRLAYAN</h3><div style="min-height:38px">Gemba Partner Mühendislik ve Yazılım A.Ş.</div><div style="height:60px;border-bottom:1px dashed #94a3b8"></div>İmza / Kaşe</div><div style="flex:1;overflow-wrap:anywhere"><h3 style="font-size:10pt;color:#b91c1c;margin:0 0 10px">MÜŞTERİ ONAYI</h3><div style="min-height:38px">${escape(doc.companyName)}<br>${escape(doc.contactPerson)}</div><div style="height:60px;border-bottom:1px dashed #94a3b8"></div>İmza / Kaşe</div></div>`;
+  const customerAuthority = doc.contactPerson?.trim();
+  const authority = customerAuthority ? `Yetkili: ${/^(sn\.?|sayın)\s/i.test(customerAuthority) ? "" : "Sn. "}${escape(customerAuthority)}` : "Yetkili: ____________________";
+  const signatureTitle = (text: string) => `<h3 style="font:700 9.5pt/1.3 Arial!important;color:#b91c1c!important;margin:0 0 5px!important;padding:0 0 4px!important;border-bottom:1px solid #cbd5e1!important">${text}</h3>`;
+  const signatureLine = '<div style="height:38px!important;position:relative;border-bottom:1px dashed #cbd5e1"><span style="position:absolute;right:6px;bottom:5px;font:italic 7pt Arial;color:#94a3b8">İMZA / KAŞE</span></div>';
+  const signatures = `<div data-signatures="true" style="display:flex!important;gap:28px!important;margin-top:auto!important;padding-top:18px!important;font:9pt/1.35 Arial;color:#1e293b"><div style="flex:1;min-width:0">${signatureTitle("TEKLİFİ HAZIRLAYAN")}<div style="min-height:34px;font-weight:700">Gemba Partner Mühendislik ve Yazılım A.Ş.</div>${signatureLine}</div><div data-customer-approval="true" style="flex:1;min-width:0;overflow-wrap:anywhere">${signatureTitle("MÜŞTERİ KABUL &amp; ONAY")}<div style="min-height:34px"><strong>${escape(doc.companyName)}</strong><div style="font:8pt/1.35 Arial;color:#64748b;margin-top:4px">${authority}</div></div>${signatureLine}</div></div>`;
   const legal = paginateBlocks(proposalTextBlocks(doc.terms || "", true), HEIGHT - 48);
   if (!legal.length) legal.push('<p style="font:9.5pt Arial;color:#64748b">Hukuki koşullar henüz tanımlanmamıştır.</p>');
-  legal.forEach((html, i) => pages.push({ section: "legal", title: "HUKUKİ ÇERÇEVE" + (i ? " (devamı)" : ""), html }));
+  legal.forEach((html, i) => pages.push({ section: "legal", title: "3. TİCARİ VE HUKUKİ GENEL ŞARTLAR" + (i ? " (devamı)" : ""), html }));
   // Measure the complete legal content + signature, reserving the heading.
   const last = pages[pages.length - 1];
   const probe = document.createElement("div");
@@ -128,5 +146,5 @@ export function buildProposalDocument(doc: ProposalDocument): string {
   const image = (src: string) => `<img alt="" src="${escape(src)}" style="position:absolute;inset:0;width:100%;height:100%;z-index:0" />`;
   const date = /^\d{4}-\d{2}-\d{2}/.test(doc.date) ? doc.date.slice(0, 10).split("-").reverse().join(".") : doc.date;
   const metadata = `<table style="width:100%;table-layout:fixed;border-collapse:collapse;font:11pt/1.6 Arial"><tbody>${[["FİRMA ADI", doc.companyName], ["TEKLİF KONUSU", name], ["TARİH / TEKLİF NO", `${date} / ${doc.proposalNumber}`]].map(([label, value]) => `<tr><td style="width:40%;padding:5px 0;font-weight:700;vertical-align:top">${label}</td><td style="padding:5px 0;overflow-wrap:anywhere">${escape(value)}</td></tr>`).join("")}</tbody></table>`;
-  return `<style>.a4-page{width:210mm;height:297mm;box-sizing:border-box;position:relative;background:white;color:#1e293b;font-family:Arial,sans-serif;margin:0 auto 30px;overflow-wrap:anywhere;flex-shrink:0}.a4-page *{box-sizing:border-box}.proposal-content{position:relative;z-index:1;height:223mm;width:170mm;display:flex;flex-direction:column}.proposal-content>h3{flex-shrink:0}.proposal-section-body{display:flex;flex-direction:column;flex:1;min-height:0}.proposal-section-body>table{flex-shrink:0}@media print{@page{size:A4;margin:0}.a4-page{margin:0!important;break-after:page;box-shadow:none!important;print-color-adjust:exact}.a4-page:last-child{break-after:auto}.a4-page div{background:transparent!important}}</style><div class="a4-page" data-section="cover">${image(doc.coverImage || "/cover.png")}<div style="position:absolute;top:160mm;left:25mm;right:25mm;text-align:center;font:700 18pt Arial">HİZMET TEKLİFİ</div><div style="position:absolute;top:195mm;left:35mm;right:25mm">${metadata}</div></div>${pages.map((page, i) => `<div class="a4-page" data-section="${page.section}" style="padding:38mm 20mm 36mm">${image(doc.pageImage || "/page.png")}<div class="proposal-content">${heading(page.title)}<div class="proposal-section-body">${page.html}</div></div><div style="position:absolute;bottom:31mm;left:20mm;right:20mm;text-align:right;font:8pt Arial;color:#64748b">${i + 2} / ${pages.length + 1}</div></div>`).join("")}`;
+  return `<style>.a4-page{width:210mm;height:297mm;box-sizing:border-box;position:relative;background:white;color:#1e293b;font-family:Arial,sans-serif;margin:0 auto 30px;overflow-wrap:anywhere;flex-shrink:0}.a4-page *{box-sizing:border-box}.proposal-content{position:relative;z-index:1;height:223mm;width:170mm;display:flex;flex-direction:column}.proposal-content>h3{flex-shrink:0}.proposal-section-body{display:flex;flex-direction:column;flex:1;min-height:0}.proposal-section-body>table{flex-shrink:0}@media print{@page{size:A4;margin:0}.a4-page{margin:0!important;break-after:page;box-shadow:none!important;print-color-adjust:exact}.a4-page:last-child{break-after:auto}.a4-page div{background:transparent!important}}</style><div class="a4-page" data-section="cover">${image(doc.coverImage || "/cover.png")}<div style="position:absolute;top:160mm;left:25mm;right:25mm;text-align:center;font:700 18pt Arial">HİZMET TEKLİFİ</div><div style="position:absolute;top:195mm;left:35mm;right:25mm">${metadata}</div></div>${pages.map((page, i) => `<div class="a4-page" data-section="${page.section}" style="padding:38mm 20mm 36mm">${image(doc.pageImage || "/page.png")}<div class="proposal-content">${page.section === "legal" ? heading(page.title).replace("color:#b91c1c", "color:#334155!important") : heading(page.title)}<div class="proposal-section-body">${page.html}</div></div><div style="position:absolute;bottom:31mm;left:20mm;right:20mm;text-align:right;font:8pt Arial;color:#64748b">${i + 2} / ${pages.length + 1}</div></div>`).join("")}`;
 }

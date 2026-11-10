@@ -1,0 +1,7 @@
+# Legal-page layout and customer signatory correction
+
+The approved eight-clause sample now renders as a single legal page with numbered h3 labels, compact black body text, and two signature blocks at the bottom. Clause wording and numbering are preserved; the renderer does not replace a proposal's stored terms with the sample. Long custom legal text can continue onto another page without truncation.
+
+The proposal wizard previously defaulted the customer contact to the signed-in actor and set the internal owner from the selected customer's primary contact. The wizard now fills its owner from the internal account representative/session and its customer name/email from the selected company's primary contact. A customer without a registered contact stays blank. Revision loading and saved-document rendering replace a proven internal-name fallback with the registered customer contact, or leave it blank if no valid contact exists. Explicit customer names are preserved. Existing database records are not bulk edited.
+
+Validation: 26 browser document fixtures, including the approved numbered sample with Marshall / Semanur and a missing-signatory case; five pure contact-resolution checks; TypeScript and isolated production build. Existing activity-page and pricing checks remain in the suite. Under production UI CSS, the previously documented 212 introduction overflow is unchanged and unrelated to the legal layout. No live proposal, legal term or contact record was changed during verification.

@@ -10,6 +10,9 @@ for (const card of ready) fixtures.set(card.code, {
  options:{'Option 1':{name:'SPC eğitim programı',desc:'Eğitim ve uygulama çalışmaları',duration:'2 gün',training:true,consulting:false,workshop:false,expenses:0,manDays:2,dailyRate:40000,rows:[{id:'a',item:'SPC eğitimi',manDays:1,dailyRate:40000},{id:'b',item:'SPC uygulaması',manDays:1,dailyRate:40000}]}}
 });
 const base=fixtures.get('307')!;
+const approvedTerms="1. KDV:\nTeklifte belirtilen fiyatlara KDV dahil değildir. Yürürlükteki KDV oranı fatura tutarına ayrıca ilave edilir.\n2. Ulaşım ve Konaklama Giderleri:\nTeklif fiyatları yalnızca hizmet bedelini kapsamaktadır. İl dışında gerçekleştirilecek çalışmalara ilişkin ulaşım, konaklama ve ilgili seyahat giderleri müşteri firmaya aittir.\n3. Faturalandırma:\nEğitim ve danışmanlık hizmetleri, ilgili ay içerisinde gerçekleştirilen eğitim veya danışmanlık günleri esas alınarak aylık olarak faturalandırılır. Tek seferlik eğitimlerde faturalandırma, eğitimin tamamlanmasının ardından yapılır.\n4. Ödeme Koşulları:\nFatura bedeli, fatura tarihinden itibaren en geç 14 (on dört) takvim günü içerisinde banka havalesi/EFT yoluyla ödenir.\n5. Teklif Geçerlilik Süresi:\nTeklifte belirtilen fiyat ve koşullar, teklif tarihinden itibaren 30 (otuz) gün süreyle geçerlidir.\n6. Eğitim ve Çalışma Takvimi:\nEğitim ve danışmanlık tarihleri, tarafların karşılıklı mutabakatıyla belirlenir. Planlanan çalışmaların ertelenmesi veya iptal edilmesi taleplerinin en az 5 (beş) iş günü öncesinden yazılı olarak bildirilmesi gerekmektedir.\n7. Hizmet Kapsamı:\nTeklifte belirtilen hizmet kapsamı, süre ve adam-gün miktarları esas alınır. Kapsam dışındaki ilave çalışmalar, tarafların karşılıklı mutabakatıyla ayrıca fiyatlandırılır.\n8. Teklif Onayı:\nTeklifin müşteri tarafından yazılı olarak onaylanmasıyla çalışma planlama süreci başlatılır. Hizmetin uygulanmasına ilişkin detaylı koşullar, gerekli görülmesi halinde taraflar arasında ayrıca düzenlenecek hizmet sözleşmesiyle belirlenir.";
+fixtures.set('ONAYLI-HUKUK',{...base,companyName:'MARSHALL BOYA',contactPerson:'Semanur Demirel',terms:approvedTerms});
+fixtures.set('YETKİLİ-YOK',{...base,contactPerson:''});
 const lean=fixtures.get('201')!;
 const pasted=lean.activityTableHtml!.replaceAll('<tr>', '<tr style="height:120px">').replaceAll('<td>', '<td width="800"><p style="font:18pt Arial;margin:18px;padding:12px">').replaceAll('</td>', '</p></td>');
 fixtures.set('WORD-GENİŞ',{...lean,activityTableHtml:pasted});
@@ -45,15 +48,19 @@ function inspect(code:string,doc:ProposalDocument){
  const activityPages=sections.filter(s=>s==='activity').length;
  const twoPages=(!ready.some(c=>c.code===code)&&code!=='WORD-GENİŞ')||activityPages<=2;
  const packed=code!=='BİRDEN-ÇOK-TABLO'||activityPages===1&&text.includes('BİRİNCİ-TABLO-KORUNUR')&&text.includes('İKİNCİ-TABLO-KORUNUR')&&text.includes('Aşamalar arasındaki not.');
- const ok=exactActivity&&twoPages&&packed&&safe&&ordered&&!overflow&&signatureBottom&&signs&&optional&&pricing&&long&&legacy&&allCells;
- report.push({code,pages:pages.length,activityPages,twoPages,packed,exactActivity,ordered,overflow,overflowSections,signatureBottom,signs,optional,pricing,long,legacy,allCells,safe,ok});
+ const approval=host.querySelector('[data-customer-approval]');
+ const customer=code!=='ONAYLI-HUKUK'||approval?.textContent?.includes('MARSHALL BOYA')&&approval?.textContent?.includes('Sn. Semanur Demirel');
+ const emptyAuthority=code!=='YETKİLİ-YOK'||approval?.textContent?.includes('Yetkili: ____________________');
+ const compactLegal=code!=='ONAYLI-HUKUK'||sections.filter(s=>s==='legal').length===1&&!sections.includes('signature')&&Array.from({length:8},(_,i)=>i+1).every(n=>Array.from(host.querySelectorAll('.a4-page[data-section="legal"] h3')).some(h=>h.textContent?.startsWith(n+'. ')));
+ const ok=customer&&emptyAuthority&&compactLegal&&exactActivity&&twoPages&&packed&&safe&&ordered&&!overflow&&signatureBottom&&signs&&optional&&pricing&&long&&legacy&&allCells;
+ report.push({code,pages:pages.length,customer,emptyAuthority,compactLegal,activityPages,twoPages,packed,exactActivity,ordered,overflow,overflowSections,signatureBottom,signs,optional,pricing,long,legacy,allCells,safe,ok});
 }
 for(const [code,doc] of fixtures)inspect(code,doc);
 document.getElementById('status')!.textContent=report.every(r=>r.ok)?`GEÇTİ: ${report.length} belge testi`:`BAŞARISIZ: ${JSON.stringify(report.filter(r=>!r.ok))}`;
 document.getElementById('results')!.textContent=JSON.stringify(report);
 const select=document.getElementById('service') as HTMLSelectElement;
 for(const key of fixtures.keys())select.add(new Option(key,key));
-function show(){host.innerHTML=buildProposalDocument(fixtures.get(select.value)!); if(new URLSearchParams(location.search).get('view')==='activity')host.querySelectorAll<HTMLElement>('.a4-page').forEach(p=>{if(p.dataset.section!=='activity')p.remove()});}
+function show(){host.innerHTML=buildProposalDocument(fixtures.get(select.value)!); const view=new URLSearchParams(location.search).get('view'); if(view==='activity'||view==='legal')host.querySelectorAll<HTMLElement>('.a4-page').forEach(p=>{if(p.dataset.section!==view)p.remove()});}
 select.value=new URLSearchParams(location.search).get('service')||'307';select.addEventListener('change',show);show();
 document.getElementById('capture')!.addEventListener('click',async()=>{
  document.getElementById('pdf-status')!.textContent='PDF hazırlanıyor';

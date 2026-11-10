@@ -59,6 +59,7 @@ import PizZip from "pizzip";
 import { CrmDb } from "../lib/CrmDb";
 import { useLanguage } from "../lib/LanguageContext";
 import { useOrganization } from "../lib/OrganizationContext";
+import { resolveCustomerContactName } from "../lib/proposalContacts";
 import { fetchOrganizationMailbox } from "../lib/organizationMailbox";
 import { fetchPersonalMailbox } from "../lib/personalMailbox";
 import { getSupabase } from "../lib/supabaseClient";
@@ -455,18 +456,13 @@ export default function ServicesView({
     }
   }, [clientTitle, isShortNameManuallyEdited]);
 
-  // "Müşteri İlgili Kişi" — the logged-in user's own name (the rep
-  // preparing this proposal), not a customer-side contact. Populated from
-  // the real session profile once available; the rep can still edit it.
-  // "Müşteri E-posta Adresi" is the actual SEND-TO address (see placeholder
-  // "to: yetkili@firma.com") — it must be the customer's own email, so it
-  // is populated from the selected company's registered contact instead
-  // (see the company dropdown handler below), never from the logged-in user.
+  // The preparer belongs in the internal owner field; the customer contact
+  // stays blank until a customer is selected or explicitly entered.
   const [clientContactPerson, setClientContactPerson] = useState("");
   const [clientContactEmail, setClientContactEmail] = useState("");
 
   useEffect(() => {
-    if (actorName) setClientContactPerson((prev) => prev || actorName);
+    if (actorName) setAssignedPm(prev => prev || actorName);
   }, [actorName]);
 
   // Integrated Email Draft Templates
@@ -833,7 +829,10 @@ export default function ServicesView({
     setClientAddress(proposal.clientAddress || "");
     setProposalDate(proposal.date || new Date().toISOString().split("T")[0]);
     setAssignedPm(proposal.owner || "");
-    setClientContactPerson(proposal.contactPerson || "");
+    const customer = CrmDb.getCompanies().find(c => c.id === proposal.companyId) || CrmDb.getCompanies().find(c => c.name.trim().toLocaleLowerCase("tr-TR") === (proposal.companyName || "").trim().toLocaleLowerCase("tr-TR"));
+    const registered = customer ? CrmDb.getPrimaryContact(customer.id) : undefined;
+    const registeredName = registered ? `${registered.firstName} ${registered.lastName}`.trim() : "";
+    setClientContactPerson(resolveCustomerContactName(proposal.contactPerson || "", [actorName, customer?.accountOwner || ""], registeredName));
     setClientContactEmail(proposal.contactEmail || "");
     setMailSubject(proposal.proposalSubject || "");
     // Teklif no elle düzeltilebilsin diye otomatik yeniden numaralamayı
@@ -2873,18 +2872,13 @@ export default function ServicesView({
                                     setClientTitle(c.name);
                                     const parts = [c.billingAddress, c.billingDistrict, c.billingCity, c.billingCountry].filter(Boolean);
                                     setClientAddress(parts.join(", "));
-                                    // "Sorumlu Kişi" and "Müşteri E-posta Adresi" both come from the
-                                    // customer's own card — the company's registered contact person
-                                    // (Sirket Detayi > Kisiler). Falls back to the company's Hesap
-                                    // Temsilcisi (Account Owner) for the name if no contact is on file.
-                                    // "Müşteri İlgili Kişi" is NOT company-specific — it's the logged-in
-                                    // user's own name (see the actorName effect above), so it's
-                                    // intentionally left untouched here.
+                                    // Keep the internal representative and customer signatory separate.
                                     const primaryContact = CrmDb.getPrimaryContact(c.id);
                                     const contactFullName = primaryContact
                                       ? `${primaryContact.firstName} ${primaryContact.lastName}`.trim()
                                       : "";
-                                    setAssignedPm(contactFullName || c.accountOwner || "");
+                                    setAssignedPm(c.accountOwner || actorName || "");
+                                    setClientContactPerson(contactFullName);
                                     setClientContactEmail(primaryContact?.email || "");
                                     setShowCompaniesDropdown(false);
                                   }}
