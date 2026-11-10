@@ -10,6 +10,10 @@ for (const card of ready) fixtures.set(card.code, {
  options:{'Option 1':{name:'SPC eğitim programı',desc:'Eğitim ve uygulama çalışmaları',duration:'2 gün',training:true,consulting:false,workshop:false,expenses:0,manDays:2,dailyRate:40000,rows:[{id:'a',item:'SPC eğitimi',manDays:1,dailyRate:40000},{id:'b',item:'SPC uygulaması',manDays:1,dailyRate:40000}]}}
 });
 const base=fixtures.get('307')!;
+const lean=fixtures.get('201')!;
+const pasted=lean.activityTableHtml!.replaceAll('<tr>', '<tr style="height:120px">').replaceAll('<td>', '<td width="800"><p style="font:18pt Arial;margin:18px;padding:12px">').replaceAll('</td>', '</p></td>');
+fixtures.set('WORD-GENİŞ',{...lean,activityTableHtml:pasted});
+fixtures.set('BİRDEN-ÇOK-TABLO',{...base,activityTableHtml:'<h3>İlk aşama</h3><table><tr><th>Adım</th></tr><tr><td>BİRİNCİ-TABLO-KORUNUR</td></tr></table><p>Aşamalar arasındaki not.</p><table><tr><th>İkinci aşama</th></tr><tr><td>İKİNCİ-TABLO-KORUNUR</td></tr></table>'});
 fixtures.set('TABLOSUZ',{...base,activityTableHtml:'',options:{}});
 fixtures.set('UZUN',{...base,coverPage:base.coverPage+'\n'+Array.from({length:900},(_,i)=>`tanım${i}`).join(' '),terms:terms+'\nÖdeme: '+Array.from({length:1000},(_,i)=>`koşul${i}`).join(' '),options:{...base.options,'Option 2':{...base.options['Option 1'],name:'İkinci seçenek',desc:'Uzun fiyat tablosu',rows:Array.from({length:90},(_,i)=>({id:String(i),item:`HİZMET-${i} `+'W'.repeat(120),dailyRate:123.45,manDays:1}))}}});
 fixtures.set('ESKİ-KAYIT',{...base,coverPage:'<h2>Eski tanım</h2><p>Tüm içerik korunur.</p>',activityTableHtml:undefined,methodology:'<h2>Eski fazlar</h2><table><tr><th>Adım</th></tr><tr><td>SON FAALİYET</td></tr></table>',options:{Eski:{training:false,consulting:true,workshop:false,expenses:500,manDays:3,dailyRate:2000}},terms:'<h2>Ödeme</h2><p>ESKİ KOŞULLAR KORUNUR.</p>'});
@@ -23,6 +27,7 @@ function inspect(code:string,doc:ProposalDocument){
  const order={cover:0,introduction:1,activity:2,pricing:3,legal:4,signature:5};
  const ordered=sections.every((s,i)=>!i||order[s]>=order[sections[i-1]]);
  const overflow=Array.from(host.querySelectorAll<HTMLElement>('.proposal-content')).some(box=>box.scrollHeight>box.clientHeight+2||Array.from(box.querySelectorAll<HTMLElement>('*')).some(el=>el.scrollWidth>el.clientWidth+3 || el.getBoundingClientRect().bottom>box.getBoundingClientRect().bottom+2));
+ const overflowSections=Array.from(host.querySelectorAll<HTMLElement>('.proposal-content')).filter(box=>box.scrollHeight>box.clientHeight+2||Array.from(box.querySelectorAll<HTMLElement>('*')).some(el=>el.scrollWidth>el.clientWidth+3||el.getBoundingClientRect().bottom>box.getBoundingClientRect().bottom+2)).map(box=>box.closest<HTMLElement>('.a4-page')!.dataset.section);
  const signature=host.querySelector<HTMLElement>('[data-signatures]')!;
  const signatureBottom=Math.abs(signature.getBoundingClientRect().bottom-signature.closest('.proposal-content')!.getBoundingClientRect().bottom)<2;
  const text=host.textContent!.replace(/\s+/g,' ');
@@ -33,17 +38,23 @@ function inspect(code:string,doc:ProposalDocument){
  const legacy=code!=='ESKİ-KAYIT'||text.includes('SON FAALİYET')&&text.includes('ESKİ KOŞULLAR KORUNUR.')&&text.includes('6.500,00');
  const input=new DOMParser().parseFromString(doc.activityTableHtml||'','text/html');
  const allCells=Array.from(input.querySelectorAll('tbody td')).every(el=>text.includes(el.textContent!.replace(/\s+/g,' ').trim()));
+ const activityWords=(root:ParentNode)=>Array.from(root.querySelectorAll('tbody td')).filter(c=>!c.closest('table[data-proposal-note]')).map(c=>c.textContent!.trim()).join(' ').replace(/\s+/g,' ').trim();
+ const activityHost=document.createElement('div');activityHost.innerHTML=Array.from(host.querySelectorAll('.a4-page[data-section="activity"] .proposal-section-body')).map(x=>x.innerHTML).join('');
+ const exactActivity=doc.activityTableHtml==null||activityWords(input)===activityWords(activityHost);
  const safe=!host.querySelector('script,[onclick],[onerror]');
- const ok=safe&&ordered&&!overflow&&signatureBottom&&signs&&optional&&pricing&&long&&legacy&&allCells;
- report.push({code,pages:pages.length,ordered,overflow,signatureBottom,signs,optional,pricing,long,legacy,allCells,safe,ok});
+ const activityPages=sections.filter(s=>s==='activity').length;
+ const twoPages=(!ready.some(c=>c.code===code)&&code!=='WORD-GENİŞ')||activityPages<=2;
+ const packed=code!=='BİRDEN-ÇOK-TABLO'||activityPages===1&&text.includes('BİRİNCİ-TABLO-KORUNUR')&&text.includes('İKİNCİ-TABLO-KORUNUR')&&text.includes('Aşamalar arasındaki not.');
+ const ok=exactActivity&&twoPages&&packed&&safe&&ordered&&!overflow&&signatureBottom&&signs&&optional&&pricing&&long&&legacy&&allCells;
+ report.push({code,pages:pages.length,activityPages,twoPages,packed,exactActivity,ordered,overflow,overflowSections,signatureBottom,signs,optional,pricing,long,legacy,allCells,safe,ok});
 }
 for(const [code,doc] of fixtures)inspect(code,doc);
 document.getElementById('status')!.textContent=report.every(r=>r.ok)?`GEÇTİ: ${report.length} belge testi`:`BAŞARISIZ: ${JSON.stringify(report.filter(r=>!r.ok))}`;
 document.getElementById('results')!.textContent=JSON.stringify(report);
 const select=document.getElementById('service') as HTMLSelectElement;
 for(const key of fixtures.keys())select.add(new Option(key,key));
-function show(){host.innerHTML=buildProposalDocument(fixtures.get(select.value)!);}
-select.value='307';select.addEventListener('change',show);show();
+function show(){host.innerHTML=buildProposalDocument(fixtures.get(select.value)!); if(new URLSearchParams(location.search).get('view')==='activity')host.querySelectorAll<HTMLElement>('.a4-page').forEach(p=>{if(p.dataset.section!=='activity')p.remove()});}
+select.value=new URLSearchParams(location.search).get('service')||'307';select.addEventListener('change',show);show();
 document.getElementById('capture')!.addEventListener('click',async()=>{
  document.getElementById('pdf-status')!.textContent='PDF hazırlanıyor';
  const expected=host.querySelectorAll('.a4-page').length;

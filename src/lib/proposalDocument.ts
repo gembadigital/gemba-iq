@@ -2,7 +2,7 @@ import DOMPurify from "dompurify";
 import { convertCurrencyToTurkishWords } from "./currencyWords";
 import type { Proposal, ProposalOption } from "../types/proposal";
 import { serviceDefinitionBlocks } from "./serviceDefinition";
-import { paginateProposalTables, styleProposalActivityTables } from "./proposalTableLayout";
+import { paginateProposalTables, paginateProposalActivityTables } from "./proposalTableLayout";
 
 export type ProposalDocument = Pick<Proposal, "proposalNumber" | "date" | "companyName" | "contactPerson" | "proposalSubject" | "currency" | "options" | "coverPage" | "terms" | "coverImage" | "pageImage" | "activityTableHtml" | "serviceName" | "serviceCode" | "methodology" | "projectPlan" | "timeline" | "description">;
 const escape = (value: unknown) => String(value ?? "").replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]!));
@@ -82,7 +82,7 @@ export function buildProposalDocument(doc: ProposalDocument): string {
   if (activity?.trim()) {
     const safe = DOMPurify.sanitize(activity, { FORBID_TAGS: ["img", "style"], FORBID_ATTR: ["class", "id"] });
     if (new DOMParser().parseFromString(safe, "text/html").querySelector("table")) {
-      paginateProposalTables(styleProposalActivityTables(safe), WIDTH, HEIGHT - 48).forEach((html, i) => pages.push({ section: "activity", title: "FAZLAR VE İÇERİK ADIMLARI" + (i ? " (devamı)" : ""), html }));
+      paginateProposalActivityTables(safe, WIDTH, HEIGHT - 48).forEach((html, i) => pages.push({ section: "activity", title: "FAZLAR VE İÇERİK ADIMLARI" + (i ? " (devamı)" : ""), html }));
     } else addText("activity", "FAZLAR VE İÇERİK ADIMLARI", proposalTextBlocks(safe));
   }
   const money = (amount: number) => `${new Intl.NumberFormat("tr-TR", { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(amount)} ${escape(doc.currency)}`;
