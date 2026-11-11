@@ -978,38 +978,38 @@ export default function ProposalManagementView() {
         
         {/* Table Container */}
         <div className="proposal-table-panel crm-panel bg-white dark:bg-[#151413] w-full border border-slate-150 dark:border-zinc-800/80 rounded-xl shadow-xs overflow-x-auto">
-          <table className="crm-data-table w-full text-xs text-left border-collapse">
-            <thead>
-              <tr className="bg-slate-50 dark:bg-black/15 text-slate-450 uppercase font-mono tracking-wider border-b border-slate-150 dark:border-zinc-800 text-[9px] font-extrabold">
-                <th className="p-3 text-center">{t("Seq")}</th>
-                <th className="p-3">{t("Ref Code")}</th>
-                <th className="p-3 min-w-[220px]">{t("Company")}</th>
-                <th className="p-3">{t("Proposal Subject")}</th>
-                <th className="p-3">{t("Owner / Creator")}</th>
-                <th className="p-3 text-center">{t("Status")}</th>
-                <th className="p-3 text-center">{t("Version")}</th>
-                <th className="p-3 text-right">{t("Offer Amount")}</th>
-                <th className="p-3 text-center">{t("Actions")}</th>
+          <table role="table" className="crm-data-table w-full text-xs text-left border-collapse">
+            <thead role="rowgroup">
+              <tr role="row" className="bg-slate-50 dark:bg-black/15 text-slate-450 uppercase font-mono tracking-wider border-b border-slate-150 dark:border-zinc-800 text-[9px] font-extrabold">
+                <th role="columnheader" className="p-3 text-center">{t("Seq")}</th>
+                <th role="columnheader" className="p-3">{t("Ref Code")}</th>
+                <th role="columnheader" className="p-3 min-w-[220px]">{t("Company")}</th>
+                <th role="columnheader" className="p-3">{t("Proposal Subject")}</th>
+                <th role="columnheader" className="p-3">{t("Owner / Creator")}</th>
+                <th role="columnheader" className="p-3 text-center">{t("Status")}</th>
+                <th role="columnheader" className="p-3 text-center">{t("Version")}</th>
+                <th role="columnheader" className="p-3 text-right">{t("Offer Amount")}</th>
+                <th role="columnheader" className="p-3 text-center">{t("Actions")}</th>
               </tr>
             </thead>
-            <tbody>
+            <tbody role="rowgroup">
               {filteredProposals.length === 0 ? (
-                <tr>
-                  <td colSpan={9} className="p-10 text-center text-slate-400 italic">
+                <tr role="row">
+                  <td role="cell" colSpan={9} className="p-10 text-center text-slate-400 italic">
                     {t("No proposals logged matching the criteria. Establish one clicking '+ Create Proposal' !")}
                   </td>
                 </tr>
               ) : (
                 filteredProposals.map((p) => (
-                  <tr 
+                  <tr role="row" data-crm-proposal-card
                     key={p.id} 
                     onClick={() => setSelectedProposalForDetail(p)}
                     className="border-b border-slate-100 dark:border-zinc-800/85 hover:bg-slate-50/50 dark:hover:bg-zinc-800/20 transition-all font-medium cursor-pointer"
                     title={t("Click to view proposal summary and PDF file")}
                   >
-                    <td className="p-3 text-center font-mono text-slate-400 text-[10px]">{p.sequenceNo}</td>
-                    <td className="p-3 font-mono font-bold text-slate-700 dark:text-zinc-300">{p.proposalNumber}</td>
-                    <td className="p-3 min-w-[220px]">
+                    <td role="cell" data-crm-cell="seq" data-crm-cell-label={t("Seq")} className="p-3 text-center font-mono text-slate-400 text-[10px]">{p.sequenceNo}</td>
+                    <td role="cell" data-crm-cell="ref" data-crm-cell-label={t("Ref Code")} className="p-3 font-mono font-bold text-slate-700 dark:text-zinc-300">{p.proposalNumber}</td>
+                    <td role="cell" data-crm-cell="company" data-crm-cell-label={t("Company")} className="p-3 min-w-[220px]">
                       <div
                         onClick={(e) => handleCompanyClick(e, p.companyName, p.companyId)}
                         className="flex items-center gap-1.5 cursor-pointer hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors group"
@@ -1019,7 +1019,7 @@ export default function ProposalManagementView() {
                         <span className="font-bold text-slate-800 dark:text-zinc-150 group-hover:underline">{p.companyName}</span>
                       </div>
                     </td>
-                    <td className="p-3 max-w-sm truncate text-slate-650 dark:text-zinc-300" title={p.proposalSubject}>
+                    <td role="cell" data-crm-cell="subject" data-crm-cell-label={t("Proposal Subject")} className="p-3 max-w-sm truncate text-slate-650 dark:text-zinc-300" title={p.proposalSubject}>
                       {/* Kullanıcı hatası: "eski tekliflerin hepsine [Taslak]
                           takısı konulmuş" — kök neden, sihirbaz TÜM
                           teklifleri her zaman status="Draft" ile
@@ -1030,11 +1030,11 @@ export default function ProposalManagementView() {
                           (isDraft === true) kayıtlar prefix alıyor. */}
                       {p.isDraft === true ? `[${t("Draft")}] ${p.proposalSubject}` : p.proposalSubject}
                     </td>
-                    <td className="p-3">
+                    <td role="cell" data-crm-cell="owner" data-crm-cell-label={t("Owner / Creator")} className="p-3">
                       <div className="text-[10px] text-slate-500">{t("Owner")}: {p.owner}</div>
                       <div className="text-[8px] text-slate-400 font-mono">{t("By")}: {p.createdBy}</div>
                     </td>
-                    <td className="p-3 text-center">
+                    <td role="cell" data-crm-cell="status" data-crm-cell-label={t("Status")} className="p-3 text-center">
                       <span className={`px-2 py-0.5 rounded-full text-[9px] font-bold ${
                         p.status === "Accepted"
                           ? "bg-green-100 text-green-800 dark:bg-green-950/40 dark:text-green-400"
@@ -1049,7 +1049,7 @@ export default function ProposalManagementView() {
                         {getStatusLabel(p.status, lang)}
                       </span>
                     </td>
-                    <td className="p-3 text-center" onClick={(e) => e.stopPropagation()}>
+                    <td role="cell" data-crm-cell="version" data-crm-cell-label={t("Version")} className="p-3 text-center" onClick={(e) => e.stopPropagation()}>
                       <div className="flex items-center justify-center gap-1.5">
                         <span className="font-mono bg-slate-100 dark:bg-zinc-800 p-0.5 px-2 rounded-md font-bold text-slate-600 dark:text-zinc-400">
                           {p.currentVersion}
@@ -1069,10 +1069,10 @@ export default function ProposalManagementView() {
                         )}
                       </div>
                     </td>
-                    <td className="p-3 text-right font-mono font-extrabold text-slate-800 dark:text-zinc-100">
+                    <td role="cell" data-crm-cell="amount" data-crm-cell-label={t("Offer Amount")} className="p-3 text-right font-mono font-extrabold text-slate-800 dark:text-zinc-100">
                       {p.currency} {formatSystemNumber(p.grandTotal)}
                     </td>
-                    <td className="p-3 text-center" onClick={(e) => e.stopPropagation()}>
+                    <td role="cell" data-crm-cell="actions" data-crm-cell-label={t("Actions")} className="p-3 text-center" onClick={(e) => e.stopPropagation()}>
                       <ProposalActionsMenu proposalNumber={p.proposalNumber} actions={[
                         { label: "Sihirbazda revize et", icon: <RefreshCw size={15} />, run: () => handleReviseInWizard(p) },
                         { label: "Kopya oluştur", icon: <Copy size={15} />, run: () => {

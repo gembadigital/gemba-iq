@@ -162,7 +162,7 @@
   /* Keep the table on the same card edge as the header and filter. Legacy
      page-wrapper padding must not create another nested frame. */
   .gemba-stitch-skin .proposal-content-layout { padding: 0 !important; border: 0 !important; background: transparent !important; box-shadow: none !important; min-width: 0; }
-  .gemba-stitch-skin .crm-data-table { table-layout: fixed; min-width: 900px; }
+  .gemba-stitch-skin .crm-data-table { table-layout: fixed; min-width: 900px !important; }
   .gemba-stitch-skin .crm-data-table :is(th,td) { padding: 12px 10px !important; min-width: 0 !important; }
   .gemba-stitch-skin .crm-data-table th:nth-child(1) { width: 4.5%; }
   .gemba-stitch-skin .crm-data-table th:nth-child(2) { width: 8.5%; white-space: normal; }

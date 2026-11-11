@@ -1639,7 +1639,7 @@ export default function TasksView() {
                   key={col.id}
                   onDragOver={(e) => handleDragOver(e)}
                   onDrop={(e) => handleDrop(e, col.id)}
-                  className="w-72 bg-[#FAF9F8] dark:bg-[#1b1a19] rounded-lg border border-[#EDEBE9] dark:border-[#323130] p-3 flex flex-col shrink-0 min-h-[500px]"
+                  data-crm-kanban-column className="w-72 bg-[#FAF9F8] dark:bg-[#1b1a19] rounded-lg border border-[#EDEBE9] dark:border-[#323130] p-3 flex flex-col shrink-0 min-h-[500px]"
                 >
                   {/* Column Header Group with kebab dropdown menu inside */}
                   <div className="group relative flex items-center justify-between mb-3.5 pb-2 border-b border-[#EDEBE9] dark:border-[#323130]">

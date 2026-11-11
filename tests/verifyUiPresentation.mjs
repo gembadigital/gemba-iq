@@ -13,6 +13,12 @@ function normalize(source,file){
    edits.push([n.openingElement.getStart(sf),n.openingElement.end,''],[n.closingElement.getStart(sf),n.closingElement.end,'']);
    visit(n.children[0]);return;
   }
+  if(ts.isJsxAttribute(n)&&n.name.getText(sf)==='role'){
+   const opening=n.parent.parent, tag=opening.tagName?.getText(sf), roles={table:'table',thead:'rowgroup',tbody:'rowgroup',tr:'row',th:'columnheader',td:'cell'};
+   let parent=opening, proposalTable=false;
+   while(parent){if(ts.isJsxElement(parent)&&parent.openingElement.tagName.getText(sf)==='table'&&parent.openingElement.attributes.getText(sf).includes('crm-data-table')){proposalTable=true;break;}parent=parent.parent;}
+   if(proposalTable&&n.initializer?.getText(sf)===JSON.stringify(roles[tag]))edits.push([n.pos,n.end,'']);
+  }
   if(ts.isJsxAttribute(n)&&n.name.getText(sf).startsWith('data-crm-'))edits.push([n.pos,n.end,'']);
   ts.forEachChild(n,visit);
  }

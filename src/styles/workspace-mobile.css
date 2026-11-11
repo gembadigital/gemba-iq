@@ -58,5 +58,32 @@
   .gemba-stitch-skin [data-crm-screen="CompanyDetailView"] .company-detail-header { align-items: stretch !important; }
   .gemba-stitch-skin .company-detail-tabs { overflow-x: auto; flex-wrap: nowrap !important; }
   .gemba-stitch-skin .company-detail-tabs button { flex-shrink: 0; min-height: 44px; white-space: nowrap; }
+  .gemba-stitch-skin [data-crm-kanban-column] { width: min(320px,calc(100vw - 56px)) !important; min-width: min(320px,calc(100vw - 56px)) !important; padding: 14px !important; }
+  .gemba-stitch-skin #wizard-step-2-card > div:first-child { flex-direction: column; align-items: stretch !important; gap: 12px; }
+  .gemba-stitch-skin #wizard-step-2-card > div:first-child > div { min-width: 0; max-width: 100%; flex-wrap: wrap; }
+  .gemba-stitch-skin #wizard-step-2-card > div:first-child button { width: 100%; justify-content: center; }
+  /* Proposal rows become records on phones. Never squeeze nine desktop
+     columns into the viewport or pin an action cell over the status. */
+  .gemba-stitch-skin .proposal-workspace .proposal-table-panel { border: 0 !important; background: transparent !important; box-shadow: none !important; overflow: visible !important; }
+  .gemba-stitch-skin .proposal-workspace .crm-data-table { display: block !important; width: 100% !important; min-width: 0 !important; max-width: 100% !important; overflow: visible !important; }
+  .gemba-stitch-skin .proposal-workspace .crm-data-table thead { position: absolute !important; width: 1px !important; height: 1px !important; padding: 0 !important; overflow: hidden !important; clip-path: inset(50%); white-space: nowrap; }
+  .gemba-stitch-skin .proposal-workspace .crm-data-table tbody { display: grid !important; gap: 14px; width: 100%; }
+  .gemba-stitch-skin .proposal-workspace [data-crm-proposal-card] { height: auto !important; min-height: 0 !important; display: grid !important; grid-template-columns: repeat(2,minmax(0,1fr)) !important; gap: 14px 16px !important; padding: 16px !important; border: 1px solid var(--stitch-line) !important; border-radius: 12px !important; background: var(--stitch-surface) !important; }
+  .gemba-stitch-skin .proposal-workspace .crm-data-table [data-crm-cell] { display: block !important; position: static !important; min-width: 0 !important; max-width: none !important; width: auto !important; padding: 0 !important; border: 0 !important; background: transparent !important; box-shadow: none !important; white-space: normal !important; text-align: left !important; font-size: 13px !important; line-height: 1.6 !important; overflow: visible !important; word-break: normal !important; overflow-wrap: break-word !important; order: 2; }
+  .gemba-stitch-skin .proposal-workspace [data-crm-cell]::before { content: attr(data-crm-cell-label); display: block; font: 500 11px/1.5 Inter,sans-serif; color: var(--stitch-muted); margin-bottom: 4px; }
+  .gemba-stitch-skin .proposal-workspace [data-crm-cell="company"] { grid-column: 1 / -1; order: 0 !important; }
+  .gemba-stitch-skin .proposal-workspace [data-crm-cell="subject"] { grid-column: 1 / -1; order: 1 !important; }
+  .gemba-stitch-skin .proposal-workspace .crm-data-table [data-crm-cell="company"] span { font-size: 15px !important; overflow-wrap: break-word !important; word-break: normal !important; }
+  .gemba-stitch-skin .proposal-workspace [data-crm-cell="owner"] { grid-column: 1 / -1; order: 3 !important; }
+  .gemba-stitch-skin .proposal-workspace [data-crm-cell="actions"] { grid-column: 1 / -1; order: 4 !important; }
+  .gemba-stitch-skin .proposal-workspace [data-crm-cell="actions"] button { min-height: 44px; width: 100%; justify-content: center; }
+  .gemba-stitch-skin .proposal-workspace [data-crm-cell="version"] > div { justify-content: flex-start !important; }
+  .gemba-stitch-skin .proposal-workspace [data-crm-cell="version"] select { min-height: 40px; font-size: 16px !important; }
+  .gemba-stitch-skin [data-crm-table] { table-layout: auto !important; }
+  .gemba-stitch-skin [data-crm-table] th:not(:has(input[type="checkbox"])) { min-width: 104px; }
+  .gemba-stitch-skin [data-crm-table] td { word-break: normal !important; overflow-wrap: break-word; }
+  .gemba-stitch-skin [data-crm-table]:has(th:nth-child(8)) { min-width: 960px !important; }
+  .gemba-stitch-skin [data-crm-table]:has(th:nth-child(12)) { min-width: 1320px !important; }
+
 }
 }

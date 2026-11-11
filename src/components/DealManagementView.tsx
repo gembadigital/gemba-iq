@@ -2501,7 +2501,7 @@ export default function DealManagementView({ initialTab = "dashboard", onNavigat
                           handleDealDropOnStage(e, stage);
                         }
                       }}
-                      className="w-88 min-w-[352px] bg-slate-50/55 dark:bg-black/15 border border-slate-210/40 dark:border-zinc-802/50 rounded-2xl p-4.5 flex flex-col justify-between select-none group/col hover:shadow-sm transition-all"
+                      data-crm-kanban-column className="w-88 min-w-[352px] bg-slate-50/55 dark:bg-black/15 border border-slate-210/40 dark:border-zinc-802/50 rounded-2xl p-4.5 flex flex-col justify-between select-none group/col hover:shadow-sm transition-all"
                     >
                       <div>
                         {/* Drag handle column top */}
