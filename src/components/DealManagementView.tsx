@@ -771,6 +771,8 @@ export default function DealManagementView({ initialTab = "dashboard", onNavigat
   // Stage renaming & deletion states
   const [isRenamingStagePopup, setIsRenamingStagePopup] = useState<string | null>(null);
   const [renameStageInput, setRenameStageInput] = useState("");
+  const [isSavingStage, setIsSavingStage] = useState(false);
+  const [stageSaveError, setStageSaveError] = useState("");
   const [isDeletingStagePopup, setIsDeletingStagePopup] = useState<string | null>(null);
 
   // Aşama bazlı hatırlatma ayarları (kullanıcı talebi: "her bir fırsat
@@ -1452,7 +1454,7 @@ export default function DealManagementView({ initialTab = "dashboard", onNavigat
     setIsDeletingStagePopup(null);
   };
 
-  const handleRenameStage = (e: React.FormEvent) => {
+  const handleRenameStage = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!isRenamingStagePopup) return;
     const oldName = isRenamingStagePopup;
@@ -1463,31 +1465,20 @@ export default function DealManagementView({ initialTab = "dashboard", onNavigat
       return;
     }
 
-    // 1. Update activeStages
-    setActiveStages(prev => prev.map(s => s === oldName ? newName : s));
-
-    // 2. Update stageMetadata key
-    setStageMetadata(prev => {
-      const updated = { ...prev };
-      if (updated[oldName]) {
-        updated[newName] = updated[oldName];
-        delete updated[oldName];
-      } else {
-        updated[newName] = { collapsed: false, description: "" };
-      }
-      return updated;
-    });
-
-    // 3. Update all deals that were in the old stage
-    setDeals(prev => prev.map(d => d.stage === oldName ? { ...d, stage: newName } : d));
-
-    // 4. Update dealFormState.stage if it matched old stage
-    if (dealFormState.stage === oldName) {
-      setDealFormState(prev => ({ ...prev, stage: newName }));
-    }
-
-    setIsRenamingStagePopup(null);
-    setRenameStageInput("");
+    if (isSavingStage) return;
+    const nextStages = activeStages.map(stage => stage === oldName ? newName : stage);
+    const nextMetadata = { ...stageMetadata, [newName]: stageMetadata[oldName] || { collapsed: false, description: "" } };
+    if (newName !== oldName) delete nextMetadata[oldName];
+    const nextDeals = deals.map(deal => deal.stage === oldName ? { ...deal, stage: newName } : deal);
+    setIsSavingStage(true); setStageSaveError("");
+    try {
+      await CrmDb.savePipelineConfiguration(nextStages, nextMetadata, nextDeals);
+      setActiveStages(nextStages); setStageMetadata(nextMetadata); setDeals(nextDeals);
+      if (dealFormState.stage === oldName) setDealFormState(prev => ({ ...prev, stage: newName }));
+      setIsRenamingStagePopup(null); setRenameStageInput("");
+    } catch (error) {
+      setStageSaveError(error instanceof Error ? error.message : "Aşama kaydedilemedi.");
+    } finally { setIsSavingStage(false); }
   };
 
   const toggleCollapseStage = (stageName: string) => {
@@ -4399,6 +4390,7 @@ export default function DealManagementView({ initialTab = "dashboard", onNavigat
               <input
                 type="text"
                 required
+                disabled={isSavingStage}
                 placeholder={t("e.g. Presentation / Pitch Done")}
                 value={renameStageInput}
                 onChange={(e) => setRenameStageInput(e.target.value)}
@@ -4406,9 +4398,11 @@ export default function DealManagementView({ initialTab = "dashboard", onNavigat
               />
             </div>
 
+            {stageSaveError && <p role="alert" className="text-xs text-red-600">{stageSaveError}</p>}
             <div className="flex justify-end gap-2 text-xs pt-1">
               <button
                 type="button"
+                disabled={isSavingStage}
                 onClick={() => {
                   setIsRenamingStagePopup(null);
                   setRenameStageInput("");
@@ -4419,9 +4413,10 @@ export default function DealManagementView({ initialTab = "dashboard", onNavigat
               </button>
               <button
                 type="submit"
+                disabled={isSavingStage}
                 className="px-4 py-1.5 bg-[#0078D4] hover:bg-blue-600 text-white rounded font-bold cursor-pointer"
               >
-                {t("Apply Rename")}
+                {isSavingStage ? "Kaydediliyor…" : t("Apply Rename")}
               </button>
             </div>
           </form>

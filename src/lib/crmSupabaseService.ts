@@ -10,7 +10,6 @@ import {
   findConflicts,
   isSuspiciousBulkDelete,
   mergeKvStore,
-  pickAuxField,
   stableStringify,
   type RowBaseline,
 } from "./syncMerge";
@@ -116,6 +115,11 @@ export function setAuxKvBaseline(key: string, value: unknown) {
   auxBaseline.kv[key] = deepClone(value);
 }
 
+export function isAuxValueUnchanged(field: string, value: unknown, kv = false): boolean {
+  return kv ? stableStringify(auxBaseline.kv[field]) === stableStringify(value)
+    : auxBaseline.fieldSigs[field] === stableStringify(value);
+}
+
 async function requireClient() {
   const client = getSupabase();
   if (!client) throw new Error("Supabase is not configured.");
@@ -197,7 +201,10 @@ function rowToTask(row: Row): Task {
   return { ...data, id: row.id };
 }
 
-export async function loadOrganizationCrm(organizationId?: string): Promise<CrmSnapshot> {
+export function loadOrganizationCrm(organizationId?: string): Promise<CrmSnapshot> {
+  return enqueueWrite("crm", () => loadOrganizationCrmNow(organizationId));
+}
+async function loadOrganizationCrmNow(organizationId?: string): Promise<CrmSnapshot> {
   const client = await requireClient();
   const orgId = organizationId || getActiveOrganizationId();
   if (!orgId) {
@@ -292,7 +299,10 @@ export interface CrmDelta {
 // rows large; `id` is a short text/uuid column — so this adds only a few KB
 // per sync even on a large table, nowhere near enough to matter against the
 // GB-scale problem this delta mechanism is already fixing.
-export async function loadOrganizationCrmDelta(sinceIso: string, organizationId?: string): Promise<CrmDelta> {
+export function loadOrganizationCrmDelta(sinceIso: string, organizationId?: string): Promise<CrmDelta> {
+  return enqueueWrite("crm", () => loadOrganizationCrmDeltaNow(sinceIso, organizationId));
+}
+async function loadOrganizationCrmDeltaNow(sinceIso: string, organizationId?: string): Promise<CrmDelta> {
   const client = await requireClient();
   const orgId = organizationId || getActiveOrganizationId();
   if (!orgId) {
@@ -385,6 +395,7 @@ export interface PersistResult {
 // baseline'ı görmeden çalışırsa kendi yazdığımız satırlar sahte "çakışma" olur.
 const writeQueues = new Map<string, Promise<unknown>>();
 function enqueueWrite<T>(key: string, fn: () => Promise<T>): Promise<T> {
+  key = "crm";
   const previous = writeQueues.get(key) || Promise.resolve();
   const next = previous.catch(() => undefined).then(fn);
   writeQueues.set(key, next);
@@ -392,12 +403,20 @@ function enqueueWrite<T>(key: string, fn: () => Promise<T>): Promise<T> {
 }
 
 const UPSERT_CHUNK = 100;
+const queuedTableItems = new Map<CrmTable, { id: string }[]>();
 
 async function persistTable<T extends { id: string }>(
   table: CrmTable,
   items: T[],
   toRow: (item: T, organizationId: string, createdBy: string) => Record<string, unknown>
 ): Promise<PersistResult> {
+  const snapshot = deepClone(items);
+  const previous = queuedTableItems.get(table);
+  const intentBase = previous ? new Map(previous.map(item => [item.id, {
+    sig: stableStringify(item), updatedAt: rowBaselines[table].get(item.id)?.updatedAt || null,
+  }])) : rowBaselines[table];
+  const { changed, removedIds } = diffAgainstBaseline(snapshot, intentBase);
+  queuedTableItems.set(table, snapshot);
   return enqueueWrite(table, async () => {
     const organizationId = await requireOrgId();
     const createdBy = await requireUserId();
@@ -405,7 +424,6 @@ async function persistTable<T extends { id: string }>(
     const baseline = rowBaselines[table];
     const result: PersistResult = { conflictIds: [], blockedDeletes: 0 };
 
-    const { changed, removedIds } = diffAgainstBaseline(items, baseline);
 
     if (changed.length > 0) {
       // Başkası (başka sekme/kullanıcı/OpenClaw API) bu satırları yüklediğimizden
@@ -457,7 +475,7 @@ async function persistTable<T extends { id: string }>(
     }
 
     return result;
-  });
+  }).finally(() => { if (queuedTableItems.get(table) === snapshot) queuedTableItems.delete(table); });
 }
 
 export async function persistCompanies(companies: Company[]) {
@@ -520,6 +538,8 @@ export interface AuxPersistResult {
   /** Gönderilen değer = kopyası (birleşme sonucu cache'e uygulanmazsa baseline için). */
   sentKv: Record<string, unknown>;
   skipped: boolean;
+  mergedFields: Record<string, unknown>;
+  sentFields: Record<string, unknown>;
 }
 
 const AUX_FIELDS: (keyof OrgAuxiliaryData)[] = [
@@ -544,7 +564,7 @@ const AUX_FIELDS: (keyof OrgAuxiliaryData)[] = [
 //  3) kv dışı alanlar istemci DEĞİŞTİRMEDİYSE sunucudaki değer korunur,
 //  4) yazma updated_at karşılaştırmalı (compare-and-swap); araya başkası
 //     girerse blob yeniden okunup birleştirme tekrarlanır.
-export async function persistAuxiliary(auxiliary: OrgAuxiliaryData, dirtyKvKeys: string[] = []): Promise<AuxPersistResult> {
+export async function persistAuxiliary(auxiliary: OrgAuxiliaryData, dirtyKvKeys: string[] = [], dirtyFields?: string[]): Promise<AuxPersistResult> {
   // Çağrı anının anlık görüntüsü: await'ler sırasında cache değişebilir.
   const mineKv: Record<string, unknown> = {};
   const sentSigs: Record<string, string> = {};
@@ -554,8 +574,17 @@ export async function persistAuxiliary(auxiliary: OrgAuxiliaryData, dirtyKvKeys:
       sentSigs[key] = stableStringify(auxiliary.kvStore[key]);
     }
   }
+  const baseKv = deepClone(auxBaseline.kv);
+  const fieldSigs = { ...auxBaseline.fieldSigs };
   const mineFields: Record<string, unknown> = {};
-  for (const field of AUX_FIELDS) mineFields[field] = deepClone(auxiliary[field]);
+  for (const field of AUX_FIELDS) {
+    const changed = dirtyFields ? dirtyFields.includes(field) : fieldSigs[field] !== stableStringify(auxiliary[field]);
+    if (changed) mineFields[field] = deepClone(auxiliary[field]);
+  }
+  // No explicit change: mounting a view must not rewrite another session's data.
+  if (!Object.keys(mineKv).length && !Object.keys(mineFields).length) {
+    return { mergedKv: {}, sentSigs, sentKv: mineKv, mergedFields: {}, sentFields: mineFields, skipped: true };
+  }
 
   return enqueueWrite("auxiliary", async () => {
     const organizationId = await requireOrgId();
@@ -575,29 +604,25 @@ export async function persistAuxiliary(auxiliary: OrgAuxiliaryData, dirtyKvKeys:
       const { merged, changedByMerge } = mergeKvStore(
         (serverData.kvStore as Record<string, unknown>) || {},
         mineKv,
-        auxBaseline.kv,
+        baseKv,
         Object.keys(mineKv)
       );
       void changedByMerge;
 
       const nextData: Record<string, unknown> = { ...serverData };
-      for (const field of AUX_FIELDS) {
-        nextData[field] = pickAuxField(
-          field,
-          mineFields[field],
-          auxBaseline.fieldSigs,
-          (serverData as Record<string, unknown>)[field],
-          field in serverData
-        );
-      }
+      for (const field of Object.keys(mineFields)) nextData[field] = mineFields[field];
       nextData.kvStore = merged;
 
       const mergedKv: Record<string, unknown> = {};
       for (const key of Object.keys(mineKv)) mergedKv[key] = merged[key];
-      const buildResult = (skipped: boolean): AuxPersistResult => ({ mergedKv, sentSigs, sentKv: mineKv, skipped });
+      const buildResult = (skipped: boolean): AuxPersistResult => ({
+        mergedKv, sentSigs, sentKv: mineKv, skipped,
+        mergedFields: Object.fromEntries(Object.keys(mineFields).map(field => [field, nextData[field]])), sentFields: mineFields,
+      });
 
       if (existing && stableStringify(nextData) === stableStringify(serverData)) {
         // Sunucudaki blob zaten istenen halde: gereksiz yazma yok.
+        for (const field of Object.keys(mineFields)) auxBaseline.fieldSigs[field] = stableStringify(mineFields[field]);
         return buildResult(true);
       }
 
@@ -608,23 +633,20 @@ export async function persistAuxiliary(auxiliary: OrgAuxiliaryData, dirtyKvKeys:
         );
         if (insertError) throw new Error(insertError.message);
       } else {
-        // Son denemede updated_at kilidi bırakılır: blob az önce taze okunup
-        // birleştirildi, kalan yarış penceresi milisaniyeler; ama olası bir
-        // zaman damgası biçim uyuşmazlığı kv kayıtlarını tamamen durdurmamalı.
-        const useCas = attempt < 3;
+        // Never drop the concurrency check, even on the last retry.
         let updateQuery = client
           .from("companies")
           .update({ data: nextData })
           .eq("id", AUXILIARY_COMPANY_ID)
           .eq("organization_id", organizationId);
-        if (useCas) updateQuery = updateQuery.eq("updated_at", (existing as { updated_at: string }).updated_at);
+        updateQuery = updateQuery.eq("updated_at", (existing as { updated_at: string }).updated_at);
         const { data: updated, error: updateError } = await updateQuery.select("id");
         if (updateError) throw new Error(updateError.message);
         if (!updated || updated.length === 0) continue; // araya başkası girdi: yeniden oku + birleştir
       }
 
       // İstemcinin değiştirdiği kv dışı alanlar artık sunucuyla aynı.
-      for (const field of AUX_FIELDS) {
+      for (const field of Object.keys(mineFields)) {
         if (stableStringify(nextData[field]) === stableStringify(mineFields[field])) {
           auxBaseline.fieldSigs[field] = stableStringify(mineFields[field]);
         }

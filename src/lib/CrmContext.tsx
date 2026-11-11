@@ -1,4 +1,5 @@
 import React, { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from "react";
+import CrmSaveStatus from "../components/CrmSaveStatus";
 import AuthLoadingScreen from "../components/auth/AuthLoadingScreen";
 import { CrmDb } from "./CrmDb";
 import { useOrganization } from "./OrganizationContext";
@@ -33,6 +34,7 @@ export function CrmProvider({ children }: { children: React.ReactNode }) {
   const [ready, setReady] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const loadSeq = useRef(0);
+  const cacheOrganization = useRef<string | null>(null);
 
   const loadCrm = useCallback(async () => {
     const seq = ++loadSeq.current;
@@ -44,6 +46,10 @@ export function CrmProvider({ children }: { children: React.ReactNode }) {
       return;
     }
 
+    if (cacheOrganization.current !== organizationId) {
+      CrmDb.resetCache();
+      cacheOrganization.current = organizationId;
+    }
     setReady(false);
     setError(null);
 
@@ -58,9 +64,7 @@ export function CrmProvider({ children }: { children: React.ReactNode }) {
     } catch (err) {
       if (seq !== loadSeq.current) return;
       console.error("CRM hydration failed:", err);
-      CrmDb.resetCache();
       setError(err instanceof Error ? err.message : "Failed to load CRM data.");
-      // Proceed with an empty in-memory cache so the app is never blocked.
       setReady(true);
     }
   }, [organizationId]);
@@ -83,7 +87,12 @@ export function CrmProvider({ children }: { children: React.ReactNode }) {
     return <AuthLoadingScreen />;
   }
 
-  return <CrmContext.Provider value={value}>{children}</CrmContext.Provider>;
+  if (error && !CrmDb.isLoaded()) return <div role="alert" className="min-h-screen flex flex-col items-center justify-center gap-4 p-8 text-center">
+    <h1 className="text-lg font-bold">CRM verileri yüklenemedi</h1>
+    <p>{error}</p><p>Mevcut kayıtları korumak için veriler yüklenene kadar düzenleme kapalı.</p>
+    <button type="button" className="rounded-lg bg-blue-600 px-4 py-2 text-white" onClick={() => { void loadCrm(); }}>Yeniden dene</button>
+  </div>;
+  return <CrmContext.Provider value={value}><CrmSaveStatus />{children}</CrmContext.Provider>;
 }
 
 export function useCrm() {

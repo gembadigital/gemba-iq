@@ -17,6 +17,7 @@ import {
   persistProposals,
   persistTasks,
   setAuxKvBaseline,
+  isAuxValueUnchanged,
   type PersistResult,
 } from "./crmSupabaseService";
 import { stableStringify } from "./syncMerge";
@@ -222,61 +223,72 @@ const cache: CrmCache = {
 // toplu silme varsa: sunucu sürümü kazanır, cache sunucudan tazelenir ve
 // arayüze haber verilir. (Veri kaybı koruması — bkz. syncMerge.ts)
 async function handlePersistResult(result: PersistResult | void) {
-  if (!result || (result.conflictIds.length === 0 && result.blockedDeletes === 0)) return;
-  console.warn("CRM sync: çakışma/engellenen silme", result);
-  if (typeof window !== "undefined") {
-    window.dispatchEvent(new CustomEvent("crm-sync-conflict", { detail: result }));
-  }
-  try {
-    await CrmDb.hydrateFromSupabase(undefined, { force: result.blockedDeletes > 0 });
-  } catch (err) {
-    console.error("CRM sync: çakışma sonrası yenileme başarısız:", err);
-  }
+  if (!result || (!result.conflictIds.length && !result.blockedDeletes)) return;
+  if (typeof window !== "undefined") window.dispatchEvent(new CustomEvent("crm-sync-conflict", { detail: result }));
+  throw new Error("Başka bir oturumda değişen kayıtlar üzerine yazılmadı. Son kayıtları yeniden açıp değişikliklerinizi kontrol edin.");
 }
 
-function persistSoon(fn: () => Promise<PersistResult | void>) {
-  void fn()
-    .then(handlePersistResult)
-    .catch((err) => console.error("CRM persist failed:", err));
+const pendingWrites = new Set<Promise<unknown>>();
+const failedWrites = new Map<string, () => Promise<any>>();
+const writeErrors = new Map<string, string>();
+let mutationEpoch = 0;
+function syncStatus() {
+  return { pending: pendingWrites.size, error: Array.from(writeErrors.values())[0] || null };
+}
+function emitSyncStatus() {
+  if (typeof window !== "undefined") window.dispatchEvent(new CustomEvent("crm-save-status", { detail: syncStatus() }));
+}
+function trackPersist<T>(fn: () => Promise<T>, label: string): Promise<T> {
+  mutationEpoch++;
+  const task = Promise.resolve().then(fn).then(result => {
+    failedWrites.delete(label); writeErrors.delete(label); return result;
+  }).catch(err => {
+    failedWrites.set(label, fn);
+    writeErrors.set(label, err instanceof Error ? err.message : "Kayıt sunucuya ulaşmadı.");
+    throw err;
+  }).finally(() => { pendingWrites.delete(task); emitSyncStatus(); });
+  pendingWrites.add(task); emitSyncStatus();
+  return task;
+}
+function persistSoon(fn: () => Promise<PersistResult | void>, label = "auxiliary") {
+  void trackPersist(async () => { const result = await fn(); await handlePersistResult(result); }, label)
+    .catch(() => undefined); // Persistent UI status reports the error; keep the unsaved cache.
+}
+async function flushPendingWrites() {
+  while (pendingWrites.size) await Promise.allSettled(Array.from(pendingWrites));
+  if (writeErrors.size) throw new Error(Array.from(writeErrors.values())[0]);
 }
 
-
-// Veri kaybı koruması: __org_auxiliary__ satırı (kvStore dahil) tek bir JSON
-// blob'u ve eskiden istemcinin bellekteki kopyası sunucudakinin ÜSTÜNE
-// körlemesine yazılıyordu. Yükleme başarısız/yarım kalmış bir istemcideki tek
-// bir setKv() bile Hedef Hesaplar, Aday Profilleri vb. tüm anahtarları siliyordu.
-// Artık (1) cache yüklenmeden hiçbir şey yazılmaz, (2) sadece bu oturumda
-// değişen kv anahtarları (dirty) sunucudaki GÜNCEL blob ile birleştirilir.
 const dirtyKvKeys = new Set<string>();
-
-function persistAux() {
-  if (!cache.loaded) {
-    console.warn("CRM auxiliary persist skipped: cache not loaded yet");
-    return;
-  }
-  const keys = Array.from(dirtyKvKeys);
-  dirtyKvKeys.clear();
+const dirtyAuxFields = new Set<string>();
+function persistAux(fields: string[] = []) {
+  fields.forEach(field => dirtyAuxFields.add(field));
+  if (!cache.loaded) return;
+  const keys = Array.from(dirtyKvKeys), changedFields = Array.from(dirtyAuxFields);
+  dirtyKvKeys.clear(); dirtyAuxFields.clear();
+  if (!keys.length && !changedFields.length) return;
   persistSoon(async () => {
     try {
-      const result = await persistAuxiliary(cache.auxiliary, keys);
-      // Üç yönlü birleştirme sonucu (sunucudaki başkasının eklediği öğeler dahil)
-      // cache'e yalnızca bu arada kullanıcı o anahtarı yeniden değiştirmediyse
-      // uygulanır; baseline cache ile her zaman tutarlı tutulur.
+      const result = await persistAuxiliary(cache.auxiliary, keys, changedFields);
       for (const key of Object.keys(result.mergedKv)) {
-        const mergedValue = result.mergedKv[key];
-        const unchangedSinceSend = stableStringify(cache.auxiliary.kvStore[key]) === result.sentSigs[key];
-        if (unchangedSinceSend) {
-          if (stableStringify(mergedValue) !== result.sentSigs[key]) cache.auxiliary.kvStore[key] = mergedValue;
-          setAuxKvBaseline(key, mergedValue);
-        } else {
-          setAuxKvBaseline(key, result.sentKv[key]);
+        if (stableStringify(cache.auxiliary.kvStore[key]) === result.sentSigs[key]) {
+          cache.auxiliary.kvStore[key] = result.mergedKv[key];
+          dirtyKvKeys.delete(key);
+          setAuxKvBaseline(key, result.mergedKv[key]);
+        } else setAuxKvBaseline(key, result.sentKv[key]);
+      }
+      for (const [field, value] of Object.entries(result.mergedFields)) {
+        const aux = cache.auxiliary as unknown as Record<string, unknown>;
+        if (stableStringify(aux[field]) === stableStringify(result.sentFields[field])) {
+          aux[field] = value; dirtyAuxFields.delete(field);
         }
       }
     } catch (err) {
-      keys.forEach((k) => dirtyKvKeys.add(k));
+      keys.forEach(key => dirtyKvKeys.add(key));
+      changedFields.forEach(field => dirtyAuxFields.add(field));
       throw err;
     }
-  });
+  }, "aux:" + [...keys.map(key => "kv:" + key), ...changedFields].sort().join(","));
 }
 
 // Aday Profilleri (Lead Profiles) sayfasının kullandığı tek merkezi
@@ -400,23 +412,38 @@ export const CrmDb = {
   // cache is already loaded AND the last sync was against this same
   // organization; any other case (first load, org switch, or a cache that
   // was reset) falls back to a full load, same as before this fix.
+  getSyncStatus: syncStatus,
+  flushPendingWrites,
+  async retryFailedWrites() {
+    const jobs = Array.from(failedWrites.entries());
+    await Promise.allSettled(jobs.map(([label, fn]) => trackPersist(fn, label)));
+    await flushPendingWrites();
+  },
   async hydrateFromSupabase(organizationId?: string, options?: { force?: boolean }): Promise<void> {
-    const orgId = organizationId || getActiveOrganizationId();
-    const canDelta = !options?.force && cache.loaded && !!orgId && lastSync?.organizationId === orgId;
-
-    if (!canDelta) {
-      const snapshot = await loadOrganizationCrm(organizationId);
-      applySnapshot(snapshot);
-      lastSync = orgId ? { organizationId: orgId, syncedAt: new Date().toISOString() } : null;
+    for (let attempt = 0; attempt < 3; attempt++) {
+      await flushPendingWrites();
+      const epoch = mutationEpoch;
+      const orgId = organizationId || getActiveOrganizationId();
+      const canDelta = !options?.force && cache.loaded && !!orgId && lastSync?.organizationId === orgId;
+      if (!canDelta) {
+        const snapshot = await loadOrganizationCrm(organizationId);
+        if (epoch !== mutationEpoch) continue;
+        applySnapshot(snapshot);
+        lastSync = orgId ? { organizationId: orgId, syncedAt: new Date().toISOString() } : null;
+      } else {
+        const delta = await loadOrganizationCrmDelta(lastSync!.syncedAt, organizationId);
+        if (epoch !== mutationEpoch) continue;
+        applyDeltaSnapshot(delta);
+        lastSync = { organizationId: orgId!, syncedAt: delta.syncedAt };
+      }
       return;
     }
-
-    const delta = await loadOrganizationCrmDelta(lastSync!.syncedAt, organizationId);
-    applyDeltaSnapshot(delta);
-    lastSync = { organizationId: orgId!, syncedAt: delta.syncedAt };
+    // Continuous editing: retain the newer local state; try again next scan.
+    await flushPendingWrites();
   },
 
   resetCache(): void {
+    dirtyKvKeys.clear(); dirtyAuxFields.clear();
     cache.loaded = false;
     cache.companies = [];
     cache.contacts = [];
@@ -427,6 +454,11 @@ export const CrmDb = {
     cache.activities = [];
     cache.documents = [];
     cache.tasks = [];
+    cache.auxiliary = {
+      emails: [], activities: [], projects: [], crmDocuments: [], taskColumns: [], crmUsers: [],
+      notificationSettings: null, taskNotifications: [], pipelineStages: null, stageMetadata: null,
+      leadSources: null, companyCustomFieldDefs: null, kvStore: {},
+    };
     lastSync = null;
   },
 
@@ -436,6 +468,7 @@ export const CrmDb = {
   },
 
   setKv(key: string, value: unknown): void {
+    if (stableStringify(cache.auxiliary.kvStore[key]) === stableStringify(value) && isAuxValueUnchanged(key, value, true)) return;
     cache.auxiliary.kvStore[key] = value;
     dirtyKvKeys.add(key);
     syncAuxiliaryFromCache();
@@ -447,9 +480,10 @@ export const CrmDb = {
   },
 
   saveTaskColumns(columns: TaskColumn[]): void {
+    if (isAuxValueUnchanged("taskColumns", columns) && stableStringify(cache.auxiliary.taskColumns) === stableStringify(columns)) return;
     cache.auxiliary.taskColumns = columns;
     syncAuxiliaryFromCache();
-    persistAux();
+    persistAux(["taskColumns"]);
   },
 
   getCrmUsers(): string[] {
@@ -457,9 +491,10 @@ export const CrmDb = {
   },
 
   saveCrmUsers(users: string[]): void {
+    if (isAuxValueUnchanged("crmUsers", users) && stableStringify(cache.auxiliary.crmUsers) === stableStringify(users)) return;
     cache.auxiliary.crmUsers = users;
     syncAuxiliaryFromCache();
-    persistAux();
+    persistAux(["crmUsers"]);
   },
 
   getNotificationSettings(): NotificationSettings | null {
@@ -467,9 +502,10 @@ export const CrmDb = {
   },
 
   saveNotificationSettings(settings: NotificationSettings): void {
+    if (isAuxValueUnchanged("notificationSettings", settings) && stableStringify(cache.auxiliary.notificationSettings) === stableStringify(settings)) return;
     cache.auxiliary.notificationSettings = settings;
     syncAuxiliaryFromCache();
-    persistAux();
+    persistAux(["notificationSettings"]);
   },
 
   getTaskNotifications(): TaskNotification[] {
@@ -477,9 +513,10 @@ export const CrmDb = {
   },
 
   saveTaskNotifications(notifications: TaskNotification[]): void {
+    if (isAuxValueUnchanged("taskNotifications", notifications) && stableStringify(cache.auxiliary.taskNotifications) === stableStringify(notifications)) return;
     cache.auxiliary.taskNotifications = notifications;
     syncAuxiliaryFromCache();
-    persistAux();
+    persistAux(["taskNotifications"]);
   },
 
   getPipelineStages(): string[] | null {
@@ -487,9 +524,10 @@ export const CrmDb = {
   },
 
   savePipelineStages(stages: string[]): void {
+    if (isAuxValueUnchanged("pipelineStages", stages) && stableStringify(cache.auxiliary.pipelineStages) === stableStringify(stages)) return;
     cache.auxiliary.pipelineStages = stages;
     syncAuxiliaryFromCache();
-    persistAux();
+    persistAux(["pipelineStages"]);
   },
 
   getStageMetadata(): Record<string, unknown> | null {
@@ -497,9 +535,20 @@ export const CrmDb = {
   },
 
   saveStageMetadata(metadata: Record<string, unknown>): void {
+    if (isAuxValueUnchanged("stageMetadata", metadata) && stableStringify(cache.auxiliary.stageMetadata) === stableStringify(metadata)) return;
     cache.auxiliary.stageMetadata = metadata;
     syncAuxiliaryFromCache();
-    persistAux();
+    persistAux(["stageMetadata"]);
+  },
+
+  async savePipelineConfiguration(stages: string[], metadata: Record<string, unknown>, deals: Deal[]) {
+    cache.auxiliary.pipelineStages = stages;
+    cache.auxiliary.stageMetadata = metadata;
+    cache.deals = deals;
+    syncAuxiliaryFromCache();
+    persistAux(["pipelineStages", "stageMetadata"]);
+    persistSoon(() => persistDeals(cache.deals), "deals");
+    await flushPendingWrites();
   },
 
   getLeadSources(): string[] | null {
@@ -507,9 +556,10 @@ export const CrmDb = {
   },
 
   saveLeadSources(sources: string[]): void {
+    if (isAuxValueUnchanged("leadSources", sources) && stableStringify(cache.auxiliary.leadSources) === stableStringify(sources)) return;
     cache.auxiliary.leadSources = sources;
     syncAuxiliaryFromCache();
-    persistAux();
+    persistAux(["leadSources"]);
   },
 
   getCompanyCustomFieldDefs(): unknown[] {
@@ -517,9 +567,10 @@ export const CrmDb = {
   },
 
   saveCompanyCustomFieldDefs(defs: unknown[]): void {
+    if (isAuxValueUnchanged("companyCustomFieldDefs", defs) && stableStringify(cache.auxiliary.companyCustomFieldDefs) === stableStringify(defs)) return;
     cache.auxiliary.companyCustomFieldDefs = defs;
     syncAuxiliaryFromCache();
-    persistAux();
+    persistAux(["companyCustomFieldDefs"]);
   },
 
   getCompanies(): Company[] {
@@ -529,7 +580,7 @@ export const CrmDb = {
   saveCompanies(companies: Company[]) {
     cache.companies = companies.map((c) => ({ ...c, customFields: c.customFields || {} }));
     this.propagateCompanyChanges(cache.companies);
-    persistSoon(() => persistCompanies(cache.companies));
+    persistSoon(() => persistCompanies(cache.companies), "companies");
   },
 
   getCompanyById(companyId: string): Company | undefined {
@@ -606,7 +657,7 @@ export const CrmDb = {
 
   saveContacts(contacts: Contact[]) {
     cache.contacts = contacts;
-    persistSoon(() => persistContacts(cache.contacts));
+    persistSoon(() => persistContacts(cache.contacts), "contacts");
   },
 
   getContactsByCompany(companyId: string): Contact[] {
@@ -753,7 +804,7 @@ export const CrmDb = {
       return next;
     });
     cache.deals = processed;
-    persistSoon(() => persistDeals(cache.deals));
+    persistSoon(() => persistDeals(cache.deals), "deals");
   },
 
   getDealsByCompany(companyId: string): Deal[] {
@@ -766,7 +817,7 @@ export const CrmDb = {
 
   saveProposals(proposals: Proposal[]) {
     cache.proposals = proposals;
-    persistSoon(() => persistProposals(cache.proposals));
+    persistSoon(() => persistProposals(cache.proposals), "proposals");
   },
 
   async saveProposalsConfirmed(proposals: Proposal[]) {
@@ -774,7 +825,7 @@ export const CrmDb = {
     cache.proposals = structuredClone(proposals);
     const attempted = cache.proposals;
     try {
-      const result = await persistProposals(attempted);
+      const result = await trackPersist(() => persistProposals(attempted), "proposals");
       if (result.conflictIds.length || result.blockedDeletes) {
         await handlePersistResult(result);
         throw new Error("Teklif başka bir oturumda değişmiş. Son kaydı açıp yeniden deneyin; değişiklikler kaydedilmedi.");
@@ -802,9 +853,10 @@ export const CrmDb = {
   },
 
   saveProjects(projects: ProjectRecord[]) {
+    if (isAuxValueUnchanged("projects", projects) && stableStringify(cache.auxiliary.projects) === stableStringify(projects)) return;
     cache.projects = projects;
     syncAuxiliaryFromCache();
-    persistAux();
+    persistAux(["projects"]);
   },
 
   getProjectsByCompany(companyId: string): ProjectRecord[] {
@@ -816,9 +868,10 @@ export const CrmDb = {
   },
 
   saveEmails(emails: CrmEmail[]) {
+    if (isAuxValueUnchanged("emails", emails) && stableStringify(cache.auxiliary.emails) === stableStringify(emails)) return;
     cache.emails = emails;
     syncAuxiliaryFromCache();
-    persistAux();
+    persistAux(["emails"]);
   },
 
   getEmailsByCompany(companyId: string): CrmEmail[] {
@@ -859,9 +912,10 @@ export const CrmDb = {
   },
 
   saveDocuments(docs: CrmDocument[]) {
+    if (isAuxValueUnchanged("crmDocuments", docs) && stableStringify(cache.auxiliary.crmDocuments) === stableStringify(docs)) return;
     cache.documents = docs;
     syncAuxiliaryFromCache();
-    persistAux();
+    persistAux(["crmDocuments"]);
   },
 
   getDocumentsByCompany(companyId: string): CrmDocument[] {
@@ -893,9 +947,10 @@ export const CrmDb = {
   },
 
   saveActivities(activities: CrmActivity[]) {
+    if (isAuxValueUnchanged("activities", activities) && stableStringify(cache.auxiliary.activities) === stableStringify(activities)) return;
     cache.activities = activities;
     syncAuxiliaryFromCache();
-    persistAux();
+    persistAux(["activities"]);
   },
 
   getActivitiesByCompany(companyId: string): CrmActivity[] {
@@ -932,7 +987,7 @@ export const CrmDb = {
 
   saveTasks(tasks: Task[]) {
     cache.tasks = tasks;
-    persistSoon(() => persistTasks(cache.tasks));
+    persistSoon(() => persistTasks(cache.tasks), "tasks");
   },
 
   createTask(taskData: Partial<Task>): Task {
