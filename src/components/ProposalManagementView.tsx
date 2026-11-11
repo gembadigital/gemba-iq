@@ -771,20 +771,21 @@ export default function ProposalManagementView() {
   });
 
   return (
-    <div className="space-y-6 max-w-7xl mx-auto px-4 py-6">
+    <div className="proposal-workspace crm-workspace max-w-7xl mx-auto px-4 py-6">
 
       {/* Title & Banner */}
-      <div className="bg-white dark:bg-[#1b1a19] p-5 rounded-lg border border-[#EDEBE9] dark:border-[#323130] shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-4 relative overflow-hidden">
-        <div className="absolute top-0 left-0 right-0 h-1.5 bg-gradient-to-r from-emerald-500 via-[#0078D4] to-blue-500" />
-        <div>
-          <h2 className="text-xl font-bold tracking-tight text-slate-800 dark:text-zinc-150">
+      <div className="crm-page-section crm-page-header bg-white dark:bg-[#1b1a19] p-5 rounded-lg border border-[#EDEBE9] dark:border-[#323130] shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-4 relative overflow-hidden">
+        <div aria-hidden="true" className="proposal-header-stripe absolute top-0 left-0 right-0 h-1.5 bg-gradient-to-r from-emerald-500 via-[#0078D4] to-blue-500" />
+        <div className="crm-page-heading">
+          <span className="crm-page-icon" aria-hidden="true"><FileText size={22} /></span>
+          <div><h2 className="text-xl font-bold tracking-tight text-slate-800 dark:text-zinc-150">
             {t("Proposal Management")}
           </h2>
           <p className="text-xs text-slate-450 dark:text-zinc-400 mt-1">
             {t("Establish, revise, audit, and dispatch executive B2B quotes synced to CRM opportunities")}
-          </p>
+          </p></div>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="crm-page-actions flex items-center gap-2">
           <button
             onClick={() => {
               setShowTemplateManager(true);
@@ -798,7 +799,7 @@ export default function ProposalManagementView() {
             onClick={() => {
               window.dispatchEvent(new CustomEvent("change-tab", { detail: "create-proposal" }));
             }}
-            className="bg-green-600 hover:bg-green-700 text-white font-extrabold px-5 py-2 rounded-lg flex items-center gap-1.5 shadow-sm hover:shadow active:scale-[0.98] transition-all text-xs cursor-pointer animate-pulse"
+            className="crm-primary-action bg-green-600 hover:bg-green-700 text-white font-extrabold px-5 py-2 rounded-lg flex items-center gap-1.5 shadow-sm hover:shadow active:scale-[0.98] transition-all text-xs cursor-pointer animate-pulse"
           >
             <Plus className="w-4 h-4" /> {t("Create Proposal")}
           </button>
@@ -806,12 +807,12 @@ export default function ProposalManagementView() {
       </div>
 
       {/* KPI Cards above - exactly 4 cards: Verilen, Onay Bekleyen, Kazanılan, Kaybedilen */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+      <div className="crm-page-section proposal-kpis grid grid-cols-1 md:grid-cols-4 gap-4">
         
         {/* KPI 1: Total Proposal Amount (Verilen Tekliflerin Toplamı) */}
         <div className="bg-white dark:bg-zinc-900 border border-slate-150 dark:border-zinc-800/80 p-4 rounded-xl shadow-xs space-y-2">
           <span className="text-[10px] uppercase tracking-wider text-slate-450 dark:text-zinc-550 font-extrabold block">
-            {t("TOTAL PROPOSALS VALUE")}
+            {t("TOTAL PROPOSALS VALUE").toLocaleLowerCase(lang === "TR" ? "tr-TR" : "en-US")}
           </span>
           <div className="font-mono text-lg font-black text-slate-800 dark:text-zinc-200">
             {getSystemCurrency().symbol} {formatSystemNumber(sumForCurrency(getSystemCurrency().symbol))}
@@ -821,7 +822,7 @@ export default function ProposalManagementView() {
         {/* KPI 2: Pending Approval (Onay Bekleyen Tekliflerin Toplamı) */}
         <div className="bg-white dark:bg-zinc-900 border border-slate-150 dark:border-zinc-800/80 p-4 rounded-xl shadow-xs space-y-2">
           <span className="text-[10px] uppercase tracking-wider text-amber-600 font-extrabold block">
-            {t("PENDING APPROVAL VALUE")}
+            {t("PENDING APPROVAL VALUE").toLocaleLowerCase(lang === "TR" ? "tr-TR" : "en-US")}
           </span>
           <div className="font-mono text-lg font-black text-amber-600 dark:text-amber-450">
             {getSystemCurrency().symbol} {formatSystemNumber(sumForCurrency(getSystemCurrency().symbol, ["Sent", "Under Evaluation", "Revision Requested", "Draft"]))}
@@ -831,7 +832,7 @@ export default function ProposalManagementView() {
         {/* KPI 3: Won Proposals (Kazanılan Tekliflerin Toplamı) */}
         <div className="bg-white dark:bg-zinc-900 border border-slate-150 dark:border-zinc-800/80 p-4 rounded-xl shadow-xs space-y-2">
           <span className="text-[10px] uppercase tracking-wider text-green-750 font-extrabold block">
-            {t("WON PROPOSALS VALUE")}
+            {t("WON PROPOSALS VALUE").toLocaleLowerCase(lang === "TR" ? "tr-TR" : "en-US")}
           </span>
           <div className="font-mono text-lg font-black text-green-600 dark:text-green-400">
             {getSystemCurrency().symbol} {formatSystemNumber(sumForCurrency(getSystemCurrency().symbol, "Accepted"))}
@@ -841,7 +842,7 @@ export default function ProposalManagementView() {
         {/* KPI 4: Lost Proposals (Kaybedilen Tekliflerin Toplamı) */}
         <div className="bg-white dark:bg-zinc-900 border border-slate-150 dark:border-zinc-800/80 p-4 rounded-xl shadow-xs space-y-2">
           <span className="text-[10px] uppercase tracking-wider text-red-600 font-extrabold block">
-            {t("LOST PROPOSALS VALUE")}
+            {t("LOST PROPOSALS VALUE").toLocaleLowerCase(lang === "TR" ? "tr-TR" : "en-US")}
           </span>
           <div className="font-mono text-lg font-black text-red-600 dark:text-red-400">
             {getSystemCurrency().symbol} {formatSystemNumber(sumForCurrency(getSystemCurrency().symbol, "Rejected"))}
@@ -851,10 +852,10 @@ export default function ProposalManagementView() {
       </div>
 
       {/* Interactive Filters Bar */}
-      <div className="bg-white dark:bg-[#151413] p-4 rounded-xl border border-slate-150 dark:border-zinc-800 space-y-3 shadow-xs">
+      <div className="crm-page-section proposal-filters crm-panel bg-white dark:bg-[#151413] p-4 rounded-xl border border-slate-150 dark:border-zinc-800 space-y-3 shadow-xs">
         {/* Top Row: Search and Toggle Icon Button */}
         <div className="flex flex-wrap gap-3 items-center justify-between text-xs">
-          <div className="flex items-center gap-2 bg-zinc-50 dark:bg-zinc-800/50 rounded-lg p-2 border border-slate-100 dark:border-zinc-700 w-full sm:w-80">
+          <div className="crm-search-field flex items-center gap-2 bg-zinc-50 dark:bg-zinc-800/50 rounded-lg p-2 border border-slate-100 dark:border-zinc-700 w-full sm:w-80">
             <Search className="w-3.5 h-3.5 text-slate-400" />
             <input
               type="text"
@@ -867,6 +868,8 @@ export default function ProposalManagementView() {
 
           <button
             onClick={() => setIsFilterPanelOpen(!isFilterPanelOpen)}
+            aria-expanded={isFilterPanelOpen}
+            aria-controls="proposal-filter-fields"
             className={`flex items-center gap-2 px-3.5 py-2.5 rounded-lg border text-xs font-bold transition-all cursor-pointer select-none shadow-xs active:scale-95 ${
               isFilterPanelOpen
                 ? "bg-emerald-50 dark:bg-emerald-950/20 border-emerald-500 text-emerald-750 dark:text-emerald-400"
@@ -885,7 +888,7 @@ export default function ProposalManagementView() {
 
         {/* Collapsible Filter Panel */}
         {isFilterPanelOpen && (
-          <div className="pt-3 border-t border-slate-100 dark:border-zinc-800 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3 text-xs animate-in fade-in duration-200">
+          <div id="proposal-filter-fields" className="crm-filter-fields pt-3 border-t border-slate-100 dark:border-zinc-800 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3 text-xs animate-in fade-in duration-200">
             <div>
               <label className="block text-[10px] font-bold text-slate-400 dark:text-zinc-500 uppercase tracking-widest mb-1 select-none">
                 {t("Company")}
@@ -971,11 +974,11 @@ export default function ProposalManagementView() {
       </div>
 
       {/* Left side Table / Right side AI Flyout layout */}
-      <div className="flex flex-col lg:flex-row gap-6 items-start">
+      <div className="crm-page-section proposal-content-layout flex flex-col lg:flex-row gap-6 items-start">
         
         {/* Table Container */}
-        <div className="bg-white dark:bg-[#151413] w-full border border-slate-150 dark:border-zinc-800/80 rounded-xl shadow-xs overflow-x-auto">
-          <table className="w-full text-xs text-left border-collapse">
+        <div className="proposal-table-panel crm-panel bg-white dark:bg-[#151413] w-full border border-slate-150 dark:border-zinc-800/80 rounded-xl shadow-xs overflow-x-auto">
+          <table className="crm-data-table w-full text-xs text-left border-collapse">
             <thead>
               <tr className="bg-slate-50 dark:bg-black/15 text-slate-450 uppercase font-mono tracking-wider border-b border-slate-150 dark:border-zinc-800 text-[9px] font-extrabold">
                 <th className="p-3 text-center">{t("Seq")}</th>
@@ -1509,11 +1512,11 @@ export default function ProposalManagementView() {
 
       {/* 10. PROPOSAL SUMMARY & PDF FILE VIEWER PANEL */}
       {selectedProposalForDetail && (
-        <div className="fixed inset-0 z-50 flex justify-end bg-black/60 backdrop-blur-xs p-0 sm:p-4 animate-in fade-in duration-200" role="dialog" aria-modal="true">
+        <div data-ui-proposal-detail className="fixed inset-0 z-50 flex justify-end bg-black/60 backdrop-blur-xs p-0 sm:p-4 animate-in fade-in duration-200" role="dialog" aria-modal="true">
           <div className="bg-slate-50 dark:bg-[#0e0d0c] w-full max-w-7xl h-full sm:h-[95vh] my-auto rounded-none sm:rounded-2xl border-l sm:border border-slate-205 dark:border-zinc-800 shadow-2xl flex flex-col overflow-hidden animate-in slide-in-from-right duration-300">
             
             {/* Header block */}
-            <div className="bg-white dark:bg-[#151413] border-b border-slate-200 dark:border-zinc-800 p-4 px-6 flex items-center justify-between">
+            <div className="crm-detail-header bg-white dark:bg-[#151413] border-b border-slate-200 dark:border-zinc-800 p-4 px-6 flex items-center justify-between">
               <div>
                 <div className="flex items-center gap-2">
                   <span className="font-mono bg-indigo-50 text-indigo-700 dark:bg-indigo-950/40 dark:text-indigo-400 p-1 px-2.5 rounded text-[10px] font-extrabold uppercase tracking-wider">
@@ -1615,7 +1618,7 @@ export default function ProposalManagementView() {
             <div className="flex-1 grid grid-cols-1 lg:grid-cols-12 overflow-hidden bg-slate-100/50 dark:bg-[#0c0c0b]">
               
               {/* Left Column: Proposal Summary Information (5 cols) */}
-              <div className="lg:col-span-5 h-full overflow-y-auto p-5 px-6 space-y-6 border-r border-slate-200 dark:border-zinc-800/80 bg-white dark:bg-[#121110]">
+              <div className="crm-detail-summary lg:col-span-5 h-full overflow-y-auto p-5 px-6 space-y-6 border-r border-slate-200 dark:border-zinc-800/80 bg-white dark:bg-[#121110]">
                 
                 {/* 1. Client & Owner Details */}
                 <div className="bg-slate-50/50 dark:bg-zinc-900/35 border border-slate-200/60 dark:border-zinc-800/60 p-4 rounded-xl space-y-3.5">

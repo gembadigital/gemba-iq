@@ -1,5 +1,6 @@
 import React, { useEffect, useRef, useState } from "react";
 import "./styles/stitch-theme.css";
+import "./styles/workspace-layout.css";
 import DashboardView from "./components/DashboardView";
 import CampaignDesigner from "./components/CampaignDesigner";
 import SendingProgressView from "./components/SendingProgressView";
@@ -824,6 +825,10 @@ export default function App() {
       <button
         id={`sidebar-nav-${id}`}
         data-ui-nav-item="true"
+        data-ui-nav-row="true"
+        aria-label={t(label)}
+        aria-current={isActive ? "page" : undefined}
+        title={t(label)}
         data-active={isActive}
         data-submenu={isSubmenu}
         disabled={disabled}
@@ -834,7 +839,7 @@ export default function App() {
             : stateClasses
         } ${extraClass}`}
       >
-        <div className={`w-[20px] h-[20px] flex items-center justify-center flex-shrink-0 [&_svg]:!w-[20px] [&_svg]:!h-[20px] ${
+        <div data-ui-nav-icon className={`w-[20px] h-[20px] flex items-center justify-center flex-shrink-0 [&_svg]:!w-[20px] [&_svg]:!h-[20px] ${
           isActive 
             ? "text-[#1E3A5F] dark:text-blue-300 [&_svg]:!text-[#1E3A5F] dark:[&_svg]:!text-blue-300" 
             : "text-slate-400 dark:text-zinc-500 [&_svg]:!text-slate-450 dark:[&_svg]:!text-zinc-500"
@@ -842,7 +847,7 @@ export default function App() {
           {icon}
         </div>
         {!sidebarCollapsed && (
-          <span className={`${typographyClass} leading-[1.4] text-left flex-1 min-w-0 truncate`}>
+          <span data-ui-nav-label className={`${typographyClass} leading-[1.4] text-left flex-1 min-w-0 truncate`}>
             {t(label)}
           </span>
         )}
@@ -961,12 +966,17 @@ export default function App() {
           </div>
 
           {/* Navigation Action Buttons list */}
-          <nav className="flex min-h-0 flex-1 flex-col gap-[20px] overflow-x-hidden overflow-y-auto">
+          <nav aria-label={lang === "TR" ? "Ana menü" : "Main navigation"} data-ui-navigation className="flex min-h-0 flex-1 flex-col gap-[20px] overflow-x-hidden overflow-y-auto">
             {/* Collapsible Activity Report sub-menu */}
             <div className="flex flex-col gap-[4px]">
               <button
                 type="button"
                 onClick={() => setActivityReportMenuExpanded(!activityReportMenuExpanded)}
+                data-ui-nav-row="true"
+                data-ui-nav-group="true"
+                aria-expanded={activityReportMenuExpanded}
+                aria-label={t("Activity Report")}
+                title={t("Activity Report")}
                 className={`w-full max-w-full overflow-hidden flex items-center transition-all group relative cursor-pointer gap-[12px] ${
                   sidebarCollapsed ? "px-0 justify-center h-[48px] min-h-[48px] py-1" : "justify-between pl-[24px] pr-[16px] h-[48px] min-h-[48px] py-1"
                 } ${
@@ -975,18 +985,18 @@ export default function App() {
                     : "border-l-[4px] border-l-transparent text-slate-500 dark:text-slate-400 hover:bg-slate-100/60 dark:hover:bg-zinc-800/40 hover:text-slate-800 dark:hover:text-zinc-100"
                 }`}
               >
-                <div className={`flex items-center gap-[12px] ${sidebarCollapsed ? "w-full justify-center" : "truncate flex-1 min-w-0"}`}>
-                  <div className="w-[20px] h-[20px] flex items-center justify-center flex-shrink-0 [&_svg]:!w-[20px] [&_svg]:!h-[20px] text-slate-400 dark:text-zinc-500 [&_svg]:!text-slate-400 dark:[&_svg]:!text-zinc-500">
+                <div data-ui-nav-main className={`flex items-center gap-[12px] ${sidebarCollapsed ? "w-full justify-center" : "truncate flex-1 min-w-0"}`}>
+                  <div data-ui-nav-icon className="w-[20px] h-[20px] flex items-center justify-center flex-shrink-0 [&_svg]:!w-[20px] [&_svg]:!h-[20px] text-slate-400 dark:text-zinc-500 [&_svg]:!text-slate-400 dark:[&_svg]:!text-zinc-500">
                     {isNotionMode ? (
                       <span className="text-base">📈</span>
                     ) : (
                       <BarChart2 className="w-[20px] h-[20px] flex-shrink-0" />
                     )}
                   </div>
-                  {!sidebarCollapsed && <span className="text-[15px] font-semibold leading-[1.4] cursor-pointer text-left flex-1 truncate">{t("Activity Report")}</span>}
+                  {!sidebarCollapsed && <span data-ui-nav-label className="text-[15px] font-semibold leading-[1.4] cursor-pointer text-left flex-1 truncate">{t("Activity Report")}</span>}
                 </div>
                 {!sidebarCollapsed && (
-                  <ChevronDown
+                  <ChevronDown data-ui-nav-chevron
                      className={`w-4 h-4 text-slate-450 dark:text-zinc-500 transition-transform duration-200 flex-shrink-0 ${
                       activityReportMenuExpanded ? "" : "-rotate-90"
                     }`}
@@ -1000,9 +1010,9 @@ export default function App() {
               </button>
 
               {activityReportMenuExpanded && (
-                <div className="relative flex flex-col gap-[4px] w-full overflow-hidden pl-0 ml-0">
+                <div data-ui-nav-children className="relative flex flex-col gap-[4px] w-full overflow-hidden pl-0 ml-0">
                   {!sidebarCollapsed && (
-                    <div className="absolute left-[34px] top-0 bottom-0 w-[1px] bg-[#EDEBE9] dark:bg-[#323130] z-10" />
+                    <div data-ui-nav-guide className="absolute left-[34px] top-0 bottom-0 w-[1px] bg-[#EDEBE9] dark:bg-[#323130] z-10" />
                   )}
                   <SidebarButton
                     id="revenue-management"
@@ -1027,6 +1037,11 @@ export default function App() {
               <button
                 type="button"
                 onClick={() => setLeadsMenuExpanded(!leadsMenuExpanded)}
+                data-ui-nav-row="true"
+                data-ui-nav-group="true"
+                aria-expanded={leadsMenuExpanded}
+                aria-label={t("Lead Discovery")}
+                title={t("Lead Discovery")}
                 className={`w-full max-w-full overflow-hidden flex items-center transition-all group relative cursor-pointer gap-[12px] ${
                   sidebarCollapsed ? "px-0 justify-center h-[48px] min-h-[48px] py-1" : "justify-between pl-[24px] pr-[16px] h-[48px] min-h-[48px] py-1"
                 } ${
@@ -1035,18 +1050,18 @@ export default function App() {
                     : "border-l-[4px] border-l-transparent text-slate-500 dark:text-slate-400 hover:bg-slate-100/60 dark:hover:bg-zinc-800/40 hover:text-slate-800 dark:hover:text-zinc-100"
                 }`}
               >
-                <div className={`flex items-center gap-[12px] ${sidebarCollapsed ? "w-full justify-center" : "truncate flex-1 min-w-0"}`}>
-                  <div className="w-[20px] h-[20px] flex items-center justify-center flex-shrink-0 [&_svg]:!w-[20px] [&_svg]:!h-[20px] text-slate-400 dark:text-zinc-500 [&_svg]:!text-slate-400 dark:[&_svg]:!text-zinc-500">
+                <div data-ui-nav-main className={`flex items-center gap-[12px] ${sidebarCollapsed ? "w-full justify-center" : "truncate flex-1 min-w-0"}`}>
+                  <div data-ui-nav-icon className="w-[20px] h-[20px] flex items-center justify-center flex-shrink-0 [&_svg]:!w-[20px] [&_svg]:!h-[20px] text-slate-400 dark:text-zinc-500 [&_svg]:!text-slate-400 dark:[&_svg]:!text-zinc-500">
                     {isNotionMode ? (
                       <span className="text-base">👥</span>
                     ) : (
                       <Users className="w-[20px] h-[20px] flex-shrink-0" />
                     )}
                   </div>
-                  {!sidebarCollapsed && <span className="text-[15px] font-semibold leading-[1.4] cursor-pointer text-left flex-1 truncate">{t("Lead Discovery")}</span>}
+                  {!sidebarCollapsed && <span data-ui-nav-label className="text-[15px] font-semibold leading-[1.4] cursor-pointer text-left flex-1 truncate">{t("Lead Discovery")}</span>}
                 </div>
                 {!sidebarCollapsed && (
-                  <ChevronDown
+                  <ChevronDown data-ui-nav-chevron
                      className={`w-4 h-4 text-slate-450 dark:text-zinc-500 transition-transform duration-200 flex-shrink-0 ${
                       leadsMenuExpanded ? "" : "-rotate-90"
                     }`}
@@ -1060,9 +1075,9 @@ export default function App() {
               </button>
 
               {leadsMenuExpanded && (
-                <div className="relative flex flex-col gap-[4px] w-full overflow-hidden pl-0 ml-0">
+                <div data-ui-nav-children className="relative flex flex-col gap-[4px] w-full overflow-hidden pl-0 ml-0">
                   {!sidebarCollapsed && (
-                    <div className="absolute left-[34px] top-0 bottom-0 w-[1px] bg-[#EDEBE9] dark:bg-[#323130] z-10" />
+                    <div data-ui-nav-guide className="absolute left-[34px] top-0 bottom-0 w-[1px] bg-[#EDEBE9] dark:bg-[#323130] z-10" />
                   )}
                   <SidebarButton
                     id="lead-profiles"
@@ -1094,6 +1109,11 @@ export default function App() {
               <button
                 type="button"
                 onClick={() => setCompaniesMenuExpanded(!companiesMenuExpanded)}
+                data-ui-nav-row="true"
+                data-ui-nav-group="true"
+                aria-expanded={companiesMenuExpanded}
+                aria-label={t("Companies & Targets")}
+                title={t("Companies & Targets")}
                 className={`w-full max-w-full overflow-hidden flex items-center transition-all group relative cursor-pointer gap-[12px] ${
                   sidebarCollapsed ? "px-0 justify-center h-[48px] min-h-[48px] py-1" : "justify-between pl-[24px] pr-[16px] h-[48px] min-h-[48px] py-1"
                 } ${
@@ -1102,18 +1122,18 @@ export default function App() {
                     : "border-l-[4px] border-l-transparent text-slate-500 dark:text-slate-400 hover:bg-slate-100/60 dark:hover:bg-zinc-800/40 hover:text-slate-800 dark:hover:text-zinc-100"
                 }`}
               >
-                <div className={`flex items-center gap-[12px] ${sidebarCollapsed ? "w-full justify-center" : "truncate flex-1 min-w-0"}`}>
-                  <div className="w-[20px] h-[20px] flex items-center justify-center flex-shrink-0 [&_svg]:!w-[20px] [&_svg]:!h-[20px] text-slate-400 dark:text-zinc-500 [&_svg]:!text-slate-400 dark:[&_svg]:!text-zinc-500">
+                <div data-ui-nav-main className={`flex items-center gap-[12px] ${sidebarCollapsed ? "w-full justify-center" : "truncate flex-1 min-w-0"}`}>
+                  <div data-ui-nav-icon className="w-[20px] h-[20px] flex items-center justify-center flex-shrink-0 [&_svg]:!w-[20px] [&_svg]:!h-[20px] text-slate-400 dark:text-zinc-500 [&_svg]:!text-slate-400 dark:[&_svg]:!text-zinc-500">
                     {isNotionMode ? (
                       <span className="text-base">🏢</span>
                     ) : (
                       <Building className="w-[20px] h-[20px] flex-shrink-0" />
                     )}
                   </div>
-                  {!sidebarCollapsed && <span className="text-[15px] font-semibold leading-[1.4] cursor-pointer text-left flex-1 truncate">{t("Companies & Targets")}</span>}
+                  {!sidebarCollapsed && <span data-ui-nav-label className="text-[15px] font-semibold leading-[1.4] cursor-pointer text-left flex-1 truncate">{t("Companies & Targets")}</span>}
                 </div>
                 {!sidebarCollapsed && (
-                  <ChevronDown
+                  <ChevronDown data-ui-nav-chevron
                      className={`w-4 h-4 text-slate-450 dark:text-zinc-500 transition-transform duration-200 flex-shrink-0 ${
                       companiesMenuExpanded ? "" : "-rotate-90"
                     }`}
@@ -1127,9 +1147,9 @@ export default function App() {
               </button>
 
               {companiesMenuExpanded && (
-                <div className="relative flex flex-col gap-[4px] w-full overflow-hidden pl-0 ml-0">
+                <div data-ui-nav-children className="relative flex flex-col gap-[4px] w-full overflow-hidden pl-0 ml-0">
                   {!sidebarCollapsed && (
-                    <div className="absolute left-[34px] top-0 bottom-0 w-[1px] bg-[#EDEBE9] dark:bg-[#323130] z-10" />
+                    <div data-ui-nav-guide className="absolute left-[34px] top-0 bottom-0 w-[1px] bg-[#EDEBE9] dark:bg-[#323130] z-10" />
                   )}
                   <SidebarButton
                     id="companies-registry"
@@ -1155,6 +1175,11 @@ export default function App() {
               <button
                 type="button"
                 onClick={() => setDealsMenuExpanded(!dealsMenuExpanded)}
+                data-ui-nav-row="true"
+                data-ui-nav-group="true"
+                aria-expanded={dealsMenuExpanded}
+                aria-label={t("Deal Management")}
+                title={t("Deal Management")}
                 className={`w-full max-w-full overflow-hidden flex items-center transition-all group relative cursor-pointer gap-[12px] ${
                   sidebarCollapsed ? "px-0 justify-center h-[48px] min-h-[48px] py-1" : "justify-between pl-[24px] pr-[16px] h-[48px] min-h-[48px] py-1"
                 } ${
@@ -1163,18 +1188,18 @@ export default function App() {
                     : "border-l-[4px] border-l-transparent text-slate-500 dark:text-slate-400 hover:bg-slate-100/60 dark:hover:bg-zinc-800/40 hover:text-slate-800 dark:hover:text-zinc-100"
                 }`}
               >
-                <div className={`flex items-center gap-[12px] ${sidebarCollapsed ? "w-full justify-center" : "truncate flex-1 min-w-0"}`}>
-                  <div className="w-[20px] h-[20px] flex items-center justify-center flex-shrink-0 [&_svg]:!w-[20px] [&_svg]:!h-[20px] text-slate-400 dark:text-zinc-500 [&_svg]:!text-slate-400 dark:[&_svg]:!text-zinc-500">
+                <div data-ui-nav-main className={`flex items-center gap-[12px] ${sidebarCollapsed ? "w-full justify-center" : "truncate flex-1 min-w-0"}`}>
+                  <div data-ui-nav-icon className="w-[20px] h-[20px] flex items-center justify-center flex-shrink-0 [&_svg]:!w-[20px] [&_svg]:!h-[20px] text-slate-400 dark:text-zinc-500 [&_svg]:!text-slate-400 dark:[&_svg]:!text-zinc-500">
                     {isNotionMode ? (
                       <span className="text-base">💼</span>
                     ) : (
                       <Briefcase className="w-[20px] h-[20px] flex-shrink-0" />
                     )}
                   </div>
-                  {!sidebarCollapsed && <span className="text-[15px] font-semibold leading-[1.4] cursor-pointer text-left flex-1 truncate">{t("Deal Management")}</span>}
+                  {!sidebarCollapsed && <span data-ui-nav-label className="text-[15px] font-semibold leading-[1.4] cursor-pointer text-left flex-1 truncate">{t("Deal Management")}</span>}
                 </div>
                 {!sidebarCollapsed && (
-                  <ChevronDown
+                  <ChevronDown data-ui-nav-chevron
                      className={`w-4 h-4 text-slate-450 dark:text-zinc-500 transition-transform duration-200 flex-shrink-0 ${
                       dealsMenuExpanded ? "" : "-rotate-90"
                     }`}
@@ -1188,9 +1213,9 @@ export default function App() {
               </button>
 
               {dealsMenuExpanded && (
-                <div className="relative flex flex-col gap-[4px] w-full overflow-hidden pl-0 ml-0">
+                <div data-ui-nav-children className="relative flex flex-col gap-[4px] w-full overflow-hidden pl-0 ml-0">
                   {!sidebarCollapsed && (
-                    <div className="absolute left-[34px] top-0 bottom-0 w-[1px] bg-[#EDEBE9] dark:bg-[#323130] z-10" />
+                    <div data-ui-nav-guide className="absolute left-[34px] top-0 bottom-0 w-[1px] bg-[#EDEBE9] dark:bg-[#323130] z-10" />
                   )}
                   <SidebarButton
                     id="services"
@@ -1256,6 +1281,11 @@ export default function App() {
               <button
                 type="button"
                 onClick={() => setMarketingMenuExpanded(!marketingMenuExpanded)}
+                data-ui-nav-row="true"
+                data-ui-nav-group="true"
+                aria-expanded={marketingMenuExpanded}
+                aria-label={t("Marketing & Business Development")}
+                title={t("Marketing & Business Development")}
                 className={`w-full max-w-full overflow-hidden flex items-center transition-all group relative cursor-pointer gap-[12px] ${
                   sidebarCollapsed ? "px-0 justify-center h-[48px] min-h-[48px] py-1" : "justify-between pl-[24px] pr-[16px] h-[48px] min-h-[48px] py-1"
                 } ${
@@ -1264,18 +1294,18 @@ export default function App() {
                     : "border-l-[4px] border-l-transparent text-slate-500 dark:text-slate-400 hover:bg-slate-100/60 dark:hover:bg-zinc-800/40 hover:text-slate-800 dark:hover:text-zinc-100"
                 }`}
               >
-                <div className={`flex items-center gap-[12px] ${sidebarCollapsed ? "w-full justify-center" : "truncate flex-1 min-w-0"}`}>
-                  <div className="w-[20px] h-[20px] flex items-center justify-center flex-shrink-0 [&_svg]:!w-[20px] [&_svg]:!h-[20px] text-purple-500 [&_svg]:!text-purple-500">
+                <div data-ui-nav-main className={`flex items-center gap-[12px] ${sidebarCollapsed ? "w-full justify-center" : "truncate flex-1 min-w-0"}`}>
+                  <div data-ui-nav-icon className="w-[20px] h-[20px] flex items-center justify-center flex-shrink-0 [&_svg]:!w-[20px] [&_svg]:!h-[20px] text-purple-500 [&_svg]:!text-purple-500">
                     {isNotionMode ? (
                       <span className="text-base">📣</span>
                     ) : (
                       <Sparkles className="w-[20px] h-[20px] flex-shrink-0" />
                     )}
                   </div>
-                  {!sidebarCollapsed && <span className="text-[15px] font-semibold leading-[1.4] cursor-pointer text-left flex-1 truncate">{t("Marketing & Business Development")}</span>}
+                  {!sidebarCollapsed && <span data-ui-nav-label className="text-[15px] font-semibold leading-[1.4] cursor-pointer text-left flex-1 truncate">{t("Marketing & Business Development")}</span>}
                 </div>
                 {!sidebarCollapsed && (
-                  <ChevronDown
+                  <ChevronDown data-ui-nav-chevron
                      className={`w-4 h-4 text-slate-450 dark:text-zinc-500 transition-transform duration-200 flex-shrink-0 ${
                       marketingMenuExpanded ? "" : "-rotate-90"
                     }`}
@@ -1289,9 +1319,9 @@ export default function App() {
               </button>
 
               {marketingMenuExpanded && (
-                <div className="relative flex flex-col gap-[4px] w-full overflow-hidden pl-0 ml-0">
+                <div data-ui-nav-children className="relative flex flex-col gap-[4px] w-full overflow-hidden pl-0 ml-0">
                   {!sidebarCollapsed && (
-                    <div className="absolute left-[34px] top-0 bottom-0 w-[1px] bg-[#EDEBE9] dark:bg-[#323130] z-10" />
+                    <div data-ui-nav-guide className="absolute left-[34px] top-0 bottom-0 w-[1px] bg-[#EDEBE9] dark:bg-[#323130] z-10" />
                   )}
                   <SidebarButton
                     id="target-accounts"
@@ -1376,6 +1406,11 @@ export default function App() {
               <button
                 type="button"
                 onClick={() => setCampaignMenuExpanded(!campaignMenuExpanded)}
+                data-ui-nav-row="true"
+                data-ui-nav-group="true"
+                aria-expanded={campaignMenuExpanded}
+                aria-label={t("Campaign")}
+                title={t("Campaign")}
                 className={`w-full max-w-full overflow-hidden flex items-center transition-all group relative cursor-pointer gap-[12px] ${
                   sidebarCollapsed ? "px-0 justify-center h-[48px] min-h-[48px] py-1" : "justify-between pl-[24px] pr-[16px] h-[48px] min-h-[48px] py-1"
                 } ${
@@ -1384,18 +1419,18 @@ export default function App() {
                     : "border-l-[4px] border-l-transparent text-slate-500 dark:text-slate-400 hover:bg-slate-100/60 dark:hover:bg-zinc-800/40 hover:text-slate-800 dark:hover:text-zinc-100"
                 }`}
               >
-                <div className={`flex items-center gap-[12px] ${sidebarCollapsed ? "w-full justify-center" : "truncate flex-1 min-w-0"}`}>
-                  <div className="w-[20px] h-[20px] flex items-center justify-center flex-shrink-0 [&_svg]:!w-[20px] [&_svg]:!h-[20px] text-slate-400 dark:text-zinc-500 [&_svg]:!text-slate-400 dark:[&_svg]:!text-zinc-500">
+                <div data-ui-nav-main className={`flex items-center gap-[12px] ${sidebarCollapsed ? "w-full justify-center" : "truncate flex-1 min-w-0"}`}>
+                  <div data-ui-nav-icon className="w-[20px] h-[20px] flex items-center justify-center flex-shrink-0 [&_svg]:!w-[20px] [&_svg]:!h-[20px] text-slate-400 dark:text-zinc-500 [&_svg]:!text-slate-400 dark:[&_svg]:!text-zinc-500">
                     {isNotionMode ? (
                       <span className="text-base">📢</span>
                     ) : (
                       <Megaphone className="w-[20px] h-[20px] flex-shrink-0" />
                     )}
                   </div>
-                  {!sidebarCollapsed && <span className="text-[15px] font-semibold leading-[1.4] cursor-pointer text-left flex-1 truncate">{t("Campaign")}</span>}
+                  {!sidebarCollapsed && <span data-ui-nav-label className="text-[15px] font-semibold leading-[1.4] cursor-pointer text-left flex-1 truncate">{t("Campaign")}</span>}
                 </div>
                 {!sidebarCollapsed && (
-                  <ChevronDown
+                  <ChevronDown data-ui-nav-chevron
                      className={`w-4 h-4 text-slate-450 dark:text-zinc-500 transition-transform duration-200 flex-shrink-0 ${
                       campaignMenuExpanded ? "" : "-rotate-90"
                     }`}
@@ -1409,9 +1444,9 @@ export default function App() {
               </button>
 
               {campaignMenuExpanded && (
-                <div className="relative flex flex-col gap-[4px] w-full overflow-hidden pl-0 ml-0">
+                <div data-ui-nav-children className="relative flex flex-col gap-[4px] w-full overflow-hidden pl-0 ml-0">
                   {!sidebarCollapsed && (
-                    <div className="absolute left-[34px] top-0 bottom-0 w-[1px] bg-[#EDEBE9] dark:bg-[#323130] z-10" />
+                    <div data-ui-nav-guide className="absolute left-[34px] top-0 bottom-0 w-[1px] bg-[#EDEBE9] dark:bg-[#323130] z-10" />
                   )}
                   <SidebarButton
                     id="dashboard"

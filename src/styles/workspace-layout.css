@@ -1,0 +1,163 @@
+@layer stitch-theme {
+@media screen {
+  /* CRM layout v1: shared geometry; the established palette/fonts stay in
+     stitch-theme.css. Scope every rule away from proposal/PDF documents. */
+  .gemba-stitch-skin {
+    --crm-panel-radius: 12px;
+    --crm-panel-padding: 22px;
+    --crm-section-gap: 20px;
+    --crm-field-height: 40px;
+    --crm-nav-icon: 20px;
+    --crm-nav-arrow: 16px;
+    --crm-nav-inset: 16px;
+    --crm-nav-gap: 12px;
+  }
+  @media (min-width:1024px) {
+    .gemba-stitch-skin [data-ui-sidebar][data-collapsed="false"] { width: 280px !important; }
+  }
+  .gemba-stitch-skin [data-ui-sidebar] [data-ui-navigation] { gap: 8px !important; padding: 0 8px 12px !important; }
+  .gemba-stitch-skin [data-ui-sidebar] [data-ui-nav-children] { gap: 2px !important; padding: 2px 0 4px !important; margin: 0 !important; width: 100% !important; }
+  .gemba-stitch-skin [data-ui-sidebar] [data-ui-nav-guide] { display: none !important; }
+  .gemba-stitch-skin [data-ui-sidebar] [data-ui-nav-row] {
+    display: grid !important;
+    grid-template-columns: var(--crm-nav-icon) minmax(0,1fr) var(--crm-nav-arrow) !important;
+    align-items: center !important;
+    column-gap: var(--crm-nav-gap) !important;
+    justify-content: stretch !important;
+    width: 100% !important; max-width: 100% !important;
+    min-height: 44px !important; height: auto !important;
+    margin: 0 !important; padding: 10px var(--crm-nav-inset) !important;
+    border-width: 0 !important; box-sizing: border-box !important;
+    text-align: left !important; animation: none !important;
+  }
+  .gemba-stitch-skin [data-ui-sidebar] [data-ui-nav-row][data-active="true"]::before {
+    content: ""; position: absolute; inset: 10px auto 10px 0; width: 3px;
+    border-radius: 3px; background: #ff6b8d;
+  }
+  .gemba-stitch-skin [data-ui-sidebar] [data-ui-nav-main] { display: contents !important; }
+  .gemba-stitch-skin [data-ui-sidebar] [data-ui-nav-icon] {
+    grid-column: 1 !important; display: grid !important; place-items: center !important;
+    width: var(--crm-nav-icon) !important; height: var(--crm-nav-icon) !important;
+    min-width: var(--crm-nav-icon) !important; margin: 0 !important; padding: 0 !important;
+  }
+  .gemba-stitch-skin [data-ui-sidebar] [data-ui-nav-icon] > svg { width: 20px !important; height: 20px !important; display: block; }
+  .gemba-stitch-skin [data-ui-sidebar] [data-ui-nav-label] {
+    grid-column: 2 !important; min-width: 0 !important;
+    white-space: normal !important; overflow: visible !important; text-overflow: clip !important;
+    line-height: 20px !important; margin: 0 !important; padding: 0 !important;
+  }
+  .gemba-stitch-skin [data-ui-sidebar] [data-ui-nav-chevron] {
+    grid-column: 3 !important; width: 16px !important; height: 16px !important;
+    justify-self: end !important; margin: 0 !important;
+  }
+  .gemba-stitch-skin [data-ui-sidebar] [data-ui-nav-row]:focus-visible { outline: 2px solid #cad4e5; outline-offset: -3px; }
+  .gemba-stitch-skin [data-ui-sidebar][data-collapsed="true"] [data-ui-nav-row] {
+    grid-template-columns: var(--crm-nav-icon) !important; justify-content: center !important; padding: 10px 0 !important;
+  }
+  .gemba-stitch-skin [data-ui-sidebar][data-collapsed="true"] [data-ui-nav-row] > span { display: none !important; }
+
+  /* The customer's existing card is the reference: quiet panels, consistent
+     spacing, readable fields, restrained headings and one action hierarchy. */
+  .gemba-stitch-skin .crm-workspace { max-width: 1560px !important; padding: 4px 0 28px !important; }
+  .gemba-stitch-skin .crm-workspace > .crm-page-section + .crm-page-section { margin-top: var(--crm-section-gap) !important; }
+  .gemba-stitch-skin .crm-page-header {
+    background: var(--stitch-surface) !important; border: 1px solid var(--stitch-line) !important;
+    border-radius: var(--crm-panel-radius) !important; padding: 22px 24px !important; box-shadow: none !important;
+  }
+  .gemba-stitch-skin .crm-page-heading { display: flex; align-items: center; gap: 14px; min-width: 0; }
+  .gemba-stitch-skin .crm-page-heading > div { min-width: 0; }
+  .gemba-stitch-skin .crm-page-icon { display: grid; place-items: center; flex: 0 0 44px; width: 44px; height: 44px; border-radius: 11px; background: var(--stitch-accent-soft); color: var(--stitch-accent-ink); }
+  .gemba-stitch-skin .crm-page-heading h2 { font-size: 21px !important; line-height: 1.3 !important; font-weight: 650 !important; letter-spacing: -.6px !important; }
+  .gemba-stitch-skin .crm-page-heading p { font-size: 13px !important; line-height: 1.6; margin-top: 5px !important; color: var(--stitch-muted) !important; }
+  .gemba-stitch-skin .proposal-header-stripe { display: none !important; }
+  .gemba-stitch-skin .crm-page-actions { flex-wrap: wrap; flex-shrink: 0; gap: 8px !important; }
+  .gemba-stitch-skin .crm-page-actions button { min-height: 40px; padding: 9px 13px !important; border-radius: 7px !important; font-size: 13px !important; font-weight: 500 !important; box-shadow: none !important; animation: none !important; }
+  .gemba-stitch-skin .crm-primary-action { background: var(--stitch-accent) !important; border-color: var(--stitch-accent) !important; color: #fff !important; }
+  .gemba-stitch-skin .crm-panel { background: var(--stitch-surface) !important; border: 1px solid var(--stitch-line) !important; border-radius: var(--crm-panel-radius) !important; padding: var(--crm-panel-padding) !important; box-shadow: 0 2px 5px #15223703 !important; }
+  .gemba-stitch-skin .proposal-kpis { gap: 0 !important; border: 1px solid var(--stitch-line); border-radius: var(--crm-panel-radius); background: var(--stitch-surface); overflow: hidden; }
+  .gemba-stitch-skin .proposal-kpis > div { background: transparent !important; border: 0 !important; border-right: 1px solid var(--stitch-line) !important; border-radius: 0 !important; padding: 20px 24px !important; box-shadow: none !important; min-width: 0; }
+  .gemba-stitch-skin .proposal-kpis > div:last-child { border-right: 0 !important; }
+  .gemba-stitch-skin .proposal-kpis > div > span { display: block; font-size: 12px !important; font-weight: 500 !important; letter-spacing: 0 !important; line-height: 1.5; color: var(--stitch-muted) !important; }
+  .gemba-stitch-skin .proposal-kpis > div > div { font: 650 22px/1.4 Inter,sans-serif !important; font-variant-numeric: tabular-nums; letter-spacing: -.5px; margin-top: 8px; overflow-wrap: anywhere; }
+  .gemba-stitch-skin .proposal-filters { padding: 16px 20px !important; }
+  .gemba-stitch-skin .crm-search-field { min-height: var(--crm-field-height); padding: 0 12px !important; background: var(--stitch-field) !important; border: 1px solid var(--stitch-line) !important; border-radius: 7px !important; width: min(100%,400px) !important; }
+  .gemba-stitch-skin .crm-search-field:focus-within { outline: 2px solid var(--stitch-accent); outline-offset: 2px; }
+  .gemba-stitch-skin .crm-search-field input { min-width: 0; height: 38px; padding: 8px 0 !important; font-size: 13px !important; background: transparent !important; border: 0 !important; box-shadow: none !important; outline: 0 !important; }
+  .gemba-stitch-skin .crm-filter-fields { gap: 18px !important; padding-top: 18px !important; margin-top: 16px !important; }
+  .gemba-stitch-skin .crm-filter-fields label { text-transform: none !important; font-size: 12px !important; font-weight: 500 !important; letter-spacing: 0 !important; margin-bottom: 6px; }
+  .gemba-stitch-skin .crm-filter-fields :where(select,input) { min-height: 40px; font-size: 13px !important; font-weight: 400 !important; padding: 9px 11px !important; border: 1px solid var(--stitch-line) !important; }
+  .gemba-stitch-skin .proposal-table-panel { padding: 0 !important; }
+  .gemba-stitch-skin .crm-data-table { width: 100%; min-width: 1080px; }
+  .gemba-stitch-skin .crm-data-table th { background: var(--stitch-field) !important; color: var(--stitch-muted) !important; text-transform: none !important; font: 500 12px/1.5 Inter,sans-serif !important; letter-spacing: 0 !important; padding: 14px 16px !important; white-space: nowrap; }
+  .gemba-stitch-skin .crm-data-table td { padding: 16px !important; border-color: var(--stitch-line) !important; font-size: 13px !important; font-weight: 400 !important; line-height: 1.5; vertical-align: middle; }
+  .gemba-stitch-skin .crm-data-table td:nth-child(3), .gemba-stitch-skin .crm-data-table th:nth-child(3) { min-width: 180px !important; }
+  .gemba-stitch-skin .crm-data-table td:nth-child(4) { min-width: 210px; }
+  .gemba-stitch-skin .crm-data-table td:nth-child(5) { min-width: 140px; }
+  .gemba-stitch-skin .crm-data-table td:nth-child(6) { min-width: 135px; }
+  .gemba-stitch-skin .crm-data-table td:nth-child(2), .gemba-stitch-skin .crm-data-table td:nth-child(8) { white-space: nowrap; font-variant-numeric: tabular-nums; }
+  .gemba-stitch-skin .crm-data-table td:nth-child(5) :where(span,div) { font-family: inherit !important; font-size: 11px !important; font-weight: 400 !important; }
+  .gemba-stitch-skin .crm-data-table tbody tr:last-child { border-bottom: 0 !important; }
+
+  .gemba-stitch-skin .crm-dialog-overlay { padding: 24px !important; }
+  .gemba-stitch-skin .crm-dialog { background: var(--stitch-canvas) !important; border: 1px solid var(--stitch-line) !important; border-radius: 14px !important; max-height: calc(100dvh - 48px) !important; }
+  .gemba-stitch-skin .crm-dialog-header { padding: 22px 24px !important; background: var(--stitch-surface) !important; border-bottom: 1px solid var(--stitch-line) !important; color: var(--stitch-text) !important; flex-shrink: 0; gap: 16px; }
+  .gemba-stitch-skin .crm-dialog-header > div { gap: 12px !important; }
+  .gemba-stitch-skin .crm-dialog-header h3 { font-size: 18px !important; font-weight: 650 !important; line-height: 1.4; }
+  .gemba-stitch-skin .crm-dialog-header p { font-size: 12px !important; line-height: 1.6; margin-top: 4px; color: var(--stitch-muted) !important; }
+  .gemba-stitch-skin .crm-dialog-header svg { color: var(--stitch-muted) !important; flex-shrink: 0; }
+  .gemba-stitch-skin .crm-dialog-header > button { background: transparent !important; color: var(--stitch-muted) !important; width: 32px; height: 32px; display: grid; place-items: center; padding: 0 !important; }
+  .gemba-stitch-skin .crm-dialog-body { min-height: 0; padding: 24px !important; }
+  .gemba-stitch-skin .crm-dialog-body > * + * { margin-top: var(--crm-section-gap) !important; }
+  .gemba-stitch-skin .crm-form-section { background: var(--stitch-surface) !important; border: 1px solid var(--stitch-line) !important; border-radius: var(--crm-panel-radius) !important; padding: var(--crm-panel-padding) !important; box-shadow: none !important; }
+  .gemba-stitch-skin .crm-form-section-title { display: block; font-family: inherit !important; font-size: 14px !important; font-weight: 600 !important; line-height: 1.5; text-transform: none !important; letter-spacing: -.1px !important; }
+  .gemba-stitch-skin .crm-form-section .grid { gap: 18px !important; }
+  .gemba-stitch-skin .crm-form-section label:not(:has(input[type="checkbox"])) { font-family: inherit !important; font-size: 12px !important; font-weight: 500 !important; line-height: 1.5; color: var(--stitch-muted) !important; text-transform: none !important; letter-spacing: 0 !important; margin-bottom: 6px; }
+  .gemba-stitch-skin .crm-form-section :where(input:not([type="checkbox"]):not([type="file"]),select,textarea) { min-height: var(--crm-field-height); padding: 9px 11px !important; font: 400 13px/1.5 Inter,sans-serif !important; border: 1px solid var(--stitch-line) !important; border-radius: 7px !important; background: var(--stitch-field) !important; box-shadow: none !important; }
+  .gemba-stitch-skin .crm-dialog-footer { flex-shrink: 0; padding: 16px 24px !important; background: var(--stitch-surface) !important; border-top: 1px solid var(--stitch-line) !important; }
+  .gemba-stitch-skin .crm-dialog-footer button { min-height: 40px; padding: 9px 16px !important; font-size: 13px !important; font-weight: 500 !important; box-shadow: none !important; }
+  .gemba-stitch-skin .crm-dialog-footer button[type="submit"] { background: var(--stitch-accent) !important; color: #fff !important; }
+  @media (max-width: 767px) {
+    .gemba-stitch-skin .crm-page-header { padding: 18px !important; align-items: stretch !important; }
+    .gemba-stitch-skin .crm-page-heading { align-items: flex-start; }
+    .gemba-stitch-skin .crm-page-heading h2 { font-size: 19px !important; }
+    .gemba-stitch-skin .crm-page-actions { width: 100%; }
+    .gemba-stitch-skin .proposal-kpis { grid-template-columns: repeat(2,minmax(0,1fr)) !important; }
+    .gemba-stitch-skin .proposal-kpis > div { padding: 16px !important; border-bottom: 1px solid var(--stitch-line) !important; }
+    .gemba-stitch-skin .proposal-kpis > div:nth-child(2n) { border-right: 0 !important; }
+    .gemba-stitch-skin .proposal-kpis > div:nth-last-child(-n+2) { border-bottom: 0 !important; }
+    .gemba-stitch-skin .proposal-kpis > div > div { font-size: 19px !important; }
+    .gemba-stitch-skin .crm-dialog-overlay { padding: 8px !important; }
+    .gemba-stitch-skin .crm-dialog { max-height: calc(100dvh - 16px) !important; }
+    .gemba-stitch-skin .crm-dialog-header, .gemba-stitch-skin .crm-dialog-body { padding: 16px !important; }
+    .gemba-stitch-skin .crm-form-section { padding: 16px !important; }
+    .gemba-stitch-skin .crm-dialog-footer { padding: 12px 16px !important; flex-wrap: wrap; }
+  }
+
+  .gemba-stitch-skin .crm-detail-header { padding: 22px 24px !important; gap: 16px; flex-wrap: wrap; }
+  .gemba-stitch-skin .crm-detail-header h2 { font-size: 18px !important; font-weight: 650 !important; line-height: 1.4; white-space: normal !important; }
+  .gemba-stitch-skin .crm-detail-header :where(button,a) { min-height: 36px; font-size: 12px !important; font-weight: 500 !important; box-shadow: none !important; }
+  .gemba-stitch-skin .crm-detail-summary { padding: 20px !important; background: var(--stitch-canvas) !important; }
+  .gemba-stitch-skin .crm-detail-summary > div[class*="border"] { padding: 20px !important; border: 1px solid var(--stitch-line) !important; border-radius: 12px !important; background: var(--stitch-surface) !important; }
+  .gemba-stitch-skin .crm-detail-summary h3 { font: 600 14px/1.5 Inter,sans-serif !important; text-transform: none !important; letter-spacing: -.1px !important; color: var(--stitch-text) !important; }
+  .gemba-stitch-skin .crm-detail-summary .grid { gap: 18px !important; }
+  .gemba-stitch-skin .crm-detail-summary .grid > div > span { font-size: 12px !important; font-weight: 500 !important; color: var(--stitch-muted) !important; margin-bottom: 5px; }
+  .gemba-stitch-skin .crm-detail-summary .grid > div > p { font-size: 13px !important; font-weight: 400 !important; line-height: 1.5; }
+
+  .gemba-stitch-skin [data-ui-sidebar] [data-ui-nav-group] [data-ui-nav-label] { font-weight: 600 !important; }
+  .gemba-stitch-skin .proposal-kpis > div > span { text-transform: none !important; }
+  .gemba-stitch-skin .proposal-kpis > div > span::first-letter { text-transform: uppercase; }
+  .gemba-stitch-skin .crm-data-table :is(th,td):last-child { position: sticky !important; right: 0; z-index: 2; background: var(--stitch-surface) !important; box-shadow: -1px 0 0 var(--stitch-line); min-width: 104px; }
+  .gemba-stitch-skin .crm-data-table th:last-child { z-index: 4; background: var(--stitch-field) !important; }
+  .gemba-stitch-skin .crm-data-table td:nth-child(6) span { display: inline-block; font-size: 11px !important; line-height: 1.5; padding: 4px 8px !important; font-weight: 500 !important; letter-spacing: 0 !important; border-radius: 6px !important; }
+  .gemba-stitch-skin .proposal-kpis > div > div { color: var(--stitch-text) !important; }
+  .gemba-stitch-skin .crm-page-actions button:not(.crm-primary-action),
+  .gemba-stitch-skin .crm-data-table button[aria-haspopup="menu"],
+  .gemba-stitch-skin .crm-dialog-footer button:not([type="submit"]) { background: var(--stitch-surface) !important; color: var(--stitch-text) !important; border: 1px solid var(--stitch-line) !important; }
+  .gemba-stitch-skin .crm-data-table tbody tr { background: var(--stitch-surface) !important; }
+  .gemba-stitch-skin .crm-data-table tbody tr:hover { background: var(--stitch-field) !important; }
+
+  .gemba-stitch-skin .crm-data-table td:nth-child(4) { white-space: normal !important; overflow-wrap: anywhere; text-overflow: clip !important; }
+  .gemba-stitch-skin .crm-data-table td:nth-child(3) > div, .gemba-stitch-skin .crm-data-table td:nth-child(3) > div > span { min-width: 0; overflow-wrap: anywhere; }
+
+}
+}

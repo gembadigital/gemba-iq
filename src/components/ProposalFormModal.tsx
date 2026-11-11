@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from "react";
-import { X, Plus, Sparkles, Check, Calculator, AlertTriangle } from "lucide-react";
+import React, { useState, useEffect, useId } from "react";
+import { X, Plus, Sparkles, Check, Calculator, AlertTriangle, FileText } from "lucide-react";
 import { Proposal, ProposalOption, PRE_POPULATED_TEMPLATES, ProposalTemplate } from "../types/proposal";
 import { Company } from "./CompaniesView";
 import CompanyAutocomplete from "./CompanyAutocomplete";
@@ -27,6 +27,8 @@ export default function ProposalFormModal({
   wordTemplates = [],
 }: ProposalFormModalProps) {
   const { lang, t } = useLanguage();
+  const formId = useId();
+  const titleId = useId();
   const [selectedCompanyId, setSelectedCompanyId] = useState("");
   const [selectedDealId, setSelectedDealId] = useState("");
   const [selectedContactId, setSelectedContactId] = useState("");
@@ -537,15 +539,15 @@ export default function ProposalFormModal({
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 overflow-y-auto px-4 py-8" role="dialog" aria-modal="true">
-      <div className="bg-white dark:bg-[#1e1d1c] rounded-xl shadow-2xl border border-slate-100 dark:border-zinc-800 w-full max-w-5xl overflow-hidden max-h-[90vh] flex flex-col animate-in fade-in zoom-in-95 duration-150">
+    <div className="crm-dialog-overlay fixed inset-0 z-50 flex items-center justify-center bg-black/50 overflow-y-auto px-4 py-8" role="dialog" aria-modal="true" aria-labelledby={titleId}>
+      <div className="crm-dialog proposal-editor bg-white dark:bg-[#1e1d1c] rounded-xl shadow-2xl border border-slate-100 dark:border-zinc-800 w-full max-w-5xl overflow-hidden max-h-[90vh] flex flex-col animate-in fade-in zoom-in-95 duration-150">
         
         {/* Header */}
-        <div className="px-6 py-4 bg-gradient-to-r from-emerald-605 to-emerald-600 text-white flex items-center justify-between">
+        <div className="crm-dialog-header px-6 py-4 bg-gradient-to-r from-emerald-605 to-emerald-600 text-white flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <Sparkles className="w-5 h-5" />
+            <span className="crm-page-icon" aria-hidden="true"><FileText size={22} /></span>
             <div>
-              <h3 className="text-sm font-bold tracking-tight">
+              <h3 id={titleId} className="text-sm font-bold tracking-tight">
                 {initialProposal ? t("Edit Opportunity / Proposal") : t("Create Opportunity / Proposal")}
               </h3>
               <p className="text-[10px] text-emerald-100">
@@ -559,12 +561,12 @@ export default function ProposalFormModal({
         </div>
 
         {/* Content Body */}
-        <form onSubmit={handleSubmit} className="flex-1 overflow-y-auto p-6 space-y-6 text-xs">
+        <form id={formId} onSubmit={handleSubmit} className="crm-dialog-body flex-1 overflow-y-auto p-6 space-y-6 text-xs">
           
           {/* Section 1: Company Lookup */}
-          <div className="bg-slate-50 dark:bg-black/15 p-4 rounded-xl border border-slate-150 dark:border-zinc-850 space-y-4">
+          <div className="crm-form-section bg-slate-50 dark:bg-black/15 p-4 rounded-xl border border-slate-150 dark:border-zinc-850 space-y-4">
             <div className="flex items-center justify-between">
-              <span className="font-extrabold text-slate-700 dark:text-zinc-200 uppercase tracking-widest font-mono text-[10px]">{t("1. Client Registry Association")}</span>
+              <span className="crm-form-section-title font-extrabold text-slate-700 dark:text-zinc-200 uppercase tracking-widest font-mono text-[10px]">{t("1. Client Registry Association")}</span>
               <button
                 type="button"
                 onClick={() => setShowAddCompanyInline(!showAddCompanyInline)}
@@ -719,8 +721,8 @@ export default function ProposalFormModal({
           </div>
 
           {/* Section 2: Header Info */}
-          <div className="bg-slate-50 dark:bg-black/15 p-4 rounded-xl border border-slate-150 dark:border-zinc-850 space-y-4">
-            <span className="font-extrabold text-slate-700 dark:text-zinc-200 uppercase tracking-widest font-mono text-[10px]">{t("2. Commercial Cover & Scope Details")}</span>
+          <div className="crm-form-section bg-slate-50 dark:bg-black/15 p-4 rounded-xl border border-slate-150 dark:border-zinc-850 space-y-4">
+            <span className="crm-form-section-title font-extrabold text-slate-700 dark:text-zinc-200 uppercase tracking-widest font-mono text-[10px]">{t("2. Commercial Cover & Scope Details")}</span>
             <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
               <div className="md:col-span-2">
                 <label className="block text-[9px] text-slate-400 font-bold uppercase font-mono">{t("Proposal Subject *")}</label>
@@ -782,8 +784,8 @@ export default function ProposalFormModal({
           </div>
 
           {/* Section 3: Selected Services */}
-          <div className="bg-slate-50 dark:bg-black/15 p-4 rounded-xl border border-slate-150 dark:border-zinc-850 space-y-3">
-            <span className="font-extrabold text-slate-700 dark:text-zinc-200 uppercase tracking-widest font-mono text-[10px]">{t("3. Operational Excellence Services Enveloped")}</span>
+          <div className="crm-form-section bg-slate-50 dark:bg-black/15 p-4 rounded-xl border border-slate-150 dark:border-zinc-850 space-y-3">
+            <span className="crm-form-section-title font-extrabold text-slate-700 dark:text-zinc-200 uppercase tracking-widest font-mono text-[10px]">{t("3. Operational Excellence Services Enveloped")}</span>
             <div className="grid grid-cols-2 md:grid-cols-4 gap-2 pt-1">
               {servicesList.map((srv) => {
                 const active = selectedServices.includes(srv);
@@ -792,6 +794,7 @@ export default function ProposalFormModal({
                     key={srv}
                     type="button"
                     onClick={() => handleToggleService(srv)}
+                    aria-pressed={active}
                     className={`p-2.5 rounded-lg border text-left transition-all flex items-center justify-between gap-2 cursor-pointer ${
                       active
                         ? "bg-emerald-50 dark:bg-green-955/20 border-emerald-500 text-emerald-800 dark:text-emerald-450 font-bold shadow-sm"
@@ -807,9 +810,9 @@ export default function ProposalFormModal({
           </div>
 
           {/* Section 4: Document Merging Templates */}
-          <div className="bg-slate-50 dark:bg-black/15 p-4 rounded-xl border border-slate-150 dark:border-zinc-850 space-y-4">
+          <div className="crm-form-section bg-slate-50 dark:bg-black/15 p-4 rounded-xl border border-slate-150 dark:border-zinc-850 space-y-4">
             <div className="flex justify-between items-center">
-              <span className="font-extrabold text-slate-700 dark:text-zinc-200 uppercase tracking-widest font-mono text-[10px]">{t("4. Document Content Builder Templates")}</span>
+              <span className="crm-form-section-title font-extrabold text-slate-700 dark:text-zinc-200 uppercase tracking-widest font-mono text-[10px]">{t("4. Document Content Builder Templates")}</span>
               <span className="text-[10px] text-green-600 font-bold bg-green-55/15 px-2 py-0.5 rounded-full">{t("✨ AI Enabled")}</span>
             </div>
 
@@ -933,9 +936,9 @@ export default function ProposalFormModal({
           </div>
 
           {/* Section 5: Option Budgets (Option 1 - 4) */}
-          <div className="bg-slate-50 dark:bg-black/15 p-4 rounded-xl border border-slate-150 dark:border-zinc-850 space-y-4">
+          <div className="crm-form-section bg-slate-50 dark:bg-black/15 p-4 rounded-xl border border-slate-150 dark:border-zinc-850 space-y-4">
             <div className="flex items-center justify-between">
-              <span className="font-extrabold text-slate-700 dark:text-zinc-200 uppercase tracking-widest font-mono text-[10px]">{t("5. Flexible Package Configurator (Option 1 - 4)")}</span>
+              <span className="crm-form-section-title font-extrabold text-slate-700 dark:text-zinc-200 uppercase tracking-widest font-mono text-[10px]">{t("5. Flexible Package Configurator (Option 1 - 4)")}</span>
               <div className="flex items-center gap-2">
                 {["Option 2", "Option 3", "Option 4"].map((key) => (
                   <button
@@ -1063,8 +1066,9 @@ export default function ProposalFormModal({
             </div>
           </div>
 
+        </form>
           {/* Bottom Dialog Action Panel */}
-          <div className="flex items-center justify-end gap-3 pt-4 border-t dark:border-zinc-800">
+          <div className="crm-dialog-footer flex items-center justify-end gap-3 pt-4 border-t dark:border-zinc-800">
             <button
               type="button"
               onClick={onClose}
@@ -1074,13 +1078,13 @@ export default function ProposalFormModal({
             </button>
             <button
               type="submit"
+              form={formId}
               className="px-6 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg font-extrabold shadow-sm hover:shadow flex items-center gap-1.5 cursor-pointer transition-all"
             >
               <Check className="w-4 h-4" /> {t("Save Opportunity & Proposal")}
             </button>
           </div>
 
-        </form>
       </div>
     </div>
   );
