@@ -56,6 +56,27 @@
   }
   .gemba-stitch-skin [data-ui-sidebar][data-collapsed="true"] [data-ui-nav-row] > span { display: none !important; }
 
+  /* Navigation hierarchy: parent and child rows each keep their own aligned
+     columns. Only expanded navigation gets the inset and darker child panel. */
+  .gemba-stitch-skin [data-ui-sidebar][data-collapsed="false"] [data-ui-nav-row]:not([data-submenu="true"]) [data-ui-nav-label] { font-size: 13px !important; font-weight: 600 !important; }
+  .gemba-stitch-skin [data-ui-sidebar][data-collapsed="false"] { --crm-nav-child-surface: #141a2b; --crm-nav-divider: rgb(202 212 229 / 12%); }
+  .gemba-stitch-skin [data-ui-sidebar][data-collapsed="false"] [data-ui-navigation] > div:not(:first-child) { border-top: 1px solid var(--crm-nav-divider) !important; padding-top: 8px; }
+  .gemba-stitch-skin [data-ui-sidebar][data-collapsed="false"] [data-ui-navigation] > [data-ui-nav-row] { border-top: 1px solid var(--crm-nav-divider) !important; }
+  .gemba-stitch-skin [data-ui-sidebar][data-collapsed="false"] [data-ui-nav-children] {
+    position: relative; box-sizing: border-box;
+    background: var(--crm-nav-child-surface) !important;
+    padding: 6px 8px 6px 15% !important; margin: 4px 0 0 !important;
+    border: 0 !important; border-radius: 9px !important;
+  }
+  .gemba-stitch-skin [data-ui-sidebar][data-collapsed="false"] [data-ui-nav-children] [data-ui-nav-guide] {
+    display: block !important; left: 26px !important; top: 10px !important; bottom: 10px !important;
+    background: #34405a !important; width: 1px !important; pointer-events: none;
+  }
+  .gemba-stitch-skin [data-ui-sidebar][data-collapsed="false"] [data-ui-nav-children] [data-ui-nav-label] { font-size: 12px !important; font-weight: 450 !important; line-height: 18px !important; }
+  .gemba-stitch-skin [data-ui-sidebar][data-collapsed="false"] [data-ui-nav-children] [data-ui-nav-icon] > svg { width: 18px !important; height: 18px !important; }
+  .gemba-stitch-skin [data-ui-sidebar][data-collapsed="false"] [data-ui-nav-children] [data-ui-nav-row] { padding: 10px 16px !important; min-height: 44px !important; }
+  .gemba-stitch-skin [data-ui-sidebar][data-collapsed="false"] [data-ui-nav-children] [data-ui-nav-row][data-active="true"] { background: var(--stitch-nav-active) !important; }
+
   /* The customer's existing card is the reference: quiet panels, consistent
      spacing, readable fields, restrained headings and one action hierarchy. */
   .gemba-stitch-skin .crm-workspace { max-width: 1560px !important; padding: 4px 0 28px !important; }

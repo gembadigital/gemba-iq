@@ -1,12 +1,12 @@
 # Gemba IQ CRM düzen sistemi — v2
 
-Referans: Müşteriler sayfasındaki mevcut müşteri kartı ve düzenleme alanı. Amaç görsel düzeni tutarlı hale getirmektir. Menü renkleri, yazı tipi ailesi, erişim yetkileri, veri alanları, hesaplamalar ve iş akışları bu sistemin kapsamıyla değiştirilmez.
+Referans: Müşteriler sayfasındaki mevcut müşteri kartı ve düzenleme alanı. Amaç görsel düzeni tutarlı hale getirmektir. Ana renk paleti, yazı tipi ailesi, erişim yetkileri, veri alanları, hesaplamalar ve iş akışları bu sistemin kapsamıyla değiştirilmez.
 
 ## Menü
 
 Menü akordeon olarak çalışır: aynı anda yalnızca bir ana bölüm açık olabilir. Başka bölüm açıldığında önceki kapanır; açık başlığa yeniden basmak o bölümü kapatır. İlk yüklemede, yenilemede ve arama/bildirim üzerinden gezinmede yalnızca etkin sayfanın ana bölümü açılır. Bağımsız sayfalarda tüm gruplar kapalıdır.
 
-Bütün satırlar tek ızgara kullanır: **20 px ikon / esnek metin / 16 px açılır ok**, sütunlar arasında 12 px. Menü panelinde 8 px, satırda 16 px yatay iç boşluk bulunur; böylece ikonlar panelin solundan 24 px, metinler 56 px çizgisinde başlar. Ana ve alt menüler aynı sütunlara oturur; hiyerarşi grup aralığı, açılır ok ve başlık ağırlığıyla belirtilir. Uzun başlıklar satıra sarılır, üç noktayla kesilmez.
+Ana menüler **20 px ikon / esnek metin / 16 px açılır ok**, 12 px sütun aralığı kullanır. Ana ikonlar ve metinler kendi aralarında, alt menüler kendi aralarında hizalanır. Alt menü paneli kullanılabilir genişliğin %15'i kadar içe girer; zemini ana lacivertin RGB kanalları yaklaşık %25 azaltılarak `#141a2b` olur. Alt metin 12 px/450, ikon 18 px; ikon ızgarası 20 px ve sütun aralığı 12 px korunur; ana metin 13 px/600 kalır. Alt menünün solunda ince dikey rehber ve ana bölümler arasında düşük kontrastlı yatay ayraç vardır. Uzun başlıklar satıra sarılır; seçili alt menü vurgusu ve 44 px dokunma alanı korunur. Daraltılmış ikon menüsünde girinti, zemin ve ayraçlar uygulanmaz.
 
 Asgari satır yüksekliği 44 px; seçili/pasif satır ölçüsü aynıdır. Aktif işaret mutlak konumlanır ve metni kaydırmaz. Geniş menü 280 px, dar menü 80 px. Dar durumda bütün ikonlar aynı merkezde kalır. Satırlar gerçek düğmedir; grup düğmeleri `aria-expanded`, sayfalar `aria-current="page"` ve açıklayıcı ad taşır. Renkli vurgu ve mevcut tema korunur.
 

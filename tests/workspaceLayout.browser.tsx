@@ -31,13 +31,20 @@ const delay=(ms=150)=>new Promise(r=>setTimeout(r,ms));
 const results:string[]=[];const expect=(ok:any,label:string)=>{if(!ok)throw Error(label);results.push(label);};
 function aligned(selector:string,axis:'left'|'right'|'center'='left'){
  const rects=Array.from(document.querySelectorAll<HTMLElement>(selector)).map(el=>el.getBoundingClientRect()).filter(r=>r.width>0&&r.height>0);
- const values=rects.map(r=>axis==='center'?r.left+r.width/2:r[axis]);return values.length>5&&Math.max(...values)-Math.min(...values)<1.5;
+ const values=rects.map(r=>axis==='center'?r.left+r.width/2:r[axis]);return values.length>1&&Math.max(...values)-Math.min(...values)<1.5;
 }
 async function test(){
  await document.fonts.ready;await delay(300);
  expect(document.querySelectorAll('[data-ui-nav-group][aria-expanded="true"]').length===1&&document.getElementById('sidebar-nav-proposal-management'),'İlk yüklemede yalnızca etkin sayfanın ana menüsü açık');
- expect(aligned('[data-ui-sidebar] [data-ui-nav-icon]'),'Ana, alt, aktif ve pasif satırlarda ikonlar aynı sütunda');
- expect(aligned('[data-ui-sidebar] [data-ui-nav-label]'),'Tüm menü metinleri aynı başlangıç çizgisinde');
+ expect(aligned('[data-ui-sidebar] [data-ui-nav-row]:not([data-submenu="true"]) [data-ui-nav-icon]'),'Ana menü ikonları aynı sütunda');
+ expect(aligned('[data-ui-sidebar] [data-submenu="true"] [data-ui-nav-icon]'),'Alt menü ikonları aynı sütunda');
+ expect(aligned('[data-ui-sidebar] [data-ui-nav-row]:not([data-submenu="true"]) [data-ui-nav-label]'),'Ana menü metinleri aynı başlangıç çizgisinde');
+ expect(aligned('[data-ui-sidebar] [data-submenu="true"] [data-ui-nav-label]'),'Alt menü metinleri aynı başlangıç çizgisinde');
+ const parentIcon=document.querySelector('[data-ui-nav-group] [data-ui-nav-icon]')!;
+ const childIcon=document.querySelector('[data-submenu="true"] [data-ui-nav-icon]')!;
+ expect(childIcon.getBoundingClientRect().left-parentIcon.getBoundingClientRect().left>=24,'Alt menü ana menüden içeri girintili');
+ const childrenPanel=document.querySelector<HTMLElement>('[data-ui-nav-children]')!;
+ expect(getComputedStyle(childrenPanel).backgroundColor==='rgb(20, 26, 43)','Alt menü zemini yaklaşık yüzde 25 daha koyu');
  expect(aligned('[data-ui-sidebar] [data-ui-nav-chevron]','right'),'Altı menü açma oku aynı sağ sütunda');
  const labels=Array.from(document.querySelectorAll<HTMLElement>('[data-ui-nav-label]'));
  expect(labels.every(el=>el.scrollWidth<=el.clientWidth+1),'Uzun Türkçe başlıklar yatay kesilmiyor');
@@ -48,7 +55,7 @@ async function test(){
  const group=document.querySelector<HTMLButtonElement>('[data-ui-nav-group][aria-label="Şirketler ve Hedefler"]')||document.querySelector<HTMLButtonElement>('[data-ui-nav-group]')!;
  const expanded=group.getAttribute('aria-expanded');group.click();await delay();
  expect(group.getAttribute('aria-expanded')!==expanded,'Menü açma/kapatma işlevi korunuyor');group.click();await delay();
- expect(aligned('[data-ui-sidebar] [data-ui-nav-icon]'),'Yeniden açılan menüde hizalar korunuyor');
+ expect(aligned('[data-ui-sidebar] [data-ui-nav-row]:not([data-submenu="true"]) [data-ui-nav-icon]'),'Yeniden açılan ana menüde hizalar korunuyor');
  const groups=Array.from(document.querySelectorAll<HTMLButtonElement>('[data-ui-nav-group]'));
  const openGroups=()=>groups.filter(el=>el.getAttribute('aria-expanded')==='true');
  expect(openGroups().length<=1,'Aynı anda en fazla bir ana bölüm açık');
