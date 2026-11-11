@@ -1,3 +1,5 @@
+import { proposalContentKey } from '../src/lib/proposalSnapshot';
+import { FINANCIAL_TITLE, FINANCIAL_LAYOUT } from '../src/lib/proposalFinancialLayout';
 import { buildProposalDocument, type ProposalDocument } from '../src/lib/proposalDocument';
 import { renderElementToPdfBase64 } from '../src/lib/htmlToPdf';
 import cards from '../src/data/serviceCatalog.json';
@@ -21,6 +23,21 @@ fixtures.set('TABLOSUZ',{...base,activityTableHtml:'',options:{}});
 fixtures.set('UZUN',{...base,coverPage:base.coverPage+'\n'+Array.from({length:900},(_,i)=>`tanım${i}`).join(' '),terms:terms+'\nÖdeme: '+Array.from({length:1000},(_,i)=>`koşul${i}`).join(' '),options:{...base.options,'Option 2':{...base.options['Option 1'],name:'İkinci seçenek',desc:'Uzun fiyat tablosu',rows:Array.from({length:90},(_,i)=>({id:String(i),item:`HİZMET-${i} `+'W'.repeat(120),dailyRate:123.45,manDays:1}))}}});
 fixtures.set('ESKİ-KAYIT',{...base,coverPage:'<h2>Eski tanım</h2><p>Tüm içerik korunur.</p>',activityTableHtml:undefined,methodology:'<h2>Eski fazlar</h2><table><tr><th>Adım</th></tr><tr><td>SON FAALİYET</td></tr></table>',options:{Eski:{training:false,consulting:true,workshop:false,expenses:500,manDays:3,dailyRate:2000}},terms:'<h2>Ödeme</h2><p>ESKİ KOŞULLAR KORUNUR.</p>'});
 fixtures.set('GÜVENLİ-METİN',{...base,companyName:'<img src=x onerror="alert(1)">',contactPerson:'A & B',coverPage:'<h3 onclick="alert(1)">Güvenli başlık</h3><script>alert(1)</script><p>Güvenli metin</p>',activityTableHtml:'',terms:'<h3>Ödeme</h3><p onclick="alert(1)">Koşul korunur.</p>'});
+const option = (name:string,rate:number,days:number[]) => ({name,desc:'Müşteriye özel çalışma programı ve saha uygulama kapsamı.',duration:'Proje süresi 12 ay.',training:true,consulting:true,workshop:false,expenses:0,manDays:0,dailyRate:rate,rows:days.map((manDays,i)=>({id:'phase-'+i,item:`FAZ ${i+1} – ${['TEŞHİS / ANALİZ / RAPORLAMA – ODAKLAMA','SÜREÇ OPTİMİZASYONU','YAYILIM VE STANDARDİZASYON'][i]}`,dailyRate:rate,manDays}))});
+fixtures.set('FİNANSAL-201',{...lean,companyName:'ÖRNEK SANAYİ A.Ş.',contactPerson:'Müşteri Yetkilisi',options:{'Option 1':option('Opsiyon 1: Standart Program',31000,[4,18,22]),'Option 2':option('Opsiyon 2: Yoğunlaştırılmış Program',33000,[4,24,28])}});
+fixtures.set('UZUN-FİRMA',{...base,companyName:Array(25).fill('Uzun Ticari Unvan').join(' '),contactPerson:'Sn. Çok Uzun İsimli Müşteri Yetkilisi'});
+fixtures.set('UZUN-OPSİYON',{...base,options:{'Option 2':{...base.options['Option 1'],name:'İkinci program',desc:Array.from({length:1500},(_,i)=>'açıklama'+i).join(' ')}}});
+const savedDoc={...base,companyName:'SAKLANAN MÜŞTERİ',contactPerson:'Sn. Saklanan Yetkili'};
+const savedDOM=new DOMParser().parseFromString(buildProposalDocument(savedDoc),'text/html');
+for(const page of Array.from(savedDOM.querySelectorAll('.a4-page[data-section="pricing"]'))){
+ page.removeAttribute('data-financial-layout');page.querySelector('[data-proposal-party]')?.remove();page.querySelector('[data-financial-heading]')?.remove();
+ const content=page.querySelector('.proposal-content')!;content.insertAdjacentHTML('afterbegin','<h3>TEKLİF VE OPSİYONLAR</h3>');
+ const body=page.querySelector('.proposal-section-body')!;body.insertAdjacentHTML('beforeend','<p>ELLE EKLENEN ÖZEL NOT KORUNUR.</p>');
+ const price=body.querySelector('tbody td:nth-child(2)')!;price.textContent='62.345,67 ₺';
+ // A nested manual wrapper around the table must not hide its text.
+ const table=body.querySelector('table')!;const wrapper=document.createElement('div');table.replaceWith(wrapper);wrapper.innerHTML='<p>TABLODAN ÖNCE EKLENEN NOT</p>';wrapper.append(table);wrapper.insertAdjacentHTML('beforeend','<p>TABLODAN SONRA EKLENEN NOT</p>');
+}
+fixtures.set('KAYITLI-HTML',{...savedDoc,documentHtml:savedDOM.body.innerHTML,documentSource:proposalContentKey(savedDoc)});
 const host=document.getElementById('pages')!;
 const report=[];
 function inspect(code:string,doc:ProposalDocument){
@@ -52,15 +69,25 @@ function inspect(code:string,doc:ProposalDocument){
  const customer=code!=='ONAYLI-HUKUK'||approval?.textContent?.includes('MARSHALL BOYA')&&approval?.textContent?.includes('Sn. Semanur Demirel');
  const emptyAuthority=code!=='YETKİLİ-YOK'||approval?.textContent?.includes('Yetkili: ____________________');
  const compactLegal=code!=='ONAYLI-HUKUK'||sections.filter(s=>s==='legal').length===1&&!sections.includes('signature')&&Array.from({length:8},(_,i)=>i+1).every(n=>Array.from(host.querySelectorAll('.a4-page[data-section="legal"] h3')).some(h=>h.textContent?.startsWith(n+'. ')));
- const ok=customer&&emptyAuthority&&compactLegal&&exactActivity&&twoPages&&packed&&safe&&ordered&&!overflow&&signatureBottom&&signs&&optional&&pricing&&long&&legacy&&allCells;
- report.push({code,pages:pages.length,customer,emptyAuthority,compactLegal,activityPages,twoPages,packed,exactActivity,ordered,overflow,overflowSections,signatureBottom,signs,optional,pricing,long,legacy,allCells,safe,ok});
+ const pricingPages=Array.from(host.querySelectorAll<HTMLElement>('.a4-page[data-section="pricing"]'));
+ const financialHeader=pricingPages.every(page=>{
+  const content=page.querySelector('.proposal-section-body')!;
+  const meta=content.firstElementChild;
+  const title=meta?.nextElementSibling;
+  return page.dataset.financialLayout===FINANCIAL_LAYOUT&&meta?.hasAttribute('data-proposal-party')&&meta.textContent?.includes(doc.companyName)&&meta.textContent?.includes(doc.proposalNumber)&&meta.textContent?.includes(doc.contactPerson||'____________________')&&title?.textContent===FINANCIAL_TITLE&&meta.querySelectorAll('tr').length===3;
+ });
+ const saved=code!=='KAYITLI-HTML'||text.includes('62.345,67')&&text.includes('ELLE EKLENEN ÖZEL NOT KORUNUR.')&&text.includes('TABLODAN ÖNCE EKLENEN NOT')&&text.includes('TABLODAN SONRA EKLENEN NOT')&&pages.every(p=>Math.abs(p.getBoundingClientRect().height-297*96/25.4)<2);
+ const oneOptionPerPage=code!=='FİNANSAL-201'||pricingPages.length===2&&pricingPages.every(p=>p.querySelectorAll('.proposal-section-body>table').length===1);
+ const noRenumber=code!=='UZUN-OPSİYON'||text.includes('SEÇENEK 2: İkinci program')&&text.includes('açıklama1499');
+ const ok=financialHeader&&saved&&oneOptionPerPage&&noRenumber&&customer&&emptyAuthority&&compactLegal&&exactActivity&&twoPages&&packed&&safe&&ordered&&!overflow&&signatureBottom&&signs&&optional&&pricing&&long&&legacy&&allCells;
+ report.push({code,financialHeader,saved,oneOptionPerPage,noRenumber,pages:pages.length,customer,emptyAuthority,compactLegal,activityPages,twoPages,packed,exactActivity,ordered,overflow,overflowSections,signatureBottom,signs,optional,pricing,long,legacy,allCells,safe,ok});
 }
 for(const [code,doc] of fixtures)inspect(code,doc);
 document.getElementById('status')!.textContent=report.every(r=>r.ok)?`GEÇTİ: ${report.length} belge testi`:`BAŞARISIZ: ${JSON.stringify(report.filter(r=>!r.ok))}`;
 document.getElementById('results')!.textContent=JSON.stringify(report);
 const select=document.getElementById('service') as HTMLSelectElement;
 for(const key of fixtures.keys())select.add(new Option(key,key));
-function show(){host.innerHTML=buildProposalDocument(fixtures.get(select.value)!); const view=new URLSearchParams(location.search).get('view'); if(view==='activity'||view==='legal')host.querySelectorAll<HTMLElement>('.a4-page').forEach(p=>{if(p.dataset.section!==view)p.remove()});}
+function show(){host.innerHTML=buildProposalDocument(fixtures.get(select.value)!); const view=new URLSearchParams(location.search).get('view'); if(view==='activity'||view==='legal'||view==='pricing')host.querySelectorAll<HTMLElement>('.a4-page').forEach(p=>{if(p.dataset.section!==view)p.remove()});}
 select.value=new URLSearchParams(location.search).get('service')||'307';select.addEventListener('change',show);show();
 document.getElementById('capture')!.addEventListener('click',async()=>{
  document.getElementById('pdf-status')!.textContent='PDF hazırlanıyor';
