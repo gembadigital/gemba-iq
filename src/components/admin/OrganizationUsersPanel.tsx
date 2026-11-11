@@ -276,15 +276,15 @@ export default function OrganizationUsersPanel({ onAuditLog }: OrganizationUsers
   };
 
   return (
-    <div className="space-y-6 animate-in fade-in duration-150">
-      <div className="rounded-2xl border border-slate-200 dark:border-zinc-800 bg-white dark:bg-[#0f0f11] shadow-sm overflow-hidden">
+    <div data-crm-stack="" data-crm-screen="OrganizationUsersPanel" className="space-y-6 animate-in fade-in duration-150">
+      <div data-crm-card="surface" className="rounded-2xl border border-slate-200 dark:border-zinc-800 bg-white dark:bg-[#0f0f11] shadow-sm overflow-hidden">
         <div className="px-6 py-5 border-b border-slate-100 dark:border-zinc-800 flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
           <div className="flex items-start gap-4">
-            <div className="w-11 h-11 rounded-xl bg-[#1E3A5F]/10 text-[#1E3A5F] dark:text-indigo-300 flex items-center justify-center">
+            <div data-crm-icon-box="" className="w-11 h-11 rounded-xl bg-[#1E3A5F]/10 text-[#1E3A5F] dark:text-indigo-300 flex items-center justify-center">
               <Users className="w-5 h-5" />
             </div>
             <div>
-              <h3 className="text-lg font-bold text-slate-900 dark:text-zinc-100">
+              <h3 data-crm-heading="section" className="text-lg font-bold text-slate-900 dark:text-zinc-100">
               {t("User Management")}
               </h3>
               <p className="text-sm text-slate-500 dark:text-zinc-400">
@@ -294,7 +294,7 @@ export default function OrganizationUsersPanel({ onAuditLog }: OrganizationUsers
           </div>
 
           <div className="flex items-center gap-2">
-            <button
+            <button data-crm-button=""
               type="button"
               onClick={() => void loadDirectory()}
               className="inline-flex items-center gap-2 px-3 py-2 rounded-xl text-xs font-semibold border border-slate-200 dark:border-zinc-700 text-slate-600 dark:text-zinc-300 hover:bg-slate-50 dark:hover:bg-zinc-900"
@@ -303,7 +303,7 @@ export default function OrganizationUsersPanel({ onAuditLog }: OrganizationUsers
               {t("Refresh")}
             </button>
             {canManage && (
-              <button
+              <button data-crm-button=""
                 type="button"
                 onClick={() => setInviteOpen((open) => !open)}
                 className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-bold text-white bg-[#1E3A5F] hover:bg-[#162d4a] transition-colors"
@@ -346,7 +346,7 @@ export default function OrganizationUsersPanel({ onAuditLog }: OrganizationUsers
                       <code className="text-[11px] px-2 py-1 rounded bg-white/70 dark:bg-black/30 border border-current/10 break-all">
                         {inviteMessage.link}
                       </code>
-                      <button
+                      <button data-crm-button=""
                         type="button"
                         onClick={() => navigator.clipboard.writeText(inviteMessage.link || "")}
                         className="inline-flex items-center gap-1 px-2 py-1 rounded-lg text-[11px] font-bold bg-[#1E3A5F] text-white"
@@ -355,7 +355,7 @@ export default function OrganizationUsersPanel({ onAuditLog }: OrganizationUsers
                         {t("Copy Link")}
                       </button>
                       {emailConfigured && inviteMessage.invitation && !inviteMessage.emailSent && (
-                        <button
+                        <button data-crm-button=""
                           type="button"
                           disabled={emailSending}
                           onClick={() => void handleSendEmail()}
@@ -369,7 +369,7 @@ export default function OrganizationUsersPanel({ onAuditLog }: OrganizationUsers
                   )}
                 </div>
               </div>
-              <button type="button" onClick={() => setInviteMessage(null)} className="text-current/70 hover:text-current">
+              <button data-crm-button="" type="button" onClick={() => setInviteMessage(null)} className="text-current/70 hover:text-current">
                 <X className="w-4 h-4" />
               </button>
             </div>
@@ -377,17 +377,17 @@ export default function OrganizationUsersPanel({ onAuditLog }: OrganizationUsers
         )}
 
         {inviteOpen && canManage && (
-          <form onSubmit={handleInvite} className="mx-6 mt-4 rounded-2xl border border-slate-200 dark:border-zinc-800 bg-slate-50/60 dark:bg-zinc-900/30 p-5 space-y-4">
+          <form data-crm-stack="" onSubmit={handleInvite} className="mx-6 mt-4 rounded-2xl border border-slate-200 dark:border-zinc-800 bg-slate-50/60 dark:bg-zinc-900/30 p-5 space-y-4">
             <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-slate-500">
               <Plus className="w-3.5 h-3.5" />
               {t("New Invitation")}
             </div>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-              <label className="space-y-1.5">
+            <div data-crm-flow="" data-crm-grid="form" className="grid grid-cols-1 md:grid-cols-3 gap-3">
+              <label data-crm-label="" className="space-y-1.5">
                 <span className="text-xs font-semibold text-slate-600 dark:text-zinc-300">
                   {t("Name")}
                 </span>
-                <input
+                <input data-crm-field="control"
                   type="text"
                   required
                   value={inviteName}
@@ -396,11 +396,11 @@ export default function OrganizationUsersPanel({ onAuditLog }: OrganizationUsers
                   className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-zinc-700 bg-white dark:bg-[#0c0c0e] text-sm"
                 />
               </label>
-              <label className="space-y-1.5">
+              <label data-crm-label="" className="space-y-1.5">
                 <span className="text-xs font-semibold text-slate-600 dark:text-zinc-300">
                   {t("Email")}
                 </span>
-                <input
+                <input data-crm-field="control"
                   type="email"
                   required
                   value={inviteEmail}
@@ -409,11 +409,11 @@ export default function OrganizationUsersPanel({ onAuditLog }: OrganizationUsers
                   className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-zinc-700 bg-white dark:bg-[#0c0c0e] text-sm"
                 />
               </label>
-              <label className="space-y-1.5">
+              <label data-crm-label="" className="space-y-1.5">
                 <span className="text-xs font-semibold text-slate-600 dark:text-zinc-300">
                   {t("Role")}
                 </span>
-                <select
+                <select data-crm-field="control"
                   value={inviteRole}
                   onChange={(event) => setInviteRole(event.target.value as AppRole)}
                   className={`w-full px-3.5 py-2.5 rounded-xl border text-sm font-bold ${roleBadgeClass(inviteRole)}`}
@@ -427,7 +427,7 @@ export default function OrganizationUsersPanel({ onAuditLog }: OrganizationUsers
               </label>
             </div>
             <div className="flex justify-end gap-2">
-              <button
+              <button data-crm-button=""
                 type="button"
                 onClick={() => {
                   setInviteOpen(false);
@@ -439,7 +439,7 @@ export default function OrganizationUsersPanel({ onAuditLog }: OrganizationUsers
               >
                 {t("Cancel")}
               </button>
-              <button
+              <button data-crm-button=""
                 type="submit"
                 disabled={inviteLoading}
                 className="px-4 py-2 rounded-xl text-xs font-bold text-white bg-[#1E3A5F] hover:bg-[#162d4a] disabled:opacity-60"
@@ -457,8 +457,8 @@ export default function OrganizationUsersPanel({ onAuditLog }: OrganizationUsers
             </div>
           )}
 
-          <div className="overflow-x-auto rounded-xl border border-slate-200 dark:border-zinc-800">
-            <table className="min-w-full text-left">
+          <div data-crm-scroll="horizontal" className="overflow-x-auto rounded-xl border border-slate-200 dark:border-zinc-800">
+            <table data-crm-table="" className="min-w-full text-left">
               <thead className="bg-slate-50 dark:bg-zinc-900/60 text-[11px] uppercase tracking-wider font-bold text-slate-500">
                 <tr>
                   <th className="px-4 py-3">{t("Name")}</th>
@@ -515,7 +515,7 @@ export default function OrganizationUsersPanel({ onAuditLog }: OrganizationUsers
                           </td>
                           <td className="px-4 py-4 text-right">
                             {canManage && (
-                              <button
+                              <button data-crm-button=""
                                 type="button"
                                 onClick={() => void handleCancelInvite(row.id, row.invited_email)}
                                 className="text-xs font-bold text-rose-600 hover:text-rose-700 dark:text-rose-400"
@@ -548,7 +548,7 @@ export default function OrganizationUsersPanel({ onAuditLog }: OrganizationUsers
                         </td>
                         <td className="px-4 py-4">
                           {canManage && !isSelf ? (
-                            <select
+                            <select data-crm-field="control"
                               value={selectedRole}
                               onChange={(event) =>
                                 setRoleSelections((current) => ({
@@ -588,7 +588,7 @@ export default function OrganizationUsersPanel({ onAuditLog }: OrganizationUsers
                           ) : (
                             <div className="flex items-center justify-end gap-2">
                               {hasRoleChange && (
-                                <button
+                                <button data-crm-button=""
                                   type="button"
                                   disabled={savingRoleId === row.membership_id}
                                   onClick={() => void handleSaveRole(row)}
@@ -598,7 +598,7 @@ export default function OrganizationUsersPanel({ onAuditLog }: OrganizationUsers
                                 </button>
                               )}
                               {canManage && (
-                                <button
+                                <button data-crm-button=""
                                   type="button"
                                   disabled={deletingId === row.membership_id}
                                   onClick={() => void handleDeleteMember(row)}

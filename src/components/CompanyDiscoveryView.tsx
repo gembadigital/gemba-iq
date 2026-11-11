@@ -544,7 +544,7 @@ You must output a raw valid JSON ARRAY strictly matching this structure without 
 
 
   return (
-    <div className="space-y-6 text-slate-800 dark:text-zinc-100 font-sans" id="company-discovery-view-wrapper">
+    <div data-crm-stack="" data-crm-screen="CompanyDiscoveryView" className="space-y-6 text-slate-800 dark:text-zinc-100 font-sans" id="company-discovery-view-wrapper">
       
       {/* Toast Alert */}
       {toast && (
@@ -558,9 +558,9 @@ You must output a raw valid JSON ARRAY strictly matching this structure without 
       )}
 
       {/* COMPACT DASHBOARD TOP HEADER */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-white dark:bg-[#151515] p-5 rounded-2xl border border-slate-200/60 dark:border-zinc-805 shadow-xs relative overflow-hidden">
-        <div className="absolute top-0 left-0 right-0 h-1.5 bg-gradient-to-r from-emerald-500 via-[#0078D4] to-blue-500" />
-        <div className="space-y-1">
+      <div data-crm-card="padded" data-crm-header="" className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-white dark:bg-[#151515] p-5 rounded-2xl border border-slate-200/60 dark:border-zinc-805 shadow-xs relative overflow-hidden">
+        <div data-crm-decoration="" className="absolute top-0 left-0 right-0 h-1.5 bg-gradient-to-r from-emerald-500 via-[#0078D4] to-blue-500" />
+        <div data-crm-header-copy="" className="space-y-1">
           <div className="flex items-center gap-2">
             <span className="bg-amber-100 dark:bg-amber-950/40 text-amber-600 dark:text-amber-400 text-[10px] font-bold px-2 py-0.5 rounded font-mono uppercase tracking-wider">
               {lang === "TR" ? "CRM İstihbarat Modülü" : "CRM Intelligence Module"}
@@ -569,7 +569,7 @@ You must output a raw valid JSON ARRAY strictly matching this structure without 
               {lang === "TR" ? "Türkiye OSB Rehberi v2.0" : "Turkey OSB Directory v2.0"}
             </span>
           </div>
-          <h2 className="text-lg font-black tracking-tight text-slate-900 dark:text-slate-100 flex items-center gap-2">
+          <h2 data-crm-heading="page" className="text-lg font-black tracking-tight text-slate-900 dark:text-slate-100 flex items-center gap-2">
             <Building className="text-amber-500 w-5 h-5" />
             <span>{lang === "TR" ? "Sanayi Şirketi Keşif Motoru" : "Industrial Company Discovery Engine"}</span>
           </h2>
@@ -581,8 +581,8 @@ You must output a raw valid JSON ARRAY strictly matching this structure without 
         </div>
 
         {/* Root Tabs */}
-        <div className="flex items-center gap-1.5 bg-slate-100 dark:bg-zinc-900 rounded-lg p-1">
-          <button
+        <div data-crm-toolbar="" data-crm-header-actions="" className="flex items-center gap-1.5 bg-slate-100 dark:bg-zinc-900 rounded-lg p-1">
+          <button data-crm-button=""
             onClick={() => setCurrentTab("search")}
             className={`px-3 py-1.5 text-xs font-bold rounded-md transition-all cursor-pointer ${
               currentTab === "search"
@@ -592,7 +592,7 @@ You must output a raw valid JSON ARRAY strictly matching this structure without 
           >
             {lang === "TR" ? "🔍 Keşif ve Arama" : "🔍 Discovery Search"}
           </button>
-          <button
+          <button data-crm-button=""
             onClick={() => setCurrentTab("campaign-builder")}
             className={`px-3 py-1.5 text-xs font-bold rounded-md transition-all cursor-pointer ${
               currentTab === "campaign-builder"
@@ -607,13 +607,13 @@ You must output a raw valid JSON ARRAY strictly matching this structure without 
 
       {/* --- TAB CONTENT 1: SEARCH & DISCOVERY ENGINE --- */}
       {currentTab === "search" && (
-        <div className="space-y-6">
+        <div data-crm-stack="" className="space-y-6">
           {!googleSearchedTerm ? (
             /* --- LANDING GOOGLE PAGE VIEW --- */
-            <div className="bg-white dark:bg-[#151515] rounded-2xl border border-slate-200/60 dark:border-zinc-800 shadow-sm py-16 px-4 flex flex-col items-center justify-center min-h-[500px]">
+            <div data-crm-card="surface" className="bg-white dark:bg-[#151515] rounded-2xl border border-slate-200/60 dark:border-zinc-800 shadow-sm py-16 px-4 flex flex-col items-center justify-center min-h-[500px]">
               {/* Google Style Brand Logo */}
               <div className="text-center space-y-2">
-                <div className="text-5xl md:text-6xl font-black tracking-tight select-none font-sans flex items-center justify-center gap-1">
+                <div data-crm-search-brand className="text-5xl md:text-6xl font-black tracking-tight select-none font-sans flex items-center justify-center gap-1">
                   <span className="text-[#4285F4]">G</span>
                   <span className="text-[#EA4335]">e</span>
                   <span className="text-[#FBBC05]">m</span>
@@ -627,7 +627,7 @@ You must output a raw valid JSON ARRAY strictly matching this structure without 
               </div>
 
               {/* Central Search Wrapper */}
-              <form
+              <form data-crm-stack=""
                 onSubmit={(e) => {
                   e.preventDefault();
                   handleGoogleSearch(googleQuery);
@@ -636,7 +636,7 @@ You must output a raw valid JSON ARRAY strictly matching this structure without 
               >
                 <div className="relative group">
                   <Search className="absolute left-4.5 top-3.5 w-5 h-5 text-slate-400 group-focus-within:text-[#0078D4]" />
-                  <input
+                  <input data-crm-search-input data-crm-trailing-icon data-crm-leading-icon data-crm-field="control"
                     type="text"
                     value={googleQuery}
                     onChange={(e) => setGoogleQuery(e.target.value)}
@@ -655,15 +655,15 @@ You must output a raw valid JSON ARRAY strictly matching this structure without 
                 </div>
 
                 {/* Google Buttons Row */}
-                <div className="flex items-center justify-center gap-3 pt-2">
-                  <button
+                <div data-crm-search-actions className="flex items-center justify-center gap-3 pt-2">
+                  <button data-crm-button=""
                     type="submit"
                     disabled={googleSearching}
                     className="bg-slate-50 hover:bg-slate-100 dark:bg-zinc-900 w-full sm:w-auto dark:hover:bg-zinc-850 text-slate-700 dark:text-zinc-300 border border-slate-200/80 dark:border-zinc-800 text-xs font-bold px-5 py-2.5 rounded-full transition-all cursor-pointer shadow-xs whitespace-nowrap"
                   >
                     {googleSearching ? t("Searching...") : t("Classic Search")}
                   </button>
-                  <button
+                  <button data-crm-button=""
                     type="button"
                     onClick={() => {
                       const sampleKeywords = [
@@ -686,7 +686,7 @@ You must output a raw valid JSON ARRAY strictly matching this structure without 
 
               {/* Suggestions chips */}
               <div className="mt-8 text-center space-y-2">
-                <span className="text-[10px] tracking-wider uppercase font-extrabold text-slate-400 dark:text-zinc-500 font-mono block">
+                <span data-crm-caption="" className="text-[10px] tracking-wider uppercase font-extrabold text-slate-400 dark:text-zinc-500 font-mono block">
                   {t("Quick Search Suggestions")}
                 </span>
                 <div className="flex flex-wrap items-center justify-center gap-2 max-w-xl">
@@ -697,7 +697,7 @@ You must output a raw valid JSON ARRAY strictly matching this structure without 
                     { label: "Ege Gıda Paketleme", query: "İzmir gıda sanayi tesisleri" },
                     { label: "Manisa Akıllı Elektronik", query: "Manisa OSB elektronik montaj konveyör imalat" }
                   ].map((chip) => (
-                    <button
+                    <button data-crm-button=""
                       key={chip.label}
                       type="button"
                       onClick={() => {
@@ -714,7 +714,7 @@ You must output a raw valid JSON ARRAY strictly matching this structure without 
             </div>
           ) : (
             /* --- IN-RESULTS SEARCH PAGE VIEW --- */
-            <div className="bg-white dark:bg-[#151515] rounded-2xl border border-slate-200/60 dark:border-zinc-800 shadow-sm p-6 space-y-6">
+            <div data-crm-stack="" data-crm-card="padded" className="bg-white dark:bg-[#151515] rounded-2xl border border-slate-200/60 dark:border-zinc-800 shadow-sm p-6 space-y-6">
               
               {/* Top Compact Arama Alanı */}
               <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 pb-4 border-b border-slate-100 dark:border-zinc-800">
@@ -745,7 +745,7 @@ You must output a raw valid JSON ARRAY strictly matching this structure without 
                     }}
                     className="relative w-full max-w-md"
                   >
-                    <input
+                    <input data-crm-trailing-icon data-crm-field="control"
                       type="text"
                       value={googleQuery}
                       onChange={(e) => setGoogleQuery(e.target.value)}
@@ -762,7 +762,7 @@ You must output a raw valid JSON ARRAY strictly matching this structure without 
                 </div>
 
                 {/* Back button */}
-                <button
+                <button data-crm-button=""
                   type="button"
                   onClick={() => {
                     setGoogleQuery("");
@@ -805,13 +805,13 @@ You must output a raw valid JSON ARRAY strictly matching this structure without 
               )}
 
               {/* Layout Content Grid (Search Results Column + Google Info Card on Right) */}
-              <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
+              <div data-crm-flow="" data-crm-grid="layout" className="grid grid-cols-1 lg:grid-cols-12 gap-8">
                 
                 {/* Search Results (Left, Span 7) */}
-                <div className="lg:col-span-7 space-y-8 divide-y divide-slate-100 dark:divide-zinc-850">
+                <div data-crm-stack="" className="lg:col-span-7 space-y-8 divide-y divide-slate-100 dark:divide-zinc-850">
                   {googleSearching ? (
                     /* Google Search skeleton loader */
-                    <div className="space-y-6 py-6 animate-pulse">
+                    <div data-crm-stack="" className="space-y-6 py-6 animate-pulse">
                       {[1, 2, 3].map((val) => (
                         <div key={val} className="space-y-2.5">
                           <div className="h-3 w-48 bg-slate-200 dark:bg-zinc-800 rounded"></div>
@@ -825,7 +825,7 @@ You must output a raw valid JSON ARRAY strictly matching this structure without 
                     </div>
                   ) : (
                     /* Search results items list */
-                    <div className="space-y-8">
+                    <div data-crm-stack="" className="space-y-8">
                       {googleSearchResults.map((item, idx) => {
                         const isAlreadyTarget = targetAccounts.some(ta => ta.companyName.toLowerCase() === item.name.toLowerCase());
                         const isAlreadyWon = wonCompanies.some(wc => wc.name.toLowerCase() === item.name.toLowerCase());
@@ -840,7 +840,7 @@ You must output a raw valid JSON ARRAY strictly matching this structure without 
                             </div>
 
                             {/* Google style Title */}
-                            <h3 className="text-[19px] leading-tight font-normal text-[#1a0dab] dark:text-[#8ab4f8] hover:underline cursor-pointer">
+                            <h3 data-crm-heading="section" className="text-[19px] leading-tight font-normal text-[#1a0dab] dark:text-[#8ab4f8] hover:underline cursor-pointer">
                               <a
                                 href={`https://www.google.com/search?q=${encodeURIComponent(item.name)}`}
                                 target="_blank"
@@ -871,7 +871,7 @@ You must output a raw valid JSON ARRAY strictly matching this structure without 
 
                             {/* Quick Action buttons */}
                             <div className="flex flex-wrap items-center gap-2 mt-3 pt-2.5 border-t border-dashed border-slate-100 dark:border-zinc-800/60 font-sans">
-                              <button
+                              <button data-crm-button=""
                                 onClick={() => handleAddToTargetAccounts(item, "Research")}
                                 disabled={isAlreadyTarget}
                                 className={`text-[11px] font-black px-3 py-1.5 rounded-lg flex items-center gap-1 cursor-pointer transition-all ${
@@ -883,7 +883,7 @@ You must output a raw valid JSON ARRAY strictly matching this structure without 
                                 🎯 {isAlreadyTarget ? t("✓ CRM Targeted") : t("Add to CRM Target List")}
                               </button>
 
-                              <button
+                              <button data-crm-button=""
                                 onClick={() => handleAddToCompanies(item)}
                                 disabled={isAlreadyWon}
                                 className={`text-[11px] font-bold px-3 py-1.5 rounded-lg flex items-center gap-1 cursor-pointer transition-all ${
@@ -895,7 +895,7 @@ You must output a raw valid JSON ARRAY strictly matching this structure without 
                                 💼 {isAlreadyWon ? t("✓ In Customers") : t("Add to Customers (Won)")}
                               </button>
 
-                              <button
+                              <button data-crm-button=""
                                 onClick={() => {
                                   setDetailCompany(item);
                                   setAiReport("");
@@ -916,7 +916,7 @@ You must output a raw valid JSON ARRAY strictly matching this structure without 
                             <>
                               <p className="font-mono text-sm font-bold text-rose-600 dark:text-rose-400">Arama başarısız oldu.</p>
                               <p className="text-xs text-rose-500 dark:text-rose-400 max-w-md mx-auto">{googleSearchError}</p>
-                              <button
+                              <button data-crm-button=""
                                 type="button"
                                 onClick={() => handleGoogleSearch(googleSearchedTerm)}
                                 disabled={googleSearching}
@@ -940,9 +940,9 @@ You must output a raw valid JSON ARRAY strictly matching this structure without 
 
                 {/* Google Knowledge Graph Panel on Right (Right, Span 5) */}
                 <div className="lg:col-span-5">
-                  <div className="bg-slate-50 dark:bg-zinc-900 border border-slate-200/80 dark:border-zinc-800 rounded-2xl p-5 space-y-5 sticky top-4">
+                  <div data-crm-stack="" className="bg-slate-50 dark:bg-zinc-900 border border-slate-200/80 dark:border-zinc-800 rounded-2xl p-5 space-y-5 sticky top-4">
                     <div className="flex items-center justify-between border-b border-slate-200 dark:border-zinc-800 pb-2.5">
-                      <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest font-mono">
+                      <span data-crm-caption="" className="text-[10px] font-black text-slate-400 uppercase tracking-widest font-mono">
                         Google Knowledge Card (Gemba Bilgi Kartı)
                       </span>
                       <Sparkles className="w-3.5 h-3.5 text-amber-500" />
@@ -954,9 +954,9 @@ You must output a raw valid JSON ARRAY strictly matching this structure without 
                         const cp = computeCompanyProfile(firstItem);
 
                         return (
-                          <div className="space-y-4">
+                          <div data-crm-stack="" className="space-y-4">
                             <div>
-                              <h4 className="text-base font-extrabold text-slate-900 dark:text-slate-100">
+                              <h4 data-crm-heading="section" className="text-base font-extrabold text-slate-900 dark:text-slate-100">
                                 {firstItem.name}
                               </h4>
                               <p className="text-xs text-[#0078D4] font-mono hover:underline mt-0.5">
@@ -972,19 +972,19 @@ You must output a raw valid JSON ARRAY strictly matching this structure without 
 
                             {/* Detailed Spec Table */}
                             <div className="space-y-2 text-xs font-sans">
-                              <div className="grid grid-cols-3 py-1.5 border-b border-slate-100 dark:border-zinc-800">
+                              <div data-crm-grid="layout" className="grid grid-cols-3 py-1.5 border-b border-slate-100 dark:border-zinc-800">
                                 <span className="text-slate-400 font-medium">Genel Merkez/Adres</span>
                                 <span className="col-span-2 font-semibold text-slate-700 dark:text-zinc-200">{firstItem.address || "Türkiye"}</span>
                               </div>
-                              <div className="grid grid-cols-3 py-1.5 border-b border-slate-100 dark:border-zinc-800">
+                              <div data-crm-grid="layout" className="grid grid-cols-3 py-1.5 border-b border-slate-100 dark:border-zinc-800">
                                 <span className="text-slate-400 font-medium">Sanayi Bölgesi</span>
                                 <span className="col-span-2 font-bold text-amber-700 dark:text-amber-400 font-mono">{firstItem.zone || firstItem.city} (📍 {firstItem.region})</span>
                               </div>
-                              <div className="grid grid-cols-3 py-1.5 border-b border-slate-100 dark:border-zinc-800">
+                              <div data-crm-grid="layout" className="grid grid-cols-3 py-1.5 border-b border-slate-100 dark:border-zinc-800">
                                 <span className="text-slate-400 font-medium">B2B Sektör</span>
                                 <span className="col-span-2 font-bold text-slate-700 dark:text-zinc-200">{firstItem.industry}</span>
                               </div>
-                              <div className="grid grid-cols-3 py-1.5 border-b border-slate-100 dark:border-zinc-800">
+                              <div data-crm-grid="layout" className="grid grid-cols-3 py-1.5 border-b border-slate-100 dark:border-zinc-800">
                                 <span className="text-slate-400 font-medium">Doğrulanan Ölçek</span>
                                 <span className="col-span-2 font-semibold text-emerald-600 font-mono">{firstItem.size || "100-250 Çalışan"}</span>
                               </div>
@@ -992,7 +992,7 @@ You must output a raw valid JSON ARRAY strictly matching this structure without 
 
                             {/* Consultancy Opportunities in Knowledge card */}
                             <div className="space-y-2">
-                              <span className="text-[10px] tracking-wider uppercase font-extrabold text-slate-400 dark:text-zinc-500 font-mono block">
+                              <span data-crm-caption="" className="text-[10px] tracking-wider uppercase font-extrabold text-slate-400 dark:text-zinc-500 font-mono block">
                                 Olası Danışmanlık ve Hizmetler
                               </span>
                               <div className="flex flex-wrap gap-1.5">
@@ -1006,7 +1006,7 @@ You must output a raw valid JSON ARRAY strictly matching this structure without 
 
                             {/* Outreach strategy */}
                             <div className="space-y-1 bg-slate-100 dark:bg-zinc-850 p-3 rounded-xl border border-slate-200 dark:border-zinc-800 text-xs">
-                              <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Önerilen İletişim Yaklaşımı :</span>
+                              <span data-crm-caption="" className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Önerilen İletişim Yaklaşımı :</span>
                               <p className="text-slate-600 dark:text-zinc-300 leading-relaxed font-sans">{cp.outreachStrategy}</p>
                             </div>
                           </div>
@@ -1026,11 +1026,11 @@ You must output a raw valid JSON ARRAY strictly matching this structure without 
 
       {/* --- TAB CONTENT 4: CRM OUTREACH UTILITIES & CALL LISTS --- */}
       {currentTab === "campaign-builder" && (
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+        <div data-crm-flow="" data-crm-grid="layout" className="grid grid-cols-1 lg:grid-cols-12 gap-6">
 
           {/* Dialing Sheet logs (Call List) */}
-          <div className="lg:col-span-5 bg-white dark:bg-[#151515] p-6 rounded-2xl border border-slate-205 dark:border-zinc-800 shadow-sm">
-            <h4 className="text-sm font-bold text-slate-850 dark:text-zinc-100 flex items-center gap-1.5 mb-2">
+          <div data-crm-card="padded" className="lg:col-span-5 bg-white dark:bg-[#151515] p-6 rounded-2xl border border-slate-205 dark:border-zinc-800 shadow-sm">
+            <h4 data-crm-heading="section" className="text-sm font-bold text-slate-850 dark:text-zinc-100 flex items-center gap-1.5 mb-2">
               <Phone className="w-4 h-4 text-emerald-600" />
               <span>CRM Sıcak Arama Fihristi (Call List Sheet)</span>
             </h4>
@@ -1047,7 +1047,7 @@ You must output a raw valid JSON ARRAY strictly matching this structure without 
                     </div>
 
                     <div className="flex items-center gap-2">
-                      <select
+                      <select data-crm-field="control"
                         value={status}
                         onChange={e => setCallListLogs(prev => ({ ...prev, [acc.id]: e.target.value as any }))}
                         className="text-[10px] bg-white dark:bg-zinc-850 border border-slate-200 dark:border-zinc-800 p-1 rounded font-bold text-slate-900 dark:text-white"
@@ -1071,9 +1071,9 @@ You must output a raw valid JSON ARRAY strictly matching this structure without 
           </div>
 
           {/* Quick OPEX Campaign and pitches generator */}
-          <div className="lg:col-span-7 bg-white dark:bg-[#151515] p-6 rounded-2xl border border-slate-205 dark:border-zinc-800 shadow-sm flex flex-col justify-between">
-            <div className="space-y-4">
-              <h4 className="text-sm font-bold text-slate-850 dark:text-zinc-150 flex items-center gap-1.5">
+          <div data-crm-card="padded" className="lg:col-span-7 bg-white dark:bg-[#151515] p-6 rounded-2xl border border-slate-205 dark:border-zinc-800 shadow-sm flex flex-col justify-between">
+            <div data-crm-stack="" className="space-y-4">
+              <h4 data-crm-heading="section" className="text-sm font-bold text-slate-850 dark:text-zinc-150 flex items-center gap-1.5">
                 <Send className="w-4.5 h-4.5 text-[#0078D4]" />
                 <span>Yalın Üretim & OPEX Odaklı Toplu E-postacı</span>
               </h4>
@@ -1082,15 +1082,15 @@ You must output a raw valid JSON ARRAY strictly matching this structure without 
               </p>
 
               <div className="p-4 bg-[#fefefe] dark:bg-zinc-900 rounded-xl border border-dashed border-slate-200">
-                <span className="text-[10px] font-black text-slate-400 block tracking-widest font-mono uppercase mb-2">Seçili Danışmanlık Prospektüsü</span>
+                <span data-crm-caption="" className="text-[10px] font-black text-slate-400 block tracking-widest font-mono uppercase mb-2">Seçili Danışmanlık Prospektüsü</span>
                 <p className="text-xs text-slate-600 dark:text-zinc-300 leading-relaxed">
                   "Özel Hazırlanan SMED, Hat Dengeleme ve Layout Tasarımları sayesinde fabrikanıza yerinde Gemba ile ilk ziyareti yapıp, 10 kat değer artışı sağlıyoruz."
                 </p>
               </div>
 
               <div className="space-y-2">
-                <label className="text-[10px] font-bold text-slate-500 block">TOPLU KAMPANYA İSMİ VEYA GİDİŞ KONUSU</label>
-                <input
+                <label data-crm-label="" className="text-[10px] font-bold text-slate-500 block">TOPLU KAMPANYA İSMİ VEYA GİDİŞ KONUSU</label>
+                <input data-crm-field="control"
                   type="text"
                   value={newCampaignTitle}
                   onChange={e => setNewCampaignTitle(e.target.value)}
@@ -1101,7 +1101,7 @@ You must output a raw valid JSON ARRAY strictly matching this structure without 
 
             <div className="pt-4 mt-6 border-t border-slate-100 dark:border-zinc-800 flex items-center justify-between">
               <span className="text-xs text-slate-400 font-mono">Toplam Hedeflenebilir Kadrolar: {targetAccounts.length} Adres</span>
-              <button
+              <button data-crm-button=""
                 onClick={() => handleBulkCreateCampaign()}
                 className="bg-slate-900 hover:bg-slate-800 text-white dark:bg-zinc-850 text-xs font-bold px-4 py-2 rounded-lg"
               >
@@ -1117,14 +1117,14 @@ You must output a raw valid JSON ARRAY strictly matching this structure without 
       {detailCompany && (
         <div role="dialog" aria-modal="true" className="fixed inset-0 bg-slate-900/40 dark:bg-black/50 z-[90] flex justify-end animate-fade-in" id="company-discovery-detail-drawer">
           <div className="w-full max-w-2xl bg-white dark:bg-[#121212] h-full shadow-2xl p-6 overflow-y-auto flex flex-col justify-between">
-            <div className="space-y-6">
+            <div data-crm-stack="" className="space-y-6">
 
               {/* Drawer Close & Title */}
               <div className="flex items-center justify-between border-b border-slate-105 dark:border-zinc-805 pb-4">
                 <span className="text-[10px] bg-sky-50 dark:bg-sky-950/20 text-[#0078D4] font-black px-2.5 py-1 rounded font-mono">
                   {detailCompany.industry} • {t("COMPANY DETAILS")}
                 </span>
-                <button
+                <button data-crm-button=""
                   onClick={() => setDetailCompany(null)}
                   className="p-1 px-2.5 text-xs text-rose-500 bg-rose-50 hover:bg-rose-100 rounded-lg font-bold"
                   aria-label={t("Close")}
@@ -1135,7 +1135,7 @@ You must output a raw valid JSON ARRAY strictly matching this structure without 
 
               {/* Title Card */}
               <div className="p-5 bg-slate-50 dark:bg-zinc-900 border border-slate-150 dark:border-zinc-800 rounded-xl relative overflow-hidden">
-                <h3 className="font-extrabold text-lg text-slate-900 dark:text-zinc-100 tracking-tight leading-snug">
+                <h3 data-crm-heading="section" className="font-extrabold text-lg text-slate-900 dark:text-zinc-100 tracking-tight leading-snug">
                   {detailCompany.name}
                 </h3>
                 <div className="flex flex-wrap items-center gap-4 mt-3 text-xs text-slate-500 font-mono">
@@ -1147,7 +1147,7 @@ You must output a raw valid JSON ARRAY strictly matching this structure without 
 
               {/* Quick recommended services badges */}
               <div className="space-y-2">
-                <h4 className="text-[10px] font-black text-slate-400 block tracking-widest font-mono uppercase">Eşleşen Potansiyel Hizmetler</h4>
+                <h4 data-crm-heading="section" className="text-[10px] font-black text-slate-400 block tracking-widest font-mono uppercase">Eşleşen Potansiyel Hizmetler</h4>
                 <div className="flex flex-wrap items-center gap-2">
                   {RECOMMENDED_SERVICES_LIST.map(service => {
                     const isMatched = computeCompanyProfile(detailCompany).recommendedServices.includes(service);
@@ -1168,28 +1168,28 @@ You must output a raw valid JSON ARRAY strictly matching this structure without 
               </div>
 
               {/* Heuristics metadata */}
-              <div className="grid grid-cols-2 gap-4 bg-slate-50/50 dark:bg-zinc-900/30 p-4 rounded-xl border border-slate-105 dark:border-zinc-800">
+              <div data-crm-grid="layout" className="grid grid-cols-2 gap-4 bg-slate-50/50 dark:bg-zinc-900/30 p-4 rounded-xl border border-slate-105 dark:border-zinc-800">
                 <div>
-                  <span className="text-[9px] font-bold text-slate-400 block uppercase">Çalışan Sayısı</span>
+                  <span data-crm-caption="" className="text-[9px] font-bold text-slate-400 block uppercase">Çalışan Sayısı</span>
                   <span className="text-xs font-black text-slate-800 dark:text-zinc-250 font-mono mt-0.5 block">{detailCompany.size}</span>
                 </div>
                 <div>
-                  <span className="text-[9px] font-bold text-slate-400 block uppercase">Yaklaşık Yıllık Ciro</span>
+                  <span data-crm-caption="" className="text-[9px] font-bold text-slate-400 block uppercase">Yaklaşık Yıllık Ciro</span>
                   <span className="text-xs font-black text-slate-800 dark:text-zinc-250 font-mono mt-0.5 block">{detailCompany.revenue || "NOT FOUND"}</span>
                 </div>
                 <div>
-                  <span className="text-[9px] font-bold text-slate-400 block uppercase">Dijital Altyapı Düzeyi</span>
+                  <span data-crm-caption="" className="text-[9px] font-bold text-slate-400 block uppercase">Dijital Altyapı Düzeyi</span>
                   <span className="text-xs font-black text-[#0078D4] font-mono mt-0.5 block">{detailCompany.digitalInfrastructure || "Filtresiz Excel"}</span>
                 </div>
                 <div>
-                  <span className="text-[9px] font-bold text-slate-400 block uppercase">Kuruluş Yılı</span>
+                  <span data-crm-caption="" className="text-[9px] font-bold text-slate-400 block uppercase">Kuruluş Yılı</span>
                   <span className="text-xs font-black text-slate-800 dark:text-zinc-250 font-mono mt-0.5 block">{detailCompany.founded || "Bilinmiyor"}</span>
                 </div>
               </div>
 
               {/* Technical description */}
               <div className="space-y-1.5">
-                <span className="text-[10px] font-black text-slate-400 block tracking-widest font-mono uppercase">İşletme ve Fabrika Tanımı</span>
+                <span data-crm-caption="" className="text-[10px] font-black text-slate-400 block tracking-widest font-mono uppercase">İşletme ve Fabrika Tanımı</span>
                 <p className="text-xs text-slate-600 dark:text-zinc-300 leading-relaxed font-sans">
                   {detailCompany.description}
                 </p>
@@ -1202,10 +1202,10 @@ You must output a raw valid JSON ARRAY strictly matching this structure without 
               </div>
 
               {/* Dynamic Gemini Raporu Workspace */}
-              <div className="space-y-4 pt-4 border-t border-slate-100 dark:border-zinc-800">
+              <div data-crm-stack="" className="space-y-4 pt-4 border-t border-slate-100 dark:border-zinc-800">
                 <div className="flex items-center justify-between">
-                  <span className="text-[10px] font-black text-slate-400 block tracking-widest font-mono uppercase">Yapay Zeka OpEx Risk Değerlendirmesi</span>
-                  <button
+                  <span data-crm-caption="" className="text-[10px] font-black text-slate-400 block tracking-widest font-mono uppercase">Yapay Zeka OpEx Risk Değerlendirmesi</span>
+                  <button data-crm-button=""
                     onClick={() => handlePerformAiAnalysis(detailCompany)}
                     disabled={isAiLoading}
                     className="bg-slate-900 border border-slate-800 hover:bg-slate-800 text-white dark:bg-zinc-800 text-[10px] font-black px-3 py-1.5 rounded-lg flex items-center gap-1 cursor-pointer transition-all uppercase font-mono"
@@ -1235,7 +1235,7 @@ You must output a raw valid JSON ARRAY strictly matching this structure without 
 
             {/* Bottom Actions inside drawer */}
             <div className="pt-4 border-t border-slate-105 dark:border-zinc-805 flex items-center justify-between gap-4 mt-6">
-              <button
+              <button data-crm-button=""
                 onClick={() => {
                   handleAddToCompanies(detailCompany);
                   setDetailCompany(null);
@@ -1244,7 +1244,7 @@ You must output a raw valid JSON ARRAY strictly matching this structure without 
               >
                 + {t("Add to Customers (Won)")}
               </button>
-              <button
+              <button data-crm-button=""
                 onClick={() => {
                   handleAddToTargetAccounts(detailCompany, "Research");
                   setDetailCompany(null);

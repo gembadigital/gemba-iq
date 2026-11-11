@@ -226,22 +226,22 @@ export default function OutreachApprovalView() {
   };
 
   return (
-    <div className="space-y-6">
+    <div data-crm-stack="" data-crm-screen="OutreachApprovalView" className="space-y-6">
       {/* Header */}
-      <div className="bg-white dark:bg-[#151515] p-4 rounded-xl border border-slate-100 dark:border-zinc-800/80 shadow-sm flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
-        <div className="flex items-center gap-3">
+      <div data-crm-card="padded" data-crm-header="" className="bg-white dark:bg-[#151515] p-4 rounded-xl border border-slate-100 dark:border-zinc-800/80 shadow-sm flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+        <div data-crm-header-copy="" className="flex items-center gap-3">
           <div className="p-2.5 bg-green-600/10 rounded-lg text-green-600">
             <Mail className="w-5 h-5" />
           </div>
           <div>
-            <h2 className="text-sm font-bold text-slate-800 dark:text-zinc-100">{t("Re-engagement Approval List")}</h2>
+            <h2 data-crm-heading="page" className="text-sm font-bold text-slate-800 dark:text-zinc-100">{t("Re-engagement Approval List")}</h2>
             <p className="text-[11px] text-slate-500 dark:text-zinc-400 font-mono mt-0.5">
               {t("{count} draft(s) awaiting approval").replace("{count}", String(pendingCount))}
             </p>
           </div>
         </div>
-        <div className="flex items-center gap-2">
-          <button
+        <div data-crm-header-actions="" className="flex items-center gap-2">
+          <button data-crm-button=""
             type="button"
             onClick={() => setShowTemplateEditor((v) => !v)}
             className="px-3 py-1.5 border border-slate-200 dark:border-zinc-700 rounded-lg text-xs font-bold text-slate-600 dark:text-zinc-300 hover:bg-slate-50 dark:hover:bg-zinc-800 flex items-center gap-1.5 cursor-pointer transition-all"
@@ -249,7 +249,7 @@ export default function OutreachApprovalView() {
             <FileText className="w-3.5 h-3.5" />
             {t("Template")}
           </button>
-          <button
+          <button data-crm-button=""
             type="button"
             onClick={loadDrafts}
             className="p-1.5 border border-slate-200 dark:border-zinc-700 rounded-lg text-slate-500 hover:bg-slate-50 dark:hover:bg-zinc-800 cursor-pointer transition-all"
@@ -268,7 +268,7 @@ export default function OutreachApprovalView() {
 
       {/* Template editor */}
       {showTemplateEditor && (
-        <div className="bg-white dark:bg-[#151515] p-4 rounded-xl border border-slate-100 dark:border-zinc-800/80 shadow-sm space-y-3">
+        <div data-crm-card="padded" className="bg-white dark:bg-[#151515] p-4 rounded-xl border border-slate-100 dark:border-zinc-800/80 shadow-sm space-y-3">
           <div className="flex items-center gap-2 text-xs font-bold text-slate-700 dark:text-zinc-200">
             <Bot className="w-3.5 h-3.5 text-green-600" />
             {t("Default Outreach Template")}
@@ -276,14 +276,14 @@ export default function OutreachApprovalView() {
               {t("Used by the agent when drafting new outreach emails")}
             </span>
           </div>
-          <input
+          <input data-crm-field="control"
             type="text"
             value={template.subject}
             onChange={(e) => setTemplate((prev) => ({ ...prev, subject: e.target.value }))}
             placeholder={t("Subject")}
             className="w-full bg-slate-50 dark:bg-zinc-800/50 border border-slate-200 dark:border-zinc-700/80 rounded-lg px-3 py-2 text-xs text-slate-700 dark:text-zinc-200 focus:outline-none focus:border-green-600 focus:ring-1 focus:ring-green-600"
           />
-          <textarea
+          <textarea data-crm-field="multiline"
             value={template.bodyHtml}
             onChange={(e) => setTemplate((prev) => ({ ...prev, bodyHtml: e.target.value }))}
             placeholder={t("Body (HTML)")}
@@ -292,7 +292,7 @@ export default function OutreachApprovalView() {
           />
           <div className="flex items-center justify-end gap-2">
             {templateSaved && <span className="text-[11px] font-bold text-green-600">{t("Saved")}</span>}
-            <button
+            <button data-crm-button=""
               type="button"
               onClick={saveTemplate}
               className="px-3.5 py-1.5 bg-green-600 hover:bg-green-700 text-white rounded-lg text-xs font-bold flex items-center gap-1.5 cursor-pointer shadow-sm transition-all"
@@ -305,11 +305,11 @@ export default function OutreachApprovalView() {
       )}
 
       {/* Controls */}
-      <div className="bg-white dark:bg-[#151515] p-4 rounded-xl border border-slate-100 dark:border-zinc-800/80 shadow-sm flex flex-col md:flex-row items-center justify-between gap-4">
+      <div data-crm-card="padded" className="bg-white dark:bg-[#151515] p-4 rounded-xl border border-slate-100 dark:border-zinc-800/80 shadow-sm flex flex-col md:flex-row items-center justify-between gap-4">
         <div className="flex flex-wrap items-center gap-3 w-full md:w-auto">
           <div className="relative">
             <Search className="w-3.5 h-3.5 text-slate-400 absolute left-3 top-3" />
-            <input
+            <input data-crm-leading-icon data-crm-field="control"
               type="text"
               placeholder={t("Search company, recipient, subject...")}
               value={searchTerm}
@@ -319,7 +319,7 @@ export default function OutreachApprovalView() {
           </div>
           <div className="flex items-center gap-1.5 bg-slate-50 dark:bg-zinc-800/50 border border-slate-200 dark:border-zinc-700/80 rounded-lg px-2.5 py-1.5 text-xs select-none">
             <Filter className="w-3.5 h-3.5 text-slate-400" />
-            <select
+            <select data-crm-field="control"
               value={statusFilter}
               onChange={(e) => setStatusFilter(e.target.value as OutreachStatus | "all")}
               className="bg-transparent border-none text-[11px] font-semibold focus:outline-none cursor-pointer"
@@ -334,7 +334,7 @@ export default function OutreachApprovalView() {
         </div>
         {selectedIds.length > 0 && (
           <div className="flex items-center gap-2">
-            <button
+            <button data-crm-button=""
               type="button"
               onClick={handleBulkReject}
               disabled={busyId !== null || bulkBusy}
@@ -343,7 +343,7 @@ export default function OutreachApprovalView() {
               <Ban className="w-3.5 h-3.5" />
               {t("Delete Selected")} ({selectedIds.length})
             </button>
-            <button
+            <button data-crm-button=""
               type="button"
               onClick={handleBulkSend}
               disabled={busyId !== null || bulkBusy}
@@ -357,9 +357,9 @@ export default function OutreachApprovalView() {
       </div>
 
       {/* List */}
-      <div className="bg-white dark:bg-[#151515] rounded-xl border border-slate-100 dark:border-zinc-800/80 shadow-sm overflow-hidden">
-        <div className="overflow-x-auto">
-          <table className="w-full text-left border-collapse">
+      <div data-crm-card="surface" className="bg-white dark:bg-[#151515] rounded-xl border border-slate-100 dark:border-zinc-800/80 shadow-sm overflow-hidden">
+        <div data-crm-scroll="horizontal" className="overflow-x-auto">
+          <table data-crm-table="" className="w-full text-left border-collapse">
             <thead>
               <tr className="bg-slate-50 dark:bg-zinc-900 border-b border-slate-100 dark:border-zinc-800 text-[10px] uppercase tracking-wider font-mono font-bold text-slate-400 select-none">
                 <th className="p-4 w-10">
@@ -419,7 +419,7 @@ export default function OutreachApprovalView() {
                         {(draft.recipients || []).map((r) => r.name || r.email).join(", ") || "—"}
                       </td>
                       <td className="p-4 text-xs text-slate-600 dark:text-zinc-300 max-w-xs overflow-hidden">
-                        <button
+                        <button data-crm-button=""
                           type="button"
                           onClick={() => setExpandedId(expandedId === draft.id ? null : draft.id)}
                           className="w-full text-left hover:underline cursor-pointer flex items-center gap-1"
@@ -445,7 +445,7 @@ export default function OutreachApprovalView() {
                         <div className="flex items-center justify-end gap-1.5">
                           {draft.status === "pending" && (
                             <>
-                              <button
+                              <button data-crm-button=""
                                 type="button"
                                 onClick={() => handleSend(draft)}
                                 disabled={busyId === draft.id}
@@ -454,7 +454,7 @@ export default function OutreachApprovalView() {
                               >
                                 <Send className="w-3.5 h-3.5" />
                               </button>
-                              <button
+                              <button data-crm-button=""
                                 type="button"
                                 onClick={() => openEdit(draft)}
                                 title={t("Edit")}
@@ -462,7 +462,7 @@ export default function OutreachApprovalView() {
                               >
                                 <Edit3 className="w-3.5 h-3.5" />
                               </button>
-                              <button
+                              <button data-crm-button=""
                                 type="button"
                                 onClick={() => openReject(draft)}
                                 title={t("Reject")}
@@ -511,33 +511,33 @@ export default function OutreachApprovalView() {
 
       {/* Edit modal */}
       {editingDraft && (
-        <div className="fixed inset-0 bg-black/40 z-50 flex items-center justify-center p-4">
-          <div className="bg-white dark:bg-[#1a1a1a] rounded-xl shadow-xl w-full max-w-lg p-5 space-y-3">
+        <div data-crm-overlay="" className="fixed inset-0 bg-black/40 z-50 flex items-center justify-center p-4">
+          <div data-crm-modal="" className="bg-white dark:bg-[#1a1a1a] rounded-xl shadow-xl w-full max-w-lg p-5 space-y-3">
             <div className="flex items-center gap-2 text-sm font-bold text-slate-800 dark:text-zinc-100">
               <MessageSquare className="w-4 h-4 text-green-600" />
               {t("Edit Draft")}
             </div>
-            <input
+            <input data-crm-field="control"
               type="text"
               value={editSubject}
               onChange={(e) => setEditSubject(e.target.value)}
               className="w-full bg-slate-50 dark:bg-zinc-800/50 border border-slate-200 dark:border-zinc-700/80 rounded-lg px-3 py-2 text-xs focus:outline-none focus:border-green-600 focus:ring-1 focus:ring-green-600"
             />
-            <textarea
+            <textarea data-crm-field="multiline"
               value={editBody}
               onChange={(e) => setEditBody(e.target.value)}
               rows={8}
               className="w-full bg-slate-50 dark:bg-zinc-800/50 border border-slate-200 dark:border-zinc-700/80 rounded-lg px-3 py-2 text-xs focus:outline-none focus:border-green-600 focus:ring-1 focus:ring-green-600 font-mono"
             />
             <div className="flex items-center justify-end gap-2 pt-1">
-              <button
+              <button data-crm-button=""
                 type="button"
                 onClick={() => setEditingDraft(null)}
                 className="px-3.5 py-1.5 border border-slate-200 dark:border-zinc-700 rounded-lg text-xs font-bold text-slate-600 dark:text-zinc-300 hover:bg-slate-50 dark:hover:bg-zinc-800 cursor-pointer"
               >
                 {t("Cancel")}
               </button>
-              <button
+              <button data-crm-button=""
                 type="button"
                 onClick={saveEdit}
                 disabled={busyId === editingDraft.id}
@@ -552,13 +552,13 @@ export default function OutreachApprovalView() {
 
       {/* Reject modal */}
       {rejectingDraft && (
-        <div className="fixed inset-0 bg-black/40 z-50 flex items-center justify-center p-4">
-          <div className="bg-white dark:bg-[#1a1a1a] rounded-xl shadow-xl w-full max-w-md p-5 space-y-3">
+        <div data-crm-overlay="" className="fixed inset-0 bg-black/40 z-50 flex items-center justify-center p-4">
+          <div data-crm-modal="" className="bg-white dark:bg-[#1a1a1a] rounded-xl shadow-xl w-full max-w-md p-5 space-y-3">
             <div className="flex items-center gap-2 text-sm font-bold text-slate-800 dark:text-zinc-100">
               <Ban className="w-4 h-4 text-rose-600" />
               {t("Reject Draft")}
             </div>
-            <textarea
+            <textarea data-crm-field="multiline"
               value={rejectReason}
               onChange={(e) => setRejectReason(e.target.value)}
               rows={3}
@@ -566,14 +566,14 @@ export default function OutreachApprovalView() {
               className="w-full bg-slate-50 dark:bg-zinc-800/50 border border-slate-200 dark:border-zinc-700/80 rounded-lg px-3 py-2 text-xs focus:outline-none focus:border-rose-500 focus:ring-1 focus:ring-rose-500"
             />
             <div className="flex items-center justify-end gap-2 pt-1">
-              <button
+              <button data-crm-button=""
                 type="button"
                 onClick={() => setRejectingDraft(null)}
                 className="px-3.5 py-1.5 border border-slate-200 dark:border-zinc-700 rounded-lg text-xs font-bold text-slate-600 dark:text-zinc-300 hover:bg-slate-50 dark:hover:bg-zinc-800 cursor-pointer"
               >
                 {t("Cancel")}
               </button>
-              <button
+              <button data-crm-button=""
                 type="button"
                 onClick={confirmReject}
                 disabled={busyId === rejectingDraft.id}

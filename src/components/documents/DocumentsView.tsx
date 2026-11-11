@@ -3,7 +3,7 @@ import DocumentExplorer from "./DocumentExplorer";
 
 export default function DocumentsView() {
   return (
-    <div className="space-y-4">
+    <div data-crm-stack="" data-crm-screen="DocumentsView" className="space-y-4">
       <DocumentExplorer />
     </div>
   );

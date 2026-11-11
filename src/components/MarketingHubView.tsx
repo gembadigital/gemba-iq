@@ -1343,13 +1343,13 @@ export default function MarketingHubView({ initialSubTab, onNavigateToTab }: Mar
     accentColor?: string;
     valueColor?: string;
   }) => (
-    <div className="bg-white dark:bg-[#1b1a19] border border-[#EDEBE9] dark:border-[#323130] rounded-2xl p-5 shadow-xs relative overflow-hidden flex flex-col justify-between">
+    <div data-crm-card="padded" className="bg-white dark:bg-[#1b1a19] border border-[#EDEBE9] dark:border-[#323130] rounded-2xl p-5 shadow-xs relative overflow-hidden flex flex-col justify-between">
       <div className="flex items-center justify-between text-slate-400">
-        <span className={`text-[10px] font-extrabold uppercase tracking-widest ${accentColor}`}>{label}</span>
+        <span data-crm-caption className={`text-[10px] font-extrabold uppercase tracking-widest ${accentColor}`}>{label}</span>
         {icon && <div className={accentColor}>{icon}</div>}
       </div>
       <div className="my-2.5">
-        <span className={`text-xl md:text-2xl font-black font-mono leading-none tracking-tight ${valueColor || ""}`}>{value}</span>
+        <span data-crm-metric className={`text-xl md:text-2xl font-black font-mono leading-none tracking-tight ${valueColor || ""}`}>{value}</span>
         {sub && <span className="block text-[10px] text-slate-400 mt-1">{sub}</span>}
       </div>
     </div>
@@ -1368,8 +1368,8 @@ export default function MarketingHubView({ initialSubTab, onNavigateToTab }: Mar
     className?: string;
     height?: string;
   }) => (
-    <div className={`bg-white dark:bg-[#1b1a19] border border-[#EDEBE9] dark:border-[#323130] rounded-2xl p-5 shadow-xs flex flex-col ${height} ${className}`}>
-      <h3 className="text-xs font-black uppercase tracking-widest text-[#0078D4] dark:text-blue-400 mb-1">{title}</h3>
+    <div data-crm-card="padded" className={`bg-white dark:bg-[#1b1a19] border border-[#EDEBE9] dark:border-[#323130] rounded-2xl p-5 shadow-xs flex flex-col ${height} ${className}`}>
+      <h3 data-crm-heading="section" className="text-xs font-black uppercase tracking-widest text-[#0078D4] dark:text-blue-400 mb-1">{title}</h3>
       {subtitle && <p className="text-[10px] text-slate-400 mb-3">{subtitle}</p>}
       <div className="flex-1 min-h-0">{children}</div>
     </div>
@@ -1433,7 +1433,7 @@ export default function MarketingHubView({ initialSubTab, onNavigateToTab }: Mar
     .filter((a) => !targetSearch || a.companyName.toLowerCase().includes(targetSearch.toLowerCase()));
 
   return (
-    <div id="marketing-hub-view-root" className="space-y-4">
+    <div data-crm-stack="" data-crm-screen="MarketingHubView" id="marketing-hub-view-root" className="space-y-4">
       {toast && (
         <div
           id="marketing-hub-toast"
@@ -1448,7 +1448,7 @@ export default function MarketingHubView({ initialSubTab, onNavigateToTab }: Mar
           <Check className="w-5 h-5 flex-shrink-0" />
           <span className="text-xs font-semibold flex-1">{toast.msg}</span>
           {toast.onUndo && (
-            <button
+            <button data-crm-button=""
               type="button"
               onClick={() => {
                 toast.onUndo?.();
@@ -1467,13 +1467,13 @@ export default function MarketingHubView({ initialSubTab, onNavigateToTab }: Mar
 
       {/* Sayfa başlığı — navigasyon artık sol menüde (App.tsx), burada sadece
           hangi bölümde olunduğunu gösteren kompakt bir başlık var. */}
-      <div className="bg-white dark:bg-[#1b1a19] p-5 border border-[#EDEBE9] dark:border-[#323130] rounded-2xl shadow-xs flex items-center gap-3 relative overflow-hidden">
-        <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-purple-500 via-[#0078D4] to-emerald-500" />
-        <div className="w-10 h-10 rounded-xl bg-[#EAF2FF] dark:bg-[#1E3A5F]/30 flex items-center justify-center text-[#0078D4] dark:text-blue-400 flex-shrink-0">
+      <div data-crm-card="padded" data-crm-header="" className="bg-white dark:bg-[#1b1a19] p-5 border border-[#EDEBE9] dark:border-[#323130] rounded-2xl shadow-xs flex items-center gap-3 relative overflow-hidden">
+        <div data-crm-decoration="" className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-purple-500 via-[#0078D4] to-emerald-500" />
+        <div data-crm-icon-box="" className="w-10 h-10 rounded-xl bg-[#EAF2FF] dark:bg-[#1E3A5F]/30 flex items-center justify-center text-[#0078D4] dark:text-blue-400 flex-shrink-0">
           {currentTabDef.icon}
         </div>
-        <div className="min-w-0">
-          <h2 className="text-sm font-bold text-slate-800 dark:text-slate-100">{t(currentTabDef.label)}</h2>
+        <div data-crm-header-copy="" className="min-w-0">
+          <h2 data-crm-heading="page" className="text-sm font-bold text-slate-800 dark:text-slate-100">{t(currentTabDef.label)}</h2>
           <p className="text-[11px] text-slate-500 truncate">{t(currentTabDef.description)}</p>
         </div>
       </div>
@@ -1483,8 +1483,8 @@ export default function MarketingHubView({ initialSubTab, onNavigateToTab }: Mar
       )}
 
       {activeSubTab === "overview" && (
-        <div className="space-y-4">
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        <div data-crm-stack="" className="space-y-4">
+          <div data-crm-flow="" data-crm-grid="layout" className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
             <KpiCard
               label={t("Sectors Tracked")}
               value={String(industryStats.length)}
@@ -1546,7 +1546,7 @@ export default function MarketingHubView({ initialSubTab, onNavigateToTab }: Mar
             />
           </div>
 
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-4">
+          <div data-crm-flow="" data-crm-grid="layout" className="grid grid-cols-1 lg:grid-cols-12 gap-4">
             <ChartCard
               title={t("Top Sectors by Strength")}
               subtitle={t("Customer count and win rate per sector")}
@@ -1584,7 +1584,7 @@ export default function MarketingHubView({ initialSubTab, onNavigateToTab }: Mar
       )}
 
       {activeSubTab === "industry-intel" && (
-        <div className="space-y-4">
+        <div data-crm-stack="" className="space-y-4">
           <ChartCard
             title={t("Industry Intelligence")}
             subtitle={t("Automatically computed from your existing customer and deal data — no manual entry required.")}
@@ -1604,9 +1604,9 @@ export default function MarketingHubView({ initialSubTab, onNavigateToTab }: Mar
             </ResponsiveContainer>
           </ChartCard>
 
-          <div className="bg-white dark:bg-[#1b1a19] border border-[#EDEBE9] dark:border-[#323130] rounded-2xl shadow-xs overflow-hidden">
-            <div className="overflow-x-auto">
-              <table className="w-full text-left border-collapse text-xs">
+          <div data-crm-card="surface" className="bg-white dark:bg-[#1b1a19] border border-[#EDEBE9] dark:border-[#323130] rounded-2xl shadow-xs overflow-hidden">
+            <div data-crm-scroll="horizontal" className="overflow-x-auto">
+              <table data-crm-table="" className="w-full text-left border-collapse text-xs">
                 <thead>
                   <tr className="bg-[#FAF9F8] dark:bg-[#201f1e] text-[10px] font-bold text-slate-450 uppercase border-b border-[#EDEBE9] dark:border-[#323130]">
                     <th className="p-3">{t("Industry")}</th>
@@ -1643,8 +1643,8 @@ export default function MarketingHubView({ initialSubTab, onNavigateToTab }: Mar
       )}
 
       {activeSubTab === "target-market" && (
-        <div className="space-y-4">
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+        <div data-crm-stack="" className="space-y-4">
+          <div data-crm-flow="" data-crm-grid="layout" className="grid grid-cols-2 lg:grid-cols-4 gap-4">
             <KpiCard label={t("Target Companies")} value={String(accounts.length)} icon={<Target className="w-4 h-4" />} />
             <KpiCard
               label={t("Pending Review/Contact")}
@@ -1663,9 +1663,9 @@ export default function MarketingHubView({ initialSubTab, onNavigateToTab }: Mar
           </div>
 
           {/* 1. Başlangıç Seçimi */}
-          <div className="bg-white dark:bg-[#1b1a19] border border-[#EDEBE9] dark:border-[#323130] rounded-2xl shadow-xs p-5 space-y-4">
+          <div data-crm-stack="" data-crm-card="padded" className="bg-white dark:bg-[#1b1a19] border border-[#EDEBE9] dark:border-[#323130] rounded-2xl shadow-xs p-5 space-y-4">
             <div className="flex items-center gap-2">
-              <button
+              <button data-crm-button=""
                 type="button"
                 onClick={() => setStartMode("customer")}
                 className={`text-xs font-bold px-3 py-2 rounded flex items-center gap-1.5 cursor-pointer border ${
@@ -1677,7 +1677,7 @@ export default function MarketingHubView({ initialSubTab, onNavigateToTab }: Mar
                 <Users className="w-3.5 h-3.5" />
                 <span>{t("Via Existing Customer")}</span>
               </button>
-              <button
+              <button data-crm-button=""
                 type="button"
                 onClick={() => setStartMode("manual")}
                 className={`text-xs font-bold px-3 py-2 rounded flex items-center gap-1.5 cursor-pointer border ${
@@ -1690,7 +1690,7 @@ export default function MarketingHubView({ initialSubTab, onNavigateToTab }: Mar
                 <span>{t("New Target Company")}</span>
               </button>
               {onNavigateToTab && (
-                <button
+                <button data-crm-button=""
                   type="button"
                   onClick={() => onNavigateToTab("deal-management")}
                   className="ml-auto text-xs font-bold bg-[#FAF9F8] hover:bg-[#EDEBE9] dark:bg-[#252423] dark:hover:bg-[#323130] text-slate-700 dark:text-slate-200 px-3 py-2 border border-[#EDEBE9] dark:border-[#323130] rounded flex items-center gap-1.5 cursor-pointer"
@@ -1702,12 +1702,12 @@ export default function MarketingHubView({ initialSubTab, onNavigateToTab }: Mar
             </div>
 
             {startMode === "customer" && (
-              <div className="space-y-4">
+              <div data-crm-stack="" className="space-y-4">
                 <div>
-                  <label className="text-[10px] font-bold text-slate-400 uppercase block mb-1">{t("Select Customer")}</label>
+                  <label data-crm-label="" className="text-[10px] font-bold text-slate-400 uppercase block mb-1">{t("Select Customer")}</label>
                   <div className="relative w-full sm:w-80">
                     <Search className="w-3.5 h-3.5 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
-                    <input
+                    <input data-crm-trailing-icon data-crm-leading-icon data-crm-field="control"
                       type="text"
                       value={customerSearchQuery}
                       onChange={(e) => {
@@ -1732,7 +1732,7 @@ export default function MarketingHubView({ initialSubTab, onNavigateToTab }: Mar
                     {showCustomerSuggestions && customerSearchQuery.trim() && !selectedSourceCompanyId && (
                       <div className="absolute z-20 top-full left-0 right-0 mt-1 bg-white dark:bg-[#1b1a19] border border-[#EDEBE9] dark:border-[#323130] rounded-lg shadow-lg max-h-56 overflow-y-auto">
                         {customerSuggestions.map((c) => (
-                          <button
+                          <button data-crm-button=""
                             type="button"
                             key={c.id}
                             onMouseDown={() => handleSelectSourceCompany(c)}
@@ -1752,31 +1752,31 @@ export default function MarketingHubView({ initialSubTab, onNavigateToTab }: Mar
 
                 {selectedSourceCompany && (
                   <>
-                    <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 text-xs bg-[#FAF9F8] dark:bg-[#201f1e] rounded-xl p-4 border border-[#EDEBE9] dark:border-[#323130]">
+                    <div data-crm-grid="layout" className="grid grid-cols-2 sm:grid-cols-3 gap-3 text-xs bg-[#FAF9F8] dark:bg-[#201f1e] rounded-xl p-4 border border-[#EDEBE9] dark:border-[#323130]">
                       <div>
-                        <span className="text-[10px] font-bold text-slate-400 uppercase block">{t("Sector")}</span>
+                        <span data-crm-caption="" className="text-[10px] font-bold text-slate-400 uppercase block">{t("Sector")}</span>
                         <span className="font-semibold text-slate-700 dark:text-slate-200">{selectedSourceCompany.industry || "—"}</span>
                       </div>
                       <div>
-                        <span className="text-[10px] font-bold text-slate-400 uppercase block">{t("Sub-Sector")}</span>
+                        <span data-crm-caption="" className="text-[10px] font-bold text-slate-400 uppercase block">{t("Sub-Sector")}</span>
                         <span className="font-semibold text-slate-700 dark:text-slate-200">{selectedSourceCompany.subIndustry || "—"}</span>
                       </div>
                       <div>
-                        <span className="text-[10px] font-bold text-slate-400 uppercase block">{t("Production Type")}</span>
+                        <span data-crm-caption="" className="text-[10px] font-bold text-slate-400 uppercase block">{t("Production Type")}</span>
                         <span className="font-semibold text-slate-700 dark:text-slate-200">{selectedSourceCompany.productionType || "—"}</span>
                       </div>
                       <div>
-                        <span className="text-[10px] font-bold text-slate-400 uppercase block">{t("Location")}</span>
+                        <span data-crm-caption="" className="text-[10px] font-bold text-slate-400 uppercase block">{t("Location")}</span>
                         <span className="font-semibold text-slate-700 dark:text-slate-200">{selectedSourceCompany.billingCity || "—"}</span>
                       </div>
                       <div className="col-span-2 sm:col-span-3">
-                        <span className="text-[10px] font-bold text-slate-400 uppercase block">{t("Services Used")}</span>
+                        <span data-crm-caption="" className="text-[10px] font-bold text-slate-400 uppercase block">{t("Services Used")}</span>
                         <span className="font-semibold text-slate-700 dark:text-slate-200">
                           {selectedCompanyIntel.servicesUsed.length > 0 ? selectedCompanyIntel.servicesUsed.join(", ") : "—"}
                         </span>
                       </div>
                       <div className="col-span-2 sm:col-span-3">
-                        <span className="text-[10px] font-bold text-slate-400 uppercase block">{t("Reference Projects")}</span>
+                        <span data-crm-caption="" className="text-[10px] font-bold text-slate-400 uppercase block">{t("Reference Projects")}</span>
                         <span className="font-semibold text-slate-700 dark:text-slate-200">
                           {selectedCompanyIntel.referenceProjects.length > 0 ? selectedCompanyIntel.referenceProjects.join(", ") : "—"}
                         </span>
@@ -1784,14 +1784,14 @@ export default function MarketingHubView({ initialSubTab, onNavigateToTab }: Mar
                     </div>
 
                     <div className="flex items-center justify-between gap-2 flex-wrap">
-                      <h3 className="text-xs font-bold text-slate-700 dark:text-slate-200 uppercase">
+                      <h3 data-crm-heading="section" className="text-xs font-bold text-slate-700 dark:text-slate-200 uppercase">
                         {t("Competitor Map")}{" "}
                         <span className="text-slate-400 font-normal normal-case">
                           ({t("companies operating in the same sector")}: {selectedSourceCompany.industry})
                         </span>
                       </h3>
                       <div className="flex items-center gap-2">
-                        <button
+                        <button data-crm-button=""
                           type="button"
                           onClick={handleFindCompetitorsWithAi}
                           disabled={aiCompetitorLoading}
@@ -1804,7 +1804,7 @@ export default function MarketingHubView({ initialSubTab, onNavigateToTab }: Mar
                           {aiCompetitorLoading ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Sparkles className="w-3.5 h-3.5" />}
                           <span>{aiCompetitorLoading ? t("Analyzing...") : t("Find Competitors with AI")}</span>
                         </button>
-                        <button
+                        <button data-crm-button=""
                           type="button"
                           onClick={() => {
                             resetTargetForm();
@@ -1825,11 +1825,11 @@ export default function MarketingHubView({ initialSubTab, onNavigateToTab }: Mar
                     {showAiCompetitorPanel && (
                       <div className="bg-purple-50/50 dark:bg-purple-950/10 border border-purple-200 dark:border-purple-900/40 rounded-xl p-4 space-y-3">
                         <div className="flex items-center justify-between">
-                          <h4 className="text-[11px] font-bold text-purple-700 dark:text-purple-300 uppercase flex items-center gap-1.5">
+                          <h4 data-crm-heading="section" className="text-[11px] font-bold text-purple-700 dark:text-purple-300 uppercase flex items-center gap-1.5">
                             <Sparkles className="w-3.5 h-3.5" />
                             {t("AI Competitor Analysis")}
                           </h4>
-                          <button
+                          <button data-crm-button=""
                             type="button"
                             onClick={() => setShowAiCompetitorPanel(false)}
                             className="text-slate-400 hover:text-slate-600 cursor-pointer"
@@ -1858,7 +1858,7 @@ export default function MarketingHubView({ initialSubTab, onNavigateToTab }: Mar
                                 const alreadyInList = accounts.some((a) => normalizeTrKey(a.companyName) === normalizeTrKey(c.name || ""));
                                 const checked = selectedAiCompetitorKeys.has(key);
                                 return (
-                                  <label
+                                  <label data-crm-label=""
                                     key={key}
                                     className={`flex items-start gap-2.5 p-2.5 rounded-lg border text-xs cursor-pointer transition-colors ${
                                       checked
@@ -1897,7 +1897,7 @@ export default function MarketingHubView({ initialSubTab, onNavigateToTab }: Mar
                               <span className="text-[10px] text-slate-400">
                                 {t("{count} selected").replace("{count}", String(selectedAiCompetitorKeys.size))}
                               </span>
-                              <button
+                              <button data-crm-button=""
                                 type="button"
                                 onClick={handleAddSelectedAiCompetitors}
                                 disabled={selectedAiCompetitorKeys.size === 0}
@@ -1916,8 +1916,8 @@ export default function MarketingHubView({ initialSubTab, onNavigateToTab }: Mar
                       </div>
                     )}
 
-                    <div className="bg-white dark:bg-[#1b1a19] border border-[#EDEBE9] dark:border-[#323130] rounded-xl overflow-hidden">
-                      <table className="w-full text-left border-collapse text-xs">
+                    <div data-crm-card="surface" className="bg-white dark:bg-[#1b1a19] border border-[#EDEBE9] dark:border-[#323130] rounded-xl overflow-hidden">
+                      <div data-crm-scroll="horizontal"><table data-crm-table="" className="w-full text-left border-collapse text-xs">
                         <thead>
                           <tr className="bg-[#FAF9F8] dark:bg-[#201f1e] text-[10px] font-bold text-slate-450 uppercase border-b border-[#EDEBE9] dark:border-[#323130]">
                             <th className="p-3">{t("Company Name")}</th>
@@ -1970,7 +1970,7 @@ export default function MarketingHubView({ initialSubTab, onNavigateToTab }: Mar
                             </tr>
                           )}
                         </tbody>
-                      </table>
+                      </table></div>
                     </div>
                   </>
                 )}
@@ -1982,10 +1982,10 @@ export default function MarketingHubView({ initialSubTab, onNavigateToTab }: Mar
                 onSubmit={handleCreateTarget}
                 className="bg-[#FAF9F8] dark:bg-[#201f1e] border border-[#0078D4]/20 rounded-xl p-4 space-y-3"
               >
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
+                <div data-crm-flow="" data-crm-grid="form" className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
                   <div>
-                    <label className="text-[10px] font-bold text-slate-400 uppercase block mb-1">{t("Company Name *")}</label>
-                    <input
+                    <label data-crm-label="" className="text-[10px] font-bold text-slate-400 uppercase block mb-1">{t("Company Name *")}</label>
+                    <input data-crm-field="control"
                       type="text"
                       list="existing-target-accounts-list"
                       value={targetFormDraft.companyName}
@@ -2003,8 +2003,8 @@ export default function MarketingHubView({ initialSubTab, onNavigateToTab }: Mar
                   </div>
                   {startMode === "manual" ? (
                     <div>
-                      <label className="text-[10px] font-bold text-slate-400 uppercase block mb-1">{t("Industry / Sector")}</label>
-                      <input
+                      <label data-crm-label="" className="text-[10px] font-bold text-slate-400 uppercase block mb-1">{t("Industry / Sector")}</label>
+                      <input data-crm-field="control"
                         type="text"
                         list="marketing-sector-suggestions"
                         value={targetFormDraft.industryTag}
@@ -2019,8 +2019,8 @@ export default function MarketingHubView({ initialSubTab, onNavigateToTab }: Mar
                     </div>
                   ) : (
                     <div>
-                      <label className="text-[10px] font-bold text-slate-400 uppercase block mb-1">{t("Sector")}</label>
-                      <input
+                      <label data-crm-label="" className="text-[10px] font-bold text-slate-400 uppercase block mb-1">{t("Sector")}</label>
+                      <input data-crm-field="control"
                         type="text"
                         value={selectedSourceCompany?.industry || ""}
                         disabled
@@ -2030,8 +2030,8 @@ export default function MarketingHubView({ initialSubTab, onNavigateToTab }: Mar
                   )}
                   {startMode === "manual" && (
                     <div>
-                      <label className="text-[10px] font-bold text-slate-400 uppercase block mb-1">{t("Sub-Sector")}</label>
-                      <input
+                      <label data-crm-label="" className="text-[10px] font-bold text-slate-400 uppercase block mb-1">{t("Sub-Sector")}</label>
+                      <input data-crm-field="control"
                         type="text"
                         value={targetFormDraft.subIndustry}
                         onChange={(e) => setTargetFormDraft({ ...targetFormDraft, subIndustry: e.target.value })}
@@ -2040,8 +2040,8 @@ export default function MarketingHubView({ initialSubTab, onNavigateToTab }: Mar
                     </div>
                   )}
                   <div>
-                    <label className="text-[10px] font-bold text-slate-400 uppercase block mb-1">{t("City")}</label>
-                    <input
+                    <label data-crm-label="" className="text-[10px] font-bold text-slate-400 uppercase block mb-1">{t("City")}</label>
+                    <input data-crm-field="control"
                       type="text"
                       value={targetFormDraft.city}
                       onChange={(e) => setTargetFormDraft({ ...targetFormDraft, city: e.target.value })}
@@ -2049,8 +2049,8 @@ export default function MarketingHubView({ initialSubTab, onNavigateToTab }: Mar
                     />
                   </div>
                   <div>
-                    <label className="text-[10px] font-bold text-slate-400 uppercase block mb-1">{t("Website URL")}</label>
-                    <input
+                    <label data-crm-label="" className="text-[10px] font-bold text-slate-400 uppercase block mb-1">{t("Website URL")}</label>
+                    <input data-crm-field="control"
                       type="text"
                       value={targetFormDraft.websiteUrl}
                       onChange={(e) => setTargetFormDraft({ ...targetFormDraft, websiteUrl: e.target.value })}
@@ -2058,8 +2058,8 @@ export default function MarketingHubView({ initialSubTab, onNavigateToTab }: Mar
                     />
                   </div>
                   <div className="sm:col-span-2">
-                    <label className="text-[10px] font-bold text-slate-400 uppercase block mb-1">{t("Note")}</label>
-                    <textarea
+                    <label data-crm-label="" className="text-[10px] font-bold text-slate-400 uppercase block mb-1">{t("Note")}</label>
+                    <textarea data-crm-field="multiline"
                       value={targetFormDraft.analysisNotes}
                       onChange={(e) => setTargetFormDraft({ ...targetFormDraft, analysisNotes: e.target.value })}
                       className="w-full p-2 border border-[#EDEBE9] dark:border-[#323130] bg-white dark:bg-[#252423] rounded outline-none h-16 resize-none focus:border-[#0078D4]"
@@ -2071,37 +2071,37 @@ export default function MarketingHubView({ initialSubTab, onNavigateToTab }: Mar
                     ekleyebilme — firma kaydıyla birlikte tek adımda kaydedilir,
                     e-posta girildiyse lead adayına dönüştürme istemi açılır. */}
                 <div className="border-t border-[#EDEBE9] dark:border-[#323130] pt-3">
-                  <label className="text-[10px] font-bold text-slate-400 uppercase block mb-2">{t("First Contact (optional)")}</label>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                    <input
+                  <label data-crm-label="" className="text-[10px] font-bold text-slate-400 uppercase block mb-2">{t("First Contact (optional)")}</label>
+                  <div data-crm-flow="" data-crm-grid="layout" className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <input data-crm-field="control"
                       type="text"
                       placeholder={t("Full Name")}
                       value={targetFormDraft.contactFullName}
                       onChange={(e) => setTargetFormDraft({ ...targetFormDraft, contactFullName: e.target.value })}
                       className="w-full p-2 border border-[#EDEBE9] dark:border-[#323130] bg-white dark:bg-[#252423] rounded outline-none focus:border-[#0078D4]"
                     />
-                    <input
+                    <input data-crm-field="control"
                       type="text"
                       placeholder={t("Title")}
                       value={targetFormDraft.contactTitle}
                       onChange={(e) => setTargetFormDraft({ ...targetFormDraft, contactTitle: e.target.value })}
                       className="w-full p-2 border border-[#EDEBE9] dark:border-[#323130] bg-white dark:bg-[#252423] rounded outline-none focus:border-[#0078D4]"
                     />
-                    <input
+                    <input data-crm-field="control"
                       type="text"
                       placeholder={t("Phone")}
                       value={targetFormDraft.contactPhone}
                       onChange={(e) => setTargetFormDraft({ ...targetFormDraft, contactPhone: e.target.value })}
                       className="w-full p-2 border border-[#EDEBE9] dark:border-[#323130] bg-white dark:bg-[#252423] rounded outline-none focus:border-[#0078D4]"
                     />
-                    <input
+                    <input data-crm-field="control"
                       type="email"
                       placeholder={t("Email")}
                       value={targetFormDraft.contactEmail}
                       onChange={(e) => setTargetFormDraft({ ...targetFormDraft, contactEmail: e.target.value })}
                       className="w-full p-2 border border-[#EDEBE9] dark:border-[#323130] bg-white dark:bg-[#252423] rounded outline-none focus:border-[#0078D4]"
                     />
-                    <input
+                    <input data-crm-field="control"
                       type="text"
                       placeholder={t("LinkedIn")}
                       value={targetFormDraft.contactLinkedin}
@@ -2115,7 +2115,7 @@ export default function MarketingHubView({ initialSubTab, onNavigateToTab }: Mar
                 </div>
 
                 <div className="flex justify-end">
-                  <button type="submit" className="text-xs font-bold bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2 rounded flex items-center gap-1 cursor-pointer">
+                  <button data-crm-button="" type="submit" className="text-xs font-bold bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2 rounded flex items-center gap-1 cursor-pointer">
                     <Check className="w-4 h-4" />
                     <span>{t("Append Target Company")}</span>
                   </button>
@@ -2126,13 +2126,13 @@ export default function MarketingHubView({ initialSubTab, onNavigateToTab }: Mar
 
           {reviewPendingAccounts.length > 0 && (
             <div className="bg-amber-50 dark:bg-amber-950/20 border border-amber-200 dark:border-amber-900 rounded-2xl p-4">
-              <h3 className="text-xs font-bold text-amber-800 dark:text-amber-300 uppercase mb-2 flex items-center gap-1.5">
+              <h3 data-crm-heading="section" className="text-xs font-bold text-amber-800 dark:text-amber-300 uppercase mb-2 flex items-center gap-1.5">
                 <Clock className="w-3.5 h-3.5" />
                 {t("Pending Review / Contact")}
               </h3>
               <div className="space-y-1.5">
                 {reviewPendingAccounts.map((a) => (
-                  <div
+                  <div data-crm-card="surface"
                     key={a.id}
                     onClick={() => setExpandedAccountId(a.id)}
                     className="flex items-center justify-between text-xs bg-white dark:bg-[#1b1a19] p-2 rounded border border-amber-100 dark:border-amber-900/50 cursor-pointer"
@@ -2152,11 +2152,11 @@ export default function MarketingHubView({ initialSubTab, onNavigateToTab }: Mar
           {/* Tüm Hedef Firmalar */}
           <div className="space-y-3">
             <div className="flex items-center justify-between">
-              <h3 className="text-xs font-bold text-slate-700 dark:text-slate-200 uppercase">{t("All Target Companies")}</h3>
+              <h3 data-crm-heading="section" className="text-xs font-bold text-slate-700 dark:text-slate-200 uppercase">{t("All Target Companies")}</h3>
               <div className="flex flex-wrap items-center gap-2 text-xs">
                 <div className="relative">
                   <Search className="w-3.5 h-3.5 text-slate-400 absolute left-3 top-2.5" />
-                  <input
+                  <input data-crm-leading-icon data-crm-field="control"
                     type="text"
                     placeholder={t("Search target companies...")}
                     value={targetSearch}
@@ -2164,7 +2164,7 @@ export default function MarketingHubView({ initialSubTab, onNavigateToTab }: Mar
                     className="bg-[#faf9f8] dark:bg-[#252423] border border-[#EDEBE9] dark:border-[#323130] text-xs rounded pl-9 pr-4 py-2 w-56 outline-none focus:border-[#0078D4]"
                   />
                 </div>
-                <select
+                <select data-crm-field="control"
                   value={targetSectorFilter}
                   onChange={(e) => setTargetSectorFilter(e.target.value)}
                   className="bg-[#faf9f8] dark:bg-[#252423] border border-[#EDEBE9] dark:border-[#323130] text-xs p-2 rounded outline-none"
@@ -2176,7 +2176,7 @@ export default function MarketingHubView({ initialSubTab, onNavigateToTab }: Mar
                     </option>
                   ))}
                 </select>
-                <button
+                <button data-crm-button=""
                   type="button"
                   onClick={() => setShowDeletedModal(true)}
                   className="text-xs font-bold bg-[#FAF9F8] hover:bg-[#EDEBE9] dark:bg-[#252423] dark:hover:bg-[#323130] text-slate-700 dark:text-slate-200 px-3 py-2 border border-[#EDEBE9] dark:border-[#323130] rounded-xl flex items-center gap-1.5 cursor-pointer transition-all shadow-xs"
@@ -2187,8 +2187,8 @@ export default function MarketingHubView({ initialSubTab, onNavigateToTab }: Mar
                 </button>
               </div>
             </div>
-            <div className="bg-white dark:bg-[#1b1a19] border border-[#EDEBE9] dark:border-[#323130] rounded-2xl overflow-hidden">
-              <table className="w-full text-left border-collapse text-xs">
+            <div data-crm-card="surface" className="bg-white dark:bg-[#1b1a19] border border-[#EDEBE9] dark:border-[#323130] rounded-2xl overflow-hidden">
+              <div data-crm-scroll="horizontal"><table data-crm-table="" className="w-full text-left border-collapse text-xs">
                 <thead>
                   <tr className="bg-[#FAF9F8] dark:bg-[#201f1e] text-[10px] font-bold text-slate-450 uppercase border-b border-[#EDEBE9] dark:border-[#323130]">
                     <th className="p-3">{t("Company Name")}</th>
@@ -2227,7 +2227,7 @@ export default function MarketingHubView({ initialSubTab, onNavigateToTab }: Mar
                         <td className="p-3 font-mono font-bold text-[#0078D4]">{contactCount}</td>
                         <td className="p-3 text-right">
                           <div className="flex items-center justify-end gap-1">
-                            <button
+                            <button data-crm-button=""
                               type="button"
                               onClick={(e) => {
                                 e.stopPropagation();
@@ -2238,7 +2238,7 @@ export default function MarketingHubView({ initialSubTab, onNavigateToTab }: Mar
                             >
                               <Edit className="w-3.5 h-3.5" />
                             </button>
-                            <button
+                            <button data-crm-button=""
                               type="button"
                               onClick={(e) => {
                                 e.stopPropagation();
@@ -2262,63 +2262,63 @@ export default function MarketingHubView({ initialSubTab, onNavigateToTab }: Mar
                     </tr>
                   )}
                 </tbody>
-              </table>
+              </table></div>
             </div>
           </div>
         </div>
       )}
 
       {activeSubTab === "bd-pipeline" && (
-        <div className="space-y-5 animate-fade-in">
+        <div data-crm-stack="" className="space-y-5 animate-fade-in">
           {/* 2026 UI/UX Modern KPI Stats Banner */}
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3.5">
-            <div className="bg-white dark:bg-[#1b1a19] border border-[#EDEBE9] dark:border-[#323130] p-4 rounded-2xl shadow-sm hover:shadow-md transition-all flex items-center justify-between">
+          <div data-crm-flow="" data-crm-grid="layout" className="grid grid-cols-2 sm:grid-cols-4 gap-3.5">
+            <div data-crm-card="padded" className="bg-white dark:bg-[#1b1a19] border border-[#EDEBE9] dark:border-[#323130] p-4 rounded-2xl shadow-sm hover:shadow-md transition-all flex items-center justify-between">
               <div>
-                <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 font-mono block">{t("Pipeline Target Companies")}</span>
+                <span data-crm-caption="" className="text-[10px] font-bold uppercase tracking-wider text-slate-400 font-mono block">{t("Pipeline Target Companies")}</span>
                 <span className="text-xl font-extrabold text-slate-800 dark:text-slate-100 block mt-1">{bdPipelineStats.total}</span>
               </div>
-              <div className="w-10 h-10 rounded-xl bg-blue-50 dark:bg-blue-950/40 text-[#0078D4] dark:text-brand-400 flex items-center justify-center">
+              <div data-crm-icon-box="" className="w-10 h-10 rounded-xl bg-blue-50 dark:bg-blue-950/40 text-[#0078D4] dark:text-brand-400 flex items-center justify-center">
                 <Target className="w-5 h-5" />
               </div>
             </div>
 
-            <div className="bg-white dark:bg-[#1b1a19] border border-[#EDEBE9] dark:border-[#323130] p-4 rounded-2xl shadow-sm hover:shadow-md transition-all flex items-center justify-between">
+            <div data-crm-card="padded" className="bg-white dark:bg-[#1b1a19] border border-[#EDEBE9] dark:border-[#323130] p-4 rounded-2xl shadow-sm hover:shadow-md transition-all flex items-center justify-between">
               <div>
-                <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 font-mono block">{t("Avg Opportunity Score")}</span>
+                <span data-crm-caption="" className="text-[10px] font-bold uppercase tracking-wider text-slate-400 font-mono block">{t("Avg Opportunity Score")}</span>
                 <span className="text-xl font-extrabold text-emerald-600 dark:text-emerald-400 block mt-1">% {bdPipelineStats.avgScore}</span>
               </div>
-              <div className="w-10 h-10 rounded-xl bg-emerald-50 dark:bg-emerald-950/40 text-emerald-600 dark:text-emerald-400 flex items-center justify-center">
+              <div data-crm-icon-box="" className="w-10 h-10 rounded-xl bg-emerald-50 dark:bg-emerald-950/40 text-emerald-600 dark:text-emerald-400 flex items-center justify-center">
                 <Zap className="w-5 h-5" />
               </div>
             </div>
 
-            <div className="bg-white dark:bg-[#1b1a19] border border-[#EDEBE9] dark:border-[#323130] p-4 rounded-2xl shadow-sm hover:shadow-md transition-all flex items-center justify-between">
+            <div data-crm-card="padded" className="bg-white dark:bg-[#1b1a19] border border-[#EDEBE9] dark:border-[#323130] p-4 rounded-2xl shadow-sm hover:shadow-md transition-all flex items-center justify-between">
               <div>
-                <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 font-mono block">{t("Promoted to Deals")}</span>
+                <span data-crm-caption="" className="text-[10px] font-bold uppercase tracking-wider text-slate-400 font-mono block">{t("Promoted to Deals")}</span>
                 <span className="text-xl font-extrabold text-indigo-600 dark:text-indigo-400 block mt-1">{bdPipelineStats.promoted}</span>
               </div>
-              <div className="w-10 h-10 rounded-xl bg-indigo-50 dark:bg-indigo-950/40 text-indigo-600 dark:text-indigo-400 flex items-center justify-center">
+              <div data-crm-icon-box="" className="w-10 h-10 rounded-xl bg-indigo-50 dark:bg-indigo-950/40 text-indigo-600 dark:text-indigo-400 flex items-center justify-center">
                 <Briefcase className="w-5 h-5" />
               </div>
             </div>
 
-            <div className="bg-white dark:bg-[#1b1a19] border border-[#EDEBE9] dark:border-[#323130] p-4 rounded-2xl shadow-sm hover:shadow-md transition-all flex items-center justify-between">
+            <div data-crm-card="padded" className="bg-white dark:bg-[#1b1a19] border border-[#EDEBE9] dark:border-[#323130] p-4 rounded-2xl shadow-sm hover:shadow-md transition-all flex items-center justify-between">
               <div>
-                <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 font-mono block">{t("High Opportunity Leads")}</span>
+                <span data-crm-caption="" className="text-[10px] font-bold uppercase tracking-wider text-slate-400 font-mono block">{t("High Opportunity Leads")}</span>
                 <span className="text-xl font-extrabold text-amber-600 dark:text-amber-400 block mt-1">{bdPipelineStats.highOpp}</span>
               </div>
-              <div className="w-10 h-10 rounded-xl bg-amber-50 dark:bg-amber-950/40 text-amber-600 dark:text-amber-400 flex items-center justify-center">
+              <div data-crm-icon-box="" className="w-10 h-10 rounded-xl bg-amber-50 dark:bg-amber-950/40 text-amber-600 dark:text-amber-400 flex items-center justify-center">
                 <Sparkles className="w-5 h-5" />
               </div>
             </div>
           </div>
 
           {/* Top Control Bar & Live Search */}
-          <div className="bg-white dark:bg-[#1b1a19] border border-[#EDEBE9] dark:border-[#323130] p-3.5 rounded-2xl flex flex-wrap items-center justify-between gap-3 shadow-sm">
+          <div data-crm-card="padded" className="bg-white dark:bg-[#1b1a19] border border-[#EDEBE9] dark:border-[#323130] p-3.5 rounded-2xl flex flex-wrap items-center justify-between gap-3 shadow-sm">
             <div className="flex items-center gap-3 flex-1 min-w-[260px]">
               <div className="relative flex-1 max-w-md">
                 <Search className="w-4 h-4 text-slate-400 absolute left-3 top-2.5" />
-                <input
+                <input data-crm-trailing-icon data-crm-leading-icon data-crm-field="control"
                   type="text"
                   placeholder={t("Live search company, contact name, email, or city in Kanban...")}
                   value={bdKanbanSearch}
@@ -2337,7 +2337,7 @@ export default function MarketingHubView({ initialSubTab, onNavigateToTab }: Mar
             </div>
 
             <div className="flex items-center gap-2">
-              <button
+              <button data-crm-button=""
                 type="button"
                 onClick={() => {
                   setStartMode("manual");
@@ -2349,7 +2349,7 @@ export default function MarketingHubView({ initialSubTab, onNavigateToTab }: Mar
                 <Plus className="w-4 h-4" />
                 <span>{t("New Target Company")}</span>
               </button>
-              <button
+              <button data-crm-button=""
                 type="button"
                 onClick={() => setBdIsAddingStage(true)}
                 className="px-3.5 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold shadow-sm transition-all flex items-center gap-1.5 cursor-pointer"
@@ -2358,7 +2358,7 @@ export default function MarketingHubView({ initialSubTab, onNavigateToTab }: Mar
                 <span>{t("+ Custom Stage")}</span>
               </button>
               {onNavigateToTab && (
-                <button
+                <button data-crm-button=""
                   type="button"
                   onClick={() => onNavigateToTab("deal-management")}
                   className="px-3.5 py-2 bg-[#FAF9F8] dark:bg-[#252423] hover:bg-[#EDEBE9] dark:hover:bg-[#323130] text-slate-700 dark:text-slate-200 border border-[#EDEBE9] dark:border-[#323130] rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer"
@@ -2373,7 +2373,7 @@ export default function MarketingHubView({ initialSubTab, onNavigateToTab }: Mar
           {/* Custom Stage Modal / Input Form */}
           {bdIsAddingStage && (
             <div className="bg-[#FAF9F8] dark:bg-[#201f1e] border border-[#0078D4]/30 rounded-2xl p-4 flex items-center gap-3 shadow-md animate-fade-in">
-              <input
+              <input data-crm-field="control"
                 type="text"
                 autoFocus
                 value={bdNewStageName}
@@ -2388,10 +2388,10 @@ export default function MarketingHubView({ initialSubTab, onNavigateToTab }: Mar
                 placeholder={t("New stage name (e.g., Demoseminar, Offer Sent)")}
                 className="flex-1 p-2.5 text-xs border border-[#EDEBE9] dark:border-[#323130] bg-white dark:bg-[#252423] rounded-xl outline-none focus:border-[#0078D4]"
               />
-              <button type="button" onClick={handleBdAddStage} className="text-xs font-bold bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2.5 rounded-xl cursor-pointer">
+              <button data-crm-button="" type="button" onClick={handleBdAddStage} className="text-xs font-bold bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2.5 rounded-xl cursor-pointer">
                 {t("Add Stage")}
               </button>
-              <button
+              <button data-crm-button=""
                 type="button"
                 onClick={() => {
                   setBdIsAddingStage(false);
@@ -2412,8 +2412,8 @@ export default function MarketingHubView({ initialSubTab, onNavigateToTab }: Mar
               </p>
               {(pipelineByStage[bdDeletingStage] || []).length > 0 && (
                 <div className="flex items-center gap-2 flex-wrap">
-                  <label className="text-[11px] text-slate-600 dark:text-slate-300">{t("Move its companies to:")}</label>
-                  <select
+                  <label data-crm-label="" className="text-[11px] text-slate-600 dark:text-slate-300">{t("Move its companies to:")}</label>
+                  <select data-crm-field="control"
                     value={bdDeleteMigrationTarget}
                     onChange={(e) => setBdDeleteMigrationTarget(e.target.value)}
                     className="text-xs p-2 border border-[#EDEBE9] dark:border-[#323130] bg-white dark:bg-[#252423] rounded-xl outline-none"
@@ -2429,10 +2429,10 @@ export default function MarketingHubView({ initialSubTab, onNavigateToTab }: Mar
                 </div>
               )}
               <div className="flex items-center gap-2">
-                <button type="submit" className="text-xs font-bold bg-rose-600 hover:bg-rose-700 text-white px-4 py-2 rounded-xl cursor-pointer">
+                <button data-crm-button="" type="submit" className="text-xs font-bold bg-rose-600 hover:bg-rose-700 text-white px-4 py-2 rounded-xl cursor-pointer">
                   {t("Delete Stage")}
                 </button>
-                <button type="button" onClick={() => setBdDeletingStage(null)} className="text-xs font-bold text-slate-500 px-3 py-2 cursor-pointer">
+                <button data-crm-button="" type="button" onClick={() => setBdDeletingStage(null)} className="text-xs font-bold text-slate-500 px-3 py-2 cursor-pointer">
                   {t("Cancel")}
                 </button>
               </div>
@@ -2441,28 +2441,28 @@ export default function MarketingHubView({ initialSubTab, onNavigateToTab }: Mar
 
           {/* Yeni hedef firma ekleme (İş Geliştirme Pipeline'dan doğrudan) */}
           {bdAddCompanyOpen && (
-            <div
+            <div data-crm-overlay=""
               className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6 bg-black/60 backdrop-blur-xs overflow-y-auto animate-fade-in"
               onClick={() => setBdAddCompanyOpen(false)}
             >
-              <form
+              <form data-crm-stack="" data-crm-modal=""
                 onSubmit={handleCreateTarget}
                 onClick={(ev) => ev.stopPropagation()}
                 className="w-full max-w-2xl bg-white dark:bg-[#1b1a19] border border-[#EDEBE9] dark:border-[#323130] rounded-2xl shadow-2xl p-5 space-y-4"
               >
                 <div className="flex items-center justify-between">
-                  <h3 className="text-sm font-bold text-slate-800 dark:text-slate-100 flex items-center gap-2">
+                  <h3 data-crm-heading="section" className="text-sm font-bold text-slate-800 dark:text-slate-100 flex items-center gap-2">
                     <Plus className="w-4 h-4 text-[#0078D4]" />
                     {t("New Target Company")}
                   </h3>
-                  <button type="button" onClick={() => setBdAddCompanyOpen(false)} className="text-slate-400 hover:text-slate-600 cursor-pointer">
+                  <button data-crm-button="" type="button" onClick={() => setBdAddCompanyOpen(false)} className="text-slate-400 hover:text-slate-600 cursor-pointer">
                     <X className="w-4 h-4" />
                   </button>
                 </div>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
+                <div data-crm-flow="" data-crm-grid="form" className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
                   <div>
-                    <label className="text-[10px] font-bold text-slate-400 uppercase block mb-1">{t("Company Name *")}</label>
-                    <input
+                    <label data-crm-label="" className="text-[10px] font-bold text-slate-400 uppercase block mb-1">{t("Company Name *")}</label>
+                    <input data-crm-field="control"
                       type="text"
                       autoFocus
                       required
@@ -2478,8 +2478,8 @@ export default function MarketingHubView({ initialSubTab, onNavigateToTab }: Mar
                     </datalist>
                   </div>
                   <div>
-                    <label className="text-[10px] font-bold text-slate-400 uppercase block mb-1">{t("Industry / Sector")}</label>
-                    <input
+                    <label data-crm-label="" className="text-[10px] font-bold text-slate-400 uppercase block mb-1">{t("Industry / Sector")}</label>
+                    <input data-crm-field="control"
                       type="text"
                       list="bd-sector-suggestions"
                       value={targetFormDraft.industryTag}
@@ -2493,8 +2493,8 @@ export default function MarketingHubView({ initialSubTab, onNavigateToTab }: Mar
                     </datalist>
                   </div>
                   <div>
-                    <label className="text-[10px] font-bold text-slate-400 uppercase block mb-1">{t("City")}</label>
-                    <input
+                    <label data-crm-label="" className="text-[10px] font-bold text-slate-400 uppercase block mb-1">{t("City")}</label>
+                    <input data-crm-field="control"
                       type="text"
                       value={targetFormDraft.city}
                       onChange={(e) => setTargetFormDraft({ ...targetFormDraft, city: e.target.value })}
@@ -2502,8 +2502,8 @@ export default function MarketingHubView({ initialSubTab, onNavigateToTab }: Mar
                     />
                   </div>
                   <div>
-                    <label className="text-[10px] font-bold text-slate-400 uppercase block mb-1">{t("Website URL")}</label>
-                    <input
+                    <label data-crm-label="" className="text-[10px] font-bold text-slate-400 uppercase block mb-1">{t("Website URL")}</label>
+                    <input data-crm-field="control"
                       type="text"
                       value={targetFormDraft.websiteUrl}
                       onChange={(e) => setTargetFormDraft({ ...targetFormDraft, websiteUrl: e.target.value })}
@@ -2511,8 +2511,8 @@ export default function MarketingHubView({ initialSubTab, onNavigateToTab }: Mar
                     />
                   </div>
                   <div className="sm:col-span-2">
-                    <label className="text-[10px] font-bold text-slate-400 uppercase block mb-1">{t("Note")}</label>
-                    <textarea
+                    <label data-crm-label="" className="text-[10px] font-bold text-slate-400 uppercase block mb-1">{t("Note")}</label>
+                    <textarea data-crm-field="multiline"
                       value={targetFormDraft.analysisNotes}
                       onChange={(e) => setTargetFormDraft({ ...targetFormDraft, analysisNotes: e.target.value })}
                       className="w-full p-2 border border-[#EDEBE9] dark:border-[#323130] bg-white dark:bg-[#252423] rounded outline-none h-16 resize-none focus:border-[#0078D4]"
@@ -2520,30 +2520,30 @@ export default function MarketingHubView({ initialSubTab, onNavigateToTab }: Mar
                   </div>
                 </div>
                 <div className="border-t border-[#EDEBE9] dark:border-[#323130] pt-3">
-                  <label className="text-[10px] font-bold text-slate-400 uppercase block mb-2">{t("First Contact (optional)")}</label>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
-                    <input
+                  <label data-crm-label="" className="text-[10px] font-bold text-slate-400 uppercase block mb-2">{t("First Contact (optional)")}</label>
+                  <div data-crm-flow="" data-crm-grid="layout" className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
+                    <input data-crm-field="control"
                       type="text"
                       placeholder={t("Full Name")}
                       value={targetFormDraft.contactFullName}
                       onChange={(e) => setTargetFormDraft({ ...targetFormDraft, contactFullName: e.target.value })}
                       className="w-full p-2 border border-[#EDEBE9] dark:border-[#323130] bg-white dark:bg-[#252423] rounded outline-none focus:border-[#0078D4]"
                     />
-                    <input
+                    <input data-crm-field="control"
                       type="text"
                       placeholder={t("Title")}
                       value={targetFormDraft.contactTitle}
                       onChange={(e) => setTargetFormDraft({ ...targetFormDraft, contactTitle: e.target.value })}
                       className="w-full p-2 border border-[#EDEBE9] dark:border-[#323130] bg-white dark:bg-[#252423] rounded outline-none focus:border-[#0078D4]"
                     />
-                    <input
+                    <input data-crm-field="control"
                       type="text"
                       placeholder={t("Phone")}
                       value={targetFormDraft.contactPhone}
                       onChange={(e) => setTargetFormDraft({ ...targetFormDraft, contactPhone: e.target.value })}
                       className="w-full p-2 border border-[#EDEBE9] dark:border-[#323130] bg-white dark:bg-[#252423] rounded outline-none focus:border-[#0078D4]"
                     />
-                    <input
+                    <input data-crm-field="control"
                       type="email"
                       placeholder={t("Email")}
                       value={targetFormDraft.contactEmail}
@@ -2556,10 +2556,10 @@ export default function MarketingHubView({ initialSubTab, onNavigateToTab }: Mar
                   </p>
                 </div>
                 <div className="flex items-center justify-end gap-2">
-                  <button type="button" onClick={() => setBdAddCompanyOpen(false)} className="text-xs font-bold text-slate-500 px-3 py-2 cursor-pointer">
+                  <button data-crm-button="" type="button" onClick={() => setBdAddCompanyOpen(false)} className="text-xs font-bold text-slate-500 px-3 py-2 cursor-pointer">
                     {t("Cancel")}
                   </button>
-                  <button type="submit" className="text-xs font-bold bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2 rounded flex items-center gap-1 cursor-pointer">
+                  <button data-crm-button="" type="submit" className="text-xs font-bold bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2 rounded flex items-center gap-1 cursor-pointer">
                     <Check className="w-4 h-4" />
                     <span>{t("Append Target Company")}</span>
                   </button>
@@ -2569,7 +2569,7 @@ export default function MarketingHubView({ initialSubTab, onNavigateToTab }: Mar
           )}
 
           {/* 2026 UI/UX Kanban Columns Board Container */}
-          <div className="flex gap-4 overflow-x-auto pb-4 pt-1 items-start min-h-[550px] scrollbar-thin">
+          <div data-crm-scroll="horizontal" className="flex gap-4 overflow-x-auto pb-4 pt-1 items-start min-h-[550px] scrollbar-thin">
             {bdActiveStages.map((stage, stageIndex) => {
               const stageAccounts = pipelineByStage[stage] || [];
               const isCollapsed = !!bdStageMetadata[stage]?.collapsed;
@@ -2596,12 +2596,12 @@ export default function MarketingHubView({ initialSubTab, onNavigateToTab }: Mar
                   {/* Column Header */}
                   <div className="p-3 border-b border-[#EDEBE9] dark:border-[#323130] cursor-move select-none">
                     {isCollapsed ? (
-                      <button type="button" onClick={() => toggleBdCollapseStage(stage)} className="w-full flex flex-col items-center gap-2 cursor-pointer py-2">
+                      <button data-crm-button="" type="button" onClick={() => toggleBdCollapseStage(stage)} className="w-full flex flex-col items-center gap-2 cursor-pointer py-2">
                         <span className={`text-[11px] font-extrabold px-2 py-0.5 rounded-full ${accentColor.badge}`}>{stageAccounts.length}</span>
                         <span className="text-[11px] font-bold text-slate-700 dark:text-slate-300 [writing-mode:vertical-rl] whitespace-nowrap">{t(stage)}</span>
                       </button>
                     ) : bdRenamingStage === stage ? (
-                      <input
+                      <input data-crm-field="control"
                         type="text"
                         autoFocus
                         value={bdRenameValue}
@@ -2618,12 +2618,12 @@ export default function MarketingHubView({ initialSubTab, onNavigateToTab }: Mar
                         <div className="flex items-center justify-between gap-1.5">
                           <div className="flex items-center gap-2 min-w-0 flex-1">
                             <span className="text-[10px] font-mono font-bold text-slate-400 flex-shrink-0">{stageIndex + 1}.</span>
-                            <h4 className="text-xs font-bold text-slate-800 dark:text-slate-100 truncate min-w-0 flex-1">{t(stage)}</h4>
+                            <h4 data-crm-heading="section" className="text-xs font-bold text-slate-800 dark:text-slate-100 truncate min-w-0 flex-1">{t(stage)}</h4>
                             <span className={`text-[10px] font-extrabold px-2 py-0.5 rounded-full flex-shrink-0 ${accentColor.badge}`}>
                               {stageAccounts.length}
                             </span>
                           </div>
-                          <button
+                          <button data-crm-button=""
                             type="button"
                             onClick={() => setBdActiveStageMenu(bdActiveStageMenu === stage ? null : stage)}
                             className="text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 cursor-pointer flex-shrink-0 p-1 rounded-md hover:bg-slate-200 dark:hover:bg-[#323130]"
@@ -2645,7 +2645,7 @@ export default function MarketingHubView({ initialSubTab, onNavigateToTab }: Mar
                         {/* Column Dropdown Menu */}
                         {bdActiveStageMenu === stage && (
                           <div className="absolute z-20 top-full right-0 mt-1 w-44 bg-white dark:bg-[#1b1a19] border border-[#EDEBE9] dark:border-[#323130] rounded-xl shadow-xl p-1.5 space-y-1 text-xs animate-fade-in">
-                            <button
+                            <button data-crm-button=""
                               type="button"
                               onClick={() => {
                                 toggleBdCollapseStage(stage);
@@ -2655,7 +2655,7 @@ export default function MarketingHubView({ initialSubTab, onNavigateToTab }: Mar
                             >
                               {t("Collapse Stage")}
                             </button>
-                            <button
+                            <button data-crm-button=""
                               type="button"
                               onClick={() => {
                                 setBdRenamingStage(stage);
@@ -2666,7 +2666,7 @@ export default function MarketingHubView({ initialSubTab, onNavigateToTab }: Mar
                             >
                               {t("Rename Stage")}
                             </button>
-                            <button
+                            <button data-crm-button=""
                               type="button"
                               onClick={() => {
                                 handleBdDeleteStage(stage);
@@ -2688,7 +2688,7 @@ export default function MarketingHubView({ initialSubTab, onNavigateToTab }: Mar
                       {stageAccounts.map((account) => {
                         const primaryContact = getTargetPrimaryContact(account);
                         return (
-                          <div
+                          <div data-crm-card="surface"
                             key={account.id}
                             draggable
                             onDragStart={(e) => handleBdCardDragStart(e, account.id)}
@@ -2706,7 +2706,7 @@ export default function MarketingHubView({ initialSubTab, onNavigateToTab }: Mar
                                   {account.companyName}
                                 </h5>
                               </div>
-                              <button
+                              <button data-crm-button=""
                                 type="button"
                                 onClick={(e) => {
                                   e.stopPropagation();
@@ -2759,7 +2759,7 @@ export default function MarketingHubView({ initialSubTab, onNavigateToTab }: Mar
 
                             {/* 1-Click Quick Stage Advancement Footer */}
                             <div className="flex items-center justify-between border-t border-[#EDEBE9] dark:border-[#323130] pt-2 text-[10px] text-slate-400">
-                              <button
+                              <button data-crm-button=""
                                 type="button"
                                 disabled={stageIndex === 0}
                                 onClick={() => handleStageChange(account.id, bdActiveStages[stageIndex - 1])}
@@ -2773,7 +2773,7 @@ export default function MarketingHubView({ initialSubTab, onNavigateToTab }: Mar
                                 {stageIndex + 1} / {bdActiveStages.length}
                               </span>
 
-                              <button
+                              <button data-crm-button=""
                                 type="button"
                                 disabled={stageIndex === bdActiveStages.length - 1}
                                 onClick={() => handleStageChange(account.id, bdActiveStages[stageIndex + 1])}
@@ -2803,8 +2803,8 @@ export default function MarketingHubView({ initialSubTab, onNavigateToTab }: Mar
       )}
 
       {activeSubTab === "growth-health" && (
-        <div className="space-y-4">
-          <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
+        <div data-crm-stack="" className="space-y-4">
+          <div data-crm-flow="" data-crm-grid="layout" className="grid grid-cols-2 sm:grid-cols-3 gap-4">
             <KpiCard label={t("Active Customers")} value={String(growthHealth.activeCustomers)} icon={<Users className="w-4 h-4" />} />
             <KpiCard
               label={t("Won Deals")}
@@ -2832,7 +2832,7 @@ export default function MarketingHubView({ initialSubTab, onNavigateToTab }: Mar
             />
           </div>
 
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-4">
+          <div data-crm-flow="" data-crm-grid="layout" className="grid grid-cols-1 lg:grid-cols-12 gap-4">
             <ChartCard title={t("Open Pipeline Value by Stage")} className="lg:col-span-7">
               <ResponsiveContainer width="100%" height="100%">
                 <BarChart data={stageValueChartData} layout="vertical" margin={{ left: 10, right: 20, top: 0, bottom: 0 }}>
@@ -2865,13 +2865,13 @@ export default function MarketingHubView({ initialSubTab, onNavigateToTab }: Mar
 
           {growthHealth.riskyCustomers.length > 0 && (
             <div className="bg-amber-50 dark:bg-amber-950/20 border border-amber-200 dark:border-amber-900 rounded-2xl p-4">
-              <h3 className="text-xs font-bold text-amber-800 dark:text-amber-300 uppercase mb-2 flex items-center gap-1.5">
+              <h3 data-crm-heading="section" className="text-xs font-bold text-amber-800 dark:text-amber-300 uppercase mb-2 flex items-center gap-1.5">
                 <AlertTriangle className="w-3.5 h-3.5" />
                 {t("At-Risk Customers")}
               </h3>
               <div className="space-y-1.5">
                 {growthHealth.riskyCustomers.map((c) => (
-                  <div
+                  <div data-crm-card="surface"
                     key={c.id}
                     className="flex items-center justify-between text-xs bg-white dark:bg-[#1b1a19] p-2 rounded border border-amber-100 dark:border-amber-900/50"
                   >
@@ -2888,17 +2888,17 @@ export default function MarketingHubView({ initialSubTab, onNavigateToTab }: Mar
       )}
 
       {activeSubTab === "digital-intel" && (
-        <div className="space-y-4">
-          <div className="bg-white dark:bg-[#1b1a19] p-5 border border-[#EDEBE9] dark:border-[#323130] rounded-2xl shadow-xs space-y-3">
+        <div data-crm-stack="" className="space-y-4">
+          <div data-crm-card="padded" className="bg-white dark:bg-[#1b1a19] p-5 border border-[#EDEBE9] dark:border-[#323130] rounded-2xl shadow-xs space-y-3">
             <p className="text-[11px] text-slate-500">
               {t(
                 "Upload or paste an exported report (Google Analytics, Search Console, SEMrush, Ahrefs, or similar) and get keyword opportunities, blog topic ideas, and concrete strategy actions."
               )}
             </p>
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs">
+            <div data-crm-flow="" data-crm-grid="form" className="grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs">
               <div>
-                <label className="text-[10px] font-bold text-slate-400 uppercase block mb-1">{t("Report Source")}</label>
-                <select
+                <label data-crm-label="" className="text-[10px] font-bold text-slate-400 uppercase block mb-1">{t("Report Source")}</label>
+                <select data-crm-field="control"
                   value={reportSourceType}
                   onChange={(e) => setReportSourceType(e.target.value)}
                   className="w-full p-2 border border-[#EDEBE9] dark:border-[#323130] bg-[#faf9f8] dark:bg-[#252423] rounded outline-none"
@@ -2910,7 +2910,7 @@ export default function MarketingHubView({ initialSubTab, onNavigateToTab }: Mar
                 </select>
               </div>
               <div className="sm:col-span-2">
-                <label className="text-[10px] font-bold text-slate-400 uppercase block mb-1">{t("Upload File (.csv, .xlsx, .txt)")}</label>
+                <label data-crm-label="" className="text-[10px] font-bold text-slate-400 uppercase block mb-1">{t("Upload File (.csv, .xlsx, .txt)")}</label>
                 <input
                   type="file"
                   accept=".csv,.xlsx,.xls,.txt"
@@ -2920,8 +2920,8 @@ export default function MarketingHubView({ initialSubTab, onNavigateToTab }: Mar
               </div>
             </div>
             <div>
-              <label className="text-[10px] font-bold text-slate-400 uppercase block mb-1">{t("Or Paste Report Content")}</label>
-              <textarea
+              <label data-crm-label="" className="text-[10px] font-bold text-slate-400 uppercase block mb-1">{t("Or Paste Report Content")}</label>
+              <textarea data-crm-field="multiline"
                 value={reportText}
                 onChange={(e) => setReportText(e.target.value)}
                 placeholder={t("Paste the exported report text/data here...")}
@@ -2929,7 +2929,7 @@ export default function MarketingHubView({ initialSubTab, onNavigateToTab }: Mar
               />
             </div>
             <div className="flex justify-end">
-              <button
+              <button data-crm-button=""
                 type="button"
                 onClick={handleAnalyzeReport}
                 disabled={isAnalyzing}
@@ -2945,11 +2945,11 @@ export default function MarketingHubView({ initialSubTab, onNavigateToTab }: Mar
           </div>
 
           {analysisResult && (
-            <div className="bg-white dark:bg-[#1b1a19] border border-emerald-200 dark:border-emerald-900 rounded-2xl shadow-xs p-5 space-y-4">
+            <div data-crm-stack="" data-crm-card="padded" className="bg-white dark:bg-[#1b1a19] border border-emerald-200 dark:border-emerald-900 rounded-2xl shadow-xs p-5 space-y-4">
               {analysisResult.rawSummary && <p className="text-xs text-slate-600 dark:text-slate-300 italic">{analysisResult.rawSummary}</p>}
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-xs">
+              <div data-crm-flow="" data-crm-grid="layout" className="grid grid-cols-1 md:grid-cols-3 gap-4 text-xs">
                 <div>
-                  <h4 className="font-bold text-slate-700 dark:text-slate-200 uppercase text-[10px] mb-2">{t("Keyword Opportunities")}</h4>
+                  <h4 data-crm-heading="section" className="font-bold text-slate-700 dark:text-slate-200 uppercase text-[10px] mb-2">{t("Keyword Opportunities")}</h4>
                   <ul className="space-y-1 list-disc list-inside text-slate-600 dark:text-slate-300">
                     {analysisResult.keywords.map((k, i) => (
                       <li key={i}>{k}</li>
@@ -2957,7 +2957,7 @@ export default function MarketingHubView({ initialSubTab, onNavigateToTab }: Mar
                   </ul>
                 </div>
                 <div>
-                  <h4 className="font-bold text-slate-700 dark:text-slate-200 uppercase text-[10px] mb-2">{t("Blog Topic Ideas")}</h4>
+                  <h4 data-crm-heading="section" className="font-bold text-slate-700 dark:text-slate-200 uppercase text-[10px] mb-2">{t("Blog Topic Ideas")}</h4>
                   <ul className="space-y-1 list-disc list-inside text-slate-600 dark:text-slate-300">
                     {analysisResult.blogTopics.map((k, i) => (
                       <li key={i}>{k}</li>
@@ -2965,7 +2965,7 @@ export default function MarketingHubView({ initialSubTab, onNavigateToTab }: Mar
                   </ul>
                 </div>
                 <div>
-                  <h4 className="font-bold text-slate-700 dark:text-slate-200 uppercase text-[10px] mb-2">{t("Strategy Actions")}</h4>
+                  <h4 data-crm-heading="section" className="font-bold text-slate-700 dark:text-slate-200 uppercase text-[10px] mb-2">{t("Strategy Actions")}</h4>
                   <ul className="space-y-1 list-disc list-inside text-slate-600 dark:text-slate-300">
                     {analysisResult.strategyActions.map((k, i) => (
                       <li key={i}>{k}</li>
@@ -2978,16 +2978,16 @@ export default function MarketingHubView({ initialSubTab, onNavigateToTab }: Mar
 
           {reportInsights.length > 0 && (
             <div className="space-y-2">
-              <h3 className="text-xs font-bold text-slate-700 dark:text-slate-200 uppercase">{t("Past Analyses")}</h3>
+              <h3 data-crm-heading="section" className="text-xs font-bold text-slate-700 dark:text-slate-200 uppercase">{t("Past Analyses")}</h3>
               {reportInsights.map((ins) => (
-                <div key={ins.id} className="bg-white dark:bg-[#1b1a19] border border-[#EDEBE9] dark:border-[#323130] rounded-2xl p-3 flex items-center justify-between text-xs">
+                <div data-crm-card="surface" key={ins.id} className="bg-white dark:bg-[#1b1a19] border border-[#EDEBE9] dark:border-[#323130] rounded-2xl p-3 flex items-center justify-between text-xs">
                   <div>
                     <div className="font-semibold text-slate-700 dark:text-slate-200">{ins.fileName}</div>
                     <div className="text-[10px] text-slate-450">
                       {ins.sourceType} · {new Date(ins.uploadedAt).toLocaleDateString("tr-TR")}
                     </div>
                   </div>
-                  <button type="button" onClick={() => deleteInsight(ins.id)} className="text-slate-400 hover:text-rose-600 cursor-pointer p-1">
+                  <button data-crm-button="" type="button" onClick={() => deleteInsight(ins.id)} className="text-slate-400 hover:text-rose-600 cursor-pointer p-1">
                     <Trash2 className="w-3.5 h-3.5" />
                   </button>
                 </div>
@@ -2998,8 +2998,8 @@ export default function MarketingHubView({ initialSubTab, onNavigateToTab }: Mar
       )}
 
       {activeSubTab === "kpi-okr" && (
-        <div className="space-y-4">
-          <div className="grid grid-cols-3 gap-4">
+        <div data-crm-stack="" className="space-y-4">
+          <div data-crm-flow="" data-crm-grid="layout" className="grid grid-cols-3 gap-4">
             <KpiCard
               label={t("Won")}
               value={String(lossAnalysis.totalWon)}
@@ -3017,7 +3017,7 @@ export default function MarketingHubView({ initialSubTab, onNavigateToTab }: Mar
             <KpiCard label={t("Win Rate")} value={`%${lossAnalysis.winRate.toFixed(0)}`} icon={<Percent className="w-4 h-4" />} />
           </div>
 
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-4">
+          <div data-crm-flow="" data-crm-grid="layout" className="grid grid-cols-1 lg:grid-cols-12 gap-4">
             <ChartCard title={t("Win / Loss Analysis")} className="lg:col-span-5">
               <ResponsiveContainer width="100%" height="100%">
                 <PieChart>
@@ -3051,8 +3051,8 @@ export default function MarketingHubView({ initialSubTab, onNavigateToTab }: Mar
 
           <div className="space-y-3">
             <div className="flex items-center justify-between">
-              <h3 className="text-xs font-bold text-slate-700 dark:text-slate-200 uppercase">{t("Strategic Goals & OKR")}</h3>
-              <button
+              <h3 data-crm-heading="section" className="text-xs font-bold text-slate-700 dark:text-slate-200 uppercase">{t("Strategic Goals & OKR")}</h3>
+              <button data-crm-button=""
                 type="button"
                 onClick={() => {
                   resetGoalForm();
@@ -3068,10 +3068,10 @@ export default function MarketingHubView({ initialSubTab, onNavigateToTab }: Mar
 
             {showAddGoal && (
               <form onSubmit={handleSaveGoal} className="bg-white dark:bg-[#1b1a19] border border-[#0078D4]/20 rounded-2xl p-5 shadow-md space-y-3 text-xs">
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                <div data-crm-flow="" data-crm-grid="form" className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                   <div className="sm:col-span-2">
-                    <label className="text-[10px] font-bold text-slate-400 uppercase block mb-1">{t("Objective *")}</label>
-                    <input
+                    <label data-crm-label="" className="text-[10px] font-bold text-slate-400 uppercase block mb-1">{t("Objective *")}</label>
+                    <input data-crm-field="control"
                       type="text"
                       value={goalForm.title}
                       onChange={(e) => setGoalForm({ ...goalForm, title: e.target.value })}
@@ -3080,8 +3080,8 @@ export default function MarketingHubView({ initialSubTab, onNavigateToTab }: Mar
                     />
                   </div>
                   <div>
-                    <label className="text-[10px] font-bold text-slate-400 uppercase block mb-1">{t("Period *")}</label>
-                    <input
+                    <label data-crm-label="" className="text-[10px] font-bold text-slate-400 uppercase block mb-1">{t("Period *")}</label>
+                    <input data-crm-field="control"
                       type="text"
                       placeholder="2026-Q3"
                       value={goalForm.period}
@@ -3091,8 +3091,8 @@ export default function MarketingHubView({ initialSubTab, onNavigateToTab }: Mar
                     />
                   </div>
                   <div>
-                    <label className="text-[10px] font-bold text-slate-400 uppercase block mb-1">{t("Owner")}</label>
-                    <input
+                    <label data-crm-label="" className="text-[10px] font-bold text-slate-400 uppercase block mb-1">{t("Owner")}</label>
+                    <input data-crm-field="control"
                       type="text"
                       value={goalForm.ownerName}
                       onChange={(e) => setGoalForm({ ...goalForm, ownerName: e.target.value })}
@@ -3100,8 +3100,8 @@ export default function MarketingHubView({ initialSubTab, onNavigateToTab }: Mar
                     />
                   </div>
                   <div>
-                    <label className="text-[10px] font-bold text-slate-400 uppercase block mb-1">{t("Status")}</label>
-                    <select
+                    <label data-crm-label="" className="text-[10px] font-bold text-slate-400 uppercase block mb-1">{t("Status")}</label>
+                    <select data-crm-field="control"
                       value={goalForm.status}
                       onChange={(e) => setGoalForm({ ...goalForm, status: e.target.value as StrategicGoal["status"] })}
                       className="w-full p-2 border border-[#EDEBE9] dark:border-[#323130] bg-[#faf9f8] dark:bg-[#252423] rounded outline-none"
@@ -3116,30 +3116,30 @@ export default function MarketingHubView({ initialSubTab, onNavigateToTab }: Mar
 
                 <div>
                   <div className="flex items-center justify-between mb-2">
-                    <label className="text-[10px] font-bold text-slate-400 uppercase">{t("Key Results")}</label>
-                    <button type="button" onClick={addKeyResultDraft} className="text-[11px] font-bold text-[#0078D4] hover:underline cursor-pointer flex items-center gap-1">
+                    <label data-crm-label="" className="text-[10px] font-bold text-slate-400 uppercase">{t("Key Results")}</label>
+                    <button data-crm-button="" type="button" onClick={addKeyResultDraft} className="text-[11px] font-bold text-[#0078D4] hover:underline cursor-pointer flex items-center gap-1">
                       <Plus className="w-3 h-3" />
                       {t("Add Key Result")}
                     </button>
                   </div>
                   <div className="space-y-2">
                     {goalForm.keyResults.map((kr) => (
-                      <div key={kr.id} className="grid grid-cols-1 sm:grid-cols-5 gap-2 items-center bg-[#FAF9F8] dark:bg-[#201f1e] p-2 rounded">
-                        <input
+                      <div data-crm-grid="layout" key={kr.id} className="grid grid-cols-1 sm:grid-cols-5 gap-2 items-center bg-[#FAF9F8] dark:bg-[#201f1e] p-2 rounded">
+                        <input data-crm-field="control"
                           type="text"
                           placeholder={t("Description")}
                           value={kr.description}
                           onChange={(e) => updateKeyResultDraft(kr.id, { description: e.target.value })}
                           className="sm:col-span-2 p-1.5 border border-[#EDEBE9] dark:border-[#323130] bg-white dark:bg-[#252423] rounded outline-none"
                         />
-                        <input
+                        <input data-crm-field="control"
                           type="number"
                           placeholder={t("Target")}
                           value={kr.targetValue}
                           onChange={(e) => updateKeyResultDraft(kr.id, { targetValue: Number(e.target.value) })}
                           className="p-1.5 border border-[#EDEBE9] dark:border-[#323130] bg-white dark:bg-[#252423] rounded outline-none"
                         />
-                        <input
+                        <input data-crm-field="control"
                           type="number"
                           placeholder={t("Current")}
                           value={kr.currentValue}
@@ -3147,14 +3147,14 @@ export default function MarketingHubView({ initialSubTab, onNavigateToTab }: Mar
                           className="p-1.5 border border-[#EDEBE9] dark:border-[#323130] bg-white dark:bg-[#252423] rounded outline-none"
                         />
                         <div className="flex items-center gap-1.5">
-                          <input
+                          <input data-crm-field="control"
                             type="text"
                             placeholder={t("Unit")}
                             value={kr.unit || ""}
                             onChange={(e) => updateKeyResultDraft(kr.id, { unit: e.target.value })}
                             className="w-full p-1.5 border border-[#EDEBE9] dark:border-[#323130] bg-white dark:bg-[#252423] rounded outline-none"
                           />
-                          <button type="button" onClick={() => removeKeyResultDraft(kr.id)} className="text-slate-400 hover:text-rose-600 cursor-pointer flex-shrink-0">
+                          <button data-crm-button="" type="button" onClick={() => removeKeyResultDraft(kr.id)} className="text-slate-400 hover:text-rose-600 cursor-pointer flex-shrink-0">
                             <X className="w-3.5 h-3.5" />
                           </button>
                         </div>
@@ -3165,7 +3165,7 @@ export default function MarketingHubView({ initialSubTab, onNavigateToTab }: Mar
                 </div>
 
                 <div className="flex justify-end">
-                  <button type="submit" className="text-xs font-bold bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2 rounded flex items-center gap-1 cursor-pointer">
+                  <button data-crm-button="" type="submit" className="text-xs font-bold bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2 rounded flex items-center gap-1 cursor-pointer">
                     <Save className="w-4 h-4" />
                     <span>{editingGoalId ? t("Update Goal") : t("Save Goal")}</span>
                   </button>
@@ -3173,9 +3173,9 @@ export default function MarketingHubView({ initialSubTab, onNavigateToTab }: Mar
               </form>
             )}
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div data-crm-flow="" data-crm-grid="layout" className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {goals.map((g) => (
-                <div key={g.id} className="bg-white dark:bg-[#1b1a19] border border-[#EDEBE9] dark:border-[#323130] rounded-2xl shadow-xs p-4 space-y-3">
+                <div data-crm-card="padded" key={g.id} className="bg-white dark:bg-[#1b1a19] border border-[#EDEBE9] dark:border-[#323130] rounded-2xl shadow-xs p-4 space-y-3">
                   <div className="flex items-start justify-between">
                     <div>
                       <div className="text-xs font-bold text-slate-800 dark:text-slate-100">{g.title}</div>
@@ -3197,10 +3197,10 @@ export default function MarketingHubView({ initialSubTab, onNavigateToTab }: Mar
                       >
                         {t(g.status)}
                       </span>
-                      <button type="button" onClick={() => startEditGoal(g)} className="text-slate-400 hover:text-[#0078D4] cursor-pointer p-1">
+                      <button data-crm-button="" type="button" onClick={() => startEditGoal(g)} className="text-slate-400 hover:text-[#0078D4] cursor-pointer p-1">
                         <Edit className="w-3.5 h-3.5" />
                       </button>
-                      <button type="button" onClick={() => deleteGoal(g.id)} className="text-slate-400 hover:text-rose-600 cursor-pointer p-1">
+                      <button data-crm-button="" type="button" onClick={() => deleteGoal(g.id)} className="text-slate-400 hover:text-rose-600 cursor-pointer p-1">
                         <Trash2 className="w-3.5 h-3.5" />
                       </button>
                     </div>
@@ -3227,7 +3227,7 @@ export default function MarketingHubView({ initialSubTab, onNavigateToTab }: Mar
                 </div>
               ))}
               {goals.length === 0 && (
-                <div className="md:col-span-2 bg-white dark:bg-[#1b1a19] border border-[#EDEBE9] dark:border-[#323130] rounded-2xl p-8 text-center text-xs text-slate-400">
+                <div data-crm-card="padded" className="md:col-span-2 bg-white dark:bg-[#1b1a19] border border-[#EDEBE9] dark:border-[#323130] rounded-2xl p-8 text-center text-xs text-slate-400">
                   {t("No strategic goals yet. Create your first OKR above.")}
                 </div>
               )}
@@ -3245,8 +3245,8 @@ export default function MarketingHubView({ initialSubTab, onNavigateToTab }: Mar
           const contactDraft = contactDraftByAccount[account.id] || { status: "Araştırılıyor" };
 
           return (
-            <div className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6 bg-black/60 backdrop-blur-xs overflow-y-auto animate-fade-in">
-              <div className="bg-white dark:bg-[#1b1a19] border border-[#EDEBE9] dark:border-[#323130] rounded-2xl shadow-2xl p-6 space-y-5 text-xs max-w-3xl w-full max-h-[90vh] overflow-y-auto my-auto relative border-t-4 border-t-[#0078D4]">
+            <div data-crm-overlay="" className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6 bg-black/60 backdrop-blur-xs overflow-y-auto animate-fade-in">
+              <div data-crm-stack="" data-crm-modal="" data-crm-card="padded" className="bg-white dark:bg-[#1b1a19] border border-[#EDEBE9] dark:border-[#323130] rounded-2xl shadow-2xl p-6 space-y-5 text-xs max-w-3xl w-full max-h-[90vh] overflow-y-auto my-auto relative border-t-4 border-t-[#0078D4]">
                 <div className="flex items-start justify-between border-b border-[#EDEBE9] dark:border-[#323130] pb-3">
                   <div className="space-y-1 flex-1 pr-4">
                     <div className="flex items-center gap-2 flex-wrap">
@@ -3267,8 +3267,8 @@ export default function MarketingHubView({ initialSubTab, onNavigateToTab }: Mar
                       </span>
                     </div>
                     <div className="pt-1">
-                      <label className="text-[10px] font-bold text-slate-400 uppercase block mb-1">{t("Company Name")} *</label>
-                      <input
+                      <label data-crm-label="" className="text-[10px] font-bold text-slate-400 uppercase block mb-1">{t("Company Name")} *</label>
+                      <input data-crm-field="control"
                         type="text"
                         defaultValue={account.companyName || ""}
                         onBlur={(e) => {
@@ -3287,7 +3287,7 @@ export default function MarketingHubView({ initialSubTab, onNavigateToTab }: Mar
                     )}
                   </div>
                   <div className="flex items-center gap-2 flex-shrink-0">
-                    <button
+                    <button data-crm-button=""
                       type="button"
                       onClick={() => {
                         triggerToast(t("Firma ve müşteri kartı bilgileri başarıyla kaydedildi."), "success");
@@ -3298,7 +3298,7 @@ export default function MarketingHubView({ initialSubTab, onNavigateToTab }: Mar
                       <Save className="w-3.5 h-3.5" />
                       <span>{t("Düzenlemeyi Kaydet")}</span>
                     </button>
-                    <button
+                    <button data-crm-button=""
                       type="button"
                       onClick={() => deleteTargetAccount(account.id)}
                       className="text-slate-400 hover:text-rose-600 cursor-pointer p-1.5 rounded-lg hover:bg-rose-50 dark:hover:bg-rose-950/30"
@@ -3306,7 +3306,7 @@ export default function MarketingHubView({ initialSubTab, onNavigateToTab }: Mar
                     >
                       <Trash2 className="w-4 h-4" />
                     </button>
-                    <button
+                    <button data-crm-button=""
                       type="button"
                       onClick={() => setExpandedAccountId(null)}
                       className="text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 cursor-pointer p-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800"
@@ -3317,28 +3317,28 @@ export default function MarketingHubView({ initialSubTab, onNavigateToTab }: Mar
                 </div>
 
                 {/* Highlights Summary Banner */}
-                <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5 bg-[#FAF9F8] dark:bg-[#201f1e] p-3 rounded-xl border border-[#EDEBE9] dark:border-[#323130]">
+                <div data-crm-grid="layout" className="grid grid-cols-2 sm:grid-cols-4 gap-2.5 bg-[#FAF9F8] dark:bg-[#201f1e] p-3 rounded-xl border border-[#EDEBE9] dark:border-[#323130]">
                   <div className="text-center p-1.5 border-r border-slate-200 dark:border-[#323130]">
-                    <span className="text-[9px] uppercase font-bold text-slate-400 font-mono block">{t("Opportunity Score")}</span>
+                    <span data-crm-caption="" className="text-[9px] uppercase font-bold text-slate-400 font-mono block">{t("Opportunity Score")}</span>
                     <span className="text-sm font-extrabold text-[#0078D4] dark:text-brand-400 block mt-0.5">% {account.riskScore || 70}</span>
                   </div>
                   <div className="text-center p-1.5 border-r border-slate-200 dark:border-[#323130]">
-                    <span className="text-[9px] uppercase font-bold text-slate-400 font-mono block">{t("Company Size")}</span>
+                    <span data-crm-caption="" className="text-[9px] uppercase font-bold text-slate-400 font-mono block">{t("Company Size")}</span>
                     <span className="text-xs font-semibold text-slate-700 dark:text-slate-200 block mt-0.5 truncate">{account.companySize || account.employeeCountLabel || t("750+ Employees")}</span>
                   </div>
                   <div className="text-center p-1.5 border-r border-slate-200 dark:border-[#323130]">
-                    <span className="text-[9px] uppercase font-bold text-slate-400 font-mono block">{t("Main Location")}</span>
+                    <span data-crm-caption="" className="text-[9px] uppercase font-bold text-slate-400 font-mono block">{t("Main Location")}</span>
                     <span className="text-xs font-semibold text-slate-700 dark:text-slate-200 block mt-0.5 truncate">{account.locationMain || account.city || t("Not specified")}</span>
                   </div>
                   <div className="text-center p-1.5">
-                    <span className="text-[9px] uppercase font-bold text-slate-400 font-mono block">{t("Lead Segment")}</span>
+                    <span data-crm-caption="" className="text-[9px] uppercase font-bold text-slate-400 font-mono block">{t("Lead Segment")}</span>
                     <span className="text-xs font-bold text-emerald-600 dark:text-emerald-400 block mt-0.5 truncate">{account.leadSegment || "Cold"} ({account.leadStatus || "New"})</span>
                   </div>
                 </div>
 
                 {/* Status & Stage Revision Control Box */}
                 <div className="bg-emerald-50/50 dark:bg-emerald-950/20 border border-emerald-200 dark:border-emerald-900/50 rounded-xl p-4 space-y-3">
-                  <h4 className="text-xs font-bold text-slate-800 dark:text-slate-200 uppercase tracking-wider font-mono flex items-center justify-between border-b border-emerald-200/60 dark:border-emerald-900/60 pb-2">
+                  <h4 data-crm-heading="section" className="text-xs font-bold text-slate-800 dark:text-slate-200 uppercase tracking-wider font-mono flex items-center justify-between border-b border-emerald-200/60 dark:border-emerald-900/60 pb-2">
                     <span className="flex items-center gap-2">
                       <TrendingUp className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
                       {t("Firma Durum Revizyonu & Lead Aşaması")}
@@ -3348,10 +3348,10 @@ export default function MarketingHubView({ initialSubTab, onNavigateToTab }: Mar
                     </span>
                   </h4>
 
-                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                  <div data-crm-flow="" data-crm-grid="form" className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                     <div>
-                      <label className="text-[10px] font-bold uppercase text-slate-400 block mb-1">{t("İlişki Durumu (Status)")}</label>
-                      <select
+                      <label data-crm-label="" className="text-[10px] font-bold uppercase text-slate-400 block mb-1">{t("İlişki Durumu (Status)")}</label>
+                      <select data-crm-field="control"
                         value={status}
                         onChange={(e) => {
                           const newRel = e.target.value;
@@ -3373,8 +3373,8 @@ export default function MarketingHubView({ initialSubTab, onNavigateToTab }: Mar
                     </div>
 
                     <div>
-                      <label className="text-[10px] font-bold uppercase text-slate-400 block mb-1">{t("Lead Segmenti")}</label>
-                      <select
+                      <label data-crm-label="" className="text-[10px] font-bold uppercase text-slate-400 block mb-1">{t("Lead Segmenti")}</label>
+                      <select data-crm-field="control"
                         value={account.leadSegment || "Cold"}
                         onChange={(e) => {
                           updateAccountField(account.id, { leadSegment: e.target.value as any });
@@ -3389,8 +3389,8 @@ export default function MarketingHubView({ initialSubTab, onNavigateToTab }: Mar
                     </div>
 
                     <div>
-                      <label className="text-[10px] font-bold uppercase text-slate-400 block mb-1">{t("Pipeline Aşaması")}</label>
-                      <select
+                      <label data-crm-label="" className="text-[10px] font-bold uppercase text-slate-400 block mb-1">{t("Pipeline Aşaması")}</label>
+                      <select data-crm-field="control"
                         value={account.bdPipelineStage || bdActiveStages[0]}
                         onChange={(e) => {
                           handleStageChange(account.id, e.target.value);
@@ -3410,7 +3410,7 @@ export default function MarketingHubView({ initialSubTab, onNavigateToTab }: Mar
 
                 {/* Primary Target Stakeholder Contact Box (Hedef Hesaplar Eşleşmesi) */}
                 <div className="bg-blue-50/60 dark:bg-blue-950/20 border border-blue-200 dark:border-blue-900/50 rounded-xl p-4 space-y-3">
-                  <h4 className="text-xs font-bold text-slate-800 dark:text-slate-200 uppercase tracking-wider font-mono flex items-center justify-between border-b border-blue-200/60 dark:border-blue-900/60 pb-2">
+                  <h4 data-crm-heading="section" className="text-xs font-bold text-slate-800 dark:text-slate-200 uppercase tracking-wider font-mono flex items-center justify-between border-b border-blue-200/60 dark:border-blue-900/60 pb-2">
                     <span className="flex items-center gap-2">
                       <Users className="w-4 h-4 text-[#0078D4]" />
                       {t("Target Stakeholder Contact Details (Primary Contact)")}
@@ -3420,10 +3420,10 @@ export default function MarketingHubView({ initialSubTab, onNavigateToTab }: Mar
                     </span>
                   </h4>
 
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <div data-crm-flow="" data-crm-grid="form" className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                     <div>
-                      <label className="text-[10px] font-bold uppercase text-slate-400 block mb-1">{t("First Name")}</label>
-                      <input
+                      <label data-crm-label="" className="text-[10px] font-bold uppercase text-slate-400 block mb-1">{t("First Name")}</label>
+                      <input data-crm-field="control"
                         type="text"
                         defaultValue={account.contactName || primaryContact.firstName}
                         onBlur={(e) => updateAccountField(account.id, { contactName: e.target.value })}
@@ -3432,8 +3432,8 @@ export default function MarketingHubView({ initialSubTab, onNavigateToTab }: Mar
                       />
                     </div>
                     <div>
-                      <label className="text-[10px] font-bold uppercase text-slate-400 block mb-1">{t("Surname")}</label>
-                      <input
+                      <label data-crm-label="" className="text-[10px] font-bold uppercase text-slate-400 block mb-1">{t("Surname")}</label>
+                      <input data-crm-field="control"
                         type="text"
                         defaultValue={account.contactSurname || primaryContact.lastName}
                         onBlur={(e) => updateAccountField(account.id, { contactSurname: e.target.value })}
@@ -3442,8 +3442,8 @@ export default function MarketingHubView({ initialSubTab, onNavigateToTab }: Mar
                       />
                     </div>
                     <div>
-                      <label className="text-[10px] font-bold uppercase text-[#0078D4] dark:text-brand-400 block mb-1">{t("Designated Contact Email")} *</label>
-                      <input
+                      <label data-crm-label="" className="text-[10px] font-bold uppercase text-[#0078D4] dark:text-brand-400 block mb-1">{t("Designated Contact Email")} *</label>
+                      <input data-crm-field="control"
                         type="email"
                         defaultValue={account.contactEmail || primaryContact.email}
                         onBlur={(e) => {
@@ -3469,8 +3469,8 @@ export default function MarketingHubView({ initialSubTab, onNavigateToTab }: Mar
                       />
                     </div>
                     <div>
-                      <label className="text-[10px] font-bold uppercase text-slate-400 block mb-1">{t("Department / Role")}</label>
-                      <input
+                      <label data-crm-label="" className="text-[10px] font-bold uppercase text-slate-400 block mb-1">{t("Department / Role")}</label>
+                      <input data-crm-field="control"
                         type="text"
                         defaultValue={account.department || primaryContact.department}
                         onBlur={(e) => updateAccountField(account.id, { department: e.target.value })}
@@ -3482,10 +3482,10 @@ export default function MarketingHubView({ initialSubTab, onNavigateToTab }: Mar
                 </div>
 
                 {/* Firma Bilgileri */}
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div data-crm-flow="" data-crm-grid="form" className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   <div>
-                    <label className="text-[10px] font-bold text-slate-400 uppercase block mb-1">{t("Website URL")}</label>
-                    <input
+                    <label data-crm-label="" className="text-[10px] font-bold text-slate-400 uppercase block mb-1">{t("Website URL")}</label>
+                    <input data-crm-field="control"
                       type="text"
                       defaultValue={account.websiteUrl || ""}
                       onBlur={(e) => updateAccountField(account.id, { websiteUrl: e.target.value })}
@@ -3493,8 +3493,8 @@ export default function MarketingHubView({ initialSubTab, onNavigateToTab }: Mar
                     />
                   </div>
                   <div>
-                    <label className="text-[10px] font-bold text-slate-400 uppercase block mb-1">{t("Industry / Sector")}</label>
-                    <input
+                    <label data-crm-label="" className="text-[10px] font-bold text-slate-400 uppercase block mb-1">{t("Industry / Sector")}</label>
+                    <input data-crm-field="control"
                       type="text"
                       defaultValue={account.industryTag || ""}
                       onBlur={(e) => updateAccountField(account.id, { industryTag: e.target.value })}
@@ -3502,8 +3502,8 @@ export default function MarketingHubView({ initialSubTab, onNavigateToTab }: Mar
                     />
                   </div>
                   <div>
-                    <label className="text-[10px] font-bold text-slate-400 uppercase block mb-1">{t("Sub-Sector")}</label>
-                    <input
+                    <label data-crm-label="" className="text-[10px] font-bold text-slate-400 uppercase block mb-1">{t("Sub-Sector")}</label>
+                    <input data-crm-field="control"
                       type="text"
                       defaultValue={account.subIndustry || ""}
                       onBlur={(e) => updateAccountField(account.id, { subIndustry: e.target.value })}
@@ -3511,8 +3511,8 @@ export default function MarketingHubView({ initialSubTab, onNavigateToTab }: Mar
                     />
                   </div>
                   <div>
-                    <label className="text-[10px] font-bold text-slate-400 uppercase block mb-1">{t("City / Address")}</label>
-                    <input
+                    <label data-crm-label="" className="text-[10px] font-bold text-slate-400 uppercase block mb-1">{t("City / Address")}</label>
+                    <input data-crm-field="control"
                       type="text"
                       defaultValue={account.city || account.locationMain || ""}
                       onBlur={(e) => updateAccountField(account.id, { city: e.target.value, locationMain: e.target.value })}
@@ -3520,8 +3520,8 @@ export default function MarketingHubView({ initialSubTab, onNavigateToTab }: Mar
                     />
                   </div>
                   <div>
-                    <label className="text-[10px] font-bold text-slate-400 uppercase block mb-1">{t("Employee Count (optional)")}</label>
-                    <input
+                    <label data-crm-label="" className="text-[10px] font-bold text-slate-400 uppercase block mb-1">{t("Employee Count (optional)")}</label>
+                    <input data-crm-field="control"
                       type="text"
                       defaultValue={account.companySize || account.employeeCountLabel || ""}
                       onBlur={(e) => updateAccountField(account.id, { companySize: e.target.value, employeeCountLabel: e.target.value })}
@@ -3529,8 +3529,8 @@ export default function MarketingHubView({ initialSubTab, onNavigateToTab }: Mar
                     />
                   </div>
                   <div>
-                    <label className="text-[10px] font-bold text-slate-400 uppercase block mb-1">{t("Next Review / Contact Date")}</label>
-                    <input
+                    <label data-crm-label="" className="text-[10px] font-bold text-slate-400 uppercase block mb-1">{t("Next Review / Contact Date")}</label>
+                    <input data-crm-field="control"
                       type="date"
                       defaultValue={account.nextReviewDate || ""}
                       onBlur={(e) => updateAccountField(account.id, { nextReviewDate: e.target.value })}
@@ -3538,15 +3538,15 @@ export default function MarketingHubView({ initialSubTab, onNavigateToTab }: Mar
                     />
                   </div>
                   <div className="sm:col-span-2">
-                    <label className="text-[10px] font-bold text-slate-400 uppercase block mb-1">{t("Company Analysis Notes")}</label>
-                    <textarea
+                    <label data-crm-label="" className="text-[10px] font-bold text-slate-400 uppercase block mb-1">{t("Company Analysis Notes")}</label>
+                    <textarea data-crm-field="multiline"
                       defaultValue={account.analysisNotes || ""}
                       onBlur={(e) => updateAccountField(account.id, { analysisNotes: e.target.value })}
                       className="w-full p-2 border border-[#EDEBE9] dark:border-[#323130] bg-[#faf9f8] dark:bg-[#252423] rounded outline-none h-20 resize-none focus:border-[#0078D4]"
                     />
                   </div>
                 </div>
-                <button
+                <button data-crm-button=""
                   type="button"
                   onClick={() => createReviewReminderTask(account)}
                   className="text-[11px] font-bold text-[#0078D4] hover:underline flex items-center gap-1 cursor-pointer"
@@ -3558,8 +3558,8 @@ export default function MarketingHubView({ initialSubTab, onNavigateToTab }: Mar
                 {/* Kontakt Yönetimi */}
                 <div className="border-t border-[#EDEBE9] dark:border-[#323130] pt-4">
                   <div className="flex items-center justify-between mb-3">
-                    <label className="text-[10px] font-bold text-slate-400 uppercase">{t("Contact Management")}</label>
-                    <button
+                    <label data-crm-label="" className="text-[10px] font-bold text-slate-400 uppercase">{t("Contact Management")}</label>
+                    <button data-crm-button=""
                       type="button"
                       onClick={() => (showContactFormFor === account.id ? setShowContactFormFor(null) : openContactForm(account.id))}
                       className="text-[11px] font-bold text-[#0078D4] hover:underline cursor-pointer flex items-center gap-1"
@@ -3570,57 +3570,57 @@ export default function MarketingHubView({ initialSubTab, onNavigateToTab }: Mar
                   </div>
 
                   {showContactFormFor === account.id && (
-                    <div className="bg-[#FAF9F8] dark:bg-[#201f1e] rounded-xl p-3 mb-3 grid grid-cols-1 sm:grid-cols-2 gap-2">
-                      <input
+                    <div data-crm-grid="layout" className="bg-[#FAF9F8] dark:bg-[#201f1e] rounded-xl p-3 mb-3 grid grid-cols-1 sm:grid-cols-2 gap-2">
+                      <input data-crm-field="control"
                         type="text"
                         placeholder={t("Full Name *")}
                         value={contactDraft.fullName || ""}
                         onChange={(e) => updateContactDraft(account.id, { fullName: e.target.value })}
                         className="p-2 border border-[#EDEBE9] dark:border-[#323130] bg-white dark:bg-[#252423] rounded outline-none focus:border-[#0078D4]"
                       />
-                      <input
+                      <input data-crm-field="control"
                         type="text"
                         placeholder={t("Title")}
                         value={contactDraft.title || ""}
                         onChange={(e) => updateContactDraft(account.id, { title: e.target.value })}
                         className="p-2 border border-[#EDEBE9] dark:border-[#323130] bg-white dark:bg-[#252423] rounded outline-none focus:border-[#0078D4]"
                       />
-                      <input
+                      <input data-crm-field="control"
                         type="text"
                         placeholder={t("Department")}
                         value={contactDraft.department || ""}
                         onChange={(e) => updateContactDraft(account.id, { department: e.target.value })}
                         className="p-2 border border-[#EDEBE9] dark:border-[#323130] bg-white dark:bg-[#252423] rounded outline-none focus:border-[#0078D4]"
                       />
-                      <input
+                      <input data-crm-field="control"
                         type="text"
                         placeholder={t("Phone")}
                         value={contactDraft.phone || ""}
                         onChange={(e) => updateContactDraft(account.id, { phone: e.target.value })}
                         className="p-2 border border-[#EDEBE9] dark:border-[#323130] bg-white dark:bg-[#252423] rounded outline-none focus:border-[#0078D4]"
                       />
-                      <input
+                      <input data-crm-field="control"
                         type="email"
                         placeholder={t("Email")}
                         value={contactDraft.email || ""}
                         onChange={(e) => updateContactDraft(account.id, { email: e.target.value })}
                         className="p-2 border border-[#EDEBE9] dark:border-[#323130] bg-white dark:bg-[#252423] rounded outline-none focus:border-[#0078D4]"
                       />
-                      <input
+                      <input data-crm-field="control"
                         type="text"
                         placeholder={t("LinkedIn")}
                         value={contactDraft.linkedin || ""}
                         onChange={(e) => updateContactDraft(account.id, { linkedin: e.target.value })}
                         className="p-2 border border-[#EDEBE9] dark:border-[#323130] bg-white dark:bg-[#252423] rounded outline-none focus:border-[#0078D4]"
                       />
-                      <input
+                      <input data-crm-field="control"
                         type="text"
                         placeholder={t("Source")}
                         value={contactDraft.source || ""}
                         onChange={(e) => updateContactDraft(account.id, { source: e.target.value })}
                         className="p-2 border border-[#EDEBE9] dark:border-[#323130] bg-white dark:bg-[#252423] rounded outline-none focus:border-[#0078D4]"
                       />
-                      <select
+                      <select data-crm-field="control"
                         value={contactDraft.status || "Araştırılıyor"}
                         onChange={(e) => updateContactDraft(account.id, { status: e.target.value as TargetContact["status"] })}
                         className="p-2 border border-[#EDEBE9] dark:border-[#323130] bg-white dark:bg-[#252423] rounded outline-none"
@@ -3632,7 +3632,7 @@ export default function MarketingHubView({ initialSubTab, onNavigateToTab }: Mar
                         ))}
                       </select>
                       <div className="sm:col-span-2 flex justify-end">
-                        <button
+                        <button data-crm-button=""
                           type="button"
                           onClick={() => handleAddContact(account.id)}
                           className="text-xs font-bold bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2 rounded flex items-center gap-1 cursor-pointer"
@@ -3648,14 +3648,14 @@ export default function MarketingHubView({ initialSubTab, onNavigateToTab }: Mar
                     <div className="bg-blue-50 dark:bg-blue-950/20 border border-blue-200 dark:border-blue-900 rounded-lg p-3 mb-3 flex items-center justify-between gap-3">
                       <span className="text-[11px] font-semibold text-blue-800 dark:text-blue-300">{t("Create this contact as a lead?")}</span>
                       <div className="flex items-center gap-2 flex-shrink-0">
-                        <button
+                        <button data-crm-button=""
                           type="button"
                           onClick={() => convertContactToLead(pendingLeadPrompt.accountId, pendingLeadPrompt.contactId)}
                           className="text-[11px] font-bold bg-[#0078D4] hover:bg-[#106ebe] text-white px-3 py-1.5 rounded cursor-pointer"
                         >
                           {t("Yes")}
                         </button>
-                        <button
+                        <button data-crm-button=""
                           type="button"
                           onClick={() => setPendingLeadPrompt(null)}
                           className="text-[11px] font-bold bg-white dark:bg-[#252423] border border-[#EDEBE9] dark:border-[#323130] text-slate-600 dark:text-slate-300 px-3 py-1.5 rounded cursor-pointer"
@@ -3688,7 +3688,7 @@ export default function MarketingHubView({ initialSubTab, onNavigateToTab }: Mar
                           </div>
                         </div>
                         <div className="flex flex-col items-end gap-1.5 flex-shrink-0">
-                          <select
+                          <select data-crm-field="control"
                             value={contact.status}
                             onChange={(e) => updateContact(account.id, contact.id, { status: e.target.value as TargetContact["status"] })}
                             className="text-[10px] p-1.5 border border-[#EDEBE9] dark:border-[#323130] bg-white dark:bg-[#252423] rounded outline-none cursor-pointer"
@@ -3701,7 +3701,7 @@ export default function MarketingHubView({ initialSubTab, onNavigateToTab }: Mar
                           </select>
                           <div className="flex items-center gap-2">
                             {!contact.leadProfileId && (
-                              <button
+                              <button data-crm-button=""
                                 type="button"
                                 onClick={() => convertContactToLead(account.id, contact.id)}
                                 className="text-[10px] font-bold text-[#0078D4] hover:underline cursor-pointer"
@@ -3709,7 +3709,7 @@ export default function MarketingHubView({ initialSubTab, onNavigateToTab }: Mar
                                 {t("Create Lead")}
                               </button>
                             )}
-                            <button
+                            <button data-crm-button=""
                               type="button"
                               onClick={() => deleteContact(account.id, contact.id)}
                               className="text-slate-400 hover:text-rose-600 cursor-pointer"
@@ -3729,7 +3729,7 @@ export default function MarketingHubView({ initialSubTab, onNavigateToTab }: Mar
                 {/* Footer Save & Complete Action */}
                 <div className="border-t border-[#EDEBE9] dark:border-[#323130] pt-4 flex items-center justify-between">
                   <span className="text-[10px] text-slate-400 font-mono">ID: {account.id}</span>
-                  <button
+                  <button data-crm-button=""
                     type="button"
                     onClick={() => {
                       triggerToast(t("Firma ve müşteri kartı bilgileri başarıyla kaydedildi."), "success");
@@ -3747,17 +3747,17 @@ export default function MarketingHubView({ initialSubTab, onNavigateToTab }: Mar
         })()}
       {/* Trash Bin Modal / Silinen Firmalar */}
       {showDeletedModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6 bg-black/60 backdrop-blur-xs overflow-y-auto animate-fade-in">
-          <div className="bg-white dark:bg-[#1b1a19] border border-[#EDEBE9] dark:border-[#323130] rounded-2xl shadow-2xl p-6 space-y-4 text-xs max-w-2xl w-full max-h-[85vh] overflow-y-auto my-auto relative border-t-4 border-t-amber-500">
+        <div data-crm-overlay="" className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6 bg-black/60 backdrop-blur-xs overflow-y-auto animate-fade-in">
+          <div data-crm-stack="" data-crm-modal="" data-crm-card="padded" className="bg-white dark:bg-[#1b1a19] border border-[#EDEBE9] dark:border-[#323130] rounded-2xl shadow-2xl p-6 space-y-4 text-xs max-w-2xl w-full max-h-[85vh] overflow-y-auto my-auto relative border-t-4 border-t-amber-500">
             <div className="flex items-center justify-between border-b border-[#EDEBE9] dark:border-[#323130] pb-3">
               <div className="flex items-center gap-2">
                 <RotateCcw className="w-5 h-5 text-amber-500" />
-                <h3 className="text-sm font-bold text-slate-800 dark:text-slate-100">{t("Silinen Hedef Firmalar (Çöp Kutusu)")}</h3>
+                <h3 data-crm-heading="section" className="text-sm font-bold text-slate-800 dark:text-slate-100">{t("Silinen Hedef Firmalar (Çöp Kutusu)")}</h3>
                 <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-amber-100 text-amber-700 dark:bg-amber-950/30 dark:text-amber-400">
                   {deletedAccounts.length} {t("firma")}
                 </span>
               </div>
-              <button
+              <button data-crm-button=""
                 type="button"
                 onClick={() => setShowDeletedModal(false)}
                 className="text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 p-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800"
@@ -3775,7 +3775,7 @@ export default function MarketingHubView({ initialSubTab, onNavigateToTab }: Mar
                       {[acc.industryTag, acc.city || acc.locationMain, acc.contactName ? `${acc.contactName} ${acc.contactSurname || ""}` : null].filter(Boolean).join(" · ")}
                     </p>
                   </div>
-                  <button
+                  <button data-crm-button=""
                     type="button"
                     onClick={() => restoreTargetAccount(acc)}
                     className="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold rounded-lg flex items-center gap-1.5 cursor-pointer shadow-xs transition-all"
@@ -3794,7 +3794,7 @@ export default function MarketingHubView({ initialSubTab, onNavigateToTab }: Mar
             </div>
 
             <div className="border-t border-[#EDEBE9] dark:border-[#323130] pt-3 flex justify-end">
-              <button
+              <button data-crm-button=""
                 type="button"
                 onClick={() => setShowDeletedModal(false)}
                 className="px-4 py-2 bg-slate-100 hover:bg-slate-200 dark:bg-[#252423] dark:hover:bg-[#323130] text-slate-700 dark:text-slate-200 font-bold rounded-xl text-xs cursor-pointer"

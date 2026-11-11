@@ -37,14 +37,14 @@ export function ConfirmModal({
   if (!open) return null;
 
   return (
-    <div
+    <div data-crm-overlay=""
       className="fixed inset-0 z-[200] bg-black/50 backdrop-blur-xs flex items-center justify-center p-4"
       role="dialog"
       aria-modal="true"
       aria-labelledby="confirm-modal-title"
       aria-describedby="confirm-modal-message"
     >
-      <div className="bg-white dark:bg-[#121212] border border-slate-200 dark:border-zinc-800 rounded-2xl w-full max-w-sm shadow-2xl animate-scaleIn text-xs p-5">
+      <div data-crm-modal="" data-crm-card="padded" className="bg-white dark:bg-[#121212] border border-slate-200 dark:border-zinc-800 rounded-2xl w-full max-w-sm shadow-2xl animate-scaleIn text-xs p-5">
         <div className="flex items-start gap-3">
           <div
             className={`p-2 rounded-full shrink-0 ${
@@ -56,7 +56,7 @@ export function ConfirmModal({
             <AlertTriangle className="w-4 h-4" />
           </div>
           <div>
-            <h3 id="confirm-modal-title" className="font-bold text-slate-800 dark:text-zinc-100 text-sm">
+            <h3 data-crm-heading="section" id="confirm-modal-title" className="font-bold text-slate-800 dark:text-zinc-100 text-sm">
               {title}
             </h3>
             <p id="confirm-modal-message" className="text-slate-500 dark:text-zinc-400 mt-1 leading-snug">
@@ -65,7 +65,7 @@ export function ConfirmModal({
           </div>
         </div>
         <div className="flex justify-end gap-2 pt-4">
-          <button
+          <button data-crm-button=""
             type="button"
             onClick={onCancel}
             autoFocus
@@ -73,7 +73,7 @@ export function ConfirmModal({
           >
             {cancelLabel}
           </button>
-          <button
+          <button data-crm-button=""
             type="button"
             onClick={onConfirm}
             className={`px-4 py-1.5 rounded-lg font-bold text-white cursor-pointer ${

@@ -165,7 +165,7 @@ export default function CompanyOpexTab({
     return (
       <div className="flex items-center gap-1">
         {[1, 2, 3, 4, 5].map((star) => (
-          <button
+          <button data-crm-button=""
             key={star}
             type="button"
             onClick={() => handleScoreChange(pillar, star)}
@@ -188,21 +188,21 @@ export default function CompanyOpexTab({
   };
 
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 font-sans text-xs">
+    <div data-crm-flow="" data-crm-screen="CompanyOpexTab" data-crm-grid="layout" className="grid grid-cols-1 lg:grid-cols-12 gap-5 font-sans text-xs">
       
       {/* LEFT: Assessment Sliders Matrix (7 columns) */}
-      <div className="lg:col-span-7 space-y-4">
+      <div data-crm-stack="" className="lg:col-span-7 space-y-4">
         
         {/* Core Matrix Card */}
-        <div className="bg-white dark:bg-[#151515] p-5 rounded-xl border border-slate-100 dark:border-zinc-800/80 shadow-[0_1px_3px_rgba(0,0,0,0.02)] space-y-4">
+        <div data-crm-stack="" data-crm-card="padded" className="bg-white dark:bg-[#151515] p-5 rounded-xl border border-slate-100 dark:border-zinc-800/80 shadow-[0_1px_3px_rgba(0,0,0,0.02)] space-y-4">
           <div className="flex items-center gap-2 border-b border-slate-100 dark:border-zinc-800/80 pb-2.5">
             <Award className="w-4 h-4 text-violet-500" />
-            <h4 className="text-xs font-bold uppercase text-slate-800 dark:text-zinc-200 tracking-wider">
+            <h4 data-crm-heading="section" className="text-xs font-bold uppercase text-slate-800 dark:text-zinc-200 tracking-wider">
               {t("Lean Maturity Assessment Matrix")}
             </h4>
           </div>
 
-          <div className="space-y-4">
+          <div data-crm-stack="" className="space-y-4">
             
             {/* 5S */}
             <div className="p-3 bg-slate-50/50 dark:bg-zinc-900/40 border border-slate-100 dark:border-zinc-800/50 rounded-lg space-y-1">
@@ -276,11 +276,11 @@ export default function CompanyOpexTab({
       </div>
 
       {/* RIGHT: Visual Radar Chart & AI Recommendations (5 columns) */}
-      <div className="lg:col-span-5 space-y-4">
+      <div data-crm-stack="" className="lg:col-span-5 space-y-4">
         
         {/* Maturity Index Circle / Banner */}
-        <div className="bg-white dark:bg-[#151515] p-5 rounded-xl border border-slate-100 dark:border-zinc-800/80 shadow-[0_1px_3px_rgba(0,0,0,0.02)] space-y-4 text-center">
-          <span className="text-[10px] font-mono font-bold text-slate-400 uppercase tracking-widest block">
+        <div data-crm-stack="" data-crm-card="padded" className="bg-white dark:bg-[#151515] p-5 rounded-xl border border-slate-100 dark:border-zinc-800/80 shadow-[0_1px_3px_rgba(0,0,0,0.02)] space-y-4 text-center">
+          <span data-crm-caption="" className="text-[10px] font-mono font-bold text-slate-400 uppercase tracking-widest block">
             {t("OVERALL OPERATIONAL RATING")}
           </span>
           
@@ -304,7 +304,7 @@ export default function CompanyOpexTab({
         </div>
 
         {/* Radar Chart representation */}
-        <div className="bg-white dark:bg-[#151515] p-4 rounded-xl border border-slate-100 dark:border-zinc-800/80 shadow-[0_1px_3px_rgba(0,0,0,0.02)] h-[250px] flex items-center justify-center">
+        <div data-crm-card="padded" className="bg-white dark:bg-[#151515] p-4 rounded-xl border border-slate-100 dark:border-zinc-800/80 shadow-[0_1px_3px_rgba(0,0,0,0.02)] h-[250px] flex items-center justify-center">
           <ResponsiveContainer width="100%" height="100%">
             <RadarChart cx="50%" cy="50%" outerRadius="80%" data={chartData}>
               <PolarGrid stroke="#e2e8f0" />

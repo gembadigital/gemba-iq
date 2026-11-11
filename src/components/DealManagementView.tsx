@@ -1897,13 +1897,13 @@ export default function DealManagementView({ initialTab = "dashboard", onNavigat
 
   // Switcher UI
   return (
-    <div className="space-y-6">
+    <div data-crm-stack="" data-crm-screen="DealManagementView" className="space-y-6">
       
       {/* Dynamic Navigation Sub-Bar under Deal Management */}
       {initialTab !== "dashboard" && (
-        <div className="bg-slate-50 dark:bg-[#121212] p-1.5 rounded-xl border border-slate-100 dark:border-zinc-800/80 flex items-center justify-between">
+        <div data-crm-toolbar="" data-crm-tabs className="bg-slate-50 dark:bg-[#121212] p-1.5 rounded-xl border border-slate-100 dark:border-zinc-800/80 flex items-center justify-between">
           <div className="flex items-center gap-1.5 select-none">
-            <button
+            <button data-crm-button=""
               type="button"
               onClick={() => setActiveModuleTab("dashboard")}
               className={`px-4 py-2 text-xs font-bold rounded-lg transition-all flex items-center gap-2 cursor-pointer ${
@@ -1916,7 +1916,7 @@ export default function DealManagementView({ initialTab = "dashboard", onNavigat
               <span>{t("Sales Dashboard")}</span>
             </button>
 
-            <button
+            <button data-crm-button=""
               type="button"
               onClick={() => setActiveModuleTab("board")}
               className={`px-4 py-2 text-xs font-bold rounded-lg transition-all flex items-center gap-2 cursor-pointer ${
@@ -1929,7 +1929,7 @@ export default function DealManagementView({ initialTab = "dashboard", onNavigat
               <span>{t("Operational Kanban Board")}</span>
             </button>
 
-            <button
+            <button data-crm-button=""
               type="button"
               onClick={() => {
                 if (onNavigateToTab) {
@@ -1967,11 +1967,11 @@ export default function DealManagementView({ initialTab = "dashboard", onNavigat
           }}
         />
       ) : (
-        <div className="space-y-6">
+        <div data-crm-stack="" className="space-y-6">
           
           {/* Active stats top banner */}
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 select-none">
-            <div className="bg-white dark:bg-[#151515] p-3.5 rounded-xl border border-slate-100 dark:border-zinc-800/80 shadow-[0_1px_2px_rgba(0,0,0,0.01)] flex flex-col justify-between">
+          <div data-crm-flow="" data-crm-grid="layout" className="grid grid-cols-2 lg:grid-cols-4 gap-4 select-none">
+            <div data-crm-card="padded" className="bg-white dark:bg-[#151515] p-3.5 rounded-xl border border-slate-100 dark:border-zinc-800/80 shadow-[0_1px_2px_rgba(0,0,0,0.01)] flex flex-col justify-between">
               <span className="text-[10px] font-bold text-slate-400 tracking-wider font-mono">
                 {t("ACTIVE PIPELINE VALUE")}
               </span>
@@ -1981,7 +1981,7 @@ export default function DealManagementView({ initialTab = "dashboard", onNavigat
               </span>
             </div>
 
-            <div className="bg-white dark:bg-[#151515] p-3.5 rounded-xl border border-slate-100 dark:border-zinc-800/80 shadow-[0_1px_2px_rgba(0,0,0,0.01)] flex flex-col justify-between">
+            <div data-crm-card="padded" className="bg-white dark:bg-[#151515] p-3.5 rounded-xl border border-slate-100 dark:border-zinc-800/80 shadow-[0_1px_2px_rgba(0,0,0,0.01)] flex flex-col justify-between">
               <span className="text-[10px] font-bold text-slate-400 tracking-wider font-mono">
                 {t("WEIGHTED REVENUE FORECAST")}
               </span>
@@ -1991,7 +1991,7 @@ export default function DealManagementView({ initialTab = "dashboard", onNavigat
               </span>
             </div>
 
-            <div className="bg-white dark:bg-[#151515] p-3.5 rounded-xl border border-slate-100 dark:border-zinc-800/80 shadow-[0_1px_2px_rgba(0,0,0,0.01)] flex flex-col justify-between">
+            <div data-crm-card="padded" className="bg-white dark:bg-[#151515] p-3.5 rounded-xl border border-slate-100 dark:border-zinc-800/80 shadow-[0_1px_2px_rgba(0,0,0,0.01)] flex flex-col justify-between">
               <span className="text-[10px] font-bold text-slate-400 tracking-wider font-mono">
                 {t("CLOSED WON TO DATE")}
               </span>
@@ -2003,7 +2003,7 @@ export default function DealManagementView({ initialTab = "dashboard", onNavigat
               </span>
             </div>
 
-            <div className="bg-white dark:bg-[#151515] p-3.5 rounded-xl border border-slate-100 dark:border-zinc-800/80 shadow-[0_1px_2px_rgba(0,0,0,0.01)] flex flex-col justify-between">
+            <div data-crm-card="padded" className="bg-white dark:bg-[#151515] p-3.5 rounded-xl border border-slate-100 dark:border-zinc-800/80 shadow-[0_1px_2px_rgba(0,0,0,0.01)] flex flex-col justify-between">
               <span className="text-[10px] font-bold text-slate-400 tracking-wider font-mono">
                 {t("TOTAL PROPOSED MAN-DAYS")}
               </span>
@@ -2017,11 +2017,11 @@ export default function DealManagementView({ initialTab = "dashboard", onNavigat
           </div>
 
           {/* Controls Bar for Deal board */}
-          <div className="bg-white dark:bg-[#151515] p-4 rounded-xl border border-slate-100 dark:border-zinc-800/80 shadow-sm flex flex-col md:flex-row items-center justify-between gap-4">
+          <div data-crm-filters data-crm-card="padded" className="bg-white dark:bg-[#151515] p-4 rounded-xl border border-slate-100 dark:border-zinc-800/80 shadow-sm flex flex-col md:flex-row items-center justify-between gap-4">
             <div className="flex flex-wrap items-center gap-3 w-full md:w-auto">
               <div className="relative">
                 <Search className="w-3.5 h-3.5 text-slate-400 absolute left-3 top-3" />
-                <input
+                <input data-crm-leading-icon data-crm-field="control"
                   type="text"
                   placeholder={t("Search deals, company names, contacts...")}
                   value={searchTerm}
@@ -2032,7 +2032,7 @@ export default function DealManagementView({ initialTab = "dashboard", onNavigat
 
               <div className="flex items-center gap-1.5 bg-slate-50 dark:bg-zinc-800/50 border border-slate-200 dark:border-zinc-700/80 rounded-lg px-2.5 py-1.5 text-xs select-none">
                 <Filter className="w-3.5 h-3.5 text-slate-400" />
-                <select
+                <select data-crm-field="control"
                   value={priorityFilter}
                   onChange={(e) => setPriorityFilter(e.target.value)}
                   className="bg-transparent border-none text-[11px] font-semibold focus:outline-none cursor-pointer"
@@ -2046,7 +2046,7 @@ export default function DealManagementView({ initialTab = "dashboard", onNavigat
 
               <div className="flex items-center gap-1.5 bg-amber-500/10 dark:bg-amber-955/20 border border-amber-200 dark:border-amber-900/65 rounded-lg px-2.5 py-1.5 text-xs select-none">
                 <Clock className="w-3.5 h-3.5 text-amber-500" />
-                <select
+                <select data-crm-field="control"
                   value={delayFilter}
                   onChange={(e) => setDelayFilter(e.target.value as any)}
                   className="bg-transparent border-none text-[11px] font-extrabold text-amber-800 dark:text-amber-450 focus:outline-none cursor-pointer"
@@ -2060,7 +2060,7 @@ export default function DealManagementView({ initialTab = "dashboard", onNavigat
 
               <div className="flex items-center gap-1.5 bg-slate-50 dark:bg-zinc-800/50 border border-slate-200 dark:border-zinc-700/80 rounded-lg px-2.5 py-1.5 text-xs select-none">
                 <ArrowUpDown className="w-3.5 h-3.5 text-slate-400" />
-                <select
+                <select data-crm-field="control"
                   value={sortBy}
                   onChange={(e) => setSortBy(e.target.value as any)}
                   className="bg-transparent border-none text-[11px] font-semibold focus:outline-none cursor-pointer"
@@ -2075,7 +2075,7 @@ export default function DealManagementView({ initialTab = "dashboard", onNavigat
 
               {/* View Toggle Option Icons */}
               <div className="flex items-center bg-slate-100 dark:bg-zinc-800/80 border border-slate-200 dark:border-zinc-700 rounded-lg p-0.5 select-none">
-                <button
+                <button data-crm-button=""
                   type="button"
                   onClick={() => setDealViewStyle("kanban")}
                   className={`p-1 px-2 rounded-md text-[11px] font-bold transition-all flex items-center gap-1 cursor-pointer ${
@@ -2088,7 +2088,7 @@ export default function DealManagementView({ initialTab = "dashboard", onNavigat
                   <Kanban className="w-3.5 h-3.5" />
                   <span className="hidden sm:inline">{t("Board")}</span>
                 </button>
-                <button
+                <button data-crm-button=""
                   type="button"
                   onClick={() => setDealViewStyle("list")}
                   className={`p-1 px-2 rounded-md text-[11px] font-bold transition-all flex items-center gap-1 cursor-pointer ${
@@ -2113,7 +2113,7 @@ export default function DealManagementView({ initialTab = "dashboard", onNavigat
                   <input type="file" accept=".csv" onChange={handleImportCSV} className="hidden" />
                 </label>
 
-                <button
+                <button data-crm-button=""
                   type="button"
                   onClick={handleExportCSV}
                   className="p-1.5 px-2.5 bg-[#14b15b] hover:bg-[#129a4f] border border-[#14b15b] text-white rounded-lg text-xs font-bold flex items-center gap-1.5 cursor-pointer transition-all shadow-xs"
@@ -2125,7 +2125,7 @@ export default function DealManagementView({ initialTab = "dashboard", onNavigat
                 </button>
               </div>
 
-              <button
+              <button data-crm-button=""
                 type="button"
                 onClick={() => setIsAddingNewStagePopup(true)}
                 className="px-3.5 py-1.5 border border-slate-205 dark:border-zinc-850 rounded-lg text-xs font-bold text-slate-655 hover:bg-slate-50 dark:hover:bg-zinc-800 flex items-center gap-1 cursor-pointer transition-all shadow-sm"
@@ -2134,7 +2134,7 @@ export default function DealManagementView({ initialTab = "dashboard", onNavigat
                 <span>{t("+ Custom Stage")}</span>
               </button>
 
-              <button
+              <button data-crm-button=""
                 type="button"
                 onClick={handleOpenCreateDeal}
                 className="px-4 py-1.5 bg-green-600 hover:bg-green-700 text-white font-bold rounded-lg text-xs flex items-center gap-1.5 cursor-pointer shadow-sm transition-all animate-none"
@@ -2161,7 +2161,7 @@ export default function DealManagementView({ initialTab = "dashboard", onNavigat
                   </p>
                 </div>
               </div>
-              <button
+              <button data-crm-button=""
                 type="button"
                 onClick={() => setDelayFilter("All")}
                 className="px-3 py-1 bg-white hover:bg-slate-50 dark:bg-zinc-800 dark:hover:bg-zinc-700 text-[10px] font-bold rounded-lg border border-slate-200 dark:border-zinc-700 transition-colors uppercase text-slate-700 dark:text-zinc-350 cursor-pointer w-fit"
@@ -2173,7 +2173,7 @@ export default function DealManagementView({ initialTab = "dashboard", onNavigat
 
           {dealViewStyle === "list" ? (
             /* BEAUTIFUL TABLE LIST VIEW */
-            <div className="bg-white dark:bg-[#151515] rounded-xl border border-slate-100 dark:border-zinc-800/80 shadow-sm overflow-hidden select-none">
+            <div data-crm-card="surface" className="bg-white dark:bg-[#151515] rounded-xl border border-slate-100 dark:border-zinc-800/80 shadow-sm overflow-hidden select-none">
               {/* Item 4: Toplu Seçim / Toplu Sil araç çubuğu */}
               {selectedDealIds.length > 0 && (
                 <div className="flex items-center justify-between gap-3 px-4 py-2 bg-rose-50/60 dark:bg-rose-950/20 border-b border-rose-100 dark:border-rose-900/40">
@@ -2181,14 +2181,14 @@ export default function DealManagementView({ initialTab = "dashboard", onNavigat
                     {selectedDealIds.length} {t("Deals Selected")}
                   </span>
                   <div className="flex items-center gap-2">
-                    <button
+                    <button data-crm-button=""
                       type="button"
                       onClick={() => setSelectedDealIds([])}
                       className="px-2.5 py-1 text-[11px] font-bold text-slate-500 hover:text-slate-700 dark:text-zinc-400 dark:hover:text-zinc-200 cursor-pointer"
                     >
                       {t("Clear")}
                     </button>
-                    <button
+                    <button data-crm-button=""
                       type="button"
                       onClick={handleAddSelectedDealsToOutreach}
                       disabled={outreachAddBusy}
@@ -2198,7 +2198,7 @@ export default function DealManagementView({ initialTab = "dashboard", onNavigat
                       <Mail className="w-3.5 h-3.5" />
                       {t("Add to Re-engagement List")}
                     </button>
-                    <button
+                    <button data-crm-button=""
                       type="button"
                       onClick={handleBulkDeleteDeals}
                       className="px-3 py-1.5 bg-rose-600 hover:bg-rose-700 text-white rounded-lg text-[11px] font-bold flex items-center gap-1.5 cursor-pointer shadow-xs"
@@ -2214,8 +2214,8 @@ export default function DealManagementView({ initialTab = "dashboard", onNavigat
                   {outreachAddMessage}
                 </div>
               )}
-              <div className="overflow-x-auto">
-                <table className="w-full text-left border-collapse">
+              <div data-crm-scroll="horizontal" className="overflow-x-auto">
+                <table data-crm-table="" className="w-full text-left border-collapse">
                   <thead>
                     <tr className="bg-slate-50 dark:bg-zinc-900 border-b border-slate-100 dark:border-zinc-800 text-[10px] uppercase tracking-wider font-mono font-bold text-slate-400 select-none">
                       <th className="p-4 w-10">
@@ -2321,7 +2321,7 @@ export default function DealManagementView({ initialTab = "dashboard", onNavigat
                             </div>
                           </td>
                           <td className="p-4" onClick={(e) => e.stopPropagation()}>
-                            <select
+                            <select data-crm-field="control"
                               value={deal.stage}
                               onChange={(e) => {
                                 const newStage = e.target.value;
@@ -2379,7 +2379,7 @@ export default function DealManagementView({ initialTab = "dashboard", onNavigat
                             </select>
                           </td>
                           <td className="p-4">
-                            <span className={`text-[8px] font-black uppercase tracking-widest px-1.5 py-0.5 rounded ${
+                            <span data-crm-caption="" className={`text-[8px] font-black uppercase tracking-widest px-1.5 py-0.5 rounded ${
                               deal.priority === "High"
                                 ? "bg-rose-100 text-rose-700 dark:bg-rose-950/40 dark:text-rose-400"
                                 : deal.priority === "Medium"
@@ -2394,7 +2394,7 @@ export default function DealManagementView({ initialTab = "dashboard", onNavigat
                           </td>
                           <td className="p-4 text-right" onClick={(e) => e.stopPropagation()}>
                             <div className="flex items-center justify-end gap-1.5">
-                              <button
+                              <button data-crm-button=""
                                 type="button"
                                 onClick={() => {
                                   setSelectedDeal(deal);
@@ -2405,7 +2405,7 @@ export default function DealManagementView({ initialTab = "dashboard", onNavigat
                               >
                                 <FileText className="w-3.5 h-3.5" />
                               </button>
-                              <button
+                              <button data-crm-button=""
                                 type="button"
                                 onClick={() => handleOpenEditDeal(deal)}
                                 className="p-1.5 text-slate-400 hover:text-green-650 rounded hover:bg-slate-50 dark:hover:bg-zinc-800 cursor-pointer"
@@ -2413,7 +2413,7 @@ export default function DealManagementView({ initialTab = "dashboard", onNavigat
                               >
                                 <Edit2 className="w-3.5 h-3.5" />
                               </button>
-                              <button
+                              <button data-crm-button=""
                                 type="button"
                                 onClick={() => {
                                   setConfirmDeleteModal({
@@ -2445,7 +2445,7 @@ export default function DealManagementView({ initialTab = "dashboard", onNavigat
             </div>
           ) : (
             /* Dynamic Drag-and-Drop Kanban Board Stages */
-            <div className="overflow-x-auto pb-4 select-none">
+            <div data-crm-scroll="horizontal" className="overflow-x-auto pb-4 select-none">
               <div className="flex gap-5 items-stretch min-h-[550px]">
                 {activeStages.map((stage, idx) => {
                   const isCollapsed = stageMetadata[stage]?.collapsed || false;
@@ -2458,7 +2458,7 @@ export default function DealManagementView({ initialTab = "dashboard", onNavigat
                         key={stage}
                         className="w-14 min-w-[56px] bg-slate-100 dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800/80 rounded-xl p-2 select-none flex flex-col items-center justify-between transition-all"
                       >
-                        <button
+                        <button data-crm-button=""
                           type="button"
                           onClick={() => toggleCollapseStage(stage)}
                           className="text-[10px] text-slate-450 hover:text-slate-600 dark:text-zinc-550 dark:hover:text-zinc-330 cursor-pointer font-bold p-1 bg-white dark:bg-zinc-800 rounded-full border shadow-sm"
@@ -2468,7 +2468,7 @@ export default function DealManagementView({ initialTab = "dashboard", onNavigat
                         </button>
 
                         <div className="flex-1 flex items-center justify-center py-6 w-full">
-                          <span
+                          <span data-crm-caption=""
                             className="text-[10px] font-black text-slate-500 uppercase tracking-widest whitespace-nowrap rotate-90 block"
                             style={{ transformOrigin: "center center" }}
                           >
@@ -2505,7 +2505,7 @@ export default function DealManagementView({ initialTab = "dashboard", onNavigat
                     >
                       <div>
                         {/* Drag handle column top */}
-                        <div className="flex items-center justify-between cursor-move mb-1 group-hover/col:bg-slate-100/50 dark:group-hover/col:bg-zinc-900/30 p-1 rounded-lg transition-all">
+                        <div data-crm-toolbar="" className="flex items-center justify-between cursor-move mb-1 group-hover/col:bg-slate-100/50 dark:group-hover/col:bg-zinc-900/30 p-1 rounded-lg transition-all">
                           <div className="flex items-center gap-1.5 truncate max-w-[240px]">
                             <span className="text-[13px] font-black text-slate-700 dark:text-zinc-200 uppercase tracking-tight truncate">
                               {getStageTranslation(stage, lang)}
@@ -2517,7 +2517,7 @@ export default function DealManagementView({ initialTab = "dashboard", onNavigat
 
                           {/* Stage Option Click Dropdown Selector */}
                           <div className="relative">
-                            <button
+                            <button data-crm-button=""
                               type="button"
                               ref={(el) => { stageMenuBtnRefs.current[stage] = el; }}
                               onClick={(e) => {
@@ -2546,11 +2546,11 @@ export default function DealManagementView({ initialTab = "dashboard", onNavigat
                                 <div className="fixed inset-0 z-[9998]" onClick={(e) => { e.stopPropagation(); setActiveStageMenu(null); setStageMenuPos(null); }} />
 
                                 {/* Dropdown Container - Float on top of everything, viewport-anchored */}
-                                <div
+                                <div data-crm-card="surface"
                                   style={{ position: "fixed", top: stageMenuPos.top, left: Math.max(8, stageMenuPos.left) }}
                                   className="bg-white dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 rounded-lg shadow-xl py-1 w-48 z-[9999] text-left animate-in fade-in duration-100"
                                 >
-                                  <button
+                                  <button data-crm-button=""
                                     type="button"
                                     onClick={() => {
                                       toggleCollapseStage(stage);
@@ -2561,7 +2561,7 @@ export default function DealManagementView({ initialTab = "dashboard", onNavigat
                                   >
                                     <span>{t("Collapse Stage")}</span>
                                   </button>
-                                  <button
+                                  <button data-crm-button=""
                                     type="button"
                                     onClick={() => {
                                       setIsAddingDescPopup({ stage });
@@ -2573,7 +2573,7 @@ export default function DealManagementView({ initialTab = "dashboard", onNavigat
                                   >
                                     <span>{t("Add/Edit Description")}</span>
                                   </button>
-                                  <button
+                                  <button data-crm-button=""
                                     type="button"
                                     onClick={() => {
                                       const stName = prompt(t("Add new stage name adjacent to this:"));
@@ -2590,7 +2590,7 @@ export default function DealManagementView({ initialTab = "dashboard", onNavigat
                                   >
                                     <span>{t("Add Adjacent Stage")}</span>
                                   </button>
-                                  <button
+                                  <button data-crm-button=""
                                     type="button"
                                     onClick={() => {
                                       setIsRenamingStagePopup(stage);
@@ -2602,7 +2602,7 @@ export default function DealManagementView({ initialTab = "dashboard", onNavigat
                                   >
                                     <span>✏️ {t("Rename Stage")}</span>
                                   </button>
-                                  <button
+                                  <button data-crm-button=""
                                     type="button"
                                     onClick={() => {
                                       const existing = getDealStageReminderSettings()[stage];
@@ -2616,7 +2616,7 @@ export default function DealManagementView({ initialTab = "dashboard", onNavigat
                                     <span>🔔 {t("Reminder Settings")}</span>
                                   </button>
                                   <div className="border-t my-1 dark:border-zinc-800"></div>
-                                  <button
+                                  <button data-crm-button=""
                                     type="button"
                                     onClick={() => {
                                       handleDeleteStage(stage);
@@ -2645,7 +2645,7 @@ export default function DealManagementView({ initialTab = "dashboard", onNavigat
 
                         {/* Hover-triggered Yeni Fırsat Ekle */}
                         <div className="opacity-0 group-hover/col:opacity-100 max-h-0 group-hover/col:max-h-14 transition-all duration-300 overflow-hidden mb-3 px-0.5">
-                          <button
+                          <button data-crm-button=""
                             type="button"
                             onClick={() => handleOpenCreateDealWithStage(stage)}
                             className="w-full py-2 bg-green-600 hover:bg-green-700 text-white font-sans font-bold text-xs rounded-xl shadow-sm transition-all flex items-center justify-center gap-1.5 cursor-pointer border border-green-700/10 active:scale-95 animate-fade-in"
@@ -2684,7 +2684,7 @@ export default function DealManagementView({ initialTab = "dashboard", onNavigat
                                       {deal.dealName || `${deal.companyName} Project`}
                                     </h5>
 
-                                    <span className={`text-[10px] font-bold uppercase tracking-widest px-1.5 py-0.5 rounded ${
+                                    <span data-crm-caption="" className={`text-[10px] font-bold uppercase tracking-widest px-1.5 py-0.5 rounded ${
                                       deal.priority === "High"
                                         ? "bg-rose-100 text-rose-700 dark:bg-rose-950/40 dark:text-rose-400"
                                         : deal.priority === "Medium"
@@ -2731,7 +2731,7 @@ export default function DealManagementView({ initialTab = "dashboard", onNavigat
                                           </p>
                                         </div>
                                       </div>
-                                      <button
+                                      <button data-crm-button=""
                                         type="button"
                                         onClick={(e) => {
                                           e.stopPropagation();
@@ -2749,15 +2749,15 @@ export default function DealManagementView({ initialTab = "dashboard", onNavigat
                                     </div>
                                   )}
 
-                                  <div className="grid grid-cols-2 gap-4 mt-4 pt-3 border-t border-slate-100 dark:border-zinc-800/50">
+                                  <div data-crm-grid="layout" className="grid grid-cols-2 gap-4 mt-4 pt-3 border-t border-slate-100 dark:border-zinc-800/50">
                                     <div>
-                                      <span className="block text-[9px] text-slate-400 uppercase font-mono font-bold">
+                                      <span data-crm-caption="" className="block text-[9px] text-slate-400 uppercase font-mono font-bold">
                                         {t("OPPORTUNITY VALUE")}
                                       </span>
                                       <span className="text-sm font-extrabold text-slate-755 dark:text-zinc-150">{getSystemCurrency().symbol}{formatSystemNumber((deal.opportunityValue || 0))}</span>
                                     </div>
                                     <div className="text-right">
-                                      <span className="block text-[9px] text-slate-400 uppercase font-mono font-bold">
+                                      <span data-crm-caption="" className="block text-[9px] text-slate-400 uppercase font-mono font-bold">
                                         {t("PROBABILITY")}
                                       </span>
                                       <span className="text-sm font-extrabold text-slate-755 dark:text-zinc-200">{deal.winProbability}%</span>
@@ -2765,9 +2765,9 @@ export default function DealManagementView({ initialTab = "dashboard", onNavigat
                                   </div>
 
                                   {/* Multi indicators box */}
-                                  <div className="grid grid-cols-3 gap-1.5 mt-2.5 bg-slate-50 dark:bg-black/20 p-2 rounded text-xs font-sans">
+                                  <div data-crm-grid="layout" className="grid grid-cols-3 gap-1.5 mt-2.5 bg-slate-50 dark:bg-black/20 p-2 rounded text-xs font-sans">
                                     <div className="text-center border-r dark:border-zinc-800">
-                                      <span className="block text-[8px] text-slate-400 uppercase">
+                                      <span data-crm-caption="" className="block text-[8px] text-slate-400 uppercase">
                                         {t("CLOSED")}
                                       </span>
                                       <span className="font-bold font-mono text-[11px]">{deal.expectedCloseDate}</span>
@@ -2790,7 +2790,7 @@ export default function DealManagementView({ initialTab = "dashboard", onNavigat
                                     </span>
                                     
                                     <div className="flex items-center gap-2">
-                                      <button
+                                      <button data-crm-button=""
                                         type="button"
                                         onClick={(e) => {
                                           e.stopPropagation();
@@ -2801,7 +2801,7 @@ export default function DealManagementView({ initialTab = "dashboard", onNavigat
                                       >
                                         <Edit2 className="w-3.5 h-3.5" />
                                       </button>
-                                      <button
+                                      <button data-crm-button=""
                                         type="button"
                                         onClick={(e) => {
                                           e.stopPropagation();
@@ -2850,16 +2850,16 @@ export default function DealManagementView({ initialTab = "dashboard", onNavigat
       {/* 5. CREATE OPPORTUNITY FORM DIALOG MODAL                  */}
       {/* ======================================================== */}
       {isAddModalOpen && (
-        <div className="fixed inset-0 bg-[#0c0c0c]/60 dark:bg-[#000000]/80 backdrop-blur-xs flex items-center justify-center z-50 p-4 font-sans" role="dialog" aria-modal="true">
-          <div className="bg-white dark:bg-[#151515] w-full max-w-2xl rounded-xl border border-slate-200 dark:border-zinc-800 shadow-2xl flex flex-col max-h-[90vh] overflow-hidden animate-in fade-in zoom-in-95 duration-100">
+        <div data-crm-overlay="" className="fixed inset-0 bg-[#0c0c0c]/60 dark:bg-[#000000]/80 backdrop-blur-xs flex items-center justify-center z-50 p-4 font-sans" role="dialog" aria-modal="true">
+          <div data-crm-modal="" data-crm-card="surface" className="bg-white dark:bg-[#151515] w-full max-w-2xl rounded-xl border border-slate-200 dark:border-zinc-800 shadow-2xl flex flex-col max-h-[90vh] overflow-hidden animate-in fade-in zoom-in-95 duration-100">
             
             {/* Modal Header */}
             <div className="flex items-center justify-between p-4 border-b border-slate-100 dark:border-zinc-800">
-              <h3 className="font-extrabold text-slate-800 dark:text-zinc-100 text-sm flex items-center gap-1.5">
+              <h3 data-crm-heading="section" className="font-extrabold text-slate-800 dark:text-zinc-100 text-sm flex items-center gap-1.5">
                 <Briefcase className="w-4 h-4 text-green-600" />
                 {formMode === "edit" ? "Tüm Kartvizit Tablarını Düzenle" : "Yeni Fırsat Kartı Oluştur"}
               </h3>
-              <button
+              <button data-crm-button=""
                 type="button"
                 className="text-slate-400 hover:text-slate-600 dark:hover:text-zinc-300 p-0.5 cursor-pointer"
                 onClick={() => setIsAddModalOpen(false)}
@@ -2869,11 +2869,11 @@ export default function DealManagementView({ initialTab = "dashboard", onNavigat
             </div>
 
             {/* Modal Form */}
-            <form onSubmit={handleSaveOpportunityForm} className="overflow-y-auto p-6 space-y-6 text-xs text-slate-700 dark:text-zinc-250 flex-1 flex flex-col justify-between">
+            <form data-crm-stack="" onSubmit={handleSaveOpportunityForm} className="overflow-y-auto p-6 space-y-6 text-xs text-slate-700 dark:text-zinc-250 flex-1 flex flex-col justify-between">
               
-              <div className="flex-1 space-y-6">
+              <div data-crm-stack="" className="flex-1 space-y-6">
                 {/* Form Tabs Button Strip */}
-                <div className="flex border-b border-slate-100 dark:border-zinc-800 select-none pb-1 mb-2 gap-1 overflow-x-auto">
+                <div data-crm-scroll="horizontal" className="flex border-b border-slate-100 dark:border-zinc-800 select-none pb-1 mb-2 gap-1 overflow-x-auto">
                   {[
                     { id: "general", label: t("📋 General Summary & Core") },
                     { id: "metadata", label: t("🏷️ Extra Metadata") },
@@ -2881,7 +2881,7 @@ export default function DealManagementView({ initialTab = "dashboard", onNavigat
                     { id: "contract", label: t("📝 Proposal / Contract") },
                     { id: "sla", label: t("⏱️ SLA Steps Timeline") }
                   ].map((tab) => (
-                    <button
+                    <button data-crm-button=""
                       key={tab.id}
                       type="button"
                       onClick={() => setActiveFormTab(tab.id as any)}
@@ -2898,19 +2898,19 @@ export default function DealManagementView({ initialTab = "dashboard", onNavigat
 
                 {/* TAB 1: General / Overview */}
                 {activeFormTab === "general" && (
-                  <div className="space-y-4 animate-in fade-in duration-100">
+                  <div data-crm-stack="" className="space-y-4 animate-in fade-in duration-100">
                     <div className="border-b border-dashed border-slate-200 dark:border-zinc-803 pb-1">
-                      <h4 className="text-xs font-bold text-green-600 uppercase font-mono tracking-wider">
+                      <h4 data-crm-heading="section" className="text-xs font-bold text-green-600 uppercase font-mono tracking-wider">
                         {t("Opportunity General Information")}
                       </h4>
                     </div>
 
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div data-crm-flow="" data-crm-grid="form" className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       <div>
-                        <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wide mb-1 font-mono">
+                        <label data-crm-label="" className="block text-[10px] font-bold text-slate-500 uppercase tracking-wide mb-1 font-mono">
                           {t("Owner / Advisor *")}
                         </label>
-                        <input
+                        <input data-crm-field="control"
                           type="text"
                           required
                           placeholder={t("e.g. GP / Gemba Partner")}
@@ -2921,10 +2921,10 @@ export default function DealManagementView({ initialTab = "dashboard", onNavigat
                       </div>
 
                       <div>
-                        <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wide mb-1 font-mono">
+                        <label data-crm-label="" className="block text-[10px] font-bold text-slate-500 uppercase tracking-wide mb-1 font-mono">
                           {t("Deal / Project Name *")}
                         </label>
-                        <input
+                        <input data-crm-field="control"
                           type="text"
                           required
                           placeholder={t("e.g. ABC Glass Line Optimization")}
@@ -2935,9 +2935,9 @@ export default function DealManagementView({ initialTab = "dashboard", onNavigat
                       </div>
                     </div>
 
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div data-crm-flow="" data-crm-grid="form" className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       <div>
-                        <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wide mb-1 font-mono">
+                        <label data-crm-label="" className="block text-[10px] font-bold text-slate-500 uppercase tracking-wide mb-1 font-mono">
                           {t("Company Name *")}
                         </label>
                         <CompanyAutocomplete
@@ -2958,10 +2958,10 @@ export default function DealManagementView({ initialTab = "dashboard", onNavigat
                       </div>
 
                       <div>
-                        <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wide mb-1 font-mono">
+                        <label data-crm-label="" className="block text-[10px] font-bold text-slate-500 uppercase tracking-wide mb-1 font-mono">
                           {t("Contact Name *")}
                         </label>
-                        <input
+                        <input data-crm-field="control"
                           type="text"
                           required
                           placeholder={t("e.g. John Smith")}
@@ -2972,12 +2972,12 @@ export default function DealManagementView({ initialTab = "dashboard", onNavigat
                       </div>
                     </div>
 
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div data-crm-flow="" data-crm-grid="form" className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       <div>
-                        <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wide mb-1 font-mono">
+                        <label data-crm-label="" className="block text-[10px] font-bold text-slate-500 uppercase tracking-wide mb-1 font-mono">
                           {t("Contact Email")}
                         </label>
-                        <input
+                        <input data-crm-field="control"
                           type="email"
                           placeholder={t("e.g. john@abcauto.com")}
                           value={dealFormState.contactEmail}
@@ -2987,10 +2987,10 @@ export default function DealManagementView({ initialTab = "dashboard", onNavigat
                       </div>
 
                       <div>
-                        <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wide mb-1 font-mono">
+                        <label data-crm-label="" className="block text-[10px] font-bold text-slate-500 uppercase tracking-wide mb-1 font-mono">
                           {t("Contact Phone")}
                         </label>
-                        <input
+                        <input data-crm-field="control"
                           type="text"
                           placeholder={t("+90 (532) ...")}
                           value={dealFormState.contactPhone}
@@ -3000,12 +3000,12 @@ export default function DealManagementView({ initialTab = "dashboard", onNavigat
                       </div>
                     </div>
 
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div data-crm-flow="" data-crm-grid="form" className="grid grid-cols-1 md:grid-cols-3 gap-4">
                       <div>
-                        <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wide mb-1 font-mono">
+                        <label data-crm-label="" className="block text-[10px] font-bold text-slate-500 uppercase tracking-wide mb-1 font-mono">
                           {t("Pipeline Name")}
                         </label>
-                        <input
+                        <input data-crm-field="control"
                           type="text"
                           readOnly
                           value={dealFormState.pipeline}
@@ -3014,10 +3014,10 @@ export default function DealManagementView({ initialTab = "dashboard", onNavigat
                       </div>
 
                       <div>
-                        <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wide mb-1 font-mono">
+                        <label data-crm-label="" className="block text-[10px] font-bold text-slate-500 uppercase tracking-wide mb-1 font-mono">
                           {t("Opportunity Stage")}
                         </label>
-                        <select
+                        <select data-crm-field="control"
                           value={dealFormState.stage}
                           onChange={(e) => setDealFormState({ ...dealFormState, stage: e.target.value })}
                           className="w-full bg-[#fbfbfb] dark:bg-zinc-800 border border-slate-250 dark:border-zinc-700 rounded-lg p-2 text-xs outline-none cursor-pointer"
@@ -3029,10 +3029,10 @@ export default function DealManagementView({ initialTab = "dashboard", onNavigat
                       </div>
 
                       <div>
-                        <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wide mb-1 font-mono">
+                        <label data-crm-label="" className="block text-[10px] font-bold text-slate-500 uppercase tracking-wide mb-1 font-mono">
                           {t("Amount ({symbol}) *").replace("{symbol}", getSystemCurrency().symbol)}
                         </label>
-                        <input
+                        <input data-crm-field="control"
                           type="number"
                           required
                           value={dealFormState.opportunityValue}
@@ -3042,12 +3042,12 @@ export default function DealManagementView({ initialTab = "dashboard", onNavigat
                       </div>
                     </div>
 
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div data-crm-flow="" data-crm-grid="form" className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       <div>
-                        <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wide mb-1 font-mono">
+                        <label data-crm-label="" className="block text-[10px] font-bold text-slate-500 uppercase tracking-wide mb-1 font-mono">
                           {t("Expected Close Date")}
                         </label>
-                        <input
+                        <input data-crm-field="control"
                           type="text"
                           placeholder={t("Format: DD.MM.YYYY")}
                           value={dealFormState.expectedCloseDate}
@@ -3058,10 +3058,10 @@ export default function DealManagementView({ initialTab = "dashboard", onNavigat
                     </div>
 
                     <div>
-                      <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wide mb-1 font-mono">
+                      <label data-crm-label="" className="block text-[10px] font-bold text-slate-500 uppercase tracking-wide mb-1 font-mono">
                         {t("Description")}
                       </label>
-                      <textarea
+                      <textarea data-crm-field="multiline"
                         placeholder={t("A few words about this opportunity")}
                         value={dealFormState.description}
                         onChange={(e) => setDealFormState({ ...dealFormState, description: e.target.value })}
@@ -3073,15 +3073,15 @@ export default function DealManagementView({ initialTab = "dashboard", onNavigat
 
                 {/* TAB 2: Custom Metadata */}
                 {activeFormTab === "metadata" && (
-                  <div className="space-y-4 animate-in fade-in duration-100">
+                  <div data-crm-stack="" className="space-y-4 animate-in fade-in duration-100">
                     <div className="border-b border-dashed border-slate-200 dark:border-zinc-803 pb-1">
-                      <h4 className="text-xs font-bold text-indigo-600 uppercase font-mono tracking-wider">{t("Extra Metadata")}</h4>
+                      <h4 data-crm-heading="section" className="text-xs font-bold text-indigo-600 uppercase font-mono tracking-wider">{t("Extra Metadata")}</h4>
                     </div>
 
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div data-crm-flow="" data-crm-grid="form" className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       <div>
-                        <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wide mb-1 font-mono">{t("Lead Source")}</label>
-                        <select
+                        <label data-crm-label="" className="block text-[10px] font-bold text-slate-500 uppercase tracking-wide mb-1 font-mono">{t("Lead Source")}</label>
+                        <select data-crm-field="control"
                           value={dealFormState.leadSource}
                           onChange={(e) => {
                             const val = e.target.value;
@@ -3108,16 +3108,16 @@ export default function DealManagementView({ initialTab = "dashboard", onNavigat
 
                         {showAddCustomSource && (
                           <div className="mt-2 p-2.5 bg-slate-100 dark:bg-zinc-900 rounded-lg border border-slate-200 dark:border-zinc-800 space-y-2">
-                            <label className="block text-[8px] font-bold text-slate-500 dark:text-zinc-400 uppercase tracking-wide">{t("New Source Name")}</label>
+                            <label data-crm-label="" className="block text-[8px] font-bold text-slate-500 dark:text-zinc-400 uppercase tracking-wide">{t("New Source Name")}</label>
                             <div className="flex gap-1.5">
-                              <input
+                              <input data-crm-field="control"
                                 type="text"
                                 placeholder={t("e.g. TikTok Ad, Meta Ads")}
                                 value={customSourceInput}
                                 onChange={(e) => setCustomSourceInput(e.target.value)}
                                 className="flex-1 bg-white dark:bg-zinc-800 border border-slate-200 dark:border-zinc-700 rounded p-1.5 text-xs outline-none"
                               />
-                              <button
+                              <button data-crm-button=""
                                 type="button"
                                 onClick={() => {
                                   const trimmed = customSourceInput.trim();
@@ -3135,7 +3135,7 @@ export default function DealManagementView({ initialTab = "dashboard", onNavigat
                               >
                                 {t("Add")}
                               </button>
-                              <button
+                              <button data-crm-button=""
                                 type="button"
                                 onClick={() => {
                                   setShowAddCustomSource(false);
@@ -3154,8 +3154,8 @@ export default function DealManagementView({ initialTab = "dashboard", onNavigat
                       </div>
 
                       <div>
-                        <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wide mb-1 font-mono">{t("Proposal Number (Quotation No)")}</label>
-                        <input
+                        <label data-crm-label="" className="block text-[10px] font-bold text-slate-500 uppercase tracking-wide mb-1 font-mono">{t("Proposal Number (Quotation No)")}</label>
+                        <input data-crm-field="control"
                           type="text"
                           placeholder={t("e.g. PRP-2026-X")}
                           value={dealFormState.proposalNumber}
@@ -3165,10 +3165,10 @@ export default function DealManagementView({ initialTab = "dashboard", onNavigat
                       </div>
                     </div>
 
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div data-crm-flow="" data-crm-grid="form" className="grid grid-cols-1 md:grid-cols-3 gap-4">
                       <div>
-                        <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wide mb-1 font-mono">{t("Man-Day Estimate")}</label>
-                        <input
+                        <label data-crm-label="" className="block text-[10px] font-bold text-slate-500 uppercase tracking-wide mb-1 font-mono">{t("Man-Day Estimate")}</label>
+                        <input data-crm-field="control"
                           type="text"
                           placeholder={t("e.g. 25")}
                           value={dealFormState.manDay}
@@ -3178,8 +3178,8 @@ export default function DealManagementView({ initialTab = "dashboard", onNavigat
                       </div>
 
                       <div>
-                        <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wide mb-1 font-mono">{t("Contact Subject")}</label>
-                        <input
+                        <label data-crm-label="" className="block text-[10px] font-bold text-slate-500 uppercase tracking-wide mb-1 font-mono">{t("Contact Subject")}</label>
+                        <input data-crm-field="control"
                           type="text"
                           placeholder={t("e.g. SMED Audit Planning")}
                           value={dealFormState.contactSubject}
@@ -3189,8 +3189,8 @@ export default function DealManagementView({ initialTab = "dashboard", onNavigat
                       </div>
 
                       <div>
-                        <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wide mb-1 font-mono">{t("Consulting Products")}</label>
-                        <input
+                        <label data-crm-label="" className="block text-[10px] font-bold text-slate-500 uppercase tracking-wide mb-1 font-mono">{t("Consulting Products")}</label>
+                        <input data-crm-field="control"
                           type="text"
                           placeholder={t("e.g. TIMWOODS floor training")}
                           value={dealFormState.products}
@@ -3204,15 +3204,15 @@ export default function DealManagementView({ initialTab = "dashboard", onNavigat
 
                 {/* TAB 3: OPEX Assessment */}
                 {activeFormTab === "opex" && (
-                  <div className="space-y-4 animate-in fade-in duration-100">
+                  <div data-crm-stack="" className="space-y-4 animate-in fade-in duration-100">
                     <div className="border-b border-dashed border-slate-200 dark:border-zinc-803 pb-1">
-                      <h4 className="text-xs font-bold text-purple-600 uppercase font-mono tracking-wider">Yalın Değerlendirme &amp; OPEX Analizi</h4>
+                      <h4 data-crm-heading="section" className="text-xs font-bold text-purple-600 uppercase font-mono tracking-wider">Yalın Değerlendirme &amp; OPEX Analizi</h4>
                     </div>
 
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div data-crm-flow="" data-crm-grid="form" className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       <div>
-                        <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wide mb-1 font-mono">{t("Lean Maturity Level")}</label>
-                        <input
+                        <label data-crm-label="" className="block text-[10px] font-bold text-slate-500 uppercase tracking-wide mb-1 font-mono">{t("Lean Maturity Level")}</label>
+                        <input data-crm-field="control"
                           type="text"
                           placeholder={t("e.g. Level 2: Standardization Start")}
                           value={dealFormState.leanMaturityLevel}
@@ -3222,8 +3222,8 @@ export default function DealManagementView({ initialTab = "dashboard", onNavigat
                       </div>
 
                       <div>
-                        <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wide mb-1 font-mono">{t("Quality Risk Level")}</label>
-                        <input
+                        <label data-crm-label="" className="block text-[10px] font-bold text-slate-500 uppercase tracking-wide mb-1 font-mono">{t("Quality Risk Level")}</label>
+                        <input data-crm-field="control"
                           type="text"
                           placeholder={t("e.g. Medium-High Risk Level")}
                           value={dealFormState.qualityRiskLevel}
@@ -3234,8 +3234,8 @@ export default function DealManagementView({ initialTab = "dashboard", onNavigat
                     </div>
 
                     <div>
-                      <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wide mb-1 font-mono">{t("Lean maturity detail description")}</label>
-                      <textarea
+                      <label data-crm-label="" className="block text-[10px] font-bold text-slate-500 uppercase tracking-wide mb-1 font-mono">{t("Lean maturity detail description")}</label>
+                      <textarea data-crm-field="multiline"
                         placeholder={t("Lean analysis details (wastes, 5S status, etc.)")}
                         value={dealFormState.leanMaturityDesc}
                         onChange={(e) => setDealFormState({ ...dealFormState, leanMaturityDesc: e.target.value })}
@@ -3244,8 +3244,8 @@ export default function DealManagementView({ initialTab = "dashboard", onNavigat
                     </div>
 
                     <div>
-                      <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wide mb-1 font-mono">{t("Quality failure analysis description")}</label>
-                      <textarea
+                      <label data-crm-label="" className="block text-[10px] font-bold text-slate-500 uppercase tracking-wide mb-1 font-mono">{t("Quality failure analysis description")}</label>
+                      <textarea data-crm-field="multiline"
                         placeholder={t("Quality loss rates, cost analysis, etc.)")}
                         value={dealFormState.qualityRiskDesc}
                         onChange={(e) => setDealFormState({ ...dealFormState, qualityRiskDesc: e.target.value })}
@@ -3257,15 +3257,15 @@ export default function DealManagementView({ initialTab = "dashboard", onNavigat
 
                 {/* TAB 4: Contract & Proposal */}
                 {activeFormTab === "contract" && (
-                  <div className="space-y-4 animate-in fade-in duration-100">
+                  <div data-crm-stack="" className="space-y-4 animate-in fade-in duration-100">
                     <div className="border-b border-dashed border-slate-200 dark:border-zinc-803 pb-1">
-                      <h4 className="text-xs font-bold text-emerald-600 uppercase font-mono tracking-wider">Sözleşme &amp; Teklif Bedelleri</h4>
+                      <h4 data-crm-heading="section" className="text-xs font-bold text-emerald-600 uppercase font-mono tracking-wider">Sözleşme &amp; Teklif Bedelleri</h4>
                     </div>
 
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div data-crm-flow="" data-crm-grid="form" className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       <div>
-                        <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wide mb-1 font-mono">{t("Project Overseer (PM)")}</label>
-                        <input
+                        <label data-crm-label="" className="block text-[10px] font-bold text-slate-500 uppercase tracking-wide mb-1 font-mono">{t("Project Overseer (PM)")}</label>
+                        <input data-crm-field="control"
                           type="text"
                           placeholder={t("e.g. John Smith")}
                           value={dealFormState.contractPm}
@@ -3275,8 +3275,8 @@ export default function DealManagementView({ initialTab = "dashboard", onNavigat
                       </div>
 
                       <div>
-                        <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wide mb-1 font-mono">{t("Responsible ID Number")}</label>
-                        <input
+                        <label data-crm-label="" className="block text-[10px] font-bold text-slate-500 uppercase tracking-wide mb-1 font-mono">{t("Responsible ID Number")}</label>
+                        <input data-crm-field="control"
                           type="text"
                           placeholder={t("11-digit ID Number")}
                           maxLength={11}
@@ -3287,10 +3287,10 @@ export default function DealManagementView({ initialTab = "dashboard", onNavigat
                       </div>
                     </div>
 
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div data-crm-flow="" data-crm-grid="form" className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       <div>
-                        <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wide mb-1 font-mono">{t("Contract Issue Date")}</label>
-                        <input
+                        <label data-crm-label="" className="block text-[10px] font-bold text-slate-500 uppercase tracking-wide mb-1 font-mono">{t("Contract Issue Date")}</label>
+                        <input data-crm-field="control"
                           type="date"
                           value={dealFormState.contractDate}
                           onChange={(e) => setDealFormState({ ...dealFormState, contractDate: e.target.value })}
@@ -3299,8 +3299,8 @@ export default function DealManagementView({ initialTab = "dashboard", onNavigat
                       </div>
 
                       <div>
-                        <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wide mb-1 font-mono">{t("Contract Subject")}</label>
-                        <input
+                        <label data-crm-label="" className="block text-[10px] font-bold text-slate-500 uppercase tracking-wide mb-1 font-mono">{t("Contract Subject")}</label>
+                        <input data-crm-field="control"
                           type="text"
                           placeholder={t("Consulting Services Agreement")}
                           value={dealFormState.contractSubject}
@@ -3314,9 +3314,9 @@ export default function DealManagementView({ initialTab = "dashboard", onNavigat
 
                 {/* TAB 5: SLA Milestones */}
                 {activeFormTab === "sla" && (
-                  <div className="space-y-4 animate-in fade-in duration-100">
+                  <div data-crm-stack="" className="space-y-4 animate-in fade-in duration-100">
                     <div className="border-b border-dashed border-slate-200 dark:border-zinc-803 pb-1">
-                      <h4 className="text-xs font-bold text-amber-600 uppercase font-mono tracking-wider">
+                      <h4 data-crm-heading="section" className="text-xs font-bold text-amber-600 uppercase font-mono tracking-wider">
                         {t("Process SLA Milestones Log History")}
                       </h4>
                     </div>
@@ -3339,7 +3339,7 @@ export default function DealManagementView({ initialTab = "dashboard", onNavigat
                                 <span className={`w-2 h-2 rounded-full ${hasEntry ? "bg-amber-500 animate-pulse" : "bg-slate-300 dark:bg-zinc-700"}`} />
                                 {getStageTranslation(st, lang)}
                               </span>
-                              <label className="inline-flex items-center gap-1.5 cursor-pointer">
+                              <label data-crm-label="" className="inline-flex items-center gap-1.5 cursor-pointer">
                                 <input
                                   type="checkbox"
                                   checked={hasEntry}
@@ -3361,19 +3361,19 @@ export default function DealManagementView({ initialTab = "dashboard", onNavigat
                                   }}
                                   className="rounded text-amber-600 focus:ring-amber-500 w-3.5 h-3.5 cursor-pointer"
                                 />
-                                <span className="text-[10px] text-slate-500 dark:text-zinc-400 font-bold uppercase tracking-wider">
+                                <span data-crm-caption="" className="text-[10px] text-slate-500 dark:text-zinc-400 font-bold uppercase tracking-wider">
                                   {t("Active / Set Date")}
                                 </span>
                               </label>
                             </div>
 
                             {hasEntry && (
-                              <div className="grid grid-cols-1 md:grid-cols-3 gap-3 animate-in slide-in-from-top-1 duration-100">
+                              <div data-crm-flow="" data-crm-grid="form" className="grid grid-cols-1 md:grid-cols-3 gap-3 animate-in slide-in-from-top-1 duration-100">
                                 <div>
-                                  <label className="block text-[9px] font-bold text-slate-400 dark:text-zinc-500 uppercase mb-1">
+                                  <label data-crm-label="" className="block text-[9px] font-bold text-slate-400 dark:text-zinc-500 uppercase mb-1">
                                     {t("Date")}
                                   </label>
-                                  <input
+                                  <input data-crm-field="control"
                                     type="text"
                                     value={entryDate}
                                     onChange={(e) => {
@@ -3388,10 +3388,10 @@ export default function DealManagementView({ initialTab = "dashboard", onNavigat
                                   />
                                 </div>
                                 <div className="md:col-span-2">
-                                  <label className="block text-[9px] font-bold text-slate-400 dark:text-zinc-500 uppercase mb-1">
+                                  <label data-crm-label="" className="block text-[9px] font-bold text-slate-400 dark:text-zinc-500 uppercase mb-1">
                                     {t("Stage Notes / Progress")}
                                   </label>
-                                  <input
+                                  <input data-crm-field="control"
                                     type="text"
                                     value={entryNotes}
                                     onChange={(e) => {
@@ -3420,14 +3420,14 @@ export default function DealManagementView({ initialTab = "dashboard", onNavigat
                   * Tüm tablardaki değişiklikleri sağ alttaki butonla tek seferde kaydedebilirsiniz.
                 </span>
                 <div className="flex gap-3">
-                  <button
+                  <button data-crm-button=""
                     type="button"
                     className="px-4 py-2 text-xs font-semibold bg-slate-100 dark:bg-zinc-800 hover:bg-slate-200 rounded-lg cursor-pointer text-slate-600 dark:text-zinc-200"
                     onClick={() => setIsAddModalOpen(false)}
                   >
                     Kapat
                   </button>
-                  <button
+                  <button data-crm-button=""
                     type="submit"
                     className="px-5 py-2 text-xs font-bold bg-[#16a34a] hover:bg-green-700 text-white rounded-lg cursor-pointer shadow-sm"
                   >
@@ -3455,7 +3455,7 @@ export default function DealManagementView({ initialTab = "dashboard", onNavigat
                   <Briefcase className="w-5 h-5" />
                 </div>
                 <div>
-                  <h3 
+                  <h3 data-crm-heading="section"
                     onClick={(e) => handleCompanyClick(e, selectedDeal.companyName, selectedDeal.companyId)}
                     className="font-extrabold text-slate-800 dark:text-zinc-100 text-sm leading-tight font-sans hover:text-indigo-600 dark:hover:text-indigo-400 cursor-pointer hover:underline transition-all flex items-center gap-1"
                     title={t("Go to Company Detail")}
@@ -3463,14 +3463,14 @@ export default function DealManagementView({ initialTab = "dashboard", onNavigat
                     🏢 {selectedDeal.companyName}
                   </h3>
                   <div className="flex items-center gap-2 mt-1">
-                    <span className="text-[10px] text-slate-450 dark:text-zinc-400 font-bold uppercase font-mono">Owner: {selectedDeal.owner || "GP"}</span>
+                    <span data-crm-caption="" className="text-[10px] text-slate-450 dark:text-zinc-400 font-bold uppercase font-mono">Owner: {selectedDeal.owner || "GP"}</span>
                     <span className="text-[10px] text-blue-500 font-bold tracking-tight">Stage: {selectedDeal.stage}</span>
                   </div>
                 </div>
               </div>
               
               <div className="flex items-center gap-2">
-                <button
+                <button data-crm-button=""
                   type="button"
                   onClick={() => {
                     handleOpenEditDeal(selectedDeal);
@@ -3482,7 +3482,7 @@ export default function DealManagementView({ initialTab = "dashboard", onNavigat
                   <span>{t("✍️ Edit All Tabs")}</span>
                 </button>
 
-                <button
+                <button data-crm-button=""
                   type="button"
                   onClick={() => setSelectedDeal(null)}
                   className="p-1 text-slate-400 hover:text-rose-500 transition-colors cursor-pointer"
@@ -3493,7 +3493,7 @@ export default function DealManagementView({ initialTab = "dashboard", onNavigat
             </div>
 
             {/* Sub Tabs group */}
-            <div className="flex border-b border-slate-100 dark:border-zinc-800/80 overflow-x-auto select-none bg-slate-50/20 dark:bg-black/15">
+            <div data-crm-scroll="horizontal" className="flex border-b border-slate-100 dark:border-zinc-800/80 overflow-x-auto select-none bg-slate-50/20 dark:bg-black/15">
               {[
                 "Overview",
                 "Emails", // Added "Emails" Tab requested
@@ -3501,7 +3501,7 @@ export default function DealManagementView({ initialTab = "dashboard", onNavigat
                 "Proposal & Won",
                 "History & Logs"
               ].map((tab) => (
-                <button
+                <button data-crm-button=""
                   key={tab}
                   type="button"
                   onClick={() => setActiveDrawerTab(tab)}
@@ -3521,15 +3521,15 @@ export default function DealManagementView({ initialTab = "dashboard", onNavigat
             </div>
 
             {/* Scrollable Drawer Body */}
-            <div className="flex-1 p-5 overflow-y-auto space-y-6 text-slate-700 dark:text-zinc-200">
+            <div data-crm-stack="" className="flex-1 p-5 overflow-y-auto space-y-6 text-slate-700 dark:text-zinc-200">
               
               {/* Tab 1: Overview */}
               {activeDrawerTab === "Overview" && (
-                <div className="space-y-5 animate-in fade-in duration-100">
+                <div data-crm-stack="" className="space-y-5 animate-in fade-in duration-100">
                   <div className="bg-slate-50 dark:bg-black/10 p-4 rounded-xl border border-slate-100 dark:border-zinc-800/80 space-y-3 font-sans">
-                    <h4 className="text-xs font-bold text-slate-800 dark:text-zinc-150 uppercase tracking-wide font-mono">{t("Opportunity Business Card Details")}</h4>
+                    <h4 data-crm-heading="section" className="text-xs font-bold text-slate-800 dark:text-zinc-150 uppercase tracking-wide font-mono">{t("Opportunity Business Card Details")}</h4>
                     
-                    <div className="grid grid-cols-2 gap-4 text-xs">
+                    <div data-crm-flow="" data-crm-grid="layout" className="grid grid-cols-2 gap-4 text-xs">
                       <div>
                         <span className="block text-[10px] text-zinc-400 capitalize font-mono font-bold">{t("Deal Name")}</span>
                         <span className="font-semibold">{selectedDeal.dealName || `${selectedDeal.companyName} Project`}</span>
@@ -3564,8 +3564,8 @@ export default function DealManagementView({ initialTab = "dashboard", onNavigat
                   </div>
 
                   <div className="bg-slate-50 dark:bg-black/10 p-4 rounded-xl border border-slate-101 space-y-3 font-sans">
-                    <h4 className="text-xs font-bold text-slate-800 dark:text-zinc-150 uppercase tracking-wide font-mono">{t("Opportunity Custom Metadata")}</h4>
-                    <div className="grid grid-cols-2 md:grid-cols-4 gap-3 text-xs">
+                    <h4 data-crm-heading="section" className="text-xs font-bold text-slate-800 dark:text-zinc-150 uppercase tracking-wide font-mono">{t("Opportunity Custom Metadata")}</h4>
+                    <div data-crm-flow="" data-crm-grid="layout" className="grid grid-cols-2 md:grid-cols-4 gap-3 text-xs">
                       <div>
                         <span className="block text-[8px] text-slate-400 font-mono">{t("LEAD SOURCE")}</span>
                         <span className="font-bold">{selectedDeal.leadSource || t("N/A")}</span>
@@ -3594,9 +3594,9 @@ export default function DealManagementView({ initialTab = "dashboard", onNavigat
                   </div>
 
                   {/* Pipeline Stage Timeline Tracker */}
-                  <div className="bg-slate-50 dark:bg-black/10 p-4 rounded-xl border border-slate-100 dark:border-zinc-800/80 space-y-4 font-sans shadow-2xs">
+                  <div data-crm-stack="" className="bg-slate-50 dark:bg-black/10 p-4 rounded-xl border border-slate-100 dark:border-zinc-800/80 space-y-4 font-sans shadow-2xs">
                     <div className="flex items-center justify-between border-b border-slate-150 dark:border-zinc-800 pb-2.5">
-                      <h4 className="text-xs font-black text-slate-800 dark:text-zinc-150 uppercase tracking-wide font-mono flex items-center gap-1.5">
+                      <h4 data-crm-heading="section" className="text-xs font-black text-slate-800 dark:text-zinc-150 uppercase tracking-wide font-mono flex items-center gap-1.5">
                         <Clock className="w-4 h-4 text-emerald-600 dark:text-emerald-400 shrink-0" />
                         {t("Process SLA Timeline Tracker")}
                       </h4>
@@ -3605,7 +3605,7 @@ export default function DealManagementView({ initialTab = "dashboard", onNavigat
                       </span>
                     </div>
 
-                    <div className="relative pl-6 space-y-6 before:absolute before:left-[7px] before:top-2 before:bottom-2 before:w-[2px] before:bg-slate-200 dark:before:bg-zinc-800 select-none">
+                    <div data-crm-stack="" className="relative pl-6 space-y-6 before:absolute before:left-[7px] before:top-2 before:bottom-2 before:w-[2px] before:bg-slate-200 dark:before:bg-zinc-800 select-none">
                       {(() => {
                         const currentStageIndex = activeStages.indexOf(selectedDeal.stage);
 
@@ -3682,7 +3682,7 @@ export default function DealManagementView({ initialTab = "dashboard", onNavigat
                                       {dateStr}
                                     </span>
 
-                                    <button
+                                    <button data-crm-button=""
                                       onClick={() => {
                                         setEditingSlaStage(st);
                                         setSlaEditDate(historyEntry?.date || new Date().toLocaleDateString("tr-TR"));
@@ -3697,13 +3697,13 @@ export default function DealManagementView({ initialTab = "dashboard", onNavigat
                                 </div>
 
                                 {isEditingSla ? (
-                                  <div className="mt-2 p-3 bg-white dark:bg-zinc-800 rounded-lg border border-slate-200 dark:border-zinc-700 space-y-2 animate-in slide-in-from-top-1 duration-100">
-                                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+                                  <div data-crm-card="surface" className="mt-2 p-3 bg-white dark:bg-zinc-800 rounded-lg border border-slate-200 dark:border-zinc-700 space-y-2 animate-in slide-in-from-top-1 duration-100">
+                                    <div data-crm-flow="" data-crm-grid="form" className="grid grid-cols-1 sm:grid-cols-3 gap-2">
                                       <div>
-                                        <label className="block text-[8px] font-bold text-slate-400 uppercase mb-0.5">
+                                        <label data-crm-label="" className="block text-[8px] font-bold text-slate-400 uppercase mb-0.5">
                                           {t("Date")}
                                         </label>
-                                        <input
+                                        <input data-crm-field="control"
                                           type="text"
                                           value={slaEditDate}
                                           onChange={(e) => setSlaEditDate(e.target.value)}
@@ -3712,10 +3712,10 @@ export default function DealManagementView({ initialTab = "dashboard", onNavigat
                                         />
                                       </div>
                                       <div className="sm:col-span-2">
-                                        <label className="block text-[8px] font-bold text-slate-400 uppercase mb-0.5">
+                                        <label data-crm-label="" className="block text-[8px] font-bold text-slate-400 uppercase mb-0.5">
                                           {t("Meeting / SLA Note")}
                                         </label>
-                                        <input
+                                        <input data-crm-field="control"
                                           type="text"
                                           value={slaEditNotes}
                                           onChange={(e) => setSlaEditNotes(e.target.value)}
@@ -3725,13 +3725,13 @@ export default function DealManagementView({ initialTab = "dashboard", onNavigat
                                       </div>
                                     </div>
                                     <div className="flex justify-end gap-1.5 pt-1">
-                                      <button
+                                      <button data-crm-button=""
                                         onClick={() => setEditingSlaStage(null)}
                                         className="px-2 py-1 text-[10px] bg-slate-100 hover:bg-slate-200 text-slate-600 dark:bg-zinc-700 dark:text-zinc-300 rounded font-bold cursor-pointer"
                                       >
                                         {t("Cancel")}
                                       </button>
-                                      <button
+                                      <button data-crm-button=""
                                         onClick={() => {
                                           const updatedHistory = [...(selectedDeal.stageHistory || [])];
                                           const existingIdx = updatedHistory.findIndex((h) => h.stage === st);
@@ -3764,9 +3764,9 @@ export default function DealManagementView({ initialTab = "dashboard", onNavigat
                   </div>
 
                   {/* Müşteri Görüşme Notları (Interview Notes Section) */}
-                  <div className="bg-slate-50 dark:bg-black/10 p-4 rounded-xl border border-slate-100 dark:border-zinc-805/80 space-y-4 font-sans">
+                  <div data-crm-stack="" className="bg-slate-50 dark:bg-black/10 p-4 rounded-xl border border-slate-100 dark:border-zinc-805/80 space-y-4 font-sans">
                     <div className="flex items-center justify-between border-b border-slate-150 dark:border-zinc-800 pb-2.5">
-                      <h4 className="text-sm font-bold text-slate-800 dark:text-zinc-150 uppercase tracking-wide font-mono flex items-center gap-1.5">
+                      <h4 data-crm-heading="section" className="text-sm font-bold text-slate-800 dark:text-zinc-150 uppercase tracking-wide font-mono flex items-center gap-1.5">
                         <FileText className="w-4 h-4 text-emerald-600 dark:text-emerald-400 shrink-0" />
                         📝 Müşteri Görüşme Notları
                       </h4>
@@ -3783,7 +3783,7 @@ export default function DealManagementView({ initialTab = "dashboard", onNavigat
                         </div>
                       ) : (
                         selectedDeal.dealNotes.map((note) => (
-                          <div key={note.id} className="p-3 bg-white dark:bg-[#1a1a19] rounded-lg border border-slate-100 dark:border-zinc-800/60 space-y-1 shadow-2xs relative group">
+                          <div data-crm-card="surface" key={note.id} className="p-3 bg-white dark:bg-[#1a1a19] rounded-lg border border-slate-100 dark:border-zinc-800/60 space-y-1 shadow-2xs relative group">
                             <div className="flex items-center justify-between text-[10px]">
                               <span className="font-bold text-slate-650 dark:text-zinc-450 flex items-center gap-1">
                                 <span className="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
@@ -3813,7 +3813,7 @@ export default function DealManagementView({ initialTab = "dashboard", onNavigat
 
                     {/* Add note Form */}
                     <div className="space-y-2">
-                      <textarea
+                      <textarea data-crm-field="multiline"
                         rows={2}
                         value={newNoteInput}
                         onChange={(e) => setNewNoteInput(e.target.value)}
@@ -3821,7 +3821,7 @@ export default function DealManagementView({ initialTab = "dashboard", onNavigat
                         className="w-full text-xs p-2.5 rounded-lg border border-slate-250 dark:border-zinc-850 bg-white dark:bg-[#111110] text-slate-800 dark:text-zinc-100 focus:outline-none focus:ring-1 focus:ring-emerald-500 dark:focus:ring-emerald-400 resize-none font-sans"
                       />
                       <div className="flex justify-end">
-                        <button
+                        <button data-crm-button=""
                           type="button"
                           disabled={!newNoteInput.trim()}
                           onClick={() => {
@@ -3849,7 +3849,7 @@ export default function DealManagementView({ initialTab = "dashboard", onNavigat
 
               {/* Tab 2: EMAIL COMMUNICATION CLIENT INSIDE DEALS (Microsoft Outlook integration) */}
               {activeDrawerTab === "Emails" && (
-                <div className="space-y-6 animate-in fade-in duration-100">
+                <div data-crm-stack="" className="space-y-6 animate-in fade-in duration-100">
                   
                   {/* Exchange Outlook synchronizer toggler box widget */}
                   <div className="bg-slate-50 dark:bg-black/10 p-4 rounded-xl border border-slate-150 dark:border-zinc-800/80 flex items-center justify-between gap-4">
@@ -3871,10 +3871,10 @@ export default function DealManagementView({ initialTab = "dashboard", onNavigat
                   </div>
 
                   {/* Complete Email Conversation stack */}
-                  <div className="space-y-4">
-                    <h4 className="text-xs font-bold text-slate-450 uppercase tracking-widest font-mono">Chronological History ({selectedDeal.dealEmails?.length || 0})</h4>
+                  <div data-crm-stack="" className="space-y-4">
+                    <h4 data-crm-heading="section" className="text-xs font-bold text-slate-450 uppercase tracking-widest font-mono">Chronological History ({selectedDeal.dealEmails?.length || 0})</h4>
                     
-                    <div className="space-y-4 max-h-[350px] overflow-y-auto pr-1">
+                    <div data-crm-stack="" className="space-y-4 max-h-[350px] overflow-y-auto pr-1">
                       {(!selectedDeal.dealEmails || selectedDeal.dealEmails.length === 0) ? (
                         <div className="p-6 text-center text-slate-400 italic font-mono text-[10px]">
                           No logged email logs yet. Draft one below!
@@ -3918,19 +3918,19 @@ export default function DealManagementView({ initialTab = "dashboard", onNavigat
                     </div>
 
                     {/* Compose Email form box */}
-                    <div className="bg-slate-50/50 dark:bg-black/10 p-4 rounded-xl border border-slate-150 dark:border-zinc-800/80 space-y-4 text-xs">
+                    <div data-crm-stack="" className="bg-slate-50/50 dark:bg-black/10 p-4 rounded-xl border border-slate-150 dark:border-zinc-800/80 space-y-4 text-xs">
                       <p className="text-[10px] font-black text-green-700 dark:text-green-450 uppercase font-mono tracking-wider">
                         📬 {t("Email dispatch panel (Outlook & Gmail integration)")}
                       </p>
 
                       {/* Recipient registration list */}
-                      <div className="space-y-1.5 p-2.5 bg-white dark:bg-zinc-900 border border-slate-150 dark:border-zinc-800 rounded-lg">
-                        <label className="block text-[9px] text-slate-400 dark:text-zinc-500 font-bold uppercase font-mono">
+                      <div data-crm-card="surface" className="space-y-1.5 p-2.5 bg-white dark:bg-zinc-900 border border-slate-150 dark:border-zinc-800 rounded-lg">
+                        <label data-crm-label="" className="block text-[9px] text-slate-400 dark:text-zinc-500 font-bold uppercase font-mono">
                           {t("Registered Contact Recipients")}
                         </label>
                         <div className="flex flex-wrap gap-1.5 py-1">
                           {/* Primary */}
-                          <button
+                          <button data-crm-button=""
                             type="button"
                             onClick={() => setEmailComposeTo(selectedDeal.contactEmail || "")}
                             className={`px-2 py-1 rounded text-[10px] font-bold border transition-all cursor-pointer select-none ${
@@ -3944,7 +3944,7 @@ export default function DealManagementView({ initialTab = "dashboard", onNavigat
 
                           {/* Alternatives */}
                           {(selectedDeal.otherEmails || []).map((alt) => (
-                            <button
+                            <button data-crm-button=""
                               key={alt}
                               type="button"
                               onClick={() => setEmailComposeTo(alt)}
@@ -3960,15 +3960,15 @@ export default function DealManagementView({ initialTab = "dashboard", onNavigat
                         </div>
 
                         {/* Register direct new mail input */}
-                        <div className="flex gap-1.5 items-center bg-slate-100 dark:bg-zinc-800 p-1 border border-slate-200 dark:border-zinc-700 rounded-lg mt-1">
-                          <input
+                        <div data-crm-toolbar="" className="flex gap-1.5 items-center bg-slate-100 dark:bg-zinc-800 p-1 border border-slate-200 dark:border-zinc-700 rounded-lg mt-1">
+                          <input data-crm-field="control"
                             type="email"
                             placeholder={t("Register a new alternative email address...")}
                             value={newOtherEmailInput}
                             onChange={(e) => setNewOtherEmailInput(e.target.value)}
                             className="bg-transparent border-none outline-none w-full text-[10px] text-slate-700 dark:text-zinc-200 px-1.5 py-0.5"
                           />
-                          <button
+                          <button data-crm-button=""
                             type="button"
                             onClick={() => {
                               const cleanEmail = newOtherEmailInput.trim();
@@ -4021,11 +4021,11 @@ export default function DealManagementView({ initialTab = "dashboard", onNavigat
                           <div className="flex items-center justify-between">
                             <div className="flex items-center gap-2 text-rose-700 dark:text-rose-400 font-sans">
                               <AlertTriangle className="w-4 h-4 shrink-0 stroke-[2.5]" />
-                              <h4 className="text-xs font-black uppercase tracking-wider font-mono">
+                              <h4 data-crm-heading="section" className="text-xs font-black uppercase tracking-wider font-mono">
                                 {t("Email connection & API auth error")} (CONNECTION ERROR)
                               </h4>
                             </div>
-                            <button
+                            <button data-crm-button=""
                               type="button"
                               onClick={() => setEmailSendError(null)}
                               className="text-[10px] font-bold text-rose-700 hover:text-rose-900 dark:text-rose-400 dark:hover:text-rose-200 font-mono cursor-pointer"
@@ -4033,7 +4033,7 @@ export default function DealManagementView({ initialTab = "dashboard", onNavigat
                               {t("[Clear]")}
                             </button>
                           </div>
-                          <div className="text-xs text-slate-700 dark:text-zinc-300 space-y-2 bg-white/70 dark:bg-black/30 p-3 rounded-lg border border-rose-100 dark:border-rose-950/20">
+                          <div data-crm-card="surface" className="text-xs text-slate-700 dark:text-zinc-300 space-y-2 bg-white/70 dark:bg-black/30 p-3 rounded-lg border border-rose-100 dark:border-rose-950/20">
                             <p className="font-bold text-rose-700 dark:text-rose-400">
                               {emailSendError.message}
                             </p>
@@ -4049,10 +4049,10 @@ export default function DealManagementView({ initialTab = "dashboard", onNavigat
                       )}
 
                       <form onSubmit={handleSendComposeEmail} className="space-y-3">
-                        <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                        <div data-crm-flow="" data-crm-grid="form" className="grid grid-cols-1 md:grid-cols-3 gap-3">
                           <div>
-                            <label className="block text-[9px] text-slate-400 dark:text-zinc-400 font-bold uppercase font-mono">{t("Recipient To *")}</label>
-                            <input
+                            <label data-crm-label="" className="block text-[9px] text-slate-400 dark:text-zinc-400 font-bold uppercase font-mono">{t("Recipient To *")}</label>
+                            <input data-crm-field="control"
                               type="text"
                               required
                               placeholder={t("client@company.com")}
@@ -4062,8 +4062,8 @@ export default function DealManagementView({ initialTab = "dashboard", onNavigat
                             />
                           </div>
                           <div>
-                            <label className="block text-[9px] text-slate-400 dark:text-zinc-400 font-bold uppercase font-mono">{t("BCC (Blind Copy)")}</label>
-                            <input
+                            <label data-crm-label="" className="block text-[9px] text-slate-400 dark:text-zinc-400 font-bold uppercase font-mono">{t("BCC (Blind Copy)")}</label>
+                            <input data-crm-field="control"
                               type="text"
                               placeholder={t("bcc@company.com")}
                               value={emailComposeBcc}
@@ -4072,8 +4072,8 @@ export default function DealManagementView({ initialTab = "dashboard", onNavigat
                             />
                           </div>
                           <div>
-                            <label className="block text-[9px] text-slate-400 dark:text-zinc-400 font-bold uppercase font-mono">{t("Email Subject *")}</label>
-                            <input
+                            <label data-crm-label="" className="block text-[9px] text-slate-400 dark:text-zinc-400 font-bold uppercase font-mono">{t("Email Subject *")}</label>
+                            <input data-crm-field="control"
                               type="text"
                               required
                               placeholder={t("Subject line")}
@@ -4085,8 +4085,8 @@ export default function DealManagementView({ initialTab = "dashboard", onNavigat
                         </div>
 
                         <div>
-                          <label className="block text-[9px] text-slate-400 dark:text-zinc-400 font-bold uppercase font-mono">{t("Message body *")}</label>
-                          <textarea
+                          <label data-crm-label="" className="block text-[9px] text-slate-400 dark:text-zinc-400 font-bold uppercase font-mono">{t("Message body *")}</label>
+                          <textarea data-crm-field="multiline"
                             placeholder={t("Email body...")}
                             required
                             value={emailComposeBody}
@@ -4095,10 +4095,10 @@ export default function DealManagementView({ initialTab = "dashboard", onNavigat
                           />
                         </div>
 
-                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pb-1 border-b border-dashed border-slate-150 dark:border-zinc-800">
+                        <div data-crm-grid="form" className="grid grid-cols-1 sm:grid-cols-2 gap-3 pb-1 border-b border-dashed border-slate-150 dark:border-zinc-800">
                           <div>
-                            <label className="block text-[9px] text-slate-400 dark:text-zinc-400 font-bold uppercase font-mono mb-1">{t("Send Mode / Mail Client")}</label>
-                            <select
+                            <label data-crm-label="" className="block text-[9px] text-slate-400 dark:text-zinc-400 font-bold uppercase font-mono mb-1">{t("Send Mode / Mail Client")}</label>
+                            <select data-crm-field="control"
                               value={emailClientMode}
                               onChange={(e) => setEmailClientMode(e.target.value as any)}
                               className="w-full p-1.5 border border-slate-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 rounded text-[11px] font-bold outline-none text-slate-700 dark:text-zinc-200 cursor-pointer"
@@ -4109,10 +4109,10 @@ export default function DealManagementView({ initialTab = "dashboard", onNavigat
                             </select>
                           </div>
                           <div>
-                            <label className="block text-[9px] text-slate-400 dark:text-zinc-400 font-bold uppercase font-mono mb-1">{t("Dosya Eki / Attachment File")}</label>
-                            <div className="flex items-center gap-1.5 bg-white dark:bg-zinc-800 border border-slate-200 dark:border-zinc-700 p-1.5 rounded">
+                            <label data-crm-label="" className="block text-[9px] text-slate-400 dark:text-zinc-400 font-bold uppercase font-mono mb-1">{t("Dosya Eki / Attachment File")}</label>
+                            <div data-crm-card="surface" className="flex items-center gap-1.5 bg-white dark:bg-zinc-800 border border-slate-200 dark:border-zinc-700 p-1.5 rounded">
                               <Paperclip className="w-3.5 h-3.5 text-slate-400 hover:text-slate-200" />
-                              <input
+                              <input data-crm-field="control"
                                 type="text"
                                 placeholder={t("Filename (e.g. opex_assessment_GP.pdf)")}
                                 value={emailComposeFile}
@@ -4127,7 +4127,7 @@ export default function DealManagementView({ initialTab = "dashboard", onNavigat
                           <span className="text-[9px] text-slate-400 dark:text-zinc-500 italic">
                             {t("After sending, a simulated reply will appear from {name}.").replace("{name}", selectedDeal.contactPerson)}
                           </span>
-                          <button
+                          <button data-crm-button=""
                             type="submit"
                             className="px-5 py-2.5 bg-green-600 hover:bg-green-700 text-white rounded-lg font-black shrink-0 cursor-pointer shadow-sm active:scale-95 transition-all flex items-center gap-1.5 uppercase font-mono text-[10px]"
                           >
@@ -4168,9 +4168,9 @@ export default function DealManagementView({ initialTab = "dashboard", onNavigat
 
               {/* Tab 5: History & Logs (Aktiviteler & Evraklar) */}
               {activeDrawerTab === "History & Logs" && (
-                <div className="space-y-6 animate-in fade-in duration-100">
+                <div data-crm-stack="" className="space-y-6 animate-in fade-in duration-100">
                   <div className="flex items-center justify-between border-b pb-2">
-                    <h4 className="text-xs font-bold text-slate-800 dark:text-zinc-150 uppercase tracking-wider font-mono">{t("Activities & Attachments")}</h4>
+                    <h4 data-crm-heading="section" className="text-xs font-bold text-slate-800 dark:text-zinc-150 uppercase tracking-wider font-mono">{t("Activities & Attachments")}</h4>
                     <span className="text-[10px] text-zinc-400 font-mono">{t("Chronology & Documents")}</span>
                   </div>
 
@@ -4182,7 +4182,7 @@ export default function DealManagementView({ initialTab = "dashboard", onNavigat
                   />
 
                   {/* Section 3: Document Attachments ("sözleşme pdf çıktısı buraya eklenebilmeli") */}
-                  <div className="bg-slate-50 dark:bg-black/15 p-4 rounded-xl border border-slate-200 dark:border-zinc-800 space-y-4">
+                  <div data-crm-stack="" className="bg-slate-50 dark:bg-black/15 p-4 rounded-xl border border-slate-200 dark:border-zinc-800 space-y-4">
                     <span className="text-xs font-extrabold text-slate-800 dark:text-zinc-150 flex items-center gap-1.5">
                       <Paperclip className="w-4 h-4 text-indigo-600" />
                       {t("Customer Documents & Contract Files")}
@@ -4190,9 +4190,9 @@ export default function DealManagementView({ initialTab = "dashboard", onNavigat
 
                     {/* Document List */}
                     {selectedDeal.documents && selectedDeal.documents.length > 0 ? (
-                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                      <div data-crm-flow="" data-crm-grid="layout" className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                         {selectedDeal.documents.map((doc) => (
-                          <div 
+                          <div data-crm-card="surface"
                             key={doc.id} 
                             className="p-2 border border-slate-200 dark:border-zinc-800/80 bg-white dark:bg-[#1a1a19] rounded-lg flex items-center justify-between text-xs group"
                           >
@@ -4208,7 +4208,7 @@ export default function DealManagementView({ initialTab = "dashboard", onNavigat
                               </div>
                             </div>
 
-                            <button
+                            <button data-crm-button=""
                               type="button"
                               onClick={() => {
                                 alert(t("Document '{name}' retrieved from local CRM archive. Download/view simulated.").replace("{name}", doc.name));
@@ -4228,7 +4228,7 @@ export default function DealManagementView({ initialTab = "dashboard", onNavigat
                     {/* Add Document Inline Form */}
                     <div className="border-t border-dashed border-slate-200 dark:border-zinc-800 pt-3 flex items-center gap-2">
                       <div className="flex-1">
-                        <input 
+                        <input data-crm-field="control"
                           type="text" 
                           placeholder={t("File name (e.g. Lean_Line_Audit.pdf)")}
                           value={newDocName}
@@ -4237,7 +4237,7 @@ export default function DealManagementView({ initialTab = "dashboard", onNavigat
                         />
                       </div>
                       <div className="w-24">
-                        <input 
+                        <input data-crm-field="control"
                           type="text" 
                           placeholder={t("e.g. 2 MB")}
                           value={newDocSize}
@@ -4245,7 +4245,7 @@ export default function DealManagementView({ initialTab = "dashboard", onNavigat
                           className="w-full p-1.5 bg-white dark:bg-zinc-850 border border-slate-250 dark:border-zinc-750 text-slate-800 dark:text-zinc-150 rounded text-xs outline-none focus:ring-1 focus:ring-indigo-500 font-mono"
                         />
                       </div>
-                      <button
+                      <button data-crm-button=""
                         type="button"
                         disabled={!newDocName.trim()}
                         onClick={() => {
@@ -4281,7 +4281,7 @@ export default function DealManagementView({ initialTab = "dashboard", onNavigat
 
             {/* Footer buttons */}
             <div className="p-4 border-t border-slate-100 dark:border-zinc-800 bg-slate-50/50 dark:bg-black/15 text-right">
-              <button
+              <button data-crm-button=""
                 type="button"
                 className="px-4 py-2 bg-slate-800 hover:bg-slate-900 text-white font-bold rounded-lg text-xs cursor-pointer"
                 onClick={() => setSelectedDeal(null)}
@@ -4298,15 +4298,15 @@ export default function DealManagementView({ initialTab = "dashboard", onNavigat
       {/* 7. ADD POPUP POPUPS/MODALS FOR PIPELINE MILESTONES       */}
       {/* ======================================================== */}
       {isAddingNewStagePopup && (
-        <div className="fixed inset-0 bg-[#0c0c0c]/50 dark:bg-[#000000]/70 backdrop-blur-xs flex items-center justify-center z-50 p-4" role="dialog" aria-modal="true">
-          <form onSubmit={handleAddNewStage} className="bg-white dark:bg-[#151515] w-full max-w-sm rounded-xl border border-slate-205 dark:border-zinc-800 p-5 space-y-4 animate-in fade-in zoom-in-95">
-            <h3 className="font-bold text-slate-800 dark:text-zinc-100 text-xs uppercase tracking-wide font-mono">
+        <div data-crm-overlay="" className="fixed inset-0 bg-[#0c0c0c]/50 dark:bg-[#000000]/70 backdrop-blur-xs flex items-center justify-center z-50 p-4" role="dialog" aria-modal="true">
+          <form data-crm-stack="" data-crm-modal="" onSubmit={handleAddNewStage} className="bg-white dark:bg-[#151515] w-full max-w-sm rounded-xl border border-slate-205 dark:border-zinc-800 p-5 space-y-4 animate-in fade-in zoom-in-95">
+            <h3 data-crm-heading="section" className="font-bold text-slate-800 dark:text-zinc-100 text-xs uppercase tracking-wide font-mono">
               Add Custom Pipeline Stage
             </h3>
             
             <div>
-              <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1">{t("Stage Milestone Name *")}</label>
-              <input
+              <label data-crm-label="" className="block text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1">{t("Stage Milestone Name *")}</label>
+              <input data-crm-field="control"
                 type="text"
                 required
                 placeholder={t("e.g. Executive Board Pitch")}
@@ -4317,14 +4317,14 @@ export default function DealManagementView({ initialTab = "dashboard", onNavigat
             </div>
 
             <div className="flex justify-end gap-2 text-xs">
-              <button
+              <button data-crm-button=""
                 type="button"
                 onClick={() => setIsAddingNewStagePopup(false)}
                 className="px-3 py-1.5 bg-slate-100 text-slate-600 rounded font-bold cursor-pointer"
               >
                 Cancel
               </button>
-              <button
+              <button data-crm-button=""
                 type="submit"
                 className="px-4 py-1.5 bg-green-600 hover:bg-green-700 text-white rounded font-bold cursor-pointer"
               >
@@ -4337,15 +4337,15 @@ export default function DealManagementView({ initialTab = "dashboard", onNavigat
 
       {/* Adding descriptions stage popup */}
       {isAddingDescPopup && (
-        <div className="fixed inset-0 bg-[#0c0c0c]/50 dark:bg-[#000000]/70 backdrop-blur-xs flex items-center justify-center z-50 p-4" role="dialog" aria-modal="true">
-          <form onSubmit={handleSaveStageDescription} className="bg-white dark:bg-[#151515] w-full max-w-sm rounded-xl border border-slate-205 dark:border-zinc-800 p-5 space-y-4 animate-in fade-in zoom-in-95">
-            <h3 className="font-bold text-slate-800 dark:text-zinc-100 text-xs uppercase tracking-wide font-mono">
+        <div data-crm-overlay="" className="fixed inset-0 bg-[#0c0c0c]/50 dark:bg-[#000000]/70 backdrop-blur-xs flex items-center justify-center z-50 p-4" role="dialog" aria-modal="true">
+          <form data-crm-stack="" data-crm-modal="" onSubmit={handleSaveStageDescription} className="bg-white dark:bg-[#151515] w-full max-w-sm rounded-xl border border-slate-205 dark:border-zinc-800 p-5 space-y-4 animate-in fade-in zoom-in-95">
+            <h3 data-crm-heading="section" className="font-bold text-slate-800 dark:text-zinc-100 text-xs uppercase tracking-wide font-mono">
               {t('Add Description: "{stage}"').replace("{stage}", isAddingDescPopup.stage)}
             </h3>
             
             <div>
-              <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1">{t("Observation Description")}</label>
-              <input
+              <label data-crm-label="" className="block text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1">{t("Observation Description")}</label>
+              <input data-crm-field="control"
                 type="text"
                 required
                 placeholder={t("Brief summary guide text of this milestone...")}
@@ -4356,14 +4356,14 @@ export default function DealManagementView({ initialTab = "dashboard", onNavigat
             </div>
 
             <div className="flex justify-end gap-2 text-xs">
-              <button
+              <button data-crm-button=""
                 type="button"
                 onClick={() => setIsAddingDescPopup(null)}
                 className="px-3 py-1.5 bg-slate-100 text-slate-600 rounded font-bold cursor-pointer"
               >
                 {t("Cancel")}
               </button>
-              <button
+              <button data-crm-button=""
                 type="submit"
                 className="px-4 py-1.5 bg-green-600 hover:bg-green-700 text-white rounded font-bold cursor-pointer"
               >
@@ -4376,9 +4376,9 @@ export default function DealManagementView({ initialTab = "dashboard", onNavigat
 
       {/* Renaming stage popup */}
       {isRenamingStagePopup && (
-        <div className="fixed inset-0 bg-[#0c0c0c]/50 dark:bg-[#000000]/70 backdrop-blur-xs flex items-center justify-center z-50 p-4" role="dialog" aria-modal="true">
-          <form onSubmit={handleRenameStage} className="bg-white dark:bg-[#151515] w-full max-w-sm rounded-xl border border-slate-205 dark:border-zinc-800 p-5 space-y-4 animate-in fade-in zoom-in-95">
-            <h3 className="font-bold text-slate-800 dark:text-zinc-100 text-xs uppercase tracking-wide font-mono">
+        <div data-crm-overlay="" className="fixed inset-0 bg-[#0c0c0c]/50 dark:bg-[#000000]/70 backdrop-blur-xs flex items-center justify-center z-50 p-4" role="dialog" aria-modal="true">
+          <form data-crm-stack="" data-crm-modal="" onSubmit={handleRenameStage} className="bg-white dark:bg-[#151515] w-full max-w-sm rounded-xl border border-slate-205 dark:border-zinc-800 p-5 space-y-4 animate-in fade-in zoom-in-95">
+            <h3 data-crm-heading="section" className="font-bold text-slate-800 dark:text-zinc-100 text-xs uppercase tracking-wide font-mono">
               {t("Rename Stage")}
             </h3>
             
@@ -4386,8 +4386,8 @@ export default function DealManagementView({ initialTab = "dashboard", onNavigat
               <p className="text-[11px] text-slate-500 mb-2">
                 {t('Specify a new title for the "{stage}" stage. All opportunities under this stage will be updated automatically.').replace("{stage}", isRenamingStagePopup)}
               </p>
-              <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1 uppercase text-slate-650">{t("New Stage Name *")}</label>
-              <input
+              <label data-crm-label="" className="block text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1 uppercase text-slate-650">{t("New Stage Name *")}</label>
+              <input data-crm-field="control"
                 type="text"
                 required
                 disabled={isSavingStage}
@@ -4400,7 +4400,7 @@ export default function DealManagementView({ initialTab = "dashboard", onNavigat
 
             {stageSaveError && <p role="alert" className="text-xs text-red-600">{stageSaveError}</p>}
             <div className="flex justify-end gap-2 text-xs pt-1">
-              <button
+              <button data-crm-button=""
                 type="button"
                 disabled={isSavingStage}
                 onClick={() => {
@@ -4411,7 +4411,7 @@ export default function DealManagementView({ initialTab = "dashboard", onNavigat
               >
                 {t("Cancel")}
               </button>
-              <button
+              <button data-crm-button=""
                 type="submit"
                 disabled={isSavingStage}
                 className="px-4 py-1.5 bg-[#0078D4] hover:bg-blue-600 text-white rounded font-bold cursor-pointer"
@@ -4425,8 +4425,8 @@ export default function DealManagementView({ initialTab = "dashboard", onNavigat
 
       {/* Aşama hatırlatma ayarları popup */}
       {reminderSettingsPopup && (
-        <div className="fixed inset-0 bg-[#0c0c0c]/50 dark:bg-[#000000]/70 backdrop-blur-xs flex items-center justify-center z-50 p-4" role="dialog" aria-modal="true">
-          <form
+        <div data-crm-overlay="" className="fixed inset-0 bg-[#0c0c0c]/50 dark:bg-[#000000]/70 backdrop-blur-xs flex items-center justify-center z-50 p-4" role="dialog" aria-modal="true">
+          <form data-crm-stack="" data-crm-modal=""
             onSubmit={(e) => {
               e.preventDefault();
               const all = getDealStageReminderSettings();
@@ -4435,14 +4435,14 @@ export default function DealManagementView({ initialTab = "dashboard", onNavigat
             }}
             className="bg-white dark:bg-[#151515] w-full max-w-sm rounded-xl border border-slate-205 dark:border-zinc-800 p-5 space-y-4 animate-in fade-in zoom-in-95"
           >
-            <h3 className="font-bold text-slate-800 dark:text-zinc-100 text-xs uppercase tracking-wide font-mono">
+            <h3 data-crm-heading="section" className="font-bold text-slate-800 dark:text-zinc-100 text-xs uppercase tracking-wide font-mono">
               🔔 {t('Reminder Settings: "{stage}"').replace("{stage}", reminderSettingsPopup)}
             </h3>
             <p className="text-[11px] text-slate-500 dark:text-zinc-400">
               {t("A deal that has been sitting in this stage will trigger both an e-mail and a bell notification to its owner.")}
             </p>
 
-            <label className="flex items-center gap-2 text-xs font-bold text-slate-700 dark:text-zinc-300 cursor-pointer">
+            <label data-crm-label="" className="flex items-center gap-2 text-xs font-bold text-slate-700 dark:text-zinc-300 cursor-pointer">
               <input
                 type="checkbox"
                 checked={reminderSettingsForm.enabled}
@@ -4453,10 +4453,10 @@ export default function DealManagementView({ initialTab = "dashboard", onNavigat
             </label>
 
             <div>
-              <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1">
+              <label data-crm-label="" className="block text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1">
                 {t("Send first reminder after (days)")}
               </label>
-              <input
+              <input data-crm-field="control"
                 type="number"
                 min={1}
                 required
@@ -4468,10 +4468,10 @@ export default function DealManagementView({ initialTab = "dashboard", onNavigat
             </div>
 
             <div>
-              <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1">
+              <label data-crm-label="" className="block text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1">
                 {t("Repeat every (days, 0 = only once)")}
               </label>
-              <input
+              <input data-crm-field="control"
                 type="number"
                 min={0}
                 disabled={!reminderSettingsForm.enabled}
@@ -4482,14 +4482,14 @@ export default function DealManagementView({ initialTab = "dashboard", onNavigat
             </div>
 
             <div className="flex justify-end gap-2 text-xs pt-1">
-              <button
+              <button data-crm-button=""
                 type="button"
                 onClick={() => setReminderSettingsPopup(null)}
                 className="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 dark:bg-zinc-800 dark:hover:bg-zinc-700 text-slate-600 dark:text-zinc-300 rounded font-bold cursor-pointer"
               >
                 {t("Cancel")}
               </button>
-              <button
+              <button data-crm-button=""
                 type="submit"
                 className="px-4 py-1.5 bg-[#0078D4] hover:bg-blue-600 text-white rounded font-bold cursor-pointer"
               >
@@ -4502,9 +4502,9 @@ export default function DealManagementView({ initialTab = "dashboard", onNavigat
 
       {/* Deleting stage popup */}
       {isDeletingStagePopup && (
-        <div className="fixed inset-0 bg-[#0c0c0c]/50 dark:bg-[#000000]/70 backdrop-blur-xs flex items-center justify-center z-50 p-4" role="dialog" aria-modal="true">
-          <form onSubmit={handleConfirmDeleteStage} className="bg-white dark:bg-[#151515] w-full max-w-sm rounded-xl border border-slate-205 dark:border-zinc-800 p-5 space-y-4 animate-in fade-in zoom-in-95">
-            <h3 className="font-bold text-slate-850 dark:text-zinc-100 text-xs uppercase tracking-wide font-mono text-rose-600 dark:text-rose-450">
+        <div data-crm-overlay="" className="fixed inset-0 bg-[#0c0c0c]/50 dark:bg-[#000000]/70 backdrop-blur-xs flex items-center justify-center z-50 p-4" role="dialog" aria-modal="true">
+          <form data-crm-stack="" data-crm-modal="" onSubmit={handleConfirmDeleteStage} className="bg-white dark:bg-[#151515] w-full max-w-sm rounded-xl border border-slate-205 dark:border-zinc-800 p-5 space-y-4 animate-in fade-in zoom-in-95">
+            <h3 data-crm-heading="section" className="font-bold text-slate-850 dark:text-zinc-100 text-xs uppercase tracking-wide font-mono text-rose-600 dark:text-rose-450">
               {t("Delete Stage")}
             </h3>
             
@@ -4521,8 +4521,8 @@ export default function DealManagementView({ initialTab = "dashboard", onNavigat
                   </p>
                   
                   <div>
-                    <label className="block text-[9px] font-black uppercase text-slate-500 mb-1">{t("Target Stage")}</label>
-                    <select
+                    <label data-crm-label="" className="block text-[9px] font-black uppercase text-slate-500 mb-1">{t("Target Stage")}</label>
+                    <select data-crm-field="control"
                       value={deleteStageTargetMigration}
                       onChange={(e) => setDeleteStageTargetMigration(e.target.value)}
                       className="w-full bg-white dark:bg-zinc-800 border border-slate-200 dark:border-zinc-700 rounded p-1.5 text-xs text-slate-800 dark:text-white"
@@ -4544,14 +4544,14 @@ export default function DealManagementView({ initialTab = "dashboard", onNavigat
             </div>
 
             <div className="flex justify-end gap-2 text-xs pt-1">
-              <button
+              <button data-crm-button=""
                 type="button"
                 onClick={() => setIsDeletingStagePopup(null)}
                 className="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 dark:bg-zinc-800 dark:hover:bg-zinc-700 text-slate-600 dark:text-zinc-300 rounded font-bold cursor-pointer"
               >
                 {t("Cancel")}
               </button>
-              <button
+              <button data-crm-button=""
                 type="submit"
                 className="px-4 py-1.5 bg-rose-600 hover:bg-rose-700 text-white rounded font-bold cursor-pointer font-black"
               >
@@ -4566,8 +4566,8 @@ export default function DealManagementView({ initialTab = "dashboard", onNavigat
       {/* 8. CRM FOLLOW-UP REMINDER MAILBOX DIALOG MODAL           */}
       {/* ======================================================== */}
       {isReminderMailboxOpen && reminderSelectedDeal && (
-        <div className="fixed inset-0 bg-[#0c0c0c]/60 dark:bg-[#000000]/80 backdrop-blur-xs flex items-center justify-center z-50 p-4" role="dialog" aria-modal="true">
-          <div className="bg-white dark:bg-[#151515] w-full max-w-2xl rounded-xl border border-slate-200 dark:border-zinc-800 shadow-2xl flex flex-col max-h-[90vh] overflow-hidden animate-in fade-in zoom-in-95 duration-100">
+        <div data-crm-overlay="" className="fixed inset-0 bg-[#0c0c0c]/60 dark:bg-[#000000]/80 backdrop-blur-xs flex items-center justify-center z-50 p-4" role="dialog" aria-modal="true">
+          <div data-crm-modal="" data-crm-card="surface" className="bg-white dark:bg-[#151515] w-full max-w-2xl rounded-xl border border-slate-200 dark:border-zinc-800 shadow-2xl flex flex-col max-h-[90vh] overflow-hidden animate-in fade-in zoom-in-95 duration-100">
             
             {/* Modal Header */}
             <div className="flex items-center justify-between p-4 border-b border-slate-100 dark:border-zinc-800/80">
@@ -4576,7 +4576,7 @@ export default function DealManagementView({ initialTab = "dashboard", onNavigat
                   <Mail className="w-4 h-4" />
                 </div>
                 <div>
-                  <h3 className="font-extrabold text-slate-800 dark:text-zinc-100 text-sm leading-tight font-sans">
+                  <h3 data-crm-heading="section" className="font-extrabold text-slate-800 dark:text-zinc-100 text-sm leading-tight font-sans">
                     {t("Proposal Reminder & Follow-up Mailbox")}
                   </h3>
                   <p className="text-[10px] text-slate-450 dark:text-zinc-500 font-medium">
@@ -4584,7 +4584,7 @@ export default function DealManagementView({ initialTab = "dashboard", onNavigat
                   </p>
                 </div>
               </div>
-              <button
+              <button data-crm-button=""
                 type="button"
                 className="text-slate-400 hover:text-slate-650 dark:hover:text-zinc-300 p-0.5 cursor-pointer"
                 onClick={() => setIsReminderMailboxOpen(false)}
@@ -4594,18 +4594,18 @@ export default function DealManagementView({ initialTab = "dashboard", onNavigat
             </div>
 
             {/* Modal Body */}
-            <div className="overflow-y-auto p-5 space-y-4 text-xs text-slate-700 dark:text-zinc-250 flex-1 grid grid-cols-1 lg:grid-cols-12 gap-4">
+            <div data-crm-stack="" data-crm-grid="layout" className="overflow-y-auto p-5 space-y-4 text-xs text-slate-700 dark:text-zinc-250 flex-1 grid grid-cols-1 lg:grid-cols-12 gap-4">
               
               {emailSendError && (
                 <div className="lg:col-span-12 p-4 rounded-xl border border-rose-200 bg-rose-50/20 dark:border-rose-950/40 dark:bg-rose-950/10 space-y-2 animate-in slide-in-from-top-2 duration-200 shadow-sm">
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2 text-rose-700 dark:text-rose-400 font-sans">
                       <AlertTriangle className="w-4 h-4 shrink-0 stroke-[2.5]" />
-                      <h4 className="text-xs font-black uppercase tracking-wider font-mono">
+                      <h4 data-crm-heading="section" className="text-xs font-black uppercase tracking-wider font-mono">
                         E-POSTA BAĞLANTI &amp; API AUTH HATASI (CONNECTION ERROR)
                       </h4>
                     </div>
-                    <button
+                    <button data-crm-button=""
                       type="button"
                       onClick={() => setEmailSendError(null)}
                       className="text-[10px] font-bold text-rose-700 hover:text-rose-900 dark:text-rose-400 dark:hover:text-rose-200 font-mono cursor-pointer"
@@ -4613,7 +4613,7 @@ export default function DealManagementView({ initialTab = "dashboard", onNavigat
                       [Temizle]
                     </button>
                   </div>
-                  <div className="text-xs text-slate-700 dark:text-zinc-300 space-y-2 bg-white/70 dark:bg-black/30 p-3 rounded-lg border border-rose-100 dark:border-rose-950/20">
+                  <div data-crm-card="surface" className="text-xs text-slate-700 dark:text-zinc-300 space-y-2 bg-white/70 dark:bg-black/30 p-3 rounded-lg border border-rose-100 dark:border-rose-950/20">
                     <p className="font-bold text-rose-700 dark:text-rose-400">
                       {emailSendError.message}
                     </p>
@@ -4629,13 +4629,13 @@ export default function DealManagementView({ initialTab = "dashboard", onNavigat
               )}
 
               {/* Left Column: Template Options & Customizer (5 cols) */}
-              <div className="lg:col-span-5 space-y-4">
+              <div data-crm-stack="" className="lg:col-span-5 space-y-4">
                 <div>
-                  <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1.5 font-mono">
+                  <label data-crm-label="" className="block text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1.5 font-mono">
                     Hatırlatıcı Zamanlaması
                   </label>
-                  <div className="grid grid-cols-2 gap-2">
-                    <button
+                  <div data-crm-flow="" data-crm-grid="layout" className="grid grid-cols-2 gap-2">
+                    <button data-crm-button=""
                       type="button"
                       onClick={() => {
                         setReminderTemplateMode("7_day");
@@ -4657,7 +4657,7 @@ export default function DealManagementView({ initialTab = "dashboard", onNavigat
                       <p className="text-[9px] opacity-75 mt-0.5">Yenilikçi teknik ve ticari destek rehberi.</p>
                     </button>
 
-                    <button
+                    <button data-crm-button=""
                       type="button"
                       onClick={() => {
                         setReminderTemplateMode("20_day");
@@ -4683,7 +4683,7 @@ export default function DealManagementView({ initialTab = "dashboard", onNavigat
 
                 {/* Custom Optional Templates */}
                 <div className="space-y-2">
-                  <span className="block text-[10px] font-bold text-slate-500 uppercase tracking-widest font-mono">
+                  <span data-crm-caption="" className="block text-[10px] font-bold text-slate-500 uppercase tracking-widest font-mono">
                     Alternatif Hazır Şablonlar
                   </span>
                   
@@ -4700,7 +4700,7 @@ export default function DealManagementView({ initialTab = "dashboard", onNavigat
                         body: "Sayın {{İlgiliKişi}},\n\nYakın zamanda paylaştığımız {{Projeİçeriği}} projesi teklifiyle ilgili üst yönetiminizin bütçe ve fizibilite kararlarını desteklemek adına ek bir analiz sunumu gerçekleştirebiliriz.\n\nSüreç planlamanızı görüşmek amacıyla kısa bir online toplantı set edebilir miyiz?\n\nSaygılarımla,\n{{Yönetici}}"
                       }
                     ].map((temp, i) => (
-                      <button
+                      <button data-crm-button=""
                         key={i}
                         type="button"
                         onClick={() => {
@@ -4718,10 +4718,10 @@ export default function DealManagementView({ initialTab = "dashboard", onNavigat
 
                 {/* Active Client Mail Selection */}
                 <div>
-                  <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1.5 font-mono">
+                  <label data-crm-label="" className="block text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1.5 font-mono">
                     Gönderim Kanalı / İletişim Tarzı
                   </label>
-                  <select
+                  <select data-crm-field="control"
                     value={reminderClientType}
                     onChange={(e: any) => setReminderClientType(e.target.value)}
                     className="w-full p-2 rounded-lg bg-[#fbfbfb] dark:bg-zinc-800 border border-slate-200 dark:border-zinc-700 text-xs font-semibold outline-none text-slate-700 dark:text-zinc-200"
@@ -4747,8 +4747,8 @@ export default function DealManagementView({ initialTab = "dashboard", onNavigat
               {/* Right Column: Mail editor fields (7 cols) */}
               <div className="lg:col-span-7 flex flex-col gap-3">
                 <div className="space-y-1">
-                  <label className="block text-[9px] font-bold text-slate-450 uppercase tracking-widest font-mono">ALICI / TO</label>
-                  <input
+                  <label data-crm-label="" className="block text-[9px] font-bold text-slate-450 uppercase tracking-widest font-mono">ALICI / TO</label>
+                  <input data-crm-field="control"
                     type="text"
                     disabled
                     value={`${reminderSelectedDeal.contactPerson} (${reminderSelectedDeal.contactEmail || "E-Posta Belirtilmemiş"})`}
@@ -4757,8 +4757,8 @@ export default function DealManagementView({ initialTab = "dashboard", onNavigat
                 </div>
 
                 <div className="space-y-1">
-                  <label className="block text-[9px] font-bold text-slate-450 uppercase tracking-widest font-mono">E-POSTA KONUSU / SUBJECT</label>
-                  <input
+                  <label data-crm-label="" className="block text-[9px] font-bold text-slate-450 uppercase tracking-widest font-mono">E-POSTA KONUSU / SUBJECT</label>
+                  <input data-crm-field="control"
                     type="text"
                     value={reminderMailSubject}
                     onChange={(e) => setReminderMailSubject(e.target.value)}
@@ -4767,8 +4767,8 @@ export default function DealManagementView({ initialTab = "dashboard", onNavigat
                 </div>
 
                 <div className="space-y-1 flex-1 flex flex-col">
-                  <label className="block text-[9px] font-bold text-slate-450 uppercase tracking-widest font-mono">MESAJ İÇERİĞİ / MESSAGE BODY</label>
-                  <textarea
+                  <label data-crm-label="" className="block text-[9px] font-bold text-slate-450 uppercase tracking-widest font-mono">MESAJ İÇERİĞİ / MESSAGE BODY</label>
+                  <textarea data-crm-field="multiline"
                     rows={9}
                     value={reminderMailBody}
                     onChange={(e) => setReminderMailBody(e.target.value)}
@@ -4785,14 +4785,14 @@ export default function DealManagementView({ initialTab = "dashboard", onNavigat
                 Açık Kalma Süresi: {reminderSelectedDeal.currentStageDuration || 0} Gün
               </span>
               <div className="flex gap-2">
-                <button
+                <button data-crm-button=""
                   type="button"
                   className="px-4 py-2 bg-slate-100 hover:bg-slate-200 dark:bg-zinc-800 dark:hover:bg-zinc-700 text-slate-600 dark:text-zinc-300 font-bold rounded-lg text-xs cursor-pointer"
                   onClick={() => setIsReminderMailboxOpen(false)}
                 >
                   {t("Cancel")}
                 </button>
-                <button
+                <button data-crm-button=""
                   type="button"
                   className="px-4 py-2 bg-green-600 hover:bg-green-700 text-white font-extrabold rounded-lg text-xs flex items-center gap-1.5 cursor-pointer shadow-sm active:scale-95 transition-transform"
                   onClick={handleSendReminderMail}
@@ -4809,26 +4809,26 @@ export default function DealManagementView({ initialTab = "dashboard", onNavigat
 
       {/* Custom Global Confirmation Dialog */}
       {confirmDeleteModal.isOpen && (
-        <div className="fixed inset-0 bg-black/60 backdrop-blur-xs flex items-center justify-center z-[9999] p-4 font-sans antialiased animate-fade-in text-slate-800 dark:text-zinc-200" role="dialog" aria-modal="true">
-          <div className="bg-white dark:bg-[#181818] w-full max-w-sm rounded-xl border border-slate-205 dark:border-zinc-805 shadow-2xl p-6 text-center animate-in zoom-in-95 duration-100">
-            <div className="mx-auto w-12 h-12 bg-rose-50 dark:bg-rose-950/25 rounded-full flex items-center justify-center text-rose-500 mb-4">
+        <div data-crm-overlay="" className="fixed inset-0 bg-black/60 backdrop-blur-xs flex items-center justify-center z-[9999] p-4 font-sans antialiased animate-fade-in text-slate-800 dark:text-zinc-200" role="dialog" aria-modal="true">
+          <div data-crm-modal="" data-crm-card="padded" className="bg-white dark:bg-[#181818] w-full max-w-sm rounded-xl border border-slate-205 dark:border-zinc-805 shadow-2xl p-6 text-center animate-in zoom-in-95 duration-100">
+            <div data-crm-icon-box="" className="mx-auto w-12 h-12 bg-rose-50 dark:bg-rose-950/25 rounded-full flex items-center justify-center text-rose-500 mb-4">
               <Trash2 className="w-6 h-6 animate-pulse" />
             </div>
-            <h3 className="font-extrabold text-slate-800 dark:text-zinc-100 text-sm mb-2">
+            <h3 data-crm-heading="section" className="font-extrabold text-slate-800 dark:text-zinc-100 text-sm mb-2">
               {confirmDeleteModal.title || t("Delete Record")}
             </h3>
             <p className="text-slate-500 dark:text-zinc-400 text-xs mb-6 font-semibold">
               {confirmDeleteModal.message || t("Move to recycle bin?")}
             </p>
             <div className="flex gap-3 justify-center select-none font-bold">
-              <button
+              <button data-crm-button=""
                 type="button"
                 onClick={() => setConfirmDeleteModal({ isOpen: false, onConfirm: () => {} })}
                 className="border border-slate-200 dark:border-zinc-800 text-slate-600 dark:text-zinc-300 hover:bg-slate-50 dark:hover:bg-zinc-900 px-4 py-2 text-xs rounded-lg transition-colors cursor-pointer w-24"
               >
                 {t("Cancel")}
               </button>
-              <button
+              <button data-crm-button=""
                 type="button"
                 onClick={() => {
                   confirmDeleteModal.onConfirm();

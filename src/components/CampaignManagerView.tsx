@@ -620,17 +620,17 @@ export default function CampaignManagerView({ onPushToMailComposer }: CampaignMa
   const mainTotalCount = isEmail ? campaigns.length : posts.length;
 
   return (
-    <div className="space-y-6" id="lead-campaign-root">
+    <div data-crm-stack="" data-crm-screen="CampaignManagerView" className="space-y-6" id="lead-campaign-root">
       
       {/* Dynamic Unified Header with Segment Link Toggle */}
-      <div className="bg-white dark:bg-[#1b1a19] p-6 rounded border border-[#EDEBE9] dark:border-[#323130] shadow-sm flex flex-col xl:flex-row xl:items-center xl:justify-between gap-5 relative overflow-hidden">
-        <div className="absolute top-0 left-0 right-0 h-1.5 bg-gradient-to-r from-emerald-500 via-[#0078D4] to-blue-500" />
-        <div className="flex flex-col sm:flex-row sm:items-center gap-4">
+      <div data-crm-card="padded" data-crm-header="" className="bg-white dark:bg-[#1b1a19] p-6 rounded border border-[#EDEBE9] dark:border-[#323130] shadow-sm flex flex-col xl:flex-row xl:items-center xl:justify-between gap-5 relative overflow-hidden">
+        <div data-crm-decoration="" className="absolute top-0 left-0 right-0 h-1.5 bg-gradient-to-r from-emerald-500 via-[#0078D4] to-blue-500" />
+        <div data-crm-header-copy="" className="flex flex-col sm:flex-row sm:items-center gap-4">
           <div className="bg-gradient-to-tr from-[#0078D4] to-indigo-500 p-2.5 rounded text-white shadow self-start sm:self-auto shrink-0 animate-pulse">
             {isEmail ? <Mail className="w-6 h-6" /> : <CalendarIcon className="w-6 h-6" />}
           </div>
           <div>
-            <h1 className="text-sm font-bold tracking-tight text-slate-800 dark:text-slate-100 flex items-center gap-2 flex-wrap">
+            <h1 data-crm-heading="page" className="text-sm font-bold tracking-tight text-slate-800 dark:text-slate-100 flex items-center gap-2 flex-wrap">
               {isEmail ? t("Email Campaign Scheduler") : t("LinkedIn Post Scheduler")}
               <span className="text-[10px] bg-slate-100 dark:bg-[#252423] border border-[#EDEBE9] dark:border-[#323130] text-[#0078D4] dark:text-brand-300 px-2.5 py-0.5 rounded font-mono">
                 {isEmail ? t("B2B Outreach Matrix") : t("Playwright Automation")}
@@ -645,8 +645,8 @@ export default function CampaignManagerView({ onPushToMailComposer }: CampaignMa
         </div>
 
         {/* Dynamic Nav Tabs to switch Channel right in the Page Header */}
-        <div className="flex items-center gap-1.5 bg-slate-50 dark:bg-[#252423] p-1 rounded border border-[#EDEBE9] dark:border-[#323130] w-fit shrink-0">
-          <button
+        <div data-crm-toolbar="" data-crm-header-actions="" className="flex items-center gap-1.5 bg-slate-50 dark:bg-[#252423] p-1 rounded border border-[#EDEBE9] dark:border-[#323130] w-fit shrink-0">
+          <button data-crm-button=""
             type="button"
             onClick={() => setSubTab("linkedin")}
             className={`px-3 py-1.5 rounded text-xs font-bold transition flex items-center gap-2 cursor-pointer ${
@@ -659,7 +659,7 @@ export default function CampaignManagerView({ onPushToMailComposer }: CampaignMa
             {t("LinkedIn posts")}
           </button>
           
-          <button
+          <button data-crm-button=""
             type="button"
             onClick={() => setSubTab("email")}
             className={`px-3 py-1.5 rounded text-xs font-bold transition flex items-center gap-2 cursor-pointer ${
@@ -674,8 +674,8 @@ export default function CampaignManagerView({ onPushToMailComposer }: CampaignMa
         </div>
 
         {/* Header Action Toolkit */}
-        <div className="flex items-center gap-2 self-start xl:self-auto flex-wrap">
-          <button
+        <div data-crm-header-actions="" className="flex items-center gap-2 self-start xl:self-auto flex-wrap">
+          <button data-crm-button=""
             onClick={handleSeedCampaignData}
             id="campaign-manager-seed-demo"
             className="px-3 py-1.5 rounded bg-[#FAF9F8] dark:bg-[#252423] hover:bg-slate-100 dark:hover:bg-[#323130] text-xs text-slate-700 dark:text-slate-200 border border-[#EDEBE9] dark:border-[#323130] font-semibold transition flex items-center gap-1.5 cursor-pointer shadow-sm text-[11px]"
@@ -685,7 +685,7 @@ export default function CampaignManagerView({ onPushToMailComposer }: CampaignMa
 {isEmail ? t("Seed Emails") : t("Seed Posts")}
           </button>
 
-          <button
+          <button data-crm-button=""
             onClick={handleSync}
             id="campaign-manager-sync"
             className="px-3 py-1.5 rounded bg-[#FAF9F8] dark:bg-[#252423] hover:bg-slate-100 dark:hover:bg-[#323130] text-xs text-slate-700 dark:text-slate-200 border border-[#EDEBE9] dark:border-[#323130] font-semibold transition flex items-center gap-1.5 cursor-pointer shadow-sm text-[11px]"
@@ -695,7 +695,7 @@ export default function CampaignManagerView({ onPushToMailComposer }: CampaignMa
           </button>
 
           {!isEmail && (
-            <button
+            <button data-crm-button=""
               onClick={handleConfigureCookies}
               id="campaign-manager-cookies"
               className="px-3 py-1.5 rounded bg-[#0078D4] hover:bg-[#106ebe] text-xs text-white font-semibold transition flex items-center gap-1.5 cursor-pointer shadow-sm text-[11px]"
@@ -708,10 +708,10 @@ export default function CampaignManagerView({ onPushToMailComposer }: CampaignMa
       </div>
 
       {/* Dynamic Stats Indicators Grid */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4" id="campaign-stats-banner">
-        <div className="bg-white dark:bg-[#1b1a19] border border-[#EDEBE9] dark:border-[#323130] rounded p-4 flex items-center justify-between shadow-sm">
+      <div data-crm-flow="" data-crm-grid="layout" className="grid grid-cols-2 md:grid-cols-4 gap-4" id="campaign-stats-banner">
+        <div data-crm-card="padded" className="bg-white dark:bg-[#1b1a19] border border-[#EDEBE9] dark:border-[#323130] rounded p-4 flex items-center justify-between shadow-sm">
           <div>
-            <span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider block">{t("Scheduled")}</span>
+            <span data-crm-caption="" className="text-[10px] text-slate-400 font-bold uppercase tracking-wider block">{t("Scheduled")}</span>
             <span className="text-xl font-bold tracking-tight text-blue-600 dark:text-blue-400 mt-1 block">
               {mainScheduledCount}
             </span>
@@ -722,9 +722,9 @@ export default function CampaignManagerView({ onPushToMailComposer }: CampaignMa
           </div>
         </div>
 
-        <div className="bg-white dark:bg-[#1b1a19] border border-[#EDEBE9] dark:border-[#323130] rounded p-4 flex items-center justify-between shadow-sm">
+        <div data-crm-card="padded" className="bg-white dark:bg-[#1b1a19] border border-[#EDEBE9] dark:border-[#323130] rounded p-4 flex items-center justify-between shadow-sm">
           <div>
-            <span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider block">
+            <span data-crm-caption="" className="text-[10px] text-slate-400 font-bold uppercase tracking-wider block">
 {isEmail ? t("Dispatched") : t("Posted")}
             </span>
             <span className="text-xl font-bold tracking-tight text-emerald-600 dark:text-emerald-400 mt-1 block">
@@ -737,9 +737,9 @@ export default function CampaignManagerView({ onPushToMailComposer }: CampaignMa
           </div>
         </div>
 
-        <div className="bg-white dark:bg-[#1b1a19] border border-[#EDEBE9] dark:border-[#323130] rounded p-4 flex items-center justify-between shadow-sm">
+        <div data-crm-card="padded" className="bg-white dark:bg-[#1b1a19] border border-[#EDEBE9] dark:border-[#323130] rounded p-4 flex items-center justify-between shadow-sm">
           <div>
-            <span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider block">{t("Errors")}</span>
+            <span data-crm-caption="" className="text-[10px] text-slate-400 font-bold uppercase tracking-wider block">{t("Errors")}</span>
             <span className="text-xl font-bold tracking-tight text-rose-600 dark:text-rose-450 mt-1 block">
               {mainFailedCount}
             </span>
@@ -750,9 +750,9 @@ export default function CampaignManagerView({ onPushToMailComposer }: CampaignMa
           </div>
         </div>
 
-        <div className="bg-white dark:bg-[#1b1a19] border border-[#EDEBE9] dark:border-[#323130] rounded p-4 flex items-center justify-between shadow-sm">
+        <div data-crm-card="padded" className="bg-white dark:bg-[#1b1a19] border border-[#EDEBE9] dark:border-[#323130] rounded p-4 flex items-center justify-between shadow-sm">
           <div>
-            <span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider block">{t("Total Database Rows")}</span>
+            <span data-crm-caption="" className="text-[10px] text-slate-400 font-bold uppercase tracking-wider block">{t("Total Database Rows")}</span>
             <span className="text-xl font-bold tracking-tight text-slate-700 dark:text-slate-300 mt-1 block">
               {mainTotalCount}
             </span>
@@ -765,13 +765,13 @@ export default function CampaignManagerView({ onPushToMailComposer }: CampaignMa
       </div>
 
       {/* Main Campaign Editorial Workspace Grid */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+      <div data-crm-flow="" data-crm-grid="layout" className="grid grid-cols-1 lg:grid-cols-12 gap-6">
         
         {/* Left Column (Editorial Calendar & List View) */}
-        <section className="lg:col-span-7 space-y-6">
+        <section data-crm-stack="" className="lg:col-span-7 space-y-6">
           
           {/* Calendar visual planning grid */}
-          <div className="bg-white dark:bg-[#1b1a19] border border-[#EDEBE9] dark:border-[#323130] rounded p-5 shadow-sm">
+          <div data-crm-card="padded" className="bg-white dark:bg-[#1b1a19] border border-[#EDEBE9] dark:border-[#323130] rounded p-5 shadow-sm">
             <div className="flex items-center justify-between mb-4">
               <div className="flex items-center gap-2">
                 <CalendarIcon className={`w-4.5 h-4.5 ${isEmail ? "text-amber-500" : "text-[#0078D4]"}`} />
@@ -782,7 +782,7 @@ export default function CampaignManagerView({ onPushToMailComposer }: CampaignMa
 
               {/* Month Selector controls */}
               <div className="flex gap-1 bg-[#FAF9F8] dark:bg-[#252423] border border-[#EDEBE9] dark:border-[#323130] rounded p-0.5">
-                <button
+                <button data-crm-button=""
                   type="button"
                   onClick={handlePrevMonth}
                   className="p-1 hover:bg-slate-100 dark:hover:bg-[#323130] text-slate-600 dark:text-slate-300 rounded transition cursor-pointer"
@@ -790,7 +790,7 @@ export default function CampaignManagerView({ onPushToMailComposer }: CampaignMa
                 >
                   <ChevronLeft className="w-4 h-4" />
                 </button>
-                <button
+                <button data-crm-button=""
                   type="button"
                   onClick={() => {
                     const today = new Date();
@@ -801,7 +801,7 @@ export default function CampaignManagerView({ onPushToMailComposer }: CampaignMa
                 >
 {t("Today")}
                 </button>
-                <button
+                <button data-crm-button=""
                   type="button"
                   onClick={handleNextMonth}
                   className="p-1 hover:bg-slate-100 dark:hover:bg-[#323130] text-slate-600 dark:text-slate-300 rounded transition cursor-pointer"
@@ -813,7 +813,7 @@ export default function CampaignManagerView({ onPushToMailComposer }: CampaignMa
             </div>
 
             {/* Calendar Weekday headers */}
-            <div className="grid grid-cols-7 gap-1 text-center text-[10px] font-bold text-slate-400 dark:text-slate-505 mb-2 uppercase tracking-wide font-mono">
+            <div data-crm-flow="" data-crm-grid="layout" className="grid grid-cols-7 gap-1 text-center text-[10px] font-bold text-slate-400 dark:text-slate-505 mb-2 uppercase tracking-wide font-mono">
               <div>{t("Mon")}</div>
               <div>{t("Tue")}</div>
               <div>{t("Wed")}</div>
@@ -824,7 +824,7 @@ export default function CampaignManagerView({ onPushToMailComposer }: CampaignMa
             </div>
 
             {/* Calendar Days Slots */}
-            <div className="grid grid-cols-7 gap-1.5">
+            <div data-crm-flow="" data-crm-grid="layout" className="grid grid-cols-7 gap-1.5">
               {/* Padding days from previous month */}
               {prevMonthDaysList.map((day, idx) => (
                 <div
@@ -842,7 +842,7 @@ export default function CampaignManagerView({ onPushToMailComposer }: CampaignMa
                 const dateKey = `${currentYear}-${formattedMonth}-${formattedDay}`;
 
                 return (
-                  <div
+                  <div data-crm-toolbar="" data-crm-card="surface"
                     key={`day-${day}`}
                     className={`min-h-[60px] border rounded p-1 flex flex-col justify-between transition-all relative group bg-white dark:bg-[#252423]/30 hover:bg-slate-50 dark:hover:bg-[#323130]/40 ${
                       (isEmail && dateKey === "2026-06-18") || (!isEmail && dateKey === "2026-06-16")
@@ -944,9 +944,9 @@ export default function CampaignManagerView({ onPushToMailComposer }: CampaignMa
           </div>
 
           {/* Chronological Pipeline Queue List */}
-          <div className="bg-white dark:bg-[#1b1a19] border border-[#EDEBE9] dark:border-[#323130] rounded p-5 shadow-sm">
+          <div data-crm-card="padded" className="bg-white dark:bg-[#1b1a19] border border-[#EDEBE9] dark:border-[#323130] rounded p-5 shadow-sm">
             <div className="flex items-center justify-between mb-4 border-b border-[#EDEBE9] dark:border-[#323130] pb-3">
-              <h3 className="text-xs font-bold text-slate-800 dark:text-slate-100 uppercase tracking-wider flex items-center gap-1.5">
+              <h3 data-crm-heading="section" className="text-xs font-bold text-slate-800 dark:text-slate-100 uppercase tracking-wider flex items-center gap-1.5">
                 <ListOrdered className={`w-4 h-4 ${isEmail ? "text-amber-500" : "text-[#0078D4]"}`} />
                 <span>
                   {isEmail ? t("Scheduled Email Pipeline Queue") : t("Chronological Post Pipeline Queue")}
@@ -973,7 +973,7 @@ export default function CampaignManagerView({ onPushToMailComposer }: CampaignMa
                     const detectedTags = Array.from(new Set(c.body.match(/{{[a-zA-Z0-9_]+}}/g) || []));
 
                     return (
-                      <div
+                      <div data-crm-card="surface"
                         key={c.id}
                         className={`rounded border transition-all overflow-hidden flex flex-col ${
                           c.status === "DISPATCHED"
@@ -1033,31 +1033,31 @@ export default function CampaignManagerView({ onPushToMailComposer }: CampaignMa
 
                         {/* Collapsible Details Panel */}
                         {isExpanded && (
-                          <div className="border-t border-[#EDEBE9] dark:border-[#323130] bg-[#FAF9F8] dark:bg-[#1f1e1d] p-4 space-y-4 text-xs">
+                          <div data-crm-stack="" className="border-t border-[#EDEBE9] dark:border-[#323130] bg-[#FAF9F8] dark:bg-[#1f1e1d] p-4 space-y-4 text-xs">
                             
                             {/* Metadata Details Grid */}
-                            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3">
-                              <div className="bg-white dark:bg-[#252423] p-2.5 rounded border border-[#EDEBE9] dark:border-[#323130]">
-                                <span className="text-[9px] uppercase tracking-wide font-bold text-slate-400 block">{t("Planned Target Segment")}</span>
+                            <div data-crm-flow="" data-crm-grid="layout" className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3">
+                              <div data-crm-card="surface" className="bg-white dark:bg-[#252423] p-2.5 rounded border border-[#EDEBE9] dark:border-[#323130]">
+                                <span data-crm-caption="" className="text-[9px] uppercase tracking-wide font-bold text-slate-400 block">{t("Planned Target Segment")}</span>
                                 <span className="text-xs font-semibold text-slate-700 dark:text-slate-205 mt-1 block truncate" title={c.targetSegment}>
 {formatSegment(c.targetSegment)}
                                 </span>
                               </div>
-                              <div className="bg-white dark:bg-[#252423] p-2.5 rounded border border-[#EDEBE9] dark:border-[#323130]">
-                                <span className="text-[9px] uppercase tracking-wide font-bold text-slate-400 block">{t("Dispatch Calendar Window")}</span>
+                              <div data-crm-card="surface" className="bg-white dark:bg-[#252423] p-2.5 rounded border border-[#EDEBE9] dark:border-[#323130]">
+                                <span data-crm-caption="" className="text-[9px] uppercase tracking-wide font-bold text-slate-400 block">{t("Dispatch Calendar Window")}</span>
                                 <span className="text-xs font-semibold text-slate-700 dark:text-slate-205 mt-1 block flex items-center gap-1">
                                   <Clock className="w-3.5 h-3.5 text-amber-500" />
 {t("{date} at {time}").replace("{date}", c.date).replace("{time}", c.time)}
                                 </span>
                               </div>
-                              <div className="bg-white dark:bg-[#252423] p-2.5 rounded border border-[#EDEBE9] dark:border-[#323130]">
-                                <span className="text-[9px] uppercase tracking-wide font-bold text-slate-400 block">{t("Template Statistics")}</span>
+                              <div data-crm-card="surface" className="bg-white dark:bg-[#252423] p-2.5 rounded border border-[#EDEBE9] dark:border-[#323130]">
+                                <span data-crm-caption="" className="text-[9px] uppercase tracking-wide font-bold text-slate-400 block">{t("Template Statistics")}</span>
                                 <span className="text-xs font-semibold text-slate-700 dark:text-slate-205 mt-1 block">
 {t("{words} Words • {chars} Chars • ~{minutes} Min read").replace("{words}", String(wordCount)).replace("{chars}", String(charCount)).replace("{minutes}", String(readTime))}
                                 </span>
                               </div>
-                              <div className="bg-white dark:bg-[#252423] p-2.5 rounded border border-[#EDEBE9] dark:border-[#323130]">
-                                <span className="text-[9px] uppercase tracking-wide font-bold text-slate-400 block">{t("Detected Fields (Tags)")}</span>
+                              <div data-crm-card="surface" className="bg-white dark:bg-[#252423] p-2.5 rounded border border-[#EDEBE9] dark:border-[#323130]">
+                                <span data-crm-caption="" className="text-[9px] uppercase tracking-wide font-bold text-slate-400 block">{t("Detected Fields (Tags)")}</span>
                                 <span className="text-xs font-semibold text-slate-700 dark:text-slate-205 mt-1 block truncate">
                                   {detectedTags.length > 0 ? (
                                     <span className="flex flex-wrap gap-1">
@@ -1077,14 +1077,14 @@ export default function CampaignManagerView({ onPushToMailComposer }: CampaignMa
                             {/* Live Interactive Preview Box */}
                             <div className="space-y-2">
                               <span className="font-bold text-slate-700 dark:text-slate-300 uppercase text-[10px] tracking-wide block">{t("Email Mailmerge Blueprint Preview:")}</span>
-                              <div className="bg-white dark:bg-[#111] border border-[#EDEBE9] dark:border-[#323130] rounded p-4 font-sans space-y-3 shadow-inner max-h-[220px] overflow-y-auto">
+                              <div data-crm-card="padded" className="bg-white dark:bg-[#111] border border-[#EDEBE9] dark:border-[#323130] rounded p-4 font-sans space-y-3 shadow-inner max-h-[220px] overflow-y-auto">
                                 <div className="border-b border-slate-100 dark:border-slate-800 pb-2 mb-2">
-<span className="text-slate-400 font-mono text-[10px] uppercase block">{t("Subject Line")}</span>
-                                  <h4 className="text-xs font-bold text-slate-850 dark:text-slate-150 truncate mt-0.5">
+<span data-crm-caption="" className="text-slate-400 font-mono text-[10px] uppercase block">{t("Subject Line")}</span>
+                                  <h4 data-crm-heading="section" className="text-xs font-bold text-slate-850 dark:text-slate-150 truncate mt-0.5">
                                     {tc(c.id, "subject", c.subject)}
                                   </h4>
                                 </div>
-                                <span className="text-slate-400 font-mono text-[10px] uppercase block">{t("Body Template Payload")}</span>
+                                <span data-crm-caption="" className="text-slate-400 font-mono text-[10px] uppercase block">{t("Body Template Payload")}</span>
                                 <p className="text-xs text-slate-700 dark:text-slate-350 font-sans whitespace-pre-line leading-relaxed">
                                   {tc(c.id, "body", c.body)}
                                 </p>
@@ -1112,7 +1112,7 @@ export default function CampaignManagerView({ onPushToMailComposer }: CampaignMa
 
                               {/* Right Interactive operations */}
                               <div className="flex items-center gap-2 ml-auto">
-                                <button
+                                <button data-crm-button=""
                                   type="button"
                                   onClick={() => handlePushToMailMergeEditor(c.subject, c.body)}
                                   className="px-3 py-1.5 bg-white hover:bg-amber-500 hover:text-white dark:bg-[#252423] dark:hover:bg-amber-600 text-slate-705 dark:text-slate-205 border border-[#EDEBE9] dark:border-[#323130] rounded cursor-pointer text-xs font-bold transition flex items-center gap-1.5 shadow-sm"
@@ -1123,7 +1123,7 @@ title={t("Push template contents directly into composer workspace")}
                                 </button>
 
                                 {c.status === "SCHEDULED" && (
-                                  <button
+                                  <button data-crm-button=""
                                     type="button"
                                     onClick={() => handleDispatchEmailCampaignNow(c.id)}
                                     className="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded cursor-pointer text-xs font-bold transition flex items-center gap-1.5 shadow-sm"
@@ -1134,7 +1134,7 @@ title={t("Manually release locked pipeline template draft for immediate custom b
                                   </button>
                                 )}
 
-                                <button
+                                <button data-crm-button=""
                                   type="button"
                                   onClick={() => {
                                     setConfirmDeleteModal({
@@ -1169,7 +1169,7 @@ aria-label={t("Delete Campaign")}
                   </div>
                 ) : (
                   posts.map(p => (
-                    <div
+                    <div data-crm-card="padded"
                       key={p.id}
                       className={`p-3.5 rounded border transition-all flex items-center justify-between gap-4 ${
                         p.status === "POSTED"
@@ -1217,7 +1217,7 @@ alt={t("Media Connection")}
                       {/* LinkedIn Queue actions */}
                       <div className="flex items-center gap-1 shrink-0">
                         {p.status === "SCHEDULED" && (
-                          <button
+                          <button data-crm-button=""
                             type="button"
                             onClick={() => handlePublishNow(p.id)}
                             className="p-1.5 bg-[#FAF9F8] hover:bg-emerald-600 hover:text-white dark:bg-[#252423] dark:hover:bg-emerald-700 text-slate-500 border border-[#EDEBE9] dark:border-[#323130] rounded cursor-pointer transition shadow-sm"
@@ -1226,7 +1226,7 @@ title={t("Publish Update Immediately")}
                             <Send className="w-3.5 h-3.5" />
                           </button>
                         )}
-                        <button
+                        <button data-crm-button=""
                           type="button"
                           onClick={() => {
                             setConfirmDeleteModal({
@@ -1254,23 +1254,23 @@ aria-label={t("Delete Post")}
         </section>
 
         {/* Right Column (Draft Composers & Assistants) */}
-        <section className="lg:col-span-5 space-y-6">
+        <section data-crm-stack="" className="lg:col-span-5 space-y-6">
           
           {isEmail ? (
             // ==========================================
             // DRAFT EMAIL COMPOSER (Email Scheduler Mode)
             // ==========================================
-            <div className="bg-white dark:bg-[#1b1a19] border border-[#EDEBE9] dark:border-[#323130] rounded p-5 shadow-sm space-y-4" id="email-draft-composer">
+            <div data-crm-stack="" data-crm-card="padded" className="bg-white dark:bg-[#1b1a19] border border-[#EDEBE9] dark:border-[#323130] rounded p-5 shadow-sm space-y-4" id="email-draft-composer">
               <div className="flex items-center justify-between border-b border-[#EDEBE9] dark:border-[#323130] pb-3">
                 <div>
-                  <h3 className="text-xs font-bold text-slate-800 dark:text-slate-100 uppercase tracking-wider flex items-center gap-1.5">
+                  <h3 data-crm-heading="section" className="text-xs font-bold text-slate-800 dark:text-slate-100 uppercase tracking-wider flex items-center gap-1.5">
                     <FileText className="w-4 h-4 text-amber-500" />
 <span>{t("Draft Email Composer Card")}</span>
                   </h3>
                   <p className="text-[10px] text-slate-400">{t("Write high-conversion B2B partnership templates")}</p>
                 </div>
 
-                <button
+                <button data-crm-button=""
                   type="button"
                   onClick={() => setShowEditorHelp(!showEditorHelp)}
                   className="text-[10px] text-amber-650 hover:underline flex items-center gap-1 font-bold focus:outline-none cursor-pointer"
@@ -1299,13 +1299,13 @@ aria-label={t("Delete Post")}
                 </div>
               )}
 
-              <form onSubmit={handleEmailCampaignSubmit} className="space-y-4 text-xs">
+              <form data-crm-stack="" onSubmit={handleEmailCampaignSubmit} className="space-y-4 text-xs">
                 {/* Recipient Segment Dropdown */}
                 <div>
-                  <label className="block text-[10px] uppercase font-bold text-slate-400 mb-1.5">
+                  <label data-crm-label="" className="block text-[10px] uppercase font-bold text-slate-400 mb-1.5">
 {t("Recipient Group Segment")}
                   </label>
-                  <select
+                  <select data-crm-field="control"
                     value={targetSegment}
                     onChange={e => setTargetSegment(e.target.value)}
                     className="w-full bg-[#FAF9F8] dark:bg-[#252423] border border-[#EDEBE9] dark:border-[#323130] rounded p-2 text-xs text-slate-800 dark:text-slate-200 outline-none"
@@ -1320,16 +1320,16 @@ aria-label={t("Delete Post")}
                 {/* Email Subject line */}
                 <div className="space-y-1">
                   <div className="flex items-center justify-between">
-<label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">{t("Subject Line")}</label>
+<label data-crm-label="" className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">{t("Subject Line")}</label>
                     <div className="flex gap-1">
-                      <button
+                      <button data-crm-button=""
                         type="button"
                         onClick={() => handleInjectTagToSubject("Company")}
                         className="text-[9px] font-bold text-amber-600 bg-amber-50 hover:bg-amber-100 dark:bg-amber-950/20 px-1.5 py-0.5 rounded border border-amber-200/50 cursor-pointer"
                       >
                         +{t("Company")}
                       </button>
-                      <button
+                      <button data-crm-button=""
                         type="button"
                         onClick={() => handleInjectTagToSubject("FirstName")}
                         className="text-[9px] font-bold text-amber-600 bg-amber-50 hover:bg-amber-100 dark:bg-amber-955/20 px-1.5 py-0.5 rounded border border-amber-200/50 cursor-pointer"
@@ -1338,7 +1338,7 @@ aria-label={t("Delete Post")}
                       </button>
                     </div>
                   </div>
-                  <input
+                  <input data-crm-field="control"
                     type="text"
                     required
 placeholder={t("e.g. Action Plan details for {{Company}} logistics")}
@@ -1350,12 +1350,12 @@ placeholder={t("e.g. Action Plan details for {{Company}} logistics")}
 
                 {/* Merge Tag interactive parameters */}
                 <div className="space-y-1.5">
-                  <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">
+                  <label data-crm-label="" className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">
 {t("Parameter Chips (Click to Inject):")}
                   </label>
                   <div className="flex flex-wrap gap-1">
                     {["FirstName", "LastName", "Company", "Department", "Industry", "RequestedService"].map((tag) => (
-                      <button
+                      <button data-crm-button=""
                         type="button"
                         key={tag}
                         onClick={() => handleInjectTag(tag)}
@@ -1370,10 +1370,10 @@ placeholder={t("e.g. Action Plan details for {{Company}} logistics")}
 
                 {/* Rich Body composing */}
                 <div>
-                  <label className="block text-[10px] uppercase font-bold text-slate-400 mb-1.5">
+                  <label data-crm-label="" className="block text-[10px] uppercase font-bold text-slate-400 mb-1.5">
 {t("Email Message Body Copy")}
                   </label>
-                  <textarea
+                  <textarea data-crm-field="multiline"
                     rows={8}
                     required
 placeholder={t("Compose structured business template strategy. Embed merge indicators such as {{FirstName}} and {{Company}} naturally...")}
@@ -1384,12 +1384,12 @@ placeholder={t("Compose structured business template strategy. Embed merge indic
                 </div>
 
                 {/* Scheduling criteria: Target Dispatch */}
-                <div className="grid grid-cols-2 gap-2">
+                <div data-crm-flow="" data-crm-grid="form" className="grid grid-cols-2 gap-2">
                   <div>
-                    <label className="block text-[10px] uppercase font-bold text-slate-400 mb-1">
+                    <label data-crm-label="" className="block text-[10px] uppercase font-bold text-slate-400 mb-1">
 {t("Schedule Date (Target Dispatch)")}
                     </label>
-                    <input
+                    <input data-crm-field="control"
                       type="date"
                       required
                       value={emailScheduleDate}
@@ -1398,10 +1398,10 @@ placeholder={t("Compose structured business template strategy. Embed merge indic
                     />
                   </div>
                   <div>
-                    <label className="block text-[10px] uppercase font-bold text-slate-400 mb-1">
+                    <label data-crm-label="" className="block text-[10px] uppercase font-bold text-slate-400 mb-1">
 {t("Dispatch Time Target")}
                     </label>
-                    <input
+                    <input data-crm-field="control"
                       type="time"
                       required
                       value={emailScheduleTime}
@@ -1411,9 +1411,9 @@ placeholder={t("Compose structured business template strategy. Embed merge indic
                   </div>
                 </div>
 
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 pt-1">
+                <div data-crm-grid="layout" className="grid grid-cols-1 sm:grid-cols-2 gap-2 pt-1">
                   {/* Save to Roster list */}
-                  <button
+                  <button data-crm-button=""
                     type="submit"
                     className="w-full bg-[#FAF9F8] hover:bg-slate-100 dark:bg-[#252423] dark:hover:bg-[#323130] text-slate-800 dark:text-slate-203 border border-[#EDEBE9] dark:border-[#323130] font-bold py-2 rounded flex items-center justify-center gap-1.5 cursor-pointer shadow-sm text-xs transition h-9"
                   >
@@ -1422,7 +1422,7 @@ placeholder={t("Compose structured business template strategy. Embed merge indic
                   </button>
 
                   {/* Transmit to primary Mail merge editor */}
-                  <button
+                  <button data-crm-button=""
                     type="button"
                     onClick={() => {
                       if (!emailSubject.trim() || !emailBodyText.trim()) {
@@ -1442,7 +1442,7 @@ placeholder={t("Compose structured business template strategy. Embed merge indic
               {/* Server-side Gemini B2B pitch assistant */}
               <div className="border-t border-[#EDEBE9] dark:border-[#323130] pt-4 mt-3 space-y-3">
                 <div className="flex items-center justify-between">
-                  <h4 className="text-xs font-bold text-slate-800 dark:text-slate-200 flex items-center gap-1.5">
+                  <h4 data-crm-heading="section" className="text-xs font-bold text-slate-800 dark:text-slate-200 flex items-center gap-1.5">
                     <Sparkles className="w-3.5 h-3.5 text-amber-500 animate-pulse" />
 <span>{t("Gemini B2B Email Coprighter")}</span>
                   </h4>
@@ -1452,7 +1452,7 @@ placeholder={t("Compose structured business template strategy. Embed merge indic
                 </div>
 
                 <div className="space-y-2">
-                  <input
+                  <input data-crm-field="control"
                     type="text"
 placeholder={t("E.g. Inviting CEO to Prague site audit")}
                     value={aiEmailTopic}
@@ -1467,8 +1467,8 @@ placeholder={t("E.g. Inviting CEO to Prague site audit")}
                     </div>
                   )}
 
-                  <div className="grid grid-cols-2 gap-2">
-                    <button
+                  <div data-crm-flow="" data-crm-grid="layout" className="grid grid-cols-2 gap-2">
+                    <button data-crm-button=""
                       type="button"
                       disabled={aiEmailLoading}
                       onClick={() => handleGeminiAssist("write")}
@@ -1487,7 +1487,7 @@ placeholder={t("E.g. Inviting CEO to Prague site audit")}
                       )}
                     </button>
 
-                    <button
+                    <button data-crm-button=""
                       type="button"
                       disabled={aiEmailLoading}
                       onClick={() => handleGeminiAssist("polish")}
@@ -1513,22 +1513,22 @@ placeholder={t("E.g. Inviting CEO to Prague site audit")}
             // ==========================================
             // DRAFT LINKEDIN COMPOSER (Original Mode)
             // ==========================================
-            <div className="bg-white dark:bg-[#1b1a19] border border-[#EDEBE9] dark:border-[#323130] rounded p-5 shadow-sm space-y-4" id="post-editor-form">
-              <h3 className="font-bold text-slate-800 dark:text-slate-100 text-xs uppercase tracking-wider flex items-center gap-2 border-b border-[#EDEBE9] dark:border-[#323130] pb-2">
+            <div data-crm-stack="" data-crm-card="padded" className="bg-white dark:bg-[#1b1a19] border border-[#EDEBE9] dark:border-[#323130] rounded p-5 shadow-sm space-y-4" id="post-editor-form">
+              <h3 data-crm-heading="section" className="font-bold text-slate-800 dark:text-slate-100 text-xs uppercase tracking-wider flex items-center gap-2 border-b border-[#EDEBE9] dark:border-[#323130] pb-2">
                 <FileText className="w-4 h-4 text-[#0078D4]" />
 <span>{t("Draft LinkedIn Post Card")}</span>
               </h3>
 
-              <form onSubmit={handleScheduleSubmit} className="space-y-4 text-xs">
+              <form data-crm-stack="" onSubmit={handleScheduleSubmit} className="space-y-4 text-xs">
                 {/* Target Channel option list */}
                 <div>
-                  <label className="block text-[10px] uppercase font-bold text-slate-400 dark:text-slate-505 mb-1.5">
+                  <label data-crm-label="" className="block text-[10px] uppercase font-bold text-slate-400 dark:text-slate-505 mb-1.5">
 {t("Target Channel Account")}
                   </label>
-                  <div className="grid grid-cols-3 gap-2">
+                  <div data-crm-flow="" data-crm-grid="layout" className="grid grid-cols-3 gap-2">
                     {/* Channel Buttons */}
                     {["Gemba Lean", "Gemba Digital", "Personal"].map((ch) => (
-                      <button
+                      <button data-crm-button=""
                         key={ch}
                         type="button"
                         onClick={() => setTargetChannel(ch as any)}
@@ -1557,14 +1557,14 @@ placeholder={t("E.g. Inviting CEO to Prague site audit")}
                 {/* Share Update text drafting */}
                 <div>
                   <div className="flex items-center justify-between mb-1.5">
-                    <label className="block text-[10px] uppercase font-bold text-slate-400 dark:text-slate-500">
+                    <label data-crm-label="" className="block text-[10px] uppercase font-bold text-slate-400 dark:text-slate-500">
 {t("Share Update Copy Text")}
                     </label>
                     <span className="text-[10px] text-slate-400 dark:text-slate-500 font-mono">
 {t("{count} / 3000 chars").replace("{count}", String(postText.length))}
                     </span>
                   </div>
-                  <textarea
+                  <textarea data-crm-field="multiline"
                     rows={4}
                     required
 placeholder={t("Write your LinkedIn copy or utilize the Gemini Assistant below to compose a structured leadership summary...")}
@@ -1576,7 +1576,7 @@ placeholder={t("Write your LinkedIn copy or utilize the Gemini Assistant below t
 
                 {/* Hashtag Chest input */}
                 <div>
-                  <label className="block text-[10px] uppercase font-bold text-slate-400 dark:text-slate-500 mb-1">
+                  <label data-crm-label="" className="block text-[10px] uppercase font-bold text-slate-400 dark:text-slate-500 mb-1">
 {t("Hashtags Pill Chest")}
                   </label>
                   <div className="flex flex-wrap gap-1 mb-2 bg-[#FAF9F8] dark:bg-[#252423] p-2 rounded border border-[#EDEBE9] dark:border-[#323130] min-h-[36px]">
@@ -1589,7 +1589,7 @@ placeholder={t("Write your LinkedIn copy or utilize the Gemini Assistant below t
                           className="bg-blue-50/70 border border-blue-100/50 text-blue-700 font-mono text-[9px] px-2 py-0.5 rounded-full flex items-center gap-1 dark:bg-blue-950/20 dark:text-brand-300"
                         >
                           #{tag}
-                          <button
+                          <button data-crm-button=""
                             type="button"
                             onClick={() => handleRemoveHashtag(idx)}
                             className="hover:text-rose-650 text-xs shrink-0 font-sans cursor-pointer focus:outline-none"
@@ -1601,7 +1601,7 @@ placeholder={t("Write your LinkedIn copy or utilize the Gemini Assistant below t
                     )}
                   </div>
                   <div className="flex gap-1.5">
-                    <input
+                    <input data-crm-field="control"
                       type="text"
 placeholder={t("Add custom tag (e.g. operationalexcellence)")}
                       value={hashtagInput}
@@ -1618,7 +1618,7 @@ placeholder={t("Add custom tag (e.g. operationalexcellence)")}
                       }}
                       className="flex-1 bg-[#FAF9F8] dark:bg-[#252423] border border-[#EDEBE9] dark:border-[#323130] rounded px-2.5 py-1.5 text-xs text-slate-800 dark:text-slate-200 focus:outline-none"
                     />
-                    <button
+                    <button data-crm-button=""
                       type="button"
                       onClick={() => {
                         const cleanTag = hashtagInput.trim().toLowerCase().replace(/#/g, "");
@@ -1635,12 +1635,12 @@ placeholder={t("Add custom tag (e.g. operationalexcellence)")}
                 </div>
 
                 {/* Date and Time selectors */}
-                <div className="grid grid-cols-2 gap-2">
+                <div data-crm-flow="" data-crm-grid="form" className="grid grid-cols-2 gap-2">
                   <div>
-                    <label className="block text-[10px] uppercase font-bold text-slate-400 dark:text-slate-505 mb-1">
+                    <label data-crm-label="" className="block text-[10px] uppercase font-bold text-slate-400 dark:text-slate-505 mb-1">
 {t("Schedule Date")}
                     </label>
-                    <input
+                    <input data-crm-field="control"
                       type="date"
                       required
                       value={scheduleDate}
@@ -1649,10 +1649,10 @@ placeholder={t("Add custom tag (e.g. operationalexcellence)")}
                     />
                   </div>
                   <div>
-                    <label className="block text-[10px] uppercase font-bold text-slate-400 dark:text-slate-505 mb-1">
+                    <label data-crm-label="" className="block text-[10px] uppercase font-bold text-slate-400 dark:text-slate-505 mb-1">
 {t("Target Dispatch Time")}
                     </label>
-                    <input
+                    <input data-crm-field="control"
                       type="time"
                       required
                       value={scheduleTime}
@@ -1664,12 +1664,12 @@ placeholder={t("Add custom tag (e.g. operationalexcellence)")}
 
                 {/* Post Media Picker */}
                 <div>
-                  <label className="block text-[10px] uppercase font-bold text-slate-400 dark:text-slate-500 mb-1.5">
+                  <label data-crm-label="" className="block text-[10px] uppercase font-bold text-slate-400 dark:text-slate-500 mb-1.5">
 {t("Post Media Stock Photo")}
                   </label>
-                  <div className="grid grid-cols-4 gap-2 mb-2">
+                  <div data-crm-flow="" data-crm-grid="layout" className="grid grid-cols-4 gap-2 mb-2">
                     {STOCK_IMAGES.map((img) => (
-                      <button
+                      <button data-crm-button=""
                         key={img.id}
                         type="button"
                         onClick={() => setSelectedImage(img.url)}
@@ -1724,7 +1724,7 @@ title={t(STOCK_IMAGE_NAME_KEYS[img.id] || img.name)}
                 </div>
 
                 {/* Submit Schedule action */}
-                <button
+                <button data-crm-button=""
                   type="submit"
                   className="w-full bg-[#0078D4] hover:bg-[#106ebe] text-white font-bold py-2 rounded flex items-center justify-center gap-1.5 cursor-pointer shadow-sm text-xs transition-colors h-9"
                 >
@@ -1736,7 +1736,7 @@ title={t(STOCK_IMAGE_NAME_KEYS[img.id] || img.name)}
               {/* Gemini AI assist block */}
               <div className="border-t border-[#EDEBE9] dark:border-[#323130] pt-4 mt-3 space-y-3">
                 <div className="flex items-center justify-between">
-                  <h4 className="text-xs font-bold text-slate-805 dark:text-slate-200 flex items-center gap-1.5">
+                  <h4 data-crm-heading="section" className="text-xs font-bold text-slate-805 dark:text-slate-200 flex items-center gap-1.5">
                     <Sparkles className="w-3.5 h-3.5 text-amber-500" />
 <span>{t("Gemini AI Strategy Assistant")}</span>
                   </h4>
@@ -1746,7 +1746,7 @@ title={t(STOCK_IMAGE_NAME_KEYS[img.id] || img.name)}
                 </div>
 
                 <div className="space-y-2">
-                  <input
+                  <input data-crm-field="control"
                     type="text"
 placeholder={t("Enter custom post topic (e.g. Digitizing Gemba board values)")}
                     value={aiTopic}
@@ -1761,8 +1761,8 @@ placeholder={t("Enter custom post topic (e.g. Digitizing Gemba board values)")}
                     </div>
                   )}
 
-                  <div className="grid grid-cols-2 gap-2">
-                    <button
+                  <div data-crm-flow="" data-crm-grid="layout" className="grid grid-cols-2 gap-2">
+                    <button data-crm-button=""
                       type="button"
                       disabled={aiLoading}
                       onClick={() => handleGeminiAssist("write")}
@@ -1781,7 +1781,7 @@ placeholder={t("Enter custom post topic (e.g. Digitizing Gemba board values)")}
                       )}
                     </button>
 
-                    <button
+                    <button data-crm-button=""
                       type="button"
                       disabled={aiLoading}
                       onClick={() => handleGeminiAssist("polish")}
@@ -1807,8 +1807,8 @@ placeholder={t("Enter custom post topic (e.g. Digitizing Gemba board values)")}
 
           {isEmail ? (
             // Email Guidelines Display
-            <div className="bg-white dark:bg-[#1b1a19] border border-[#EDEBE9] dark:border-[#323130] rounded p-5 shadow-sm text-left space-y-3">
-              <h4 className="text-xs font-bold text-slate-400 flex items-center gap-1.5 uppercase tracking-wider">
+            <div data-crm-card="padded" className="bg-white dark:bg-[#1b1a19] border border-[#EDEBE9] dark:border-[#323130] rounded p-5 shadow-sm text-left space-y-3">
+              <h4 data-crm-heading="section" className="text-xs font-bold text-slate-400 flex items-center gap-1.5 uppercase tracking-wider">
                 <BookOpen className="w-4 h-4 text-emerald-500" />
 <span>{t("Campaign Manager Directives")}</span>
               </h4>
@@ -1835,17 +1835,17 @@ placeholder={t("Enter custom post topic (e.g. Digitizing Gemba board values)")}
             // LinkedIn Preview & Guidelines
             <>
               {/* Social feed live preview workspace */}
-              <div className="bg-white dark:bg-[#1b1a19] border border-[#EDEBE9] dark:border-[#323130] rounded p-5 shadow-sm space-y-3">
-                <h4 className="text-xs font-bold text-slate-800 dark:text-slate-205 flex items-center gap-1.5 uppercase tracking-wider">
+              <div data-crm-card="padded" className="bg-white dark:bg-[#1b1a19] border border-[#EDEBE9] dark:border-[#323130] rounded p-5 shadow-sm space-y-3">
+                <h4 data-crm-heading="section" className="text-xs font-bold text-slate-800 dark:text-slate-205 flex items-center gap-1.5 uppercase tracking-wider">
                   <Eye className="w-4 h-4 text-blue-500" />
 <span>{t("Live LinkedIn Feed Preview")}</span>
                 </h4>
 
                 {/* LinkedIn-style visual simulator card */}
-                <div className="bg-white text-slate-900 rounded-xl border border-slate-200 shadow overflow-hidden text-left max-w-sm mx-auto font-sans">
+                <div data-crm-card="surface" className="bg-white text-slate-900 rounded-xl border border-slate-200 shadow overflow-hidden text-left max-w-sm mx-auto font-sans">
                   <div className="p-3 pb-2 flex items-start justify-between gap-2">
                     <div className="flex items-center gap-2">
-                      <div className="w-10 h-10 rounded-full bg-slate-100 border border-slate-200 overflow-hidden shrink-0 flex items-center justify-center text-xs font-bold text-slate-700">
+                      <div data-crm-icon-box="" className="w-10 h-10 rounded-full bg-slate-100 border border-slate-200 overflow-hidden shrink-0 flex items-center justify-center text-xs font-bold text-slate-700">
                         {targetChannel === "Gemba Lean" ? "GL" : targetChannel === "Gemba Digital" ? "GD" : "P"}
                       </div>
                       <div>
@@ -1911,8 +1911,8 @@ placeholder={t("Enter custom post topic (e.g. Digitizing Gemba board values)")}
 <span>{t("1 Comment • {count} Reposts").replace("{count}", targetChannel === "Gemba Lean" ? "2" : "0")}</span>
                   </div>
 
-                  <div className="px-1 py-1 grid grid-cols-4 gap-0.5 text-slate-500 text-[10px] font-semibold text-center">
-                    <button
+                  <div data-crm-grid="layout" className="px-1 py-1 grid grid-cols-4 gap-0.5 text-slate-500 text-[10px] font-semibold text-center">
+                    <button data-crm-button=""
                       type="button"
                       onClick={() => {
                         setPreviewLiked(!previewLiked);
@@ -1924,13 +1924,13 @@ placeholder={t("Enter custom post topic (e.g. Digitizing Gemba board values)")}
                     >
 <ThumbsUp className="w-3.5 h-3.5" /> {t("Like")}
                     </button>
-                    <button type="button" className="py-1.5 hover:bg-slate-50 rounded flex items-center justify-center gap-1 transition-all cursor-pointer">
+                    <button data-crm-button="" type="button" className="py-1.5 hover:bg-slate-50 rounded flex items-center justify-center gap-1 transition-all cursor-pointer">
 <MessageSquare className="w-3.5 h-3.5" /> {t("Comment")}
                     </button>
-                    <button type="button" className="py-1.5 hover:bg-slate-50 rounded flex items-center justify-center gap-1 transition-all cursor-pointer">
+                    <button data-crm-button="" type="button" className="py-1.5 hover:bg-slate-50 rounded flex items-center justify-center gap-1 transition-all cursor-pointer">
 <Repeat2 className="w-3.5 h-3.5" /> {t("Repost")}
                     </button>
-                    <button type="button" className="py-1.5 hover:bg-slate-50 rounded flex items-center justify-center gap-1 transition-all cursor-pointer">
+                    <button data-crm-button="" type="button" className="py-1.5 hover:bg-slate-50 rounded flex items-center justify-center gap-1 transition-all cursor-pointer">
 <Send className="w-3.5 h-3.5" /> {t("Send")}
                     </button>
                   </div>
@@ -1938,8 +1938,8 @@ placeholder={t("Enter custom post topic (e.g. Digitizing Gemba board values)")}
               </div>
 
               {/* Scheduler Guidelines card block */}
-              <div className="bg-white dark:bg-[#1b1a19] border border-[#EDEBE9] dark:border-[#323130] rounded p-5 shadow-sm text-left space-y-3">
-                <h4 className="text-xs font-bold text-slate-800 dark:text-slate-200 flex items-center gap-1.5 uppercase tracking-wider">
+              <div data-crm-card="padded" className="bg-white dark:bg-[#1b1a19] border border-[#EDEBE9] dark:border-[#323130] rounded p-5 shadow-sm text-left space-y-3">
+                <h4 data-crm-heading="section" className="text-xs font-bold text-slate-800 dark:text-slate-200 flex items-center gap-1.5 uppercase tracking-wider">
                   <BookOpen className="w-4 h-4 text-emerald-500" />
 <span>{t("Scheduler System Directives")}</span>
                 </h4>
@@ -1970,26 +1970,26 @@ placeholder={t("Enter custom post topic (e.g. Digitizing Gemba board values)")}
 
       {/* Custom Global Confirmation Dialog */}
       {confirmDeleteModal.isOpen && (
-        <div role="dialog" aria-modal="true" className="fixed inset-0 bg-black/60 backdrop-blur-xs flex items-center justify-center z-[9999] p-4 font-sans antialiased animate-fade-in text-slate-800 dark:text-zinc-200">
-          <div className="bg-white dark:bg-[#181818] w-full max-w-sm rounded-xl border border-slate-205 dark:border-zinc-855 shadow-2xl p-6 text-center animate-in zoom-in-95 duration-100">
-            <div className="mx-auto w-12 h-12 bg-rose-50 dark:bg-rose-950/25 rounded-full flex items-center justify-center text-rose-500 mb-4">
+        <div data-crm-overlay="" role="dialog" aria-modal="true" className="fixed inset-0 bg-black/60 backdrop-blur-xs flex items-center justify-center z-[9999] p-4 font-sans antialiased animate-fade-in text-slate-800 dark:text-zinc-200">
+          <div data-crm-modal="" data-crm-card="padded" className="bg-white dark:bg-[#181818] w-full max-w-sm rounded-xl border border-slate-205 dark:border-zinc-855 shadow-2xl p-6 text-center animate-in zoom-in-95 duration-100">
+            <div data-crm-icon-box="" className="mx-auto w-12 h-12 bg-rose-50 dark:bg-rose-950/25 rounded-full flex items-center justify-center text-rose-500 mb-4">
               <Trash2 className="w-6 h-6 animate-pulse" />
             </div>
-            <h3 className="font-extrabold text-slate-800 dark:text-zinc-100 text-sm mb-2">
+            <h3 data-crm-heading="section" className="font-extrabold text-slate-800 dark:text-zinc-100 text-sm mb-2">
 {confirmDeleteModal.title || t("Delete Record")}
             </h3>
             <p className="text-slate-500 dark:text-zinc-400 text-xs mb-6 font-semibold animate-pulse">
 {confirmDeleteModal.message || t("Move to recycle bin?")}
             </p>
             <div className="flex gap-3 justify-center select-none font-bold">
-              <button
+              <button data-crm-button=""
                 type="button"
                 onClick={() => setConfirmDeleteModal({ isOpen: false, onConfirm: () => {} })}
                 className="border border-slate-200 dark:border-zinc-800 text-slate-600 dark:text-zinc-300 hover:bg-slate-50 dark:hover:bg-zinc-900 px-4 py-2 text-xs rounded-lg transition-colors cursor-pointer w-24"
               >
 {t("Cancel")}
               </button>
-              <button
+              <button data-crm-button=""
                 type="button"
                 onClick={() => {
                   confirmDeleteModal.onConfirm();

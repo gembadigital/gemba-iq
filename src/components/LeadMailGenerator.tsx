@@ -429,39 +429,39 @@ export default function LeadMailGenerator({
   };
 
   return (
-    <div className="space-y-6">
+    <div data-crm-stack="" data-crm-screen="LeadMailGenerator" className="space-y-6">
       
       {/* Toast popup message wrapper */}
       {toastMessage && (
         <div className="fixed top-6 right-6 z-50 flex items-center gap-3 px-4 py-3 bg-slate-900 text-white rounded-lg shadow-xl animate-bounce">
           <CheckCircle className={`w-4 h-4 ${toastType === "success" ? "text-emerald-400" : "text-amber-400"}`} />
           <span className="text-xs font-semibold">{toastMessage}</span>
-          <button onClick={() => setToastMessage(null)} className="text-slate-400 hover:text-white ml-2">
+          <button data-crm-button="" onClick={() => setToastMessage(null)} className="text-slate-400 hover:text-white ml-2">
             <X className="w-3.5 h-3.5" />
           </button>
         </div>
       )}
 
       {/* Header Banner view */}
-      <div className="bg-white dark:bg-[#1b1a19] border border-[#EDEBE9] dark:border-[#323130] rounded-xl shadow-sm p-6 flex flex-col md:flex-row md:items-center md:justify-between gap-4 relative overflow-hidden">
-        <div className="absolute top-0 left-0 right-0 h-1.5 bg-gradient-to-r from-emerald-500 via-[#0078D4] to-blue-500" />
-        <div>
+      <div data-crm-card="padded" data-crm-header="" className="bg-white dark:bg-[#1b1a19] border border-[#EDEBE9] dark:border-[#323130] rounded-xl shadow-sm p-6 flex flex-col md:flex-row md:items-center md:justify-between gap-4 relative overflow-hidden">
+        <div data-crm-decoration="" className="absolute top-0 left-0 right-0 h-1.5 bg-gradient-to-r from-emerald-500 via-[#0078D4] to-blue-500" />
+        <div data-crm-header-copy="">
           <div className="flex items-center gap-2">
             <Sparkles className="w-5 h-5 text-[#0078D4]" />
             <span className="text-xs font-bold text-[#0078D4] tracking-widest uppercase">
               {t("Premium Generator Suite")}
             </span>
           </div>
-          <h2 className="text-xl font-bold text-slate-900 dark:text-slate-50 mt-1 font-display">
+          <h2 data-crm-heading="page" className="text-xl font-bold text-slate-900 dark:text-slate-50 mt-1 font-display">
             {t("Lead Mail Generator — Email Pattern Builder")}
           </h2>
           <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
             {t("Intelligent, automated email predictor guessing address paths by name pattern rules and transferring directly to your campaign.")}
           </p>
         </div>
-        <div className="flex flex-wrap gap-2">
+        <div data-crm-header-actions="" className="flex flex-wrap gap-2">
           {records.length > 0 && (
-            <button
+            <button data-crm-button=""
               onClick={handleClearAll}
               className="flex items-center gap-1.5 px-3 py-2 border border-rose-200 dark:border-rose-950/40 text-rose-600 dark:text-rose-450 hover:bg-rose-50 dark:hover:bg-rose-950/25 rounded-lg text-xs font-bold transition-all cursor-pointer"
             >
@@ -472,10 +472,10 @@ export default function LeadMailGenerator({
         </div>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      <div data-crm-flow="" data-crm-grid="layout" className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         
         {/* Left Side: Creation Form card */}
-        <div className="lg:col-span-1 bg-white dark:bg-[#1b1a19] border border-[#EDEBE9] dark:border-[#323130] rounded-xl shadow-sm p-6 self-start">
+        <div data-crm-card="padded" className="lg:col-span-1 bg-white dark:bg-[#1b1a19] border border-[#EDEBE9] dark:border-[#323130] rounded-xl shadow-sm p-6 self-start">
           <div className="flex items-center justify-between border-b border-[#EDEBE9] dark:border-[#323130] pb-3 mb-4">
             <span className="text-xs font-bold text-slate-705 dark:text-slate-200 uppercase tracking-widest block">
               {t("Lead Creation Form")}
@@ -489,13 +489,13 @@ export default function LeadMailGenerator({
             </div>
           </div>
 
-          <form onSubmit={handleAddRecord} className="space-y-4">
+          <form data-crm-stack="" onSubmit={handleAddRecord} className="space-y-4">
             
             {/* Şirket Adı & Otomatik Domain */}
-            <div className="grid grid-cols-1 gap-3.5">
+            <div data-crm-flow="" data-crm-grid="form" className="grid grid-cols-1 gap-3.5">
               <div className="space-y-1">
-                <label className="text-[10px] font-bold uppercase tracking-wider text-slate-500 block">{t("Company Name")}</label>
-                <input
+                <label data-crm-label="" className="text-[10px] font-bold uppercase tracking-wider text-slate-500 block">{t("Company Name")}</label>
+                <input data-crm-field="control"
                   type="text"
                   placeholder={t("e.g. Gemba Partner")}
                   value={company}
@@ -506,8 +506,8 @@ export default function LeadMailGenerator({
               </div>
 
               <div className="space-y-1">
-                <label className="text-[10px] font-bold uppercase tracking-wider text-slate-500 block">{t("Domain (Estimated)")}</label>
-                <input
+                <label data-crm-label="" className="text-[10px] font-bold uppercase tracking-wider text-slate-500 block">{t("Domain (Estimated)")}</label>
+                <input data-crm-field="control"
                   type="text"
                   placeholder={t("e.g. gembapartner.com")}
                   value={domain}
@@ -520,8 +520,8 @@ export default function LeadMailGenerator({
             {/* Email Pattern structure */}
             <div className="space-y-1 pt-1.5 border-t border-[#EDEBE9] dark:border-[#323130]/60">
               <div className="flex items-center justify-between">
-                <label className="text-[10px] font-bold uppercase tracking-wider text-[#0078D4] block">{t("E-Mail Format Pattern")}</label>
-                <button
+                <label data-crm-label="" className="text-[10px] font-bold uppercase tracking-wider text-[#0078D4] block">{t("E-Mail Format Pattern")}</label>
+                <button data-crm-button=""
                   type="button"
                   onClick={() => setEmailFormat("")}
                   className="text-[10px] text-rose-600 dark:text-rose-450 font-semibold hover:underline"
@@ -529,7 +529,7 @@ export default function LeadMailGenerator({
                   {t("Clear Pattern")}
                 </button>
               </div>
-              <input
+              <input data-crm-field="control"
                 type="text"
                 value={emailFormat}
                 onChange={(e) => setEmailFormat(e.target.value)}
@@ -543,10 +543,10 @@ export default function LeadMailGenerator({
             </div>
 
             {/* Personal credentials */}
-            <div className="grid grid-cols-2 gap-3 pt-1.5 border-t border-[#EDEBE9] dark:border-[#323130]/60">
+            <div data-crm-grid="form" className="grid grid-cols-2 gap-3 pt-1.5 border-t border-[#EDEBE9] dark:border-[#323130]/60">
               <div className="space-y-1">
-                <label className="text-[10px] font-bold uppercase tracking-wider text-slate-500 block">{t("First Name")}</label>
-                <input
+                <label data-crm-label="" className="text-[10px] font-bold uppercase tracking-wider text-slate-500 block">{t("First Name")}</label>
+                <input data-crm-field="control"
                   type="text"
                   placeholder={t("e.g. John")}
                   value={firstName}
@@ -557,8 +557,8 @@ export default function LeadMailGenerator({
               </div>
 
               <div className="space-y-1">
-                <label className="text-[10px] font-bold uppercase tracking-wider text-slate-500 block">{t("Last Name")}</label>
-                <input
+                <label data-crm-label="" className="text-[10px] font-bold uppercase tracking-wider text-slate-500 block">{t("Last Name")}</label>
+                <input data-crm-field="control"
                   type="text"
                   placeholder={t("e.g. Doe")}
                   value={lastName}
@@ -572,8 +572,8 @@ export default function LeadMailGenerator({
             {/* Form standard fields: Department, Address & Sector */}
             <div className="space-y-3 pt-1 border-t border-[#EDEBE9] dark:border-[#323130]/60">
               <div className="space-y-1">
-                <label className="text-[10px] font-bold uppercase tracking-wider text-slate-500 block">{t("Department")}</label>
-                <input
+                <label data-crm-label="" className="text-[10px] font-bold uppercase tracking-wider text-slate-500 block">{t("Department")}</label>
+                <input data-crm-field="control"
                   type="text"
                   placeholder={t("e.g. Sales, HR, Engineering")}
                   value={department}
@@ -583,8 +583,8 @@ export default function LeadMailGenerator({
               </div>
 
               <div className="space-y-1">
-                <label className="text-[10px] font-bold uppercase tracking-wider text-slate-500 block">{t("Sector / Industry")}</label>
-                <input
+                <label data-crm-label="" className="text-[10px] font-bold uppercase tracking-wider text-slate-500 block">{t("Sector / Industry")}</label>
+                <input data-crm-field="control"
                   type="text"
                   placeholder={t("e.g. Automotive, IT, Retail")}
                   value={sector}
@@ -594,8 +594,8 @@ export default function LeadMailGenerator({
               </div>
 
               <div className="space-y-1">
-                <label className="text-[10px] font-bold uppercase tracking-wider text-slate-500 block">{t("Address")}</label>
-                <input
+                <label data-crm-label="" className="text-[10px] font-bold uppercase tracking-wider text-slate-500 block">{t("Address")}</label>
+                <input data-crm-field="control"
                   type="text"
                   placeholder={t("e.g. London, UK")}
                   value={address}
@@ -614,7 +614,7 @@ export default function LeadMailGenerator({
             </div>
 
             <div className="pt-3 border-t border-[#EDEBE9] dark:border-[#323130] flex gap-2">
-              <button
+              <button data-crm-button=""
                 type="submit"
                 className="flex-1 flex items-center justify-center gap-1 bg-[#0078D4] hover:bg-[#005a9e] text-white py-2 rounded-lg text-xs font-bold transition-all shadow-sm cursor-pointer"
               >
@@ -622,7 +622,7 @@ export default function LeadMailGenerator({
                 {t("Add Record")}
               </button>
 
-              <button
+              <button data-crm-button=""
                 type="button"
                 onClick={handleSaveAll}
                 className="flex items-center justify-center border border-[#EDEBE9] dark:border-[#323130] hover:bg-slate-50 dark:hover:bg-[#252423]/40 text-slate-750 dark:text-slate-205 px-3 rounded-lg text-xs font-bold transition-all cursor-pointer"
@@ -636,13 +636,13 @@ export default function LeadMailGenerator({
         </div>
 
         {/* Right Side: Lead List data table overview with pagination */}
-        <div className="lg:col-span-2 bg-white dark:bg-[#1b1a19] border border-[#EDEBE9] dark:border-[#323130] rounded-xl shadow-sm overflow-hidden flex flex-col justify-between min-h-[500px]">
+        <div data-crm-card="surface" className="lg:col-span-2 bg-white dark:bg-[#1b1a19] border border-[#EDEBE9] dark:border-[#323130] rounded-xl shadow-sm overflow-hidden flex flex-col justify-between min-h-[500px]">
           
           <div>
             {/* Table top toolbar headers */}
             <div className="p-5 border-b border-[#EDEBE9] dark:border-[#323130] flex flex-col sm:flex-row items-start sm:items-center sm:justify-between gap-3">
               <div>
-                <h3 className="text-sm font-bold text-slate-800 dark:text-slate-100 uppercase tracking-widest">
+                <h3 data-crm-heading="section" className="text-sm font-bold text-slate-800 dark:text-slate-100 uppercase tracking-widest">
                   {t("Lead Table List ({count} Records)").replace("{count}", String(records.length))}
                 </h3>
                 <p className="text-[11px] text-slate-500 mt-1">
@@ -651,7 +651,7 @@ export default function LeadMailGenerator({
               </div>
 
               <div className="flex flex-wrap items-center gap-2">
-                <button
+                <button data-crm-button=""
                   type="button"
                   onClick={handleTransferToMailMerge}
                   disabled={records.length === 0}
@@ -667,8 +667,8 @@ export default function LeadMailGenerator({
                 </button>
 
                 <div className="flex items-center gap-1.5 bg-slate-50 dark:bg-[#252423] p-1 rounded-lg border border-[#EDEBE9] dark:border-[#323130]">
-                  <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider px-1">{t("Page")}:</span>
-                  <select
+                  <span data-crm-caption="" className="text-[10px] font-bold text-slate-400 uppercase tracking-wider px-1">{t("Page")}:</span>
+                  <select data-crm-field="control"
                     value={pageSize}
                     onChange={(e) => {
                       setPageSize(Number(e.target.value));
@@ -683,8 +683,8 @@ export default function LeadMailGenerator({
                   </select>
                 </div>
 
-                <div className="flex gap-1.5 bg-slate-50 dark:bg-[#252423] p-1 rounded-lg border border-[#EDEBE9] dark:border-[#323130]">
-                  <button
+                <div data-crm-toolbar="" className="flex gap-1.5 bg-slate-50 dark:bg-[#252423] p-1 rounded-lg border border-[#EDEBE9] dark:border-[#323130]">
+                  <button data-crm-button=""
                     onClick={() => exportDataFile("xlsx")}
                     disabled={records.length === 0}
                     className="flex items-center gap-1 px-2.5 py-1 text-[11px] font-bold text-slate-600 dark:text-slate-300 hover:text-[#0078D4] disabled:opacity-40 disabled:pointer-events-none"
@@ -692,7 +692,7 @@ export default function LeadMailGenerator({
                     <FileSpreadsheet className="w-3.5 h-3.5 text-emerald-600" />
                     {t("Excel (XLSX)")}
                   </button>
-                  <button
+                  <button data-crm-button=""
                     onClick={() => exportDataFile("csv")}
                     disabled={records.length === 0}
                     className="flex items-center gap-1 px-2.5 py-1 text-[11px] font-bold text-white hover:opacity-90 disabled:opacity-40 disabled:pointer-events-none rounded"
@@ -706,21 +706,21 @@ export default function LeadMailGenerator({
             </div>
 
             {/* Table Container area */}
-            <div className="overflow-x-auto">
+            <div data-crm-scroll="horizontal" className="overflow-x-auto">
               {totalRecords === 0 ? (
-                <div className="text-center py-20 px-4 space-y-4">
-                  <div className="w-12 h-12 bg-slate-50 dark:bg-slate-800/40 rounded-full flex items-center justify-center mx-auto text-slate-400">
+                <div data-crm-stack="" className="text-center py-20 px-4 space-y-4">
+                  <div data-crm-icon-box="" className="w-12 h-12 bg-slate-50 dark:bg-slate-800/40 rounded-full flex items-center justify-center mx-auto text-slate-400">
                     <ListPlus className="w-6 h-6" />
                   </div>
                   <div className="max-w-md mx-auto">
-                    <h4 className="text-sm font-bold text-slate-800 dark:text-slate-100">{t("No Lead Records Yet")}</h4>
+                    <h4 data-crm-heading="section" className="text-sm font-bold text-slate-800 dark:text-slate-100">{t("No Lead Records Yet")}</h4>
                     <p className="text-xs text-slate-500 mt-1">
                       {t("You can add custom company personnel targets from the creation form on the left.")}
                     </p>
                   </div>
                 </div>
               ) : (
-                <table className="w-full text-left border-collapse">
+                <table data-crm-table="" className="w-full text-left border-collapse">
                   <thead>
                     <tr className="bg-slate-50/50 dark:bg-[#11100f] border-b border-[#EDEBE9] dark:border-[#323130] text-[10px] font-bold uppercase text-slate-400">
                       <th className="p-3 pl-4 w-[50px] text-center">#</th>
@@ -746,7 +746,7 @@ export default function LeadMailGenerator({
                           </td>
                           <td className="p-3">
                             {isEditing ? (
-                              <input
+                              <input data-crm-field="control"
                                 type="text"
                                 className="w-full text-xs font-semibold text-slate-850 dark:text-slate-100 bg-white dark:bg-[#11100f] border border-[#EDEBE9] dark:border-[#323130] rounded px-2 py-1 focus:outline-none focus:ring-1 focus:ring-[#0078D4]"
                                 value={editCompany}
@@ -767,14 +767,14 @@ export default function LeadMailGenerator({
                           <td className="p-3 font-medium text-slate-700 dark:text-slate-200">
                             {isEditing ? (
                               <div className="flex gap-1">
-                                <input
+                                <input data-crm-field="control"
                                   type="text"
                                   className="w-1/2 text-xs bg-white dark:bg-[#11100f] border border-[#EDEBE9] dark:border-[#323130] rounded px-1.5 py-1 focus:outline-none focus:ring-1 focus:ring-[#0078D4]"
                                   value={editFirstName}
                                   onChange={(e) => setEditFirstName(e.target.value)}
                                   placeholder={t("First")}
                                 />
-                                <input
+                                <input data-crm-field="control"
                                   type="text"
                                   className="w-1/2 text-xs bg-white dark:bg-[#11100f] border border-[#EDEBE9] dark:border-[#323130] rounded px-1.5 py-1 focus:outline-none focus:ring-1 focus:ring-[#0078D4]"
                                   value={editLastName}
@@ -788,7 +788,7 @@ export default function LeadMailGenerator({
                           </td>
                           <td className="p-3 font-mono font-medium text-[#0078D4] dark:text-indigo-400 text-[11px]">
                             {isEditing ? (
-                              <input
+                              <input data-crm-field="control"
                                 type="email"
                                 className="w-full text-xs font-mono bg-white dark:bg-[#11100f] border border-[#EDEBE9] dark:border-[#323130] rounded px-1.5 py-1 focus:outline-none focus:ring-1 focus:ring-[#0078D4]"
                                 value={editEmail}
@@ -800,7 +800,7 @@ export default function LeadMailGenerator({
                           </td>
                           <td className="p-3 text-slate-700 dark:text-slate-300 font-medium">
                             {isEditing ? (
-                              <input
+                              <input data-crm-field="control"
                                 type="text"
                                 className="w-full text-xs bg-white dark:bg-[#11100f] border border-[#EDEBE9] dark:border-[#323130] rounded px-1.5 py-1 focus:outline-none focus:ring-1 focus:ring-[#0078D4]"
                                 value={editDepartment}
@@ -812,7 +812,7 @@ export default function LeadMailGenerator({
                           </td>
                           <td className="p-3 text-slate-700 dark:text-slate-300">
                             {isEditing ? (
-                              <input
+                              <input data-crm-field="control"
                                 type="text"
                                 className="w-full text-xs bg-white dark:bg-[#11100f] border border-[#EDEBE9] dark:border-[#323130] rounded px-1.5 py-1 focus:outline-none focus:ring-1 focus:ring-[#0078D4]"
                                 value={editSector}
@@ -824,7 +824,7 @@ export default function LeadMailGenerator({
                           </td>
                           <td className="p-3 text-slate-650 dark:text-slate-400 text-xs">
                             {isEditing ? (
-                              <input
+                              <input data-crm-field="control"
                                 type="text"
                                 className="w-full text-xs bg-white dark:bg-[#11100f] border border-[#EDEBE9] dark:border-[#323130] rounded px-1.5 py-1 focus:outline-none focus:ring-1 focus:ring-[#0078D4]"
                                 value={editAddress}
@@ -839,7 +839,7 @@ export default function LeadMailGenerator({
                           <td className="p-3 text-center">
                             {isEditing ? (
                               <div className="flex items-center justify-center gap-1.5">
-                                <button
+                                <button data-crm-button=""
                                   type="button"
                                   onClick={() => saveEditedRecord(r.uid)}
                                   className="p-1 text-emerald-600 hover:text-emerald-700 hover:bg-emerald-50 dark:hover:bg-emerald-950/20 rounded transition-all cursor-pointer inline-flex items-center justify-center"
@@ -847,7 +847,7 @@ export default function LeadMailGenerator({
                                 >
                                   <Check className="w-3.5 h-3.5" />
                                 </button>
-                                <button
+                                <button data-crm-button=""
                                   type="button"
                                   onClick={cancelEditing}
                                   className="p-1 text-slate-400 hover:text-slate-600 hover:bg-slate-100 dark:hover:bg-slate-800/60 rounded transition-all cursor-pointer inline-flex items-center justify-center"
@@ -858,7 +858,7 @@ export default function LeadMailGenerator({
                               </div>
                             ) : (
                               <div className="flex items-center justify-center gap-1.5">
-                                <button
+                                <button data-crm-button=""
                                   type="button"
                                   onClick={() => startEditing(r)}
                                   className="p-1 text-[#0078D4] hover:text-[#005a9e] hover:bg-blue-50 dark:hover:bg-blue-950/20 rounded transition-all cursor-pointer inline-flex items-center justify-center"
@@ -866,7 +866,7 @@ export default function LeadMailGenerator({
                                 >
                                   <Edit className="w-3.5 h-3.5" />
                                 </button>
-                                <button
+                                <button data-crm-button=""
                                   type="button"
                                   onClick={() => handleDeleteRecord(r.uid)}
                                   className="p-1 text-slate-400 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/20 rounded transition-all cursor-pointer inline-flex items-center justify-center"
@@ -894,7 +894,7 @@ export default function LeadMailGenerator({
               </div>
               
               <div className="flex items-center gap-1.5">
-                <button
+                <button data-crm-button=""
                   onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
                   disabled={currentPage === 1}
                   className="px-2 py-1 rounded border border-[#EDEBE9] dark:border-[#323130] disabled:opacity-40 cursor-pointer disabled:cursor-not-allowed bg-white dark:bg-transparent font-semibold shadow-xs"
@@ -907,7 +907,7 @@ export default function LeadMailGenerator({
                   return (
                     <React.Fragment key={no}>
                       {isDots && <span className="text-slate-400">...</span>}
-                      <button
+                      <button data-crm-button=""
                         onClick={() => setCurrentPage(no)}
                         className={`w-7 h-7 rounded font-semibold flex items-center justify-center transition-all cursor-pointer ${
                           currentPage === no
@@ -921,7 +921,7 @@ export default function LeadMailGenerator({
                   );
                 })}
 
-                <button
+                <button data-crm-button=""
                   onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
                   disabled={currentPage === totalPages}
                   className="px-2 py-1 rounded border border-[#EDEBE9] dark:border-[#323130] disabled:opacity-40 cursor-pointer disabled:cursor-not-allowed bg-white dark:bg-transparent font-semibold shadow-xs"

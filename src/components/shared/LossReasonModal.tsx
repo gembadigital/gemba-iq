@@ -95,19 +95,19 @@ export default function LossReasonModal({ open, contextLabel, onCancel, onConfir
   };
 
   return (
-    <div
+    <div data-crm-screen="LossReasonModal" data-crm-overlay=""
       className="fixed inset-0 z-[200] bg-black/50 backdrop-blur-xs flex items-center justify-center p-4"
       role="dialog"
       aria-modal="true"
       aria-labelledby="loss-reason-modal-title"
     >
-      <div className="bg-white dark:bg-[#121212] border border-slate-200 dark:border-zinc-800 rounded-2xl w-full max-w-md shadow-2xl animate-scaleIn text-xs p-5">
+      <div data-crm-modal="" data-crm-card="padded" className="bg-white dark:bg-[#121212] border border-slate-200 dark:border-zinc-800 rounded-2xl w-full max-w-md shadow-2xl animate-scaleIn text-xs p-5">
         <div className="flex items-start gap-3 mb-4">
           <div className="p-2 rounded-full shrink-0 bg-rose-50 dark:bg-rose-950/20 text-rose-600 dark:text-rose-400">
             <XCircle className="w-4 h-4" />
           </div>
           <div>
-            <h3 id="loss-reason-modal-title" className="font-bold text-slate-800 dark:text-zinc-100 text-sm">
+            <h3 data-crm-heading="section" id="loss-reason-modal-title" className="font-bold text-slate-800 dark:text-zinc-100 text-sm">
               {t("Loss Reason")}
             </h3>
             {contextLabel && (
@@ -120,10 +120,10 @@ export default function LossReasonModal({ open, contextLabel, onCancel, onConfir
 
         <div className="space-y-3">
           <div>
-            <label className="block font-semibold text-slate-700 dark:text-zinc-300 mb-1">
+            <label data-crm-label="" className="block font-semibold text-slate-700 dark:text-zinc-300 mb-1">
               {t("Why was this lost?")}
             </label>
-            <select
+            <select data-crm-field="control"
               value={lossReason}
               onChange={(e) => { setLossReason(e.target.value); setError(""); }}
               className="w-full border border-slate-300 dark:border-zinc-700 rounded-lg px-2.5 py-2 bg-white dark:bg-zinc-900 text-slate-800 dark:text-zinc-100"
@@ -136,10 +136,10 @@ export default function LossReasonModal({ open, contextLabel, onCancel, onConfir
           </div>
 
           <div>
-            <label className="block font-semibold text-slate-700 dark:text-zinc-300 mb-1">
+            <label data-crm-label="" className="block font-semibold text-slate-700 dark:text-zinc-300 mb-1">
               {t("Loss reason notes (optional)")}
             </label>
-            <textarea
+            <textarea data-crm-field="multiline"
               value={lossReasonNote}
               onChange={(e) => setLossReasonNote(e.target.value)}
               rows={2}
@@ -149,7 +149,7 @@ export default function LossReasonModal({ open, contextLabel, onCancel, onConfir
           </div>
 
           <div className="border-t border-slate-200 dark:border-zinc-800 pt-3">
-            <label className="flex items-center gap-2 font-semibold text-slate-700 dark:text-zinc-300 cursor-pointer">
+            <label data-crm-label="" className="flex items-center gap-2 font-semibold text-slate-700 dark:text-zinc-300 cursor-pointer">
               <input
                 type="checkbox"
                 checked={createReminder}
@@ -160,12 +160,12 @@ export default function LossReasonModal({ open, contextLabel, onCancel, onConfir
               {t("Create a re-contact reminder")}
             </label>
             {createReminder && (
-              <div className="grid grid-cols-2 gap-2 mt-2">
+              <div data-crm-grid="form" className="grid grid-cols-2 gap-2 mt-2">
                 <div>
-                  <label className="block text-slate-500 dark:text-zinc-400 mb-1">
+                  <label data-crm-label="" className="block text-slate-500 dark:text-zinc-400 mb-1">
                     {t("Re-contact window start")}
                   </label>
-                  <input
+                  <input data-crm-field="control"
                     type="date"
                     value={reminderStart}
                     onChange={(e) => { handleStartChange(e.target.value); setError(""); }}
@@ -173,10 +173,10 @@ export default function LossReasonModal({ open, contextLabel, onCancel, onConfir
                   />
                 </div>
                 <div>
-                  <label className="block text-slate-500 dark:text-zinc-400 mb-1">
+                  <label data-crm-label="" className="block text-slate-500 dark:text-zinc-400 mb-1">
                     {t("Re-contact window end")}
                   </label>
-                  <input
+                  <input data-crm-field="control"
                     type="date"
                     value={reminderEnd}
                     min={reminderStart || undefined}
@@ -197,14 +197,14 @@ export default function LossReasonModal({ open, contextLabel, onCancel, onConfir
         </div>
 
         <div className="flex justify-end gap-2 pt-4">
-          <button
+          <button data-crm-button=""
             type="button"
             onClick={onCancel}
             className="px-3.5 py-1.5 bg-slate-100 hover:bg-slate-200 dark:bg-zinc-800 dark:hover:bg-zinc-700 text-slate-700 dark:text-zinc-200 rounded-lg font-semibold cursor-pointer"
           >
             {t("Cancel")}
           </button>
-          <button
+          <button data-crm-button=""
             type="button"
             onClick={handleSubmit}
             className="px-4 py-1.5 rounded-lg font-bold text-white cursor-pointer bg-rose-600 hover:bg-rose-700"

@@ -180,15 +180,15 @@ export default function CompanyRevenueTab({
   }, [metrics, lang]);
 
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 font-sans text-xs">
+    <div data-crm-flow="" data-crm-screen="CompanyRevenueTab" data-crm-grid="layout" className="grid grid-cols-1 lg:grid-cols-12 gap-5 font-sans text-xs">
       
       {/* LEFT: Invoicing / Milestones Schedule (7 columns) */}
-      <div className="lg:col-span-7 space-y-4">
+      <div data-crm-stack="" className="lg:col-span-7 space-y-4">
         
         {/* Core Financial Stat Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+        <div data-crm-flow="" data-crm-grid="layout" className="grid grid-cols-1 md:grid-cols-3 gap-3">
           
-          <div className="bg-white dark:bg-[#151515] p-4.5 rounded-xl border border-slate-100 dark:border-zinc-800/80 shadow-[0_1px_3px_rgba(0,0,0,0.01)] space-y-1">
+          <div data-crm-card="padded" className="bg-white dark:bg-[#151515] p-4.5 rounded-xl border border-slate-100 dark:border-zinc-800/80 shadow-[0_1px_3px_rgba(0,0,0,0.01)] space-y-1">
             <div className="flex items-center justify-between text-slate-400">
               <span className="text-[9px] uppercase font-bold tracking-wider font-mono">{lang === "TR" ? "İmzalı Ciro" : "Contract Value"}</span>
               <DollarSign className="w-4 h-4 text-emerald-500" />
@@ -199,7 +199,7 @@ export default function CompanyRevenueTab({
             <p className="text-[9px] text-emerald-500 font-mono">✓ {lang === "TR" ? "Onaylı Taahhütler" : "Closed-Won Contract"}</p>
           </div>
 
-          <div className="bg-white dark:bg-[#151515] p-4.5 rounded-xl border border-slate-100 dark:border-zinc-800/80 shadow-[0_1px_3px_rgba(0,0,0,0.01)] space-y-1">
+          <div data-crm-card="padded" className="bg-white dark:bg-[#151515] p-4.5 rounded-xl border border-slate-100 dark:border-zinc-800/80 shadow-[0_1px_3px_rgba(0,0,0,0.01)] space-y-1">
             <div className="flex items-center justify-between text-slate-400">
               <span className="text-[9px] uppercase font-bold tracking-wider font-mono">{lang === "TR" ? "Açık Fırsatlar" : "Sales Pipeline"}</span>
               <TrendingUp className="w-4 h-4 text-indigo-500" />
@@ -210,7 +210,7 @@ export default function CompanyRevenueTab({
             <p className="text-[9px] text-indigo-500 font-mono">★ {metrics.activeDealsCount} {lang === "TR" ? "Aktif Fırsat" : "Deals in Pipeline"}</p>
           </div>
 
-          <div className="bg-white dark:bg-[#151515] p-4.5 rounded-xl border border-slate-100 dark:border-zinc-800/80 shadow-[0_1px_3px_rgba(0,0,0,0.01)] space-y-1">
+          <div data-crm-card="padded" className="bg-white dark:bg-[#151515] p-4.5 rounded-xl border border-slate-100 dark:border-zinc-800/80 shadow-[0_1px_3px_rgba(0,0,0,0.01)] space-y-1">
             <div className="flex items-center justify-between text-slate-400">
               <span className="text-[9px] uppercase font-bold tracking-wider font-mono">{lang === "TR" ? "Ağırlıklı Boru" : "Weighted Pipeline"}</span>
               <Sparkles className="w-4 h-4 text-amber-500 animate-pulse" />
@@ -224,15 +224,15 @@ export default function CompanyRevenueTab({
         </div>
 
         {/* Milestone Billing Table */}
-        <div className="bg-white dark:bg-[#151515] p-5 rounded-xl border border-slate-100 dark:border-zinc-800/80 shadow-[0_1px_3px_rgba(0,0,0,0.02)] space-y-4">
+        <div data-crm-stack="" data-crm-card="padded" className="bg-white dark:bg-[#151515] p-5 rounded-xl border border-slate-100 dark:border-zinc-800/80 shadow-[0_1px_3px_rgba(0,0,0,0.02)] space-y-4">
           <div className="flex items-center justify-between border-b border-slate-100 dark:border-zinc-800/80 pb-2.5">
             <div className="flex items-center gap-2">
               <Receipt className="w-4 h-4 text-indigo-500" />
-              <h4 className="text-xs font-bold uppercase text-slate-800 dark:text-zinc-200 tracking-wider">
+              <h4 data-crm-heading="section" className="text-xs font-bold uppercase text-slate-800 dark:text-zinc-200 tracking-wider">
                 {lang === "TR" ? "Hakediş ve Faturalama Planı" : "Milestone Billing & Invoicing Plan"}
               </h4>
             </div>
-            <button
+            <button data-crm-button=""
               type="button"
               onClick={() => setIsAddingMilestone(!isAddingMilestone)}
               className="px-2.5 py-1 bg-slate-50 hover:bg-slate-100 dark:bg-zinc-800 dark:hover:bg-zinc-700/80 border border-slate-205 dark:border-zinc-700 rounded font-bold flex items-center gap-1 cursor-pointer transition-colors text-[10px]"
@@ -248,10 +248,10 @@ export default function CompanyRevenueTab({
               onSubmit={handleCreateMilestone}
               className="p-3 bg-slate-50 dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 rounded-lg space-y-3 animate-fadeIn"
             >
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+              <div data-crm-flow="" data-crm-grid="form" className="grid grid-cols-1 md:grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-[8px] uppercase font-bold text-slate-400 mb-1">{lang === "TR" ? "Aşama / Açıklama *" : "Milestone Detail *"}</label>
-                  <input
+                  <label data-crm-label="" className="block text-[8px] uppercase font-bold text-slate-400 mb-1">{lang === "TR" ? "Aşama / Açıklama *" : "Milestone Detail *"}</label>
+                  <input data-crm-field="control"
                     type="text"
                     required
                     placeholder={t("e.g. Milestone 4: OEE Verification Audit")}
@@ -261,8 +261,8 @@ export default function CompanyRevenueTab({
                   />
                 </div>
                 <div>
-                  <label className="block text-[8px] uppercase font-bold text-slate-400 mb-1">{lang === "TR" ? `Tutar (${getSystemCurrency().symbol}) *` : `Amount (${getSystemCurrency().symbol}) *`}</label>
-                  <input
+                  <label data-crm-label="" className="block text-[8px] uppercase font-bold text-slate-400 mb-1">{lang === "TR" ? `Tutar (${getSystemCurrency().symbol}) *` : `Amount (${getSystemCurrency().symbol}) *`}</label>
+                  <input data-crm-field="control"
                     type="number"
                     required
                     value={newMilestone.amount}
@@ -271,8 +271,8 @@ export default function CompanyRevenueTab({
                   />
                 </div>
                 <div>
-                  <label className="block text-[8px] uppercase font-bold text-slate-400 mb-1">{lang === "TR" ? "Tahmini Tarih" : "Expected Date"}</label>
-                  <input
+                  <label data-crm-label="" className="block text-[8px] uppercase font-bold text-slate-400 mb-1">{lang === "TR" ? "Tahmini Tarih" : "Expected Date"}</label>
+                  <input data-crm-field="control"
                     type="date"
                     value={newMilestone.date}
                     onChange={(e) => setNewMilestone({ ...newMilestone, date: e.target.value })}
@@ -280,8 +280,8 @@ export default function CompanyRevenueTab({
                   />
                 </div>
                 <div>
-                  <label className="block text-[8px] uppercase font-bold text-slate-400 mb-1">{t("Status")}</label>
-                  <select
+                  <label data-crm-label="" className="block text-[8px] uppercase font-bold text-slate-400 mb-1">{t("Status")}</label>
+                  <select data-crm-field="control"
                     value={newMilestone.status}
                     onChange={(e: any) => setNewMilestone({ ...newMilestone, status: e.target.value })}
                     className="w-full bg-white dark:bg-zinc-800 border border-slate-200 dark:border-zinc-700 rounded p-1.5 text-xs text-slate-800 dark:text-zinc-200 focus:outline-none"
@@ -294,14 +294,14 @@ export default function CompanyRevenueTab({
               </div>
 
               <div className="flex justify-end gap-1.5 pt-2 border-t border-dashed border-slate-205 dark:border-zinc-800">
-                <button
+                <button data-crm-button=""
                   type="button"
                   onClick={() => setIsAddingMilestone(false)}
                   className="px-2.5 py-1 bg-slate-200 hover:bg-slate-300 text-slate-700 rounded font-semibold cursor-pointer"
                 >
                   {lang === "TR" ? "İptal" : "Cancel"}
                 </button>
-                <button
+                <button data-crm-button=""
                   type="submit"
                   className="px-3.5 py-1 bg-indigo-600 hover:bg-indigo-700 text-white rounded font-bold cursor-pointer"
                 >
@@ -312,8 +312,8 @@ export default function CompanyRevenueTab({
           )}
 
           {/* Billing List Data Grid */}
-          <div className="overflow-x-auto border border-slate-100 dark:border-zinc-800 rounded-lg">
-            <table className="w-full text-left border-collapse text-xs font-sans">
+          <div data-crm-scroll="horizontal" className="overflow-x-auto border border-slate-100 dark:border-zinc-800 rounded-lg">
+            <table data-crm-table="" className="w-full text-left border-collapse text-xs font-sans">
               <thead>
                 <tr className="bg-slate-50 dark:bg-zinc-900 border-b border-slate-100 dark:border-zinc-800 text-[10px] uppercase font-bold text-slate-400 font-mono tracking-wider">
                   <th className="p-3 pl-4">{lang === "TR" ? "Hakediş Aşama Kalemi" : "Milestone Description"}</th>
@@ -330,7 +330,7 @@ export default function CompanyRevenueTab({
                     <td className="p-3 font-mono text-slate-550 dark:text-zinc-400">{bill.date}</td>
                     <td className="p-3 font-extrabold text-slate-800 dark:text-zinc-100 font-mono">{getSystemCurrency().symbol}{formatSystemNumber(bill.amount)}</td>
                     <td className="p-3">
-                      <span className={`inline-block px-2 py-0.5 rounded-full text-[9px] font-mono font-bold uppercase ${
+                      <span data-crm-caption="" className={`inline-block px-2 py-0.5 rounded-full text-[9px] font-mono font-bold uppercase ${
                         bill.status === "Paid" 
                           ? "bg-emerald-50 text-emerald-600 dark:bg-emerald-950/20 dark:text-emerald-400" 
                           : bill.status === "Pending" 
@@ -342,7 +342,7 @@ export default function CompanyRevenueTab({
                     </td>
                     <td className="p-3 text-right pr-4">
                       {bill.status !== "Paid" && (
-                        <button
+                        <button data-crm-button=""
                           type="button"
                           onClick={() => handleMarkAsPaid(bill.id, bill.milestone, bill.amount)}
                           className="px-2 py-1 bg-emerald-50 hover:bg-emerald-100 dark:bg-emerald-950/30 dark:hover:bg-emerald-900/40 text-emerald-600 dark:text-emerald-400 border border-emerald-500/10 rounded font-bold cursor-pointer text-[10px] flex items-center gap-1 ml-auto"
@@ -368,13 +368,13 @@ export default function CompanyRevenueTab({
       </div>
 
       {/* RIGHT: Financial Projection AreaChart Forecast (5 columns) */}
-      <div className="lg:col-span-5 space-y-4">
+      <div data-crm-stack="" className="lg:col-span-5 space-y-4">
         
         {/* projected revenue 6-month forecast charting */}
-        <div className="bg-white dark:bg-[#151515] p-5 rounded-xl border border-slate-100 dark:border-zinc-800/80 shadow-[0_1px_3px_rgba(0,0,0,0.02)] space-y-4">
+        <div data-crm-stack="" data-crm-card="padded" className="bg-white dark:bg-[#151515] p-5 rounded-xl border border-slate-100 dark:border-zinc-800/80 shadow-[0_1px_3px_rgba(0,0,0,0.02)] space-y-4">
           <div className="flex items-center gap-2 border-b border-slate-100 dark:border-zinc-800 pb-2.5">
             <TrendingUp className="w-4 h-4 text-indigo-500" />
-            <h4 className="text-xs font-bold uppercase text-slate-800 dark:text-zinc-200 tracking-wider">
+            <h4 data-crm-heading="section" className="text-xs font-bold uppercase text-slate-800 dark:text-zinc-200 tracking-wider">
               {lang === "TR" ? "6 Aylık Ciro Projeksiyonu" : "6-Month Projected Revenue Forecast"}
             </h4>
           </div>

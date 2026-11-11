@@ -251,17 +251,17 @@ export default function CompanyTimelineTab({
   };
 
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 font-sans text-xs">
+    <div data-crm-flow="" data-crm-screen="CompanyTimelineTab" data-crm-grid="layout" className="grid grid-cols-1 lg:grid-cols-12 gap-5 font-sans text-xs">
       
       {/* LEFT: Timeline chronological feed (8 columns) */}
-      <div className="lg:col-span-8 space-y-4">
+      <div data-crm-stack="" className="lg:col-span-8 space-y-4">
         
         {/* Action Header and Quick Log Activator */}
-        <div className="flex items-center justify-between bg-white dark:bg-[#151515] p-3.5 rounded-xl border border-slate-100 dark:border-zinc-800/80 shadow-[0_1px_2px_rgba(0,0,0,0.01)]">
-          <h4 className="text-xs font-bold uppercase text-slate-800 dark:text-zinc-200 tracking-wider">
+        <div data-crm-card="padded" className="flex items-center justify-between bg-white dark:bg-[#151515] p-3.5 rounded-xl border border-slate-100 dark:border-zinc-800/80 shadow-[0_1px_2px_rgba(0,0,0,0.01)]">
+          <h4 data-crm-heading="section" className="text-xs font-bold uppercase text-slate-800 dark:text-zinc-200 tracking-wider">
             {t("Chronological Activity Timeline")}
           </h4>
-          <button
+          <button data-crm-button=""
             type="button"
             onClick={() => setIsFormOpen(!isFormOpen)}
             className="px-3.5 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg font-bold flex items-center gap-1 cursor-pointer transition-all text-xs"
@@ -279,7 +279,7 @@ export default function CompanyTimelineTab({
           >
             <div className="flex items-center justify-between border-b border-dashed border-slate-200 dark:border-zinc-800 pb-1.5">
               <span className="font-bold text-slate-700 dark:text-zinc-200">{t("Log Phone Call / Meeting")}</span>
-              <button
+              <button data-crm-button=""
                 type="button"
                 onClick={() => setIsFormOpen(false)}
                 className="p-1 hover:bg-slate-200 dark:hover:bg-zinc-800 rounded text-slate-400"
@@ -288,10 +288,10 @@ export default function CompanyTimelineTab({
               </button>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+            <div data-crm-flow="" data-crm-grid="form" className="grid grid-cols-1 md:grid-cols-3 gap-3">
               <div>
-                <label className="block text-[9px] uppercase font-bold text-slate-400 mb-1">{t("Type")}</label>
-                <select
+                <label data-crm-label="" className="block text-[9px] uppercase font-bold text-slate-400 mb-1">{t("Type")}</label>
+                <select data-crm-field="control"
                   value={formState.type}
                   onChange={(e: any) => setFormState({ ...formState, type: e.target.value })}
                   className="w-full bg-white dark:bg-zinc-800 border border-slate-200 dark:border-zinc-700 rounded p-1.5 text-xs text-slate-800 dark:text-zinc-200 focus:outline-none"
@@ -305,8 +305,8 @@ export default function CompanyTimelineTab({
               </div>
 
               <div className="md:col-span-2">
-                <label className="block text-[9px] uppercase font-bold text-slate-400 mb-1">{t("Activity Title *")}</label>
-                <input
+                <label data-crm-label="" className="block text-[9px] uppercase font-bold text-slate-400 mb-1">{t("Activity Title *")}</label>
+                <input data-crm-field="control"
                   type="text"
                   required
                   placeholder={t("e.g. Discussed SMED process diagnostic scope")}
@@ -318,8 +318,8 @@ export default function CompanyTimelineTab({
             </div>
 
             <div>
-              <label className="block text-[9px] uppercase font-bold text-slate-400 mb-1">{t("Brief Details")}</label>
-              <textarea
+              <label data-crm-label="" className="block text-[9px] uppercase font-bold text-slate-400 mb-1">{t("Brief Details")}</label>
+              <textarea data-crm-field="multiline"
                 value={formState.description}
                 onChange={(e) => setFormState({ ...formState, description: e.target.value })}
                 placeholder={t("Key notes, identified wastes, follow-ups...")}
@@ -327,10 +327,10 @@ export default function CompanyTimelineTab({
               />
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+            <div data-crm-flow="" data-crm-grid="form" className="grid grid-cols-1 md:grid-cols-2 gap-3">
               <div>
-                <label className="block text-[9px] uppercase font-bold text-slate-400 mb-1">{t("Outcome")}</label>
-                <input
+                <label data-crm-label="" className="block text-[9px] uppercase font-bold text-slate-400 mb-1">{t("Outcome")}</label>
+                <input data-crm-field="control"
                   type="text"
                   placeholder={t("e.g. Positive, follow up next Monday")}
                   value={formState.result}
@@ -339,8 +339,8 @@ export default function CompanyTimelineTab({
                 />
               </div>
               <div>
-                <label className="block text-[9px] uppercase font-bold text-slate-400 mb-1">{t("Logged By")}</label>
-                <input
+                <label data-crm-label="" className="block text-[9px] uppercase font-bold text-slate-400 mb-1">{t("Logged By")}</label>
+                <input data-crm-field="control"
                   type="text"
                   value={formState.user}
                   onChange={(e) => setFormState({ ...formState, user: e.target.value })}
@@ -350,14 +350,14 @@ export default function CompanyTimelineTab({
             </div>
 
             <div className="flex justify-end gap-2 border-t border-dashed border-slate-200 dark:border-zinc-800 pt-2.5">
-              <button
+              <button data-crm-button=""
                 type="button"
                 onClick={() => setIsFormOpen(false)}
                 className="px-3 py-1.5 bg-slate-200 hover:bg-slate-300 text-slate-700 rounded font-semibold cursor-pointer"
               >
                 {t("Cancel")}
               </button>
-              <button
+              <button data-crm-button=""
                 type="submit"
                 className="px-4 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded font-bold cursor-pointer"
               >
@@ -368,7 +368,7 @@ export default function CompanyTimelineTab({
         )}
 
         {/* Timeline Feed Container */}
-        <div className="bg-white dark:bg-[#151515] p-5 rounded-xl border border-slate-100 dark:border-zinc-800/80 shadow-[0_1px_3px_rgba(0,0,0,0.02)]">
+        <div data-crm-card="padded" className="bg-white dark:bg-[#151515] p-5 rounded-xl border border-slate-100 dark:border-zinc-800/80 shadow-[0_1px_3px_rgba(0,0,0,0.02)]">
           {timelineItems.length === 0 ? (
             <div className="p-12 text-center">
               <Clock className="w-8 h-8 text-slate-300 mx-auto mb-2" />
@@ -377,7 +377,7 @@ export default function CompanyTimelineTab({
               </span>
             </div>
           ) : (
-            <div className="relative border-l-2 border-slate-100 dark:border-zinc-800 pl-5.5 ml-3 space-y-6">
+            <div data-crm-stack="" className="relative border-l-2 border-slate-100 dark:border-zinc-800 pl-5.5 ml-3 space-y-6">
               {timelineItems.map((item) => (
                 <div key={item.id} className="relative group/timeline animate-fadeIn text-xs font-sans">
                   
@@ -435,11 +435,11 @@ export default function CompanyTimelineTab({
       </div>
 
       {/* RIGHT: Activity stats (4 columns) */}
-      <div className="lg:col-span-4 space-y-4">
+      <div data-crm-stack="" className="lg:col-span-4 space-y-4">
 
         {/* Operational Timeline Stats Card */}
-        <div className="bg-white dark:bg-[#151515] p-5 rounded-xl border border-slate-100 dark:border-zinc-800/80 shadow-[0_1px_3px_rgba(0,0,0,0.02)] space-y-3">
-          <h4 className="text-xs font-bold uppercase text-slate-800 dark:text-zinc-200 tracking-wider font-mono">
+        <div data-crm-card="padded" className="bg-white dark:bg-[#151515] p-5 rounded-xl border border-slate-100 dark:border-zinc-800/80 shadow-[0_1px_3px_rgba(0,0,0,0.02)] space-y-3">
+          <h4 data-crm-heading="section" className="text-xs font-bold uppercase text-slate-800 dark:text-zinc-200 tracking-wider font-mono">
             {t("Activity Density Stats")}
           </h4>
 

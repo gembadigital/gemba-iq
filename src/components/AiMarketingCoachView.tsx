@@ -94,7 +94,7 @@ export default function AiMarketingCoachView({ onNavigateToTab }: AiMarketingCoa
 
   if (!weeklyPlan) {
     return (
-      <div className="flex items-center justify-center p-12 text-slate-400 text-xs">
+      <div data-crm-screen="AiMarketingCoachView" className="flex items-center justify-center p-12 text-slate-400 text-xs">
         <RefreshCw className="w-5 h-5 animate-spin mr-2 text-[#0078D4]" />
         <span>{t("AI Marketing Coach canlı CRM verilerini analiz ediyor...")}</span>
       </div>
@@ -118,7 +118,7 @@ export default function AiMarketingCoachView({ onNavigateToTab }: AiMarketingCoa
   const currentWorkload = userWorkloads[activeUserTab] || userWorkloads["Atakan"];
 
   return (
-    <div id="ai-marketing-coach-root" className="space-y-5 animate-fade-in">
+    <div data-crm-stack="" data-crm-screen="AiMarketingCoachView" id="ai-marketing-coach-root" className="space-y-5 animate-fade-in">
       {/* Toast Alert pop notification */}
       {toast && (
         <div className="fixed bottom-6 right-6 z-50 p-4 rounded-xl shadow-2xl border flex items-center gap-3 animate-bounce max-w-md bg-slate-900 text-white border-slate-700">
@@ -128,10 +128,10 @@ export default function AiMarketingCoachView({ onNavigateToTab }: AiMarketingCoa
       )}
 
       {/* Main Header Banner */}
-      <div className="bg-white dark:bg-[#1b1a19] p-6 border border-[#EDEBE9] dark:border-[#323130] rounded-2xl shadow-sm relative overflow-hidden">
-        <div className="absolute top-0 left-0 right-0 h-1.5 bg-gradient-to-r from-amber-500 via-[#0078D4] to-emerald-500" />
+      <div data-crm-card="padded" data-crm-header="" className="bg-white dark:bg-[#1b1a19] p-6 border border-[#EDEBE9] dark:border-[#323130] rounded-2xl shadow-sm relative overflow-hidden">
+        <div data-crm-decoration="" className="absolute top-0 left-0 right-0 h-1.5 bg-gradient-to-r from-amber-500 via-[#0078D4] to-emerald-500" />
 
-        <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+        <div data-crm-header-copy="" className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
           <div className="space-y-1.5">
             <div className="flex items-center gap-2 flex-wrap">
               <span className="text-xs font-mono font-bold bg-amber-100 text-amber-800 dark:bg-amber-950/40 dark:text-amber-300 px-2.5 py-0.5 rounded-lg flex items-center gap-1.5 border border-amber-200 dark:border-amber-800">
@@ -145,7 +145,7 @@ export default function AiMarketingCoachView({ onNavigateToTab }: AiMarketingCoa
                 2 Kişilik Ticari Ekip Yönetimi
               </span>
             </div>
-            <h2 className="text-lg font-extrabold text-slate-800 dark:text-slate-100 tracking-tight">
+            <h2 data-crm-heading="page" className="text-lg font-extrabold text-slate-800 dark:text-slate-100 tracking-tight">
               {t("Pazarlama & İş Geliştirme AI Yönetici Paneli")}
             </h2>
             <p className="text-xs text-slate-500 dark:text-slate-400 max-w-3xl leading-relaxed">
@@ -154,7 +154,7 @@ export default function AiMarketingCoachView({ onNavigateToTab }: AiMarketingCoa
           </div>
 
           <div className="flex flex-wrap items-center gap-2 flex-shrink-0">
-            <button
+            <button data-crm-button=""
               type="button"
               onClick={() => setShowReportModal(true)}
               className="text-xs font-bold bg-[#FAF9F8] hover:bg-[#EDEBE9] dark:bg-[#252423] dark:hover:bg-[#323130] text-slate-700 dark:text-slate-200 px-3.5 py-2.5 border border-[#EDEBE9] dark:border-[#323130] rounded-xl flex items-center gap-2 cursor-pointer transition-all shadow-xs"
@@ -163,7 +163,7 @@ export default function AiMarketingCoachView({ onNavigateToTab }: AiMarketingCoa
               <span>{t("AI Yönetici Raporu")}</span>
             </button>
 
-            <button
+            <button data-crm-button=""
               type="button"
               onClick={() => loadOrGeneratePlan(true)}
               disabled={isRegenerating}
@@ -190,9 +190,9 @@ export default function AiMarketingCoachView({ onNavigateToTab }: AiMarketingCoa
       </div>
 
       {/* KPI Ribbon Summary */}
-      <div className="grid grid-cols-2 md:grid-cols-5 gap-3.5">
-        <div className="bg-white dark:bg-[#1b1a19] p-4 rounded-2xl border border-[#EDEBE9] dark:border-[#323130] shadow-xs">
-          <span className="text-[10px] font-bold text-slate-400 uppercase font-mono">{t("Bu Haftanın Hedefleri")}</span>
+      <div data-crm-flow="" data-crm-grid="layout" className="grid grid-cols-2 md:grid-cols-5 gap-3.5">
+        <div data-crm-card="padded" className="bg-white dark:bg-[#1b1a19] p-4 rounded-2xl border border-[#EDEBE9] dark:border-[#323130] shadow-xs">
+          <span data-crm-caption="" className="text-[10px] font-bold text-slate-400 uppercase font-mono">{t("Bu Haftanın Hedefleri")}</span>
           <div className="text-xl font-extrabold text-[#0078D4] dark:text-brand-400 mt-1 flex items-center justify-between">
             <span>{targetCount} {t("görev")}</span>
             <Target className="w-5 h-5 opacity-40" />
@@ -200,8 +200,8 @@ export default function AiMarketingCoachView({ onNavigateToTab }: AiMarketingCoa
           <p className="text-[10px] text-slate-450 mt-1">{t("Öncelikli aksiyon planı")}</p>
         </div>
 
-        <div className="bg-white dark:bg-[#1b1a19] p-4 rounded-2xl border border-[#EDEBE9] dark:border-[#323130] shadow-xs">
-          <span className="text-[10px] font-bold text-slate-400 uppercase font-mono">{t("Gerçekleşen Görevler")}</span>
+        <div data-crm-card="padded" className="bg-white dark:bg-[#1b1a19] p-4 rounded-2xl border border-[#EDEBE9] dark:border-[#323130] shadow-xs">
+          <span data-crm-caption="" className="text-[10px] font-bold text-slate-400 uppercase font-mono">{t("Gerçekleşen Görevler")}</span>
           <div className="text-xl font-extrabold text-emerald-600 dark:text-emerald-400 mt-1 flex items-center justify-between">
             <span>{completedCount} / {targetCount}</span>
             <CheckCircle className="w-5 h-5 opacity-40" />
@@ -209,8 +209,8 @@ export default function AiMarketingCoachView({ onNavigateToTab }: AiMarketingCoa
           <p className="text-[10px] text-slate-450 mt-1">{t("Task Management senkronlu")}</p>
         </div>
 
-        <div className="bg-white dark:bg-[#1b1a19] p-4 rounded-2xl border border-[#EDEBE9] dark:border-[#323130] shadow-xs">
-          <span className="text-[10px] font-bold text-slate-400 uppercase font-mono">{t("Hedef Başarı Oranı")}</span>
+        <div data-crm-card="padded" className="bg-white dark:bg-[#1b1a19] p-4 rounded-2xl border border-[#EDEBE9] dark:border-[#323130] shadow-xs">
+          <span data-crm-caption="" className="text-[10px] font-bold text-slate-400 uppercase font-mono">{t("Hedef Başarı Oranı")}</span>
           <div className="text-xl font-extrabold text-amber-600 dark:text-amber-400 mt-1 flex items-center justify-between">
             <span>%{successRate}</span>
             <TrendingUp className="w-5 h-5 opacity-40" />
@@ -220,8 +220,8 @@ export default function AiMarketingCoachView({ onNavigateToTab }: AiMarketingCoa
           </div>
         </div>
 
-        <div className="bg-white dark:bg-[#1b1a19] p-4 rounded-2xl border border-[#EDEBE9] dark:border-[#323130] shadow-xs">
-          <span className="text-[10px] font-bold text-slate-400 uppercase font-mono">{t("Açık Fırsat Hacmi")}</span>
+        <div data-crm-card="padded" className="bg-white dark:bg-[#1b1a19] p-4 rounded-2xl border border-[#EDEBE9] dark:border-[#323130] shadow-xs">
+          <span data-crm-caption="" className="text-[10px] font-bold text-slate-400 uppercase font-mono">{t("Açık Fırsat Hacmi")}</span>
           <div className="text-xl font-extrabold text-indigo-600 dark:text-indigo-400 mt-1 flex items-center justify-between">
             <span>₺{openOpportunitiesValue ? (openOpportunitiesValue / 1000).toFixed(0) + "K" : "0"}</span>
             <DollarSign className="w-5 h-5 opacity-40" />
@@ -229,8 +229,8 @@ export default function AiMarketingCoachView({ onNavigateToTab }: AiMarketingCoa
           <p className="text-[10px] text-slate-450 mt-1">{t("Takipteki tüm fırsatlar")}</p>
         </div>
 
-        <div className="bg-white dark:bg-[#1b1a19] p-4 rounded-2xl border border-[#EDEBE9] dark:border-[#323130] shadow-xs">
-          <span className="text-[10px] font-bold text-slate-400 uppercase font-mono">{t("AI Yönetici Uyarıları")}</span>
+        <div data-crm-card="padded" className="bg-white dark:bg-[#1b1a19] p-4 rounded-2xl border border-[#EDEBE9] dark:border-[#323130] shadow-xs">
+          <span data-crm-caption="" className="text-[10px] font-bold text-slate-400 uppercase font-mono">{t("AI Yönetici Uyarıları")}</span>
           <div className="text-xl font-extrabold text-rose-600 dark:text-rose-400 mt-1 flex items-center justify-between">
             <span>{criticalAlertCount} {t("uyarı")}</span>
             <ShieldAlert className="w-5 h-5 opacity-40" />
@@ -252,9 +252,9 @@ export default function AiMarketingCoachView({ onNavigateToTab }: AiMarketingCoa
             </span>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-2.5">
+          <div data-crm-flow="" data-crm-grid="layout" className="grid grid-cols-1 md:grid-cols-2 gap-2.5">
             {alerts.map((alt) => (
-              <div key={alt.id} className="bg-white dark:bg-[#201f1e] p-3 rounded-xl border border-rose-100 dark:border-rose-900/40 space-y-1">
+              <div data-crm-card="surface" key={alt.id} className="bg-white dark:bg-[#201f1e] p-3 rounded-xl border border-rose-100 dark:border-rose-900/40 space-y-1">
                 <div className="flex items-center justify-between">
                   <span className="font-bold text-slate-800 dark:text-slate-100 text-xs flex items-center gap-1.5">
                     <span className="w-2 h-2 rounded-full bg-rose-500" />
@@ -275,15 +275,15 @@ export default function AiMarketingCoachView({ onNavigateToTab }: AiMarketingCoa
       )}
 
       {/* Main Grid: Priority Actions (Left 7 cols) & Team Workload Breakdown (Right 5 cols) */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-5">
+      <div data-crm-flow="" data-crm-grid="layout" className="grid grid-cols-1 lg:grid-cols-12 gap-5">
         
         {/* Left Column: Priority Actions List (Ranked 1 to 7) */}
-        <div className="lg:col-span-7 space-y-4">
-          <div className="bg-white dark:bg-[#1b1a19] p-5 border border-[#EDEBE9] dark:border-[#323130] rounded-2xl shadow-xs space-y-4">
+        <div data-crm-stack="" className="lg:col-span-7 space-y-4">
+          <div data-crm-stack="" data-crm-card="padded" className="bg-white dark:bg-[#1b1a19] p-5 border border-[#EDEBE9] dark:border-[#323130] rounded-2xl shadow-xs space-y-4">
             <div className="flex items-center justify-between border-b border-[#EDEBE9] dark:border-[#323130] pb-3">
               <div className="flex items-center gap-2">
                 <Zap className="w-4 h-4 text-amber-500" />
-                <h3 className="text-xs font-bold text-slate-800 dark:text-slate-100 uppercase tracking-wider font-mono">
+                <h3 data-crm-heading="section" className="text-xs font-bold text-slate-800 dark:text-slate-100 uppercase tracking-wider font-mono">
                   {t("Haftalık Öncelikli Aksiyon Planı (AI Tarafından Sıralanmış)")}
                 </h3>
               </div>
@@ -296,7 +296,7 @@ export default function AiMarketingCoachView({ onNavigateToTab }: AiMarketingCoa
               {priorityTasks.map((task, idx) => {
                 const isCompleted = task.status === "completed";
                 return (
-                  <div
+                  <div data-crm-card="padded"
                     key={task.id}
                     className={`p-4 rounded-xl border transition-all duration-200 space-y-2.5 ${
                       isCompleted
@@ -306,7 +306,7 @@ export default function AiMarketingCoachView({ onNavigateToTab }: AiMarketingCoa
                   >
                     <div className="flex items-start justify-between gap-3">
                       <div className="flex items-start gap-3 flex-1 min-w-0">
-                        <button
+                        <button data-crm-button=""
                           type="button"
                           onClick={() => handleToggleTaskStatus(task)}
                           className={`mt-0.5 w-5 h-5 rounded-md border flex items-center justify-center cursor-pointer transition-all ${
@@ -339,7 +339,7 @@ export default function AiMarketingCoachView({ onNavigateToTab }: AiMarketingCoa
                             </span>
                           </div>
 
-                          <h4 className={`text-xs font-bold ${isCompleted ? "line-through text-slate-400" : "text-slate-800 dark:text-slate-100"}`}>
+                          <h4 data-crm-heading="section" className={`text-xs font-bold ${isCompleted ? "line-through text-slate-400" : "text-slate-800 dark:text-slate-100"}`}>
                             {task.title}
                           </h4>
 
@@ -372,20 +372,20 @@ export default function AiMarketingCoachView({ onNavigateToTab }: AiMarketingCoa
         </div>
 
         {/* Right Column: 2-Person Team Weekly Workload & Schedule (Atakan & Ersin) */}
-        <div className="lg:col-span-5 space-y-4">
-          <div className="bg-white dark:bg-[#1b1a19] p-5 border border-[#EDEBE9] dark:border-[#323130] rounded-2xl shadow-xs space-y-4">
+        <div data-crm-stack="" className="lg:col-span-5 space-y-4">
+          <div data-crm-stack="" data-crm-card="padded" className="bg-white dark:bg-[#1b1a19] p-5 border border-[#EDEBE9] dark:border-[#323130] rounded-2xl shadow-xs space-y-4">
             <div className="flex items-center justify-between border-b border-[#EDEBE9] dark:border-[#323130] pb-3">
               <div className="flex items-center gap-2">
                 <Users className="w-4 h-4 text-[#0078D4]" />
-                <h3 className="text-xs font-bold text-slate-800 dark:text-slate-100 uppercase tracking-wider font-mono">
+                <h3 data-crm-heading="section" className="text-xs font-bold text-slate-800 dark:text-slate-100 uppercase tracking-wider font-mono">
                   {t("Ekip Görev Dağılımı & Günlük Plan")}
                 </h3>
               </div>
 
               {/* User Selector Tabs */}
-              <div className="flex items-center gap-1 bg-slate-100 dark:bg-slate-800 p-1 rounded-xl">
+              <div data-crm-toolbar="" className="flex items-center gap-1 bg-slate-100 dark:bg-slate-800 p-1 rounded-xl">
                 {(["Atakan", "Ersin"] as const).map((user) => (
-                  <button
+                  <button data-crm-button=""
                     key={user}
                     type="button"
                     onClick={() => setActiveUserTab(user)}
@@ -414,7 +414,7 @@ export default function AiMarketingCoachView({ onNavigateToTab }: AiMarketingCoa
               </div>
 
               <div className="flex items-center gap-1.5 flex-wrap text-[10px]">
-                <span className="text-slate-400 font-mono uppercase">{t("Odak Alanları")}:</span>
+                <span data-crm-caption="" className="text-slate-400 font-mono uppercase">{t("Odak Alanları")}:</span>
                 {currentWorkload.focusAreas.map((area) => (
                   <span key={area} className="bg-white dark:bg-black/20 text-slate-600 dark:text-slate-300 font-semibold px-2 py-0.5 rounded border border-slate-200 dark:border-slate-800">
                     {area}
@@ -445,7 +445,7 @@ export default function AiMarketingCoachView({ onNavigateToTab }: AiMarketingCoa
                             key={tk.id}
                             className="flex items-start gap-2 bg-[#FAF9F8] dark:bg-[#252423] p-2 rounded-lg text-xs"
                           >
-                            <button
+                            <button data-crm-button=""
                               type="button"
                               onClick={() => handleToggleTaskStatus(tk)}
                               className={`mt-0.5 w-4 h-4 rounded border flex items-center justify-center cursor-pointer ${
@@ -477,10 +477,10 @@ export default function AiMarketingCoachView({ onNavigateToTab }: AiMarketingCoa
       </div>
 
       {/* Marketing, Web/SEO & Customer Competitors Strategic Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
+      <div data-crm-flow="" data-crm-grid="layout" className="grid grid-cols-1 md:grid-cols-3 gap-5">
         
         {/* Card 1: Mevcut Müşteri Rakipleri Hedefleme */}
-        <div className="bg-white dark:bg-[#1b1a19] p-5 border border-[#EDEBE9] dark:border-[#323130] rounded-2xl shadow-xs space-y-3">
+        <div data-crm-card="padded" className="bg-white dark:bg-[#1b1a19] p-5 border border-[#EDEBE9] dark:border-[#323130] rounded-2xl shadow-xs space-y-3">
           <div className="flex items-center justify-between border-b border-[#EDEBE9] dark:border-[#323130] pb-2.5">
             <span className="font-extrabold text-xs text-slate-800 dark:text-slate-100 uppercase tracking-wider font-mono flex items-center gap-2">
               <Building2 className="w-4 h-4 text-[#0078D4]" />
@@ -496,7 +496,7 @@ export default function AiMarketingCoachView({ onNavigateToTab }: AiMarketingCoa
           </p>
 
           {onNavigateToTab && (
-            <button
+            <button data-crm-button=""
               type="button"
               onClick={() => onNavigateToTab("marketing-target-market")}
               className="text-xs font-bold text-[#0078D4] hover:underline flex items-center gap-1 cursor-pointer pt-1"
@@ -508,7 +508,7 @@ export default function AiMarketingCoachView({ onNavigateToTab }: AiMarketingCoa
         </div>
 
         {/* Card 2: Pazarlama & LinkedIn Kampanyaları */}
-        <div className="bg-white dark:bg-[#1b1a19] p-5 border border-[#EDEBE9] dark:border-[#323130] rounded-2xl shadow-xs space-y-3">
+        <div data-crm-card="padded" className="bg-white dark:bg-[#1b1a19] p-5 border border-[#EDEBE9] dark:border-[#323130] rounded-2xl shadow-xs space-y-3">
           <div className="flex items-center justify-between border-b border-[#EDEBE9] dark:border-[#323130] pb-2.5">
             <span className="font-extrabold text-xs text-slate-800 dark:text-slate-100 uppercase tracking-wider font-mono flex items-center gap-2">
               <Zap className="w-4 h-4 text-amber-500" />
@@ -524,7 +524,7 @@ export default function AiMarketingCoachView({ onNavigateToTab }: AiMarketingCoa
           </p>
 
           {onNavigateToTab && (
-            <button
+            <button data-crm-button=""
               type="button"
               onClick={() => onNavigateToTab("marketing-digital-intel")}
               className="text-xs font-bold text-[#0078D4] hover:underline flex items-center gap-1 cursor-pointer pt-1"
@@ -536,7 +536,7 @@ export default function AiMarketingCoachView({ onNavigateToTab }: AiMarketingCoa
         </div>
 
         {/* Card 3: SEO & Web İçerik Aksiyonları */}
-        <div className="bg-white dark:bg-[#1b1a19] p-5 border border-[#EDEBE9] dark:border-[#323130] rounded-2xl shadow-xs space-y-3">
+        <div data-crm-card="padded" className="bg-white dark:bg-[#1b1a19] p-5 border border-[#EDEBE9] dark:border-[#323130] rounded-2xl shadow-xs space-y-3">
           <div className="flex items-center justify-between border-b border-[#EDEBE9] dark:border-[#323130] pb-2.5">
             <span className="font-extrabold text-xs text-slate-800 dark:text-slate-100 uppercase tracking-wider font-mono flex items-center gap-2">
               <Globe className="w-4 h-4 text-emerald-500" />
@@ -552,7 +552,7 @@ export default function AiMarketingCoachView({ onNavigateToTab }: AiMarketingCoa
           </p>
 
           {onNavigateToTab && (
-            <button
+            <button data-crm-button=""
               type="button"
               onClick={() => onNavigateToTab("marketing-industry-intel")}
               className="text-xs font-bold text-[#0078D4] hover:underline flex items-center gap-1 cursor-pointer pt-1"
@@ -566,21 +566,21 @@ export default function AiMarketingCoachView({ onNavigateToTab }: AiMarketingCoa
 
       {/* AI Executive Weekly Report Modal */}
       {showReportModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6 bg-black/60 backdrop-blur-xs overflow-y-auto animate-fade-in">
-          <div className="bg-white dark:bg-[#1b1a19] border border-[#EDEBE9] dark:border-[#323130] rounded-2xl shadow-2xl p-6 space-y-5 text-xs max-w-3xl w-full max-h-[90vh] overflow-y-auto my-auto relative border-t-4 border-t-[#0078D4]">
+        <div data-crm-overlay="" className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6 bg-black/60 backdrop-blur-xs overflow-y-auto animate-fade-in">
+          <div data-crm-stack="" data-crm-modal="" data-crm-card="padded" className="bg-white dark:bg-[#1b1a19] border border-[#EDEBE9] dark:border-[#323130] rounded-2xl shadow-2xl p-6 space-y-5 text-xs max-w-3xl w-full max-h-[90vh] overflow-y-auto my-auto relative border-t-4 border-t-[#0078D4]">
             
             {/* Header */}
             <div className="flex items-center justify-between border-b border-[#EDEBE9] dark:border-[#323130] pb-3">
               <div className="flex items-center gap-2">
                 <FileText className="w-5 h-5 text-[#0078D4]" />
                 <div>
-                  <h3 className="text-sm font-bold text-slate-800 dark:text-slate-100">
+                  <h3 data-crm-heading="section" className="text-sm font-bold text-slate-800 dark:text-slate-100">
                     {t("AI Marketing Manager — Haftalık Yönetici Raporu")}
                   </h3>
                   <p className="text-[10px] text-slate-400 font-mono">{weekYearLabel} Değerlendirmesi</p>
                 </div>
               </div>
-              <button
+              <button data-crm-button=""
                 type="button"
                 onClick={() => setShowReportModal(false)}
                 className="text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 p-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 cursor-pointer"
@@ -591,7 +591,7 @@ export default function AiMarketingCoachView({ onNavigateToTab }: AiMarketingCoa
 
             {/* Section 1: Geçen Hafta Özeti */}
             <div className="bg-blue-50/60 dark:bg-blue-950/20 border border-blue-200 dark:border-blue-900/50 rounded-xl p-4 space-y-2.5">
-              <h4 className="font-extrabold text-xs text-blue-900 dark:text-blue-300 uppercase tracking-wider font-mono flex items-center gap-2">
+              <h4 data-crm-heading="section" className="font-extrabold text-xs text-blue-900 dark:text-blue-300 uppercase tracking-wider font-mono flex items-center gap-2">
                 <CheckCircle className="w-4 h-4 text-[#0078D4]" />
                 1. GEÇEN HAFTA DEĞERLENDİRMESİ
               </h4>
@@ -607,7 +607,7 @@ export default function AiMarketingCoachView({ onNavigateToTab }: AiMarketingCoa
 
             {/* Section 2: Bu Hafta Öncelikleri */}
             <div className="bg-emerald-50/60 dark:bg-emerald-950/20 border border-emerald-200 dark:border-emerald-900/50 rounded-xl p-4 space-y-2.5">
-              <h4 className="font-extrabold text-xs text-emerald-900 dark:text-emerald-300 uppercase tracking-wider font-mono flex items-center gap-2">
+              <h4 data-crm-heading="section" className="font-extrabold text-xs text-emerald-900 dark:text-emerald-300 uppercase tracking-wider font-mono flex items-center gap-2">
                 <Target className="w-4 h-4 text-emerald-600" />
                 2. BU HAFTANIN EN ÖNEMLİ 5 ÖNCELİĞİ
               </h4>
@@ -625,7 +625,7 @@ export default function AiMarketingCoachView({ onNavigateToTab }: AiMarketingCoa
 
             {/* Section 3: Yönetici Uyarıları */}
             <div className="bg-rose-50/60 dark:bg-rose-950/20 border border-rose-200 dark:border-rose-900/50 rounded-xl p-4 space-y-2.5">
-              <h4 className="font-extrabold text-xs text-rose-900 dark:text-rose-300 uppercase tracking-wider font-mono flex items-center gap-2">
+              <h4 data-crm-heading="section" className="font-extrabold text-xs text-rose-900 dark:text-rose-300 uppercase tracking-wider font-mono flex items-center gap-2">
                 <ShieldAlert className="w-4 h-4 text-rose-600" />
                 3. YÖNETİCİ UYARILARI & KRİTİK RİSKLER
               </h4>
@@ -641,7 +641,7 @@ export default function AiMarketingCoachView({ onNavigateToTab }: AiMarketingCoa
 
             {/* Footer */}
             <div className="border-t border-[#EDEBE9] dark:border-[#323130] pt-3 flex justify-end">
-              <button
+              <button data-crm-button=""
                 type="button"
                 onClick={() => setShowReportModal(false)}
                 className="px-4 py-2 bg-[#0078D4] hover:bg-[#106ebe] text-white font-bold rounded-xl text-xs cursor-pointer shadow-sm"

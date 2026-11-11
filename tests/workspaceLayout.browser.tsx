@@ -1,5 +1,5 @@
 import React from 'react';import{createRoot}from'react-dom/client';import{MemoryRouter}from'react-router-dom';
-import App from '../src/App';import ProposalFormModal from '../src/components/ProposalFormModal';import{LanguageProvider}from'../src/lib/LanguageContext';
+import App from '../src/App';import AdministrationCenter from '../src/components/AdministrationCenter';import UserAccountSettings from '../src/components/UserAccountSettings';import AuthLayout,{AuthField,AuthButton} from '../src/components/auth/AuthLayout';import ProposalFormModal from '../src/components/ProposalFormModal';import{LanguageProvider}from'../src/lib/LanguageContext';
 class PreviewBoundary extends React.Component<{children:React.ReactNode},{error:string}> {
  state={error:''};static getDerivedStateFromError(error:Error){return{error:error.message};}
  render(){return this.state.error?<p role="alert">Önizleme hatası: {this.state.error}</p>:this.props.children;}
@@ -12,7 +12,8 @@ const base:any={id:'demo-proposal',sequenceNo:71,proposalNumber:'2611-71',compan
 const fixtures:any={companies:[company],kv:{crm_admin_org_settings:{defaultCurrency:'TRY (₺)'}},proposals:[base,{...base,id:'demo-2',sequenceNo:72,proposalNumber:'2611-72',proposalSubject:'Süreç Geliştirme ve Saha Uygulamaları',status:'Accepted',approvalStatus:'Approved'},{...base,id:'demo-3',sequenceNo:73,proposalNumber:'2611-73',proposalSubject:'Operasyonel Mükemmellik Değerlendirmesi',status:'Draft',approvalStatus:'Draft'}]};
 (window as any).workspaceFixture=fixtures;
 const root=createRoot(document.getElementById('root')!);
-if(query.has('editor')) root.render(<PreviewBoundary><LanguageProvider><ProposalFormModal isOpen onClose={()=>{}} onSave={p=>{fixtures.saved=p}} initialProposal={base} companies={[company as any]} onAddCompany={()=>{}} /></LanguageProvider></PreviewBoundary>);
+if(query.get('screen')) root.render(<PreviewBoundary><LanguageProvider><div style={{padding:16}}>{query.get('screen')==='admin'?<AdministrationCenter onClose={()=>{}} />:query.get('screen')==='account'?<UserAccountSettings onClose={()=>{}} darkMode={false} onToggleTheme={()=>{}} />:<AuthLayout title="Gemba IQ hesabınıza giriş yapın" subtitle="Çalışma alanınıza güvenle bağlanın"><AuthField id="email" label="E-posta" value="" onChange={()=>{}} /><div style={{marginTop:16}}><AuthButton>Giriş yap</AuthButton></div></AuthLayout>}</div></LanguageProvider></PreviewBoundary>);
+else if(query.has('editor')) root.render(<PreviewBoundary><LanguageProvider><ProposalFormModal isOpen onClose={()=>{}} onSave={p=>{fixtures.saved=p}} initialProposal={base} companies={[company as any]} onAddCompany={()=>{}} /></LanguageProvider></PreviewBoundary>);
 else root.render(<PreviewBoundary><MemoryRouter><LanguageProvider><App /></LanguageProvider></MemoryRouter></PreviewBoundary>);
 const delay=(ms=150)=>new Promise(r=>setTimeout(r,ms));
 const results:string[]=[];const expect=(ok:any,label:string)=>{if(!ok)throw Error(label);results.push(label);};

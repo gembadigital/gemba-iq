@@ -487,24 +487,24 @@ export default function SalesCoachAI({ deals }: SalesCoachAIProps) {
   };
 
   return (
-    <div className="bg-slate-50 dark:bg-[#111] rounded-2xl border border-slate-200/80 dark:border-zinc-800/80 p-1 overflow-hidden" id="sales-coach-base">
-      <div className="grid grid-cols-1 lg:grid-cols-12 min-h-[680px]">
+    <div data-crm-screen="SalesCoachAI" className="bg-slate-50 dark:bg-[#111] rounded-2xl border border-slate-200/80 dark:border-zinc-800/80 p-1 overflow-hidden" id="sales-coach-base">
+      <div data-crm-flow="" data-crm-grid="layout" className="grid grid-cols-1 lg:grid-cols-12 min-h-[680px]">
         
         {/* SIDE MENU (Submenus representing AI Sales Intelligence System) */}
-        <div className="lg:col-span-3 border-r border-slate-200/80 dark:border-zinc-800/80 bg-white dark:bg-[#151515] p-5 flex flex-col justify-between">
-          <div className="space-y-6">
+        <div data-crm-header="" className="lg:col-span-3 border-r border-slate-200/80 dark:border-zinc-800/80 bg-white dark:bg-[#151515] p-5 flex flex-col justify-between">
+          <div data-crm-stack="" data-crm-header-copy="" className="space-y-6">
             <div className="flex items-center gap-2 px-1">
               <div className="p-1.5 bg-gradient-to-tr from-rose-500 to-amber-500 rounded-lg text-white">
                 <Brain className="w-5 h-5" />
               </div>
               <div>
-                <h2 className="text-xs font-black tracking-widest uppercase text-slate-400 dark:text-zinc-500">{t("AI Sales Intelligence")}</h2>
-                <h1 className="text-sm font-bold text-slate-800 dark:text-slate-100">{t("Sales Coach AI")}</h1>
+                <h2 data-crm-heading="page" className="text-xs font-black tracking-widest uppercase text-slate-400 dark:text-zinc-500">{t("AI Sales Intelligence")}</h2>
+                <h1 data-crm-heading="page" className="text-sm font-bold text-slate-800 dark:text-slate-100">{t("Sales Coach AI")}</h1>
               </div>
             </div>
 
             <nav className="space-y-1 select-none">
-              <button
+              <button data-crm-button=""
                 onClick={() => setActiveSubmenu("assistant")}
                 className={`w-full flex items-center justify-start text-left px-3 py-2.5 rounded-lg text-xs font-bold transition-all ${
                   activeSubmenu === "assistant"
@@ -519,7 +519,7 @@ export default function SalesCoachAI({ deals }: SalesCoachAIProps) {
                 {activeSubmenu === "assistant" && <ChevronRight className="w-3.5 h-3.5 ml-auto flex-shrink-0" />}
               </button>
 
-              <button
+              <button data-crm-button=""
                 onClick={() => setActiveSubmenu("library")}
                 className={`w-full flex items-center justify-start text-left px-3 py-2.5 rounded-lg text-xs font-bold transition-all ${
                   activeSubmenu === "library"
@@ -536,7 +536,7 @@ export default function SalesCoachAI({ deals }: SalesCoachAIProps) {
                 </span>
               </button>
 
-              <button
+              <button data-crm-button=""
                 onClick={() => setActiveSubmenu("history")}
                 className={`w-full flex items-center justify-start text-left px-3 py-2.5 rounded-lg text-xs font-bold transition-all ${
                   activeSubmenu === "history"
@@ -551,7 +551,7 @@ export default function SalesCoachAI({ deals }: SalesCoachAIProps) {
                 {activeSubmenu === "history" && <ChevronRight className="w-3.5 h-3.5 ml-auto flex-shrink-0" />}
               </button>
 
-              <button
+              <button data-crm-button=""
                 onClick={() => setActiveSubmenu("knowledge")}
                 className={`w-full flex items-center justify-start text-left px-3 py-2.5 rounded-lg text-xs font-bold transition-all ${
                   activeSubmenu === "knowledge"
@@ -566,7 +566,7 @@ export default function SalesCoachAI({ deals }: SalesCoachAIProps) {
                 {activeSubmenu === "knowledge" && <ChevronRight className="w-3.5 h-3.5 ml-auto flex-shrink-0" />}
               </button>
 
-              <button
+              <button data-crm-button=""
                 onClick={() => setActiveSubmenu("settings")}
                 className={`w-full flex items-center justify-start text-left px-3 py-2.5 rounded-lg text-xs font-bold transition-all ${
                   activeSubmenu === "settings"
@@ -584,7 +584,7 @@ export default function SalesCoachAI({ deals }: SalesCoachAIProps) {
           </div>
 
           <div className="hidden lg:block p-3.5 bg-slate-50 dark:bg-zinc-900 border border-slate-100 dark:border-zinc-800 rounded-xl space-y-1.5">
-            <span className="text-[10px] uppercase font-bold text-slate-400 font-mono tracking-widest block">{t("Operational Mode")}</span>
+            <span data-crm-caption="" className="text-[10px] uppercase font-bold text-slate-400 font-mono tracking-widest block">{t("Operational Mode")}</span>
             <div className="flex items-center gap-1.5">
               <span className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse" />
               <span className="text-xs font-extrabold font-mono text-emerald-600 dark:text-emerald-400">{t("COACH CONNECTED")}</span>
@@ -600,15 +600,15 @@ export default function SalesCoachAI({ deals }: SalesCoachAIProps) {
           
           {/* SUBMENU 1: SALES DIRECTOR ASSISTANT CHAT/AUDIT */}
           {activeSubmenu === "assistant" && (
-            <div className="flex flex-col h-full space-y-4">
+            <div data-crm-stack="" className="flex flex-col h-full space-y-4">
               
               {/* Header section with Dynamic trigger */}
-              <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-white dark:bg-[#201f1e] border border-slate-200/50 dark:border-zinc-800/80 p-4 rounded-xl shadow-xs">
+              <div data-crm-card="padded" className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-white dark:bg-[#201f1e] border border-slate-200/50 dark:border-zinc-800/80 p-4 rounded-xl shadow-xs">
                 <div>
-                  <h2 className="text-sm font-black text-slate-900 dark:text-slate-100">{t("Weekly Performance Audit Deck")}</h2>
+                  <h2 data-crm-heading="section" className="text-sm font-black text-slate-900 dark:text-slate-100">{t("Weekly Performance Audit Deck")}</h2>
                   <p className="text-xs text-slate-500 mt-0.5">{t("Let Gemini analyze current pipeline leaks and score salesperson productivity.")}</p>
                 </div>
-                <button
+                <button data-crm-button=""
                   type="button"
                   onClick={auditMetricsAndTriggerCoach}
                   disabled={isGenerating}
@@ -621,7 +621,7 @@ export default function SalesCoachAI({ deals }: SalesCoachAIProps) {
               </div>
 
               {/* Chat Messages stream */}
-              <div className="flex-1 bg-white dark:bg-[#201f1e] rounded-xl border border-slate-200/50 dark:border-zinc-800/80 shadow-xs overflow-y-auto p-4 space-y-4 max-h-[460px] min-h-[380px]">
+              <div data-crm-stack="" data-crm-card="padded" className="flex-1 bg-white dark:bg-[#201f1e] rounded-xl border border-slate-200/50 dark:border-zinc-800/80 shadow-xs overflow-y-auto p-4 space-y-4 max-h-[460px] min-h-[380px]">
                 {chatMessages.map((msg, index) => (
                   <div
                     key={index}
@@ -636,7 +636,7 @@ export default function SalesCoachAI({ deals }: SalesCoachAIProps) {
                     >
                       {msg.sender === "user" ? <Users className="w-4 h-4" /> : <Bot className="w-4 h-4" />}
                     </div>
-                    <div
+                    <div data-crm-card="padded"
                       className={`p-3.5 rounded-2xl text-xs leading-relaxed ${
                         msg.sender === "user"
                           ? "bg-slate-100 dark:bg-zinc-850 text-slate-800 dark:text-zinc-250 font-bold border border-slate-200 dark:border-zinc-800"
@@ -685,7 +685,7 @@ export default function SalesCoachAI({ deals }: SalesCoachAIProps) {
                   disabled={isGenerating}
                   className="flex-1 px-4 py-3 bg-white dark:bg-[#201f1e] border border-slate-200 dark:border-zinc-850 rounded-xl text-xs placeholder-slate-400 focus:outline-hidden focus:ring-1 focus:ring-rose-500"
                 />
-                <button
+                <button data-crm-button=""
                   type="submit"
                   disabled={isGenerating || !chatInput.trim()}
                   className="px-5 py-3 rounded-xl bg-[#0078D4] hover:bg-[#005a9e] text-white text-xs font-bold shadow-sm transition-all disabled:opacity-40 select-none cursor-pointer flex items-center gap-1.5"
@@ -699,13 +699,13 @@ export default function SalesCoachAI({ deals }: SalesCoachAIProps) {
 
           {/* SUBMENU 2: SKILL LIBRARY PANEL */}
           {activeSubmenu === "library" && (
-            <div className="space-y-6">
+            <div data-crm-stack="" className="space-y-6">
               <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
                 <div>
-                  <h1 className="text-base font-extrabold text-slate-900 dark:text-slate-100">{t("Consulting AI Skill Library")}</h1>
+                  <h1 data-crm-heading="page" className="text-base font-extrabold text-slate-900 dark:text-slate-100">{t("Consulting AI Skill Library")}</h1>
                   <p className="text-xs text-slate-500 mt-0.5">{t("Let administrators manage the SOPs and methodologies evaluated by Sales Coach AI.")}</p>
                 </div>
-                <button
+                <button data-crm-button=""
                   onClick={() => setShowAddSkillModal(true)}
                   className="px-4 py-2 text-xs font-bold text-white bg-slate-900 hover:bg-black dark:bg-[#2d2c2b] dark:hover:bg-[#3d3c3b] border border-[#EDEBE9] dark:border-[#323130] rounded-lg shadow-sm flex items-center gap-1.5 cursor-pointer select-none transition-all"
                 >
@@ -715,9 +715,9 @@ export default function SalesCoachAI({ deals }: SalesCoachAIProps) {
               </div>
 
               {/* Grid of existing rules */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div data-crm-flow="" data-crm-grid="layout" className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {skills.map((s) => (
-                  <div key={s.id} className="bg-white dark:bg-[#201f1e] border border-slate-200/60 dark:border-zinc-800 rounded-xl p-5 shadow-xs relative flex flex-col justify-between">
+                  <div data-crm-card="padded" key={s.id} className="bg-white dark:bg-[#201f1e] border border-slate-200/60 dark:border-zinc-800 rounded-xl p-5 shadow-xs relative flex flex-col justify-between">
                     <div>
                       <div className="flex items-center justify-between mb-2">
                         <span className={`text-[10px] font-bold px-2 py-0.5 rounded ${
@@ -731,7 +731,7 @@ export default function SalesCoachAI({ deals }: SalesCoachAIProps) {
                         </span>
                         <div className="flex items-center gap-2">
                           <span className="text-[10px] text-slate-400 font-mono">{s.version}</span>
-                          <button
+                          <button data-crm-button=""
                             onClick={() => toggleSkillStatus(s.id)}
                             className={`w-10 h-5 rounded-full p-0.5 transition-colors cursor-pointer ${
                               s.status === "Active" ? "bg-emerald-500" : "bg-slate-200 dark:bg-zinc-700"
@@ -743,7 +743,7 @@ export default function SalesCoachAI({ deals }: SalesCoachAIProps) {
                           </button>
                         </div>
                       </div>
-                      <h3 className="text-xs font-extrabold text-slate-800 dark:text-slate-100">{s.name}</h3>
+                      <h3 data-crm-heading="section" className="text-xs font-extrabold text-slate-800 dark:text-slate-100">{s.name}</h3>
                       <p className="text-xs text-slate-500 dark:text-slate-400 mt-1 lines-clamp-2 leading-relaxed">{s.description}</p>
                       <div className="flex flex-wrap gap-1 mt-3.5">
                         {s.tags.map((tag, idx) => (
@@ -759,7 +759,7 @@ export default function SalesCoachAI({ deals }: SalesCoachAIProps) {
                         <FileText className="w-3.5 h-3.5" />
                         <span>{s.fileName} ({s.contentSize || "18 KB"})</span>
                       </div>
-                      <button
+                      <button data-crm-button=""
                         onClick={() => void handleDeleteSkill(s.id)}
                         className="p-1 hover:bg-rose-50 dark:hover:bg-rose-950/30 text-slate-400 hover:text-rose-500 rounded transition-all cursor-pointer"
                         title={t("Delete Skill")}
@@ -774,16 +774,16 @@ export default function SalesCoachAI({ deals }: SalesCoachAIProps) {
 
               {/* ADD SKILL MODAL */}
               {showAddSkillModal && (
-                <div role="dialog" aria-modal="true" className="fixed inset-0 bg-black/60 backdrop-blur-xs flex items-center justify-center z-50 animate-in fade-in duration-150">
-                  <div className="bg-white dark:bg-[#1f1e1d] border border-slate-200 dark:border-[#323130] rounded-xl w-full max-w-lg shadow-2xl overflow-hidden animate-in zoom-in-95 duration-150">
+                <div data-crm-overlay="" role="dialog" aria-modal="true" className="fixed inset-0 bg-black/60 backdrop-blur-xs flex items-center justify-center z-50 animate-in fade-in duration-150">
+                  <div data-crm-modal="" data-crm-card="surface" className="bg-white dark:bg-[#1f1e1d] border border-slate-200 dark:border-[#323130] rounded-xl w-full max-w-lg shadow-2xl overflow-hidden animate-in zoom-in-95 duration-150">
                     <div className="p-5 border-b border-[#EDEBE9] dark:border-[#323130] flex items-center justify-between">
-                      <h3 className="text-sm font-extrabold uppercase text-slate-850 dark:text-slate-100">{t("Upload methodology / Skill")}</h3>
-                      <button onClick={() => setShowAddSkillModal(false)} className="p-1 hover:bg-slate-100 dark:hover:bg-[#252423] rounded" aria-label={t("Close")}>
+                      <h3 data-crm-heading="section" className="text-sm font-extrabold uppercase text-slate-850 dark:text-slate-100">{t("Upload methodology / Skill")}</h3>
+                      <button data-crm-button="" onClick={() => setShowAddSkillModal(false)} className="p-1 hover:bg-slate-100 dark:hover:bg-[#252423] rounded" aria-label={t("Close")}>
                         <X className="w-4 h-4" />
                       </button>
                     </div>
 
-                    <form onSubmit={handleAddSkill} className="p-5 space-y-4">
+                    <form data-crm-stack="" onSubmit={handleAddSkill} className="p-5 space-y-4">
                       
                       {/* Drag & Drop Zone */}
                       <div
@@ -813,9 +813,9 @@ export default function SalesCoachAI({ deals }: SalesCoachAIProps) {
                         )}
                       </div>
 
-                      <div className="grid grid-cols-2 gap-4">
+                      <div data-crm-flow="" data-crm-grid="form" className="grid grid-cols-2 gap-4">
                         <div className="space-y-1">
-                          <label className="text-[10px] uppercase font-bold text-slate-400 tracking-wider">{t("Skill Name")}</label>
+                          <label data-crm-label="" className="text-[10px] uppercase font-bold text-slate-400 tracking-wider">{t("Skill Name")}</label>
                           <input
                             type="text"
                             required
@@ -826,7 +826,7 @@ export default function SalesCoachAI({ deals }: SalesCoachAIProps) {
                           />
                         </div>
                         <div className="space-y-1">
-                          <label className="text-[10px] uppercase font-bold text-slate-400 tracking-wider">{t("Category")}</label>
+                          <label data-crm-label="" className="text-[10px] uppercase font-bold text-slate-400 tracking-wider">{t("Category")}</label>
                           <select
                             value={newSkillCategory}
                             onChange={(e) => setNewSkillCategory(e.target.value as any)}
@@ -841,7 +841,7 @@ export default function SalesCoachAI({ deals }: SalesCoachAIProps) {
                       </div>
 
                       <div className="space-y-1">
-                        <label className="text-[10px] uppercase font-bold text-slate-400 tracking-wider">{t("Description")}</label>
+                        <label data-crm-label="" className="text-[10px] uppercase font-bold text-slate-400 tracking-wider">{t("Description")}</label>
                         <textarea
                           rows={2}
                           placeholder={t("Summarize what concepts this methodology file controls or extracts...")}
@@ -851,9 +851,9 @@ export default function SalesCoachAI({ deals }: SalesCoachAIProps) {
                         />
                       </div>
 
-                      <div className="grid grid-cols-2 gap-4">
+                      <div data-crm-flow="" data-crm-grid="form" className="grid grid-cols-2 gap-4">
                         <div className="space-y-1">
-                          <label className="text-[10px] uppercase font-bold text-slate-400 tracking-wider">{t("Tags (comma separated)")}</label>
+                          <label data-crm-label="" className="text-[10px] uppercase font-bold text-slate-400 tracking-wider">{t("Tags (comma separated)")}</label>
                           <input
                             type="text"
                             placeholder={t("e.g. kaizen, smed, efficiency")}
@@ -863,7 +863,7 @@ export default function SalesCoachAI({ deals }: SalesCoachAIProps) {
                           />
                         </div>
                         <div className="space-y-1">
-                          <label className="text-[10px] uppercase font-bold text-slate-400 tracking-wider">{t("Version")}</label>
+                          <label data-crm-label="" className="text-[10px] uppercase font-bold text-slate-400 tracking-wider">{t("Version")}</label>
                           <input
                             type="text"
                             value={newSkillVersion}
@@ -874,14 +874,14 @@ export default function SalesCoachAI({ deals }: SalesCoachAIProps) {
                       </div>
 
                       <div className="pt-3 border-t border-slate-100 dark:border-zinc-850 flex justify-end gap-2">
-                        <button
+                        <button data-crm-button=""
                           type="button"
                           onClick={() => setShowAddSkillModal(false)}
                           className="px-4 py-2 border border-slate-250 dark:border-zinc-800 text-slate-650 dark:text-slate-400 text-xs font-bold rounded-lg hover:bg-slate-50"
                         >
                           {t("Cancel")}
                         </button>
-                        <button
+                        <button data-crm-button=""
                           type="submit"
                           className="px-4 py-2 bg-slate-900 hover:bg-black dark:bg-[#2d2c2b] dark:hover:bg-[#3d3c3b] text-white text-xs font-bold rounded-lg shadow-sm"
                         >
@@ -897,15 +897,15 @@ export default function SalesCoachAI({ deals }: SalesCoachAIProps) {
 
           {/* SUBMENU 3: AI RECOMMENDATIONS HISTORY */}
           {activeSubmenu === "history" && (
-            <div className="space-y-6">
+            <div data-crm-stack="" className="space-y-6">
               <div>
-                <h1 className="text-base font-extrabold text-slate-900 dark:text-slate-100">{t("AI Recommendations Audit Registry")}</h1>
+                <h1 data-crm-heading="page" className="text-base font-extrabold text-slate-900 dark:text-slate-100">{t("AI Recommendations Audit Registry")}</h1>
                 <p className="text-xs text-slate-500 mt-0.5">{t("Trace past diagnostic audits and commercial intelligence briefs produced by Gemini.")}</p>
               </div>
 
-              <div className="bg-white dark:bg-[#201f1e] border border-slate-200/50 dark:border-zinc-850 rounded-xl overflow-hidden shadow-xs">
-                <div className="overflow-x-auto">
-                  <table className="w-full font-sans text-xs">
+              <div data-crm-card="surface" className="bg-white dark:bg-[#201f1e] border border-slate-200/50 dark:border-zinc-850 rounded-xl overflow-hidden shadow-xs">
+                <div data-crm-scroll="horizontal" className="overflow-x-auto">
+                  <table data-crm-table="" className="w-full font-sans text-xs">
                     <thead>
                       <tr className="bg-slate-50 dark:bg-zinc-900 border-b border-slate-250 dark:border-zinc-800 font-extrabold text-[10px] text-slate-400 uppercase tracking-widest text-left">
                         <th className="p-4">{t("Date / Trigger")}</th>
@@ -946,7 +946,7 @@ export default function SalesCoachAI({ deals }: SalesCoachAIProps) {
                             </div>
                           </td>
                           <td className="p-4 text-center">
-                            <button
+                            <button data-crm-button=""
                               onClick={() => {
                                 setRecommendationHistory(prev => prev.map(r => r.id === rec.id ? { ...r, isCompleted: !r.isCompleted } : r));
                               }}
@@ -970,13 +970,13 @@ export default function SalesCoachAI({ deals }: SalesCoachAIProps) {
 
           {/* SUBMENU 4: KNOWLEDGE BASE CONFIG */}
           {activeSubmenu === "knowledge" && (
-            <div className="space-y-6">
+            <div data-crm-stack="" className="space-y-6">
               <div>
-                <h1 className="text-base font-extrabold text-slate-900 dark:text-slate-100">{t("Knowledge Base Vector Indexes")}</h1>
+                <h1 data-crm-heading="page" className="text-base font-extrabold text-slate-900 dark:text-slate-100">{t("Knowledge Base Vector Indexes")}</h1>
                 <p className="text-xs text-slate-500 mt-0.5 font-sans">{t("View unstructured context chunks and corporate training rulebooks loaded as vector embeddings.")}</p>
               </div>
 
-              <div className="bg-white dark:bg-[#201f1e] border border-slate-200/50 dark:border-zinc-850 rounded-xl p-5 shadow-xs space-y-4">
+              <div data-crm-stack="" data-crm-card="padded" className="bg-white dark:bg-[#201f1e] border border-slate-200/50 dark:border-zinc-850 rounded-xl p-5 shadow-xs space-y-4">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
                     <Layers className="w-5 h-5 text-indigo-500" />
@@ -1031,17 +1031,17 @@ export default function SalesCoachAI({ deals }: SalesCoachAIProps) {
 
           {/* SUBMENU 5: AI SETTINGS PANEL */}
           {activeSubmenu === "settings" && (
-            <div className="space-y-6">
+            <div data-crm-stack="" className="space-y-6">
               <div>
-                <h1 className="text-base font-extrabold text-slate-900 dark:text-slate-100">{t("AI Sales Intelligence Configuration")}</h1>
+                <h1 data-crm-heading="page" className="text-base font-extrabold text-slate-900 dark:text-slate-100">{t("AI Sales Intelligence Configuration")}</h1>
                 <p className="text-xs text-slate-500 mt-0.5">{t("Instruct the model on tone, confidence score cutoffs, and warning timers.")}</p>
               </div>
 
-              <div className="bg-white dark:bg-[#201f1e] border border-slate-200/50 dark:border-zinc-850 rounded-xl p-5 shadow-xs space-y-4">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div data-crm-stack="" data-crm-card="padded" className="bg-white dark:bg-[#201f1e] border border-slate-200/50 dark:border-zinc-850 rounded-xl p-5 shadow-xs space-y-4">
+                <div data-crm-flow="" data-crm-grid="form" className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="space-y-1">
-                    <label className="text-[10px] uppercase font-black text-slate-450 block">{t("Gemini Engine Model")}</label>
-                    <select
+                    <label data-crm-label="" className="text-[10px] uppercase font-black text-slate-450 block">{t("Gemini Engine Model")}</label>
+                    <select data-crm-field="control"
                       value={settings.model}
                       onChange={(e) => setSettings(prev => ({ ...prev, model: e.target.value }))}
                       className="w-full px-3 py-2 text-xs bg-slate-50 dark:bg-zinc-900 border border-slate-250 dark:border-zinc-850 rounded-lg"
@@ -1052,8 +1052,8 @@ export default function SalesCoachAI({ deals }: SalesCoachAIProps) {
                   </div>
 
                   <div className="space-y-1">
-                    <label className="text-[10px] uppercase font-black text-slate-455 block">{t("Coaching Rigor Tone")}</label>
-                    <select
+                    <label data-crm-label="" className="text-[10px] uppercase font-black text-slate-455 block">{t("Coaching Rigor Tone")}</label>
+                    <select data-crm-field="control"
                       value={settings.coachingRigor}
                       onChange={(e) => setSettings(prev => ({ ...prev, coachingRigor: e.target.value }))}
                       className="w-full px-3 py-2 text-xs bg-slate-50 dark:bg-zinc-900 border border-slate-250 dark:border-zinc-850 rounded-lg"
@@ -1065,8 +1065,8 @@ export default function SalesCoachAI({ deals }: SalesCoachAIProps) {
                   </div>
 
                   <div className="space-y-1">
-                    <label className="text-[10px] uppercase font-black text-slate-455 block">{t("Rapport Style")}</label>
-                    <select
+                    <label data-crm-label="" className="text-[10px] uppercase font-black text-slate-455 block">{t("Rapport Style")}</label>
+                    <select data-crm-field="control"
                       value={settings.rapportStyle}
                       onChange={(e) => setSettings(prev => ({ ...prev, rapportStyle: e.target.value }))}
                       className="w-full px-3 py-2 text-xs bg-slate-50 dark:bg-zinc-900 border border-slate-250 dark:border-zinc-850 rounded-lg"
@@ -1078,8 +1078,8 @@ export default function SalesCoachAI({ deals }: SalesCoachAIProps) {
                   </div>
 
                   <div className="space-y-1">
-                    <label className="text-[10px] uppercase font-black text-slate-455 block">{t("Aging Warning Threshold (Days)")}</label>
-                    <input
+                    <label data-crm-label="" className="text-[10px] uppercase font-black text-slate-455 block">{t("Aging Warning Threshold (Days)")}</label>
+                    <input data-crm-field="control"
                       type="number"
                       value={settings.alertOnAgingDays}
                       onChange={(e) => setSettings(prev => ({ ...prev, alertOnAgingDays: Number(e.target.value) }))}
@@ -1090,7 +1090,7 @@ export default function SalesCoachAI({ deals }: SalesCoachAIProps) {
 
                 <div className="pt-4 border-t border-slate-100 dark:border-zinc-850 flex items-center justify-between">
                   <span className="text-xs text-slate-500 font-sans">{t("Settings automatically synchronized to local storage cache.")}</span>
-                  <button
+                  <button data-crm-button=""
                     onClick={() => {
                       alert(t("Settings saved successfully!"));
                     }}

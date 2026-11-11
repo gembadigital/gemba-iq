@@ -196,10 +196,10 @@ export const OptionRowEditor: React.FC<OptionRowEditorProps> = ({ rows, onChange
   return (
     <div className="space-y-3 pt-3 border-t border-slate-200 dark:border-zinc-800">
       <div className="flex items-center justify-between">
-        <span className="text-[10px] font-black uppercase text-slate-500 tracking-wider">
+        <span data-crm-caption="" className="text-[10px] font-black uppercase text-slate-500 tracking-wider">
           {optionLabel} Teklif Tablosu Kalemleri
         </span>
-        <button
+        <button data-crm-button=""
           type="button"
           onClick={handleAddRow}
           className="bg-blue-50 hover:bg-blue-100 dark:bg-blue-950/20 text-[#0078D4] dark:text-blue-300 text-[10px] font-extrabold px-2.5 py-1 rounded flex items-center gap-1 cursor-pointer transition-all"
@@ -210,10 +210,10 @@ export const OptionRowEditor: React.FC<OptionRowEditorProps> = ({ rows, onChange
 
       <div className="space-y-2 max-h-56 overflow-y-auto pr-1">
         {rows.map((row, index) => (
-          <div key={row.id} className="grid grid-cols-12 gap-2 bg-slate-50/70 dark:bg-zinc-800/20 p-2 rounded border border-slate-150 dark:border-zinc-800/80 items-center">
+          <div data-crm-grid="layout" key={row.id} className="grid grid-cols-12 gap-2 bg-slate-50/70 dark:bg-zinc-800/20 p-2 rounded border border-slate-150 dark:border-zinc-800/80 items-center">
             {/* Item description */}
             <div className="col-span-12 sm:col-span-5">
-              <input
+              <input data-crm-field="control"
                 type="text"
                 value={row.item}
                 onChange={(e) => handleUpdateRow(row.id, "item", e.target.value)}
@@ -225,7 +225,7 @@ export const OptionRowEditor: React.FC<OptionRowEditorProps> = ({ rows, onChange
             {/* Daily rate */}
             <div className="col-span-5 sm:col-span-3">
               <div className="relative">
-                <input
+                <input data-crm-field="control"
                   type="number"
                   value={row.dailyRate}
                   onChange={(e) => handleUpdateRow(row.id, "dailyRate", parseFloat(e.target.value) || 0)}
@@ -238,7 +238,7 @@ export const OptionRowEditor: React.FC<OptionRowEditorProps> = ({ rows, onChange
 
             {/* Man days */}
             <div className="col-span-3 sm:col-span-2">
-              <input
+              <input data-crm-field="control"
                 type="number"
                 value={row.manDays}
                 onChange={(e) => handleUpdateRow(row.id, "manDays", parseFloat(e.target.value) || 0)}
@@ -253,7 +253,7 @@ export const OptionRowEditor: React.FC<OptionRowEditorProps> = ({ rows, onChange
                 {new Intl.NumberFormat("tr-TR").format(row.dailyRate * row.manDays)}
               </div>
               <div className="flex items-center gap-0.5">
-                <button
+                <button data-crm-button=""
                   type="button"
                   disabled={index === 0}
                   onClick={() => handleMoveUp(index)}
@@ -262,7 +262,7 @@ export const OptionRowEditor: React.FC<OptionRowEditorProps> = ({ rows, onChange
                 >
                   <ArrowUpEditor className="w-3.5 h-3.5" />
                 </button>
-                <button
+                <button data-crm-button=""
                   type="button"
                   disabled={index === rows.length - 1}
                   onClick={() => handleMoveDown(index)}
@@ -271,7 +271,7 @@ export const OptionRowEditor: React.FC<OptionRowEditorProps> = ({ rows, onChange
                 >
                   <ArrowDownEditor className="w-3.5 h-3.5" />
                 </button>
-                <button
+                <button data-crm-button=""
                   type="button"
                   onClick={() => handleRemoveRow(row.id)}
                   className="text-rose-500 hover:text-rose-600 hover:bg-rose-100/40 p-0.5 rounded cursor-pointer transition-colors"
@@ -2102,22 +2102,22 @@ export default function ServicesView({
   };
 
   return (
-    <div className="w-full text-slate-700 dark:text-slate-300 antialiased font-sans flex flex-col space-y-6">
+    <div data-crm-stack="" data-crm-screen="ServicesView" className="w-full text-slate-700 dark:text-slate-300 antialiased font-sans flex flex-col space-y-6">
       {/* Fix 2: off-screen, branded PDF capture node (see useProposalPdfCapture) —
           used by handleCreateAndSaveProposal to persist the exact same PDF
           Teklif Yönetimi shows, at CRM'e Kaydet time. */}
       {pdfCaptureNode}
 
       {/* HEADER CARD */}
-      <div className="bg-white dark:bg-[#1b1a19] p-5 rounded-lg border border-[#EDEBE9] dark:border-[#323130] shadow-sm relative overflow-hidden">
-        <div className="absolute top-0 left-0 right-0 h-1.5 bg-gradient-to-r from-emerald-500 via-[#0078D4] to-blue-500" />
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mt-2">
+      <div data-crm-card="padded" data-crm-header="" className="bg-white dark:bg-[#1b1a19] p-5 rounded-lg border border-[#EDEBE9] dark:border-[#323130] shadow-sm relative overflow-hidden">
+        <div data-crm-decoration="" className="absolute top-0 left-0 right-0 h-1.5 bg-gradient-to-r from-emerald-500 via-[#0078D4] to-blue-500" />
+        <div data-crm-header-copy="" className="flex flex-col md:flex-row md:items-center justify-between gap-4 mt-2">
           <div className="flex items-start gap-3.5">
             <div className="p-2.5 bg-emerald-50 text-emerald-600 dark:bg-emerald-950/40 dark:text-emerald-400 rounded-lg">
               <Layers className="w-6 h-6" />
             </div>
             <div>
-              <h1 id="services-page-title" className="text-xl font-black text-slate-900 dark:text-white tracking-tight flex items-center gap-2">
+              <h1 data-crm-heading="page" id="services-page-title" className="text-xl font-black text-slate-900 dark:text-white tracking-tight flex items-center gap-2">
                 {activeTab === "cards" ? t("Service Templates & Master Data") : t("New Proposal Wizard")}
                 <span className="text-[10px] bg-emerald-50 text-emerald-700 dark:bg-emerald-950/50 dark:text-emerald-400 font-bold px-2 py-0.5 rounded-full">
                   {activeTab === "cards" ? t("Master Data & Word Layout") : t("Multi-Option Proposal")}
@@ -2133,8 +2133,8 @@ export default function ServicesView({
 
           {/* MAIN TAB SWITCHER */}
           {showSwitcher && (
-            <div className="flex bg-slate-100 dark:bg-[#252423] p-1 rounded-lg border border-[#EDEBE9] dark:border-[#323130]">
-              <button
+            <div data-crm-toolbar="" className="flex bg-slate-100 dark:bg-[#252423] p-1 rounded-lg border border-[#EDEBE9] dark:border-[#323130]">
+              <button data-crm-button=""
                 id="tab-btn-cards"
                 type="button"
                 onClick={() => setActiveTab("cards")}
@@ -2147,7 +2147,7 @@ export default function ServicesView({
                 <Settings className="w-3.5 h-3.5" />
                 Hizmet Kartları
               </button>
-              <button
+              <button data-crm-button=""
                 id="tab-btn-wizard"
                 type="button"
                 onClick={() => setActiveTab("wizard")}
@@ -2167,10 +2167,10 @@ export default function ServicesView({
 
       {/* TAB 1: SERVICE CARDS MANAGEMENT (Master Data) */}
       {activeTab === "cards" && (
-        <div id="service-cards-config-tab" className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+        <div data-crm-flow="" data-crm-grid="layout" id="service-cards-config-tab" className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
           
           {/* Services Checklist / Sidebar */}
-          <div className="lg:col-span-4 bg-white dark:bg-[#1b1a19] p-4 rounded-lg border border-[#EDEBE9] dark:border-[#323130] shadow-sm space-y-4">
+          <div data-crm-stack="" data-crm-card="padded" className="lg:col-span-4 bg-white dark:bg-[#1b1a19] p-4 rounded-lg border border-[#EDEBE9] dark:border-[#323130] shadow-sm space-y-4">
             <div className="flex items-center justify-between pb-3 border-b border-[#EDEBE9] dark:border-[#323130]">
               <span className="text-xs font-black uppercase text-slate-800 dark:text-white tracking-wider flex items-center gap-1.5">
                 <Briefcase className="w-4 h-4 text-[#0078D4]" />
@@ -2180,7 +2180,7 @@ export default function ServicesView({
 
             <div className="space-y-3">
               <div className="flex items-center justify-between">
-                <label className="text-xs font-bold text-slate-650 dark:text-slate-400">
+                <label data-crm-label="" className="text-xs font-bold text-slate-650 dark:text-slate-400">
                   Düzenlemek için Hizmet Seçin:
                 </label>
                 <label className="text-[10px] font-black text-[#107C41] dark:text-[#52c47c] bg-[#FAF9F8] hover:bg-[#E8F5E9] dark:bg-[#252423] dark:hover:bg-[#1B3A24] border border-[#C8E6C9] dark:border-[#2e7d32] px-2 py-1 rounded cursor-pointer transition-all flex items-center gap-1 shadow-xs selection-none">
@@ -2212,7 +2212,7 @@ export default function ServicesView({
               </select>
 
               <div className="flex gap-2 pt-1">
-                <button
+                <button data-crm-button=""
                   type="button"
                   onClick={createNewCard}
                   className="flex-1 bg-[#0078D4] hover:bg-blue-600 text-white text-xs font-bold px-3 py-2 rounded flex items-center justify-center gap-1.5 cursor-pointer transition-colors"
@@ -2221,7 +2221,7 @@ export default function ServicesView({
                 </button>
                 
                 {selectedEditCardId && (
-                  <button
+                  <button data-crm-button=""
                     type="button"
                     onClick={() => {
                       const c = serviceCards.find(item => item.id === selectedEditCardId);
@@ -2265,15 +2265,15 @@ export default function ServicesView({
           </div>
 
           {/* Service Editor Area */}
-          <div className="lg:col-span-8 bg-white dark:bg-[#1b1a19] p-5 rounded-lg border border-[#EDEBE9] dark:border-[#323130] shadow-sm min-h-[500px]">
+          <div data-crm-card="padded" className="lg:col-span-8 bg-white dark:bg-[#1b1a19] p-5 rounded-lg border border-[#EDEBE9] dark:border-[#323130] shadow-sm min-h-[500px]">
             {selectedEditCardId ? (
-              <div className="space-y-4">
+              <div data-crm-stack="" className="space-y-4">
                 <div className="flex items-center justify-between pb-3 border-b border-[#EDEBE9] dark:border-[#323130]">
                   <div className="flex items-center gap-2">
                     <Edit3 className="w-4 h-4 text-[#0078D4]" />
                     <span className="text-xs font-black uppercase text-slate-900 dark:text-white tracking-wider">Hizmet Kartı Detay Düzenleyici</span>
                   </div>
-                  <button
+                  <button data-crm-button=""
                     type="button"
                     onClick={saveEditedCard}
                     className="bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold px-3 py-1.5 rounded flex items-center gap-1.5 cursor-pointer selection-none"
@@ -2284,9 +2284,9 @@ export default function ServicesView({
                 </div>
 
                 {/* Grid Title / Code / Category */}
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div data-crm-flow="" data-crm-grid="form" className="grid grid-cols-1 md:grid-cols-3 gap-4">
                   <div className="space-y-1">
-                    <label className="text-[11px] font-bold text-slate-500 dark:text-slate-400">{t("Service Name (Text)")}</label>
+                    <label data-crm-label="" className="text-[11px] font-bold text-slate-500 dark:text-slate-400">{t("Service Name (Text)")}</label>
                     <input
                       type="text"
                       value={editName}
@@ -2296,7 +2296,7 @@ export default function ServicesView({
                   </div>
 
                   <div className="space-y-1">
-                    <label className="text-[11px] font-bold text-slate-500 dark:text-slate-400">Ürün Kodu *</label>
+                    <label data-crm-label="" className="text-[11px] font-bold text-slate-500 dark:text-slate-400">Ürün Kodu *</label>
                     <input
                       type="text"
                       value={editCode}
@@ -2306,7 +2306,7 @@ export default function ServicesView({
                   </div>
 
                   <div className="space-y-1">
-                    <label className="text-[11px] font-bold text-slate-500 dark:text-slate-400">Kategori</label>
+                    <label data-crm-label="" className="text-[11px] font-bold text-slate-500 dark:text-slate-400">Kategori</label>
                     <select
                       value={editCategory}
                       onChange={(e) => setEditCategory(e.target.value as any)}
@@ -2324,7 +2324,7 @@ export default function ServicesView({
 
                 {/* Default Cover Text */}
                 <div className="space-y-1.5">
-                  <label className="text-[11px] font-bold text-slate-500 dark:text-slate-400 flex items-center gap-1">
+                  <label data-crm-label="" className="text-[11px] font-bold text-slate-500 dark:text-slate-400 flex items-center gap-1">
                     <Type className="w-3.5 h-3.5" />
                     Hizmet Tanımı ve Kapak Metni
                   </label>
@@ -2342,7 +2342,7 @@ export default function ServicesView({
 
                 <section aria-label="Hizmet tanımı önizlemesi" className="space-y-2">
                   <p className="text-xs font-bold text-slate-500 dark:text-slate-400">Hizmet Tanımı Önizlemesi</p>
-                  <div
+                  <div data-crm-document="true"
                     className="bg-white border border-slate-200 rounded-lg p-5 max-w-none break-words"
                     dangerouslySetInnerHTML={{ __html: serviceDefinitionBlocks(editCoverPage, "screen").join("") || "<p style='color:#64748b;font-size:14px'>Henüz hizmet tanımı eklenmedi.</p>" }}
                   />
@@ -2356,7 +2356,7 @@ export default function ServicesView({
                       Süreç, Faaliyet ve Efor Tablosu (Gelişmiş Word Uyumlu)
                     </div>
                     <div className="flex items-center gap-2">
-                      <button
+                      <button data-crm-button=""
                         type="button"
                         onClick={() => setPastePrompt(!pastePrompt)}
                         className="bg-amber-100 dark:bg-amber-950/40 text-amber-800 dark:text-amber-300 hover:bg-amber-200 text-[11px] font-bold px-2.5 py-1 rounded flex items-center gap-1 cursor-pointer selection-none"
@@ -2376,9 +2376,9 @@ export default function ServicesView({
 
                   {/* Show Manual Import Panel */}
                   {pastePrompt && (
-                    <div className="p-4 bg-slate-50 dark:bg-[#252423] border border-amber-400 dark:border-amber-800 rounded-lg space-y-4">
+                    <div data-crm-stack="" className="p-4 bg-slate-50 dark:bg-[#252423] border border-amber-400 dark:border-amber-800 rounded-lg space-y-4">
                       <div>
-                        <h4 className="text-xs font-black text-[#0078D4] dark:text-[#5caff3] uppercase tracking-wide flex items-center gap-1.5 mb-1">
+                        <h4 data-crm-heading="section" className="text-xs font-black text-[#0078D4] dark:text-[#5caff3] uppercase tracking-wide flex items-center gap-1.5 mb-1">
                           <Sparkles className="w-4 h-4" />
                           Word'den Tablo Verisi / Kopyalanmış Metin Yapıştırın
                         </h4>
@@ -2400,7 +2400,7 @@ export default function ServicesView({
                           * Yapay zeka ile sütun gruplama ve rowspan hizalamaları otomatik oluşturulur.
                         </span>
                         <div className="flex items-center gap-2 self-end">
-                          <button
+                          <button data-crm-button=""
                             type="button"
                             onClick={() => {
                               setPastePrompt(false);
@@ -2411,7 +2411,7 @@ export default function ServicesView({
                             Vazgeç
                           </button>
                           
-                          <button
+                          <button data-crm-button=""
                             type="button"
                             onClick={handleManualWordPaste}
                             disabled={!rawPastedHtml || isAiConverting}
@@ -2421,7 +2421,7 @@ export default function ServicesView({
                             Düz Kod Temizle
                           </button>
 
-                          <button
+                          <button data-crm-button=""
                             type="button"
                             onClick={handleAiTableConvert}
                             disabled={!rawPastedHtml || isAiConverting}
@@ -2447,10 +2447,10 @@ export default function ServicesView({
                   {/* LIVE EDITABLE CONTENT ZONE */}
                   <div className="space-y-1.5 pb-2">
                     <div className="flex items-center justify-between">
-                      <label className="text-[11px] font-bold text-slate-500 dark:text-slate-400 flex items-center gap-1.5">
+                      <label data-crm-label="" className="text-[11px] font-bold text-slate-500 dark:text-slate-400 flex items-center gap-1.5">
                         Ürün Tablosu Düzenleme Alanı  {t("(Source HTML)")}
                       </label>
-                      <button 
+                      <button data-crm-button=""
                         type="button" 
                         onClick={() => setIsTableCollapsed(!isTableCollapsed)} 
                         className="text-xs font-black bg-slate-100 hover:bg-slate-200 dark:bg-[#252423] dark:hover:bg-[#323130] text-slate-700 dark:text-slate-200 w-6 h-6 rounded flex items-center justify-center cursor-pointer border border-[#EDEBE9] dark:border-[#323130] transition-colors"
@@ -2474,7 +2474,7 @@ export default function ServicesView({
 
                   {/* COVET TEXT & TERMS EDITOR */}
                   <div className="space-y-1.5">
-                    <label className="text-[11px] font-bold text-slate-500 dark:text-slate-400 flex items-center gap-1">
+                    <label data-crm-label="" className="text-[11px] font-bold text-slate-500 dark:text-slate-400 flex items-center gap-1">
                       <FileSignature className="w-3.5 h-3.5" />
                       Hizmete Özel Varsayılan Sözleşme Genel Şartları  {t("(Text Lines)")}
                     </label>
@@ -2488,7 +2488,7 @@ export default function ServicesView({
                   </div>
 
                   {/* HIGH-FIDELITY PNG TEMPLATES DUAL UPLOAD ZONE */}
-                  <div className="p-4 bg-slate-50 dark:bg-[#252423] border border-dashed border-[#EDEBE9] dark:border-[#323130] rounded-lg space-y-4">
+                  <div data-crm-stack="" className="p-4 bg-slate-50 dark:bg-[#252423] border border-dashed border-[#EDEBE9] dark:border-[#323130] rounded-lg space-y-4">
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-2">
                         <FileCheck className="w-4 h-4 text-[#0078D4]" />
@@ -2497,9 +2497,9 @@ export default function ServicesView({
                       <span className="text-[10px] bg-red-100 text-red-800 dark:bg-red-950/40 dark:text-red-300 font-semibold px-2 py-0.5 rounded uppercase tracking-wider">{t("A4 PNG Engine")}</span>
                     </div>
 
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div data-crm-flow="" data-crm-grid="layout" className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       {/* 1. COVER PAGE PNG UPLOAD */}
-                      <div className="space-y-2 p-3 bg-white dark:bg-[#1b1a19] rounded-md border border-[#EDEBE9] dark:border-[#323130]">
+                      <div data-crm-card="surface" className="space-y-2 p-3 bg-white dark:bg-[#1b1a19] rounded-md border border-[#EDEBE9] dark:border-[#323130]">
                         <span className="text-xs font-bold text-slate-700 dark:text-slate-300 block">1. Kapak Sayfa Şablonu (cover.png alternatifi)</span>
                         {coverUploadStatus && (
                           <span className={`text-[10px] font-bold px-2 py-1 rounded flex items-center gap-1 animate-fadeIn ${
@@ -2518,7 +2518,7 @@ export default function ServicesView({
                                 <div className="text-[11px] font-bold text-slate-800 dark:text-slate-100 truncate">{uploadedCoverTemplates[selectedEditCardId].name}</div>
                                 <div className="text-[9px] text-slate-400">{uploadedCoverTemplates[selectedEditCardId].size} • {uploadedCoverTemplates[selectedEditCardId].uploadedAt}</div>
                               </div>
-                              <button
+                              <button data-crm-button=""
                                 type="button"
                                 onClick={() => {
                                   const updated = { ...uploadedCoverTemplates };
@@ -2598,7 +2598,7 @@ export default function ServicesView({
                       </div>
 
                       {/* 2. INNER PAGE PNG UPLOAD */}
-                      <div className="space-y-2 p-3 bg-white dark:bg-[#1b1a19] rounded-md border border-[#EDEBE9] dark:border-[#323130]">
+                      <div data-crm-card="surface" className="space-y-2 p-3 bg-white dark:bg-[#1b1a19] rounded-md border border-[#EDEBE9] dark:border-[#323130]">
                         <span className="text-xs font-bold text-slate-700 dark:text-slate-300 block">2. Standart İç Sayfa Şablonu (page.png alternatifi)</span>
                         {pageUploadStatus && (
                           <span className={`text-[10px] font-bold px-2 py-1 rounded flex items-center gap-1 animate-fadeIn ${
@@ -2617,7 +2617,7 @@ export default function ServicesView({
                                 <div className="text-[11px] font-bold text-slate-800 dark:text-slate-100 truncate">{uploadedPageTemplates[selectedEditCardId].name}</div>
                                 <div className="text-[9px] text-slate-400">{uploadedPageTemplates[selectedEditCardId].size} • {uploadedPageTemplates[selectedEditCardId].uploadedAt}</div>
                               </div>
-                              <button
+                              <button data-crm-button=""
                                 type="button"
                                 onClick={() => {
                                   const updated = { ...uploadedPageTemplates };
@@ -2696,8 +2696,8 @@ export default function ServicesView({
                       <Eye className="w-3.5 h-3.5" />
                       Mevcut Hiyerarşik Tablo Canlı Görünümü
                     </span>
-                    <div className="p-4 bg-white dark:bg-slate-900 rounded-lg border border-[#EDEBE9] dark:border-[#323130] overflow-x-auto">
-                      <div dangerouslySetInnerHTML={{ __html: editTableHtml || "<p class='text-xs italic text-slate-400'>Tablo boş</p>" }} />
+                    <div data-crm-card="padded" data-crm-scroll="horizontal" className="p-4 bg-white dark:bg-slate-900 rounded-lg border border-[#EDEBE9] dark:border-[#323130] overflow-x-auto">
+                      <div data-crm-document="true" dangerouslySetInnerHTML={{ __html: editTableHtml || "<p class='text-xs italic text-slate-400'>Tablo boş</p>" }} />
                     </div>
                   </div>
 
@@ -2709,7 +2709,7 @@ export default function ServicesView({
                   <Settings className="w-8 h-8 animate-spin-slow" />
                 </div>
                 <div>
-                  <h3 className="text-sm font-bold text-slate-900 dark:text-white">Seçilmiş Hizmet Kartı Bulunmuyor</h3>
+                  <h3 data-crm-heading="section" className="text-sm font-bold text-slate-900 dark:text-white">Seçilmiş Hizmet Kartı Bulunmuyor</h3>
                   <p className="text-xs text-slate-400 mt-1 max-w-xs leading-relaxed">
                     Düzenleme yapmak, Word tablolarını kopyalayıp temizlemek ve taslak girişleri güncellemek için sol sütundan bir hizmet seçin.
                   </p>
@@ -2722,12 +2722,12 @@ export default function ServicesView({
 
       {/* TAB 2: PROPOSAL WIZARD FLOW */}
       {activeTab === "wizard" && (
-        <div id="proposal-wizard-flow-wrapper" className="space-y-6">
+        <div data-crm-stack="" id="proposal-wizard-flow-wrapper" className="space-y-6">
           
           {/* STEPPER HEADER PROGRESS */}
-          <div className="bg-white dark:bg-[#1b1a19] p-4 rounded-lg border border-[#EDEBE9] dark:border-[#323130] shadow-sm">
+          <div data-crm-card="padded" className="bg-white dark:bg-[#1b1a19] p-4 rounded-lg border border-[#EDEBE9] dark:border-[#323130] shadow-sm">
             <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
-              <div className="flex items-center gap-3">
+              <div data-crm-wizard-steps className="flex items-center gap-3">
                 <span className="text-xs font-bold text-slate-400">Aşamalar:</span>
                 <div className="flex items-center gap-1">
                   <span className={`w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-black ${wizardStep === 1 ? "bg-[#0078D4] text-white" : "bg-slate-100 dark:bg-slate-850 text-slate-600"}`}>1</span>
@@ -2752,7 +2752,7 @@ export default function ServicesView({
 
               {/* Step Navigation Hooks */}
               <div className="flex items-center gap-2">
-                <button
+                <button data-crm-button=""
                   type="button"
                   onClick={() => setWizardStep(prev => Math.max(1, prev - 1) as any)}
                   disabled={wizardStep === 1}
@@ -2760,7 +2760,7 @@ export default function ServicesView({
                 >
                   <ChevronLeft className="w-3.5 h-3.5" /> Geri
                 </button>
-                <button
+                <button data-crm-button=""
                   type="button"
                   onClick={() => setWizardStep(prev => Math.min(4, prev + 1) as any)}
                   disabled={wizardStep === 4}
@@ -2772,25 +2772,25 @@ export default function ServicesView({
             </div>
           </div>
 
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+          <div data-crm-flow="" data-crm-grid="layout" className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
             
             {/* LEFT COLUMN: WIZARD CONFIG FORM */}
-            <div className={`${wizardStep === 4 ? "lg:col-span-4" : "lg:col-span-12 max-w-5xl mx-auto w-full"} space-y-6`}>
+            <div data-crm-stack="" className={`${wizardStep === 4 ? "lg:col-span-4" : "lg:col-span-12 max-w-5xl mx-auto w-full"} space-y-6`}>
 
               {/* STEP 1: CLIENT & CARD DESCRIPTION FORM */}
               {wizardStep === 1 && (
-                <div id="wizard-step-1-card" className="bg-white dark:bg-[#1b1a19] p-6 rounded-lg border border-[#EDEBE9] dark:border-[#323130] shadow-sm space-y-5">
+                <div data-crm-stack="" data-crm-card="padded" id="wizard-step-1-card" className="bg-white dark:bg-[#1b1a19] p-6 rounded-lg border border-[#EDEBE9] dark:border-[#323130] shadow-sm space-y-5">
                   <div className="flex items-center gap-1.5 pb-2.5 border-b border-[#EDEBE9] dark:border-[#323130]">
                     <Building className="w-5 h-5 text-[#0078D4]" />
                     <span className="text-sm font-black uppercase text-slate-900 dark:text-white tracking-wider">Aşama 1: Müşteri & Hizmet Şablon Bilgileri</span>
                   </div>
 
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                  <div data-crm-flow="" data-crm-grid="form" className="grid grid-cols-1 md:grid-cols-2 gap-5">
                     {/* Left: Client Fields */}
-                    <div className="space-y-4">
+                    <div data-crm-stack="" className="space-y-4">
                       <div className="space-y-1">
                         <div className="flex items-center justify-between">
-                          <label className="text-xs font-bold text-slate-700 dark:text-slate-300">Müşteri Ticari Unvanı * </label>
+                          <label data-crm-label="" className="text-xs font-bold text-slate-700 dark:text-slate-300">Müşteri Ticari Unvanı * </label>
                           {registeredCompanies.length > 0 && (
                             <span className="text-[10px] text-[#0078D4] dark:text-[#5caff3] font-bold flex items-center gap-1 bg-blue-50 dark:bg-blue-950/20 px-1.5 py-0.5 rounded">
                               <Building className="w-3 h-3" />
@@ -2799,7 +2799,7 @@ export default function ServicesView({
                           )}
                         </div>
                         <div className="relative">
-                          <input
+                          <input data-crm-trailing-icon data-crm-field="control"
                             type="text"
                             value={clientTitle}
                             onChange={(e) => {
@@ -2824,7 +2824,7 @@ export default function ServicesView({
                           {showCompaniesDropdown && matchingCompanies.length > 0 && (
                             <div className="absolute left-0 right-0 mt-1 bg-white dark:bg-[#1b1a19] border border-[#0078D4] dark:border-blue-500 rounded-md shadow-lg max-h-48 overflow-y-auto z-50 divide-y divide-[#EDEBE9] dark:divide-[#323130] scrollbar-thin">
                               {matchingCompanies.map((c) => (
-                                <button
+                                <button data-crm-button=""
                                   key={c.id}
                                   type="button"
                                   onMouseDown={() => {
@@ -2853,9 +2853,9 @@ export default function ServicesView({
 
                       <div className="space-y-1">
                         <div className="flex items-center justify-between">
-                          <label className="text-xs font-bold text-slate-700 dark:text-slate-300">Firma Kısa Adı * (PDF Dosya Adı Kısaltması)</label>
+                          <label data-crm-label="" className="text-xs font-bold text-slate-700 dark:text-slate-300">Firma Kısa Adı * (PDF Dosya Adı Kısaltması)</label>
                           {isShortNameManuallyEdited && (
-                            <button
+                            <button data-crm-button=""
                               type="button"
                               onClick={() => setIsShortNameManuallyEdited(false)}
                               className="text-[9px] text-[#0078D4] dark:text-[#5caff3] font-black hover:underline"
@@ -2864,7 +2864,7 @@ export default function ServicesView({
                             </button>
                           )}
                         </div>
-                        <input
+                        <input data-crm-field="control"
                           type="text"
                           value={clientShortName}
                           onChange={(e) => {
@@ -2880,8 +2880,8 @@ export default function ServicesView({
                       </div>
 
                       <div className="space-y-1">
-                        <label className="text-xs font-bold text-slate-700 dark:text-slate-300">Tebligat & Fatura Adresi</label>
-                        <textarea
+                        <label data-crm-label="" className="text-xs font-bold text-slate-700 dark:text-slate-300">Tebligat & Fatura Adresi</label>
+                        <textarea data-crm-field="multiline"
                           rows={2}
                           value={clientAddress}
                           onChange={(e) => setClientAddress(e.target.value)}
@@ -2890,10 +2890,10 @@ export default function ServicesView({
                         />
                       </div>
 
-                      <div className="grid grid-cols-2 gap-3">
+                      <div data-crm-flow="" data-crm-grid="form" className="grid grid-cols-2 gap-3">
                         <div className="space-y-1">
-                          <label className="text-xs font-bold text-slate-700 dark:text-slate-300">Sorumlu Kişi </label>
-                          <input
+                          <label data-crm-label="" className="text-xs font-bold text-slate-700 dark:text-slate-300">Sorumlu Kişi </label>
+                          <input data-crm-field="control"
                             type="text"
                             value={assignedPm}
                             onChange={(e) => setAssignedPm(e.target.value)}
@@ -2902,8 +2902,8 @@ export default function ServicesView({
                         </div>
 
                         <div className="space-y-1">
-                          <label className="text-xs font-bold text-slate-700 dark:text-slate-300">Teklif Tarihi </label>
-                          <input
+                          <label data-crm-label="" className="text-xs font-bold text-slate-700 dark:text-slate-300">Teklif Tarihi </label>
+                          <input data-crm-field="control"
                             type="date"
                             value={proposalDate}
                             onChange={(e) => setProposalDate(e.target.value)}
@@ -2912,10 +2912,10 @@ export default function ServicesView({
                         </div>
                       </div>
 
-                      <div className="grid grid-cols-2 gap-3">
+                      <div data-crm-flow="" data-crm-grid="form" className="grid grid-cols-2 gap-3">
                         <div className="space-y-1">
-                          <label className="text-xs font-bold text-slate-700 dark:text-slate-300">Müşteri İlgili Kişi </label>
-                          <input
+                          <label data-crm-label="" className="text-xs font-bold text-slate-700 dark:text-slate-300">Müşteri İlgili Kişi </label>
+                          <input data-crm-field="control"
                             type="text"
                             value={clientContactPerson}
                             onChange={(e) => setClientContactPerson(e.target.value)}
@@ -2925,8 +2925,8 @@ export default function ServicesView({
                         </div>
 
                         <div className="space-y-1">
-                          <label className="text-xs font-bold text-slate-700 dark:text-slate-300">Müşteri E-posta Adresi</label>
-                          <input
+                          <label data-crm-label="" className="text-xs font-bold text-slate-700 dark:text-slate-300">Müşteri E-posta Adresi</label>
+                          <input data-crm-field="control"
                             type="email"
                             value={clientContactEmail}
                             onChange={(e) => setClientContactEmail(e.target.value)}
@@ -2938,9 +2938,9 @@ export default function ServicesView({
 
                       <div className="space-y-1">
                         <div className="flex items-center justify-between">
-                          <label className="text-xs font-bold text-slate-700 dark:text-slate-300">Teklif Numarası </label>
+                          <label data-crm-label="" className="text-xs font-bold text-slate-700 dark:text-slate-300">Teklif Numarası </label>
                           {isNumberManuallyEdited && (
-                            <button
+                            <button data-crm-button=""
                               type="button"
                               onClick={() => {
                                 setIsNumberManuallyEdited(false);
@@ -2958,7 +2958,7 @@ export default function ServicesView({
                           )}
                         </div>
                         <div className="relative">
-                          <input
+                          <input data-crm-field="control"
                             type="text"
                             value={proposalNumber}
                             onChange={(e) => {
@@ -2979,16 +2979,16 @@ export default function ServicesView({
                     </div>
 
                     {/* Right: Service Select & Cover Letter Editor! */}
-                    <div className="space-y-4">
+                    <div data-crm-stack="" className="space-y-4">
                       <div className="space-y-1">
-                        <label className="text-xs font-bold text-slate-700 dark:text-slate-300">Hizmet  *</label>
+                        <label data-crm-label="" className="text-xs font-bold text-slate-700 dark:text-slate-300">Hizmet  *</label>
                         
                         {/* Interactive Filter Field */}
                         <div className="relative mb-2">
                           <span className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                             <Filter className="h-3.5 w-3.5 text-slate-400 dark:text-zinc-500" />
                           </span>
-                          <input
+                          <input data-crm-leading-icon data-crm-field="control"
                             type="text"
                             placeholder="Hizmetlerde interaktif ara... (örn: 'Yalın', 'SMED')"
                             value={serviceFilterQuery}
@@ -3028,7 +3028,7 @@ export default function ServicesView({
                         </select>
                         
                         <div className="flex pt-1.5">
-                          <button
+                          <button data-crm-button=""
                             type="button"
                             onClick={handleSaveServiceDefaults}
                             className="w-full px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white text-[10px] font-black rounded flex items-center justify-center gap-1 shadow-sm transition-all cursor-pointer"
@@ -3044,14 +3044,14 @@ export default function ServicesView({
                   </div>
 
                   {/* Active Table Editor & AI Table Wizard for Stage 1 removed */}
-                  <div className="hidden space-y-4 pt-5 border-t border-[#EDEBE9] dark:border-[#323130]">
+                  <div data-crm-stack="" className="hidden space-y-4 pt-5 border-t border-[#EDEBE9] dark:border-[#323130]">
                     <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 bg-slate-50 dark:bg-[#252423] p-3 rounded-lg border border-[#EDEBE9] dark:border-[#323130]">
                       <div className="flex items-center gap-1.5 text-xs font-black text-slate-800 dark:text-white uppercase tracking-wider">
                         <Table className="w-4 h-4 text-[#0078D4]" />
                         <span>Süreç, Faaliyet ve Efor Tablosu Editörü </span>
                       </div>
                       <div className="flex items-center gap-2">
-                        <button
+                        <button data-crm-button=""
                           type="button"
                           onClick={() => setWizardPastePrompt(!wizardPastePrompt)}
                           className="bg-purple-100 dark:bg-purple-950/40 text-purple-800 dark:text-purple-300 hover:bg-purple-200 text-[11px] font-black px-2.5 py-1.5 rounded flex items-center gap-1 cursor-pointer transition-colors"
@@ -3071,9 +3071,9 @@ export default function ServicesView({
 
                     {/* Show AI Word/Excel Import Panel */}
                     {wizardPastePrompt && (
-                      <div className="p-4 bg-purple-50/30 dark:bg-purple-950/5 border border-purple-200 dark:border-purple-900/50 rounded-lg space-y-4 animate-fadeIn">
+                      <div data-crm-stack="" className="p-4 bg-purple-50/30 dark:bg-purple-950/5 border border-purple-200 dark:border-purple-900/50 rounded-lg space-y-4 animate-fadeIn">
                         <div>
-                          <h4 className="text-xs font-black text-purple-700 dark:text-purple-400 uppercase tracking-wide flex items-center gap-1.5 mb-1">
+                          <h4 data-crm-heading="section" className="text-xs font-black text-purple-700 dark:text-purple-400 uppercase tracking-wide flex items-center gap-1.5 mb-1">
                             <Sparkles className="w-4 h-4" />
                             Düz Metin, Madde Listesi veya Excel Tablosunu Yapıştırın
                           </h4>
@@ -3095,7 +3095,7 @@ export default function ServicesView({
                             * Yapay zeka ile A4 sayfa yapısına uygun sütun birleştirmeleri ve rowspan hizalamaları otomatik oluşturulur.
                           </span>
                           <div className="flex items-center gap-2 self-end">
-                            <button
+                            <button data-crm-button=""
                               type="button"
                               onClick={() => {
                                 setWizardPastePrompt(false);
@@ -3106,7 +3106,7 @@ export default function ServicesView({
                               Vazgeç
                             </button>
                             
-                            <button
+                            <button data-crm-button=""
                               type="button"
                               onClick={handleWizardManualWordPaste}
                               disabled={!wizardRawPastedHtml || isWizardAiConverting}
@@ -3116,7 +3116,7 @@ export default function ServicesView({
                               Düz Kod Temizle
                             </button>
 
-                            <button
+                            <button data-crm-button=""
                               type="button"
                               onClick={handleWizardAiTableConvert}
                               disabled={!wizardRawPastedHtml || isWizardAiConverting}
@@ -3142,10 +3142,10 @@ export default function ServicesView({
                     {/* LIVE EDITABLE CONTENT ZONE */}
                     <div className="space-y-1.5">
                       <div className="flex items-center justify-between">
-                        <label className="text-[11px] font-black text-slate-500 dark:text-slate-400 uppercase tracking-wider">
+                        <label data-crm-label="" className="text-[11px] font-black text-slate-500 dark:text-slate-400 uppercase tracking-wider">
                           Efor Tablosu Kaynak Kodu (HTML Canlı Düzenleme)
                         </label>
-                        <button 
+                        <button data-crm-button=""
                           type="button" 
                           onClick={() => setWizardTableCollapsed(!wizardTableCollapsed)} 
                           className="text-xs font-black bg-slate-100 hover:bg-slate-200 dark:bg-[#252423] dark:hover:bg-[#323130] text-slate-700 dark:text-slate-200 w-6 h-6 rounded flex items-center justify-center cursor-pointer border border-[#EDEBE9] dark:border-[#323130] transition-colors"
@@ -3173,7 +3173,7 @@ export default function ServicesView({
 
               {/* STEP 2: MULTI-OPTION PRICING FLOW CONFIG */}
               {wizardStep === 2 && (
-                <div id="wizard-step-2-card" className="bg-white dark:bg-[#1b1a19] p-6 rounded-lg border border-[#EDEBE9] dark:border-[#323130] shadow-sm space-y-5">
+                <div data-crm-stack="" data-crm-card="padded" id="wizard-step-2-card" className="bg-white dark:bg-[#1b1a19] p-6 rounded-lg border border-[#EDEBE9] dark:border-[#323130] shadow-sm space-y-5">
                   <div className="flex items-center justify-between pb-2.5 border-b border-[#EDEBE9] dark:border-[#323130]">
                     <div className="flex items-center gap-1.5">
                       <Tag className="w-5 h-5 text-[#0078D4]" />
@@ -3183,7 +3183,7 @@ export default function ServicesView({
                       <div className="text-[10.5px] text-[#0078D4] dark:text-blue-300 font-bold bg-blue-50 dark:bg-blue-950/20 px-2.5 py-1 rounded">
                         Seçili olan opsiyonlar otomatik teklife eklenir
                       </div>
-                      <button
+                      <button data-crm-button=""
                         type="button"
                         onClick={handleSaveServiceDefaults}
                         className="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white text-[10.5px] font-black rounded flex items-center gap-1.5 shadow-sm transition-all cursor-pointer"
@@ -3195,11 +3195,11 @@ export default function ServicesView({
                   </div>
 
                   {/* Multi-Option Tab Selector */}
-                  <div className="flex bg-slate-50 dark:bg-zinc-800/20 p-1.5 rounded-lg border border-slate-150 dark:border-zinc-800">
+                  <div data-crm-toolbar="" className="flex bg-slate-50 dark:bg-zinc-800/20 p-1.5 rounded-lg border border-slate-150 dark:border-zinc-800">
                     {[1, 2, 3].map((optNum) => {
                       const isActive = optNum === 1 ? option1Active : optNum === 2 ? option2Active : option3Active;
                       return (
-                        <button
+                        <button data-crm-button=""
                           key={optNum}
                           type="button"
                           onClick={() => setActiveOptionTab(optNum as any)}
@@ -3216,13 +3216,13 @@ export default function ServicesView({
                   </div>
 
                   {/* Options Input Panels */}
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-5 pt-1">
+                  <div data-crm-grid="form" className="grid grid-cols-1 md:grid-cols-2 gap-5 pt-1">
                     {/* Left Panel: Common properties */}
-                    <div className="space-y-4 bg-slate-50/40 dark:bg-zinc-800/5 p-4 rounded-lg border border-slate-200/50 dark:border-zinc-800/50">
+                    <div data-crm-stack="" className="space-y-4 bg-slate-50/40 dark:bg-zinc-800/5 p-4 rounded-lg border border-slate-200/50 dark:border-zinc-800/50">
                       {activeOptionTab === 1 && (
-                        <div className="space-y-4">
+                        <div data-crm-stack="" className="space-y-4">
                           <div className="flex items-center justify-between p-2 bg-emerald-50 dark:bg-emerald-950/20 border border-emerald-100 dark:border-emerald-900/35 rounded">
-                            <label className="text-xs font-black text-emerald-800 dark:text-emerald-350 uppercase tracking-wide flex items-center gap-1">
+                            <label data-crm-label="" className="text-xs font-black text-emerald-800 dark:text-emerald-350 uppercase tracking-wide flex items-center gap-1">
                               🟢 Opsiyon 1 Teklifte Gösterilsin
                             </label>
                             <input
@@ -3234,8 +3234,8 @@ export default function ServicesView({
                           </div>
                           
                           <div className="space-y-1">
-                            <label className="text-xs font-bold text-slate-700 dark:text-slate-300">Opsiyon Başlığı </label>
-                            <input
+                            <label data-crm-label="" className="text-xs font-bold text-slate-700 dark:text-slate-300">Opsiyon Başlığı </label>
+                            <input data-crm-field="control"
                               type="text"
                               value={option1Name}
                               onChange={(e) => setOption1Name(e.target.value)}
@@ -3244,8 +3244,8 @@ export default function ServicesView({
                           </div>
 
                           <div className="space-y-1">
-                            <label className="text-xs font-bold text-slate-700 dark:text-slate-300">Kapsam Özeti & Açıklaması </label>
-                            <textarea
+                            <label data-crm-label="" className="text-xs font-bold text-slate-700 dark:text-slate-300">Kapsam Özeti & Açıklaması </label>
+                            <textarea data-crm-field="multiline"
                               rows={3}
                               value={option1Desc}
                               onChange={(e) => setOption1Desc(e.target.value)}
@@ -3254,8 +3254,8 @@ export default function ServicesView({
                           </div>
 
                           <div className="space-y-1">
-                            <label className="text-xs font-bold text-slate-700 dark:text-slate-300">Zaman Çizelgesi / Süre</label>
-                            <input
+                            <label data-crm-label="" className="text-xs font-bold text-slate-700 dark:text-slate-300">Zaman Çizelgesi / Süre</label>
+                            <input data-crm-field="control"
                               type="text"
                               value={option1Duration}
                               onChange={(e) => setOption1Duration(e.target.value)}
@@ -3266,9 +3266,9 @@ export default function ServicesView({
                       )}
 
                       {activeOptionTab === 2 && (
-                        <div className="space-y-4">
+                        <div data-crm-stack="" className="space-y-4">
                           <div className="flex items-center justify-between p-2 bg-emerald-50 dark:bg-emerald-950/20 border border-emerald-100 dark:border-emerald-900/35 rounded">
-                            <label className="text-xs font-black text-emerald-800 dark:text-emerald-350 uppercase tracking-wide flex items-center gap-1">
+                            <label data-crm-label="" className="text-xs font-black text-emerald-800 dark:text-emerald-350 uppercase tracking-wide flex items-center gap-1">
                               🟢 Opsiyon 2 Teklifte Gösterilsin
                             </label>
                             <input
@@ -3280,8 +3280,8 @@ export default function ServicesView({
                           </div>
                           
                           <div className="space-y-1">
-                            <label className="text-xs font-bold text-slate-700 dark:text-slate-300">Opsiyon Başlığı </label>
-                            <input
+                            <label data-crm-label="" className="text-xs font-bold text-slate-700 dark:text-slate-300">Opsiyon Başlığı </label>
+                            <input data-crm-field="control"
                               type="text"
                               value={option2Name}
                               onChange={(e) => setOption2Name(e.target.value)}
@@ -3290,8 +3290,8 @@ export default function ServicesView({
                           </div>
 
                           <div className="space-y-1">
-                            <label className="text-xs font-bold text-slate-700 dark:text-slate-300">Kapsam Özeti & Açıklaması </label>
-                            <textarea
+                            <label data-crm-label="" className="text-xs font-bold text-slate-700 dark:text-slate-300">Kapsam Özeti & Açıklaması </label>
+                            <textarea data-crm-field="multiline"
                               rows={3}
                               value={option2Desc}
                               onChange={(e) => setOption2Desc(e.target.value)}
@@ -3300,8 +3300,8 @@ export default function ServicesView({
                           </div>
 
                           <div className="space-y-1">
-                            <label className="text-xs font-bold text-slate-700 dark:text-slate-300">Zaman Çizelgesi / Süre</label>
-                            <input
+                            <label data-crm-label="" className="text-xs font-bold text-slate-700 dark:text-slate-300">Zaman Çizelgesi / Süre</label>
+                            <input data-crm-field="control"
                               type="text"
                               value={option2Duration}
                               onChange={(e) => setOption2Duration(e.target.value)}
@@ -3312,9 +3312,9 @@ export default function ServicesView({
                       )}
 
                       {activeOptionTab === 3 && (
-                        <div className="space-y-4">
+                        <div data-crm-stack="" className="space-y-4">
                           <div className="flex items-center justify-between p-2 bg-emerald-50 dark:bg-emerald-950/20 border border-emerald-100 dark:border-emerald-900/35 rounded">
-                            <label className="text-xs font-black text-emerald-800 dark:text-emerald-350 uppercase tracking-wide flex items-center gap-1">
+                            <label data-crm-label="" className="text-xs font-black text-emerald-800 dark:text-emerald-350 uppercase tracking-wide flex items-center gap-1">
                               🟢 Opsiyon 3 Teklifte Gösterilsin
                             </label>
                             <input
@@ -3326,8 +3326,8 @@ export default function ServicesView({
                           </div>
                           
                           <div className="space-y-1">
-                            <label className="text-xs font-bold text-slate-700 dark:text-slate-300">Opsiyon Başlığı </label>
-                            <input
+                            <label data-crm-label="" className="text-xs font-bold text-slate-700 dark:text-slate-300">Opsiyon Başlığı </label>
+                            <input data-crm-field="control"
                               type="text"
                               value={option3Name}
                               onChange={(e) => setOption3Name(e.target.value)}
@@ -3336,8 +3336,8 @@ export default function ServicesView({
                           </div>
 
                           <div className="space-y-1">
-                            <label className="text-xs font-bold text-slate-700 dark:text-slate-300">Kapsam Özeti & Açıklaması </label>
-                            <textarea
+                            <label data-crm-label="" className="text-xs font-bold text-slate-700 dark:text-slate-300">Kapsam Özeti & Açıklaması </label>
+                            <textarea data-crm-field="multiline"
                               rows={3}
                               value={option3Desc}
                               onChange={(e) => setOption3Desc(e.target.value)}
@@ -3346,8 +3346,8 @@ export default function ServicesView({
                           </div>
 
                           <div className="space-y-1">
-                            <label className="text-xs font-bold text-slate-700 dark:text-slate-300">Zaman Çizelgesi / Süre</label>
-                            <input
+                            <label data-crm-label="" className="text-xs font-bold text-slate-700 dark:text-slate-300">Zaman Çizelgesi / Süre</label>
+                            <input data-crm-field="control"
                               type="text"
                               value={option3Duration}
                               onChange={(e) => setOption3Duration(e.target.value)}
@@ -3359,7 +3359,7 @@ export default function ServicesView({
                     </div>
 
                     {/* Right Panel: Itemized pricing rows list with auto calculation summaries */}
-                    <div className="space-y-4">
+                    <div data-crm-stack="" className="space-y-4">
                       {activeOptionTab === 1 && (
                         <>
                           <OptionRowEditor
@@ -3423,7 +3423,7 @@ export default function ServicesView({
 
               {/* STEP 3: GENERAL CONDITIONS */}
               {wizardStep === 3 && (
-                <div id="wizard-step-3-card" className="bg-white dark:bg-[#1b1a19] p-6 rounded-lg border border-[#EDEBE9] dark:border-[#323130] shadow-sm space-y-4">
+                <div data-crm-stack="" data-crm-card="padded" id="wizard-step-3-card" className="bg-white dark:bg-[#1b1a19] p-6 rounded-lg border border-[#EDEBE9] dark:border-[#323130] shadow-sm space-y-4">
                   <div className="flex items-center gap-1.5 pb-2.5 border-b border-[#EDEBE9] dark:border-[#323130]">
                     <FileText className="w-5 h-5 text-[#0078D4]" />
                     <span className="text-sm font-black uppercase text-slate-900 dark:text-white tracking-wider flex items-center gap-1.5">Aşama 3: Genel Ticari Şartlar </span>
@@ -3431,8 +3431,8 @@ export default function ServicesView({
 
                   <div className="space-y-2">
                     <div className="flex items-center justify-between">
-                      <label className="text-xs font-bold text-slate-700 dark:text-slate-300">Sözleşme Maddeleri / Genel Şartname Hükümleri:</label>
-                      <button
+                      <label data-crm-label="" className="text-xs font-bold text-slate-700 dark:text-slate-300">Sözleşme Maddeleri / Genel Şartname Hükümleri:</label>
+                      <button data-crm-button=""
                         type="button"
                         onClick={() => {
                           CrmDb.setKv("crm_persistent_general_terms", wizardTermsAndConditions);
@@ -3444,7 +3444,7 @@ export default function ServicesView({
                         <Save className="w-3.5 h-3.5" /> Genel Şartları Varsayılan Yap (Kaydet)
                       </button>
                     </div>
-                    <textarea
+                    <textarea data-crm-field="multiline"
                       rows={12}
                       value={wizardTermsAndConditions}
                       onChange={(e) => setWizardTermsAndConditions(e.target.value)}
@@ -3460,16 +3460,16 @@ export default function ServicesView({
 
               {/* STEP 4: SECTOR FINETUNINGS & EXPORTS GENERAL STYLER */}
               {wizardStep === 4 && (
-                <div id="wizard-step-4-card" className="bg-white dark:bg-[#1b1a19] p-6 rounded-lg border border-[#EDEBE9] dark:border-[#323130] shadow-sm space-y-4">
+                <div data-crm-stack="" data-crm-card="padded" id="wizard-step-4-card" className="bg-white dark:bg-[#1b1a19] p-6 rounded-lg border border-[#EDEBE9] dark:border-[#323130] shadow-sm space-y-4">
                   <div className="flex items-center gap-1.5 pb-2.5 border-b border-[#EDEBE9] dark:border-[#323130]">
                     <Settings className="w-4 h-4 text-[#0078D4]" />
                     <span className="text-sm font-semibold text-slate-900 dark:text-white uppercase tracking-wider">Aşama 4: Antetli & İndirme</span>
                   </div>
 
-                  <div className="space-y-4">
+                  <div data-crm-stack="" className="space-y-4">
                     <div className="space-y-1.5">
-                      <label className="text-[13px] font-semibold text-slate-700 dark:text-slate-300 block">Resmi Antetli Seçimi</label>
-                      <select
+                      <label data-crm-label="" className="text-[13px] font-semibold text-slate-700 dark:text-slate-300 block">Resmi Antetli Seçimi</label>
+                      <select data-crm-field="control"
                         value={letterheadId}
                         onChange={(e) => setLetterheadId(e.target.value)}
                         className="w-full bg-slate-50 dark:bg-[#252423] border border-[#EDEBE9] dark:border-[#323130] rounded-md px-3 py-2 text-[14px] font-normal text-slate-900 dark:text-white cursor-pointer focus:ring-1 focus:ring-[#0078D4] focus:border-[#0078D4] outline-none"
@@ -3508,7 +3508,7 @@ export default function ServicesView({
 
               {/* CRM & OUTREACH CARD BLOCK ON STEP 4 */}
               {wizardStep === 4 && (
-                <div id="wizard-step-4-crm-card" className="bg-white dark:bg-[#1b1a19] p-6 rounded-lg border border-[#EDEBE9] dark:border-[#323130] shadow-sm space-y-4">
+                <div data-crm-stack="" data-crm-card="padded" id="wizard-step-4-crm-card" className="bg-white dark:bg-[#1b1a19] p-6 rounded-lg border border-[#EDEBE9] dark:border-[#323130] shadow-sm space-y-4">
                   <div className="flex items-center gap-1.5 pb-2.5 border-b border-[#EDEBE9] dark:border-[#323130]">
                     <CheckCircle2 className="w-4 h-4 text-[#0078D4]" />
                     <span className="text-sm font-semibold text-slate-900 dark:text-white uppercase tracking-wider">Aşama 5: Sistem & Fırsat Kaydı</span>
@@ -3518,7 +3518,7 @@ export default function ServicesView({
                     Mevcut teklif parametrelerini (müşteri, tarih, kalem fiyatları ve versiyon) arşive kaydeder ve <strong>{t("Deal Management (B2B CRM Pipeline)")}</strong> sürecinde otomatik olarak <em className="text-blue-600 dark:text-blue-400 font-bold">{t("Proposal Submitted (Quote Sent)")}</em> aşamasına yeni bir kart ekler.
                   </p>
 
-                  <button
+                  <button data-crm-button=""
                     type="button"
                     onClick={() => handleCreateAndSaveProposal(false)}
                     className={`w-full h-[52px] px-6 py-3.5 text-white font-semibold rounded-md flex items-center justify-center gap-2 transition-colors border cursor-pointer text-[14px] ${
@@ -3541,7 +3541,7 @@ export default function ServicesView({
                   {/* Kullanıcı talebi: "teklif oluşturda taslak oluştur
                       butonu koyarsan teklif yönetimi Teklif konusu
                       segmesinde [Taslak] Teklif konusu olarak gözükür." */}
-                  <button
+                  <button data-crm-button=""
                     type="button"
                     onClick={handleSaveAsDraft}
                     className="w-full h-[44px] px-6 py-2.5 text-slate-700 dark:text-slate-200 font-semibold rounded-md flex items-center justify-center gap-2 transition-colors border border-[#EDEBE9] dark:border-[#323130] bg-white dark:bg-transparent hover:bg-slate-50 dark:hover:bg-white/5 cursor-pointer text-[13px]"
@@ -3553,7 +3553,7 @@ export default function ServicesView({
 
               {/* EMAIL OUTREACH CARD BLOCK ON STEP 4 */}
               {wizardStep === 4 && (
-                <div id="wizard-step-4-email-card" className="bg-white dark:bg-[#1b1a19] p-6 rounded-lg border border-[#EDEBE9] dark:border-[#323130] shadow-sm space-y-5">
+                <div data-crm-stack="" data-crm-card="padded" id="wizard-step-4-email-card" className="bg-white dark:bg-[#1b1a19] p-6 rounded-lg border border-[#EDEBE9] dark:border-[#323130] shadow-sm space-y-5">
                   <div className="flex items-center justify-between pb-2.5 border-b border-[#EDEBE9] dark:border-[#323130]">
                     <div className="flex items-center gap-1.5">
                       <Mail className="w-4 h-4 text-[#0078D4]" />
@@ -3564,8 +3564,8 @@ export default function ServicesView({
                   {/* Mail Template Dropdown */}
                   <div className="space-y-1.5">
                     <div className="flex items-center justify-between">
-                      <label className="text-[13px] font-semibold text-slate-700 dark:text-slate-300">E-Posta Taslağı Şablonu</label>
-                      <button
+                      <label data-crm-label="" className="text-[13px] font-semibold text-slate-700 dark:text-slate-300">E-Posta Taslağı Şablonu</label>
+                      <button data-crm-button=""
                         type="button"
                         onClick={() => handleDeleteEmailTemplate(selectedEmailTemplateId)}
                         className="text-[12px] text-red-650 dark:text-red-400 hover:underline font-semibold"
@@ -3573,7 +3573,7 @@ export default function ServicesView({
                         Taslağı Sil
                       </button>
                     </div>
-                    <select
+                    <select data-crm-field="control"
                       value={selectedEmailTemplateId}
                       onChange={(e) => setSelectedEmailTemplateId(e.target.value)}
                       className="w-full bg-slate-50 dark:bg-[#252423] border border-[#EDEBE9] dark:border-[#323130] rounded-md px-3 py-2 text-[14px] font-normal text-slate-950 dark:text-white cursor-pointer focus:ring-1 focus:ring-[#0078D4] focus:border-[#0078D4] outline-none"
@@ -3588,8 +3588,8 @@ export default function ServicesView({
 
                   {/* Subject editor */}
                   <div className="space-y-1.5">
-                    <label className="text-[13px] font-semibold text-slate-700 dark:text-slate-300 block">{t("Subject")}</label>
-                    <input
+                    <label data-crm-label="" className="text-[13px] font-semibold text-slate-700 dark:text-slate-300 block">{t("Subject")}</label>
+                    <input data-crm-field="control"
                       type="text"
                       value={mailSubject}
                       onChange={(e) => setMailSubject(e.target.value)}
@@ -3600,8 +3600,8 @@ export default function ServicesView({
                   {/* Editor text area */}
                   <div className="space-y-1.5">
                     <div className="flex items-center justify-between">
-                      <label className="text-[13px] font-semibold text-slate-700 dark:text-slate-300">İçerik (Mektup Gövdesi)</label>
-                      <button
+                      <label data-crm-label="" className="text-[13px] font-semibold text-slate-700 dark:text-slate-300">İçerik (Mektup Gövdesi)</label>
+                      <button data-crm-button=""
                         type="button"
                         onClick={handleSaveCurrentEmailTemplate}
                         className="text-[12px] text-[#0078D4] hover:underline font-semibold"
@@ -3609,7 +3609,7 @@ export default function ServicesView({
                         Yeni Şablon Kaydet
                       </button>
                     </div>
-                    <textarea
+                    <textarea data-crm-field="multiline"
                       rows={10}
                       value={mailBody}
                       onChange={(e) => setMailBody(e.target.value)}
@@ -3622,8 +3622,8 @@ export default function ServicesView({
                       olabilir" dedi, bu yüzden hem gerçek uygulama-içi gönderim hem de
                       harici posta istemcisine devretme seçeneği burada bir arada. */}
                   <div className="space-y-1.5">
-                    <label className="text-[13px] font-semibold text-slate-700 dark:text-slate-300 block">Gönderim Yöntemi</label>
-                    <select
+                    <label data-crm-label="" className="text-[13px] font-semibold text-slate-700 dark:text-slate-300 block">Gönderim Yöntemi</label>
+                    <select data-crm-field="control"
                       value={emailSendMode}
                       onChange={(e) => setEmailSendMode(e.target.value as "app" | "external")}
                       className="w-full bg-slate-50 dark:bg-[#252423] border border-[#EDEBE9] dark:border-[#323130] rounded-md px-3 py-2 text-[14px] font-semibold text-slate-950 dark:text-white cursor-pointer focus:ring-1 focus:ring-[#0078D4] focus:border-[#0078D4] outline-none"
@@ -3645,8 +3645,8 @@ export default function ServicesView({
                       )}
 
                       <div className="space-y-1.5">
-                        <label className="text-[13px] font-semibold text-slate-700 dark:text-slate-300 block">Gönderen Posta Kutusu *</label>
-                        <select
+                        <label data-crm-label="" className="text-[13px] font-semibold text-slate-700 dark:text-slate-300 block">Gönderen Posta Kutusu *</label>
+                        <select data-crm-field="control"
                           value={selectedProposalSender}
                           onChange={(e) => setSelectedProposalSender(e.target.value as "organization" | "personal" | "")}
                           disabled={isLoadingProposalSenders || proposalSenderOptions.length === 0}
@@ -3660,7 +3660,7 @@ export default function ServicesView({
                         </select>
                       </div>
 
-                      <button
+                      <button data-crm-button=""
                         type="button"
                         onClick={handleSendProposalEmailInApp}
                         disabled={isSendingProposalEmail || isLoadingProposalSenders || proposalSenderOptions.length === 0}
@@ -3677,8 +3677,8 @@ export default function ServicesView({
                   ) : (
                     <div className="space-y-3">
                       <div className="space-y-1.5">
-                        <label className="text-[13px] font-semibold text-slate-700 dark:text-slate-300 block">Posta İstemcisi</label>
-                        <select
+                        <label data-crm-label="" className="text-[13px] font-semibold text-slate-700 dark:text-slate-300 block">Posta İstemcisi</label>
+                        <select data-crm-field="control"
                           value={mailClientType}
                           onChange={(e) => setMailClientType(e.target.value as "mailto" | "gmail" | "outlook" | "outlook-corp")}
                           className="w-full bg-slate-50 dark:bg-[#252423] border border-[#EDEBE9] dark:border-[#323130] rounded-md px-3 py-2 text-[14px] font-normal text-slate-950 dark:text-white cursor-pointer focus:ring-1 focus:ring-[#0078D4] focus:border-[#0078D4] outline-none"
@@ -3690,7 +3690,7 @@ export default function ServicesView({
                         </select>
                       </div>
 
-                      <button
+                      <button data-crm-button=""
                         type="button"
                         onClick={handleOpenMailClient}
                         className="w-full h-[52px] px-6 py-3.5 bg-[#0078D4] hover:bg-[#106ebe] text-white font-semibold rounded-md flex items-center justify-center gap-2 transition-colors cursor-pointer border border-[#005a9e] text-[14px]"
@@ -3706,9 +3706,9 @@ export default function ServicesView({
 
             {/* RIGHT COLUMN: INTERACTIVE CONTINUOUS PAPER PREVIEW */}
             {wizardStep === 4 && (
-              <div className="lg:col-span-8 lg:sticky lg:top-6 lg:max-h-[calc(100vh-120px)] lg:overflow-y-auto pr-1 flex flex-col space-y-4">
+              <div data-crm-stack="" className="lg:col-span-8 lg:sticky lg:top-6 lg:max-h-[calc(100vh-120px)] lg:overflow-y-auto pr-1 flex flex-col space-y-4">
                 
-                <div className="bg-white dark:bg-[#1b1a19] p-4 rounded-lg border border-[#EDEBE9] dark:border-[#323130] shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                <div data-crm-card="padded" className="bg-white dark:bg-[#1b1a19] p-4 rounded-lg border border-[#EDEBE9] dark:border-[#323130] shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                   <div className="flex items-center gap-2">
                     <span className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
                     <span className="text-xs font-bold text-slate-950 dark:text-white">A4 Antetli Sürekli Çıktı Önizleme Alanı</span>
@@ -3718,7 +3718,7 @@ export default function ServicesView({
                   {wizardStep === 4 && (
                     <div className="flex items-center flex-wrap gap-2">
                     {/* IN PLACE EDIT SWITCHER */}
-                    <button
+                    <button data-crm-button=""
                       type="button"
                       onClick={() => setIsAssemblyEditable(!isAssemblyEditable)}
                       className={`px-3 py-1.5 rounded text-xs font-bold flex items-center gap-1.5 transition-all cursor-pointer ${
@@ -3733,7 +3733,7 @@ export default function ServicesView({
                     </button>
 
                     {/* PRINT ACTION */}
-                    <button
+                    <button data-crm-button=""
                       type="button"
                       onClick={handlePrint}
                       className="bg-[#2876e2] hover:bg-[#1a5cb8] text-white border border-[#EDEBE9] dark:border-[#323130] px-3 py-1.5 rounded text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5 shadow-xs"
@@ -3742,7 +3742,7 @@ export default function ServicesView({
                     </button>
 
                     {/* WORD DOC EXPORT */}
-                    <button
+                    <button data-crm-button=""
                       type="button"
                       onClick={handleExportWord}
                       className="bg-blue-600 hover:bg-blue-700 text-white px-3 py-1.5 rounded text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5"
@@ -3752,7 +3752,7 @@ export default function ServicesView({
                     </button>
 
                     {/* PDF EXPORT */}
-                    <button
+                    <button data-crm-button=""
                       type="button"
                       onClick={handleExportPDF}
                       disabled={isExportingPdf}
@@ -3771,7 +3771,7 @@ export default function ServicesView({
               </div>
 
               {/* A4 PAGES CONTAINER CARD */}
-              <div 
+              <div data-crm-document="true"
                 id="assembly-paper-view"
                 ref={assemblyPaperRef}
                 className="bg-white dark:bg-slate-900 text-slate-950 dark:text-slate-100 p-8 sm:p-12 rounded-lg border border-[#EDEBE9] dark:border-[#323130] shadow-md min-h-[700px] transition-all relative"
@@ -3867,26 +3867,26 @@ export default function ServicesView({
 
       {/* Custom Global Confirmation Dialog */}
       {confirmDeleteModal.isOpen && (
-        <div className="fixed inset-0 bg-black/60 backdrop-blur-xs flex items-center justify-center z-[9999] p-4 font-sans antialiased animate-fade-in text-slate-800 dark:text-zinc-200" role="dialog" aria-modal="true">
-          <div className="bg-white dark:bg-[#181818] w-full max-w-sm rounded-xl border border-slate-205 dark:border-zinc-855 shadow-2xl p-6 text-center animate-in zoom-in-95 duration-100">
-            <div className="mx-auto w-12 h-12 bg-rose-50 dark:bg-rose-950/25 rounded-full flex items-center justify-center text-rose-500 mb-4">
+        <div data-crm-overlay="" className="fixed inset-0 bg-black/60 backdrop-blur-xs flex items-center justify-center z-[9999] p-4 font-sans antialiased animate-fade-in text-slate-800 dark:text-zinc-200" role="dialog" aria-modal="true">
+          <div data-crm-modal="" data-crm-card="padded" className="bg-white dark:bg-[#181818] w-full max-w-sm rounded-xl border border-slate-205 dark:border-zinc-855 shadow-2xl p-6 text-center animate-in zoom-in-95 duration-100">
+            <div data-crm-icon-box="" className="mx-auto w-12 h-12 bg-rose-50 dark:bg-rose-950/25 rounded-full flex items-center justify-center text-rose-500 mb-4">
               <Trash2 className="w-6 h-6 animate-pulse" />
             </div>
-            <h3 className="font-extrabold text-slate-800 dark:text-zinc-100 text-sm mb-2">
+            <h3 data-crm-heading="section" className="font-extrabold text-slate-800 dark:text-zinc-100 text-sm mb-2">
               {confirmDeleteModal.title || t("Record will be deleted")}
             </h3>
             <p className="text-slate-500 dark:text-zinc-400 text-xs mb-6 font-semibold animate-pulse">
               {confirmDeleteModal.message || t("Move to recycle bin?")}
             </p>
             <div className="flex gap-3 justify-center select-none font-bold">
-              <button
+              <button data-crm-button=""
                 type="button"
                 onClick={() => setConfirmDeleteModal({ isOpen: false, onConfirm: () => {} })}
                 className="border border-slate-200 dark:border-zinc-800 text-slate-600 dark:text-zinc-300 hover:bg-slate-50 dark:hover:bg-zinc-900 px-4 py-2 text-xs rounded-lg transition-colors cursor-pointer w-24"
               >
                 {t("Cancel")}
               </button>
-              <button
+              <button data-crm-button=""
                 type="button"
                 onClick={() => {
                   confirmDeleteModal.onConfirm();

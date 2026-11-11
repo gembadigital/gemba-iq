@@ -1386,16 +1386,16 @@ export default function TasksView() {
   };
 
   return (
-    <div className="flex flex-col lg:flex-row gap-6 w-full text-slate-700 dark:text-slate-300">
+    <div data-crm-screen="TasksView" className="flex flex-col lg:flex-row gap-6 w-full text-slate-700 dark:text-slate-300">
       
       {/* LEFT COLUMN: MAIN TASKS WRAPPER */}
-      <div className="flex-1 flex flex-col space-y-5 min-w-0">
+      <div data-crm-stack="" className="flex-1 flex flex-col space-y-5 min-w-0">
           
          {/* VIEW HEADER & ACTIONS BAR */}
-         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 bg-white dark:bg-[#1b1a19] p-5 rounded-lg border border-[#EDEBE9] dark:border-[#323130] shadow-sm relative overflow-hidden">
-           <div className="absolute top-0 left-0 right-0 h-1.5 bg-gradient-to-r from-emerald-500 via-[#0078D4] to-blue-500" />
-           <div>
-             <h1 className="text-xl font-bold text-slate-900 dark:text-white flex items-center gap-2">
+         <div data-crm-card="padded" data-crm-header="" className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 bg-white dark:bg-[#1b1a19] p-5 rounded-lg border border-[#EDEBE9] dark:border-[#323130] shadow-sm relative overflow-hidden">
+           <div data-crm-decoration="" className="absolute top-0 left-0 right-0 h-1.5 bg-gradient-to-r from-emerald-500 via-[#0078D4] to-blue-500" />
+           <div data-crm-header-copy="">
+             <h1 data-crm-heading="page" className="text-xl font-bold text-slate-900 dark:text-white flex items-center gap-2">
                <CheckSquare className="w-5 h-5 text-[#0078D4]" />
                {lang === "TR" ? "Görev Takibi (Tasks)" : "Task Tracking"}
              </h1>
@@ -1404,9 +1404,9 @@ export default function TasksView() {
              </p>
            </div>
  
-           <div className="flex items-center flex-wrap gap-2.5">
+           <div data-crm-header-actions="" className="flex items-center flex-wrap gap-2.5">
              {/* Screen expansion arrow button */}
-             <button
+             <button data-crm-button=""
                type="button"
                onClick={() => setIsFullScreen(!isFullScreen)}
                className="p-2 bg-slate-100 dark:bg-[#252423] hover:bg-slate-200 dark:hover:bg-[#323130] text-slate-700 dark:text-slate-300 border border-[#EDEBE9] dark:border-[#323130] rounded flex items-center justify-center transition-all cursor-pointer"
@@ -1420,7 +1420,7 @@ export default function TasksView() {
              </button>
 
              {/* XLS Export button */}
-             <button
+             <button data-crm-button=""
                type="button"
                onClick={handleExportToExcel}
                className="bg-emerald-600 hover:bg-emerald-700 text-white px-3.5 py-2 rounded text-xs font-bold font-sans flex items-center gap-1.5 shadow-sm transition-all focus:outline-hidden cursor-pointer"
@@ -1431,8 +1431,8 @@ export default function TasksView() {
              </button>
 
              {/* View Toggle */}
-             <div className="flex items-center bg-slate-100 dark:bg-[#252423] p-1 rounded border border-[#EDEBE9] dark:border-[#323130]">
-               <button
+             <div data-crm-toolbar="" className="flex items-center bg-slate-100 dark:bg-[#252423] p-1 rounded border border-[#EDEBE9] dark:border-[#323130]">
+               <button data-crm-button=""
                  type="button"
                  onClick={() => setActiveView("kanban")}
                  className={`px-3 py-1.5 rounded text-xs font-bold font-sans flex items-center gap-1.5 transition-all ${
@@ -1444,7 +1444,7 @@ export default function TasksView() {
                  <Kanban className="w-3.5 h-3.5" />
                  <span>Kanban</span>
                </button>
-               <button
+               <button data-crm-button=""
                  type="button"
                  onClick={() => setActiveView("list")}
                  className={`px-3 py-1.5 rounded text-xs font-bold font-sans flex items-center gap-1.5 transition-all ${
@@ -1459,7 +1459,7 @@ export default function TasksView() {
              </div>
 
              {/* Main top action button */}
-             <button
+             <button data-crm-button=""
                type="button"
                onClick={() => handleOpenAddTask()}
                className="bg-[#0078D4] hover:bg-[#005a9e] text-white px-3.5 py-2 rounded text-xs font-bold font-sans flex items-center gap-1.5 shadow-sm transition-all focus:outline-hidden cursor-pointer"
@@ -1471,9 +1471,9 @@ export default function TasksView() {
          </div>
 
          {/* TAB SYSTEM NAVIGATION & SIMULATION ENGINE CONTROL */}
-         <div className="flex flex-col xl:flex-row items-stretch xl:items-center justify-between gap-4 bg-white dark:bg-[#1b1a19] p-4 rounded-lg border border-[#EDEBE9] dark:border-[#323130] shadow-sm">
-           <div className="flex flex-wrap items-center gap-1.5 bg-slate-100 dark:bg-[#252423] p-1 rounded-md border border-slate-200/60 dark:border-[#2d2c2b]">
-             <button
+         <div data-crm-card="padded" className="flex flex-col xl:flex-row items-stretch xl:items-center justify-between gap-4 bg-white dark:bg-[#1b1a19] p-4 rounded-lg border border-[#EDEBE9] dark:border-[#323130] shadow-sm">
+           <div data-crm-toolbar="" className="flex flex-wrap items-center gap-1.5 bg-slate-100 dark:bg-[#252423] p-1 rounded-md border border-slate-200/60 dark:border-[#2d2c2b]">
+             <button data-crm-button=""
                type="button"
                onClick={() => setActiveMainTab("board")}
                className={`px-4 py-2 rounded-md text-xs font-bold font-sans flex items-center gap-2 transition-all cursor-pointer ${
@@ -1485,7 +1485,7 @@ export default function TasksView() {
                <LayoutDashboard className="w-4 h-4 text-[#0078D4]" />
                {t("Task Board")}
              </button>
-             <button
+             <button data-crm-button=""
                type="button"
                onClick={() => setActiveMainTab("notifications")}
                className={`px-4 py-2 rounded-md text-xs font-bold font-sans flex items-center gap-2 transition-all relative cursor-pointer ${
@@ -1502,7 +1502,7 @@ export default function TasksView() {
                  </span>
                )}
              </button>
-             <button
+             <button data-crm-button=""
                type="button"
                onClick={() => setActiveMainTab("settings")}
                className={`px-4 py-2 rounded-md text-xs font-bold font-sans flex items-center gap-2 transition-all cursor-pointer ${
@@ -1526,7 +1526,7 @@ export default function TasksView() {
                <span className="text-[10px] text-slate-450 dark:text-slate-500">
                  {t("Automatic scan runs every {minutes} minutes and sends real emails.").replace("{minutes}", String(NOTIFICATION_ENGINE_INTERVAL_MINUTES))}
                </span>
-               <button
+               <button data-crm-button=""
                  type="button"
                  onClick={() => runNotificationEngine(true)}
                  title={t("Manual task status scan & alert check")}
@@ -1542,7 +1542,7 @@ export default function TasksView() {
          {activeMainTab === "board" && (
            <>
              {/* SEARCH, FILTERS & UTILITIES */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-3 bg-white dark:bg-[#1b1a19] p-4 rounded-lg border border-[#EDEBE9] dark:border-[#323130] shadow-sm">
+        <div data-crm-card="padded" data-crm-grid="layout" className="grid grid-cols-1 md:grid-cols-3 gap-3 bg-white dark:bg-[#1b1a19] p-4 rounded-lg border border-[#EDEBE9] dark:border-[#323130] shadow-sm">
           {/* Search Box */}
           <div className="relative">
             <span className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
@@ -1598,7 +1598,7 @@ export default function TasksView() {
         {/* VIEW BODY RENDERING */}
         {activeView === "kanban" ? (
           /* KANBAN BOARD VIEW */
-          <div className="flex gap-4 overflow-x-auto pb-4 items-start select-none scrollbar-thin">
+          <div data-crm-scroll="horizontal" className="flex gap-4 overflow-x-auto pb-4 items-start select-none scrollbar-thin">
             {columns.map((col) => {
               const columnTasks = filteredTasks.filter(t => t.status === col.id);
 
@@ -1619,7 +1619,7 @@ export default function TasksView() {
                     <div className="vertical-text text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 select-none pointer-events-none py-2 shrink-0">
                       {col.title}
                     </div>
-                    <button
+                    <button data-crm-button=""
                       type="button"
                       className="text-[#0078D4] hover:text-blue-500 p-1 rounded-full text-xs"
                       onClick={(e) => {
@@ -1645,7 +1645,7 @@ export default function TasksView() {
                   <div className="group relative flex items-center justify-between mb-3.5 pb-2 border-b border-[#EDEBE9] dark:border-[#323130]">
                     {editingColumnId === col.id ? (
                       <div className="flex items-center gap-1 w-full">
-                        <input
+                        <input data-crm-field="control"
                           type="text"
                           defaultValue={col.title}
                           onChange={(e) => setEditingColumnTitle(e.target.value)}
@@ -1660,7 +1660,7 @@ export default function TasksView() {
                       </div>
                     ) : (
                       <div className="flex items-center gap-2">
-                        <h3 className="text-xs font-bold text-slate-800 dark:text-slate-200 uppercase tracking-wide">
+                        <h3 data-crm-heading="section" className="text-xs font-bold text-slate-800 dark:text-slate-200 uppercase tracking-wide">
                           {col.title}
                         </h3>
                         <span className="text-[11px] px-1.5 py-0.25 bg-slate-200/60 dark:bg-[#2d2c2b] text-slate-600 dark:text-slate-400 font-bold rounded-full border border-slate-300/40 dark:border-zinc-850">
@@ -1671,7 +1671,7 @@ export default function TasksView() {
 
                     {/* Show kebab icon (...) on hover */}
                     <div className="flex items-center gap-1">
-                      <button
+                      <button data-crm-button=""
                         type="button"
                         onClick={() => setActiveColumnMenu(activeColumnMenu === col.id ? null : col.id)}
                         className="opacity-0 group-hover:opacity-100 focus:opacity-100 text-slate-400 hover:text-slate-600 dark:text-slate-500 dark:hover:text-slate-300 p-1 rounded-full hover:bg-slate-200 dark:hover:bg-[#323130] transition-opacity cursor-pointer flex-shrink-0"
@@ -1689,7 +1689,7 @@ export default function TasksView() {
                           onClick={() => setActiveColumnMenu(null)}
                         />
                         <div className="absolute right-0 top-7 bg-white dark:bg-[#252423] border border-[#EDEBE9] dark:border-[#323130] rounded shadow-lg py-1.5 w-44 z-20 text-xs text-slate-700 dark:text-slate-200">
-                          <button
+                          <button data-crm-button=""
                             type="button"
                             onClick={() => {
                               setEditingColumnId(col.id);
@@ -1701,7 +1701,7 @@ export default function TasksView() {
                             <Edit3 className="w-3.5 h-3.5 text-[#0078D4]" />
                             {t("Rename Column")}
                           </button>
-                          <button
+                          <button data-crm-button=""
                             type="button"
                             onClick={() => {
                               handleAddNewColumn();
@@ -1712,7 +1712,7 @@ export default function TasksView() {
                             <FolderPlus className="w-3.5 h-3.5 text-emerald-500" />
                             {t("Add New Column")}
                           </button>
-                          <button
+                          <button data-crm-button=""
                             type="button"
                             onClick={() => {
                               handleCollapseColumn(col.id);
@@ -1724,7 +1724,7 @@ export default function TasksView() {
                             {t("Collapse Column")}
                           </button>
                           {columns.length > 1 && (
-                            <button
+                            <button data-crm-button=""
                               type="button"
                               onClick={() => {
                                 handleRemoveColumn(col.id);
@@ -1749,7 +1749,7 @@ export default function TasksView() {
                       </div>
                     ) : (
                       columnTasks.map((task) => (
-                        <div
+                        <div data-crm-card="padded"
                           key={task.id}
                           draggable={true}
                           onDragStart={(e) => handleDragStart(e, task.id)}
@@ -1762,7 +1762,7 @@ export default function TasksView() {
                             </span>
                             
                             {/* Fast direct delete */}
-                            <button
+                            <button data-crm-button=""
                               type="button"
                               onClick={(e) => {
                                 e.stopPropagation();
@@ -1813,7 +1813,7 @@ export default function TasksView() {
                   </div>
 
                   {/* Add action task text button */}
-                  <button
+                  <button data-crm-button=""
                     type="button"
                     onClick={() => handleOpenAddTask(col.id)}
                     className="mt-3.5 py-1.5 w-full bg-white dark:bg-[#252423]/40 hover:bg-[#FAF9F8] dark:hover:bg-[#252423] text-[#0078D4] hover:text-blue-500 border border-dashed border-slate-200 dark:border-zinc-800 rounded text-xs font-semibold flex items-center justify-center gap-1 shadow-2xs transition-all cursor-pointer"
@@ -1826,7 +1826,7 @@ export default function TasksView() {
             })}
 
             {/* QUICK COLUMN CREATOR AREA */}
-            <button
+            <button data-crm-button=""
               onClick={handleAddNewColumn}
               className="w-44 h-[120px] bg-slate-50/50 hover:bg-slate-100/50 dark:bg-[#1b1a19]/30 dark:hover:bg-[#1b1a19]/60 rounded-xl border-2 border-dashed border-slate-200 dark:border-zinc-800 flex flex-col items-center justify-center gap-2 hover:border-[#0078D4] dark:hover:border-blue-500 text-slate-400 hover:text-[#0078D4] dark:hover:text-blue-400 transition-all shrink-0 cursor-pointer text-xs font-bold"
             >
@@ -1836,7 +1836,7 @@ export default function TasksView() {
           </div>
         ) : (
           /* LIST VIEW SECTION */
-          <div className="bg-white dark:bg-[#1b1a19] border border-[#EDEBE9] dark:border-[#323130] rounded-lg shadow-sm overflow-hidden w-full">
+          <div data-crm-card="surface" className="bg-white dark:bg-[#1b1a19] border border-[#EDEBE9] dark:border-[#323130] rounded-lg shadow-sm overflow-hidden w-full">
             {filteredTasks.length === 0 ? (
               <div className="p-10 text-center text-slate-450 dark:text-slate-550 flex flex-col items-center justify-center gap-2">
                 <CheckCircle className="w-10 h-10 text-slate-300" />
@@ -1844,8 +1844,8 @@ export default function TasksView() {
                 <span className="text-xs">{t("Try changing your search terms or filters.")}</span>
               </div>
             ) : (
-              <div className="overflow-x-auto">
-                <table className="w-full text-left border-collapse">
+              <div data-crm-scroll="horizontal" className="overflow-x-auto">
+                <table data-crm-table="" className="w-full text-left border-collapse">
                   <thead>
                     <tr className="bg-[#FAF9F8] dark:bg-[#201f1e] border-b border-[#EDEBE9] dark:border-[#323130] text-xs font-bold font-sans uppercase text-slate-500 dark:text-slate-400 tracking-wider">
                       <th className="px-5 py-3 shadow-2xs">{t("Task Name")}</th>
@@ -1892,7 +1892,7 @@ export default function TasksView() {
                             {task.dueDate ? task.dueDate.split("-").reverse().join(".") : "-"}
                           </td>
                           <td className="px-5 py-3.5 font-bold">
-                            <span className={`text-[10px] uppercase font-bold px-2 py-0.5 rounded ${
+                            <span data-crm-caption="" className={`text-[10px] uppercase font-bold px-2 py-0.5 rounded ${
                               task.priority === "High" 
                                 ? "bg-rose-50 dark:bg-rose-950/30 text-rose-650 dark:text-rose-400"
                                 : task.priority === "Medium"
@@ -1904,7 +1904,7 @@ export default function TasksView() {
                           </td>
                           <td className="px-5 py-3.5 text-right" onClick={(e) => e.stopPropagation()}>
                             <div className="flex items-center justify-end gap-1.5 opacity-0 group-hover:opacity-100 transition-opacity">
-                              <button
+                              <button data-crm-button=""
                                 type="button"
                                 onClick={() => handleOpenEditTask(task)}
                                 className="p-1 bg-white hover:bg-slate-100 dark:bg-[#252423] dark:hover:bg-[#323130] border border-[#EDEBE9] dark:border-[#323130] rounded text-slate-600 hover:text-[#0078D4] dark:text-zinc-300"
@@ -1913,7 +1913,7 @@ export default function TasksView() {
                               >
                                 <Edit3 className="w-3.5 h-3.5" />
                               </button>
-                              <button
+                              <button data-crm-button=""
                                 type="button"
                                 onClick={() => handleDeleteTask(task.id)}
                                 className="p-1 bg-white hover:bg-rose-50 dark:bg-[#252423] dark:hover:bg-rose-950/30 border border-[#EDEBE9] dark:border-[#323130] rounded text-slate-600 hover:text-rose-600 dark:text-zinc-300"
@@ -1938,10 +1938,10 @@ export default function TasksView() {
 
       {/* NOTIFICATIONS CENTER */}
       {activeMainTab === "notifications" && (
-        <div className="bg-white dark:bg-[#1b1a19] border border-[#EDEBE9] dark:border-[#323130] rounded-lg shadow-sm p-5 space-y-5">
+        <div data-crm-stack="" data-crm-card="padded" className="bg-white dark:bg-[#1b1a19] border border-[#EDEBE9] dark:border-[#323130] rounded-lg shadow-sm p-5 space-y-5">
           <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 pb-4 border-b border-[#EDEBE9] dark:border-[#323130]">
             <div>
-              <h2 className="text-sm font-bold text-slate-800 dark:text-slate-100 flex items-center gap-2 font-sans uppercase tracking-wider">
+              <h2 data-crm-heading="section" className="text-sm font-bold text-slate-800 dark:text-slate-100 flex items-center gap-2 font-sans uppercase tracking-wider">
                 <Bell className="w-4 h-4 text-amber-500" />
                 {t("System Notification Center")}
               </h2>
@@ -1950,7 +1950,7 @@ export default function TasksView() {
               </p>
             </div>
             <div className="flex items-center gap-2 flex-wrap pb-1 sm:pb-0">
-              <button
+              <button data-crm-button=""
                 type="button"
                 onClick={() => {
                   setNotifications(prev => prev.map(n => ({ ...n, isRead: true })));
@@ -1960,7 +1960,7 @@ export default function TasksView() {
               >
                 {t("Mark All as Read")}
               </button>
-              <button
+              <button data-crm-button=""
                 type="button"
                 onClick={() => {
                   setConfirmDeleteModal({
@@ -1984,8 +1984,8 @@ export default function TasksView() {
           <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 bg-[#FAF8F5] dark:bg-[#201f1e] p-3 rounded border border-[#EDEBE9] dark:border-[#323130]">
             <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2">
               <span className="text-xs font-bold text-slate-500 dark:text-slate-400">{t("Type Filter")}:</span>
-              <div className="flex flex-wrap items-center gap-1.5 bg-white dark:bg-[#252423] p-1 rounded border border-slate-200/60 dark:border-[#2d2c2b]">
-                <button
+              <div data-crm-toolbar="" data-crm-card="surface" className="flex flex-wrap items-center gap-1.5 bg-white dark:bg-[#252423] p-1 rounded border border-slate-200/60 dark:border-[#2d2c2b]">
+                <button data-crm-button=""
                   type="button"
                   onClick={() => setNotificationTypeFilter("All")}
                   className={`px-2.5 py-1 text-[11px] font-bold rounded transition-all cursor-pointer ${
@@ -1996,7 +1996,7 @@ export default function TasksView() {
                 >
                   {t("All")} ({notifications.length})
                 </button>
-                <button
+                <button data-crm-button=""
                   type="button"
                   onClick={() => setNotificationTypeFilter("assigned")}
                   className={`px-2.5 py-1 text-[11px] font-bold rounded transition-all cursor-pointer ${
@@ -2007,7 +2007,7 @@ export default function TasksView() {
                 >
                   {t("Task Assignment")} ({notifications.filter(n => n.type === "assigned").length})
                 </button>
-                <button
+                <button data-crm-button=""
                   type="button"
                   onClick={() => setNotificationTypeFilter("due_soon")}
                   className={`px-2.5 py-1 text-[11px] font-bold rounded transition-all cursor-pointer ${
@@ -2018,7 +2018,7 @@ export default function TasksView() {
                 >
                   {t("Due Soon")} ({notifications.filter(n => n.type === "due_soon").length})
                 </button>
-                <button
+                <button data-crm-button=""
                   type="button"
                   onClick={() => setNotificationTypeFilter("overdue")}
                   className={`px-2.5 py-1 text-[11px] font-bold rounded transition-all cursor-pointer ${
@@ -2029,7 +2029,7 @@ export default function TasksView() {
                 >
                   {t("Overdue")} ({notifications.filter(n => n.type === "overdue").length})
                 </button>
-                <button
+                <button data-crm-button=""
                   type="button"
                   onClick={() => setNotificationTypeFilter("escalation")}
                   className={`px-2.5 py-1 text-[11px] font-bold rounded transition-all cursor-pointer ${
@@ -2093,7 +2093,7 @@ export default function TasksView() {
                           <span className={`text-[9px] uppercase font-bold px-1.5 py-0.25 rounded ${badgeColor}`}>
                             {typeLabel}
                           </span>
-                          <span
+                          <span data-crm-caption=""
                             className={`text-[9px] uppercase font-bold px-1.5 py-0.25 rounded border ${
                               n.status === "sent"
                                 ? "bg-emerald-50 dark:bg-emerald-955 text-emerald-600 dark:text-emerald-400 border-emerald-200/50"
@@ -2112,7 +2112,7 @@ export default function TasksView() {
                             <span className="bg-red-500 w-1.5 h-1.5 rounded-full" title={t("Unread")} />
                           )}
                         </div>
-                        <h4 className="font-bold text-xs text-slate-800 dark:text-slate-200 truncate">
+                        <h4 data-crm-heading="section" className="font-bold text-xs text-slate-800 dark:text-slate-200 truncate">
                           {n.subject}
                         </h4>
                         <div className="flex flex-wrap items-center gap-3 text-[10px] text-slate-500 dark:text-slate-400 font-medium font-mono">
@@ -2124,7 +2124,7 @@ export default function TasksView() {
                         </div>
                       </div>
                       <div className="flex items-center gap-2 self-stretch md:self-auto justify-end">
-                        <button
+                        <button data-crm-button=""
                           type="button"
                           onClick={() => {
                             setNotifications(prev => prev.map(item => item.id === n.id ? { ...item, isRead: !item.isRead } : item));
@@ -2133,14 +2133,14 @@ export default function TasksView() {
                         >
                           {n.isRead ? t("Mark as Unread") : t("Mark as Read")}
                         </button>
-                        <button
+                        <button data-crm-button=""
                           type="button"
                           onClick={() => setActiveNotificationItem(n)}
                           className="px-2.5 py-1 text-[10px] font-bold bg-[#0078D4] hover:bg-[#005a9e] text-white rounded cursor-pointer"
                         >
                           {t("Preview Email")}
                         </button>
-                        <button
+                        <button data-crm-button=""
                           type="button"
                           onClick={() => {
                             setNotifications(prev => prev.filter(item => item.id !== n.id));
@@ -2163,9 +2163,9 @@ export default function TasksView() {
 
       {/* SETTINGS ENGINE ADMIN */}
       {activeMainTab === "settings" && (
-        <div className="bg-white dark:bg-[#1b1a19] border border-[#EDEBE9] dark:border-[#323130] rounded-lg shadow-sm p-5 space-y-6">
+        <div data-crm-stack="" data-crm-card="padded" className="bg-white dark:bg-[#1b1a19] border border-[#EDEBE9] dark:border-[#323130] rounded-lg shadow-sm p-5 space-y-6">
           <div className="pb-4 border-b border-[#EDEBE9] dark:border-[#323130]">
-            <h2 className="text-sm font-bold text-slate-800 dark:text-slate-100 flex items-center gap-2 font-sans uppercase tracking-wider">
+            <h2 data-crm-heading="section" className="text-sm font-bold text-slate-800 dark:text-slate-100 flex items-center gap-2 font-sans uppercase tracking-wider">
               <Settings className="w-4 h-4 text-[#0078D4]" />
               Bildirim Alarmları ve SLA Eskalasyon Engine Yapılandırması
             </h2>
@@ -2176,7 +2176,7 @@ export default function TasksView() {
 
           {/* Inner subtabs */}
           <div className="flex border-b border-slate-200 dark:border-[#2d2c2b] gap-2">
-            <button
+            <button data-crm-button=""
               type="button"
               onClick={() => setSettingsActiveTab("general")}
               className={`pb-2.5 px-3 text-xs font-bold transition-all relative cursor-pointer ${
@@ -2187,7 +2187,7 @@ export default function TasksView() {
             >
               Genel Kurallar & Frekans
             </button>
-            <button
+            <button data-crm-button=""
               type="button"
               onClick={() => setSettingsActiveTab("escalation")}
               className={`pb-2.5 px-3 text-xs font-bold transition-all relative cursor-pointer ${
@@ -2198,7 +2198,7 @@ export default function TasksView() {
             >
               SLA Eskalasyon Yetkilileri
             </button>
-            <button
+            <button data-crm-button=""
               type="button"
               onClick={() => setSettingsActiveTab("templates")}
               className={`pb-2.5 px-3 text-xs font-bold transition-all relative cursor-pointer ${
@@ -2213,14 +2213,14 @@ export default function TasksView() {
 
           {/* Tab 1: General rules */}
           {settingsActiveTab === "general" && (
-            <div className="space-y-5 animate-in fade-in duration-100">
+            <div data-crm-stack="" className="space-y-5 animate-in fade-in duration-100">
               {/* Reminder list */}
-              <div className="space-y-4">
-                <h3 className="text-xs font-extrabold text-slate-800 dark:text-slate-250 uppercase tracking-wider flex items-center gap-1.5">
+              <div data-crm-stack="" className="space-y-4">
+                <h3 data-crm-heading="section" className="text-xs font-extrabold text-slate-800 dark:text-slate-250 uppercase tracking-wider flex items-center gap-1.5">
                   <Clock className="w-3.5 h-3.5 text-[#0078D4]" />
                   Yaklaşan Bitiş Hatırlatıcı Kuralları (Ön-Uyarı Alarmları)
                 </h3>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div data-crm-flow="" data-crm-grid="form" className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <label className="flex items-start gap-3 bg-[#FAF9F8] dark:bg-[#252423] p-4 rounded-lg border border-[#EDEBE9] dark:border-[#323130] cursor-pointer hover:bg-slate-50/50 dark:hover:bg-[#323130]/40 transition-colors">
                     <input
                       type="checkbox"
@@ -2270,13 +2270,13 @@ export default function TasksView() {
               </div>
 
               {/* Overdue list */}
-              <div className="space-y-4 pt-2">
-                <h3 className="text-xs font-extrabold text-slate-800 dark:text-slate-250 uppercase tracking-wider flex items-center gap-1.5">
+              <div data-crm-stack="" className="space-y-4 pt-2">
+                <h3 data-crm-heading="section" className="text-xs font-extrabold text-slate-800 dark:text-slate-250 uppercase tracking-wider flex items-center gap-1.5">
                   <AlertTriangle className="w-3.5 h-3.5 text-rose-500" />
                   Gecikme Alarmları (Overdue Rules)
                 </h3>
                 <div className="space-y-3 bg-[#FAF9F8] dark:bg-[#252423] p-5 rounded-lg border border-[#EDEBE9] dark:border-[#323130]">
-                  <label className="flex items-center gap-3 cursor-pointer">
+                  <label data-crm-label="" className="flex items-center gap-3 cursor-pointer">
                     <input
                       type="checkbox"
                       checked={notificationSettings.overdueIntervals.detectOverdue}
@@ -2299,8 +2299,8 @@ export default function TasksView() {
                 </label>
 
                 {notificationSettings.overdueIntervals.detectOverdue && (
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-3 pt-3 pl-6 border-l-2 border-rose-200 dark:border-rose-950">
-                    <label className="flex items-start gap-2 cursor-pointer">
+                  <div data-crm-grid="form" className="grid grid-cols-1 md:grid-cols-3 gap-3 pt-3 pl-6 border-l-2 border-rose-200 dark:border-rose-950">
+                    <label data-crm-label="" className="flex items-start gap-2 cursor-pointer">
                       <input
                         type="checkbox"
                         checked={notificationSettings.overdueIntervals.day3}
@@ -2323,7 +2323,7 @@ export default function TasksView() {
                       </div>
                     </label>
 
-                    <label className="flex items-start gap-2 cursor-pointer">
+                    <label data-crm-label="" className="flex items-start gap-2 cursor-pointer">
                       <input
                         type="checkbox"
                         checked={notificationSettings.overdueIntervals.day7}
@@ -2346,7 +2346,7 @@ export default function TasksView() {
                       </div>
                     </label>
 
-                    <label className="flex items-start gap-2 cursor-pointer">
+                    <label data-crm-label="" className="flex items-start gap-2 cursor-pointer">
                       <input
                         type="checkbox"
                         checked={notificationSettings.overdueIntervals.every7Days}
@@ -2377,8 +2377,8 @@ export default function TasksView() {
 
         {/* Tab 2: Escalation configuration */}
         {settingsActiveTab === "escalation" && (
-          <div className="space-y-4 animate-in fade-in duration-100">
-            <h3 className="text-xs font-extrabold text-slate-800 dark:text-slate-250 uppercase tracking-wider flex items-center gap-1.5">
+          <div data-crm-stack="" className="space-y-4 animate-in fade-in duration-100">
+            <h3 data-crm-heading="section" className="text-xs font-extrabold text-slate-800 dark:text-slate-250 uppercase tracking-wider flex items-center gap-1.5">
               <TrendingUp className="w-3.5 h-3.5 text-[#0078D4]" />
               SLA Sıralı Organizasyonel Eskalasyon Ağacı (Yönetici Hiyerarşisi)
             </h3>
@@ -2386,13 +2386,13 @@ export default function TasksView() {
               Gecikme günü arttıkça, uyarı e-postaları sistem tarafından otomatik olarak aşağıdaki sorumlulara ve hiyerarşik rollere eskalasyon konusu edilerek iletilecektir.
             </p>
 
-            <div className="space-y-4 pt-2">
+            <div data-crm-stack="" className="space-y-4 pt-2">
               {/* Step 1: 1 Day Overdue (Task Owner) */}
               <div className="p-4 bg-slate-50 dark:bg-[#252423] border border-slate-200 dark:border-[#323130] rounded-lg space-y-3">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
                     <span className="w-5 h-5 rounded-full bg-slate-200 dark:bg-slate-700 flex items-center justify-center text-xs font-bold">1</span>
-                    <h4 className="text-xs font-bold text-slate-800 dark:text-slate-200">1. Gün Gecikme Eskalasyonu (Görev Sahibi Teması)</h4>
+                    <h4 data-crm-heading="section" className="text-xs font-bold text-slate-800 dark:text-slate-200">1. Gün Gecikme Eskalasyonu (Görev Sahibi Teması)</h4>
                   </div>
                   <input
                     type="checkbox"
@@ -2408,10 +2408,10 @@ export default function TasksView() {
                   />
                 </div>
                 {notificationSettings.escalationRules.day1Enabled && (
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-3 pt-1">
+                  <div data-crm-grid="form" className="grid grid-cols-1 md:grid-cols-3 gap-3 pt-1">
                     <div>
-                      <label className="text-[10px] uppercase font-bold text-slate-505 dark:text-slate-400 block mb-1">Eskalasyon Alıcısı / Görevli Ismi</label>
-                      <input
+                      <label data-crm-label="" className="text-[10px] uppercase font-bold text-slate-505 dark:text-slate-400 block mb-1">Eskalasyon Alıcısı / Görevli Ismi</label>
+                      <input data-crm-field="control"
                         type="text"
                         value={notificationSettings.escalationRules.day1Recipient}
                         onChange={(e) => {
@@ -2425,8 +2425,8 @@ export default function TasksView() {
                       />
                     </div>
                     <div>
-                      <label className="text-[10px] uppercase font-bold text-slate-505 dark:text-slate-400 block mb-1">Gerçek E-posta Adresi</label>
-                      <input
+                      <label data-crm-label="" className="text-[10px] uppercase font-bold text-slate-505 dark:text-slate-400 block mb-1">Gerçek E-posta Adresi</label>
+                      <input data-crm-field="control"
                         type="email"
                         value={notificationSettings.escalationRules.day1RecipientEmail}
                         placeholder="ornek@sirket.com"
@@ -2442,8 +2442,8 @@ export default function TasksView() {
                       <p className="text-[9px] text-slate-450 mt-0.5">Boş bırakılırsa bu eskalasyon e-postası gönderilmez.</p>
                     </div>
                     <div>
-                      <label className="text-[10px] uppercase font-bold text-slate-505 dark:text-slate-400 block mb-1">Organizasyonel Rolü</label>
-                      <input
+                      <label data-crm-label="" className="text-[10px] uppercase font-bold text-slate-505 dark:text-slate-400 block mb-1">Organizasyonel Rolü</label>
+                      <input data-crm-field="control"
                         type="text"
                         value={notificationSettings.escalationRules.day1Role}
                         onChange={(e) => {
@@ -2465,7 +2465,7 @@ export default function TasksView() {
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
                     <span className="w-5 h-5 rounded-full bg-amber-100 dark:bg-amber-955 text-amber-700 flex items-center justify-center text-xs font-bold">2</span>
-                    <h4 className="text-xs font-bold text-slate-800 dark:text-slate-200">3. Gün Gecikme Eskalasyonu (Takım Lideri Bilgilendirme)</h4>
+                    <h4 data-crm-heading="section" className="text-xs font-bold text-slate-800 dark:text-slate-200">3. Gün Gecikme Eskalasyonu (Takım Lideri Bilgilendirme)</h4>
                   </div>
                   <input
                     type="checkbox"
@@ -2481,10 +2481,10 @@ export default function TasksView() {
                   />
                 </div>
                 {notificationSettings.escalationRules.day3Enabled && (
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-3 pt-1">
+                  <div data-crm-grid="form" className="grid grid-cols-1 md:grid-cols-3 gap-3 pt-1">
                     <div>
-                      <label className="text-[10px] uppercase font-bold text-slate-505 dark:text-slate-400 block mb-1">Eskalasyon Alıcısı / Görevli Ismi</label>
-                      <input
+                      <label data-crm-label="" className="text-[10px] uppercase font-bold text-slate-505 dark:text-slate-400 block mb-1">Eskalasyon Alıcısı / Görevli Ismi</label>
+                      <input data-crm-field="control"
                         type="text"
                         value={notificationSettings.escalationRules.day3Recipient}
                         onChange={(e) => {
@@ -2498,8 +2498,8 @@ export default function TasksView() {
                       />
                     </div>
                     <div>
-                      <label className="text-[10px] uppercase font-bold text-slate-505 dark:text-slate-400 block mb-1">Gerçek E-posta Adresi</label>
-                      <input
+                      <label data-crm-label="" className="text-[10px] uppercase font-bold text-slate-505 dark:text-slate-400 block mb-1">Gerçek E-posta Adresi</label>
+                      <input data-crm-field="control"
                         type="email"
                         value={notificationSettings.escalationRules.day3RecipientEmail}
                         placeholder="ornek@sirket.com"
@@ -2515,8 +2515,8 @@ export default function TasksView() {
                       <p className="text-[9px] text-slate-450 mt-0.5">Boş bırakılırsa bu eskalasyon e-postası gönderilmez.</p>
                     </div>
                     <div>
-                      <label className="text-[10px] uppercase font-bold text-slate-505 dark:text-slate-400 block mb-1">Organizasyonel Rolü</label>
-                      <input
+                      <label data-crm-label="" className="text-[10px] uppercase font-bold text-slate-505 dark:text-slate-400 block mb-1">Organizasyonel Rolü</label>
+                      <input data-crm-field="control"
                         type="text"
                         value={notificationSettings.escalationRules.day3Role}
                         onChange={(e) => {
@@ -2538,7 +2538,7 @@ export default function TasksView() {
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
                     <span className="w-5 h-5 rounded-full bg-rose-100 dark:bg-rose-955 text-rose-750 flex items-center justify-center text-xs font-bold">3</span>
-                    <h4 className="text-xs font-bold text-slate-800 dark:text-slate-200">7. Gün Gecikme Eskalasyonu (Departman Müdürü Müdahalesi)</h4>
+                    <h4 data-crm-heading="section" className="text-xs font-bold text-slate-800 dark:text-slate-200">7. Gün Gecikme Eskalasyonu (Departman Müdürü Müdahalesi)</h4>
                   </div>
                   <input
                     type="checkbox"
@@ -2554,10 +2554,10 @@ export default function TasksView() {
                   />
                 </div>
                 {notificationSettings.escalationRules.day7Enabled && (
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-3 pt-1">
+                  <div data-crm-grid="form" className="grid grid-cols-1 md:grid-cols-3 gap-3 pt-1">
                     <div>
-                      <label className="text-[10px] uppercase font-bold text-slate-505 dark:text-slate-400 block mb-1">Eskalasyon Alıcısı / Görevli Ismi</label>
-                      <input
+                      <label data-crm-label="" className="text-[10px] uppercase font-bold text-slate-505 dark:text-slate-400 block mb-1">Eskalasyon Alıcısı / Görevli Ismi</label>
+                      <input data-crm-field="control"
                         type="text"
                         value={notificationSettings.escalationRules.day7Recipient}
                         onChange={(e) => {
@@ -2571,8 +2571,8 @@ export default function TasksView() {
                       />
                     </div>
                     <div>
-                      <label className="text-[10px] uppercase font-bold text-slate-505 dark:text-slate-400 block mb-1">Gerçek E-posta Adresi</label>
-                      <input
+                      <label data-crm-label="" className="text-[10px] uppercase font-bold text-slate-505 dark:text-slate-400 block mb-1">Gerçek E-posta Adresi</label>
+                      <input data-crm-field="control"
                         type="email"
                         value={notificationSettings.escalationRules.day7RecipientEmail}
                         placeholder="ornek@sirket.com"
@@ -2588,8 +2588,8 @@ export default function TasksView() {
                       <p className="text-[9px] text-slate-450 mt-0.5">Boş bırakılırsa bu eskalasyon e-postası gönderilmez.</p>
                     </div>
                     <div>
-                      <label className="text-[10px] uppercase font-bold text-slate-505 dark:text-slate-400 block mb-1">Organizasyonel Rolü</label>
-                      <input
+                      <label data-crm-label="" className="text-[10px] uppercase font-bold text-slate-505 dark:text-slate-400 block mb-1">Organizasyonel Rolü</label>
+                      <input data-crm-field="control"
                         type="text"
                         value={notificationSettings.escalationRules.day7Role}
                         onChange={(e) => {
@@ -2607,7 +2607,7 @@ export default function TasksView() {
               </div>
             </div>
             <div className="text-right pt-2 border-t border-slate-100 dark:border-[#323130] mt-4">
-              <button
+              <button data-crm-button=""
                 type="button"
                 onClick={() => {
                   showToast("Tüm eskalasyon ayarları başarıyla kaydedildi!");
@@ -2622,16 +2622,16 @@ export default function TasksView() {
 
         {/* Tab 3: Template Ozellestirme */}
         {settingsActiveTab === "templates" && (
-          <div className="space-y-4 animate-in fade-in duration-100">
-            <h3 className="text-xs font-extrabold text-slate-805 dark:text-slate-250 uppercase tracking-wider flex items-center gap-1.5">
+          <div data-crm-stack="" className="space-y-4 animate-in fade-in duration-100">
+            <h3 data-crm-heading="section" className="text-xs font-extrabold text-slate-805 dark:text-slate-250 uppercase tracking-wider flex items-center gap-1.5">
               <FileSpreadsheet className="w-3.5 h-3.5 text-indigo-505" />
               Giden E-Posta Şablonları ve Şirket Bilgileri
             </h3>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 bg-slate-50 dark:bg-[#252423] p-4 rounded-lg border border-slate-200 dark:border-[#323130]">
+            <div data-crm-grid="form" className="grid grid-cols-1 md:grid-cols-2 gap-4 bg-slate-50 dark:bg-[#252423] p-4 rounded-lg border border-slate-200 dark:border-[#323130]">
               <div>
-                <label className="text-[10px] uppercase font-bold text-slate-500 dark:text-slate-400 block mb-1">Şirket Adı / Marka</label>
-                <input
+                <label data-crm-label="" className="text-[10px] uppercase font-bold text-slate-500 dark:text-slate-400 block mb-1">Şirket Adı / Marka</label>
+                <input data-crm-field="control"
                   type="text"
                   value={notificationSettings.emailTemplates.companyName}
                   onChange={(e) => {
@@ -2646,8 +2646,8 @@ export default function TasksView() {
               </div>
 
               <div>
-                <label className="text-[10px] uppercase font-bold text-slate-500 dark:text-slate-400 block mb-1">Logo URL adresi</label>
-                <input
+                <label data-crm-label="" className="text-[10px] uppercase font-bold text-slate-500 dark:text-slate-400 block mb-1">Logo URL adresi</label>
+                <input data-crm-field="control"
                   type="text"
                   value={notificationSettings.emailTemplates.logoUrl}
                   onChange={(e) => {
@@ -2662,10 +2662,10 @@ export default function TasksView() {
               </div>
             </div>
 
-            <div className="space-y-4">
+            <div data-crm-stack="" className="space-y-4">
               <div>
-                <label className="text-xs font-bold text-slate-700 dark:text-slate-300 block mb-1">Gecikme (Overdue) E-posta Konu Şablonu</label>
-                <input
+                <label data-crm-label="" className="text-xs font-bold text-slate-700 dark:text-slate-300 block mb-1">Gecikme (Overdue) E-posta Konu Şablonu</label>
+                <input data-crm-field="control"
                   type="text"
                   value={notificationSettings.emailTemplates.overdueSubject}
                   onChange={(e) => {
@@ -2680,8 +2680,8 @@ export default function TasksView() {
               </div>
 
               <div>
-                <label className="text-xs font-bold text-slate-700 dark:text-slate-300 block mb-1">Yaklaşan Vade (Due Soon) E-posta Konu Şablonu</label>
-                <input
+                <label data-crm-label="" className="text-xs font-bold text-slate-700 dark:text-slate-300 block mb-1">Yaklaşan Vade (Due Soon) E-posta Konu Şablonu</label>
+                <input data-crm-field="control"
                   type="text"
                   value={notificationSettings.emailTemplates.dueSoonSubject}
                   onChange={(e) => {
@@ -2701,7 +2701,7 @@ export default function TasksView() {
             </p>
 
             <div className="text-right pt-2 border-t border-slate-100 dark:border-[#323130]">
-              <button
+              <button data-crm-button=""
                 type="button"
                 onClick={() => {
                   showToast("E-posta şablon parametreleri başarıyla kaydedildi.");
@@ -2719,13 +2719,13 @@ export default function TasksView() {
 
       {/* RIGHT COLUMN: ANALYTICS VISUAL DASHBOARD PANEL */}
       {!isFullScreen && (
-        <div className="w-full lg:w-80 space-y-5 flex-shrink-0">
-        <div className="bg-white dark:bg-[#1b1a19] border border-[#EDEBE9] dark:border-[#323130] rounded-lg p-5 shadow-sm space-y-5">
+        <div data-crm-stack="" className="w-full lg:w-80 space-y-5 flex-shrink-0">
+        <div data-crm-stack="" data-crm-card="padded" className="bg-white dark:bg-[#1b1a19] border border-[#EDEBE9] dark:border-[#323130] rounded-lg p-5 shadow-sm space-y-5">
           
           {/* Section Header */}
           <div className="flex items-center gap-1.5 pb-2.5 border-b border-[#EDEBE9] dark:border-[#323130]">
             <TrendingUp className="w-4 h-4 text-[#0078D4]" />
-            <h2 className="text-xs font-bold text-slate-800 dark:text-slate-100 uppercase tracking-widest font-sans">
+            <h2 data-crm-heading="section" className="text-xs font-bold text-slate-800 dark:text-slate-100 uppercase tracking-widest font-sans">
               Görev İstatistikleri
             </h2>
           </div>
@@ -2818,15 +2818,15 @@ export default function TasksView() {
 
       {/* ADD TASK MODAL */}
       {isAddModalOpen && (
-        <div className="fixed inset-0 bg-black/60 dark:bg-black/85 backdrop-blur-xs flex items-center justify-center z-50 p-4" role="dialog" aria-modal="true">
-          <div className="bg-white dark:bg-[#1b1a19] w-full max-w-lg rounded-lg border border-[#EDEBE9] dark:border-[#323130] shadow-2xl overflow-hidden animate-in fade-in zoom-in-95 duration-150">
+        <div data-crm-overlay="" className="fixed inset-0 bg-black/60 dark:bg-black/85 backdrop-blur-xs flex items-center justify-center z-50 p-4" role="dialog" aria-modal="true">
+          <div data-crm-modal="" data-crm-card="surface" className="bg-white dark:bg-[#1b1a19] w-full max-w-lg rounded-lg border border-[#EDEBE9] dark:border-[#323130] shadow-2xl overflow-hidden animate-in fade-in zoom-in-95 duration-150">
             {/* Header */}
             <div className="px-5 py-4 border-b border-[#EDEBE9] dark:border-[#323130] bg-[#FAF9F8] dark:bg-[#201f1e] flex items-center justify-between">
-              <h3 className="font-bold text-slate-900 dark:text-slate-100 text-sm flex items-center gap-1.5">
+              <h3 data-crm-heading="section" className="font-bold text-slate-900 dark:text-slate-100 text-sm flex items-center gap-1.5">
                 <Plus className="w-4 h-4 text-[#0078D4]" />
                 {t("Add New Task")}
               </h3>
-              <button
+              <button data-crm-button=""
                 type="button"
                 onClick={() => setIsAddModalOpen(false)}
                 className="p-1 rounded hover:bg-slate-200 dark:hover:bg-[#252423] text-slate-500 dark:text-slate-400 cursor-pointer"
@@ -2837,10 +2837,10 @@ export default function TasksView() {
             </div>
 
             {/* Form */}
-            <form onSubmit={handleCreateTask} className="p-5 space-y-4">
+            <form data-crm-stack="" onSubmit={handleCreateTask} className="p-5 space-y-4">
               {/* Task Title */}
               <div className="space-y-1">
-                <label className="text-xs font-bold text-slate-600 dark:text-slate-400 uppercase tracking-wider block">
+                <label data-crm-label="" className="text-xs font-bold text-slate-600 dark:text-slate-400 uppercase tracking-wider block">
                   {t("Task Title")} *
                 </label>
                 <input
@@ -2855,7 +2855,7 @@ export default function TasksView() {
 
               {/* Task Description */}
               <div className="space-y-1">
-                <label className="text-xs font-bold text-slate-600 dark:text-slate-400 uppercase tracking-wider block">
+                <label data-crm-label="" className="text-xs font-bold text-slate-600 dark:text-slate-400 uppercase tracking-wider block">
                   {t("Description / Details")}
                 </label>
                 <textarea
@@ -2868,9 +2868,9 @@ export default function TasksView() {
               </div>
 
               {/* Due Date & Assignee Grid */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div data-crm-flow="" data-crm-grid="form" className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div className="space-y-1">
-                  <label className="text-xs font-bold text-slate-600 dark:text-slate-400 uppercase tracking-wider block">
+                  <label data-crm-label="" className="text-xs font-bold text-slate-600 dark:text-slate-400 uppercase tracking-wider block">
                     {t("Assignee")}
                   </label>
                   <select
@@ -2907,7 +2907,7 @@ export default function TasksView() {
                 </div>
 
                 <div className="space-y-1">
-                  <label className="text-xs font-bold text-slate-600 dark:text-slate-400 uppercase tracking-wider block">
+                  <label data-crm-label="" className="text-xs font-bold text-slate-600 dark:text-slate-400 uppercase tracking-wider block">
                     {t("Due Date")}
                   </label>
                   <input
@@ -2920,15 +2920,15 @@ export default function TasksView() {
               </div>
 
               {/* Priority & Column State Selection */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div data-crm-flow="" data-crm-grid="form" className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 {/* Priority */}
                 <div className="space-y-1">
-                  <label className="text-xs font-bold text-slate-600 dark:text-slate-400 uppercase tracking-wider block">
+                  <label data-crm-label="" className="text-xs font-bold text-slate-600 dark:text-slate-400 uppercase tracking-wider block">
                     {t("Priority Level")}
                   </label>
                   <div className="flex gap-2">
                     {(["Low", "Medium", "High"] as const).map((pri) => (
-                      <button
+                      <button data-crm-button=""
                         key={pri}
                         type="button"
                         onClick={() => setNewPriority(pri)}
@@ -2950,7 +2950,7 @@ export default function TasksView() {
 
                 {/* Status Column */}
                 <div className="space-y-1">
-                  <label className="text-xs font-bold text-slate-600 dark:text-slate-400 uppercase tracking-wider block">
+                  <label data-crm-label="" className="text-xs font-bold text-slate-600 dark:text-slate-400 uppercase tracking-wider block">
                     {t("Starting Stage")}
                   </label>
                   <select
@@ -2969,14 +2969,14 @@ export default function TasksView() {
 
               {/* Footer Buttons */}
               <div className="border-t border-[#EDEBE9] dark:border-[#323130] pt-4 mt-6 flex justify-end gap-2.5">
-                <button
+                <button data-crm-button=""
                   type="button"
                   onClick={() => setIsAddModalOpen(false)}
                   className="px-4 py-2 hover:bg-slate-100 dark:hover:bg-[#252423] border border-[#EDEBE9] dark:border-[#323130] text-slate-600 dark:text-slate-400 rounded text-xs font-bold transition-all cursor-pointer"
                 >
                   {t("Discard")}
                 </button>
-                <button
+                <button data-crm-button=""
                   type="submit"
                   className="px-4 py-2 bg-[#0078D4] hover:bg-[#005a9e] text-white rounded text-xs font-bold shadow-sm transition-all cursor-pointer"
                 >
@@ -2990,15 +2990,15 @@ export default function TasksView() {
 
       {/* EDIT / DETAIL TASK MODAL */}
       {isEditModalOpen && selectedTask && (
-        <div className="fixed inset-0 bg-black/60 dark:bg-black/85 backdrop-blur-xs flex items-center justify-center z-50 p-4" role="dialog" aria-modal="true">
-          <div className="bg-white dark:bg-[#1b1a19] w-full max-w-lg rounded-lg border border-[#EDEBE9] dark:border-[#323130] shadow-2xl overflow-hidden animate-in fade-in zoom-in-95 duration-150">
+        <div data-crm-overlay="" className="fixed inset-0 bg-black/60 dark:bg-black/85 backdrop-blur-xs flex items-center justify-center z-50 p-4" role="dialog" aria-modal="true">
+          <div data-crm-modal="" data-crm-card="surface" className="bg-white dark:bg-[#1b1a19] w-full max-w-lg rounded-lg border border-[#EDEBE9] dark:border-[#323130] shadow-2xl overflow-hidden animate-in fade-in zoom-in-95 duration-150">
             {/* Header */}
             <div className="px-5 py-4 border-b border-[#EDEBE9] dark:border-[#323130] bg-[#FAF9F8] dark:bg-[#201f1e] flex items-center justify-between">
-              <h3 className="font-bold text-slate-900 dark:text-slate-100 text-sm flex items-center gap-1.5">
+              <h3 data-crm-heading="section" className="font-bold text-slate-900 dark:text-slate-100 text-sm flex items-center gap-1.5">
                 <CheckSquare className="w-4 h-4 text-[#0078D4]" />
                 {t("Task Details & Edit")}
               </h3>
-              <button
+              <button data-crm-button=""
                 type="button"
                 onClick={() => {
                   setIsEditModalOpen(false);
@@ -3012,10 +3012,10 @@ export default function TasksView() {
             </div>
 
             {/* Form */}
-            <form onSubmit={handleUpdateTask} className="p-5 space-y-4">
+            <form data-crm-stack="" onSubmit={handleUpdateTask} className="p-5 space-y-4">
               {/* Task Title */}
               <div className="space-y-1">
-                <label className="text-xs font-bold text-slate-600 dark:text-slate-400 uppercase tracking-wider block">
+                <label data-crm-label="" className="text-xs font-bold text-slate-600 dark:text-slate-400 uppercase tracking-wider block">
                   {t("Task Title")} *
                 </label>
                 <input
@@ -3030,10 +3030,10 @@ export default function TasksView() {
 
               {/* Task Description */}
               <div className="space-y-1">
-                <label className="text-xs font-bold text-slate-600 dark:text-slate-400 uppercase tracking-wider block">
+                <label data-crm-label="" className="text-xs font-bold text-slate-600 dark:text-slate-400 uppercase tracking-wider block">
                   {t("Description / Details")}
                 </label>
-                <textarea
+                <textarea data-crm-field="multiline"
                   placeholder={t("Enter what needs to be done and any important notes...")}
                   value={newDescription}
                   onChange={(e) => setNewDescription(e.target.value)}
@@ -3043,9 +3043,9 @@ export default function TasksView() {
               </div>
 
               {/* Due Date & Assignee Grid */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div data-crm-flow="" data-crm-grid="form" className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div className="space-y-1">
-                  <label className="text-xs font-bold text-slate-600 dark:text-slate-400 uppercase tracking-wider block">
+                  <label data-crm-label="" className="text-xs font-bold text-slate-600 dark:text-slate-400 uppercase tracking-wider block">
                     {t("Assignee")}
                   </label>
                   <select
@@ -3082,10 +3082,10 @@ export default function TasksView() {
                 </div>
 
                 <div className="space-y-1">
-                  <label className="text-xs font-bold text-slate-600 dark:text-slate-400 uppercase tracking-wider block">
+                  <label data-crm-label="" className="text-xs font-bold text-slate-600 dark:text-slate-400 uppercase tracking-wider block">
                     {t("Due Date")}
                   </label>
-                  <input
+                  <input data-crm-field="control"
                     type="date"
                     value={newDueDate}
                     onChange={(e) => setNewDueDate(e.target.value)}
@@ -3095,15 +3095,15 @@ export default function TasksView() {
               </div>
 
               {/* Priority & Status Column Grid */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div data-crm-flow="" data-crm-grid="form" className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 {/* Priority */}
                 <div className="space-y-1">
-                  <label className="text-xs font-bold text-slate-600 dark:text-slate-400 uppercase tracking-wider block">
+                  <label data-crm-label="" className="text-xs font-bold text-slate-600 dark:text-slate-400 uppercase tracking-wider block">
                     {t("Priority Level")}
                   </label>
                   <div className="flex gap-2">
                     {(["Low", "Medium", "High"] as const).map((pri) => (
-                      <button
+                      <button data-crm-button=""
                         key={pri}
                         type="button"
                         onClick={() => setNewPriority(pri)}
@@ -3125,7 +3125,7 @@ export default function TasksView() {
 
                 {/* Status Column */}
                 <div className="space-y-1">
-                  <label className="text-xs font-bold text-slate-600 dark:text-slate-400 uppercase tracking-wider block">
+                  <label data-crm-label="" className="text-xs font-bold text-slate-600 dark:text-slate-400 uppercase tracking-wider block">
                     {t("Current Status / Column")}
                   </label>
                   <select
@@ -3144,7 +3144,7 @@ export default function TasksView() {
 
               {/* Footer Buttons with custom delete button on left side */}
               <div className="border-t border-[#EDEBE9] dark:border-[#323130] pt-4 mt-6 flex items-center justify-between">
-                <button
+                <button data-crm-button=""
                   type="button"
                   onClick={() => handleDeleteTask(selectedTask.id)}
                   className="px-4 py-2 border border-rose-200 dark:border-rose-950/40 hover:bg-rose-500 hover:text-white dark:hover:bg-rose-650 text-rose-600 dark:text-rose-400 rounded text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer"
@@ -3154,7 +3154,7 @@ export default function TasksView() {
                 </button>
 
                 <div className="flex gap-2.5">
-                  <button
+                  <button data-crm-button=""
                     type="button"
                     onClick={() => {
                       setIsEditModalOpen(false);
@@ -3164,7 +3164,7 @@ export default function TasksView() {
                   >
                     {t("Discard")}
                   </button>
-                  <button
+                  <button data-crm-button=""
                     type="submit"
                     className="px-4 py-2 bg-[#0078D4] hover:bg-[#005a9e] text-white rounded text-xs font-bold shadow-sm transition-all cursor-pointer"
                   >
@@ -3179,7 +3179,7 @@ export default function TasksView() {
 
       {/* EMAIL PREVIEW MODAL FOR ACTIVE NOTIFICATION ITEM */}
       {activeNotificationItem && (
-        <div className="fixed inset-0 bg-black/75 dark:bg-black/90 backdrop-blur-xs flex items-center justify-center z-50 p-4 animate-in fade-in duration-200" role="dialog" aria-modal="true">
+        <div data-crm-overlay="" className="fixed inset-0 bg-black/75 dark:bg-black/90 backdrop-blur-xs flex items-center justify-center z-50 p-4 animate-in fade-in duration-200" role="dialog" aria-modal="true">
           <div className="bg-[#FAF9F8] dark:bg-[#1f1e1d] w-full max-w-2xl rounded-xl border border-[#EDEBE9] dark:border-[#323130] shadow-2xl overflow-hidden flex flex-col max-h-[90vh]">
             {/* Header */}
             <div className="px-5 py-4 border-b border-[#EDEBE9] dark:border-[#323130] bg-[#FAF9F8] dark:bg-[#201f1e] flex items-center justify-between flex-shrink-0">
@@ -3191,7 +3191,7 @@ export default function TasksView() {
                   {t("Email Preview")}
                 </span>
               </div>
-              <button
+              <button data-crm-button=""
                 type="button"
                 onClick={() => setActiveNotificationItem(null)}
                 className="p-1 rounded hover:bg-slate-200 dark:hover:bg-[#252423] text-slate-500 dark:text-slate-400 cursor-pointer"
@@ -3223,7 +3223,7 @@ export default function TasksView() {
 
             {/* Rendered HTML Body */}
             <div className="flex-1 overflow-y-auto p-6 bg-[#FAF9F8] dark:bg-black/10 scrollbar-thin">
-              <div
+              <div data-crm-document="true"
                 className="bg-white p-5 rounded-lg border border-slate-200 shadow-xs max-w-full overflow-hidden"
                 dangerouslySetInnerHTML={{ __html: activeNotificationItem.bodyHtml }}
               />
@@ -3231,14 +3231,14 @@ export default function TasksView() {
 
             {/* Footer actions */}
             <div className="px-5 py-3.5 bg-slate-50 dark:bg-zinc-900 border-t border-[#EDEBE9] dark:border-[#323130] flex justify-between items-center flex-shrink-0">
-              <span className="text-[10px] text-slate-450 dark:text-slate-500 uppercase tracking-widest font-bold">
+              <span data-crm-caption="" className="text-[10px] text-slate-450 dark:text-slate-500 uppercase tracking-widest font-bold">
                 {activeNotificationItem.status === "sent"
                   ? t("* This email was actually sent to {email}.").replace("{email}", activeNotificationItem.recipientEmail)
                   : activeNotificationItem.status === "skipped"
                   ? t("* Not sent: no email address defined for this recipient.")
                   : t("* Failed to send: {error}").replace("{error}", activeNotificationItem.errorNote || t("unknown error"))}
               </span>
-              <button
+              <button data-crm-button=""
                 type="button"
                 onClick={() => setActiveNotificationItem(null)}
                 className="px-4 py-2 bg-[#0078D4] hover:bg-[#005a9e] text-white rounded text-xs font-bold transition-all cursor-pointer"
@@ -3252,26 +3252,26 @@ export default function TasksView() {
 
       {/* Custom Global Confirmation Dialog */}
       {confirmDeleteModal.isOpen && (
-        <div className="fixed inset-0 bg-black/60 backdrop-blur-xs flex items-center justify-center z-[9999] p-4 font-sans antialiased animate-fade-in text-slate-800 dark:text-zinc-200" role="dialog" aria-modal="true">
-          <div className="bg-white dark:bg-[#181818] w-full max-w-sm rounded-xl border border-slate-205 dark:border-zinc-805 shadow-2xl p-6 text-center animate-in zoom-in-95 duration-100">
-            <div className="mx-auto w-12 h-12 bg-rose-50 dark:bg-rose-950/25 rounded-full flex items-center justify-center text-rose-500 mb-4">
+        <div data-crm-overlay="" className="fixed inset-0 bg-black/60 backdrop-blur-xs flex items-center justify-center z-[9999] p-4 font-sans antialiased animate-fade-in text-slate-800 dark:text-zinc-200" role="dialog" aria-modal="true">
+          <div data-crm-modal="" data-crm-card="padded" className="bg-white dark:bg-[#181818] w-full max-w-sm rounded-xl border border-slate-205 dark:border-zinc-805 shadow-2xl p-6 text-center animate-in zoom-in-95 duration-100">
+            <div data-crm-icon-box="" className="mx-auto w-12 h-12 bg-rose-50 dark:bg-rose-950/25 rounded-full flex items-center justify-center text-rose-500 mb-4">
               <Trash2 className="w-6 h-6 animate-pulse" />
             </div>
-            <h3 className="font-extrabold text-slate-800 dark:text-zinc-100 text-sm mb-2">
+            <h3 data-crm-heading="section" className="font-extrabold text-slate-800 dark:text-zinc-100 text-sm mb-2">
               {confirmDeleteModal.title || t("Record will be deleted")}
             </h3>
             <p className="text-slate-500 dark:text-zinc-400 text-xs mb-6 font-semibold">
               {confirmDeleteModal.message || t("Move to recycle bin?")}
             </p>
             <div className="flex gap-3 justify-center select-none font-bold">
-              <button
+              <button data-crm-button=""
                 type="button"
                 onClick={() => setConfirmDeleteModal({ isOpen: false, onConfirm: () => {} })}
                 className="border border-slate-200 dark:border-zinc-800 text-slate-600 dark:text-zinc-300 hover:bg-slate-50 dark:hover:bg-zinc-900 px-4 py-2 text-xs rounded-lg transition-colors cursor-pointer w-24"
               >
                 {t("Cancel")}
               </button>
-              <button
+              <button data-crm-button=""
                 type="button"
                 onClick={() => {
                   confirmDeleteModal.onConfirm();

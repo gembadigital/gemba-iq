@@ -65,18 +65,18 @@ export default function DashboardView({
       ];
 
   return (
-    <div className="space-y-6">
+    <div data-crm-stack="" data-crm-screen="DashboardView" className="space-y-6">
       {/* Upper Welcome Header */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-        <div>
-          <h1 className="text-xl font-semibold tracking-tight text-slate-900 dark:text-slate-100 font-display">
+      <div data-crm-header="" className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div data-crm-header-copy="">
+          <h1 data-crm-heading="page" className="text-xl font-semibold tracking-tight text-slate-900 dark:text-slate-100 font-display">
             {t("Overview")}
           </h1>
           <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
             {t("M365 Integrated Campaign Metrics and Performance Auditing")}
           </p>
         </div>
-        <button
+        <button data-crm-header-actions="" data-crm-button=""
           id="dashboard-new-campaign"
           onClick={onNavigateToDesigner}
           className="flex items-center gap-2 bg-[#0078D4] hover:bg-[#006cc0] text-white text-xs font-bold px-4 py-2.5 rounded shadow-sm transition-all cursor-pointer"
@@ -88,11 +88,11 @@ export default function DashboardView({
       </div>
 
       {/* KPI Cards section */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
+      <div data-crm-flow="" data-crm-grid="layout" className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
         {/* Metric 1 */}
-        <div className="bg-white dark:bg-[#1b1a19] border border-[#EDEBE9] dark:border-[#323130] rounded p-5 shadow-sm">
+        <div data-crm-card="padded" className="bg-white dark:bg-[#1b1a19] border border-[#EDEBE9] dark:border-[#323130] rounded p-5 shadow-sm">
           <div className="flex items-center justify-between mb-3 text-slate-400">
-            <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400">
+            <span data-crm-caption="" className="text-[10px] font-bold uppercase tracking-wider text-slate-400">
               {t("Total Campaigns")}
             </span>
             <LayoutDashboard className="w-4.5 h-4.5 text-[#0078D4]" />
@@ -104,9 +104,9 @@ export default function DashboardView({
         </div>
 
         {/* Metric 2 */}
-        <div className="bg-white dark:bg-[#1b1a19] border border-[#EDEBE9] dark:border-[#323130] rounded p-5 shadow-sm">
+        <div data-crm-card="padded" className="bg-white dark:bg-[#1b1a19] border border-[#EDEBE9] dark:border-[#323130] rounded p-5 shadow-sm">
           <div className="flex items-center justify-between mb-3 text-slate-400">
-            <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400">
+            <span data-crm-caption="" className="text-[10px] font-bold uppercase tracking-wider text-slate-400">
               {t("Emails Sent")}
             </span>
             <Mail className="w-4.5 h-4.5 text-indigo-500" />
@@ -118,9 +118,9 @@ export default function DashboardView({
         </div>
 
         {/* Metric 3 */}
-        <div className="bg-white dark:bg-[#1b1a19] border border-[#EDEBE9] dark:border-[#323130] rounded p-5 shadow-sm">
+        <div data-crm-card="padded" className="bg-white dark:bg-[#1b1a19] border border-[#EDEBE9] dark:border-[#323130] rounded p-5 shadow-sm">
           <div className="flex items-center justify-between mb-3 text-slate-400">
-            <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400">
+            <span data-crm-caption="" className="text-[10px] font-bold uppercase tracking-wider text-slate-400">
               {t("Success Rate")}
             </span>
             <CheckCircle2 className="w-4.5 h-4.5 text-emerald-500" />
@@ -132,9 +132,9 @@ export default function DashboardView({
         </div>
 
         {/* Metric 4 */}
-        <div className="bg-white dark:bg-[#1b1a19] border border-[#EDEBE9] dark:border-[#323130] rounded p-5 shadow-sm">
+        <div data-crm-card="padded" className="bg-white dark:bg-[#1b1a19] border border-[#EDEBE9] dark:border-[#323130] rounded p-5 shadow-sm">
           <div className="flex items-center justify-between mb-3 text-slate-350">
-            <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400">
+            <span data-crm-caption="" className="text-[10px] font-bold uppercase tracking-wider text-slate-400">
               {t("Open Rate")}
             </span>
             <Eye className="w-4.5 h-4.5 text-[#0078D4]" />
@@ -156,9 +156,9 @@ export default function DashboardView({
         </div>
 
         {/* Metric 5 */}
-        <div className="bg-white dark:bg-[#1b1a19] border border-[#EDEBE9] dark:border-[#323130] rounded p-5 shadow-sm">
+        <div data-crm-card="padded" className="bg-white dark:bg-[#1b1a19] border border-[#EDEBE9] dark:border-[#323130] rounded p-5 shadow-sm">
           <div className="flex items-center justify-between mb-3 text-slate-400">
-            <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400">
+            <span data-crm-caption="" className="text-[10px] font-bold uppercase tracking-wider text-slate-400">
               {t("Last Sync")}
             </span>
             <Calendar className="w-4.5 h-4.5 text-amber-500" />
@@ -175,13 +175,13 @@ export default function DashboardView({
       </div>
 
       {/* Grid of Chart and Tracking Integrations */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      <div data-crm-flow="" data-crm-grid="layout" className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         
         {/* Recharts Graphical Panel */}
-        <div className="lg:col-span-2 bg-white dark:bg-[#1b1a19] border border-[#EDEBE9] dark:border-[#323130] rounded p-6 shadow-sm">
+        <div data-crm-card="padded" className="lg:col-span-2 bg-white dark:bg-[#1b1a19] border border-[#EDEBE9] dark:border-[#323130] rounded p-6 shadow-sm">
           <div className="flex items-center justify-between mb-4">
             <div>
-              <h3 className="text-sm font-bold text-slate-800 dark:text-slate-100 flex items-center gap-2">
+              <h3 data-crm-heading="section" className="text-sm font-bold text-slate-800 dark:text-slate-100 flex items-center gap-2">
                 <TrendingUp className="w-4 h-4 text-[#0078D4]" />
                 {t("Campaign Performance History")}
               </h3>
@@ -215,22 +215,22 @@ export default function DashboardView({
         </div>
 
         {/* Tracking Services Settings panel */}
-        <div className="bg-white dark:bg-[#1b1a19] border border-[#EDEBE9] dark:border-[#323130] rounded p-6 shadow-sm flex flex-col justify-between">
-          <div className="space-y-4">
+        <div data-crm-card="padded" className="bg-white dark:bg-[#1b1a19] border border-[#EDEBE9] dark:border-[#323130] rounded p-6 shadow-sm flex flex-col justify-between">
+          <div data-crm-stack="" className="space-y-4">
             <div className="flex items-center gap-2 border-b border-[#EDEBE9] dark:border-[#323130] pb-3">
               <Radio className="w-4.5 h-4.5 text-[#0078D4] animate-pulse" />
               <div>
-                <h3 className="text-sm font-bold text-slate-800 dark:text-slate-100">{t("Email Tracking Pixels")}</h3>
+                <h3 data-crm-heading="section" className="text-sm font-bold text-slate-800 dark:text-slate-100">{t("Email Tracking Pixels")}</h3>
                 <p className="text-xs text-slate-500 dark:text-slate-400">{t("Hook external auditing nodes")}</p>
               </div>
             </div>
 
             <div className="space-y-1.5">
-              <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">{t("Connected Nodes")}</span>
+              <span data-crm-caption="" className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">{t("Connected Nodes")}</span>
               
-              <div className="grid grid-cols-1 gap-1.5">
+              <div data-crm-flow="" data-crm-grid="layout" className="grid grid-cols-1 gap-1.5">
                 {TRACKING_SERVICES.map(service => (
-                  <button
+                  <button data-crm-button=""
                     id={`track-service-${service.id}`}
                     key={service.id}
                     onClick={() => setTrackingService(service.id)}

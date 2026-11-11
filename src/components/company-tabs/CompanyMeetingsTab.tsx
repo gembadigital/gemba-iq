@@ -121,23 +121,23 @@ export default function CompanyMeetingsTab({
   };
 
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 font-sans text-xs">
+    <div data-crm-flow="" data-crm-screen="CompanyMeetingsTab" data-crm-grid="form" className="grid grid-cols-1 lg:grid-cols-12 gap-5 font-sans text-xs">
       {/* LEFT: Add Meeting Form (5 columns) */}
-      <div className="lg:col-span-5 space-y-4">
-        <div className="bg-white dark:bg-[#151515] p-5 rounded-xl border border-slate-100 dark:border-zinc-800/80 shadow-[0_1px_3px_rgba(0,0,0,0.02)] space-y-4">
+      <div data-crm-stack="" className="lg:col-span-5 space-y-4">
+        <div data-crm-stack="" data-crm-card="padded" className="bg-white dark:bg-[#151515] p-5 rounded-xl border border-slate-100 dark:border-zinc-800/80 shadow-[0_1px_3px_rgba(0,0,0,0.02)] space-y-4">
           <div className="flex items-center gap-2 border-b border-slate-100 dark:border-zinc-800/80 pb-2.5">
             <CalendarClock className="w-4 h-4 text-violet-500" />
-            <h4 className="text-xs font-bold uppercase text-slate-800 dark:text-zinc-200 tracking-wider">
+            <h4 data-crm-heading="section" className="text-xs font-bold uppercase text-slate-800 dark:text-zinc-200 tracking-wider">
               {t("Log New Meeting")}
             </h4>
           </div>
 
-          <div className="grid grid-cols-2 gap-3">
+          <div data-crm-flow="" data-crm-grid="form" className="grid grid-cols-2 gap-3">
             <div className="space-y-1">
-              <label className="block text-[10px] uppercase font-bold text-slate-400 dark:text-zinc-500 font-mono">
+              <label data-crm-label="" className="block text-[10px] uppercase font-bold text-slate-400 dark:text-zinc-500 font-mono">
                 {t("Meeting Date")}
               </label>
-              <input
+              <input data-crm-field="control"
                 type="date"
                 value={newDate}
                 onChange={(e) => setNewDate(e.target.value)}
@@ -145,10 +145,10 @@ export default function CompanyMeetingsTab({
               />
             </div>
             <div className="space-y-1">
-              <label className="block text-[10px] uppercase font-bold text-slate-400 dark:text-zinc-500 font-mono">
+              <label data-crm-label="" className="block text-[10px] uppercase font-bold text-slate-400 dark:text-zinc-500 font-mono">
                 {t("Meeting Time")}
               </label>
-              <input
+              <input data-crm-field="control"
                 type="time"
                 value={newTime}
                 onChange={(e) => setNewTime(e.target.value)}
@@ -158,10 +158,10 @@ export default function CompanyMeetingsTab({
           </div>
 
           <div className="space-y-1">
-            <label className="block text-[10px] uppercase font-bold text-slate-400 dark:text-zinc-500 font-mono">
+            <label data-crm-label="" className="block text-[10px] uppercase font-bold text-slate-400 dark:text-zinc-500 font-mono">
               {t("Meeting Minutes")}
             </label>
-            <textarea
+            <textarea data-crm-field="multiline"
               value={newNotes}
               onChange={(e) => setNewNotes(e.target.value)}
               placeholder={t("Meeting minutes / notes...")}
@@ -180,7 +180,7 @@ export default function CompanyMeetingsTab({
             </p>
           )}
 
-          <button
+          <button data-crm-button=""
             type="button"
             onClick={handleAddMeeting}
             disabled={!newDate || !newNotes.trim() || isSaving}
@@ -193,11 +193,11 @@ export default function CompanyMeetingsTab({
       </div>
 
       {/* RIGHT: Meeting History (7 columns) */}
-      <div className="lg:col-span-7 space-y-4">
-        <div className="bg-white dark:bg-[#151515] p-5 rounded-xl border border-slate-100 dark:border-zinc-800/80 shadow-[0_1px_3px_rgba(0,0,0,0.02)] space-y-3">
+      <div data-crm-stack="" className="lg:col-span-7 space-y-4">
+        <div data-crm-card="padded" className="bg-white dark:bg-[#151515] p-5 rounded-xl border border-slate-100 dark:border-zinc-800/80 shadow-[0_1px_3px_rgba(0,0,0,0.02)] space-y-3">
           <div className="flex items-center gap-2 border-b border-slate-100 dark:border-zinc-800/80 pb-2.5">
             <Users className="w-4 h-4 text-indigo-500" />
-            <h4 className="text-xs font-bold uppercase text-slate-800 dark:text-zinc-200 tracking-wider">
+            <h4 data-crm-heading="section" className="text-xs font-bold uppercase text-slate-800 dark:text-zinc-200 tracking-wider">
               {t("Meeting History")}
             </h4>
           </div>
@@ -224,7 +224,7 @@ export default function CompanyMeetingsTab({
                         />
                       )}
                     </span>
-                    <button
+                    <button data-crm-button=""
                       type="button"
                       onClick={() => handleDeleteMeeting(m.id)}
                       className="p-1 opacity-60 group-hover:opacity-100 hover:bg-rose-100 dark:hover:bg-rose-950/20 text-rose-500 rounded transition-all cursor-pointer"

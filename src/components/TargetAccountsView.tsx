@@ -623,7 +623,7 @@ export default function TargetAccountsView({
   }, [totalPages, currentPage]);
 
   return (
-    <div id="target-accounts-view-root" className="space-y-6">
+    <div data-crm-stack="" data-crm-screen="TargetAccountsView" id="target-accounts-view-root" className="space-y-6">
       
       {/* Toast Alert pop notification */}
       {toast && (
@@ -640,12 +640,12 @@ export default function TargetAccountsView({
       )}
 
       {/* Title Header with Metrics Ribbon */}
-      <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 bg-white dark:bg-[#1b1a19] p-6 border border-[#EDEBE9] dark:border-[#323130] rounded shadow-sm relative overflow-hidden">
-        <div className="absolute top-0 left-0 right-0 h-1.5 bg-gradient-to-r from-emerald-500 via-[#0078D4] to-blue-500" />
-        <div className="space-y-1">
+      <div data-crm-card="padded" data-crm-header="" className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 bg-white dark:bg-[#1b1a19] p-6 border border-[#EDEBE9] dark:border-[#323130] rounded shadow-sm relative overflow-hidden">
+        <div data-crm-decoration="" className="absolute top-0 left-0 right-0 h-1.5 bg-gradient-to-r from-emerald-500 via-[#0078D4] to-blue-500" />
+        <div data-crm-header-copy="" className="space-y-1">
           <div className="flex items-center gap-2">
             <Target className="w-5 h-5 text-[#0078D4] dark:text-brand-300" />
-            <h2 className="text-base font-bold text-slate-800 dark:text-slate-100">{t("Target Accounts & Prospects Database")}</h2>
+            <h2 data-crm-heading="page" className="text-base font-bold text-slate-800 dark:text-slate-100">{t("Target Accounts & Prospects Database")}</h2>
           </div>
           <p className="text-xs text-slate-500 max-w-2xl">
             {t("Maintain high priority enterprise company research and siber profiles. Coordinate lead statuses, optimize continuous improvement channels, and bulk compile targeted recipients straight into the Mail Merge outgoing queue.")}
@@ -653,7 +653,7 @@ export default function TargetAccountsView({
         </div>
 
         {/* Action Belt */}
-        <div className="flex flex-wrap items-center gap-2">
+        <div data-crm-header-actions="" className="flex flex-wrap items-center gap-2">
           <input
             ref={fileInputRef}
             type="file"
@@ -662,7 +662,7 @@ export default function TargetAccountsView({
             className="hidden"
           />
           
-          <button
+          <button data-crm-button=""
             type="button"
             onClick={() => fileInputRef.current?.click()}
             className="text-xs font-bold bg-[#FAF9F8] hover:bg-[#EDEBE9] dark:bg-[#252423] dark:hover:bg-[#323130] text-slate-700 dark:text-slate-200 px-3 py-2 border border-[#EDEBE9] dark:border-[#323130] rounded flex items-center gap-1.5 cursor-pointer transition-all shadow-sm"
@@ -671,7 +671,7 @@ export default function TargetAccountsView({
             <span>{t("Import Sheet")}</span>
           </button>
 
-          <button
+          <button data-crm-button=""
             type="button"
             onClick={handleExportCSV}
             className="text-xs font-bold bg-[#FAF9F8] hover:bg-[#EDEBE9] dark:bg-[#252423] dark:hover:bg-[#323130] text-slate-700 dark:text-slate-200 px-3 py-2 border border-[#EDEBE9] dark:border-[#323130] rounded flex items-center gap-1.5 cursor-pointer transition-all shadow-sm"
@@ -680,7 +680,7 @@ export default function TargetAccountsView({
             <span>{t("Export CSV")}</span>
           </button>
 
-          <button
+          <button data-crm-button=""
             type="button"
             onClick={handleManualSaveAll}
             className="text-xs font-bold bg-[#FAF9F8] hover:bg-[#EDEBE9] dark:bg-[#252423] dark:hover:bg-[#323130] text-slate-700 dark:text-slate-200 px-3 py-2 border border-[#EDEBE9] dark:border-[#323130] rounded flex items-center gap-1.5 cursor-pointer transition-all shadow-sm"
@@ -689,7 +689,7 @@ export default function TargetAccountsView({
             <span>{t("Save List")}</span>
           </button>
 
-          <button
+          <button data-crm-button=""
             type="button"
             onClick={() => setIsAddingAccount(!isAddingAccount)}
             className="text-xs font-bold bg-[#FAF9F8] hover:bg-[#EDEBE9] dark:bg-[#252423] dark:hover:bg-[#323130] text-slate-700 dark:text-slate-200 px-3 py-2 border border-[#EDEBE9] dark:border-[#323130] rounded flex items-center gap-1.5 cursor-pointer transition-all shadow-sm"
@@ -699,7 +699,7 @@ export default function TargetAccountsView({
           </button>
 
           {onNavigateToTab && (
-            <button
+            <button data-crm-button=""
               type="button"
               onClick={() => onNavigateToTab("deal-management")}
               className="text-xs font-bold bg-[#FAF9F8] hover:bg-[#EDEBE9] dark:bg-[#252423] dark:hover:bg-[#323130] text-slate-700 dark:text-slate-200 px-3 py-2 border border-[#EDEBE9] dark:border-[#323130] rounded flex items-center gap-1.5 cursor-pointer transition-all shadow-sm"
@@ -714,7 +714,7 @@ export default function TargetAccountsView({
       {/* Inline diagnostic block */}
       {importError && (
         <div className="p-4 bg-rose-50 dark:bg-rose-950/20 border border-rose-300 dark:border-rose-900 rounded text-xs text-rose-800 dark:text-rose-300 flex items-center gap-3">
-          <button
+          <button data-crm-button=""
             type="button"
             onClick={() => setImportError(null)}
             className="shrink-0 hover:opacity-80 cursor-pointer"
@@ -727,27 +727,27 @@ export default function TargetAccountsView({
       )}
 
       {/* Bento Stats Ribbons */}
-      <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
-        <div className="bg-white dark:bg-[#1b1a19] p-4 rounded border border-[#EDEBE9] dark:border-[#323130] shadow-sm">
-          <span className="text-[10px] font-bold text-slate-400 uppercase">{t("Total Target Accounts")}</span>
+      <div data-crm-flow="" data-crm-grid="layout" className="grid grid-cols-2 md:grid-cols-5 gap-4">
+        <div data-crm-card="padded" className="bg-white dark:bg-[#1b1a19] p-4 rounded border border-[#EDEBE9] dark:border-[#323130] shadow-sm">
+          <span data-crm-caption="" className="text-[10px] font-bold text-slate-400 uppercase">{t("Total Target Accounts")}</span>
           <div className="text-xl font-bold text-[#0078D4] mt-1">{totalCount} {t("companies")}</div>
           <p className="text-[10px] text-slate-450 mt-1">{t("In-Memory synced")}</p>
         </div>
 
-        <div className="bg-white dark:bg-[#1b1a19] p-4 rounded border border-[#EDEBE9] dark:border-[#323130] shadow-sm">
-          <span className="text-[10px] font-bold text-slate-400 uppercase">{t("High Priority / Hot")}</span>
+        <div data-crm-card="padded" className="bg-white dark:bg-[#1b1a19] p-4 rounded border border-[#EDEBE9] dark:border-[#323130] shadow-sm">
+          <span data-crm-caption="" className="text-[10px] font-bold text-slate-400 uppercase">{t("High Priority / Hot")}</span>
           <div className="text-xl font-bold text-orange-600 mt-1">{highRiskCount} {t("active")}</div>
           <p className="text-[10px] text-slate-450 mt-1">{t("Opportunity Score >= 85%")}</p>
         </div>
 
-        <div className="bg-white dark:bg-[#1b1a19] p-4 rounded border border-[#EDEBE9] dark:border-[#323130] shadow-sm">
-          <span className="text-[10px] font-bold text-slate-400 uppercase">{t("Already Contacted")}</span>
+        <div data-crm-card="padded" className="bg-white dark:bg-[#1b1a19] p-4 rounded border border-[#EDEBE9] dark:border-[#323130] shadow-sm">
+          <span data-crm-caption="" className="text-[10px] font-bold text-slate-400 uppercase">{t("Already Contacted")}</span>
           <div className="text-xl font-bold text-indigo-500 mt-1">{contactedCount} {t("companies")}</div>
           <p className="text-[10px] text-slate-450 mt-1">{t("Active outreach initiated")}</p>
         </div>
 
-        <div className="bg-white dark:bg-[#1b1a19] p-4 rounded border border-[#EDEBE9] dark:border-[#323130] shadow-sm">
-          <span className="text-[10px] font-bold text-slate-450 uppercase">{t("Current Selected Targets")}</span>
+        <div data-crm-card="padded" className="bg-white dark:bg-[#1b1a19] p-4 rounded border border-[#EDEBE9] dark:border-[#323130] shadow-sm">
+          <span data-crm-caption="" className="text-[10px] font-bold text-slate-450 uppercase">{t("Current Selected Targets")}</span>
           <div className="text-xl font-bold text-emerald-600 mt-1">{selectedCount} {t("selected")}</div>
           <p className="text-[10px] text-slate-450 mt-1">{t("Ready for transfer queue")}</p>
         </div>
@@ -760,7 +760,7 @@ export default function TargetAccountsView({
       </div>
 
       {/* Main Database Table & Control Panel */}
-      <div className={isWide 
+      <div data-crm-stack="" className={isWide
         ? "fixed inset-0 z-50 bg-[#FAF9F8] dark:bg-[#121110] p-6 overflow-y-auto flex flex-col space-y-4 animate-fadeIn" 
         : "bg-white dark:bg-[#1b1a19] border border-[#EDEBE9] dark:border-[#323130] rounded shadow-sm overflow-hidden"
       }>
@@ -770,9 +770,9 @@ export default function TargetAccountsView({
           <div className="flex items-center justify-between border-b border-[#EDEBE9] dark:border-[#323130] pb-3 flex-shrink-0">
             <div className="flex items-center gap-2">
               <Sparkles className="w-4 h-4 text-[#0078D4]" />
-              <h3 className="text-sm font-bold text-slate-800 dark:text-slate-100 uppercase tracking-wider">{t("Target Accounts Studio (Expanded Mode)")}</h3>
+              <h3 data-crm-heading="section" className="text-sm font-bold text-slate-800 dark:text-slate-100 uppercase tracking-wider">{t("Target Accounts Studio (Expanded Mode)")}</h3>
             </div>
-            <button 
+            <button data-crm-button=""
               type="button" 
               onClick={() => setIsWide(false)}
               className="text-xs font-bold text-slate-550 hover:text-slate-755 dark:text-slate-300 dark:hover:text-slate-100 bg-white dark:bg-[#252423] border border-[#EDEBE9] dark:border-[#323130] px-3 py-1.5 rounded flex items-center gap-1.5 cursor-pointer shadow-sm transition-all hover:bg-slate-50"
@@ -785,21 +785,21 @@ export default function TargetAccountsView({
 
         {/* Manual Account append slider layout */}
         {isAddingAccount && (
-          <form onSubmit={handleManualAddSubmit} className="bg-white dark:bg-[#1b1a19] border border-[#0078D4]/20 rounded p-6 shadow-md animate-fadeIn space-y-4">
+          <form data-crm-stack="" onSubmit={handleManualAddSubmit} className="bg-white dark:bg-[#1b1a19] border border-[#0078D4]/20 rounded p-6 shadow-md animate-fadeIn space-y-4">
             <div className="border-b border-[#EDEBE9] dark:border-[#323130] pb-3 flex items-center justify-between">
-              <h3 className="text-xs font-bold text-slate-705 uppercase tracking-wide flex items-center gap-1.5">
+              <h3 data-crm-heading="section" className="text-xs font-bold text-slate-705 uppercase tracking-wide flex items-center gap-1.5">
                 <Plus className="w-4 h-4 text-emerald-500" />
                 <span>{t("Input Target Company Manual Record")}</span>
               </h3>
-              <button type="button" onClick={() => setIsAddingAccount(false)} className="text-slate-400 hover:text-slate-600" aria-label={t("Close")}>
+              <button data-crm-button="" type="button" onClick={() => setIsAddingAccount(false)} className="text-slate-400 hover:text-slate-600" aria-label={t("Close")}>
                 <X className="w-4 h-4" />
               </button>
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4 text-xs">
+            <div data-crm-flow="" data-crm-grid="form" className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4 text-xs">
               <div>
-                <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block mb-1">{t("Company Name *")}</label>
-                <input
+                <label data-crm-label="" className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block mb-1">{t("Company Name *")}</label>
+                <input data-crm-field="control"
                   type="text"
                   placeholder={t("e.g. Arçelik")}
                   value={newAccount.companyName}
@@ -810,8 +810,8 @@ export default function TargetAccountsView({
               </div>
 
               <div>
-                <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block mb-1">{t("Website URL")}</label>
-                <input
+                <label data-crm-label="" className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block mb-1">{t("Website URL")}</label>
+                <input data-crm-field="control"
                   type="text"
                   placeholder={t("https://www.arcelik.com.tr")}
                   value={newAccount.websiteUrl}
@@ -821,8 +821,8 @@ export default function TargetAccountsView({
               </div>
 
               <div>
-                <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block mb-1">{t("Industry Tag")}</label>
-                <input
+                <label data-crm-label="" className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block mb-1">{t("Industry Tag")}</label>
+                <input data-crm-field="control"
                   type="text"
                   placeholder={t("e.g. Beyaz Eşya Üretimi")}
                   value={newAccount.industryTag}
@@ -832,8 +832,8 @@ export default function TargetAccountsView({
               </div>
 
               <div>
-                <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block mb-1">{t("Company Size")}</label>
-                <input
+                <label data-crm-label="" className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block mb-1">{t("Company Size")}</label>
+                <input data-crm-field="control"
                   type="text"
                   placeholder={t("e.g. 10000+ Çalışan")}
                   value={newAccount.companySize}
@@ -843,8 +843,8 @@ export default function TargetAccountsView({
               </div>
 
               <div>
-                <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block mb-1">{t("Contact First Name")}</label>
-                <input
+                <label data-crm-label="" className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block mb-1">{t("Contact First Name")}</label>
+                <input data-crm-field="control"
                   type="text"
                   placeholder={t("Kürşad")}
                   value={newAccount.contactName}
@@ -854,8 +854,8 @@ export default function TargetAccountsView({
               </div>
 
               <div>
-                <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block mb-1">{t("Contact Surname")}</label>
-                <input
+                <label data-crm-label="" className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block mb-1">{t("Contact Surname")}</label>
+                <input data-crm-field="control"
                   type="text"
                   placeholder={t("Yıldırım")}
                   value={newAccount.contactSurname}
@@ -865,8 +865,8 @@ export default function TargetAccountsView({
               </div>
 
               <div>
-                <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block mb-1">{t("Contact Email")}</label>
-                <input
+                <label data-crm-label="" className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block mb-1">{t("Contact Email")}</label>
+                <input data-crm-field="control"
                   type="email"
                   placeholder={t("kursad.yildirim@arcelik.com")}
                   value={newAccount.contactEmail}
@@ -876,8 +876,8 @@ export default function TargetAccountsView({
               </div>
 
               <div>
-                <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block mb-1">{t("Department")}</label>
-                <input
+                <label data-crm-label="" className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block mb-1">{t("Department")}</label>
+                <input data-crm-field="control"
                   type="text"
                   placeholder={t("Yalın İmalat / Kalite")}
                   value={newAccount.department}
@@ -887,8 +887,8 @@ export default function TargetAccountsView({
               </div>
 
               <div>
-                <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block mb-1">{t("Address / Main Location")}</label>
-                <input
+                <label data-crm-label="" className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block mb-1">{t("Address / Main Location")}</label>
+                <input data-crm-field="control"
                   type="text"
                   placeholder={t("Eskişehir, Türkiye")}
                   value={newAccount.locationMain}
@@ -898,8 +898,8 @@ export default function TargetAccountsView({
               </div>
 
               <div>
-                <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block mb-1">{t("Opportunity Score (1-100) *")}</label>
-                <input
+                <label data-crm-label="" className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block mb-1">{t("Opportunity Score (1-100) *")}</label>
+                <input data-crm-field="control"
                   type="number"
                   placeholder={t("85")}
                   value={newAccount.riskScore}
@@ -912,8 +912,8 @@ export default function TargetAccountsView({
               </div>
 
               <div>
-                <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block mb-1">{t("Lead Status")}</label>
-                <select
+                <label data-crm-label="" className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block mb-1">{t("Lead Status")}</label>
+                <select data-crm-field="control"
                   value={newAccount.leadStatus}
                   onChange={e => setNewAccount({ ...newAccount, leadStatus: e.target.value })}
                   className="w-full p-2 border border-[#EDEBE9] dark:border-[#323130] bg-[#faf9f8] dark:bg-[#252423] rounded outline-none"
@@ -926,8 +926,8 @@ export default function TargetAccountsView({
               </div>
 
               <div>
-                <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block mb-1">{t("Lead Segment")}</label>
-                <select
+                <label data-crm-label="" className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block mb-1">{t("Lead Segment")}</label>
+                <select data-crm-field="control"
                   value={newAccount.leadSegment}
                   onChange={e => setNewAccount({ ...newAccount, leadSegment: e.target.value })}
                   className="w-full p-2 border border-[#EDEBE9] dark:border-[#323130] bg-[#faf9f8] dark:bg-[#252423] rounded outline-none"
@@ -939,8 +939,8 @@ export default function TargetAccountsView({
               </div>
 
               <div className="sm:col-span-2">
-                <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block mb-1">{t("AI Risks & Waste Opportunities Summary")}</label>
-                <textarea
+                <label data-crm-label="" className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block mb-1">{t("AI Risks & Waste Opportunities Summary")}</label>
+                <textarea data-crm-field="multiline"
                   placeholder={t("Muda points and factory efficiency indicators...")}
                   value={newAccount.aiAnalysisSummary}
                   onChange={e => setNewAccount({ ...newAccount, aiAnalysisSummary: e.target.value })}
@@ -949,8 +949,8 @@ export default function TargetAccountsView({
               </div>
 
               <div className="sm:col-span-2">
-                <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block mb-1">{t("Outreach Templates / Drafts")}</label>
-                <textarea
+                <label data-crm-label="" className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block mb-1">{t("Outreach Templates / Drafts")}</label>
+                <textarea data-crm-field="multiline"
                   placeholder={t("Subject: Outreach Template here...")}
                   value={newAccount.draftTemplates}
                   onChange={e => setNewAccount({ ...newAccount, draftTemplates: e.target.value })}
@@ -960,14 +960,14 @@ export default function TargetAccountsView({
             </div>
 
             <div className="flex justify-end gap-2 border-t border-[#EDEBE9] dark:border-[#323130] pt-4 mt-2">
-              <button
+              <button data-crm-button=""
                 type="button"
                 onClick={() => setIsAddingAccount(false)}
                 className="text-xs font-bold text-slate-500 hover:text-slate-650 px-3 py-2 border border-[#EDEBE9] dark:border-[#323130] rounded cursor-pointer bg-[#faf9f8] dark:bg-[#252423]"
               >
                 {t("Cancel")}
               </button>
-              <button
+              <button data-crm-button=""
                 type="submit"
                 className="text-xs font-bold bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2 rounded flex items-center gap-1 cursor-pointer"
               >
@@ -983,7 +983,7 @@ export default function TargetAccountsView({
           <div className="flex flex-wrap items-center gap-2 text-xs w-full md:w-auto">
             <div className="relative">
               <Search className="w-3.5 h-3.5 text-slate-400 absolute left-3 top-2.5" />
-              <input
+              <input data-crm-leading-icon data-crm-field="control"
                 type="text"
                 placeholder={t("Search companies, sectors, or contacts...")}
                 value={searchTerm}
@@ -992,7 +992,7 @@ export default function TargetAccountsView({
               />
             </div>
 
-            <button
+            <button data-crm-button=""
               type="button"
               onClick={() => setShowFilters(!showFilters)}
               className={`p-2 border rounded flex items-center justify-center cursor-pointer transition-all shadow-sm relative ${
@@ -1010,7 +1010,7 @@ export default function TargetAccountsView({
 
             {showFilters && (
               <div className="flex flex-wrap items-center gap-2 animate-fadeIn">
-                <select
+                <select data-crm-field="control"
                   value={statusFilter}
                   onChange={e => setStatusFilter(e.target.value)}
                   className="bg-[#FAF9F8] dark:bg-[#252423] border border-[#0078D4]/30 dark:border-[#323130] text-xs p-1.5 rounded outline-none text-slate-700 dark:text-slate-200"
@@ -1022,7 +1022,7 @@ export default function TargetAccountsView({
                   <option value="Disqualified">{t("Disqualified")}</option>
                 </select>
 
-                <select
+                <select data-crm-field="control"
                   value={segmentFilter}
                   onChange={e => setSegmentFilter(e.target.value)}
                   className="bg-[#FAF9F8] dark:bg-[#252423] border border-[#0078D4]/30 dark:border-[#323130] text-xs p-1.5 rounded outline-none text-slate-700 dark:text-slate-200"
@@ -1034,7 +1034,7 @@ export default function TargetAccountsView({
                 </select>
 
                 {(statusFilter || segmentFilter) && (
-                  <button
+                  <button data-crm-button=""
                     type="button"
                     onClick={() => {
                       setStatusFilter("");
@@ -1050,7 +1050,7 @@ export default function TargetAccountsView({
           </div>
 
           <div className="flex items-center gap-2.5 w-full md:w-auto justify-end">
-            <button
+            <button data-crm-button=""
               type="button"
               onClick={handleTransferToRecipientList}
               disabled={selectedCount === 0}
@@ -1064,7 +1064,7 @@ export default function TargetAccountsView({
               <span>{t("Transfer to Outbox List ({count})").replace("{count}", String(selectedCount))}</span>
             </button>
 
-            <button
+            <button data-crm-button=""
               type="button"
               onClick={deleteSelectedAccounts}
               disabled={selectedCount === 0}
@@ -1079,7 +1079,7 @@ export default function TargetAccountsView({
               <span>{t("Delete")}</span>
             </button>
 
-            <button
+            <button data-crm-button=""
               type="button"
               onClick={() => setIsWide(!isWide)}
               className="text-xs font-bold bg-white hover:bg-slate-50 dark:bg-[#252423] dark:hover:bg-[#323130] text-[#0078D4] dark:text-brand-300 px-3.5 py-2 border border-[#EDEBE9] dark:border-[#323130] rounded flex items-center gap-1.5 cursor-pointer transition-all shadow-sm"
@@ -1101,8 +1101,8 @@ export default function TargetAccountsView({
         </div>
 
         {/* Dense Excel-Style Adapted Grid Multi-Field View */}
-        <div className="overflow-x-auto select-none">
-          <table className="w-full text-left border-collapse">
+        <div data-crm-scroll="horizontal" className="overflow-x-auto select-none">
+          <table data-crm-table="" className="w-full text-left border-collapse">
             <thead>
               <tr className="bg-[#FAF9F8] dark:bg-[#201f1e] text-[10px] font-bold text-slate-450 uppercase border-b border-[#EDEBE9] dark:border-[#323130] tracking-wider select-none">
                 <th className="p-3 w-10 text-center">
@@ -1168,7 +1168,7 @@ export default function TargetAccountsView({
                       {/* COMPANY COLUMN */}
                       <td className="p-3 font-medium text-slate-800 dark:text-slate-100 min-w-[120px]">
                         {isEditing && editForm ? (
-                          <input
+                          <input data-crm-field="control"
                             type="text"
                             value={editForm.companyName}
                             onChange={(e) => setEditForm({ ...editForm, companyName: e.target.value })}
@@ -1200,7 +1200,7 @@ export default function TargetAccountsView({
                       {/* INDUSTRY COLUMN */}
                       <td className="p-3 text-slate-600 dark:text-slate-300">
                         {isEditing && editForm ? (
-                          <input
+                          <input data-crm-field="control"
                             type="text"
                             value={editForm.industryTag}
                             onChange={(e) => setEditForm({ ...editForm, industryTag: e.target.value })}
@@ -1216,7 +1216,7 @@ export default function TargetAccountsView({
                       {/* CONTACT NAME */}
                       <td className="p-3 text-slate-700 dark:text-slate-205">
                         {isEditing && editForm ? (
-                          <input
+                          <input data-crm-field="control"
                             type="text"
                             value={editForm.contactName || ""}
                             onChange={(e) => setEditForm({ ...editForm, contactName: e.target.value })}
@@ -1230,7 +1230,7 @@ export default function TargetAccountsView({
                       {/* CONTACT SURNAME */}
                       <td className="p-3 text-slate-700 dark:text-slate-205">
                         {isEditing && editForm ? (
-                          <input
+                          <input data-crm-field="control"
                             type="text"
                             value={editForm.contactSurname || ""}
                             onChange={(e) => setEditForm({ ...editForm, contactSurname: e.target.value })}
@@ -1244,7 +1244,7 @@ export default function TargetAccountsView({
                       {/* CONTACT EMAIL COLUMN */}
                       <td className="p-3 text-slate-700 dark:text-slate-200">
                         {isEditing && editForm ? (
-                          <input
+                          <input data-crm-field="control"
                             type="email"
                             value={editForm.contactEmail || ""}
                             onChange={(e) => setEditForm({ ...editForm, contactEmail: e.target.value })}
@@ -1261,7 +1261,7 @@ export default function TargetAccountsView({
                       {/* DEPARTMENT */}
                       <td className="p-3 text-slate-600 dark:text-slate-300">
                         {isEditing && editForm ? (
-                          <input
+                          <input data-crm-field="control"
                             type="text"
                             value={editForm.department || ""}
                             onChange={(e) => setEditForm({ ...editForm, department: e.target.value })}
@@ -1275,7 +1275,7 @@ export default function TargetAccountsView({
                       {/* ADDRESS */}
                       <td className="p-3 text-slate-600 dark:text-slate-350 truncate max-w-[110px]">
                         {isEditing && editForm ? (
-                          <input
+                          <input data-crm-field="control"
                             type="text"
                             value={editForm.locationMain || ""}
                             onChange={(e) => setEditForm({ ...editForm, locationMain: e.target.value })}
@@ -1289,7 +1289,7 @@ export default function TargetAccountsView({
                       {/* LEAD STATUS */}
                       <td className="p-3">
                         {isEditing && editForm ? (
-                          <select
+                          <select data-crm-field="control"
                             value={editForm.leadStatus || "New"}
                             onChange={(e) => setEditForm({ ...editForm, leadStatus: e.target.value })}
                             className="p-1 text-xs border border-slate-300 rounded bg-white dark:bg-[#252423]"
@@ -1317,7 +1317,7 @@ export default function TargetAccountsView({
                       {/* LEAD SEGMENT */}
                       <td className="p-3">
                         {isEditing && editForm ? (
-                          <select
+                          <select data-crm-field="control"
                             value={editForm.leadSegment || "Cold"}
                             onChange={(e) => setEditForm({ ...editForm, leadSegment: e.target.value })}
                             className="p-1 text-xs border border-slate-300 rounded bg-white dark:bg-[#252423]"
@@ -1344,7 +1344,7 @@ export default function TargetAccountsView({
                         {isEditing && editForm ? (
                           <div className="flex items-center gap-1">
                             <span className="text-[10px] font-bold">%</span>
-                            <input
+                            <input data-crm-field="control"
                               type="number"
                               value={editForm.riskScore}
                               onChange={(e) => setEditForm({ ...editForm, riskScore: Number(e.target.value) })}
@@ -1365,7 +1365,7 @@ export default function TargetAccountsView({
                       <td className="p-3 text-center">
                         {isEditing ? (
                           <div className="flex items-center justify-center gap-1 animate-slide-in">
-                            <button
+                            <button data-crm-button=""
                               type="button"
                               onClick={saveEditedAccount}
                               className="p-1 hover:bg-emerald-50 dark:hover:bg-emerald-950 text-emerald-600 dark:text-emerald-450 border border-emerald-250 dark:border-emerald-800 rounded shadow-sm cursor-pointer"
@@ -1374,7 +1374,7 @@ export default function TargetAccountsView({
                             >
                               <Check className="w-3.5 h-3.5" />
                             </button>
-                            <button
+                            <button data-crm-button=""
                               type="button"
                               onClick={() => {
                                 setEditingAccountId(null);
@@ -1389,7 +1389,7 @@ export default function TargetAccountsView({
                           </div>
                         ) : (
                           <div className="flex items-center justify-center gap-1 pb shadow-none">
-                            <button
+                            <button data-crm-button=""
                               type="button"
                               onClick={() => {
                                 // Push a clean recipient mapped from this company contact
@@ -1422,7 +1422,7 @@ export default function TargetAccountsView({
                               <Mail className="w-3.5 h-3.5" />
                             </button>
 
-                            <button
+                            <button data-crm-button=""
                               type="button"
                               onClick={() => startEditingAccount(a)}
                               className="p-1 bg-[#FAF9F8] text-slate-505 border border-[#EDEBE9] dark:bg-[#201f1e] dark:border-[#323130] hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-[#0078D4] rounded cursor-pointer transition-colors"
@@ -1432,7 +1432,7 @@ export default function TargetAccountsView({
                               <Edit className="w-3.5 h-3.5" />
                             </button>
 
-                            <button
+                            <button data-crm-button=""
                               type="button"
                               onClick={() => deleteSingleAccount(a.id)}
                               className="p-1 bg-[#FAF9F8] text-rose-500 border border-[#EDEBE9] dark:bg-[#201f1e] dark:border-[#323130] hover:bg-rose-50 dark:hover:bg-rose-950/20 rounded cursor-pointer transition-colors"
@@ -1468,7 +1468,7 @@ export default function TargetAccountsView({
           </span>
 
           <div className="flex items-center gap-1.5 shadow-none pb-0">
-            <button
+            <button data-crm-button=""
               type="button"
               onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
               disabled={currentPage === 1}
@@ -1488,7 +1488,7 @@ export default function TargetAccountsView({
               <strong className="dark:text-slate-200">{totalPages}</strong>
             </div>
 
-            <button
+            <button data-crm-button=""
               type="button"
               onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
               disabled={currentPage >= totalPages}
@@ -1515,11 +1515,11 @@ export default function TargetAccountsView({
             {/* Modal header */}
             <div className="px-6 py-4 bg-[#FAF9F8] dark:bg-[#201f1e] border-b border-[#EDEBE9] dark:border-[#323130] flex items-center justify-between shrink-0">
               <div className="flex items-center gap-3">
-                <div className="w-9 h-9 rounded-full bg-[#0078D4]/10 text-[#0078D4] dark:text-brand-400 flex items-center justify-center">
+                <div data-crm-icon-box="" className="w-9 h-9 rounded-full bg-[#0078D4]/10 text-[#0078D4] dark:text-brand-400 flex items-center justify-center">
                   <Target className="w-5 h-5" />
                 </div>
                 <div>
-                  <h3 className="text-sm font-extrabold text-slate-800 dark:text-slate-100 font-display">
+                  <h3 data-crm-heading="section" className="text-sm font-extrabold text-slate-800 dark:text-slate-100 font-display">
                     {selectedAccount.companyName.toUpperCase()} - {isDrawerEditing ? t("MÜŞTERİ BİLGİLERİNİ DÜZENLE") : t("DEEP RESEARCH & DOSSIER")}
                   </h3>
                   <p className="text-[10px] text-slate-400 font-sans mt-0.5 flex items-center gap-3">
@@ -1532,7 +1532,7 @@ export default function TargetAccountsView({
 
               <div className="flex items-center gap-2">
                 {!isDrawerEditing ? (
-                  <button
+                  <button data-crm-button=""
                     type="button"
                     onClick={startDrawerEditing}
                     className="flex items-center gap-1.5 px-3 py-1.5 bg-[#0078D4]/10 hover:bg-[#0078D4]/20 text-[#0078D4] dark:text-brand-300 border border-[#0078D4]/30 rounded-lg text-xs font-bold transition-all cursor-pointer"
@@ -1542,7 +1542,7 @@ export default function TargetAccountsView({
                     <span>{t("Edit Customer Info")}</span>
                   </button>
                 ) : (
-                  <button
+                  <button data-crm-button=""
                     type="button"
                     onClick={cancelDrawerEditing}
                     className="flex items-center gap-1 px-2.5 py-1.5 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 rounded-lg text-xs font-bold transition-all cursor-pointer"
@@ -1552,7 +1552,7 @@ export default function TargetAccountsView({
                   </button>
                 )}
 
-                <button
+                <button data-crm-button=""
                   type="button"
                   onClick={() => { setSelectedAccount(null); setIsDrawerEditing(false); setDrawerEditForm(null); }}
                   className="p-1.5 hover:bg-slate-100 dark:hover:bg-black/20 rounded-full text-slate-400 hover:text-slate-700 dark:hover:text-white transition-colors cursor-pointer ml-1"
@@ -1564,23 +1564,23 @@ export default function TargetAccountsView({
             </div>
 
             {/* Modal Body scrollable area */}
-            <div className="flex-1 overflow-y-auto px-6 py-5 space-y-5 font-sans">
+            <div data-crm-stack="" className="flex-1 overflow-y-auto px-6 py-5 space-y-5 font-sans">
               
               {isDrawerEditing && drawerEditForm ? (
                 /* EDIT FORM IN DRAWER MODE */
-                <div className="space-y-4 text-xs animate-fade-in">
+                <div data-crm-stack="" className="space-y-4 text-xs animate-fade-in">
                   
                   {/* Company & Industry info */}
                   <div className="bg-[#FAF9F8] dark:bg-black/10 p-4 rounded-xl border border-[#EDEBE9] dark:border-[#323130] space-y-3">
-                    <h4 className="text-xs font-bold text-slate-800 dark:text-slate-200 uppercase tracking-wider font-mono flex items-center gap-2 border-b border-slate-200 dark:border-slate-800 pb-2">
+                    <h4 data-crm-heading="section" className="text-xs font-bold text-slate-800 dark:text-slate-200 uppercase tracking-wider font-mono flex items-center gap-2 border-b border-slate-200 dark:border-slate-800 pb-2">
                       <Building className="w-4 h-4 text-[#0078D4]" />
                       {t("Company & Sector Information")}
                     </h4>
                     
-                    <div className="grid grid-cols-2 gap-3">
+                    <div data-crm-flow="" data-crm-grid="form" className="grid grid-cols-2 gap-3">
                       <div>
-                        <label className="text-[10px] font-bold uppercase text-slate-400 block mb-1">{t("Company Name")} *</label>
-                        <input
+                        <label data-crm-label="" className="text-[10px] font-bold uppercase text-slate-400 block mb-1">{t("Company Name")} *</label>
+                        <input data-crm-field="control"
                           type="text"
                           value={drawerEditForm.companyName}
                           onChange={(e) => setDrawerEditForm({ ...drawerEditForm, companyName: e.target.value })}
@@ -1589,8 +1589,8 @@ export default function TargetAccountsView({
                       </div>
 
                       <div>
-                        <label className="text-[10px] font-bold uppercase text-slate-400 block mb-1">{t("Website URL")}</label>
-                        <input
+                        <label data-crm-label="" className="text-[10px] font-bold uppercase text-slate-400 block mb-1">{t("Website URL")}</label>
+                        <input data-crm-field="control"
                           type="text"
                           value={drawerEditForm.websiteUrl}
                           onChange={(e) => setDrawerEditForm({ ...drawerEditForm, websiteUrl: e.target.value })}
@@ -1599,8 +1599,8 @@ export default function TargetAccountsView({
                       </div>
 
                       <div>
-                        <label className="text-[10px] font-bold uppercase text-slate-400 block mb-1">{t("Industry Tag")}</label>
-                        <input
+                        <label data-crm-label="" className="text-[10px] font-bold uppercase text-slate-400 block mb-1">{t("Industry Tag")}</label>
+                        <input data-crm-field="control"
                           type="text"
                           value={drawerEditForm.industryTag}
                           onChange={(e) => setDrawerEditForm({ ...drawerEditForm, industryTag: e.target.value })}
@@ -1609,8 +1609,8 @@ export default function TargetAccountsView({
                       </div>
 
                       <div>
-                        <label className="text-[10px] font-bold uppercase text-slate-400 block mb-1">{t("Company Size")}</label>
-                        <input
+                        <label data-crm-label="" className="text-[10px] font-bold uppercase text-slate-400 block mb-1">{t("Company Size")}</label>
+                        <input data-crm-field="control"
                           type="text"
                           value={drawerEditForm.companySize}
                           onChange={(e) => setDrawerEditForm({ ...drawerEditForm, companySize: e.target.value })}
@@ -1619,8 +1619,8 @@ export default function TargetAccountsView({
                       </div>
 
                       <div className="col-span-2">
-                        <label className="text-[10px] font-bold uppercase text-slate-400 block mb-1">{t("Main Address / Location")}</label>
-                        <input
+                        <label data-crm-label="" className="text-[10px] font-bold uppercase text-slate-400 block mb-1">{t("Main Address / Location")}</label>
+                        <input data-crm-field="control"
                           type="text"
                           value={drawerEditForm.locationMain}
                           onChange={(e) => setDrawerEditForm({ ...drawerEditForm, locationMain: e.target.value })}
@@ -1632,15 +1632,15 @@ export default function TargetAccountsView({
 
                   {/* Contact Info Editing */}
                   <div className="bg-[#FAF9F8] dark:bg-black/10 p-4 rounded-xl border border-[#EDEBE9] dark:border-[#323130] space-y-3">
-                    <h4 className="text-xs font-bold text-slate-800 dark:text-slate-200 uppercase tracking-wider font-mono flex items-center gap-2 border-b border-slate-200 dark:border-slate-800 pb-2">
+                    <h4 data-crm-heading="section" className="text-xs font-bold text-slate-800 dark:text-slate-200 uppercase tracking-wider font-mono flex items-center gap-2 border-b border-slate-200 dark:border-slate-800 pb-2">
                       <Users className="w-4 h-4 text-emerald-500" />
                       {t("Target Stakeholder Contact Details")}
                     </h4>
 
-                    <div className="grid grid-cols-2 gap-3">
+                    <div data-crm-flow="" data-crm-grid="form" className="grid grid-cols-2 gap-3">
                       <div>
-                        <label className="text-[10px] font-bold uppercase text-slate-400 block mb-1">{t("Contact Name")}</label>
-                        <input
+                        <label data-crm-label="" className="text-[10px] font-bold uppercase text-slate-400 block mb-1">{t("Contact Name")}</label>
+                        <input data-crm-field="control"
                           type="text"
                           value={drawerEditForm.contactName || ""}
                           onChange={(e) => setDrawerEditForm({ ...drawerEditForm, contactName: e.target.value })}
@@ -1649,8 +1649,8 @@ export default function TargetAccountsView({
                       </div>
 
                       <div>
-                        <label className="text-[10px] font-bold uppercase text-slate-400 block mb-1">{t("Contact Surname")}</label>
-                        <input
+                        <label data-crm-label="" className="text-[10px] font-bold uppercase text-slate-400 block mb-1">{t("Contact Surname")}</label>
+                        <input data-crm-field="control"
                           type="text"
                           value={drawerEditForm.contactSurname || ""}
                           onChange={(e) => setDrawerEditForm({ ...drawerEditForm, contactSurname: e.target.value })}
@@ -1659,8 +1659,8 @@ export default function TargetAccountsView({
                       </div>
 
                       <div>
-                        <label className="text-[10px] font-bold uppercase text-[#0078D4] dark:text-brand-400 block mb-1">{t("Designated Contact Email")} *</label>
-                        <input
+                        <label data-crm-label="" className="text-[10px] font-bold uppercase text-[#0078D4] dark:text-brand-400 block mb-1">{t("Designated Contact Email")} *</label>
+                        <input data-crm-field="control"
                           type="email"
                           value={drawerEditForm.contactEmail || ""}
                           onChange={(e) => setDrawerEditForm({ ...drawerEditForm, contactEmail: e.target.value })}
@@ -1670,8 +1670,8 @@ export default function TargetAccountsView({
                       </div>
 
                       <div>
-                        <label className="text-[10px] font-bold uppercase text-slate-400 block mb-1">{t("Department / Role")}</label>
-                        <input
+                        <label data-crm-label="" className="text-[10px] font-bold uppercase text-slate-400 block mb-1">{t("Department / Role")}</label>
+                        <input data-crm-field="control"
                           type="text"
                           value={drawerEditForm.department || ""}
                           onChange={(e) => setDrawerEditForm({ ...drawerEditForm, department: e.target.value })}
@@ -1683,15 +1683,15 @@ export default function TargetAccountsView({
 
                   {/* Status, Segment & Risk Score */}
                   <div className="bg-[#FAF9F8] dark:bg-black/10 p-4 rounded-xl border border-[#EDEBE9] dark:border-[#323130] space-y-3">
-                    <h4 className="text-xs font-bold text-slate-800 dark:text-slate-200 uppercase tracking-wider font-mono flex items-center gap-2 border-b border-slate-200 dark:border-slate-800 pb-2">
+                    <h4 data-crm-heading="section" className="text-xs font-bold text-slate-800 dark:text-slate-200 uppercase tracking-wider font-mono flex items-center gap-2 border-b border-slate-200 dark:border-slate-800 pb-2">
                       <TrendingUp className="w-4 h-4 text-amber-500" />
                       {t("Lead Status, Segment & Opportunity Score")}
                     </h4>
 
-                    <div className="grid grid-cols-3 gap-3">
+                    <div data-crm-flow="" data-crm-grid="form" className="grid grid-cols-3 gap-3">
                       <div>
-                        <label className="text-[10px] font-bold uppercase text-slate-400 block mb-1">{t("Lead Status")}</label>
-                        <select
+                        <label data-crm-label="" className="text-[10px] font-bold uppercase text-slate-400 block mb-1">{t("Lead Status")}</label>
+                        <select data-crm-field="control"
                           value={drawerEditForm.leadStatus || "New"}
                           onChange={(e) => setDrawerEditForm({ ...drawerEditForm, leadStatus: e.target.value })}
                           className="w-full p-2 border border-slate-300 dark:border-slate-700 rounded bg-white dark:bg-[#252423] text-xs outline-none focus:border-[#0078D4]"
@@ -1704,8 +1704,8 @@ export default function TargetAccountsView({
                       </div>
 
                       <div>
-                        <label className="text-[10px] font-bold uppercase text-slate-400 block mb-1">{t("Lead Segment")}</label>
-                        <select
+                        <label data-crm-label="" className="text-[10px] font-bold uppercase text-slate-400 block mb-1">{t("Lead Segment")}</label>
+                        <select data-crm-field="control"
                           value={drawerEditForm.leadSegment || "Cold"}
                           onChange={(e) => setDrawerEditForm({ ...drawerEditForm, leadSegment: e.target.value })}
                           className="w-full p-2 border border-slate-300 dark:border-slate-700 rounded bg-white dark:bg-[#252423] text-xs outline-none focus:border-[#0078D4]"
@@ -1717,8 +1717,8 @@ export default function TargetAccountsView({
                       </div>
 
                       <div>
-                        <label className="text-[10px] font-bold uppercase text-slate-400 block mb-1">{t("Opportunity Score (%)")}</label>
-                        <input
+                        <label data-crm-label="" className="text-[10px] font-bold uppercase text-slate-400 block mb-1">{t("Opportunity Score (%)")}</label>
+                        <input data-crm-field="control"
                           type="number"
                           value={drawerEditForm.riskScore || 70}
                           onChange={(e) => setDrawerEditForm({ ...drawerEditForm, riskScore: Number(e.target.value) })}
@@ -1732,15 +1732,15 @@ export default function TargetAccountsView({
 
                   {/* Summaries & Templates */}
                   <div className="bg-[#FAF9F8] dark:bg-black/10 p-4 rounded-xl border border-[#EDEBE9] dark:border-[#323130] space-y-3">
-                    <h4 className="text-xs font-bold text-slate-800 dark:text-slate-200 uppercase tracking-wider font-mono flex items-center gap-2 border-b border-slate-200 dark:border-slate-800 pb-2">
+                    <h4 data-crm-heading="section" className="text-xs font-bold text-slate-800 dark:text-slate-200 uppercase tracking-wider font-mono flex items-center gap-2 border-b border-slate-200 dark:border-slate-800 pb-2">
                       <Layers className="w-4 h-4 text-blue-500" />
                       {t("AI Analysis & Outreach Template")}
                     </h4>
 
                     <div className="space-y-3">
                       <div>
-                        <label className="text-[10px] font-bold uppercase text-slate-400 block mb-1">{t("AI Analysis Summary (Quality Risks & Lean Opportunities)")}</label>
-                        <textarea
+                        <label data-crm-label="" className="text-[10px] font-bold uppercase text-slate-400 block mb-1">{t("AI Analysis Summary (Quality Risks & Lean Opportunities)")}</label>
+                        <textarea data-crm-field="multiline"
                           rows={3}
                           value={drawerEditForm.aiAnalysisSummary || ""}
                           onChange={(e) => setDrawerEditForm({ ...drawerEditForm, aiAnalysisSummary: e.target.value })}
@@ -1749,8 +1749,8 @@ export default function TargetAccountsView({
                       </div>
 
                       <div>
-                        <label className="text-[10px] font-bold uppercase text-slate-400 block mb-1">{t("Pre-compiled Outreach Template")}</label>
-                        <textarea
+                        <label data-crm-label="" className="text-[10px] font-bold uppercase text-slate-400 block mb-1">{t("Pre-compiled Outreach Template")}</label>
+                        <textarea data-crm-field="multiline"
                           rows={4}
                           value={drawerEditForm.draftTemplates || ""}
                           onChange={(e) => setDrawerEditForm({ ...drawerEditForm, draftTemplates: e.target.value })}
@@ -1765,17 +1765,17 @@ export default function TargetAccountsView({
                 /* READ-ONLY DOSSIER VIEW */
                 <>
                   {/* Stats highlights banner */}
-                  <div className="grid grid-cols-3 gap-2.5 bg-[#FAF9F8] dark:bg-[#201f1e] p-3 rounded-xl border border-[#EDEBE9] dark:border-[#323130]">
+                  <div data-crm-grid="layout" className="grid grid-cols-3 gap-2.5 bg-[#FAF9F8] dark:bg-[#201f1e] p-3 rounded-xl border border-[#EDEBE9] dark:border-[#323130]">
                     <div className="text-center p-1.5 border-r border-slate-200 dark:border-[#323130]">
-                      <span className="text-[9px] uppercase font-bold text-slate-400 font-mono block">{t("Opportunity Score")}</span>
+                      <span data-crm-caption="" className="text-[9px] uppercase font-bold text-slate-400 font-mono block">{t("Opportunity Score")}</span>
                       <span className="text-sm font-extrabold text-[#0078D4] dark:text-brand-400 block mt-0.5">% {selectedAccount.riskScore || 75}</span>
                     </div>
                     <div className="text-center p-1.5 border-r border-slate-200 dark:border-[#323130]">
-                      <span className="text-[9px] uppercase font-bold text-slate-400 font-mono block">{t("Company Size")}</span>
+                      <span data-crm-caption="" className="text-[9px] uppercase font-bold text-slate-400 font-mono block">{t("Company Size")}</span>
                       <span className="text-xs font-semibold text-slate-700 dark:text-slate-200 block mt-0.5 truncate">{selectedAccount.companySize || t("750+ Employees")}</span>
                     </div>
                     <div className="text-center p-1.5">
-                      <span className="text-[9px] uppercase font-bold text-slate-400 font-mono block">{t("Main Location")}</span>
+                      <span data-crm-caption="" className="text-[9px] uppercase font-bold text-slate-400 font-mono block">{t("Main Location")}</span>
                       <span className="text-xs font-semibold text-slate-700 dark:text-slate-200 block mt-0.5 truncate">{selectedAccount.locationMain || t("Not specified")}</span>
                     </div>
                   </div>
@@ -1801,12 +1801,12 @@ export default function TargetAccountsView({
 
                   {/* Contact Information Block */}
                   <div className="space-y-2">
-                    <h4 className="text-xs font-bold text-slate-800 dark:text-slate-200 uppercase tracking-wider font-mono flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-1.5">
+                    <h4 data-crm-heading="section" className="text-xs font-bold text-slate-800 dark:text-slate-200 uppercase tracking-wider font-mono flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-1.5">
                       <span className="flex items-center gap-2">
                         <Users className="w-4 h-4 text-emerald-500" />
                         {t("Target Stakeholder Contact Details")}
                       </span>
-                      <button
+                      <button data-crm-button=""
                         type="button"
                         onClick={startDrawerEditing}
                         className="text-[10px] font-bold text-[#0078D4] hover:underline cursor-pointer flex items-center gap-1"
@@ -1816,21 +1816,21 @@ export default function TargetAccountsView({
                       </button>
                     </h4>
                     <div className="bg-[#FAF9F8] dark:bg-black/10 p-4 rounded-xl border border-[#EDEBE9] dark:border-[#323130] text-xs space-y-2 font-sans">
-                      <div className="grid grid-cols-2 gap-4">
+                      <div data-crm-flow="" data-crm-grid="layout" className="grid grid-cols-2 gap-4">
                         <div>
-                          <span className="text-[10px] uppercase font-bold tracking-brand text-slate-400 block">{t("First Name")}</span>
+                          <span data-crm-caption="" className="text-[10px] uppercase font-bold tracking-brand text-slate-400 block">{t("First Name")}</span>
                           <span className="font-semibold text-slate-700 dark:text-slate-200">{selectedAccount.contactName || t("Quality / Operations")}</span>
                         </div>
                         <div>
-                          <span className="text-[10px] uppercase font-bold tracking-brand text-slate-400 block">{t("Surname")}</span>
+                          <span data-crm-caption="" className="text-[10px] uppercase font-bold tracking-brand text-slate-400 block">{t("Surname")}</span>
                           <span className="font-semibold text-slate-700 dark:text-slate-200">{selectedAccount.contactSurname || t("Director")}</span>
                         </div>
                         <div>
-                          <span className="text-[10px] uppercase font-bold tracking-brand text-slate-400 block">{t("Designated Email")}</span>
+                          <span data-crm-caption="" className="text-[10px] uppercase font-bold tracking-brand text-slate-400 block">{t("Designated Email")}</span>
                           <span className="font-mono text-[#0078D4] dark:text-brand-400 font-bold">{selectedAccount.contactEmail || t("N/A")}</span>
                         </div>
                         <div>
-                          <span className="text-[10px] uppercase font-bold tracking-brand text-slate-400 block">{t("Department / Role")}</span>
+                          <span data-crm-caption="" className="text-[10px] uppercase font-bold tracking-brand text-slate-400 block">{t("Department / Role")}</span>
                           <span className="font-medium text-slate-750 dark:text-slate-300">{selectedAccount.department || t("Operational Excellence")}</span>
                         </div>
                       </div>
@@ -1839,7 +1839,7 @@ export default function TargetAccountsView({
 
                   {/* Kalite Riskleri ve Lean Fırsatları Details Section */}
                   <div className="space-y-2">
-                    <h4 className="text-xs font-bold text-slate-800 dark:text-slate-200 uppercase tracking-wider font-mono flex items-center gap-2 border-b border-slate-100 dark:border-slate-800 pb-1.5">
+                    <h4 data-crm-heading="section" className="text-xs font-bold text-slate-800 dark:text-slate-200 uppercase tracking-wider font-mono flex items-center gap-2 border-b border-slate-100 dark:border-slate-800 pb-1.5">
                       <Layers className="w-4 h-4 text-amber-500" />
                       {t("Quality Risks & Lean Opportunities (AI Analysis)")}
                     </h4>
@@ -1850,7 +1850,7 @@ export default function TargetAccountsView({
 
                   {/* Üretilen E-posta Taslakları outreach template */}
                   <div className="space-y-2">
-                    <h4 className="text-xs font-bold text-slate-800 dark:text-slate-200 uppercase tracking-wider font-mono flex items-center gap-2 border-b border-slate-100 dark:border-slate-800 pb-1.5">
+                    <h4 data-crm-heading="section" className="text-xs font-bold text-slate-800 dark:text-slate-200 uppercase tracking-wider font-mono flex items-center gap-2 border-b border-slate-100 dark:border-slate-800 pb-1.5">
                       <Mail className="w-4 h-4 text-blue-500" />
                       {t("Pre-compiled Outreach Template (Outbox Copy)")}
                     </h4>
@@ -1865,7 +1865,7 @@ export default function TargetAccountsView({
                   {/* Raw Groundings output */}
                   {selectedAccount.rawOutput && (
                     <div className="space-y-2">
-                      <h4 className="text-xs font-bold text-slate-800 dark:text-slate-200 uppercase tracking-wider font-mono flex items-center gap-2 border-b border-slate-100 dark:border-slate-800 pb-1.5">
+                      <h4 data-crm-heading="section" className="text-xs font-bold text-slate-800 dark:text-slate-200 uppercase tracking-wider font-mono flex items-center gap-2 border-b border-slate-100 dark:border-slate-800 pb-1.5">
                         <FileText className="w-4 h-4 text-emerald-500" />
                         {t("Cyber Search Grounding & Raw Output")}
                       </h4>
@@ -1883,7 +1883,7 @@ export default function TargetAccountsView({
             <div className="px-6 py-4 bg-[#FAF9F8] dark:bg-[#201f1e] border-t border-[#EDEBE9] dark:border-[#323130] flex flex-wrap items-center justify-between gap-3 shrink-0">
               {isDrawerEditing ? (
                 <>
-                  <button
+                  <button data-crm-button=""
                     type="button"
                     onClick={cancelDrawerEditing}
                     className="px-4 py-2 hover:bg-slate-200 dark:hover:bg-slate-800 rounded-lg text-xs font-bold text-slate-600 dark:text-slate-300 transition-colors border border-slate-200 dark:border-[#323130] cursor-pointer"
@@ -1891,7 +1891,7 @@ export default function TargetAccountsView({
                     {t("Cancel")}
                   </button>
 
-                  <button
+                  <button data-crm-button=""
                     type="button"
                     onClick={saveDrawerEditing}
                     className="px-5 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold rounded-lg shadow-sm flex items-center gap-1.5 transition-all cursor-pointer"
@@ -1903,7 +1903,7 @@ export default function TargetAccountsView({
               ) : (
                 <>
                   <div className="flex items-center gap-2">
-                    <button
+                    <button data-crm-button=""
                       type="button"
                       onClick={() => { setSelectedAccount(null); setIsDrawerEditing(false); setDrawerEditForm(null); }}
                       className="px-4 py-2 hover:bg-slate-200 dark:hover:bg-slate-800 rounded-lg text-xs font-bold text-slate-600 dark:text-slate-300 transition-colors border border-slate-200 dark:border-[#323130] cursor-pointer"
@@ -1911,7 +1911,7 @@ export default function TargetAccountsView({
                       {t("Close")}
                     </button>
 
-                    <button
+                    <button data-crm-button=""
                       type="button"
                       onClick={startDrawerEditing}
                       className="px-4 py-2 bg-[#FAF9F8] dark:bg-[#252423] hover:bg-slate-100 text-[#0078D4] text-xs font-bold rounded-lg border border-[#0078D4]/30 flex items-center gap-1.5 transition-all cursor-pointer"
@@ -1921,7 +1921,7 @@ export default function TargetAccountsView({
                     </button>
                   </div>
 
-                  <button
+                  <button data-crm-button=""
                     type="button"
                     onClick={() => {
                       const contactFirstName = selectedAccount.contactName || "Kalite / Operasyon";

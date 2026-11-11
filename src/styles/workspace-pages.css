@@ -1,0 +1,67 @@
+@layer stitch-theme {
+@media screen {
+  /* Layout v2: explicit hooks in application UI only. Document HTML, mail
+     bodies, charts and paper capture nodes never receive these hooks. */
+  .gemba-stitch-skin [data-crm-viewport] { max-width: 1608px; min-width: 0; padding: 24px !important; scrollbar-gutter: stable; }
+  .gemba-stitch-skin [data-crm-route] { min-width: 0; }
+  .gemba-stitch-skin [data-crm-stack] > :not([hidden]):not([data-crm-document]):not([data-crm-overlay]) { margin-block: 0 !important; }
+  .gemba-stitch-skin [data-crm-stack] > :not([hidden]):not([data-crm-document]):not([data-crm-overlay]) ~ :not([hidden]):not([data-crm-document]):not([data-crm-overlay]):not([data-crm-header]):not([class*="fixed"]) { margin-top: var(--crm-section-gap) !important; }
+  .gemba-stitch-skin [data-crm-stack] > [class*="fixed"], .gemba-stitch-skin [data-crm-stack] > [data-crm-header] { margin-block: 0 !important; }
+  .gemba-stitch-skin [data-crm-header-copy] { flex: 1 1 360px; min-width: 0; }
+
+  .gemba-stitch-skin [data-crm-screen] { min-width: 0; max-width: 100%; }
+  .gemba-stitch-skin [data-crm-screen="CompaniesView"] { padding: 0 !important; min-height: 0 !important; }
+  .gemba-stitch-skin [data-crm-header] {
+    padding: 22px 24px !important; background: var(--stitch-surface) !important;
+    border: 1px solid var(--stitch-line) !important; border-radius: var(--crm-panel-radius) !important;
+    box-shadow: none !important; gap: 18px !important; min-width: 0;
+  }
+  .gemba-stitch-skin [data-crm-header] { flex-wrap: wrap; margin-top: 0 !important; }
+  .gemba-stitch-skin [data-crm-header] > [class*="mt-"] { margin-top: 0 !important; }
+  .gemba-stitch-skin [data-crm-screen="AISalesAssistant"] { padding: 0 !important; }
+  .gemba-stitch-skin [data-crm-header-actions] { display: flex; flex-wrap: wrap; flex-shrink: 0; gap: 8px; max-width: 100%; }
+  .gemba-stitch-skin [data-crm-header-actions] select { min-width: 106px; }
+  .gemba-stitch-skin [data-crm-header] > :is(div,section) { min-width: 0; }
+  .gemba-stitch-skin [data-crm-header] p { font-size: 13px !important; line-height: 1.6 !important; color: var(--stitch-muted) !important; white-space: normal !important; }
+  .gemba-stitch-skin [data-crm-heading] { color: var(--stitch-text) !important; font-family: Inter,sans-serif !important; text-transform: none !important; letter-spacing: -.15px !important; font-weight: 600 !important; line-height: 1.5 !important; overflow-wrap: anywhere; }
+  .gemba-stitch-skin [data-crm-heading="page"] { font-size: 21px !important; font-weight: 650 !important; line-height: 1.35 !important; letter-spacing: -.5px !important; }
+  .gemba-stitch-skin [data-crm-heading="section"] { font-size: 14px !important; }
+  .gemba-stitch-skin [data-crm-card] { background: var(--stitch-surface) !important; border-color: var(--stitch-line) !important; border-radius: var(--crm-panel-radius) !important; box-shadow: 0 2px 5px #15223703 !important; min-width: 0; }
+  .gemba-stitch-skin [data-crm-card="padded"] { padding: var(--crm-panel-padding) !important; }
+  .gemba-stitch-skin [data-crm-card] [data-crm-card="padded"] { padding: 16px !important; box-shadow: none !important; }
+  .gemba-stitch-skin [data-crm-label] { font: 500 12px/1.5 Inter,sans-serif !important; letter-spacing: 0 !important; text-transform: none !important; }
+  .gemba-stitch-skin [data-crm-field] { min-width: 0; max-width: 100%; min-height: var(--crm-field-height); border-radius: 7px !important; font: 400 13px/1.5 Inter,sans-serif !important; padding: 9px 11px !important; box-shadow: none !important; }
+  .gemba-stitch-skin [data-crm-field][data-crm-trailing-icon] { padding-right: 36px !important; }
+  .gemba-stitch-skin [data-crm-field][data-crm-leading-icon] { padding-left: 36px !important; }
+  .gemba-stitch-skin [data-crm-field][data-crm-search-input] { padding-left: 48px !important; padding-right: 64px !important; }
+  .gemba-stitch-skin [data-crm-field="multiline"] { line-height: 1.65 !important; resize: vertical; }
+  .gemba-stitch-skin [data-crm-field]:disabled { opacity: .65; cursor: not-allowed; }
+  .gemba-stitch-skin [data-crm-button] { min-width: 32px; min-height: 36px; border-radius: 7px !important; font-family: Inter,sans-serif !important; font-weight: 500 !important; letter-spacing: 0 !important; text-transform: none !important; line-height: 1.45; box-shadow: none !important; }
+  .gemba-stitch-skin [data-crm-button] > svg { flex-shrink: 0; width: 16px; height: 16px; stroke-width: 1.8; }
+  .gemba-stitch-skin [data-crm-header] [data-crm-button] { min-height: 40px; font-size: 13px !important; padding: 9px 13px !important; }
+  .gemba-stitch-skin [data-crm-button]:focus-visible { outline: 2px solid var(--stitch-accent); outline-offset: 3px; }
+  .gemba-stitch-skin [data-crm-button]:disabled { cursor: not-allowed; }
+  .gemba-stitch-skin [data-crm-flow] { padding: 0 !important; border: 0 !important; box-shadow: none !important; background: transparent !important; }
+  .gemba-stitch-skin [data-crm-caption] { color: var(--stitch-muted) !important; white-space: normal !important; overflow: visible !important; text-overflow: clip !important; font-family: Inter,sans-serif !important; font-size: 12px !important; font-weight: 500 !important; letter-spacing: 0 !important; text-transform: none !important; line-height: 1.5; }
+  .gemba-stitch-skin [data-crm-metric] { font-family: Inter,sans-serif !important; font-variant-numeric: tabular-nums; font-weight: 650 !important; letter-spacing: -.5px !important; }
+  .gemba-stitch-skin [data-crm-summary-grid] { grid-template-columns: repeat(3,minmax(0,1fr)) !important; }
+  .gemba-stitch-skin [data-crm-icon-box] { display: grid !important; place-items: center; padding: 0 !important; border: 0 !important; box-shadow: none !important; border-radius: 11px !important; }
+  .gemba-stitch-skin [data-crm-toolbar] { padding: 6px !important; border: 1px solid var(--stitch-line) !important; border-radius: 9px !important; box-shadow: none !important; background: var(--stitch-canvas) !important; gap: 6px !important; flex-wrap: wrap; }
+  .gemba-stitch-skin [data-crm-grid] { min-width: 0; }
+  .gemba-stitch-skin [data-crm-grid] > * { min-width: 0; }
+  .gemba-stitch-skin [data-crm-grid="form"] { gap: 18px !important; }
+  .gemba-stitch-skin [data-crm-scroll="horizontal"] { min-width: 0; max-width: 100%; overflow-x: auto; overscroll-behavior-x: contain; scrollbar-width: thin; scrollbar-color: var(--stitch-line) transparent; -webkit-overflow-scrolling: touch; }
+  .gemba-stitch-skin [data-crm-table] { display: table !important; max-width: none !important; overflow: visible !important; width: 100%; min-width: 640px; border-collapse: separate; border-spacing: 0; font-family: Inter,sans-serif; }
+  .gemba-stitch-skin [data-crm-table] th { background: var(--stitch-field) !important; color: var(--stitch-muted) !important; text-transform: none !important; letter-spacing: 0 !important; font: 500 12px/1.5 Inter,sans-serif !important; padding: 12px 14px !important; border-color: var(--stitch-line) !important; }
+  .gemba-stitch-skin [data-crm-table] td { padding: 13px 14px !important; font-size: 12px !important; line-height: 1.6; border-color: var(--stitch-line) !important; vertical-align: middle; }
+  .gemba-stitch-skin [data-crm-table] tbody tr:hover { background-color: var(--stitch-field); }
+  .gemba-stitch-skin [data-crm-table] [data-crm-field] { min-height: 34px; padding: 6px 8px !important; }
+  .gemba-stitch-skin [data-crm-modal] { background: var(--stitch-surface) !important; border: 1px solid var(--stitch-line) !important; border-radius: 14px !important; box-shadow: 0 24px 80px #080f2430 !important; min-width: 0; }
+  .gemba-stitch-skin [data-crm-tabs] { min-width: 0; max-width: 100%; gap: 8px !important; }
+  .gemba-stitch-skin [data-crm-decoration] { display: none !important; }
+  /* Existing editor toolbars retain their compact geometry and document text. */
+  @media (prefers-reduced-motion: reduce) {
+    .gemba-stitch-skin [data-crm-button] { transition: none !important; }
+  }
+}
+}

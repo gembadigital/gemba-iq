@@ -87,12 +87,12 @@ export default function CompanyOverviewTab({
   ) => {
     return (
       <div className="company-form-field p-2.5 bg-slate-50/50 dark:bg-zinc-900/40 rounded-lg border border-slate-100 dark:border-zinc-800/50 font-sans text-xs">
-        <label className="text-[10px] uppercase font-bold text-slate-400 dark:text-zinc-500 font-mono block mb-1">
+        <label data-crm-label="" className="text-[10px] uppercase font-bold text-slate-400 dark:text-zinc-500 font-mono block mb-1">
           {label}
         </label>
 
         {type === "select" ? (
-          <select
+          <select data-crm-field="control"
             defaultValue={value}
             onChange={(e) => handleFieldChange(field, e.target.value, isCustom)}
             className="w-full p-1.5 bg-white dark:bg-zinc-800 border border-slate-205 dark:border-zinc-700 rounded text-xs font-semibold text-slate-700 dark:text-zinc-200 focus:outline-none focus:border-blue-400"
@@ -104,14 +104,14 @@ export default function CompanyOverviewTab({
             ))}
           </select>
         ) : type === "textarea" ? (
-          <textarea
+          <textarea data-crm-field="multiline"
             key={`${String(field)}-${value}`}
             defaultValue={value}
             onBlur={(e) => handleFieldChange(field, e.target.value, isCustom)}
             className="w-full p-1.5 bg-white dark:bg-zinc-800 border border-slate-205 dark:border-zinc-700 rounded text-xs text-slate-700 dark:text-zinc-200 focus:outline-none focus:border-blue-400 min-h-[70px] resize-y"
           />
         ) : (
-          <input
+          <input data-crm-field="control"
             key={`${String(field)}-${value}`}
             type={type === "number" ? "number" : "text"}
             defaultValue={value}
@@ -124,19 +124,19 @@ export default function CompanyOverviewTab({
   };
 
   return (
-    <div className="company-overview grid grid-cols-1 lg:grid-cols-12 gap-5 font-sans">
+    <div data-crm-flow="" data-crm-screen="CompanyOverviewTab" data-crm-grid="layout" className="company-overview grid grid-cols-1 lg:grid-cols-12 gap-5 font-sans">
       
       {/* LEFT: Core Corporate Registry Details (7 columns) */}
-      <div className="lg:col-span-7 space-y-4">
-        <div className="company-section bg-white dark:bg-[#151515] p-5 rounded-xl border border-slate-100 dark:border-zinc-800/80 shadow-[0_1px_3px_rgba(0,0,0,0.02)] space-y-4">
+      <div data-crm-stack="" className="lg:col-span-7 space-y-4">
+        <div data-crm-stack="" data-crm-card="padded" className="company-section bg-white dark:bg-[#151515] p-5 rounded-xl border border-slate-100 dark:border-zinc-800/80 shadow-[0_1px_3px_rgba(0,0,0,0.02)] space-y-4">
           <div className="company-section-heading flex items-center gap-2 border-b border-slate-100 dark:border-zinc-800/80 pb-2.5">
             <Building className="w-4 h-4 text-[#0078D4]" />
-            <h4 className="text-xs font-bold uppercase text-slate-800 dark:text-zinc-200 tracking-wider">
+            <h4 data-crm-heading="section" className="text-xs font-bold uppercase text-slate-800 dark:text-zinc-200 tracking-wider">
               {t("Company Profile & Identity")}
             </h4>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+          <div data-crm-flow="" data-crm-grid="layout" className="grid grid-cols-1 md:grid-cols-2 gap-3">
             {renderFormField(t("Company Name"), "name", company.name)}
             {renderFormField(
               t("Account Status"),
@@ -195,15 +195,15 @@ export default function CompanyOverviewTab({
         </div>
 
         {/* Address and Tax Information Card */}
-        <div className="company-section bg-white dark:bg-[#151515] p-5 rounded-xl border border-slate-100 dark:border-zinc-800/80 shadow-[0_1px_3px_rgba(0,0,0,0.02)] space-y-4">
+        <div data-crm-stack="" data-crm-card="padded" className="company-section bg-white dark:bg-[#151515] p-5 rounded-xl border border-slate-100 dark:border-zinc-800/80 shadow-[0_1px_3px_rgba(0,0,0,0.02)] space-y-4">
           <div className="company-section-heading flex items-center gap-2 border-b border-slate-100 dark:border-zinc-800/80 pb-2.5">
             <MapPin className="w-4 h-4 text-[#0078D4]" />
-            <h4 className="text-xs font-bold uppercase text-slate-800 dark:text-zinc-200 tracking-wider">
+            <h4 data-crm-heading="section" className="text-xs font-bold uppercase text-slate-800 dark:text-zinc-200 tracking-wider">
               {t("Location & Billing Details")}
             </h4>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+          <div data-crm-flow="" data-crm-grid="layout" className="grid grid-cols-1 md:grid-cols-2 gap-3">
             {renderFormField(t("HQ City"), "billingCity", company.billingCity || "")}
             {renderFormField(t("District"), "billingDistrict", company.billingDistrict || "")}
             {renderFormField(t("Postal Code"), "billingPostalCode", company.billingPostalCode || "")}
@@ -218,13 +218,13 @@ export default function CompanyOverviewTab({
       </div>
 
       {/* RIGHT: Technical Operations & Lean profile (5 columns) */}
-      <div className="lg:col-span-5 space-y-4">
+      <div data-crm-stack="" className="lg:col-span-5 space-y-4">
         
         {/* Plant Attributes & Lean Profile Card */}
-        <div className="company-section bg-white dark:bg-[#151515] p-5 rounded-xl border border-slate-100 dark:border-zinc-800/80 shadow-[0_1px_3px_rgba(0,0,0,0.02)] space-y-4">
+        <div data-crm-stack="" data-crm-card="padded" className="company-section bg-white dark:bg-[#151515] p-5 rounded-xl border border-slate-100 dark:border-zinc-800/80 shadow-[0_1px_3px_rgba(0,0,0,0.02)] space-y-4">
           <div className="company-section-heading flex items-center gap-2 border-b border-slate-100 dark:border-zinc-800/80 pb-2.5">
             <TrendingUp className="w-4 h-4 text-emerald-500" />
-            <h4 className="text-xs font-bold uppercase text-slate-800 dark:text-zinc-200 tracking-wider">
+            <h4 data-crm-heading="section" className="text-xs font-bold uppercase text-slate-800 dark:text-zinc-200 tracking-wider">
               {t("Plant & Lean Production Profile")}
             </h4>
           </div>
@@ -273,17 +273,17 @@ export default function CompanyOverviewTab({
         {/* ISO Certification & Compliance Card (Item 2: "Sahip Olunan
             Belgeler") — artık her zaman düzenlenebilir bir onay kutusu
             listesi olarak gösteriliyor, ayrı bir "kalem" edit modu yok. */}
-        <div className="company-section bg-white dark:bg-[#151515] p-5 rounded-xl border border-slate-100 dark:border-zinc-800/80 shadow-[0_1px_3px_rgba(0,0,0,0.02)] space-y-3">
+        <div data-crm-card="padded" className="company-section bg-white dark:bg-[#151515] p-5 rounded-xl border border-slate-100 dark:border-zinc-800/80 shadow-[0_1px_3px_rgba(0,0,0,0.02)] space-y-3">
           <div className="company-section-heading flex items-center gap-2 border-b border-slate-100 dark:border-zinc-800/80 pb-2.5">
             <Shield className="w-4 h-4 text-blue-500" />
-            <h4 className="text-xs font-bold uppercase text-slate-800 dark:text-zinc-200 tracking-wider">
+            <h4 data-crm-heading="section" className="text-xs font-bold uppercase text-slate-800 dark:text-zinc-200 tracking-wider">
               {t("ISO Certification & Compliance")}
             </h4>
           </div>
 
           <div className="flex flex-wrap gap-2">
             {ISO_CERT_OPTIONS.map((opt) => (
-              <label
+              <label data-crm-label=""
                 key={opt}
                 className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg border text-xs font-semibold cursor-pointer transition-colors ${
                   (company.isoCertifications || []).includes(opt)
@@ -303,7 +303,7 @@ export default function CompanyOverviewTab({
           </div>
 
           {(company.isoCertifications || []).includes("Diğer") && (
-            <input
+            <input data-crm-field="control"
               type="text"
               key={`iso-other-${company.isoCertificationOther || ""}`}
               defaultValue={company.isoCertificationOther || ""}
@@ -315,10 +315,10 @@ export default function CompanyOverviewTab({
         </div>
 
         {/* Custom Fields Card */}
-        <div className="company-section bg-white dark:bg-[#151515] p-5 rounded-xl border border-slate-100 dark:border-zinc-800/80 shadow-[0_1px_3px_rgba(0,0,0,0.02)] space-y-4">
+        <div data-crm-stack="" data-crm-card="padded" className="company-section bg-white dark:bg-[#151515] p-5 rounded-xl border border-slate-100 dark:border-zinc-800/80 shadow-[0_1px_3px_rgba(0,0,0,0.02)] space-y-4">
           <div className="company-section-heading flex items-center gap-2 border-b border-slate-100 dark:border-zinc-800/80 pb-2.5">
             <Layers className="w-4 h-4 text-purple-500" />
-            <h4 className="text-xs font-bold uppercase text-slate-800 dark:text-zinc-200 tracking-wider">
+            <h4 data-crm-heading="section" className="text-xs font-bold uppercase text-slate-800 dark:text-zinc-200 tracking-wider">
               {t("Custom Corporate Fields")}
             </h4>
           </div>

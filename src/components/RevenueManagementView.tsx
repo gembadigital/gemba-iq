@@ -1669,13 +1669,13 @@ CRITICAL FORMATTING INSTRUCTIONS: Your response MUST be output as beautiful, pro
   };
 
   return (
-    <div className="space-y-6 text-slate-800 dark:text-zinc-100 font-sans" id="revenue-management-system-stage">
+    <div data-crm-stack="" data-crm-screen="RevenueManagementView" className="space-y-6 text-slate-800 dark:text-zinc-100 font-sans" id="revenue-management-system-stage">
       
       {/* HEADER SECTION */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-white dark:bg-[#151515] p-5 rounded-2xl border border-slate-200/60 dark:border-zinc-800 shadow-sm print:shadow-none relative overflow-hidden">
-        <div className="absolute top-0 left-0 right-0 h-1.5 bg-gradient-to-r from-emerald-500 via-[#0078D4] to-blue-500" />
-        <div className="space-y-1.5">
-          <h1 className="text-xl font-bold tracking-tight text-slate-900 dark:text-slate-100">
+      <div data-crm-card="padded" data-crm-header="" className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-white dark:bg-[#151515] p-5 rounded-2xl border border-slate-200/60 dark:border-zinc-800 shadow-sm print:shadow-none relative overflow-hidden">
+        <div data-crm-decoration="" className="absolute top-0 left-0 right-0 h-1.5 bg-gradient-to-r from-emerald-500 via-[#0078D4] to-blue-500" />
+        <div data-crm-header-copy="" className="space-y-1.5">
+          <h1 data-crm-heading="page" className="text-xl font-bold tracking-tight text-slate-900 dark:text-slate-100">
             {t("Revenue & Consultant Capacity Management")}
           </h1>
           <p className="text-xs text-slate-550 max-w-2xl leading-relaxed">
@@ -1684,10 +1684,10 @@ CRITICAL FORMATTING INSTRUCTIONS: Your response MUST be output as beautiful, pro
         </div>
 
         {/* Global Controls */}
-        <div className="flex flex-wrap items-center gap-2.5">
+        <div data-crm-header-actions="" className="flex flex-wrap items-center gap-2.5">
           <div className="flex items-center gap-2 bg-slate-50 dark:bg-[#1f1e1d] border border-slate-200 dark:border-zinc-800 p-1.5 px-3 rounded-lg">
             <div className="flex items-center gap-1.5 mr-2 pr-2 border-r border-[#EDEBE9] dark:border-[#323130]">
-              <label className="text-[10px] text-slate-500 font-bold uppercase select-none cursor-pointer flex items-center gap-1">
+              <label data-crm-label="" className="text-[10px] text-slate-500 font-bold uppercase select-none cursor-pointer flex items-center gap-1">
                 <input
                   type="checkbox"
                   checked={isRangeMode}
@@ -1701,7 +1701,7 @@ CRITICAL FORMATTING INSTRUCTIONS: Your response MUST be output as beautiful, pro
             {isRangeMode ? (
               <div className="flex items-center gap-2">
                 <span className="text-[10px] text-slate-400 font-mono">{t("From:")}</span>
-                <select
+                <select data-crm-field="control"
                   value={rangeStart}
                   onChange={(e) => setRangeStart(e.target.value)}
                   className="text-xs font-bold font-mono bg-transparent outline-none cursor-pointer border-none p-0 text-[#0078D4]"
@@ -1711,7 +1711,7 @@ CRITICAL FORMATTING INSTRUCTIONS: Your response MUST be output as beautiful, pro
                   ))}
                 </select>
                 <span className="text-[10px] text-slate-400 font-mono">{t("To:")}</span>
-                <select
+                <select data-crm-field="control"
                   value={rangeEnd}
                   onChange={(e) => {
                     if (e.target.value >= rangeStart) {
@@ -1728,7 +1728,7 @@ CRITICAL FORMATTING INSTRUCTIONS: Your response MUST be output as beautiful, pro
             ) : (
               <div className="flex items-center gap-1.5">
                 <span className="text-xs text-slate-500 font-mono font-bold">{t("Target Month:")}</span>
-                <select
+                <select data-crm-field="control"
                   value={selectedMonth}
                   onChange={(e) => setSelectedMonth(e.target.value)}
                   className="text-xs font-bold font-mono bg-transparent outline-none cursor-pointer border-none p-0 text-[#0078D4]"
@@ -1747,9 +1747,9 @@ CRITICAL FORMATTING INSTRUCTIONS: Your response MUST be output as beautiful, pro
           (where it was a small, easy-to-miss toggle) into its own
           full-width tab strip directly under the page header, matching
           the tab bar pattern used elsewhere in the app (e.g. Tasks). */}
-      <div className="flex items-center bg-white dark:bg-[#151515] p-1.5 rounded-xl border border-slate-200/60 dark:border-zinc-800 shadow-sm">
-        <div className="flex flex-wrap items-center gap-1.5 bg-slate-100 dark:bg-[#1f1e1d] p-1 rounded-lg w-full">
-          <button
+      <div data-crm-toolbar="" data-crm-card="surface" className="flex items-center bg-white dark:bg-[#151515] p-1.5 rounded-xl border border-slate-200/60 dark:border-zinc-800 shadow-sm">
+        <div data-crm-toolbar="" className="flex flex-wrap items-center gap-1.5 bg-slate-100 dark:bg-[#1f1e1d] p-1 rounded-lg w-full">
+          <button data-crm-button=""
             onClick={() => setActiveTab("dashboard")}
             className={`flex-1 min-w-[180px] px-4 py-2.5 text-[13px] font-bold rounded-md transition-all cursor-pointer flex items-center justify-center gap-2 ${
               activeTab === "dashboard"
@@ -1760,7 +1760,7 @@ CRITICAL FORMATTING INSTRUCTIONS: Your response MUST be output as beautiful, pro
             <LayoutDashboard className="w-4 h-4" />
             {t("📊 Executive Dashboard")}
           </button>
-          <button
+          <button data-crm-button=""
             onClick={() => setActiveTab("data")}
             className={`flex-1 min-w-[180px] px-4 py-2.5 text-[13px] font-bold rounded-md transition-all cursor-pointer flex items-center justify-center gap-2 ${
               activeTab === "data"
@@ -1776,14 +1776,14 @@ CRITICAL FORMATTING INSTRUCTIONS: Your response MUST be output as beautiful, pro
 
       {/* RENDER ACTIVE ROOT TAB */}
       {activeTab === "dashboard" ? (
-        <div className="space-y-6">
+        <div data-crm-stack="" className="space-y-6">
           
           {/* SECTION 11 - EXECUTIVE KPI CARDS */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+          <div data-crm-flow="" data-crm-grid="layout" className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
             
             {/* CARD 1: Total Revenue */}
-            <div className="bg-white dark:bg-[#151515] p-5 rounded-xl border border-slate-205/65 dark:border-zinc-800/80 shadow-xs relative overflow-hidden">
-              <span className="text-[10px] font-black uppercase text-slate-400 tracking-wider font-mono">
+            <div data-crm-card="padded" className="bg-white dark:bg-[#151515] p-5 rounded-xl border border-slate-205/65 dark:border-zinc-800/80 shadow-xs relative overflow-hidden">
+              <span data-crm-caption="" className="text-[10px] font-black uppercase text-slate-400 tracking-wider font-mono">
                 {t("Monthly Revenues")}
               </span>
               <div className="flex items-baseline gap-1.5 mt-2.5">
@@ -1797,8 +1797,8 @@ CRITICAL FORMATTING INSTRUCTIONS: Your response MUST be output as beautiful, pro
             </div>
 
             {/* CARD 2: Man-Days and Utilization */}
-            <div className="bg-white dark:bg-[#151515] p-5 rounded-xl border border-slate-205/65 dark:border-zinc-800/80 shadow-xs relative overflow-hidden">
-              <span className="text-[10px] font-black uppercase text-slate-400 tracking-wider font-mono">
+            <div data-crm-card="padded" className="bg-white dark:bg-[#151515] p-5 rounded-xl border border-slate-205/65 dark:border-zinc-800/80 shadow-xs relative overflow-hidden">
+              <span data-crm-caption="" className="text-[10px] font-black uppercase text-slate-400 tracking-wider font-mono">
                 {t("Consultant Utilization")}
               </span>
               <div className="flex items-baseline gap-1.5 mt-2.5">
@@ -1815,8 +1815,8 @@ CRITICAL FORMATTING INSTRUCTIONS: Your response MUST be output as beautiful, pro
             </div>
 
             {/* CARD 3: Average Daily Sales Rate & Gross Margin */}
-            <div className="bg-white dark:bg-[#151515] p-5 rounded-xl border border-slate-205/65 dark:border-zinc-800/80 shadow-xs relative overflow-hidden">
-              <span className="text-[10px] font-black uppercase text-slate-400 tracking-wider font-mono">
+            <div data-crm-card="padded" className="bg-white dark:bg-[#151515] p-5 rounded-xl border border-slate-205/65 dark:border-zinc-800/80 shadow-xs relative overflow-hidden">
+              <span data-crm-caption="" className="text-[10px] font-black uppercase text-slate-400 tracking-wider font-mono">
                 {t("Gross Margin Rate")}
               </span>
               <div className="flex items-baseline gap-1.5 mt-2.5">
@@ -1849,13 +1849,13 @@ CRITICAL FORMATTING INSTRUCTIONS: Your response MUST be output as beautiful, pro
           </div>
 
           {/* SECOND CONTAINER CARD - HEATMAP & WORKLOAD SPLIT */}
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+          <div data-crm-flow="" data-crm-grid="layout" className="grid grid-cols-1 lg:grid-cols-12 gap-6">
 
             {/* SECTION 7 - RESOURCE WORKLOAD HEATMAP */}
-            <div className="lg:col-span-8 bg-white dark:bg-[#151515] p-6 rounded-xl border border-slate-200/50 dark:border-zinc-800 shadow-sm relative">
+            <div data-crm-card="padded" className="lg:col-span-8 bg-white dark:bg-[#151515] p-6 rounded-xl border border-slate-200/50 dark:border-zinc-800 shadow-sm relative">
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 mb-5">
                 <div>
-                  <h3 className="text-sm font-extrabold text-slate-850 dark:text-zinc-100 flex items-center gap-1.5">
+                  <h3 data-crm-heading="section" className="text-sm font-extrabold text-slate-850 dark:text-zinc-100 flex items-center gap-1.5">
                     <Calendar className="w-4.5 h-4.5 text-[#0078D4]" />
                     <span>{t("Resource Workload & Capacity Utilization Chart")}</span>
                   </h3>
@@ -1933,10 +1933,10 @@ CRITICAL FORMATTING INSTRUCTIONS: Your response MUST be output as beautiful, pro
             </div>
 
             {/* SECTION 10 - FORECAST MODELS PLANNER */}
-            <div className="lg:col-span-4 bg-white dark:bg-[#151515] p-6 rounded-xl border border-slate-200/50 dark:border-zinc-800 shadow-sm flex flex-col justify-between">
+            <div data-crm-card="padded" className="lg:col-span-4 bg-white dark:bg-[#151515] p-6 rounded-xl border border-slate-200/50 dark:border-zinc-800 shadow-sm flex flex-col justify-between">
               <div>
                 <div className="flex items-center justify-between mb-4">
-                  <h3 className="text-sm font-extrabold text-slate-800 dark:text-zinc-100 flex items-center gap-1.5">
+                  <h3 data-crm-heading="section" className="text-sm font-extrabold text-slate-800 dark:text-zinc-100 flex items-center gap-1.5">
                     <TrendingUp className="w-4.5 h-4.5 text-rose-500" />
                     <span>{t("6-Month Capacity & Sales Forecast")}</span>
                   </h3>
@@ -1975,8 +1975,8 @@ CRITICAL FORMATTING INSTRUCTIONS: Your response MUST be output as beautiful, pro
                 </div>
 
                 <div className="mt-4 space-y-2">
-                  <span className="text-[10px] font-black uppercase text-slate-400 tracking-wider font-mono">{t("Forecast Breakdowns:")}</span>
-                  <div className="grid grid-cols-3 gap-2">
+                  <span data-crm-caption="" className="text-[10px] font-black uppercase text-slate-400 tracking-wider font-mono">{t("Forecast Breakdowns:")}</span>
+                  <div data-crm-flow="" data-crm-grid="layout" className="grid grid-cols-3 gap-2">
                     {forecasts.slice(0, 3).map(f => (
                       <div key={f.month} className="p-2 bg-slate-50 dark:bg-zinc-900 border border-slate-100 rounded-md text-center">
                         <span className="block text-[10px] font-bold text-[#0078D4] font-mono">{f.month}</span>
@@ -1997,13 +1997,13 @@ CRITICAL FORMATTING INSTRUCTIONS: Your response MUST be output as beautiful, pro
           </div>
 
           {/* RATING PANELS CONTAINER: PROFITABILITY BREAKDOWN */}
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+          <div data-crm-flow="" data-crm-grid="layout" className="grid grid-cols-1 lg:grid-cols-12 gap-6">
             
             {/* SECTION 8 - CUSTOMER PROFITABILITY */}
-            <div className="lg:col-span-6 bg-white dark:bg-[#151515] p-6 rounded-xl border border-slate-200/50 dark:border-zinc-800 shadow-sm relative">
+            <div data-crm-card="padded" className="lg:col-span-6 bg-white dark:bg-[#151515] p-6 rounded-xl border border-slate-200/50 dark:border-zinc-800 shadow-sm relative">
               <div className="flex items-center justify-between mb-4">
                 <div>
-                  <h3 className="text-sm font-extrabold text-slate-850 dark:text-zinc-100 flex items-center gap-1.5">
+                  <h3 data-crm-heading="section" className="text-sm font-extrabold text-slate-850 dark:text-zinc-100 flex items-center gap-1.5">
                     <Building className="w-4.5 h-4.5 text-emerald-500" />
                     <span>{t("Customer Sales & Gross Profitability Rank")}</span>
                   </h3>
@@ -2011,8 +2011,8 @@ CRITICAL FORMATTING INSTRUCTIONS: Your response MUST be output as beautiful, pro
                 </div>
               </div>
 
-              <div className="overflow-x-auto">
-                <table className="w-full text-left text-xs font-sans">
+              <div data-crm-scroll="horizontal" className="overflow-x-auto">
+                <table data-crm-table="" className="w-full text-left text-xs font-sans">
                   <thead>
                     <tr className="border-b border-slate-100 dark:border-zinc-800 font-bold text-slate-405 text-[10px] uppercase tracking-wider">
                       <th className="py-2.5 px-1">{t("Customer Client")}</th>
@@ -2052,10 +2052,10 @@ CRITICAL FORMATTING INSTRUCTIONS: Your response MUST be output as beautiful, pro
             </div>
 
             {/* SECTION 9 - PLANNED VS REALIZED CAPACITY + SERVICE LINE DETAIL */}
-            <div className="lg:col-span-6 bg-white dark:bg-[#151515] p-6 rounded-xl border border-slate-200/50 dark:border-zinc-800 shadow-sm relative">
+            <div data-crm-card="padded" className="lg:col-span-6 bg-white dark:bg-[#151515] p-6 rounded-xl border border-slate-200/50 dark:border-zinc-800 shadow-sm relative">
               <div className="flex items-center justify-between mb-4">
                 <div>
-                  <h3 className="text-sm font-extrabold text-slate-850 dark:text-zinc-100 flex items-center gap-1.5">
+                  <h3 data-crm-heading="section" className="text-sm font-extrabold text-slate-850 dark:text-zinc-100 flex items-center gap-1.5">
                     <Layers className="w-4.5 h-4.5 text-sky-500" />
                     <span>{t("Methodology / Service Line Margins Share")}</span>
                   </h3>
@@ -2064,7 +2064,7 @@ CRITICAL FORMATTING INSTRUCTIONS: Your response MUST be output as beautiful, pro
               </div>
 
               {capacitySummary.totalPlanned > 0 || capacitySummary.totalRealized > 0 ? (
-                <div className="grid grid-cols-1 md:grid-cols-12 gap-4 items-center">
+                <div data-crm-flow="" data-crm-grid="layout" className="grid grid-cols-1 md:grid-cols-12 gap-4 items-center">
                   <div className="md:col-span-6 h-52 font-sans text-xs">
                     <ResponsiveContainer width="100%" height="100%">
                       <BarChart
@@ -2129,7 +2129,7 @@ CRITICAL FORMATTING INSTRUCTIONS: Your response MUST be output as beautiful, pro
 
               {serviceProfitability.length > 0 && (
                 <div className="mt-5 pt-4 border-t border-slate-100 dark:border-zinc-800 space-y-2.5">
-                  <span className="text-[10px] uppercase font-bold text-slate-400 font-mono tracking-widest block">
+                  <span data-crm-caption="" className="text-[10px] uppercase font-bold text-slate-400 font-mono tracking-widest block">
                     {t("Service Line Detail (Revenue & Margin)")}
                   </span>
                   {serviceProfitability.map((sp, idx) => {
@@ -2178,10 +2178,10 @@ CRITICAL FORMATTING INSTRUCTIONS: Your response MUST be output as beautiful, pro
           </div>
 
           {/* SECTION 9b - PLANNED VS REALIZED MAN-DAYS CAPACITY CHART */}
-          <div className="bg-white dark:bg-[#151515] p-6 rounded-xl border border-slate-200/50 dark:border-zinc-800 shadow-sm">
+          <div data-crm-card="padded" className="bg-white dark:bg-[#151515] p-6 rounded-xl border border-slate-200/50 dark:border-zinc-800 shadow-sm">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-4">
               <div>
-                <h3 className="text-sm font-extrabold text-slate-850 dark:text-zinc-100 flex items-center gap-1.5">
+                <h3 data-crm-heading="section" className="text-sm font-extrabold text-slate-850 dark:text-zinc-100 flex items-center gap-1.5">
                   <BarChart2 className="w-4.5 h-4.5 text-sky-500" />
                   <span>{t("Planned vs. Realized Man-Days")}</span>
                 </h3>
@@ -2189,7 +2189,7 @@ CRITICAL FORMATTING INSTRUCTIONS: Your response MUST be output as beautiful, pro
                   {t("Planned = allocated assignment days for the selected month(s). Realized = delivered days actually invoiced. The gap is lost capacity — staffed time that never turned into billed work.")}
                 </span>
               </div>
-              <label className="flex items-center gap-1.5 text-[11px] font-bold text-slate-600 dark:text-zinc-300 select-none cursor-pointer bg-slate-50 dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 rounded-lg px-2.5 py-1.5 whitespace-nowrap">
+              <label data-crm-label className="flex items-center gap-1.5 text-[11px] font-bold text-slate-600 dark:text-zinc-300 select-none cursor-pointer bg-slate-50 dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 rounded-lg px-2.5 py-1.5 whitespace-nowrap">
                 <input
                   type="checkbox"
                   checked={showYearEndForecast}
@@ -2264,7 +2264,7 @@ CRITICAL FORMATTING INSTRUCTIONS: Your response MUST be output as beautiful, pro
                     {t("Months after the selected period are projected from ongoing/staffed project assignments only — no realized or lost-capacity figures exist for them yet.")}
                   </p>
                 )}
-                <div className="grid grid-cols-3 gap-3 mt-4 pt-4 border-t border-slate-100 dark:border-zinc-800">
+                <div data-crm-grid="layout" className="grid grid-cols-3 gap-3 mt-4 pt-4 border-t border-slate-100 dark:border-zinc-800">
                   <div className="text-center">
                     <div className="text-[10px] uppercase font-bold text-slate-400 font-mono">{t("Total Planned")}</div>
                     <div className="text-lg font-extrabold text-emerald-600 dark:text-emerald-400 font-mono">
@@ -2293,14 +2293,14 @@ CRITICAL FORMATTING INSTRUCTIONS: Your response MUST be output as beautiful, pro
           </div>
 
           {/* CONSULTANTS MARGIN RATES & STAFF SUMMARY */}
-          <div className="bg-white dark:bg-[#151515] p-6 rounded-xl border border-slate-205/65 dark:border-zinc-800/80 shadow-sm">
-            <h3 className="text-sm font-extrabold text-slate-850 dark:text-zinc-100 mb-4 flex items-center gap-1.5">
+          <div data-crm-card="padded" className="bg-white dark:bg-[#151515] p-6 rounded-xl border border-slate-205/65 dark:border-zinc-800/80 shadow-sm">
+            <h3 data-crm-heading="section" className="text-sm font-extrabold text-slate-850 dark:text-zinc-100 mb-4 flex items-center gap-1.5">
               <Users className="w-4.5 h-4.5 text-[#0078D4]" />
               <span>{t("Consultant Financial Performance & Direct Profit Margin")}</span>
             </h3>
             
-            <div className="overflow-x-auto">
-              <table className="w-full text-left text-xs font-sans">
+            <div data-crm-scroll="horizontal" className="overflow-x-auto">
+              <table data-crm-table="" className="w-full text-left text-xs font-sans">
                 <thead>
                   <tr className="border-b border-slate-150 dark:border-zinc-800 font-bold text-slate-400 text-[10px] uppercase tracking-wider">
                     <th className="py-3 px-3">{t("Consultant")}</th>
@@ -2317,7 +2317,7 @@ CRITICAL FORMATTING INSTRUCTIONS: Your response MUST be output as beautiful, pro
                     <tr key={cp.id} className="hover:bg-slate-55/35 dark:hover:bg-zinc-855/35">
                       <td className="py-3.5 px-3">
                         <div className="flex items-center gap-2">
-                          <div className="w-8 h-8 rounded-full bg-slate-100 dark:bg-zinc-850 text-slate-700 dark:text-zinc-300 flex items-center justify-center font-bold text-xs">
+                          <div data-crm-icon-box="" className="w-8 h-8 rounded-full bg-slate-100 dark:bg-zinc-850 text-slate-700 dark:text-zinc-300 flex items-center justify-center font-bold text-xs">
                             {cp.name.charAt(0)}
                           </div>
                           <div>
@@ -2362,7 +2362,7 @@ CRITICAL FORMATTING INSTRUCTIONS: Your response MUST be output as beautiful, pro
             
             <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
               <div className="space-y-1">
-                <h3 className="text-base font-black text-slate-900 dark:text-slate-100 flex items-center gap-1.5">
+                <h3 data-crm-heading="section" className="text-base font-black text-slate-900 dark:text-slate-100 flex items-center gap-1.5">
                   <Sparkles className="w-5 h-5 text-amber-500 animate-pulse" />
                   <span>{t("Gemini Revenue and Resource Optimization Assessment")}</span>
                 </h3>
@@ -2372,7 +2372,7 @@ CRITICAL FORMATTING INSTRUCTIONS: Your response MUST be output as beautiful, pro
               </div>
 
               <div className="flex items-center gap-2">
-                <button
+                <button data-crm-button=""
                   type="button"
                   onClick={triggerAiManagementReview}
                   disabled={isAiLoading}
@@ -2385,10 +2385,10 @@ CRITICAL FORMATTING INSTRUCTIONS: Your response MUST be output as beautiful, pro
             </div>
 
             {/* Render local heuristics warning insights side by side with AI output */}
-            <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+            <div data-crm-flow="" data-crm-grid="layout" className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
               
               <div className="lg:col-span-4 space-y-3.5">
-                <span className="text-[10px] uppercase font-bold text-slate-400 font-mono tracking-widest block">{t("System Diagnostics Logs:")}</span>
+                <span data-crm-caption="" className="text-[10px] uppercase font-bold text-slate-400 font-mono tracking-widest block">{t("System Diagnostics Logs:")}</span>
                 
                 {localInsights.map((li, idx) => (
                   <div key={idx} className={`p-4 rounded-xl border flex items-start gap-2.5 text-xs leading-relaxed ${
@@ -2404,11 +2404,11 @@ CRITICAL FORMATTING INSTRUCTIONS: Your response MUST be output as beautiful, pro
                 ))}
               </div>
 
-              <div className="lg:col-span-8 bg-white dark:bg-[#151515] p-5 rounded-xl border border-slate-200 dark:border-zinc-800 shadow-xs min-h-[220px] max-h-[480px] overflow-y-auto">
+              <div data-crm-card="padded" className="lg:col-span-8 bg-white dark:bg-[#151515] p-5 rounded-xl border border-slate-200 dark:border-zinc-800 shadow-xs min-h-[220px] max-h-[480px] overflow-y-auto">
                 <span className="text-[10px] font-black uppercase text-[#0078D4] tracking-wider font-mono block mb-3.5">{t("AI Director Executive Performance Review:")}</span>
                 
                 {aiCoachingOutput ? (
-                  <div 
+                  <div data-crm-document="true"
                     className="text-sm leading-relaxed text-slate-900 dark:text-zinc-100 style-html-prose"
                     dangerouslySetInnerHTML={{ __html: aiCoachingOutput }}
                   />
@@ -2427,14 +2427,14 @@ CRITICAL FORMATTING INSTRUCTIONS: Your response MUST be output as beautiful, pro
           </div>
 
           {/* SECTION 13 - EXPORTS CONTROLS BAR */}
-          <div className="bg-white dark:bg-[#151515] hover:bg-slate-50/50 p-5 rounded-2xl border border-slate-200/50 dark:border-zinc-805/85 shadow-xs flex flex-wrap items-center justify-between gap-4">
+          <div data-crm-card="padded" className="bg-white dark:bg-[#151515] hover:bg-slate-50/50 p-5 rounded-2xl border border-slate-200/50 dark:border-zinc-805/85 shadow-xs flex flex-wrap items-center justify-between gap-4">
             <div>
-              <h4 className="text-xs font-black text-slate-850 dark:text-slate-150 uppercase tracking-widest font-mono">{t("Preserve Filters & Export Options")}</h4>
+              <h4 data-crm-heading="section" className="text-xs font-black text-slate-850 dark:text-slate-150 uppercase tracking-widest font-mono">{t("Preserve Filters & Export Options")}</h4>
               <p className="text-[11px] text-slate-400 mt-0.5">{t("Extract raw tabular comma-delimited logs or produce a printable executive review layout.")}</p>
             </div>
 
             <div className="flex items-center gap-2.5">
-              <button
+              <button data-crm-button=""
                 type="button"
                 onClick={() => handleExportCSV("revenue")}
                 className="px-4 py-2 text-xs font-bold bg-[#EDEBE9] hover:bg-[#DEDCDA] dark:bg-zinc-800 text-slate-800 dark:text-zinc-200 rounded-lg flex items-center gap-1.5 transition-all cursor-pointer"
@@ -2443,7 +2443,7 @@ CRITICAL FORMATTING INSTRUCTIONS: Your response MUST be output as beautiful, pro
                 <span>{t("Export Revenue Sheet (.CSV)")}</span>
               </button>
 
-              <button
+              <button data-crm-button=""
                 type="button"
                 onClick={() => handleExportCSV("capacity")}
                 className="px-4 py-2 text-xs font-bold bg-[#EDEBE9] hover:bg-[#DEDCDA] dark:bg-zinc-800 text-slate-800 dark:text-zinc-200 rounded-lg flex items-center gap-1.5 transition-all cursor-pointer"
@@ -2452,7 +2452,7 @@ CRITICAL FORMATTING INSTRUCTIONS: Your response MUST be output as beautiful, pro
                 <span>{t("Export Capacity Report (.CSV)")}</span>
               </button>
 
-              <button
+              <button data-crm-button=""
                 type="button"
                 onClick={handleTriggerPrint}
                 className="px-4 py-2 text-xs font-bold bg-slate-900 hover:bg-black dark:bg-[#2d2c2b] text-white rounded-lg flex items-center gap-1.5 transition-all cursor-pointer"
@@ -2466,16 +2466,16 @@ CRITICAL FORMATTING INSTRUCTIONS: Your response MUST be output as beautiful, pro
         </div>
       ) : (
         // TAB: DATA INPUTS & OPERATIONS DECK
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+        <div data-crm-flow="" data-crm-grid="layout" className="grid grid-cols-1 lg:grid-cols-12 gap-6">
           
           {/* Sub-menu panel in data management */}
-          <div className="lg:col-span-3 bg-white dark:bg-[#151515] p-5 rounded-xl border border-slate-200/55 dark:border-zinc-800/80 shadow-xs h-fit space-y-4">
-            <h3 className="text-[13px] font-black uppercase text-slate-400 dark:text-zinc-500 tracking-wider font-mono">
+          <div data-crm-stack="" data-crm-card="padded" className="lg:col-span-3 bg-white dark:bg-[#151515] p-5 rounded-xl border border-slate-200/55 dark:border-zinc-800/80 shadow-xs h-fit space-y-4">
+            <h3 data-crm-heading="section" className="text-[13px] font-black uppercase text-slate-400 dark:text-zinc-500 tracking-wider font-mono">
               {t("DATA REPOSITORIES")}
             </h3>
             
             <nav className="space-y-1.5">
-              <button
+              <button data-crm-button=""
                 onClick={() => setActiveDataSubTab("consultants")}
                 className={`w-full text-left px-3.5 py-2.5 rounded-lg text-[12px] font-bold transition-all flex items-center justify-between ${
                   activeDataSubTab === "consultants"
@@ -2492,7 +2492,7 @@ CRITICAL FORMATTING INSTRUCTIONS: Your response MUST be output as beautiful, pro
                 </span>
               </button>
 
-              <button
+              <button data-crm-button=""
                 onClick={() => setActiveDataSubTab("capacity")}
                 className={`w-full text-left px-3.5 py-2.5 rounded-lg text-[12px] font-bold transition-all flex items-center justify-between ${
                   activeDataSubTab === "capacity"
@@ -2509,7 +2509,7 @@ CRITICAL FORMATTING INSTRUCTIONS: Your response MUST be output as beautiful, pro
                 </span>
               </button>
 
-              <button
+              <button data-crm-button=""
                 onClick={() => setActiveDataSubTab("assignments")}
                 className={`w-full text-left px-3.5 py-2.5 rounded-lg text-[12px] font-bold transition-all flex items-center justify-between ${
                   activeDataSubTab === "assignments"
@@ -2526,7 +2526,7 @@ CRITICAL FORMATTING INSTRUCTIONS: Your response MUST be output as beautiful, pro
                 </span>
               </button>
 
-              <button
+              <button data-crm-button=""
                 onClick={() => setActiveDataSubTab("invoices")}
                 className={`w-full text-left px-3.5 py-2.5 rounded-lg text-[12px] font-bold transition-all flex items-center justify-between ${
                   activeDataSubTab === "invoices"
@@ -2545,7 +2545,7 @@ CRITICAL FORMATTING INSTRUCTIONS: Your response MUST be output as beautiful, pro
             </nav>
             
             <div className="p-3.5 bg-slate-50 dark:bg-zinc-900/40 rounded-lg space-y-1 border border-slate-100 dark:border-zinc-800 text-[11px] leading-snug">
-              <span className="text-[10px] uppercase font-bold text-slate-450 dark:text-zinc-500 font-mono block">
+              <span data-crm-caption="" className="text-[10px] uppercase font-bold text-slate-450 dark:text-zinc-500 font-mono block">
                 {t("DATA INTEGRITY CHECK:")}
               </span>
               <p className="text-slate-500">
@@ -2555,21 +2555,21 @@ CRITICAL FORMATTING INSTRUCTIONS: Your response MUST be output as beautiful, pro
           </div>
 
           {/* Core content block representing the sub-menu tables */}
-          <div className="lg:col-span-9 bg-white dark:bg-[#151515] p-6 rounded-xl border border-slate-200/50 dark:border-zinc-800 shadow-sm relative min-h-[500px] flex flex-col justify-between">
+          <div data-crm-card="padded" className="lg:col-span-9 bg-white dark:bg-[#151515] p-6 rounded-xl border border-slate-200/50 dark:border-zinc-800 shadow-sm relative min-h-[500px] flex flex-col justify-between">
             
             {/* SUB-TAB 1: CONSULTANTS MASTER LIST */}
             {activeDataSubTab === "consultants" && (
-              <div className="space-y-4">
+              <div data-crm-stack="" className="space-y-4">
                 <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 border-b border-slate-100 dark:border-zinc-800/80 pb-4">
                   <div>
-                    <h2 className="text-sm font-extrabold text-slate-900 dark:text-slate-100">
+                    <h2 data-crm-heading="section" className="text-sm font-extrabold text-slate-900 dark:text-slate-100">
                       {t("Consultant Master Registry")}
                     </h2>
                     <p className="text-xs text-slate-500 mt-0.5">
                       {t("Define corporate daily cost parameters and commercial billing rates.")}
                     </p>
                   </div>
-                  <button
+                  <button data-crm-button=""
                     onClick={() => {
                       setEditingConsultant(null);
                       setConsultantForm({
@@ -2592,14 +2592,14 @@ CRITICAL FORMATTING INSTRUCTIONS: Your response MUST be output as beautiful, pro
 
                 {/* CONSULTANT DOCK FORM */}
                 {showConsultantForm && (
-                  <form onSubmit={handleSaveConsultant} className="p-4 bg-slate-50 dark:bg-zinc-900 rounded-xl space-y-4 border border-slate-150 dark:border-zinc-800">
-                    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+                  <form data-crm-stack="" onSubmit={handleSaveConsultant} className="p-4 bg-slate-50 dark:bg-zinc-900 rounded-xl space-y-4 border border-slate-150 dark:border-zinc-800">
+                    <div data-crm-flow="" data-crm-grid="form" className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
                       
                       <div className="space-y-1">
-                        <label className="text-[10px] uppercase font-bold text-slate-400 tracking-wider">
+                        <label data-crm-label="" className="text-[10px] uppercase font-bold text-slate-400 tracking-wider">
                           {t("Full Name")}
                         </label>
-                        <input
+                        <input data-crm-field="control"
                           type="text"
                           required
                           value={consultantForm.name}
@@ -2610,10 +2610,10 @@ CRITICAL FORMATTING INSTRUCTIONS: Your response MUST be output as beautiful, pro
                       </div>
 
                       <div className="space-y-1">
-                        <label className="text-[10px] uppercase font-bold text-slate-400 tracking-wider">
+                        <label data-crm-label="" className="text-[10px] uppercase font-bold text-slate-400 tracking-wider">
                           {t("Title/Position")}
                         </label>
-                        <input
+                        <input data-crm-field="control"
                           type="text"
                           required
                           value={consultantForm.title}
@@ -2624,10 +2624,10 @@ CRITICAL FORMATTING INSTRUCTIONS: Your response MUST be output as beautiful, pro
                       </div>
 
                       <div className="space-y-1">
-                        <label className="text-[10px] uppercase font-bold text-slate-400 tracking-wider">
+                        <label data-crm-label="" className="text-[10px] uppercase font-bold text-slate-400 tracking-wider">
                           {t("Business Unit")}
                         </label>
-                        <select
+                        <select data-crm-field="control"
                           value={consultantForm.department}
                           onChange={(e) => setConsultantForm({ ...consultantForm, department: e.target.value })}
                           className="w-full px-3 py-2 text-xs rounded bg-white dark:bg-zinc-850 border border-slate-200 dark:border-zinc-800 focus:outline-[#0078D4]"
@@ -2640,10 +2640,10 @@ CRITICAL FORMATTING INSTRUCTIONS: Your response MUST be output as beautiful, pro
                       </div>
 
                       <div className="space-y-1 font-sans">
-                        <label className="text-[10px] uppercase font-bold text-slate-400 tracking-wider">
+                        <label data-crm-label="" className="text-[10px] uppercase font-bold text-slate-400 tracking-wider">
                           {t("Daily Internal Cost (TL)")}
                         </label>
-                        <input
+                        <input data-crm-field="control"
                           type="number"
                           value={consultantForm.dailyCost || ""}
                           onChange={(e) => {
@@ -2662,10 +2662,10 @@ CRITICAL FORMATTING INSTRUCTIONS: Your response MUST be output as beautiful, pro
                       </div>
 
                       <div className="space-y-1 font-sans">
-                        <label className="text-[10px] uppercase font-bold text-slate-400 tracking-wider">
+                        <label data-crm-label="" className="text-[10px] uppercase font-bold text-slate-400 tracking-wider">
                           {t("Daily Standard Sales Rate (TL)")}
                         </label>
-                        <input
+                        <input data-crm-field="control"
                           type="number"
                           value={consultantForm.dailySalesRate || ""}
                           onChange={(e) => {
@@ -2697,10 +2697,10 @@ CRITICAL FORMATTING INSTRUCTIONS: Your response MUST be output as beautiful, pro
                       </div>
 
                       <div className="space-y-1 font-sans">
-                        <label className="text-[10px] uppercase font-bold text-slate-400 tracking-wider">
+                        <label data-crm-label="" className="text-[10px] uppercase font-bold text-slate-400 tracking-wider">
                           {t("Cost Ratio (%)")}
                         </label>
-                        <input
+                        <input data-crm-field="control"
                           type="number"
                           value={consultantForm.internalCostRatio !== undefined ? consultantForm.internalCostRatio : ""}
                           onChange={(e) => {
@@ -2719,10 +2719,10 @@ CRITICAL FORMATTING INSTRUCTIONS: Your response MUST be output as beautiful, pro
                       </div>
 
                       <div className="space-y-1">
-                        <label className="text-[10px] uppercase font-bold text-slate-400 tracking-wider">
+                        <label data-crm-label="" className="text-[10px] uppercase font-bold text-slate-400 tracking-wider">
                           {t("Employment Typology")}
                         </label>
-                        <select
+                        <select data-crm-field="control"
                           value={consultantForm.employmentType}
                           onChange={(e) => setConsultantForm({ ...consultantForm, employmentType: e.target.value as any })}
                           className="w-full px-3 py-2 text-xs rounded bg-white dark:bg-zinc-850 border border-slate-200 dark:border-zinc-800 focus:outline-[#0078D4]"
@@ -2736,14 +2736,14 @@ CRITICAL FORMATTING INSTRUCTIONS: Your response MUST be output as beautiful, pro
                     </div>
 
                     <div className="flex justify-end gap-2 pt-2 border-t border-slate-100 dark:border-zinc-800">
-                      <button
+                      <button data-crm-button=""
                         type="button"
                         onClick={() => setShowConsultantForm(false)}
                         className="px-3.5 py-1.5 border border-slate-200 text-slate-500 rounded text-xs"
                       >
                         {t("Cancel")}
                       </button>
-                      <button
+                      <button data-crm-button=""
                         type="submit"
                         className="px-4 py-1.5 bg-[#0078D4] hover:bg-[#005a9e] text-white rounded text-xs font-bold"
                       >
@@ -2754,8 +2754,8 @@ CRITICAL FORMATTING INSTRUCTIONS: Your response MUST be output as beautiful, pro
                   </form>
                 )}
 
-                <div className="overflow-x-auto w-full border border-slate-150 dark:border-zinc-800 rounded-xl">
-                  <table className="w-full text-left text-xs font-sans min-w-[700px]">
+                <div data-crm-scroll="horizontal" className="overflow-x-auto w-full border border-slate-150 dark:border-zinc-800 rounded-xl">
+                  <table data-crm-table="" className="w-full text-left text-xs font-sans min-w-[700px]">
                     <thead>
                       <tr className="bg-slate-50 dark:bg-zinc-900 border-b border-slate-150 dark:border-zinc-800 font-bold text-slate-400 text-[10px] uppercase tracking-wider">
                         <th className="py-2.5 px-3">{t("Name")}</th>
@@ -2789,7 +2789,7 @@ CRITICAL FORMATTING INSTRUCTIONS: Your response MUST be output as beautiful, pro
                             </span>
                           </td>
                           <td className="py-3 text-right space-x-1 px-3">
-                            <button
+                            <button data-crm-button=""
                               onClick={() => handleEditConsultant(c)}
                               className="p-1 text-slate-400 hover:text-sky-500 rounded inline-block cursor-pointer"
                               title={t("Edit")}
@@ -2797,7 +2797,7 @@ CRITICAL FORMATTING INSTRUCTIONS: Your response MUST be output as beautiful, pro
                             >
                               <Edit className="w-4 h-4" />
                             </button>
-                            <button
+                            <button data-crm-button=""
                               onClick={() => toggleConsultantActive(c.id)}
                               className="p-1 px-2 text-[10px] font-bold bg-slate-100 hover:bg-slate-200 dark:bg-zinc-800 dark:hover:bg-zinc-700 rounded border border-slate-200 dark:border-zinc-700 cursor-pointer inline-block"
                             >
@@ -2814,9 +2814,9 @@ CRITICAL FORMATTING INSTRUCTIONS: Your response MUST be output as beautiful, pro
 
             {/* SUB-TAB 2: CAPACITY ADJUSTMENTS (Section 2) */}
             {activeDataSubTab === "capacity" && (
-              <div className="space-y-4">
+              <div data-crm-stack="" className="space-y-4">
                 <div className="border-b border-slate-100 dark:border-zinc-800 pb-3">
-                  <h2 className="text-sm font-extrabold text-slate-900 dark:text-slate-100">
+                  <h2 data-crm-heading="section" className="text-sm font-extrabold text-slate-900 dark:text-slate-100">
                     {t("Consultant Capacity Calibrations ({month})").replace("{month}", selectedMonth)}
                   </h2>
                   <p className="text-xs text-slate-500 mt-0.5">
@@ -2824,8 +2824,8 @@ CRITICAL FORMATTING INSTRUCTIONS: Your response MUST be output as beautiful, pro
                   </p>
                 </div>
 
-                <div className="overflow-x-auto w-full border border-slate-150 dark:border-zinc-800 rounded-xl">
-                  <table className="w-full text-left text-xs font-sans min-w-[600px]">
+                <div data-crm-scroll="horizontal" className="overflow-x-auto w-full border border-slate-150 dark:border-zinc-800 rounded-xl">
+                  <table data-crm-table="" className="w-full text-left text-xs font-sans min-w-[600px]">
                     <thead>
                       <tr className="bg-slate-50 dark:bg-zinc-900 border-b border-slate-150 dark:border-zinc-800 font-bold text-slate-400 text-[10px] uppercase">
                         <th className="py-2.5 px-3">{t("Consultant Name")}</th>
@@ -2872,7 +2872,7 @@ CRITICAL FORMATTING INSTRUCTIONS: Your response MUST be output as beautiful, pro
                           <tr key={cons.id} className="hover:bg-slate-50/50">
                             <td className="py-3 px-3 font-bold">{cons.name}</td>
                             <td className="py-3 text-center">
-                              <input
+                              <input data-crm-field="control"
                                 type="number"
                                 step="0.5"
                                 min="0"
@@ -2898,17 +2898,17 @@ CRITICAL FORMATTING INSTRUCTIONS: Your response MUST be output as beautiful, pro
 
             {/* SUB-TAB 3: PROJECT CONSULTANT ASSIGNMENTS (Section 3) */}
             {activeDataSubTab === "assignments" && (
-              <div className="space-y-4">
+              <div data-crm-stack="" className="space-y-4">
                 <div className="flex justify-between items-center border-b border-slate-100 dark:border-zinc-800 pb-3">
                   <div>
-                    <h2 className="text-sm font-extrabold text-slate-900 dark:text-slate-100">
+                    <h2 data-crm-heading="section" className="text-sm font-extrabold text-slate-900 dark:text-slate-100">
                       {t("Consultant Project Allocation Registry")}
                     </h2>
                     <p className="text-xs text-slate-500 mt-0.5">
                       {t("Assign specialists to pipeline contracts and track revenue rates.")}
                     </p>
                   </div>
-                  <button
+                  <button data-crm-button=""
                     onClick={() => {
                       setEditingAssignment(null);
                       setAssignmentForm({
@@ -2934,12 +2934,12 @@ CRITICAL FORMATTING INSTRUCTIONS: Your response MUST be output as beautiful, pro
                 </div>
 
                 {showAssignmentForm && (
-                  <form onSubmit={handleSaveAssignment} className="p-4 bg-slate-50 dark:bg-zinc-900 rounded-xl space-y-4 border border-slate-200 dark:border-zinc-800">
-                    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+                  <form data-crm-stack="" onSubmit={handleSaveAssignment} className="p-4 bg-slate-50 dark:bg-zinc-900 rounded-xl space-y-4 border border-slate-200 dark:border-zinc-800">
+                    <div data-crm-flow="" data-crm-grid="form" className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
                       
                       <div className="space-y-1">
-                        <label className="text-[10px] uppercase font-bold text-slate-400">{t("Customer Client")}</label>
-                        <input
+                        <label data-crm-label="" className="text-[10px] uppercase font-bold text-slate-400">{t("Customer Client")}</label>
+                        <input data-crm-field="control"
                           type="text"
                           required
                           value={assignmentForm.customerName}
@@ -2950,8 +2950,8 @@ CRITICAL FORMATTING INSTRUCTIONS: Your response MUST be output as beautiful, pro
                       </div>
 
                       <div className="space-y-1">
-                        <label className="text-[10px] uppercase font-bold text-slate-400">{t("Project / Engagement Scope")}</label>
-                        <input
+                        <label data-crm-label="" className="text-[10px] uppercase font-bold text-slate-400">{t("Project / Engagement Scope")}</label>
+                        <input data-crm-field="control"
                           type="text"
                           required
                           value={assignmentForm.projectName}
@@ -2962,8 +2962,8 @@ CRITICAL FORMATTING INSTRUCTIONS: Your response MUST be output as beautiful, pro
                       </div>
 
                       <div className="space-y-1">
-                        <label className="text-[10px] uppercase font-bold text-slate-400">{t("Consulting Discipline")}</label>
-                        <select
+                        <label data-crm-label="" className="text-[10px] uppercase font-bold text-slate-400">{t("Consulting Discipline")}</label>
+                        <select data-crm-field="control"
                           value={assignmentForm.serviceType}
                           onChange={(e) => setAssignmentForm({ ...assignmentForm, serviceType: e.target.value as any })}
                           className="w-full px-3 py-2 text-xs rounded bg-white dark:bg-zinc-850 border border-slate-200 dark:border-zinc-800 focus:outline-[#0078D4]"
@@ -2975,8 +2975,8 @@ CRITICAL FORMATTING INSTRUCTIONS: Your response MUST be output as beautiful, pro
                       </div>
 
                       <div className="space-y-1">
-                        <label className="text-[10px] uppercase font-bold text-slate-400">{t("Consultant Speciality")}</label>
-                        <select
+                        <label data-crm-label="" className="text-[10px] uppercase font-bold text-slate-400">{t("Consultant Speciality")}</label>
+                        <select data-crm-field="control"
                           value={assignmentForm.consultantId}
                           onChange={(e) => setAssignmentForm({ ...assignmentForm, consultantId: e.target.value })}
                           className="w-full px-3 py-2 text-xs rounded bg-white dark:bg-zinc-850 border border-slate-200 dark:border-zinc-800 focus:outline-[#0078D4]"
@@ -2988,8 +2988,8 @@ CRITICAL FORMATTING INSTRUCTIONS: Your response MUST be output as beautiful, pro
                       </div>
 
                       <div className="space-y-1">
-                        <label className="text-[10px] uppercase font-bold text-slate-400 font-mono">{t("Allocated billable days")}</label>
-                        <input
+                        <label data-crm-label="" className="text-[10px] uppercase font-bold text-slate-400 font-mono">{t("Allocated billable days")}</label>
+                        <input data-crm-field="control"
                           type="number"
                           value={assignmentForm.allocatedDays}
                           onChange={(e) => setAssignmentForm({ ...assignmentForm, allocatedDays: parseInt(e.target.value, 10) || 5 })}
@@ -2998,8 +2998,8 @@ CRITICAL FORMATTING INSTRUCTIONS: Your response MUST be output as beautiful, pro
                       </div>
 
                       <div className="space-y-1">
-                        <label className="text-[10px] uppercase font-bold text-slate-400 font-mono">{t("Customer daily rate (TL)")}</label>
-                        <input
+                        <label data-crm-label="" className="text-[10px] uppercase font-bold text-slate-400 font-mono">{t("Customer daily rate (TL)")}</label>
+                        <input data-crm-field="control"
                           type="number"
                           value={assignmentForm.customerDailyRate}
                           onChange={(e) => setAssignmentForm({ ...assignmentForm, customerDailyRate: parseFloat(e.target.value) || 15000 })}
@@ -3008,8 +3008,8 @@ CRITICAL FORMATTING INSTRUCTIONS: Your response MUST be output as beautiful, pro
                       </div>
 
                       <div className="space-y-1">
-                        <label className="text-[10px] uppercase font-bold text-slate-400 font-mono">{t("Start Date")}</label>
-                        <input
+                        <label data-crm-label="" className="text-[10px] uppercase font-bold text-slate-400 font-mono">{t("Start Date")}</label>
+                        <input data-crm-field="control"
                           type="date"
                           required
                           value={assignmentForm.startDate}
@@ -3019,8 +3019,8 @@ CRITICAL FORMATTING INSTRUCTIONS: Your response MUST be output as beautiful, pro
                       </div>
 
                       <div className="space-y-1">
-                        <label className="text-[10px] uppercase font-bold text-slate-400 font-mono">{t("End Date")}</label>
-                        <input
+                        <label data-crm-label="" className="text-[10px] uppercase font-bold text-slate-400 font-mono">{t("End Date")}</label>
+                        <input data-crm-field="control"
                           type="date"
                           required={!assignmentForm.isOngoing}
                           disabled={assignmentForm.isOngoing}
@@ -3038,7 +3038,7 @@ CRITICAL FORMATTING INSTRUCTIONS: Your response MUST be output as beautiful, pro
                           onChange={(e) => setAssignmentForm({ ...assignmentForm, isOngoing: e.target.checked })}
                           className="w-4 h-4 rounded text-[#0078D4] focus:ring-[#0078D4] cursor-pointer"
                         />
-                        <label htmlFor="isOngoingCheckbox" className="text-xs font-bold text-slate-700 dark:text-zinc-300 cursor-pointer select-none">
+                        <label data-crm-label="" htmlFor="isOngoingCheckbox" className="text-xs font-bold text-slate-700 dark:text-zinc-300 cursor-pointer select-none">
                           {t("Ongoing Project (No End Date)")}
                         </label>
                       </div>
@@ -3046,14 +3046,14 @@ CRITICAL FORMATTING INSTRUCTIONS: Your response MUST be output as beautiful, pro
                     </div>
 
                     <div className="flex justify-end gap-2 pt-2 border-t border-slate-100 dark:border-zinc-800">
-                      <button
+                      <button data-crm-button=""
                         type="button"
                         onClick={() => setShowAssignmentForm(false)}
                         className="px-3.5 py-1.5 border border-slate-200 text-slate-500 rounded text-xs"
                       >
                         {t("Cancel")}
                       </button>
-                      <button
+                      <button data-crm-button=""
                         type="submit"
                         className="px-4 py-1.5 bg-[#0078D4] hover:bg-[#005a9e] text-white rounded text-xs font-bold"
                       >
@@ -3064,8 +3064,8 @@ CRITICAL FORMATTING INSTRUCTIONS: Your response MUST be output as beautiful, pro
                   </form>
                 )}
 
-                <div className="overflow-x-auto w-full border border-slate-150 dark:border-zinc-800 rounded-xl">
-                  <table className="w-full text-left text-xs font-sans min-w-[850px]">
+                <div data-crm-scroll="horizontal" className="overflow-x-auto w-full border border-slate-150 dark:border-zinc-800 rounded-xl">
+                  <table data-crm-table="" className="w-full text-left text-xs font-sans min-w-[850px]">
                     <thead>
                       <tr className="bg-slate-50 dark:bg-zinc-900 border-b border-slate-150 dark:border-zinc-800 font-bold text-slate-450 text-[10px] uppercase">
                         <th className="py-2.5 px-3">{t("Customer & Scope")}</th>
@@ -3101,7 +3101,7 @@ CRITICAL FORMATTING INSTRUCTIONS: Your response MUST be output as beautiful, pro
                               {formatSystemNumber((ass.allocatedDays * ass.customerDailyRate))} TL
                             </td>
                             <td className="py-3 text-right space-x-1 px-3">
-                              <button
+                              <button data-crm-button=""
                                 type="button"
                                 onClick={() => {
                                   setEditingAssignment(ass);
@@ -3127,7 +3127,7 @@ CRITICAL FORMATTING INSTRUCTIONS: Your response MUST be output as beautiful, pro
                               >
                                 <Edit className="w-3.5 h-3.5" />
                               </button>
-                              <button
+                              <button data-crm-button=""
                                 type="button"
                                 onClick={() => void handleDeleteAssignment(ass.id)}
                                 className="p-1 hover:bg-rose-50 dark:hover:bg-rose-950/30 text-slate-400 hover:text-rose-500 rounded cursor-pointer inline-block"
@@ -3148,17 +3148,17 @@ CRITICAL FORMATTING INSTRUCTIONS: Your response MUST be output as beautiful, pro
 
             {/* SUB-TAB 4: INVOICE HISTORIES & IMPORTER (Section 4) */}
             {activeDataSubTab === "invoices" && (
-              <div className="space-y-6">
+              <div data-crm-stack="" className="space-y-6">
                 <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center border-b pb-3 border-slate-100 dark:border-zinc-800 gap-2">
                   <div>
-                    <h2 className="text-sm font-extrabold text-slate-900 dark:text-slate-100">
+                    <h2 data-crm-heading="section" className="text-sm font-extrabold text-slate-900 dark:text-slate-100">
                       {t("Monthly Billing Invoice Importer Panel")}
                     </h2>
                     <p className="text-xs text-slate-500 mt-0.5">
                       {t("Upload the monthly revenue and invoice table from your accounting program in bulk.")}
                     </p>
                   </div>
-                  <button
+                  <button data-crm-button=""
                     type="button"
                     onClick={downloadSampleTemplate}
                     className="px-3 py-1.5 text-xs font-bold text-[#0078D4] bg-sky-50 dark:bg-sky-950/20 hover:bg-sky-100 dark:hover:bg-sky-900/35 rounded-lg flex items-center gap-1.5 cursor-pointer border border-sky-100 dark:border-sky-950"
@@ -3169,12 +3169,12 @@ CRITICAL FORMATTING INSTRUCTIONS: Your response MUST be output as beautiful, pro
                 </div>
 
                 {/* Invoice Importer Drag & Drop Zone */}
-                <div className="space-y-4">
+                <div data-crm-stack="" className="space-y-4">
                   <div className="text-[11px] text-slate-500 leading-relaxed bg-slate-50 dark:bg-zinc-900 p-3 rounded-lg border border-slate-100 dark:border-zinc-800">
                     <strong className="text-slate-800 dark:text-zinc-200">{t("Required Column Names:")}</strong> {t("Customer Name, Sold Man-Days, Unit Price, Invoice Subtotal / VAT-Included Total, VAT Info (or similar English/Turkish terms — your accounting system's own export column names, like \"Müşteri\", \"Miktar\", \"Ara Toplam\", \"Genel Toplam\", work as-is). The system matches them automatically.")} <strong className="text-slate-800 dark:text-zinc-200">{t("Date")}</strong> {t("column is optional but recommended — with it, each invoice lands in its real month automatically, and the Range filter above can show any custom date span.")} <strong className="text-slate-800 dark:text-zinc-200">{t("Consultant")}</strong> {t("column (e.g. \"Kategori\"/\"Danışman\") is optional but recommended — with it, margins use that consultant's real daily cost from the Consultant Master list instead of an estimate.")}
                   </div>
 
-                  <div
+                  <div data-crm-card="padded"
                     onDragOver={(e) => { e.preventDefault(); e.stopPropagation(); }}
                     onDrop={(e) => {
                       e.preventDefault();
@@ -3222,7 +3222,7 @@ CRITICAL FORMATTING INSTRUCTIONS: Your response MUST be output as beautiful, pro
 
                 {/* Import logs auditing */}
                 <div className="space-y-2">
-                  <span className="text-[10px] uppercase font-bold text-slate-400 font-mono tracking-widest block">
+                  <span data-crm-caption="" className="text-[10px] uppercase font-bold text-slate-400 font-mono tracking-widest block">
                     {t("Activity logs & import history traces:")}
                   </span>
                   <div className="bg-slate-50 dark:bg-zinc-900 border border-slate-100 dark:border-zinc-800 p-3 rounded-lg max-h-[120px] overflow-y-auto space-y-1">
@@ -3235,11 +3235,11 @@ CRITICAL FORMATTING INSTRUCTIONS: Your response MUST be output as beautiful, pro
                 {/* Invoices tabular layout */}
                 <div className="space-y-2 pt-4">
                   <div className="flex items-center justify-between flex-wrap gap-2">
-                    <span className="text-[10px] uppercase font-bold text-slate-400 font-mono tracking-widest block">
+                    <span data-crm-caption="" className="text-[10px] uppercase font-bold text-slate-400 font-mono tracking-widest block">
                       {t("Invoiced accounts database registry:")}
                     </span>
                     {selectedInvoiceIds.size > 0 && (
-                      <button
+                      <button data-crm-button=""
                         type="button"
                         onClick={() => void handleDeleteSelectedInvoices()}
                         className="flex items-center gap-1.5 px-2.5 py-1 text-[10px] font-bold text-rose-650 bg-rose-50 dark:bg-rose-950/25 hover:bg-rose-100 dark:hover:bg-rose-950/40 rounded transition-all cursor-pointer"
@@ -3249,8 +3249,8 @@ CRITICAL FORMATTING INSTRUCTIONS: Your response MUST be output as beautiful, pro
                       </button>
                     )}
                   </div>
-                  <div className="overflow-x-auto w-full border border-slate-150 dark:border-zinc-800 rounded-xl">
-                    <table className="w-full text-left text-xs font-sans min-w-[1150px]">
+                  <div data-crm-scroll="horizontal" className="overflow-x-auto w-full border border-slate-150 dark:border-zinc-800 rounded-xl">
+                    <table data-crm-table="" className="w-full text-left text-xs font-sans min-w-[1150px]">
                       <thead>
                         <tr className="bg-slate-50 dark:bg-zinc-900 border-b border-slate-150 dark:border-zinc-800 font-bold text-slate-450 text-[10px] uppercase">
                           <th className="py-2.5 px-3 w-8">
@@ -3319,7 +3319,7 @@ CRITICAL FORMATTING INSTRUCTIONS: Your response MUST be output as beautiful, pro
                               <td className="py-2.5 text-right font-mono font-extrabold text-[#0078D4] dark:text-sky-400">{formatSystemNumber(grandTotal)} TL</td>
                               <td className="py-2.5 text-right px-3">
                                 <div className="flex items-center justify-end gap-1">
-                                  <button
+                                  <button data-crm-button=""
                                     type="button"
                                     onClick={() => handleOpenEditInvoice(inv)}
                                     className="p-1 text-[#0078D4] hover:bg-sky-50 dark:hover:bg-sky-950/35 rounded transition-all cursor-pointer inline-flex items-center"
@@ -3328,7 +3328,7 @@ CRITICAL FORMATTING INSTRUCTIONS: Your response MUST be output as beautiful, pro
                                   >
                                     <Edit className="w-3.5 h-3.5" />
                                   </button>
-                                  <button
+                                  <button data-crm-button=""
                                     type="button"
                                     onClick={() => void handleDeleteInvoice(inv.id)}
                                     className="p-1 text-rose-650 hover:bg-rose-50 dark:hover:bg-rose-950/35 rounded transition-all cursor-pointer inline-flex items-center"
@@ -3362,14 +3362,14 @@ CRITICAL FORMATTING INSTRUCTIONS: Your response MUST be output as beautiful, pro
 
       {/* EDIT INVOICE MODAL */}
       {editingInvoiceId && (
-        <div className="fixed inset-0 bg-black/60 dark:bg-black/85 backdrop-blur-xs flex items-center justify-center z-50 p-4" role="dialog" aria-modal="true">
-          <div className="bg-white dark:bg-[#1b1a19] w-full max-w-lg rounded-lg border border-[#EDEBE9] dark:border-[#323130] shadow-2xl overflow-hidden animate-in fade-in zoom-in-95 duration-150">
+        <div data-crm-overlay="" className="fixed inset-0 bg-black/60 dark:bg-black/85 backdrop-blur-xs flex items-center justify-center z-50 p-4" role="dialog" aria-modal="true">
+          <div data-crm-modal="" data-crm-card="surface" className="bg-white dark:bg-[#1b1a19] w-full max-w-lg rounded-lg border border-[#EDEBE9] dark:border-[#323130] shadow-2xl overflow-hidden animate-in fade-in zoom-in-95 duration-150">
             <div className="px-5 py-4 border-b border-[#EDEBE9] dark:border-[#323130] bg-[#FAF9F8] dark:bg-[#201f1e] flex items-center justify-between">
-              <h3 className="font-bold text-slate-900 dark:text-slate-100 text-sm flex items-center gap-1.5">
+              <h3 data-crm-heading="section" className="font-bold text-slate-900 dark:text-slate-100 text-sm flex items-center gap-1.5">
                 <Edit className="w-4 h-4 text-[#0078D4]" />
                 {t("Edit Invoice")}
               </h3>
-              <button
+              <button data-crm-button=""
                 type="button"
                 onClick={() => setEditingInvoiceId(null)}
                 className="p-1 rounded hover:bg-slate-200 dark:hover:bg-[#252423] text-slate-550 dark:text-slate-400 cursor-pointer"
@@ -3380,9 +3380,9 @@ CRITICAL FORMATTING INSTRUCTIONS: Your response MUST be output as beautiful, pro
             </div>
 
             <div className="p-5 space-y-3.5 max-h-[70vh] overflow-y-auto">
-              <div className="grid grid-cols-2 gap-3">
+              <div data-crm-flow="" data-crm-grid="form" className="grid grid-cols-2 gap-3">
                 <div className="col-span-2 space-y-1">
-                  <label className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">{t("Customer Name")}</label>
+                  <label data-crm-label="" className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">{t("Customer Name")}</label>
                   <input
                     type="text"
                     value={editInvoiceForm.customerName}
@@ -3391,7 +3391,7 @@ CRITICAL FORMATTING INSTRUCTIONS: Your response MUST be output as beautiful, pro
                   />
                 </div>
                 <div className="space-y-1">
-                  <label className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">{t("Date")}</label>
+                  <label data-crm-label="" className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">{t("Date")}</label>
                   <input
                     type="date"
                     value={editInvoiceForm.invoiceDate}
@@ -3400,7 +3400,7 @@ CRITICAL FORMATTING INSTRUCTIONS: Your response MUST be output as beautiful, pro
                   />
                 </div>
                 <div className="space-y-1">
-                  <label className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">{t("Delivered Days")}</label>
+                  <label data-crm-label="" className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">{t("Delivered Days")}</label>
                   <input
                     type="text"
                     inputMode="decimal"
@@ -3410,7 +3410,7 @@ CRITICAL FORMATTING INSTRUCTIONS: Your response MUST be output as beautiful, pro
                   />
                 </div>
                 <div className="space-y-1">
-                  <label className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">{t("Unit Price")}</label>
+                  <label data-crm-label="" className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">{t("Unit Price")}</label>
                   <input
                     type="text"
                     inputMode="decimal"
@@ -3420,7 +3420,7 @@ CRITICAL FORMATTING INSTRUCTIONS: Your response MUST be output as beautiful, pro
                   />
                 </div>
                 <div className="space-y-1">
-                  <label className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">{t("Invoice Total")} ({t("Subtotal")})</label>
+                  <label data-crm-label="" className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">{t("Invoice Total")} ({t("Subtotal")})</label>
                   <input
                     type="text"
                     inputMode="decimal"
@@ -3430,7 +3430,7 @@ CRITICAL FORMATTING INSTRUCTIONS: Your response MUST be output as beautiful, pro
                   />
                 </div>
                 <div className="space-y-1">
-                  <label className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">{t("VAT Rate")} (%)</label>
+                  <label data-crm-label="" className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">{t("VAT Rate")} (%)</label>
                   <input
                     type="text"
                     inputMode="decimal"
@@ -3440,7 +3440,7 @@ CRITICAL FORMATTING INSTRUCTIONS: Your response MUST be output as beautiful, pro
                   />
                 </div>
                 <div className="space-y-1">
-                  <label className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">{t("Tevkifat")} ({t("optional, e.g. 9/10")})</label>
+                  <label data-crm-label="" className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">{t("Tevkifat")} ({t("optional, e.g. 9/10")})</label>
                   <input
                     type="text"
                     placeholder="9/10"
@@ -3450,7 +3450,7 @@ CRITICAL FORMATTING INSTRUCTIONS: Your response MUST be output as beautiful, pro
                   />
                 </div>
                 <div className="col-span-2 space-y-1">
-                  <label className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">{t("Consultant")} ({t("comma-separated")})</label>
+                  <label data-crm-label="" className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">{t("Consultant")} ({t("comma-separated")})</label>
                   <input
                     type="text"
                     value={editInvoiceForm.consultantNames}
@@ -3470,7 +3470,7 @@ CRITICAL FORMATTING INSTRUCTIONS: Your response MUST be output as beautiful, pro
                 const previewVatAmount = Math.round(previewAmount * (previewVatRate / 100));
                 const previewGrandTotal = previewAmount + previewVatAmount;
                 return (
-                  <div className="grid grid-cols-2 gap-3 pt-1">
+                  <div data-crm-grid="layout" className="grid grid-cols-2 gap-3 pt-1">
                     <div className="bg-slate-50 dark:bg-zinc-900 border border-slate-150 dark:border-zinc-800 rounded p-2.5 text-center">
                       <div className="text-[9px] uppercase font-bold text-slate-400 font-mono">{t("VAT Amount")}</div>
                       <div className="text-sm font-extrabold text-amber-600 font-mono mt-0.5">{formatSystemNumber(previewVatAmount)} TL</div>
@@ -3485,14 +3485,14 @@ CRITICAL FORMATTING INSTRUCTIONS: Your response MUST be output as beautiful, pro
             </div>
 
             <div className="px-5 py-3.5 bg-slate-50 dark:bg-zinc-900 border-t border-[#EDEBE9] dark:border-[#323130] flex justify-end gap-2">
-              <button
+              <button data-crm-button=""
                 type="button"
                 onClick={() => setEditingInvoiceId(null)}
                 className="px-4 py-2 bg-slate-150 hover:bg-slate-200 dark:bg-zinc-800 dark:hover:bg-zinc-700 text-slate-700 dark:text-slate-200 rounded text-xs font-bold transition-all cursor-pointer"
               >
                 {t("Cancel")}
               </button>
-              <button
+              <button data-crm-button=""
                 type="button"
                 onClick={handleSaveInvoiceEdit}
                 className="px-4 py-2 bg-[#0078D4] hover:bg-[#005a9e] text-white rounded text-xs font-bold transition-all cursor-pointer"

@@ -671,7 +671,7 @@ function EditableAmountCell({ value, onSave }: { value: number; onSave: (v: numb
 
   if (editing) {
     return (
-      <input
+      <input data-crm-field="control"
         type="number"
         autoFocus
         value={draft}
@@ -694,7 +694,7 @@ function EditableAmountCell({ value, onSave }: { value: number; onSave: (v: numb
   }
 
   return (
-    <button
+    <button data-crm-button=""
       type="button"
       onClick={() => setEditing(true)}
       className="text-right w-full bg-transparent border-0 shadow-none appearance-none hover:bg-slate-100 dark:hover:bg-zinc-700/50 rounded px-1.5 py-0.5 transition-colors text-inherit"
@@ -746,11 +746,11 @@ function KpiCard({ label, value, previousValue, sparklineData, isPercent, invert
   const sparkData = sparklineData.map((v, i) => ({ i, v }));
 
   return (
-    <div
+    <div data-crm-card="surface"
       className="rounded-2xl border border-slate-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 shadow-sm"
       style={{ padding: 16 }}
     >
-      <p className="text-[10.5px] uppercase tracking-wide text-slate-400 dark:text-zinc-500 mb-1.5 truncate" title={label}>
+      <p data-crm-caption className="text-[10.5px] uppercase tracking-wide text-slate-400 dark:text-zinc-500 mb-1.5 truncate" title={label}>
         {label}
       </p>
       <div className="flex items-end justify-between gap-2">
@@ -813,7 +813,7 @@ function WaterfallTooltip({ active, payload, label }: any) {
   const entry = payload.find((p: any) => p.dataKey === "value");
   if (!entry) return null;
   return (
-    <div className="rounded-lg border border-slate-200 dark:border-zinc-700 bg-white dark:bg-zinc-900 shadow-md text-[11.5px]" style={{ padding: 8 }}>
+    <div data-crm-card="surface" className="rounded-lg border border-slate-200 dark:border-zinc-700 bg-white dark:bg-zinc-900 shadow-md text-[11.5px]" style={{ padding: 8 }}>
       <p className="font-semibold text-slate-700 dark:text-zinc-200">{label}</p>
       <p className="text-slate-500 dark:text-zinc-400 tabular-nums">{formatTRY(entry.value)}</p>
     </div>
@@ -823,7 +823,7 @@ function WaterfallTooltip({ active, payload, label }: any) {
 function TrendChartTooltip({ active, payload, label }: any) {
   if (!active || !payload || !payload.length) return null;
   return (
-    <div className="rounded-lg border border-slate-200 dark:border-zinc-700 bg-white dark:bg-zinc-900 shadow-md text-[11.5px]" style={{ padding: 8 }}>
+    <div data-crm-card="surface" className="rounded-lg border border-slate-200 dark:border-zinc-700 bg-white dark:bg-zinc-900 shadow-md text-[11.5px]" style={{ padding: 8 }}>
       <p className="font-semibold text-slate-700 dark:text-zinc-200 mb-1">{label}</p>
       {payload.map((p: any) => (
         <p key={p.dataKey} className="tabular-nums" style={{ color: p.color }}>
@@ -844,7 +844,7 @@ function BreakdownTooltip({ active, payload }: any) {
   if (!active || !payload || !payload.length) return null;
   const p = payload[0];
   return (
-    <div className="rounded-lg border border-slate-200 dark:border-zinc-700 bg-white dark:bg-zinc-900 shadow-md text-[11.5px]" style={{ padding: 8 }}>
+    <div data-crm-card="surface" className="rounded-lg border border-slate-200 dark:border-zinc-700 bg-white dark:bg-zinc-900 shadow-md text-[11.5px]" style={{ padding: 8 }}>
       <p className="font-semibold text-slate-700 dark:text-zinc-200">{p.name ?? p.payload?.label}</p>
       <p className="text-slate-500 dark:text-zinc-400 tabular-nums">{formatTRY(p.value)}</p>
     </div>
@@ -969,7 +969,7 @@ function ForecastTooltip({ active, payload, label }: any) {
   const byKey: Record<string, any> = {};
   payload.forEach((p: any) => (byKey[p.dataKey] = p));
   return (
-    <div className="rounded-lg border border-slate-200 dark:border-zinc-700 bg-white dark:bg-zinc-900 shadow-md text-[11.5px]" style={{ padding: 8 }}>
+    <div data-crm-card="surface" className="rounded-lg border border-slate-200 dark:border-zinc-700 bg-white dark:bg-zinc-900 shadow-md text-[11.5px]" style={{ padding: 8 }}>
       <p className="font-semibold text-slate-700 dark:text-zinc-200 mb-1">{label}</p>
       {byKey.actual !== undefined && (
         <p className="tabular-nums" style={{ color: byKey.actual.color }}>
@@ -1021,7 +1021,7 @@ const SCENARIO_TOOLTIP_COLORS: Record<string, string> = { İyimser: "#059669", B
 function ScenarioTooltip({ active, payload, label }: any) {
   if (!active || !payload || !payload.length) return null;
   return (
-    <div className="rounded-lg border border-slate-200 dark:border-zinc-700 bg-white dark:bg-zinc-900 shadow-md text-[11.5px]" style={{ padding: 8 }}>
+    <div data-crm-card="surface" className="rounded-lg border border-slate-200 dark:border-zinc-700 bg-white dark:bg-zinc-900 shadow-md text-[11.5px]" style={{ padding: 8 }}>
       <p className="font-semibold text-slate-700 dark:text-zinc-200 mb-1">{label}</p>
       {payload.map((p: any) => (
         <p key={p.dataKey} className="tabular-nums" style={{ color: SCENARIO_TOOLTIP_COLORS[p.dataKey] ?? p.color }}>
@@ -1102,7 +1102,7 @@ function PLTableRow({
         >
           <div className="flex items-center gap-1.5">
             {hasChildren ? (
-              <button
+              <button data-crm-button=""
                 type="button"
                 onClick={() => onToggle(row.key)}
                 className="p-0.5 rounded hover:bg-slate-200/70 dark:hover:bg-zinc-700/50 shrink-0"
@@ -1120,7 +1120,7 @@ function PLTableRow({
               {row.label}
             </span>
             {row.onNavigate && (
-              <button type="button" onClick={row.onNavigate} className="ml-1 text-[10.5px] text-indigo-600 hover:underline shrink-0">
+              <button data-crm-button="" type="button" onClick={row.onNavigate} className="ml-1 text-[10.5px] text-indigo-600 hover:underline shrink-0">
                 Düzenle →
               </button>
             )}
@@ -1200,14 +1200,14 @@ function RecurringTab({
 }) {
   const cats = categoriesForGroup(groupKey);
   return (
-    <div className="space-y-4">
+    <div data-crm-stack="" className="space-y-4">
       {cats.map((cat) => {
         const catEntries = entries.filter((e) => e.groupKey === groupKey && e.categoryKey === cat.key);
         return (
           <div key={cat.key} className="rounded-xl border border-slate-200 dark:border-zinc-800 p-4">
             <div className="flex items-center justify-between mb-3">
-              <h4 className="text-[14px] font-semibold text-slate-700 dark:text-zinc-200">{cat.label}</h4>
-              <button
+              <h4 data-crm-heading="section" className="text-[14px] font-semibold text-slate-700 dark:text-zinc-200">{cat.label}</h4>
+              <button data-crm-button=""
                 type="button"
                 onClick={() => onAdd(groupKey, cat.key, cat.allowMultiplePeople)}
                 className="flex items-center gap-1 text-[12px] font-medium text-indigo-600 hover:text-indigo-700"
@@ -1219,7 +1219,7 @@ function RecurringTab({
               <p className="text-[12.5px] text-slate-400 dark:text-zinc-500">Henüz kayıt yok.</p>
             ) : (
               <div className="space-y-2">
-                <div className="hidden md:grid grid-cols-12 gap-2 text-[10.5px] uppercase tracking-wide text-slate-400 dark:text-zinc-500 px-0.5">
+                <div data-crm-grid="layout" className="hidden md:grid grid-cols-12 gap-2 text-[10.5px] uppercase tracking-wide text-slate-400 dark:text-zinc-500 px-0.5">
                   <span className="col-span-3">Etiket</span>
                   <span className="col-span-2">Tip</span>
                   <span className="col-span-2">Başlangıç</span>
@@ -1229,9 +1229,9 @@ function RecurringTab({
                   <span className="col-span-1" />
                 </div>
                 {catEntries.map((entry) => (
-                  <div key={entry.id} className="grid grid-cols-12 gap-2 items-center text-[12.5px]">
+                  <div data-crm-flow="" data-crm-grid="layout" key={entry.id} className="grid grid-cols-12 gap-2 items-center text-[12.5px]">
                     {cat.allowMultiplePeople || cat.allowCustomLabel ? (
-                      <input
+                      <input data-crm-field="control"
                         value={entry.personLabel ?? entry.customLabel ?? ""}
                         onChange={(e) =>
                           onUpdate(entry.id, cat.allowMultiplePeople ? { personLabel: e.target.value } : { customLabel: e.target.value })
@@ -1242,7 +1242,7 @@ function RecurringTab({
                     ) : (
                       <span className="col-span-3 text-slate-500 dark:text-zinc-400 truncate">{cat.label}</span>
                     )}
-                    <select
+                    <select data-crm-field="control"
                       value={entry.mode}
                       onChange={(e) => onUpdate(entry.id, { mode: e.target.value as "recurring" | "range" })}
                       className="col-span-2 rounded border border-slate-200 dark:border-zinc-700 bg-transparent px-1.5 py-1"
@@ -1250,7 +1250,7 @@ function RecurringTab({
                       <option value="recurring">Süreklilik</option>
                       <option value="range">Tarih Aralığı</option>
                     </select>
-                    <select
+                    <select data-crm-field="control"
                       value={entry.startMonth}
                       onChange={(e) => onUpdate(entry.id, { startMonth: e.target.value })}
                       className="col-span-2 rounded border border-slate-200 dark:border-zinc-700 bg-transparent px-1.5 py-1"
@@ -1262,7 +1262,7 @@ function RecurringTab({
                       ))}
                     </select>
                     {entry.mode === "range" ? (
-                      <select
+                      <select data-crm-field="control"
                         value={entry.endMonth ?? entry.startMonth}
                         onChange={(e) => onUpdate(entry.id, { endMonth: e.target.value })}
                         className="col-span-1 rounded border border-slate-200 dark:border-zinc-700 bg-transparent px-1 py-1"
@@ -1276,19 +1276,19 @@ function RecurringTab({
                     ) : (
                       <span className="col-span-1" />
                     )}
-                    <input
+                    <input data-crm-field="control"
                       type="number"
                       value={entry.amountPlan}
                       onChange={(e) => onUpdate(entry.id, { amountPlan: parseFloat(e.target.value) || 0 })}
                       className="col-span-1 rounded border border-slate-200 dark:border-zinc-700 bg-transparent px-1.5 py-1 text-right"
                     />
-                    <input
+                    <input data-crm-field="control"
                       type="number"
                       value={entry.amountActual}
                       onChange={(e) => onUpdate(entry.id, { amountActual: parseFloat(e.target.value) || 0 })}
                       className="col-span-2 rounded border border-slate-200 dark:border-zinc-700 bg-transparent px-1.5 py-1 text-right"
                     />
-                    <button
+                    <button data-crm-button=""
                       type="button"
                       onClick={() => {
                         if (!window.confirm("Bu satırı silmek istediğinizden emin misiniz?")) return;
@@ -1869,17 +1869,17 @@ export default function ManagementPLView() {
     // instead of a "p-6"/"p-8" Tailwind class so the substring match never
     // fires at all, and max-width/width are then free to actually apply.
     return (
-      <div className="flex items-center justify-center min-h-[70vh] px-4">
-        <div
+      <div data-crm-screen="ManagementPLView" className="flex items-center justify-center min-h-[70vh] px-4">
+        <div data-crm-card="surface" data-crm-header=""
           className="w-full mx-auto rounded-2xl border border-slate-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 shadow-sm text-center"
           style={{ maxWidth: 300, padding: 20 }}
         >
-          <div className="w-9 h-9 mx-auto rounded-full bg-indigo-50 dark:bg-indigo-950/40 flex items-center justify-center mb-3">
+          <div data-crm-icon-box="" className="w-9 h-9 mx-auto rounded-full bg-indigo-50 dark:bg-indigo-950/40 flex items-center justify-center mb-3">
             <Lock className="w-4 h-4 text-indigo-600" />
           </div>
-          <h2 className="text-[14.5px] font-semibold text-slate-800 dark:text-zinc-100 mb-1">Yönetim P/L</h2>
+          <h2 data-crm-header-copy="" data-crm-heading="page" className="text-[14.5px] font-semibold text-slate-800 dark:text-zinc-100 mb-1">Yönetim P/L</h2>
           <p className="text-[11px] text-slate-400 dark:text-zinc-500 mb-3.5">Bu sayfaya erişmek için şifre gereklidir.</p>
-          <input
+          <input data-crm-field="control"
             type="password"
             inputMode="numeric"
             maxLength={4}
@@ -1896,7 +1896,7 @@ export default function ManagementPLView() {
             } bg-transparent py-1.5 mb-2.5 focus:outline-none focus:ring-2 focus:ring-indigo-400`}
           />
           {pinError && <p className="text-[11px] text-rose-500 mb-2.5">Hatalı şifre, tekrar deneyin.</p>}
-          <button
+          <button data-crm-header-actions="" data-crm-button=""
             type="button"
             onClick={handleUnlock}
             className="w-full rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white text-[12.5px] font-semibold py-1.5 transition-colors"
@@ -1909,18 +1909,18 @@ export default function ManagementPLView() {
   }
 
   return (
-    <div className="space-y-5 pb-10">
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <div>
-          <h1 className="text-[20px] font-bold text-slate-800 dark:text-zinc-100">
+    <div data-crm-stack="" data-crm-screen="ManagementPLView" className="space-y-5 pb-10">
+      <div data-crm-header="" className="flex flex-wrap items-center justify-between gap-3">
+        <div data-crm-header-copy="">
+          <h1 data-crm-heading="page" className="text-[20px] font-bold text-slate-800 dark:text-zinc-100">
             Yönetim P/L <span className="text-slate-400 dark:text-zinc-500 font-medium text-[14px]">(Management P/L)</span>
           </h1>
           <p className="text-[12.5px] text-slate-400 dark:text-zinc-500 mt-0.5">
             Fatura Yükleme &amp; KDV Yönetimi ayı: {formatMonthLabel(selectedMonth)}
           </p>
         </div>
-        <div className="flex items-center gap-2">
-          <select
+        <div data-crm-header-actions="" className="flex items-center gap-2">
+          <select data-crm-field="control"
             value={selectedMonth}
             onChange={(e) => setSelectedMonth(e.target.value)}
             className="rounded-lg border border-slate-200 dark:border-zinc-700 bg-white dark:bg-zinc-900 px-3 py-2 text-[13px] font-medium"
@@ -1931,7 +1931,7 @@ export default function ManagementPLView() {
               </option>
             ))}
           </select>
-          <button
+          <button data-crm-button=""
             type="button"
             onClick={() => {
               setPinOk(false);
@@ -1944,9 +1944,9 @@ export default function ManagementPLView() {
         </div>
       </div>
 
-      <div className="flex flex-wrap gap-1.5 border-b border-slate-200 dark:border-zinc-800">
+      <div data-crm-tabs className="flex flex-wrap gap-1.5 border-b border-slate-200 dark:border-zinc-800">
         {SECTIONS.map((s) => (
-          <button
+          <button data-crm-button=""
             key={s.key}
             type="button"
             onClick={() => setActiveSection(s.key)}
@@ -1961,21 +1961,21 @@ export default function ManagementPLView() {
         ))}
       </div>
 
-      <div className="rounded-2xl border border-slate-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 p-5">
+      <div data-crm-card="padded" className="rounded-2xl border border-slate-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 p-5">
         {activeSection === "dashboard" && (
-          <div className="space-y-5">
+          <div data-crm-stack="" className="space-y-5">
             <div className="flex flex-wrap items-center justify-between gap-3">
               <div>
-                <h2 className="text-[15px] font-semibold text-slate-800 dark:text-zinc-100">Yönetici Özeti</h2>
+                <h2 data-crm-heading="section" className="text-[15px] font-semibold text-slate-800 dark:text-zinc-100">Yönetici Özeti</h2>
                 <p className="text-[12px] text-slate-400 dark:text-zinc-500">
                   {formatMonthLabel(selectedMonth)} performansı — bir önceki aya göre. Ay seçimi sayfanın üstündeki filtreden
                   yapılır.
                 </p>
               </div>
               <div className="flex items-center gap-3">
-                <div className="flex items-center gap-1 rounded-lg border border-slate-200 dark:border-zinc-700 p-1">
+                <div data-crm-toolbar="" className="flex items-center gap-1 rounded-lg border border-slate-200 dark:border-zinc-700 p-1">
                   {([6, 12] as const).map((w) => (
-                    <button
+                    <button data-crm-button=""
                       key={w}
                       type="button"
                       onClick={() => setTrendWindow(w)}
@@ -1992,7 +1992,7 @@ export default function ManagementPLView() {
               </div>
             </div>
 
-            <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-6 gap-3">
+            <div data-crm-summary-grid data-crm-flow="" data-crm-grid="layout" className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-6 gap-3">
               <KpiCard
                 label="Net Satış Geliri"
                 value={dashboardData.current.netSales}
@@ -2033,7 +2033,7 @@ export default function ManagementPLView() {
               />
             </div>
 
-            <div className="grid grid-cols-1 xl:grid-cols-2 gap-4">
+            <div data-crm-flow="" data-crm-grid="layout" className="grid grid-cols-1 xl:grid-cols-2 gap-4">
               <div className="rounded-2xl border border-slate-200 dark:border-zinc-800" style={{ padding: 20 }}>
                 <p className="text-[13px] font-semibold text-slate-700 dark:text-zinc-200 mb-3">Gelir - Gider - Net Kâr Trendi</p>
                 <div style={{ height: 260 }}>
@@ -2107,13 +2107,13 @@ export default function ManagementPLView() {
             </div>
 
             <div className="pt-1 border-t border-slate-100 dark:border-zinc-800">
-              <h3 className="text-[13.5px] font-semibold text-slate-700 dark:text-zinc-200 mt-4 mb-0.5">Finansal Analiz</h3>
+              <h3 data-crm-heading="section" className="text-[13.5px] font-semibold text-slate-700 dark:text-zinc-200 mt-4 mb-0.5">Finansal Analiz</h3>
               <p className="text-[12px] text-slate-400 dark:text-zinc-500">
                 {formatMonthLabel(selectedMonth)} dağılımları ve son 12 aylık trend
               </p>
             </div>
 
-            <div className="grid grid-cols-1 xl:grid-cols-2 gap-4">
+            <div data-crm-flow="" data-crm-grid="layout" className="grid grid-cols-1 xl:grid-cols-2 gap-4">
               <div className="rounded-2xl border border-slate-200 dark:border-zinc-800" style={{ padding: 20 }}>
                 <p className="text-[13px] font-semibold text-slate-700 dark:text-zinc-200 mb-3">
                   Gelir Dağılımı — {formatMonthLabel(selectedMonth)}
@@ -2208,9 +2208,9 @@ export default function ManagementPLView() {
         )}
 
         {activeSection === "forecast" && (
-          <div className="space-y-5">
+          <div data-crm-stack="" className="space-y-5">
             <div>
-              <h2 className="text-[15px] font-semibold text-slate-800 dark:text-zinc-100">Tahmin ve Planlama</h2>
+              <h2 data-crm-heading="section" className="text-[15px] font-semibold text-slate-800 dark:text-zinc-100">Tahmin ve Planlama</h2>
               <p className="text-[12px] text-slate-400 dark:text-zinc-500">
                 Son 12 aylık gerçek veriden doğrusal trend ile {formatMonthLabel(shiftMonth(selectedMonth, 1))} –{" "}
                 {formatMonthLabel(shiftMonth(selectedMonth, 6))} arası projeksiyon. Düz çizgi Gerçekleşen, kesikli çizgi
@@ -2229,7 +2229,7 @@ export default function ManagementPLView() {
               </div>
             )}
 
-            <div className="grid grid-cols-1 xl:grid-cols-2 gap-4">
+            <div data-crm-flow="" data-crm-grid="layout" className="grid grid-cols-1 xl:grid-cols-2 gap-4">
               <div className="rounded-2xl border border-slate-200 dark:border-zinc-800" style={{ padding: 20 }}>
                 <p className="text-[13px] font-semibold text-slate-700 dark:text-zinc-200 mb-3">Gelir Tahmini</p>
                 <ForecastLineChart data={forecastData.revenueForecast} color="#059669" />
@@ -2263,11 +2263,11 @@ export default function ManagementPLView() {
         )}
 
         {activeSection === "pl" && (
-          <div className="space-y-4">
+          <div data-crm-stack="" className="space-y-4">
             <div className="flex flex-wrap items-center gap-3">
-              <div className="flex items-center gap-1 rounded-lg border border-slate-200 dark:border-zinc-700 p-1">
+              <div data-crm-toolbar="" className="flex items-center gap-1 rounded-lg border border-slate-200 dark:border-zinc-700 p-1">
                 {(["single", "range", "quarter"] as PLPeriodMode[]).map((mode) => (
-                  <button
+                  <button data-crm-button=""
                     key={mode}
                     type="button"
                     onClick={() => setPeriodMode(mode)}
@@ -2291,7 +2291,7 @@ export default function ManagementPLView() {
               {periodMode === "range" && (
                 <div className="flex items-center gap-2 text-[12.5px]">
                   <span className="text-slate-400 dark:text-zinc-500">Başlangıç</span>
-                  <select
+                  <select data-crm-field="control"
                     value={rangeStart}
                     onChange={(e) => setRangeStart(e.target.value)}
                     className="rounded-lg border border-slate-200 dark:border-zinc-700 bg-white dark:bg-zinc-900 px-2 py-1.5"
@@ -2303,7 +2303,7 @@ export default function ManagementPLView() {
                     ))}
                   </select>
                   <span className="text-slate-400 dark:text-zinc-500">Bitiş</span>
-                  <select
+                  <select data-crm-field="control"
                     value={rangeEnd}
                     onChange={(e) => setRangeEnd(e.target.value)}
                     className="rounded-lg border border-slate-200 dark:border-zinc-700 bg-white dark:bg-zinc-900 px-2 py-1.5"
@@ -2319,7 +2319,7 @@ export default function ManagementPLView() {
 
               {periodMode === "quarter" && (
                 <div className="flex items-center gap-2 text-[12.5px]">
-                  <input
+                  <input data-crm-field="control"
                     type="number"
                     value={quarterYear}
                     onChange={(e) => setQuarterYear(parseInt(e.target.value, 10) || quarterYear)}
@@ -2327,7 +2327,7 @@ export default function ManagementPLView() {
                   />
                   <div className="flex items-center gap-1">
                     {[1, 2, 3, 4].map((q) => (
-                      <button
+                      <button data-crm-button=""
                         key={q}
                         type="button"
                         onClick={() => setQuarterIndex(q)}
@@ -2344,7 +2344,7 @@ export default function ManagementPLView() {
                 </div>
               )}
 
-              <button
+              <button data-crm-button=""
                 type="button"
                 onClick={() => exportPLTableToExcel(plData.rows, periods)}
                 className="ml-auto flex items-center gap-1.5 rounded-lg border border-slate-200 dark:border-zinc-700 px-3 py-1.5 text-[12.5px] font-medium text-slate-600 dark:text-zinc-300 hover:bg-slate-50 dark:hover:bg-zinc-800/60 transition-colors"
@@ -2391,8 +2391,8 @@ export default function ManagementPLView() {
               )}
             </div>
 
-            <div className="overflow-x-auto rounded-xl border border-slate-200 dark:border-zinc-800">
-              <table className="w-full border-separate border-spacing-0 min-w-[860px]">
+            <div data-crm-scroll="horizontal" className="overflow-x-auto rounded-xl border border-slate-200 dark:border-zinc-800">
+              <table data-crm-table="" className="w-full border-separate border-spacing-0 min-w-[860px]">
                 <thead>
                   {periods.length > 1 && (
                     <tr className="text-[10.5px] text-slate-500 dark:text-zinc-400">
@@ -2483,7 +2483,7 @@ export default function ManagementPLView() {
         )}
 
         {activeSection === "invoices" && (
-          <div className="space-y-4">
+          <div data-crm-stack="" className="space-y-4">
             <div className="rounded-xl border border-sky-200 dark:border-sky-900/40 bg-sky-50/60 dark:bg-sky-950/20 p-3 flex items-start gap-2.5">
               <Info className="w-4 h-4 text-sky-600 mt-0.5 shrink-0" />
               <p className="text-[12px] text-sky-800 dark:text-sky-300 leading-relaxed">
@@ -2516,8 +2516,8 @@ export default function ManagementPLView() {
               />
             </div>
 
-            <div className="overflow-x-auto rounded-xl border border-slate-200 dark:border-zinc-800">
-              <table className="w-full min-w-[1020px] border-collapse text-[12.5px]">
+            <div data-crm-scroll="horizontal" className="overflow-x-auto rounded-xl border border-slate-200 dark:border-zinc-800">
+              <table data-crm-table="" className="w-full min-w-[1020px] border-collapse text-[12.5px]">
                 <thead>
                   <tr className="text-[11px] uppercase text-slate-400 dark:text-zinc-500 border-b border-slate-200 dark:border-zinc-800">
                     <th className="text-left py-2 pl-3">Dosya</th>
@@ -2545,7 +2545,7 @@ export default function ManagementPLView() {
                               {inv.fileName}
                             </span>
                             {inv.storagePath && (
-                              <button
+                              <button data-crm-button=""
                                 type="button"
                                 onClick={() => handleDownloadInvoice(inv)}
                                 className="text-indigo-500 hover:text-indigo-700 shrink-0"
@@ -2557,7 +2557,7 @@ export default function ManagementPLView() {
                           </div>
                         </td>
                         <td className="py-2 px-2">
-                          <select
+                          <select data-crm-field="control"
                             value={inv.month}
                             onChange={(e) => updateInvoice(inv.id, { month: e.target.value })}
                             className="rounded border border-slate-200 dark:border-zinc-700 bg-transparent px-1.5 py-1"
@@ -2570,7 +2570,7 @@ export default function ManagementPLView() {
                           </select>
                         </td>
                         <td className="py-2 px-2">
-                          <select
+                          <select data-crm-field="control"
                             value={inv.category}
                             onChange={(e) => {
                               const key = e.target.value as PLInvoiceCategoryKey | "uncategorized";
@@ -2599,7 +2599,7 @@ export default function ManagementPLView() {
                         </td>
                         <td className="py-2 px-2">
                           {inv.category === "consultant_fee" ? (
-                            <select
+                            <select data-crm-field="control"
                               value={inv.consultantId ?? ""}
                               onChange={(e) => {
                                 const cId = e.target.value;
@@ -2616,7 +2616,7 @@ export default function ManagementPLView() {
                               ))}
                             </select>
                           ) : (
-                            <input
+                            <input data-crm-field="control"
                               value={inv.vendorName ?? ""}
                               onChange={(e) => updateInvoice(inv.id, { vendorName: e.target.value })}
                               placeholder="Tedarikçi/kişi..."
@@ -2625,7 +2625,7 @@ export default function ManagementPLView() {
                           )}
                         </td>
                         <td className="py-2 px-2 text-right">
-                          <input
+                          <input data-crm-field="control"
                             type="number"
                             value={inv.amount}
                             onChange={(e) => updateInvoice(inv.id, { amount: parseFloat(e.target.value) || 0 })}
@@ -2633,7 +2633,7 @@ export default function ManagementPLView() {
                           />
                         </td>
                         <td className="py-2 px-2 text-right">
-                          <input
+                          <input data-crm-field="control"
                             type="number"
                             value={inv.vatRate}
                             onChange={(e) => updateInvoice(inv.id, { vatRate: parseFloat(e.target.value) || 0 })}
@@ -2648,7 +2648,7 @@ export default function ManagementPLView() {
                               onChange={(e) => updateInvoice(inv.id, { tevkifatEnabled: e.target.checked })}
                             />
                             {inv.tevkifatEnabled && (
-                              <input
+                              <input data-crm-field="control"
                                 value={inv.tevkifatFraction}
                                 onChange={(e) => updateInvoice(inv.id, { tevkifatFraction: e.target.value })}
                                 placeholder="9/10"
@@ -2659,7 +2659,7 @@ export default function ManagementPLView() {
                         </td>
                         <td className="py-2 px-2 text-right font-medium">{formatTRY(inv.vatAmount)}</td>
                         <td className="py-2 px-2">
-                          <input
+                          <input data-crm-field="control"
                             value={inv.description ?? ""}
                             onChange={(e) => updateInvoice(inv.id, { description: e.target.value })}
                             placeholder="Not..."
@@ -2667,7 +2667,7 @@ export default function ManagementPLView() {
                           />
                         </td>
                         <td className="py-2 pr-3 text-right">
-                          <button type="button" onClick={() => removeInvoice(inv.id)} className="text-slate-400 hover:text-rose-600" aria-label="Faturayı sil">
+                          <button data-crm-button="" type="button" onClick={() => removeInvoice(inv.id)} className="text-slate-400 hover:text-rose-600" aria-label="Faturayı sil">
                             <Trash2 className="w-3.5 h-3.5" />
                           </button>
                         </td>
@@ -2687,7 +2687,7 @@ export default function ManagementPLView() {
         )}
 
         {activeSection === "kdv" && (
-          <div className="space-y-4">
+          <div data-crm-stack="" className="space-y-4">
             <div className="rounded-xl border border-amber-200 dark:border-amber-900/40 bg-amber-50/60 dark:bg-amber-950/20 p-4 flex items-start gap-2.5">
               <Info className="w-4 h-4 text-amber-600 mt-0.5 shrink-0" />
               <p className="text-[12.5px] text-amber-800 dark:text-amber-300 leading-relaxed">
@@ -2695,7 +2695,7 @@ export default function ManagementPLView() {
                 hiçbir şekilde dahil edilmez.
               </p>
             </div>
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            <div data-crm-flow="" data-crm-grid="layout" className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
               <KdvStatCard label="Hesaplanan KDV" value={kdvSummary.hesaplanan} tone="neutral" />
               <KdvStatCard label="İndirilecek KDV" value={kdvSummary.indirilecek} tone="neutral" />
               <KdvStatCard label="Ödenecek KDV" value={kdvSummary.odenecek} tone="warn" />

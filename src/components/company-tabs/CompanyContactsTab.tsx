@@ -217,13 +217,13 @@ export default function CompanyContactsTab({
     .sort((a, b) => (b.isPrimary ? 1 : 0) - (a.isPrimary ? 1 : 0));
 
   return (
-    <div className="space-y-4 font-sans text-xs">
+    <div data-crm-stack="" data-crm-screen="CompanyContactsTab" className="space-y-4 font-sans text-xs">
       
       {/* Search & Actions Toolbar */}
-      <div className="flex flex-col sm:flex-row items-center justify-between gap-3 bg-white dark:bg-[#151515] p-3.5 rounded-xl border border-slate-100 dark:border-zinc-800/80 shadow-[0_1px_2px_rgba(0,0,0,0.01)]">
+      <div data-crm-card="padded" className="flex flex-col sm:flex-row items-center justify-between gap-3 bg-white dark:bg-[#151515] p-3.5 rounded-xl border border-slate-100 dark:border-zinc-800/80 shadow-[0_1px_2px_rgba(0,0,0,0.01)]">
         <div className="relative w-full sm:w-72">
           <Search className="w-3.5 h-3.5 text-slate-400 absolute left-2.5 top-2.5" />
-          <input
+          <input data-crm-leading-icon data-crm-field="control"
             type="text"
             placeholder={t("Search contacts...")}
             value={searchQuery}
@@ -232,7 +232,7 @@ export default function CompanyContactsTab({
           />
         </div>
 
-        <button
+        <button data-crm-button=""
           type="button"
           onClick={handleOpenAdd}
           className="w-full sm:w-auto px-4 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg font-bold flex items-center justify-center gap-1.5 cursor-pointer shadow-sm transition-all text-xs"
@@ -255,7 +255,7 @@ export default function CompanyContactsTab({
                 ? t("Edit Contact Information")
                 : t("Add New Contact Reference")}
             </span>
-            <button
+            <button data-crm-button=""
               type="button"
               onClick={() => setIsFormOpen(false)}
               className="p-1 hover:bg-slate-200 dark:hover:bg-zinc-800 rounded text-slate-400 hover:text-slate-600"
@@ -264,10 +264,10 @@ export default function CompanyContactsTab({
             </button>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+          <div data-crm-flow="" data-crm-grid="form" className="grid grid-cols-1 md:grid-cols-2 gap-3">
             <div>
-              <label className="block text-[9px] uppercase font-bold text-slate-400 mb-1">{t("First Name *")}</label>
-              <input
+              <label data-crm-label="" className="block text-[9px] uppercase font-bold text-slate-400 mb-1">{t("First Name *")}</label>
+              <input data-crm-field="control"
                 type="text"
                 required
                 value={formState.firstName}
@@ -276,8 +276,8 @@ export default function CompanyContactsTab({
               />
             </div>
             <div>
-              <label className="block text-[9px] uppercase font-bold text-slate-400 mb-1">{t("Last Name *")}</label>
-              <input
+              <label data-crm-label="" className="block text-[9px] uppercase font-bold text-slate-400 mb-1">{t("Last Name *")}</label>
+              <input data-crm-field="control"
                 type="text"
                 required
                 value={formState.lastName}
@@ -286,8 +286,8 @@ export default function CompanyContactsTab({
               />
             </div>
             <div>
-              <label className="block text-[9px] uppercase font-bold text-slate-400 mb-1">{t("E-posta")}</label>
-              <input
+              <label data-crm-label="" className="block text-[9px] uppercase font-bold text-slate-400 mb-1">{t("E-posta")}</label>
+              <input data-crm-field="control"
                 type="email"
                 placeholder="client@company.com"
                 value={formState.email}
@@ -296,8 +296,8 @@ export default function CompanyContactsTab({
               />
             </div>
             <div>
-              <label className="block text-[9px] uppercase font-bold text-slate-400 mb-1">{t("Phone")}</label>
-              <input
+              <label data-crm-label="" className="block text-[9px] uppercase font-bold text-slate-400 mb-1">{t("Phone")}</label>
+              <input data-crm-field="control"
                 type="text"
                 placeholder="+90 (532) 123 4567"
                 value={formState.phone}
@@ -306,8 +306,8 @@ export default function CompanyContactsTab({
               />
             </div>
             <div>
-              <label className="block text-[9px] uppercase font-bold text-slate-400 mb-1">{t("Department / Title")}</label>
-              <input
+              <label data-crm-label="" className="block text-[9px] uppercase font-bold text-slate-400 mb-1">{t("Department / Title")}</label>
+              <input data-crm-field="control"
                 type="text"
                 placeholder={t("e.g. Purchase Manager, COO, General Manager")}
                 value={formState.department}
@@ -316,8 +316,8 @@ export default function CompanyContactsTab({
               />
             </div>
             <div>
-              <label className="block text-[9px] uppercase font-bold text-slate-400 mb-1">{t("Customer Segment")}</label>
-              <input
+              <label data-crm-label="" className="block text-[9px] uppercase font-bold text-slate-400 mb-1">{t("Customer Segment")}</label>
+              <input data-crm-field="control"
                 type="text"
                 value={formState.leadSegment}
                 onChange={(e) => setFormState({ ...formState, leadSegment: e.target.value })}
@@ -327,14 +327,14 @@ export default function CompanyContactsTab({
           </div>
 
           <div className="flex justify-end gap-2 border-t border-dashed border-slate-200 dark:border-zinc-800 pt-3">
-            <button
+            <button data-crm-button=""
               type="button"
               onClick={() => setIsFormOpen(false)}
               className="px-3 py-1.5 bg-slate-200 hover:bg-slate-300 text-slate-700 rounded font-semibold cursor-pointer"
             >
               {t("Cancel")}
             </button>
-            <button
+            <button data-crm-button=""
               type="submit"
               className="px-4 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded font-bold cursor-pointer"
             >
@@ -346,16 +346,16 @@ export default function CompanyContactsTab({
 
       {/* Contacts Cards Grid */}
       {filteredContacts.length === 0 ? (
-        <div className="p-12 text-center bg-white dark:bg-[#151515] border border-dashed border-slate-200 dark:border-zinc-800 rounded-xl">
+        <div data-crm-card="surface" className="p-12 text-center bg-white dark:bg-[#151515] border border-dashed border-slate-200 dark:border-zinc-800 rounded-xl">
           <Users className="w-8 h-8 text-slate-300 mx-auto mb-2" />
           <span className="text-slate-400">
             {t("No contacts registered for this company yet.")}
           </span>
         </div>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div data-crm-flow="" data-crm-grid="layout" className="grid grid-cols-1 md:grid-cols-2 gap-4">
           {filteredContacts.map((contact) => (
-            <div
+            <div data-crm-card="padded"
               key={contact.id}
               className={`p-4 bg-white dark:bg-[#151515] border rounded-xl hover:shadow-md transition-all flex justify-between items-start ${
                 contact.isPrimary
@@ -365,7 +365,7 @@ export default function CompanyContactsTab({
             >
               <div className="space-y-2 min-w-0 flex-1">
                 <div className="flex items-center gap-2">
-                  <div className="w-7 h-7 rounded-full bg-indigo-50 dark:bg-zinc-800 text-indigo-600 dark:text-indigo-400 font-bold flex items-center justify-center font-display shrink-0 text-xs">
+                  <div data-crm-icon-box="" className="w-7 h-7 rounded-full bg-indigo-50 dark:bg-zinc-800 text-indigo-600 dark:text-indigo-400 font-bold flex items-center justify-center font-display shrink-0 text-xs">
                     {contact.firstName[0]}{contact.lastName[0]}
                   </div>
                   <div className="truncate">
@@ -406,7 +406,7 @@ export default function CompanyContactsTab({
 
               <div className="flex items-center gap-1.5 shrink-0 ml-2">
                 {!contact.isPrimary && (
-                  <button
+                  <button data-crm-button=""
                     type="button"
                     onClick={() => handleSetPrimary(contact)}
                     className="p-1.5 bg-slate-50 dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 text-slate-400 hover:text-amber-500 dark:text-zinc-500 dark:hover:text-amber-400 rounded transition-colors cursor-pointer"
@@ -416,7 +416,7 @@ export default function CompanyContactsTab({
                   </button>
                 )}
                 {contact.email && (
-                  <button
+                  <button data-crm-button=""
                     type="button"
                     onClick={() => handleAddContactToOutreach(contact)}
                     disabled={outreachBusyContactId === contact.id}
@@ -426,7 +426,7 @@ export default function CompanyContactsTab({
                     <Send className="w-3 h-3" />
                   </button>
                 )}
-                <button
+                <button data-crm-button=""
                   type="button"
                   onClick={() => handleOpenEdit(contact)}
                   className="p-1.5 bg-slate-50 dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 text-slate-500 hover:text-indigo-600 dark:text-zinc-400 dark:hover:text-indigo-400 rounded transition-colors cursor-pointer"
@@ -434,7 +434,7 @@ export default function CompanyContactsTab({
                 >
                   <Edit2 className="w-3 h-3" />
                 </button>
-                <button
+                <button data-crm-button=""
                   type="button"
                   onClick={() => handleDeleteContact(contact.id, `${contact.firstName} ${contact.lastName}`)}
                   className="p-1.5 bg-rose-50 dark:bg-rose-950/20 border border-rose-200 dark:border-rose-900/45 text-rose-600 hover:bg-rose-100 dark:text-rose-400 rounded transition-colors cursor-pointer"

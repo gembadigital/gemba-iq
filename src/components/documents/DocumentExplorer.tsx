@@ -373,19 +373,19 @@ export default function DocumentExplorer({
   };
 
   return (
-    <div
+    <div data-crm-flow="" data-crm-screen="DocumentExplorer" data-crm-grid="layout"
       className={`grid gap-4 ${
         compact ? "grid-cols-1" : "grid-cols-1 xl:grid-cols-[240px_minmax(0,1fr)_360px]"
       }`}
     >
       {!compact && (
-        <aside className="rounded-2xl border border-slate-200 dark:border-zinc-800 bg-white dark:bg-[#0f0f11] p-3 h-fit">
+        <aside data-crm-card="surface" className="rounded-2xl border border-slate-200 dark:border-zinc-800 bg-white dark:bg-[#0f0f11] p-3 h-fit">
           <p className="px-2 py-1 text-[11px] font-bold uppercase tracking-wider text-slate-500">
             {t("Folders")}
           </p>
           <div className="mt-2 space-y-1">
             {DOCUMENT_FOLDERS.map((folder) => (
-              <button
+              <button data-crm-button=""
                 key={folder.key}
                 type="button"
                 onClick={() => setSelectedFolder(folder.key)}
@@ -403,11 +403,11 @@ export default function DocumentExplorer({
         </aside>
       )}
 
-      <section className="rounded-2xl border border-slate-200 dark:border-zinc-800 bg-white dark:bg-[#0f0f11] overflow-hidden">
+      <section data-crm-card="surface" className="rounded-2xl border border-slate-200 dark:border-zinc-800 bg-white dark:bg-[#0f0f11] overflow-hidden">
         <div className="p-4 border-b border-slate-100 dark:border-zinc-800 space-y-3">
-          <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-3">
-            <div>
-              <h2 className="text-lg font-bold text-slate-900 dark:text-zinc-100">
+          <div data-crm-header="" className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-3">
+            <div data-crm-header-copy="">
+              <h2 data-crm-heading="page" className="text-lg font-bold text-slate-900 dark:text-zinc-100">
                 {companyName
                   ? t("{company} Documents").replace("{company}", companyName)
                   : t("Enterprise Documents")}
@@ -416,9 +416,9 @@ export default function DocumentExplorer({
                 {t("SharePoint-style document management")} · {actorName}
               </p>
             </div>
-            <div className="flex items-center gap-2">
+            <div data-crm-header-actions="" className="flex items-center gap-2">
               {compact && (
-                <select
+                <select data-crm-field="control"
                   value={selectedFolder}
                   onChange={(e) => setSelectedFolder(e.target.value as DocumentFolderKey)}
                   className="text-xs rounded-xl border border-slate-200 dark:border-zinc-700 px-3 py-2 bg-white dark:bg-zinc-900"
@@ -430,7 +430,7 @@ export default function DocumentExplorer({
                   ))}
                 </select>
               )}
-              <button
+              <button data-crm-button=""
                 type="button"
                 onClick={() => fileInputRef.current?.click()}
                 className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-[#1E3A5F] text-white text-xs font-bold"
@@ -454,10 +454,10 @@ export default function DocumentExplorer({
             </div>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-6 gap-2">
+          <div data-crm-flow="" data-crm-grid="layout" className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-6 gap-2">
             <div className="relative md:col-span-2">
               <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
-              <input
+              <input data-crm-leading-icon data-crm-field="control"
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
                 placeholder={t("Search...")}
@@ -465,7 +465,7 @@ export default function DocumentExplorer({
               />
             </div>
             {!companyId && (
-              <select
+              <select data-crm-field="control"
                 value={companyFilter}
                 onChange={(e) => setCompanyFilter(e.target.value)}
                 className="text-sm rounded-xl border border-slate-200 dark:border-zinc-700 px-3 py-2 bg-white dark:bg-zinc-900"
@@ -478,7 +478,7 @@ export default function DocumentExplorer({
                 ))}
               </select>
             )}
-            <select
+            <select data-crm-field="control"
               value={typeFilter}
               onChange={(e) => setTypeFilter(e.target.value)}
               className="text-sm rounded-xl border border-slate-200 dark:border-zinc-700 px-3 py-2 bg-white dark:bg-zinc-900"
@@ -490,7 +490,7 @@ export default function DocumentExplorer({
                 </option>
               ))}
             </select>
-            <select
+            <select data-crm-field="control"
               value={uploaderFilter}
               onChange={(e) => setUploaderFilter(e.target.value)}
               className="text-sm rounded-xl border border-slate-200 dark:border-zinc-700 px-3 py-2 bg-white dark:bg-zinc-900"
@@ -503,7 +503,7 @@ export default function DocumentExplorer({
               ))}
             </select>
             <div className="flex gap-2">
-              <select
+              <select data-crm-field="control"
                 value={sortBy}
                 onChange={(e) => setSortBy(e.target.value as "date" | "size" | "name")}
                 className="flex-1 text-sm rounded-xl border border-slate-200 dark:border-zinc-700 px-3 py-2 bg-white dark:bg-zinc-900"
@@ -512,7 +512,7 @@ export default function DocumentExplorer({
                 <option value="size">{t("Size")}</option>
                 <option value="name">{t("Name")}</option>
               </select>
-              <select
+              <select data-crm-field="control"
                 value={sortDir}
                 onChange={(e) => setSortDir(e.target.value as "asc" | "desc")}
                 className="w-24 text-sm rounded-xl border border-slate-200 dark:border-zinc-700 px-3 py-2 bg-white dark:bg-zinc-900"
@@ -522,7 +522,7 @@ export default function DocumentExplorer({
               </select>
             </div>
           </div>
-          <input
+          <input data-crm-field="control"
             value={tagFilter}
             onChange={(e) => setTagFilter(e.target.value)}
             placeholder={t("Filter by tag")}
@@ -585,7 +585,7 @@ export default function DocumentExplorer({
           {/* Breadcrumb + New Folder */}
           <div className="mb-3 flex items-center justify-between gap-2 flex-wrap">
             <div className="flex items-center gap-1 text-xs text-slate-500 flex-wrap">
-              <button
+              <button data-crm-button=""
                 type="button"
                 onClick={() => setFolderPath([])}
                 className={`inline-flex items-center gap-1 px-2 py-1 rounded-lg hover:bg-slate-100 dark:hover:bg-zinc-800 ${
@@ -598,7 +598,7 @@ export default function DocumentExplorer({
               {folderPath.map((folder, idx) => (
                 <React.Fragment key={folder.id}>
                   <ChevronRight className="w-3.5 h-3.5 text-slate-300" />
-                  <button
+                  <button data-crm-button=""
                     type="button"
                     onClick={() => setFolderPath(folderPath.slice(0, idx + 1))}
                     className={`px-2 py-1 rounded-lg hover:bg-slate-100 dark:hover:bg-zinc-800 truncate max-w-[160px] ${
@@ -610,7 +610,7 @@ export default function DocumentExplorer({
                 </React.Fragment>
               ))}
             </div>
-            <button
+            <button data-crm-button=""
               type="button"
               onClick={() => setShowNewFolderModal(true)}
               className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-slate-200 dark:border-zinc-700 text-xs font-semibold text-slate-600 dark:text-zinc-300 hover:bg-slate-50 dark:hover:bg-zinc-900"
@@ -622,13 +622,13 @@ export default function DocumentExplorer({
 
           {/* Subfolders inside the current folder (or category root) */}
           {(foldersLoading || subfolders.length > 0) && (
-            <div className="mb-4 grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-2">
+            <div data-crm-flow="" data-crm-grid="layout" className="mb-4 grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-2">
               {subfolders.map((folder) => (
                 <div
                   key={folder.id}
                   className="group relative rounded-xl border border-slate-200 dark:border-zinc-800 hover:border-[#1E3A5F] hover:bg-[#1E3A5F]/5 transition-colors"
                 >
-                  <button
+                  <button data-crm-button=""
                     type="button"
                     onClick={() => setFolderPath([...folderPath, folder])}
                     className="w-full flex items-center gap-2 px-3 py-2.5 text-left"
@@ -660,7 +660,7 @@ export default function DocumentExplorer({
               <p>{t("No documents yet. Drag & drop or upload.")}</p>
             </div>
           ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+            <div data-crm-flow="" data-crm-grid="layout" className="grid grid-cols-1 md:grid-cols-2 gap-3">
               {documents.map((doc) => (
                 <div
                   key={doc.id}
@@ -670,7 +670,7 @@ export default function DocumentExplorer({
                       : "border-slate-200 dark:border-zinc-800 hover:border-slate-300"
                   }`}
                 >
-                  <button
+                  <button data-crm-button=""
                     type="button"
                     onClick={() => {
                       setSelectedDoc(doc);
@@ -683,7 +683,7 @@ export default function DocumentExplorer({
                     className="w-full text-left"
                   >
                     <div className="flex items-start gap-3">
-                      <div className="w-10 h-10 rounded-xl bg-slate-100 dark:bg-zinc-800 flex items-center justify-center">
+                      <div data-crm-icon-box="" className="w-10 h-10 rounded-xl bg-slate-100 dark:bg-zinc-800 flex items-center justify-center">
                         {isImageExtension(doc.extension) ? (
                           <FileImage className="w-5 h-5 text-emerald-600" />
                         ) : isPdfExtension(doc.extension) ? (
@@ -706,7 +706,7 @@ export default function DocumentExplorer({
                   </button>
                   {compact && (
                     <div className="mt-3 flex items-center gap-2 border-t border-slate-100 dark:border-zinc-800 pt-3">
-                      <button
+                      <button data-crm-button=""
                         type="button"
                         onClick={() => void handleDownload(doc)}
                         className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg border text-[11px] font-semibold"
@@ -714,7 +714,7 @@ export default function DocumentExplorer({
                         <Download className="w-3 h-3" />
                         {t("Download")}
                       </button>
-                      <button
+                      <button data-crm-button=""
                         type="button"
                         onClick={() => {
                           setSelectedDoc(doc);
@@ -726,7 +726,7 @@ export default function DocumentExplorer({
                         <Pencil className="w-3 h-3" />
                         {t("Rename")}
                       </button>
-                      <button
+                      <button data-crm-button=""
                         type="button"
                         onClick={() => void handleDelete(doc)}
                         className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg border border-rose-200 text-rose-600 text-[11px] font-semibold"
@@ -750,26 +750,26 @@ export default function DocumentExplorer({
           an explicit "büyüt" button below that opens this same view). No
           download required to actually see the content. */}
       {fullScreenPreview && selectedDoc && (
-        <div
+        <div data-crm-overlay=""
           className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-3 md:p-6"
           onClick={() => {
             setFullScreenPreview(false);
             if (compact) setSelectedDoc(null);
           }}
         >
-          <div
+          <div data-crm-modal="" data-crm-card="padded"
             className="w-full h-full max-w-[1400px] rounded-2xl bg-white dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 p-4 md:p-5 flex flex-col gap-3"
             onClick={(e) => e.stopPropagation()}
           >
             <div className="flex items-start justify-between gap-2 flex-shrink-0">
               <div className="min-w-0">
-                <h3 className="font-bold text-base text-slate-900 dark:text-zinc-100 break-words">{selectedDoc.filename}</h3>
+                <h3 data-crm-heading="section" className="font-bold text-base text-slate-900 dark:text-zinc-100 break-words">{selectedDoc.filename}</h3>
                 <p className="text-xs text-slate-500 mt-1">
                   {folderLabel(selectedDoc.folder, lang)} · v{selectedDoc.version} · {formatFileSize(selectedDoc.file_size)}
                 </p>
               </div>
               <div className="flex items-center gap-2 flex-shrink-0">
-                <button
+                <button data-crm-button=""
                   type="button"
                   onClick={() => void handleDownload(selectedDoc)}
                   className="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl border text-xs font-semibold"
@@ -777,7 +777,7 @@ export default function DocumentExplorer({
                   <Download className="w-3.5 h-3.5" />
                   {t("Download")}
                 </button>
-                <button
+                <button data-crm-button=""
                   type="button"
                   onClick={() => {
                     setFullScreenPreview(false);
@@ -816,21 +816,21 @@ export default function DocumentExplorer({
       )}
 
       {!compact && (
-        <aside className="rounded-2xl border border-slate-200 dark:border-zinc-800 bg-white dark:bg-[#0f0f11] p-4 h-fit xl:sticky xl:top-4">
+        <aside data-crm-card="padded" className="rounded-2xl border border-slate-200 dark:border-zinc-800 bg-white dark:bg-[#0f0f11] p-4 h-fit xl:sticky xl:top-4">
           {!selectedDoc ? (
             <div className="text-sm text-slate-500 py-16 text-center">
               {t("Select a document to preview")}
             </div>
           ) : (
-            <div className="space-y-4">
+            <div data-crm-stack="" className="space-y-4">
               <div className="flex items-start justify-between gap-2">
                 <div>
-                  <h3 className="font-bold text-sm text-slate-900 dark:text-zinc-100 break-words">{selectedDoc.filename}</h3>
+                  <h3 data-crm-heading="section" className="font-bold text-sm text-slate-900 dark:text-zinc-100 break-words">{selectedDoc.filename}</h3>
                   <p className="text-xs text-slate-500 mt-1">
                     {folderLabel(selectedDoc.folder, lang)} · v{selectedDoc.version}
                   </p>
                 </div>
-                <button type="button" onClick={() => setSelectedDoc(null)} className="text-slate-400 hover:text-slate-600">
+                <button data-crm-button="" type="button" onClick={() => setSelectedDoc(null)} className="text-slate-400 hover:text-slate-600">
                   <X className="w-4 h-4" />
                 </button>
               </div>
@@ -865,8 +865,8 @@ export default function DocumentExplorer({
                 )}
               </div>
 
-              <div className="grid grid-cols-2 gap-2">
-                <button
+              <div data-crm-flow="" data-crm-grid="layout" className="grid grid-cols-2 gap-2">
+                <button data-crm-button=""
                   type="button"
                   onClick={() => void handleDownload(selectedDoc)}
                   className="inline-flex items-center justify-center gap-1 px-3 py-2 rounded-xl border text-xs font-semibold"
@@ -874,7 +874,7 @@ export default function DocumentExplorer({
                   <Download className="w-3.5 h-3.5" />
                   {t("Download")}
                 </button>
-                <button
+                <button data-crm-button=""
                   type="button"
                   onClick={() => {
                     setRenameValue(selectedDoc.filename);
@@ -885,7 +885,7 @@ export default function DocumentExplorer({
                   <Pencil className="w-3.5 h-3.5" />
                   {t("Rename")}
                 </button>
-                <button
+                <button data-crm-button=""
                   type="button"
                   onClick={() => {
                     setMoveFolder(selectedDoc.folder);
@@ -896,7 +896,7 @@ export default function DocumentExplorer({
                   <MoveRight className="w-3.5 h-3.5" />
                   {t("Move")}
                 </button>
-                <button
+                <button data-crm-button=""
                   type="button"
                   onClick={() => void handleCopy(selectedDoc)}
                   className="inline-flex items-center justify-center gap-1 px-3 py-2 rounded-xl border text-xs font-semibold"
@@ -904,7 +904,7 @@ export default function DocumentExplorer({
                   <Copy className="w-3.5 h-3.5" />
                   {t("Copy")}
                 </button>
-                <button
+                <button data-crm-button=""
                   type="button"
                   onClick={() => void openVersions(selectedDoc)}
                   className="inline-flex items-center justify-center gap-1 px-3 py-2 rounded-xl border text-xs font-semibold"
@@ -912,7 +912,7 @@ export default function DocumentExplorer({
                   <History className="w-3.5 h-3.5" />
                   {t("Versions")}
                 </button>
-                <button
+                <button data-crm-button=""
                   type="button"
                   onClick={() => void handleDelete(selectedDoc)}
                   className="inline-flex items-center justify-center gap-1 px-3 py-2 rounded-xl border border-rose-200 text-rose-600 text-xs font-semibold"
@@ -922,7 +922,7 @@ export default function DocumentExplorer({
                 </button>
               </div>
 
-              <label className="block">
+              <label data-crm-label="" className="block">
                 <span className="text-xs font-semibold text-slate-500">{t("Upload new version")}</span>
                 <input
                   type="file"
@@ -940,21 +940,21 @@ export default function DocumentExplorer({
       )}
 
       {actionModal && selectedDoc && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-          <div className="w-full max-w-md rounded-2xl bg-white dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 p-5 space-y-4">
-            <h3 className="font-bold text-slate-900 dark:text-zinc-100">
+        <div data-crm-overlay="" className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <div data-crm-stack="" data-crm-modal="" data-crm-card="padded" className="w-full max-w-md rounded-2xl bg-white dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 p-5 space-y-4">
+            <h3 data-crm-heading="section" className="font-bold text-slate-900 dark:text-zinc-100">
               {actionModal === "rename"
                 ? t("Rename")
                 : t("Move")}
             </h3>
             {actionModal === "rename" ? (
-              <input
+              <input data-crm-field="control"
                 value={renameValue}
                 onChange={(e) => setRenameValue(e.target.value)}
                 className="w-full rounded-xl border border-slate-200 dark:border-zinc-700 px-3 py-2 text-sm"
               />
             ) : (
-              <select
+              <select data-crm-field="control"
                 value={moveFolder}
                 onChange={(e) => setMoveFolder(e.target.value as DocumentFolderKey)}
                 className="w-full rounded-xl border border-slate-200 dark:border-zinc-700 px-3 py-2 text-sm"
@@ -967,10 +967,10 @@ export default function DocumentExplorer({
               </select>
             )}
             <div className="flex justify-end gap-2">
-              <button type="button" onClick={() => setActionModal(null)} className="px-4 py-2 rounded-xl border text-sm">
+              <button data-crm-button="" type="button" onClick={() => setActionModal(null)} className="px-4 py-2 rounded-xl border text-sm">
                 {t("Cancel")}
               </button>
-              <button
+              <button data-crm-button=""
                 type="button"
                 onClick={() => void (actionModal === "rename" ? handleRename() : handleMove())}
                 className="px-4 py-2 rounded-xl bg-[#1E3A5F] text-white text-sm font-semibold"
@@ -983,15 +983,15 @@ export default function DocumentExplorer({
       )}
 
       {showNewFolderModal && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-          <div className="w-full max-w-md rounded-2xl bg-white dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 p-5 space-y-4">
-            <h3 className="font-bold text-slate-900 dark:text-zinc-100">{t("New Folder")}</h3>
+        <div data-crm-overlay="" className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <div data-crm-stack="" data-crm-modal="" data-crm-card="padded" className="w-full max-w-md rounded-2xl bg-white dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 p-5 space-y-4">
+            <h3 data-crm-heading="section" className="font-bold text-slate-900 dark:text-zinc-100">{t("New Folder")}</h3>
             <p className="text-xs text-slate-500">
               {folderPath.length > 0
                 ? t("Creates a folder inside \"{name}\".").replace("{name}", folderPath[folderPath.length - 1].name)
                 : t("Creates a folder at the root of \"{category}\".").replace("{category}", folderLabel(selectedFolder, lang))}
             </p>
-            <input
+            <input data-crm-field="control"
               autoFocus
               value={newFolderName}
               onChange={(e) => setNewFolderName(e.target.value)}
@@ -1003,7 +1003,7 @@ export default function DocumentExplorer({
             />
             {folderError && <p className="text-xs text-rose-600">{folderError}</p>}
             <div className="flex justify-end gap-2">
-              <button
+              <button data-crm-button=""
                 type="button"
                 onClick={() => {
                   setShowNewFolderModal(false);
@@ -1014,7 +1014,7 @@ export default function DocumentExplorer({
               >
                 {t("Cancel")}
               </button>
-              <button
+              <button data-crm-button=""
                 type="button"
                 onClick={() => void handleCreateFolder()}
                 disabled={!newFolderName.trim()}
@@ -1028,11 +1028,11 @@ export default function DocumentExplorer({
       )}
 
       {showVersions && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-          <div className="w-full max-w-lg rounded-2xl bg-white dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 p-5">
+        <div data-crm-overlay="" className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <div data-crm-modal="" data-crm-card="padded" className="w-full max-w-lg rounded-2xl bg-white dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 p-5">
             <div className="flex items-center justify-between mb-4">
-              <h3 className="font-bold">{t("Version History")}</h3>
-              <button type="button" onClick={() => setShowVersions(false)}>
+              <h3 data-crm-heading="section" className="font-bold">{t("Version History")}</h3>
+              <button data-crm-button="" type="button" onClick={() => setShowVersions(false)}>
                 <X className="w-4 h-4" />
               </button>
             </div>
@@ -1046,7 +1046,7 @@ export default function DocumentExplorer({
                     <p className="font-medium">v{version.version} · {version.filename}</p>
                     <p className="text-xs text-slate-500">{new Date(version.created_at).toLocaleString()}</p>
                   </div>
-                  <button
+                  <button data-crm-button=""
                     type="button"
                     onClick={() => void handleDownload(version)}
                     className="text-xs font-semibold text-[#1E3A5F]"

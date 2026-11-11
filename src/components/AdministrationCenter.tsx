@@ -836,9 +836,9 @@ export default function AdministrationCenter({
   };
 
   const organizationMailboxCard = (
-    <div className="space-y-4 pt-6 border-t border-slate-100 dark:border-zinc-800">
+    <div data-crm-stack="" className="space-y-4 pt-6 border-t border-slate-100 dark:border-zinc-800">
       <div className="text-left">
-        <h4 className="text-sm font-bold text-slate-800 dark:text-zinc-200 uppercase tracking-wide font-mono flex items-center gap-1.5">
+        <h4 data-crm-heading="section" className="text-sm font-bold text-slate-800 dark:text-zinc-200 uppercase tracking-wide font-mono flex items-center gap-1.5">
           <Mail className="w-4 h-4 text-slate-400" />
           {L("Organizasyon Posta Kutusu", "Organization Mailbox")}
         </h4>
@@ -850,10 +850,10 @@ export default function AdministrationCenter({
         </p>
       </div>
 
-      <div className="p-5 rounded-2xl border border-indigo-200/70 bg-indigo-50/20 dark:border-zinc-800 dark:bg-black/20 space-y-4">
+      <div data-crm-stack="" className="p-5 rounded-2xl border border-indigo-200/70 bg-indigo-50/20 dark:border-zinc-800 dark:bg-black/20 space-y-4">
         <div className="flex flex-col lg:flex-row lg:items-start justify-between gap-4">
           <div className="space-y-2">
-            <span className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[10px] font-black uppercase ${
+            <span data-crm-caption="" className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[10px] font-black uppercase ${
               organizationMailbox?.status === "Connected"
                 ? "bg-emerald-50 text-emerald-700 dark:bg-emerald-950/30 dark:text-emerald-300"
                 : organizationMailbox?.status === "Expired"
@@ -863,7 +863,7 @@ export default function AdministrationCenter({
               {organizationMailbox?.status || "Disconnected"}
             </span>
             <div>
-              <h4 className="text-sm font-bold text-slate-850 dark:text-zinc-100">
+              <h4 data-crm-heading="section" className="text-sm font-bold text-slate-850 dark:text-zinc-100">
                 {organizationMailbox?.mailbox_email || L("Bağlı organizasyon posta kutusu yok", "No organization mailbox connected")}
               </h4>
               <p className="text-xs text-slate-500 dark:text-zinc-400 mt-1">
@@ -880,10 +880,10 @@ export default function AdministrationCenter({
           </div>
 
           <div className="w-full lg:max-w-md space-y-3">
-            <label className="block text-[10px] font-bold text-slate-500 uppercase font-mono">
+            <label data-crm-label="" className="block text-[10px] font-bold text-slate-500 uppercase font-mono">
               {L("Posta Kutusu Adresi", "Mailbox Address")}
             </label>
-            <input
+            <input data-crm-field="control"
               type="email"
               value={mailboxAddress}
               onChange={(event) => setMailboxAddress(event.target.value)}
@@ -898,7 +898,7 @@ export default function AdministrationCenter({
           </div>
 
           <div className="flex flex-wrap gap-2 lg:justify-end">
-            <button
+            <button data-crm-button=""
               type="button"
               onClick={() => onConnectOrganizationMailbox?.(mailboxAddress.trim())}
               disabled={!mailboxAddress.trim()}
@@ -913,7 +913,7 @@ export default function AdministrationCenter({
             </button>
             {organizationMailbox?.status === "Connected" || organizationMailbox?.status === "Expired" ? (
               <>
-                <button
+                <button data-crm-button=""
                   type="button"
                   onClick={onTestOrganizationMailbox}
                   disabled={organizationMailbox?.status !== "Connected"}
@@ -922,7 +922,7 @@ export default function AdministrationCenter({
                   <Mail className="w-4 h-4" />
                   {L("Test Gönder", "Test Connection")}
                 </button>
-                <button
+                <button data-crm-button=""
                   type="button"
                   onClick={onDisconnectOrganizationMailbox}
                   className="p-2.5 px-4 text-xs font-bold text-rose-700 bg-white border border-rose-200 rounded-xl hover:bg-rose-50 transition-all flex items-center gap-1.5"
@@ -940,9 +940,9 @@ export default function AdministrationCenter({
 
   if (!isAdmin) {
     return (
-      <div className="flex flex-col items-center justify-center min-h-[320px] p-8 text-center space-y-3">
+      <div data-crm-screen="AdministrationCenter" className="flex flex-col items-center justify-center min-h-[320px] p-8 text-center space-y-3">
         <Lock className="w-10 h-10 text-rose-500" />
-        <h2 className="text-lg font-bold text-slate-800 dark:text-zinc-200">{L("Erişim Reddedildi", "Access Denied")}</h2>
+        <h2 data-crm-heading="section" className="text-lg font-bold text-slate-800 dark:text-zinc-200">{L("Erişim Reddedildi", "Access Denied")}</h2>
         <p className="text-sm text-slate-500 dark:text-zinc-400 max-w-md">
           {L(
             "Bu sayfaya erişmek için yönetici yetkisine sahip olmanız gerekir.",
@@ -954,20 +954,20 @@ export default function AdministrationCenter({
   }
 
   return (
-    <div className="w-full text-left space-y-6">
+    <div data-crm-stack="" data-crm-screen="AdministrationCenter" className="w-full text-left space-y-6">
       {/* HEADER ROW WITH USER METRICS */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-white dark:bg-[#18181b] p-6 rounded-2xl border border-slate-150 dark:border-zinc-800/80 shadow-xs">
-        <div className="space-y-1 text-left">
+      <div data-crm-card="padded" data-crm-header="" className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-white dark:bg-[#18181b] p-6 rounded-2xl border border-slate-150 dark:border-zinc-800/80 shadow-xs">
+        <div data-crm-header-copy="" className="space-y-1 text-left">
           <div className="flex items-center gap-2">
             <span className="p-1 px-2.5 bg-indigo-50 dark:bg-zinc-900 border border-indigo-200 dark:border-zinc-800 text-indigo-650 dark:text-zinc-200 rounded-lg text-[10px] font-bold font-mono tracking-wider uppercase">
               {L("YÖNETİM PANELİ", "ADMINISTRATION PANEL")}
             </span>
             <span className="w-1.5 h-1.5 bg-emerald-500 rounded-full animate-ping"></span>
-            <span className="text-[10px] text-slate-400 font-bold uppercase font-mono">
+            <span data-crm-caption="" className="text-[10px] text-slate-400 font-bold uppercase font-mono">
               {L("Yetki Sınıfı: ADMIN", "Access Level: ADMIN")}
             </span>
           </div>
-          <h2 className="text-xl font-bold text-slate-900 dark:text-zinc-150 font-sans tracking-tight">
+          <h2 data-crm-heading="page" className="text-xl font-bold text-slate-900 dark:text-zinc-150 font-sans tracking-tight">
             {L(
               "Gemba Partner İşletim Sistemi™ Merkez Ofis Portalı",
               "Gemba Partner Business Operating System™ Central Office Portal"
@@ -975,7 +975,7 @@ export default function AdministrationCenter({
           </h2>
         </div>
 
-        <div className="flex flex-col sm:flex-row items-center gap-3">
+        <div data-crm-header-actions="" className="flex flex-col sm:flex-row items-center gap-3">
 
           <div className="text-right hidden sm:block">
             <span className="text-xs font-bold text-slate-900 dark:text-zinc-200 block">{adminDisplayName}</span>
@@ -984,7 +984,7 @@ export default function AdministrationCenter({
               {L("Lisans: Aktif", "License: Active")}
             </span>
           </div>
-          <div className="w-11 h-11 bg-indigo-550 group-hover:bg-indigo-600 rounded-lg flex items-center justify-center text-white font-black text-sm shadow-md cursor-pointer border-2 border-slate-100 dark:border-zinc-800 mr-2">
+          <div data-crm-icon-box="" className="w-11 h-11 bg-indigo-550 group-hover:bg-indigo-600 rounded-lg flex items-center justify-center text-white font-black text-sm shadow-md cursor-pointer border-2 border-slate-100 dark:border-zinc-800 mr-2">
             {adminInitials}
           </div>
           <div className="flex items-center gap-3">
@@ -993,7 +993,7 @@ export default function AdministrationCenter({
                 ✓ {L("Kaydedildi", "Saved")}
               </span>
             )}
-            <button
+            <button data-crm-button=""
               type="button"
               onClick={handleSaveAndClose}
               className="p-2.5 px-4 bg-emerald-600 hover:bg-emerald-555 border border-emerald-500 text-xs font-bold text-white rounded-xl shadow-md transition-all cursor-pointer flex items-center gap-1.5"
@@ -1007,15 +1007,15 @@ export default function AdministrationCenter({
       </div>
 
       {/* ADMINISTRATION GRID VIEW & TABS WORKSPACE */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+      <div data-crm-flow="" data-crm-grid="layout" className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
         
         {/* SIDE BAR NAVIGATION WITHIN ADMIN VIEW */}
-        <aside className="lg:col-span-3 bg-white dark:bg-[#18181b] rounded-2xl border border-slate-200/60 dark:border-zinc-800/85 p-3.5 space-y-1.5 shadow-xs text-left">
-          <span className="px-3.5 py-1 text-[9px] font-bold text-slate-400 uppercase tracking-widest font-mono block">
+        <aside data-crm-card="padded" className="lg:col-span-3 bg-white dark:bg-[#18181b] rounded-2xl border border-slate-200/60 dark:border-zinc-800/85 p-3.5 space-y-1.5 shadow-xs text-left">
+          <span data-crm-caption="" className="px-3.5 py-1 text-[9px] font-bold text-slate-400 uppercase tracking-widest font-mono block">
             {L("AYAR KATEGORİLERİ", "SETTING CATEGORIES")}
           </span>
           
-          <button
+          <button data-crm-button=""
             type="button"
             onClick={() => setActiveSubTab("organization")}
             className={`w-full flex items-center justify-start gap-3 pl-3.5 pr-3.5 py-2.5 rounded-xl text-xs font-bold transition-all text-left ${
@@ -1028,7 +1028,7 @@ export default function AdministrationCenter({
             <span>{L("Organizasyon Ayarları", "Organization Settings")}</span>
           </button>
 
-          <button
+          <button data-crm-button=""
             type="button"
             onClick={() => setActiveSubTab("users")}
             className={`w-full flex items-center justify-start gap-3 pl-3.5 pr-3.5 py-2.5 rounded-xl text-xs font-bold transition-all text-left ${
@@ -1041,7 +1041,7 @@ export default function AdministrationCenter({
             <span>{L("Kullanıcılar ve İzinler", "Users & Permissions")}</span>
           </button>
 
-          <button
+          <button data-crm-button=""
             type="button"
             onClick={() => setActiveSubTab("email")}
             className={`w-full flex items-center justify-start gap-3 pl-3.5 pr-3.5 py-2.5 rounded-xl text-xs font-bold transition-all text-left ${
@@ -1054,7 +1054,7 @@ export default function AdministrationCenter({
             <span>{L("Paylaşımlı E-posta Kutuları", "Shared Mailboxes")}</span>
           </button>
 
-          <button
+          <button data-crm-button=""
             type="button"
             onClick={() => setActiveSubTab("templates")}
             className={`w-full flex items-center justify-start gap-3 pl-3.5 pr-3.5 py-2.5 rounded-xl text-xs font-bold transition-all text-left ${
@@ -1067,7 +1067,7 @@ export default function AdministrationCenter({
             <span>{L("E-posta Şablonları", "Email Templates")}</span>
           </button>
 
-          <button
+          <button data-crm-button=""
             type="button"
             onClick={() => setActiveSubTab("datahub")}
             className={`w-full flex items-center justify-start gap-3 pl-3.5 pr-3.5 py-2.5 rounded-xl text-xs font-bold transition-all text-left ${
@@ -1080,7 +1080,7 @@ export default function AdministrationCenter({
             <span>{L("Bulut Depolama ve Veri Merkezi", "Cloud Storage & Data Hub")}</span>
           </button>
 
-          <button
+          <button data-crm-button=""
             type="button"
             onClick={() => setActiveSubTab("auditlogs")}
             className={`w-full flex items-center justify-start gap-3 pl-3.5 pr-3.5 py-2.5 rounded-xl text-xs font-bold transition-all text-left ${
@@ -1093,7 +1093,7 @@ export default function AdministrationCenter({
             <span>{L("Denetim Günlükleri", "Audit Logs")}</span>
           </button>
 
-          <button
+          <button data-crm-button=""
             type="button"
             onClick={() => setActiveSubTab("aisettings")}
             className={`w-full flex items-center justify-start gap-3 pl-3.5 pr-3.5 py-2.5 rounded-xl text-xs font-bold transition-all text-left ${
@@ -1106,7 +1106,7 @@ export default function AdministrationCenter({
             <span>{L("Yapay Zeka ve Prompt Ayarları", "AI Assistant & Prompt Settings")}</span>
           </button>
 
-          <button
+          <button data-crm-button=""
             type="button"
             onClick={() => setActiveSubTab("systemhealth")}
             className={`w-full flex items-center justify-start gap-3 pl-3.5 pr-3.5 py-2.5 rounded-xl text-xs font-bold transition-all text-left ${
@@ -1121,23 +1121,23 @@ export default function AdministrationCenter({
         </aside>
 
         {/* DETAILS WORKSPACE CONTAINER */}
-        <div className="lg:col-span-9 bg-white dark:bg-[#18181b] rounded-2xl border border-slate-205/60 dark:border-zinc-800/80 shadow-xs p-6 md:p-8 min-h-[500px] text-left">
+        <div data-crm-card="padded" className="lg:col-span-9 bg-white dark:bg-[#18181b] rounded-2xl border border-slate-205/60 dark:border-zinc-800/80 shadow-xs p-6 md:p-8 min-h-[500px] text-left">
           
           {/* ==================== SECTION 1: ORGANIZATION SETTINGS ==================== */}
           {activeSubTab === "organization" && (
-            <div className="space-y-6">
+            <div data-crm-stack="" className="space-y-6">
               <div className="border-b border-slate-100 dark:border-zinc-800/80 pb-4 text-left">
-                <h3 className="text-lg font-bold text-slate-800 dark:text-zinc-150">
+                <h3 data-crm-heading="section" className="text-lg font-bold text-slate-800 dark:text-zinc-150">
                   {L("1. Organizasyon Temel Konfigürasyonu", "1. Organization Basic Configuration")}
                 </h3>
               </div>
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div data-crm-flow="" data-crm-grid="form" className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-[10px] font-bold text-slate-450 uppercase font-mono mb-1.5">
+                  <label data-crm-label="" className="block text-[10px] font-bold text-slate-450 uppercase font-mono mb-1.5">
                     {L("Şirket Resmi Adı", "Official Company Name")}
                   </label>
-                  <input
+                  <input data-crm-field="control"
                     type="text"
                     value={orgSettings.name}
                     onChange={(e) => setOrgSettings({ ...orgSettings, name: e.target.value })}
@@ -1146,7 +1146,7 @@ export default function AdministrationCenter({
                 </div>
 
                 <div>
-                  <label className="block text-[10px] font-bold text-slate-450 uppercase font-mono mb-1.5">
+                  <label data-crm-label="" className="block text-[10px] font-bold text-slate-450 uppercase font-mono mb-1.5">
                     {L("Şirket Logosu / Marka İmzası", "Company Logo / Brand Signature")}
                   </label>
                   <div className="flex items-center gap-3">
@@ -1157,7 +1157,7 @@ export default function AdministrationCenter({
                         className="w-10 h-10 object-contain rounded-xl border border-slate-200 dark:border-zinc-800 shadow" 
                       />
                     ) : (
-                      <div className="w-10 h-10 bg-indigo-650 rounded-xl flex items-center justify-center text-white font-extrabold text-sm shadow">
+                      <div data-crm-icon-box="" className="w-10 h-10 bg-indigo-650 rounded-xl flex items-center justify-center text-white font-extrabold text-sm shadow">
                         {orgSettings.name ? orgSettings.name.split(" ").map(w => w ? w[0] : "").join("").substring(0, 3).toUpperCase() : "GP"}
                       </div>
                     )}
@@ -1185,10 +1185,10 @@ export default function AdministrationCenter({
                 </div>
 
                 <div>
-                  <label className="block text-[10px] font-bold text-slate-450 uppercase font-mono mb-1.5">
+                  <label data-crm-label="" className="block text-[10px] font-bold text-slate-450 uppercase font-mono mb-1.5">
                     {L("Vergi Dairesi ve Numarası", "Tax Office & Number")}
                   </label>
-                  <input
+                  <input data-crm-field="control"
                     type="text"
                     value={orgSettings.taxInfo}
                     onChange={(e) => setOrgSettings({ ...orgSettings, taxInfo: e.target.value })}
@@ -1197,10 +1197,10 @@ export default function AdministrationCenter({
                 </div>
 
                 <div>
-                  <label className="block text-[10px] font-bold text-slate-450 uppercase font-mono mb-1.5">
+                  <label data-crm-label="" className="block text-[10px] font-bold text-slate-450 uppercase font-mono mb-1.5">
                     {L("Resmi Web Sitesi", "Official Website")}
                   </label>
-                  <input
+                  <input data-crm-field="control"
                     type="text"
                     value={orgSettings.website}
                     onChange={(e) => setOrgSettings({ ...orgSettings, website: e.target.value })}
@@ -1209,10 +1209,10 @@ export default function AdministrationCenter({
                 </div>
 
                 <div>
-                  <label className="block text-[10px] font-bold text-slate-450 uppercase font-mono mb-1.5">
+                  <label data-crm-label="" className="block text-[10px] font-bold text-slate-450 uppercase font-mono mb-1.5">
                     {L("Telefon Numarası", "Phone Number")}
                   </label>
-                  <input
+                  <input data-crm-field="control"
                     type="text"
                     value={orgSettings.phone}
                     onChange={(e) => setOrgSettings({ ...orgSettings, phone: e.target.value })}
@@ -1221,10 +1221,10 @@ export default function AdministrationCenter({
                 </div>
 
                 <div>
-                  <label className="block text-[10px] font-bold text-slate-450 uppercase font-mono mb-1.5">
+                  <label data-crm-label="" className="block text-[10px] font-bold text-slate-450 uppercase font-mono mb-1.5">
                     {L("Varsayılan Para Birimi", "Default Currency")}
                   </label>
-                  <select
+                  <select data-crm-field="control"
                     value={orgSettings.defaultCurrency}
                     onChange={(e) => setOrgSettings({ ...orgSettings, defaultCurrency: e.target.value })}
                     className="w-full text-xs bg-slate-50 dark:bg-black/35 text-slate-800 dark:text-slate-200 px-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-zinc-800 focus:outline-none font-semibold"
@@ -1238,12 +1238,12 @@ export default function AdministrationCenter({
 
                 <div className="flex items-center gap-2 bg-[#FAFAFA] dark:bg-black/20 p-3.5 rounded-xl border border-slate-200 dark:border-zinc-800">
                   <div className="text-xs">
-                    <span className="font-bold text-slate-450 uppercase font-mono block text-[10px] mb-1">
+                    <span data-crm-caption="" className="font-bold text-slate-450 uppercase font-mono block text-[10px] mb-1">
                       {L("Aktif Sistem Dili", "Active System Language")}
                     </span>
                     <span className="font-bold text-slate-800 dark:text-zinc-200 flex items-center gap-1.5">
                       <span>{isTR ? "🇹🇷 Türkçe" : "🇬🇧 English"}</span>
-                      <span className="text-[9px] bg-indigo-50 dark:bg-zinc-800 text-indigo-650 dark:text-zinc-400 px-1.5 py-0.5 rounded uppercase font-mono font-extrabold">
+                      <span data-crm-caption="" className="text-[9px] bg-indigo-50 dark:bg-zinc-800 text-indigo-650 dark:text-zinc-400 px-1.5 py-0.5 rounded uppercase font-mono font-extrabold">
                         {L("Üst Menüden Değiştirilir", "Change via Header")}
                       </span>
                     </span>
@@ -1251,10 +1251,10 @@ export default function AdministrationCenter({
                 </div>
 
                 <div className="sm:col-span-2">
-                  <label className="block text-[10px] font-bold text-slate-450 uppercase font-mono mb-1.5">
+                  <label data-crm-label="" className="block text-[10px] font-bold text-slate-450 uppercase font-mono mb-1.5">
                     {L("Resmi Merkez Adresi", "Official Headquarters Address")}
                   </label>
-                  <textarea
+                  <textarea data-crm-field="multiline"
                     rows={2}
                     value={orgSettings.address}
                     onChange={(e) => setOrgSettings({ ...orgSettings, address: e.target.value })}
@@ -1265,15 +1265,15 @@ export default function AdministrationCenter({
 
               {/* Business days configuration */}
               <div className="pt-4 border-t border-slate-100 dark:border-zinc-800/85 space-y-3">
-                <h4 className="text-xs font-bold text-slate-800 dark:text-zinc-200 uppercase tracking-wide font-mono">
+                <h4 data-crm-heading="section" className="text-xs font-bold text-slate-800 dark:text-zinc-200 uppercase tracking-wide font-mono">
                   {L("Çalışma Düzeni ve Takvim Yapılandırması", "Work Schedule & Calendar Configuration")}
                 </h4>
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                <div data-crm-flow="" data-crm-grid="form" className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                   <div>
-                    <label className="block text-[10px] font-semibold text-slate-455 mb-1">
+                    <label data-crm-label="" className="block text-[10px] font-semibold text-slate-455 mb-1">
                       {L("Mali Yıl Başlangıcı", "Fiscal Year Start")}
                     </label>
-                    <input
+                    <input data-crm-field="control"
                       type="text"
                       value={orgSettings.fiscalYear}
                       onChange={(e) => setOrgSettings({ ...orgSettings, fiscalYear: e.target.value })}
@@ -1282,10 +1282,10 @@ export default function AdministrationCenter({
                   </div>
 
                   <div>
-                    <label className="block text-[10px] font-semibold text-slate-455 mb-1">
+                    <label data-crm-label="" className="block text-[10px] font-semibold text-slate-455 mb-1">
                       {L("Günlük Çalışma Saatleri", "Daily Working Hours")}
                     </label>
-                    <input
+                    <input data-crm-field="control"
                       type="text"
                       value={orgSettings.workingHours}
                       onChange={(e) => setOrgSettings({ ...orgSettings, workingHours: e.target.value })}
@@ -1294,10 +1294,10 @@ export default function AdministrationCenter({
                   </div>
 
                   <div>
-                    <label className="block text-[10px] font-semibold text-slate-455 mb-1">
+                    <label data-crm-label="" className="block text-[10px] font-semibold text-slate-455 mb-1">
                       {L("Varsayılan Saat Dilimi", "Default Timezone")}
                     </label>
-                    <input
+                    <input data-crm-field="control"
                       type="text"
                       value={orgSettings.timezone}
                       onChange={(e) => setOrgSettings({ ...orgSettings, timezone: e.target.value })}
@@ -1307,14 +1307,14 @@ export default function AdministrationCenter({
                 </div>
 
                 <div className="space-y-1 pt-2">
-                  <span className="text-[10px] font-bold text-slate-450 block uppercase">
+                  <span data-crm-caption="" className="text-[10px] font-bold text-slate-450 block uppercase">
                     {L("Aktif İş Günleri", "Active Business Days")}
                   </span>
                   <div className="flex flex-wrap gap-2 pt-1.5">
                     {["Pazartesi", "Salı", "Çarşamba", "Perşembe", "Cuma", "Cumartesi", "Pazar"].map(day => {
                       const isChecked = orgSettings.businessDays.includes(day);
                       return (
-                        <button
+                        <button data-crm-button=""
                           key={day}
                           type="button"
                           onClick={() => {
@@ -1346,7 +1346,7 @@ export default function AdministrationCenter({
                     ✓ {L("Kaydedildi", "Saved")}
                   </span>
                 )}
-                <button
+                <button data-crm-button=""
                   type="button"
                   onClick={() => {
                     setShowSavedMsg(true);
@@ -1366,7 +1366,7 @@ export default function AdministrationCenter({
 
           {/* ==================== SECTION 2: USER MANAGEMENT & PERMISSIONS ==================== */}
           {activeSubTab === "users" && (
-            <div className="space-y-8 animate-in fade-in duration-100">
+            <div data-crm-stack="" className="space-y-8 animate-in fade-in duration-100">
               <OrganizationUsersPanel
                 onAuditLog={(action, detail) =>
                   addAuditLog(actorName, action, detail, "Kullanıcı Yönetimi")
@@ -1376,10 +1376,10 @@ export default function AdministrationCenter({
               {/* Dynamic Permissions Matrix component */}
 
               {/* Dynamic Permissions Matrix component */}
-              <div className="pt-6 border-t border-slate-100 dark:border-zinc-800 space-y-4">
+              <div data-crm-stack="" className="pt-6 border-t border-slate-100 dark:border-zinc-800 space-y-4">
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 text-left">
                   <div>
-                    <h4 className="text-sm font-bold text-slate-800 dark:text-zinc-200 uppercase tracking-wide font-mono flex items-center gap-1.5">
+                    <h4 data-crm-heading="section" className="text-sm font-bold text-slate-800 dark:text-zinc-200 uppercase tracking-wide font-mono flex items-center gap-1.5">
                       <Lock className="w-4 h-4 text-slate-400" />
                       {L("Rol Bazlı Menü İzin Matrisi", "Role-Based Menu Permission Matrix")}
                     </h4>
@@ -1387,7 +1387,7 @@ export default function AdministrationCenter({
 
                   <div className="flex items-center gap-2">
                     <span className="text-xs font-bold text-slate-500 font-mono">{L("Rol Seçin:", "Select Role:")}</span>
-                    <select
+                    <select data-crm-field="control"
                       value={selectedRoleForMatrix}
                       onChange={(e) => setSelectedRoleForMatrix(e.target.value)}
                       className="text-xs bg-slate-50 dark:bg-zinc-900 border border-slate-205 md:p-2 p-1.5 rounded-lg"
@@ -1398,8 +1398,8 @@ export default function AdministrationCenter({
                   </div>
                 </div>
 
-                <div className="overflow-x-auto border border-slate-150 dark:border-zinc-800 rounded-xl">
-                  <table className="w-full text-left border-collapse">
+                <div data-crm-scroll="horizontal" className="overflow-x-auto border border-slate-150 dark:border-zinc-800 rounded-xl">
+                  <table data-crm-table="" className="w-full text-left border-collapse">
                     <thead>
                       <tr className="bg-slate-50 dark:bg-neutral-900 text-[10px] font-bold font-mono text-slate-450 uppercase border-b border-slate-150 dark:border-zinc-800">
                         <th className="p-3 text-left w-1/4">{L("Menü ve Yetki Grubu", "Menu & Permission Group")}</th>
@@ -1420,7 +1420,7 @@ export default function AdministrationCenter({
                               const hasPerm = menuActivePerms.includes(perm);
                               return (
                                 <td key={perm} className="p-3">
-                                  <button
+                                  <button data-crm-button=""
                                     type="button"
                                     onClick={() => togglePermission(menu, perm)}
                                     className={`w-5.5 h-5.5 rounded-md flex items-center justify-center border transition-all mx-auto ${
@@ -1446,10 +1446,10 @@ export default function AdministrationCenter({
 
           {/* ==================== SECTION 3: SHARED MAILBOXES ==================== */}
           {activeSubTab === "email" && (
-            <div className="space-y-6 animate-in fade-in duration-100">
+            <div data-crm-stack="" className="space-y-6 animate-in fade-in duration-100">
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-100 dark:border-zinc-800 pb-4 text-left">
                 <div>
-                  <h3 className="text-lg font-bold text-slate-800 dark:text-zinc-150">
+                  <h3 data-crm-heading="section" className="text-lg font-bold text-slate-800 dark:text-zinc-150">
                     {L("3. Paylaşımlı E-posta Kutuları", "3. Shared Mailboxes")}
                   </h3>
                   <p className="text-xs text-slate-500 dark:text-zinc-400 mt-1">
@@ -1467,14 +1467,14 @@ export default function AdministrationCenter({
 
           {/* ==================== SECTION 4: EMAIL TEMPLATES ==================== */}
           {activeSubTab === "templates" && (
-            <div className="space-y-6 animate-in fade-in duration-100">
+            <div data-crm-stack="" className="space-y-6 animate-in fade-in duration-100">
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-100 dark:border-[#323130] pb-4 text-left">
                 <div>
-                  <h3 className="text-lg font-bold text-slate-800 dark:text-zinc-150">
+                  <h3 data-crm-heading="section" className="text-lg font-bold text-slate-800 dark:text-zinc-150">
                     {L("4. Standart E-posta Şablonları", "4. Standard Email Templates")}
                   </h3>
                 </div>
-                <button
+                <button data-crm-button=""
                   type="button"
                   onClick={() => setIsNewTemplateOpen(true)}
                   className="p-2.5 px-4 text-xs font-bold text-white bg-indigo-650 rounded-xl hover:bg-indigo-600 transition-all flex items-center gap-1.5 cursor-pointer shadow-xs"
@@ -1486,11 +1486,11 @@ export default function AdministrationCenter({
 
               {isNewTemplateOpen && (
                 <form onSubmit={handleCreateTemplate} className="p-5 rounded-2xl border border-slate-200 bg-slate-50/50 dark:border-zinc-800 dark:bg-black/20 space-y-3 text-xs animate-in slide-in-from-top-2 duration-150">
-                  <span className="font-mono font-bold text-slate-450 uppercase block">
+                  <span data-crm-caption="" className="font-mono font-bold text-slate-450 uppercase block">
                     {L("YENİ ŞABLON OLUŞTURMA", "CREATE NEW TEMPLATE")}
                   </span>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                    <input
+                  <div data-crm-flow="" data-crm-grid="layout" className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <input data-crm-field="control"
                       type="text"
                       placeholder="Şablon Başlığı (Örn: Yalın Teklif Takibi)"
                       required
@@ -1498,7 +1498,7 @@ export default function AdministrationCenter({
                       onChange={(e) => setNewTemplate({ ...newTemplate, name: e.target.value })}
                       className="bg-white dark:bg-black p-3 rounded-xl border border-slate-205 dark:border-zinc-805"
                     />
-                    <select
+                    <select data-crm-field="control"
                       value={newTemplate.category}
                       onChange={(e) => setNewTemplate({ ...newTemplate, category: e.target.value as any })}
                       className="bg-white dark:bg-black p-3 rounded-xl border border-slate-205 dark:border-zinc-805"
@@ -1510,7 +1510,7 @@ export default function AdministrationCenter({
                       <option>{L("Proje Şablonları", "Project Templates")}</option>
                       <option>{L("Sistem Şablonları", "System Templates")}</option>
                     </select>
-                    <input
+                    <input data-crm-field="control"
                       type="text"
                       placeholder={L("Konu Satırı *", "Email Subject *")}
                       required
@@ -1520,15 +1520,15 @@ export default function AdministrationCenter({
                     />
                   </div>
                   <div className="flex justify-end gap-2">
-                    <button type="button" onClick={() => setIsNewTemplateOpen(false)} className="p-2 px-3.5 bg-slate-100 dark:bg-zinc-800 rounded">Vazgeç</button>
-                    <button type="submit" className="p-2 px-4 bg-indigo-650 text-white font-bold rounded">Şablonu Ekle</button>
+                    <button data-crm-button="" type="button" onClick={() => setIsNewTemplateOpen(false)} className="p-2 px-3.5 bg-slate-100 dark:bg-zinc-800 rounded">Vazgeç</button>
+                    <button data-crm-button="" type="submit" className="p-2 px-4 bg-indigo-650 text-white font-bold rounded">Şablonu Ekle</button>
                   </div>
                 </form>
               )}
 
               {/* Template list display table */}
-              <div className="overflow-x-auto border border-slate-105 dark:border-zinc-800 rounded-xl">
-                <table className="w-full text-left border-collapse">
+              <div data-crm-scroll="horizontal" className="overflow-x-auto border border-slate-105 dark:border-zinc-800 rounded-xl">
+                <table data-crm-table="" className="w-full text-left border-collapse">
                   <thead>
                     <tr className="bg-slate-50 dark:bg-black/10 text-[10px] font-bold font-mono text-slate-400 uppercase border-b border-slate-100">
                       <th className="p-3">{L("Şablon Adı", "Template Name")}</th>
@@ -1556,7 +1556,7 @@ export default function AdministrationCenter({
                           </span>
                         </td>
                         <td className="p-3 text-right">
-                          <button
+                          <button data-crm-button=""
                             type="button"
                             onClick={() => void deleteTemplate(t.id, t.name)}
                             className="p-1.5 text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/20 rounded transition-all cursor-pointer"
@@ -1574,14 +1574,14 @@ export default function AdministrationCenter({
 
           {/* ==================== SECTION 5: Bulut Depolama & DATA HUB ==================== */}
           {activeSubTab === "datahub" && (
-            <div className="space-y-6 animate-in fade-in duration-100">
+            <div data-crm-stack="" className="space-y-6 animate-in fade-in duration-100">
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-105 dark:border-[#323130] pb-4 text-left">
                 <div>
-                  <h3 className="text-lg font-bold text-slate-800 dark:text-zinc-150">
+                  <h3 data-crm-heading="section" className="text-lg font-bold text-slate-800 dark:text-zinc-150">
                     {L("5. Kurumsal Belge Altyapısı ve Bulut Depolama", "5. Enterprise Document Infrastructure & Cloud Storage")}
                   </h3>
                 </div>
-                <button
+                <button data-crm-button=""
                   type="button"
                   onClick={() => {
                     setEditingConnId(null);
@@ -1597,12 +1597,12 @@ export default function AdministrationCenter({
 
               {/* NEW STORAGE CONNECTION FORM */}
               {isAddStorageOpen && (
-                <form onSubmit={handleAddStorage} className="p-5 rounded-2xl border border-slate-200 bg-slate-50/50 dark:border-zinc-800 dark:bg-black/20 space-y-4 text-xs animate-in slide-in-from-top-2 duration-150">
+                <form data-crm-stack="" onSubmit={handleAddStorage} className="p-5 rounded-2xl border border-slate-200 bg-slate-50/50 dark:border-zinc-800 dark:bg-black/20 space-y-4 text-xs animate-in slide-in-from-top-2 duration-150">
                   <span className="font-mono font-bold text-indigo-600 dark:text-indigo-400 uppercase block tracking-wider text-[10px]">YENİ BULUT DEPOLAMA KANALI EKLE</span>
-                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                  <div data-crm-flow="" data-crm-grid="form" className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                     <div className="space-y-1">
-                      <label className="font-bold text-slate-600">Bağlantı Adı *</label>
-                      <input
+                      <label data-crm-label="" className="font-bold text-slate-600">Bağlantı Adı *</label>
+                      <input data-crm-field="control"
                         type="text"
                         placeholder="Örn: SharePoint Finans"
                         required
@@ -1612,8 +1612,8 @@ export default function AdministrationCenter({
                       />
                     </div>
                     <div className="space-y-1">
-                      <label className="font-bold text-slate-600">Depolama Sağlayıcısı *</label>
-                      <select
+                      <label data-crm-label="" className="font-bold text-slate-600">Depolama Sağlayıcısı *</label>
+                      <select data-crm-field="control"
                         value={newStorage.provider}
                         onChange={(e) => setNewStorage({ ...newStorage, provider: e.target.value })}
                         className="w-full bg-white dark:bg-black p-2.5 rounded-xl border border-slate-205 dark:border-zinc-805 text-xs"
@@ -1624,8 +1624,8 @@ export default function AdministrationCenter({
                       </select>
                     </div>
                     <div className="space-y-1">
-                      <label className="font-bold text-slate-600">Varsayılan Kök Klasör *</label>
-                      <input
+                      <label data-crm-label="" className="font-bold text-slate-600">Varsayılan Kök Klasör *</label>
+                      <input data-crm-field="control"
                         type="text"
                         placeholder="Örn: /MusteriBelgeleri"
                         value={newStorage.defaultRootFolder}
@@ -1635,10 +1635,10 @@ export default function AdministrationCenter({
                     </div>
                   </div>
 
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <div data-crm-flow="" data-crm-grid="form" className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                     <div className="space-y-1">
-                      <label className="font-bold text-slate-600">{L("İstemci Kimliği", "Client ID / API Key")}</label>
-                      <input
+                      <label data-crm-label="" className="font-bold text-slate-600">{L("İstemci Kimliği", "Client ID / API Key")}</label>
+                      <input data-crm-field="control"
                         type="text"
                         placeholder="Uygulama istemci kimliğini girin"
                         value={newStorage.clientId}
@@ -1647,8 +1647,8 @@ export default function AdministrationCenter({
                       />
                     </div>
                     <div className="space-y-1">
-                      <label className="font-bold text-slate-600">{L("Giriş Parolası", "Client Secret")}</label>
-                      <input
+                      <label data-crm-label="" className="font-bold text-slate-600">{L("Giriş Parolası", "Client Secret")}</label>
+                      <input data-crm-field="control"
                         type="password"
                         placeholder="••••••••••••••••••••"
                         value={newStorage.clientSecret}
@@ -1659,8 +1659,8 @@ export default function AdministrationCenter({
                   </div>
 
                   <div className="space-y-1">
-                    <label className="font-bold text-slate-600">Kanal Açıklaması</label>
-                    <textarea
+                    <label data-crm-label="" className="font-bold text-slate-600">Kanal Açıklaması</label>
+                    <textarea data-crm-field="multiline"
                       placeholder="Bu bağlantının kullanım amacını yazın..."
                       value={newStorage.description}
                       onChange={(e) => setNewStorage({ ...newStorage, description: e.target.value })}
@@ -1669,24 +1669,24 @@ export default function AdministrationCenter({
                   </div>
 
                   <div className="flex justify-end gap-2 pt-2">
-                    <button type="button" onClick={() => setIsAddStorageOpen(false)} className="p-2 px-3.5 bg-slate-100 dark:bg-zinc-800 rounded font-bold cursor-pointer">Vazgeç</button>
-                    <button type="submit" className="p-2 px-4 bg-indigo-650 text-white font-bold rounded cursor-pointer">Kanal Bağlantısını Kaydet</button>
+                    <button data-crm-button="" type="button" onClick={() => setIsAddStorageOpen(false)} className="p-2 px-3.5 bg-slate-100 dark:bg-zinc-800 rounded font-bold cursor-pointer">Vazgeç</button>
+                    <button data-crm-button="" type="submit" className="p-2 px-4 bg-indigo-650 text-white font-bold rounded cursor-pointer">Kanal Bağlantısını Kaydet</button>
                   </div>
                 </form>
               )}
 
               {/* DETAILED EDITING FORM FOR STORAGE CHANNEL */}
               {editingConnId && editForm && (
-                <div className="p-5 rounded-2xl border border-indigo-200 bg-indigo-50/10 dark:border-zinc-700 dark:bg-black/40 space-y-4 text-xs animate-in slide-in-from-top-2 duration-150">
+                <div data-crm-stack="" className="p-5 rounded-2xl border border-indigo-200 bg-indigo-50/10 dark:border-zinc-700 dark:bg-black/40 space-y-4 text-xs animate-in slide-in-from-top-2 duration-150">
                   <div className="flex justify-between items-center border-b border-indigo-100 dark:border-zinc-800 pb-2">
                     <span className="font-mono font-bold text-indigo-700 dark:text-indigo-400 uppercase tracking-wider text-[11px]">⚡ DEPOLAMA BAĞLANTISINI DÜZENLE: {editForm.name}</span>
-                    <button type="button" onClick={() => { setEditingConnId(null); setEditForm(null); }} className="text-slate-400 hover:text-slate-600 text-sm font-bold">✕</button>
+                    <button data-crm-button="" type="button" onClick={() => { setEditingConnId(null); setEditForm(null); }} className="text-slate-400 hover:text-slate-600 text-sm font-bold">✕</button>
                   </div>
 
-                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                  <div data-crm-flow="" data-crm-grid="form" className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                     <div className="space-y-1">
-                      <label className="font-bold text-slate-600">Bağlantı Adı</label>
-                      <input
+                      <label data-crm-label="" className="font-bold text-slate-600">Bağlantı Adı</label>
+                      <input data-crm-field="control"
                         type="text"
                         value={editForm.name}
                         onChange={(e) => setEditForm({ ...editForm, name: e.target.value })}
@@ -1694,8 +1694,8 @@ export default function AdministrationCenter({
                       />
                     </div>
                     <div className="space-y-1">
-                      <label className="font-bold text-slate-600">Depolama Sağlayıcısı</label>
-                      <input
+                      <label data-crm-label="" className="font-bold text-slate-600">Depolama Sağlayıcısı</label>
+                      <input data-crm-field="control"
                         type="text"
                         disabled
                         value={editForm.provider}
@@ -1703,8 +1703,8 @@ export default function AdministrationCenter({
                       />
                     </div>
                     <div className="space-y-1">
-                      <label className="font-bold text-slate-600">Varsayılan Kök Klasör</label>
-                      <input
+                      <label data-crm-label="" className="font-bold text-slate-600">Varsayılan Kök Klasör</label>
+                      <input data-crm-field="control"
                         type="text"
                         value={editForm.defaultRootFolder}
                         onChange={(e) => setEditForm({ ...editForm, defaultRootFolder: e.target.value })}
@@ -1713,10 +1713,10 @@ export default function AdministrationCenter({
                     </div>
                   </div>
 
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <div data-crm-flow="" data-crm-grid="form" className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                     <div className="space-y-1">
-                      <label className="font-bold text-slate-600">{L("İstemci Kimliği", "Client ID / API Key")}</label>
-                      <input
+                      <label data-crm-label="" className="font-bold text-slate-600">{L("İstemci Kimliği", "Client ID / API Key")}</label>
+                      <input data-crm-field="control"
                         type="text"
                         value={editForm.clientId || ""}
                         onChange={(e) => setEditForm({ ...editForm, clientId: e.target.value })}
@@ -1724,8 +1724,8 @@ export default function AdministrationCenter({
                       />
                     </div>
                     <div className="space-y-1">
-                      <label className="font-bold text-slate-600">{L("Giriş Parolası", "Client Secret")}</label>
-                      <input
+                      <label data-crm-label="" className="font-bold text-slate-600">{L("Giriş Parolası", "Client Secret")}</label>
+                      <input data-crm-field="control"
                         type="password"
                         placeholder={editForm.clientSecret ? "••••••••••••••••••••" : ""}
                         value={editForm.clientSecret || ""}
@@ -1735,15 +1735,15 @@ export default function AdministrationCenter({
                     </div>
                   </div>
 
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <div data-crm-flow="" data-crm-grid="form" className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                     <div className="space-y-1">
-                      <label className="font-bold text-slate-600 font-mono text-[10px]">
+                      <label data-crm-label="" className="font-bold text-slate-600 font-mono text-[10px]">
                         {L("OLUŞTURULMA TARİHİ:", "CREATED DATE:")}{" "}
                         <span className="text-slate-500 font-normal">{editForm.createdDate}</span>
                       </label>
                     </div>
                     <div className="space-y-1 sm:text-right">
-                      <label className="font-bold text-slate-600 font-mono text-[10px]">
+                      <label data-crm-label="" className="font-bold text-slate-600 font-mono text-[10px]">
                         {L("SON GÜNCELLEME:", "LAST MODIFIED:")}{" "}
                         <span className="text-slate-500 font-normal">{editForm.lastModified}</span>
                       </label>
@@ -1751,8 +1751,8 @@ export default function AdministrationCenter({
                   </div>
 
                   <div className="space-y-1">
-                    <label className="font-bold text-slate-600">Kanal Açıklaması</label>
-                    <textarea
+                    <label data-crm-label="" className="font-bold text-slate-600">Kanal Açıklaması</label>
+                    <textarea data-crm-field="multiline"
                       value={editForm.description}
                       onChange={(e) => setEditForm({ ...editForm, description: e.target.value })}
                       className="w-full bg-white dark:bg-zinc-900 p-2.5 rounded-lg border border-slate-205 dark:border-zinc-805 h-16"
@@ -1761,7 +1761,7 @@ export default function AdministrationCenter({
 
                   <div className="flex flex-wrap justify-between items-center gap-2 pt-2 border-t border-indigo-100 dark:border-zinc-800">
                     <div className="flex gap-2">
-                      <button
+                      <button data-crm-button=""
                         type="button"
                         onClick={() => handleTestConnection(editForm.id)}
                         className="p-2 px-3 bg-amber-600 hover:bg-amber-500 text-white font-bold rounded-lg flex items-center gap-1 cursor-pointer font-sans"
@@ -1770,7 +1770,7 @@ export default function AdministrationCenter({
                         Bağlantıyı Test Et
                       </button>
                       {!editForm.defaultStorage && editForm.enabled && (
-                        <button
+                        <button data-crm-button=""
                           type="button"
                           onClick={() => {
                             setEditForm({ ...editForm, defaultStorage: true });
@@ -1784,21 +1784,21 @@ export default function AdministrationCenter({
                     </div>
 
                     <div className="flex gap-2">
-                      <button
+                      <button data-crm-button=""
                         type="button"
                         onClick={() => void handleDeleteConnection(editForm.id, editForm.name)}
                         className="p-2 px-3 bg-rose-50 text-rose-600 hover:bg-rose-100 rounded-lg font-bold cursor-pointer"
                       >
                         Bağlantıyı Kaldır
                       </button>
-                      <button
+                      <button data-crm-button=""
                         type="button"
                         onClick={() => { setEditingConnId(null); setEditForm(null); }}
                         className="p-2 px-4 bg-slate-100 dark:bg-zinc-800 text-slate-700 dark:text-zinc-300 rounded-lg font-bold cursor-pointer"
                       >
                         Kapat
                       </button>
-                      <button
+                      <button data-crm-button=""
                         type="button"
                         onClick={() => handleSaveConnection(editForm)}
                         className="p-2 px-5 bg-indigo-600 hover:bg-indigo-550 text-white font-bold rounded-lg cursor-pointer"
@@ -1812,8 +1812,8 @@ export default function AdministrationCenter({
 
               {/* Connected Cloud Storages Table / List */}
               <div className="space-y-3">
-                <span className="text-[10px] font-bold text-slate-450 block uppercase font-mono tracking-wider">AKTİF DEPOLAMA KANALLARI VE ENTEGRASYONLAR</span>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <span data-crm-caption="" className="text-[10px] font-bold text-slate-450 block uppercase font-mono tracking-wider">AKTİF DEPOLAMA KANALLARI VE ENTEGRASYONLAR</span>
+                <div data-crm-flow="" data-crm-grid="layout" className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   {dataHubConnections.map(conn => (
                     <div
                       key={conn.id}
@@ -1840,7 +1840,7 @@ export default function AdministrationCenter({
                               {L("Sağlık", "Health")}: {t(conn.connectionHealth)}
                             </span>
                           </div>
-                          <h4 className="text-xs font-bold text-slate-800 dark:text-zinc-150 mt-1.5 truncate" title={conn.name}>{conn.name}</h4>
+                          <h4 data-crm-heading="section" className="text-xs font-bold text-slate-800 dark:text-zinc-150 mt-1.5 truncate" title={conn.name}>{conn.name}</h4>
                           <p className="text-[11px] text-slate-500 mt-1 line-clamp-2 leading-snug">{conn.description}</p>
                         </div>
                         <div className="flex flex-col items-end gap-1 shrink-0">
@@ -1855,7 +1855,7 @@ export default function AdministrationCenter({
                       <div className="mt-3 pt-3 border-t border-slate-105 dark:border-zinc-850/60 flex items-center justify-between text-[10px] text-slate-500 font-mono">
                         <div className="truncate max-w-[150px]">Kök: <strong className="text-slate-700 dark:text-zinc-300 font-semibold">{conn.defaultRootFolder}</strong></div>
                         <div className="flex items-center gap-2">
-                          <button
+                          <button data-crm-button=""
                             type="button"
                             onClick={() => {
                               setEditingConnId(conn.id);
@@ -1867,7 +1867,7 @@ export default function AdministrationCenter({
                             Yapılandır
                           </button>
                           <span className="text-slate-300">|</span>
-                          <button
+                          <button data-crm-button=""
                             type="button"
                             onClick={() => handleToggleConnection(conn.id, !conn.enabled)}
                             className={`font-bold hover:underline cursor-pointer ${
@@ -1884,16 +1884,16 @@ export default function AdministrationCenter({
               </div>
 
               {/* UNLIMITED DOCUMENT CATEGORIES CONFIGURATION PANEL */}
-              <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 pt-6 border-t border-slate-100 dark:border-zinc-800">
+              <div data-crm-grid="form" className="grid grid-cols-1 lg:grid-cols-3 gap-6 pt-6 border-t border-slate-100 dark:border-zinc-800">
                 <div className="lg:col-span-1 p-5 rounded-2xl border border-slate-150 bg-slate-50/55 dark:border-zinc-800 dark:bg-black/10 space-y-3 text-xs">
-                  <h4 className="font-bold text-slate-805 dark:text-zinc-200 font-mono text-xs uppercase flex items-center gap-1.5">
+                  <h4 data-crm-heading="section" className="font-bold text-slate-805 dark:text-zinc-200 font-mono text-xs uppercase flex items-center gap-1.5">
                     <Database className="w-4 h-4 text-indigo-550" />
                     {L("Belge Kategorisi Oluştur", "Create Document Category")}
                   </h4>
                   <form onSubmit={handleAddDocType} className="space-y-3 pt-2">
                     <div className="space-y-1">
-                      <label className="font-bold text-slate-600">Kategori Adı *</label>
-                      <input
+                      <label data-crm-label="" className="font-bold text-slate-600">Kategori Adı *</label>
+                      <input data-crm-field="control"
                         type="text"
                         required
                         placeholder={L("Örn: Saha Anket Raporu", "e.g. Site Survey Report")}
@@ -1903,15 +1903,15 @@ export default function AdministrationCenter({
                       />
                     </div>
                     <div className="space-y-1">
-                      <label className="font-bold text-slate-600">Açıklama</label>
-                      <textarea
+                      <label data-crm-label="" className="font-bold text-slate-600">Açıklama</label>
+                      <textarea data-crm-field="multiline"
                         placeholder="Bu kategoride ne tür belgeler saklanacak..."
                         value={newTypeDesc}
                         onChange={(e) => setNewTypeDesc(e.target.value)}
                         className="w-full bg-white dark:bg-zinc-900 p-2 rounded-lg border border-slate-205 dark:border-zinc-805 outline-none h-16 text-xs"
                       />
                     </div>
-                    <button
+                    <button data-crm-button=""
                       type="submit"
                       className="w-full p-2 bg-indigo-650 hover:bg-indigo-600 text-white font-bold rounded-lg cursor-pointer text-center"
                     >
@@ -1921,23 +1921,23 @@ export default function AdministrationCenter({
                 </div>
 
                 <div className="lg:col-span-2 space-y-3">
-                  <span className="text-[10px] font-bold text-slate-450 block uppercase font-mono tracking-wider">
+                  <span data-crm-caption="" className="text-[10px] font-bold text-slate-450 block uppercase font-mono tracking-wider">
                     {L(`AKTİF BELGE KATEGORİLERİ (${docTypes.length})`, `ACTIVE DOCUMENT CATEGORIES (${docTypes.length})`)}
                   </span>
                   <div className="border border-slate-105 dark:border-zinc-800 rounded-xl overflow-hidden text-xs">
-                    <div className="grid grid-cols-3 bg-slate-50 dark:bg-black/10 p-2.5 text-[9px] font-mono text-slate-400 font-bold border-b border-slate-100">
+                    <div data-crm-grid="layout" className="grid grid-cols-3 bg-slate-50 dark:bg-black/10 p-2.5 text-[9px] font-mono text-slate-400 font-bold border-b border-slate-100">
                       <div>Kategori Adı</div>
                       <div>Açıklama</div>
                       <div className="text-right">İşlem</div>
                     </div>
                     <div className="divide-y divide-slate-100 dark:divide-zinc-800 max-h-[220px] overflow-y-auto">
                       {docTypes.map(type => (
-                        <div key={type.id} className="grid grid-cols-3 p-2.5 items-center hover:bg-slate-50/50">
+                        <div data-crm-grid="layout" key={type.id} className="grid grid-cols-3 p-2.5 items-center hover:bg-slate-50/50">
                           <div className="font-bold text-slate-800 dark:text-zinc-200">{type.name}</div>
                           <div className="text-slate-500 text-[11px] truncate pr-4">{type.description || "Açıklama girilmedi."}</div>
                           <div className="text-right">
                             {type.isCustom ? (
-                              <button
+                              <button data-crm-button=""
                                 type="button"
                                 onClick={() => void handleDeleteDocType(type.id, type.name)}
                                 className="text-rose-600 hover:text-rose-500 font-bold hover:underline font-mono text-[10px] cursor-pointer"
@@ -1945,7 +1945,7 @@ export default function AdministrationCenter({
                                 Sil
                               </button>
                             ) : (
-                              <span className="text-slate-400 font-mono text-[10px] font-semibold uppercase">Sistem</span>
+                              <span data-crm-caption="" className="text-slate-400 font-mono text-[10px] font-semibold uppercase">Sistem</span>
                             )}
                           </div>
                         </div>
@@ -1958,11 +1958,11 @@ export default function AdministrationCenter({
               {/* CENTRALIZED DOCUMENT SERVICE REAL TIME AUDIT LOG VIEWER */}
               <div className="space-y-3 pt-6 border-t border-slate-100 dark:border-zinc-800">
                 <div className="flex items-center justify-between">
-                  <span className="text-[10px] font-bold text-slate-450 block uppercase font-mono tracking-wider flex items-center gap-1.5">
+                  <span data-crm-caption="" className="text-[10px] font-bold text-slate-450 block uppercase font-mono tracking-wider flex items-center gap-1.5">
                     <Clock className="w-4 h-4 text-slate-400" />
                     {L("Döküman Yönetim Sistemi Denetim Logları", "Document Management System Audit Logs")}
                   </span>
-                  <button
+                  <button data-crm-button=""
                     type="button"
                     onClick={() => {
                       CrmDb.setKv("enterprise_doc_audit_logs", []);
@@ -1975,7 +1975,7 @@ export default function AdministrationCenter({
                 </div>
 
                 <div className="border border-slate-105 dark:border-zinc-800 rounded-xl overflow-hidden text-xs">
-                  <div className="grid grid-cols-6 bg-slate-50 dark:bg-black/10 p-2.5 text-[9px] font-mono text-slate-400 font-bold border-b border-slate-100">
+                  <div data-crm-grid="layout" className="grid grid-cols-6 bg-slate-50 dark:bg-black/10 p-2.5 text-[9px] font-mono text-slate-400 font-bold border-b border-slate-100">
                     <div>Zaman Damgası</div>
                     <div>Kullanıcı</div>
                     <div>İşlem</div>
@@ -1989,7 +1989,7 @@ export default function AdministrationCenter({
                       </div>
                     ) : (
                       DocumentService.getAuditLogs().map((log) => (
-                        <div key={log.id} className="grid grid-cols-6 p-2 items-center hover:bg-slate-50/50">
+                        <div data-crm-grid="layout" key={log.id} className="grid grid-cols-6 p-2 items-center hover:bg-slate-50/50">
                           <div className="text-slate-400">{log.timestamp}</div>
                           <div className="font-semibold text-slate-700 dark:text-zinc-300">{log.user}</div>
                           <div>
@@ -2021,9 +2021,9 @@ export default function AdministrationCenter({
 
           {/* ==================== SECTION 6: AUDIT LOGS ==================== */}
           {activeSubTab === "auditlogs" && (
-            <div className="space-y-6 animate-in fade-in duration-100">
+            <div data-crm-stack="" className="space-y-6 animate-in fade-in duration-100">
               <div className="border-b border-slate-100 dark:border-zinc-800 pb-4 text-left">
-                <h3 className="text-lg font-bold text-slate-800 dark:text-zinc-150">
+                <h3 data-crm-heading="section" className="text-lg font-bold text-slate-800 dark:text-zinc-150">
                   {L("6. Denetim Günlükleri ve Güvenlik Takibi", "6. Audit Logs & Security Tracking")}
                 </h3>
               </div>
@@ -2035,7 +2035,7 @@ export default function AdministrationCenter({
                     {L("Anlık Log Sinyali: Aktif", "Live Log Signal: Active")}
                   </span>
                 </div>
-                <button
+                <button data-crm-button=""
                   type="button"
                   onClick={() => {
                     alert("Tüm güvenlik günlükleri CSV olarak dışa aktarılmıştır!");
@@ -2048,8 +2048,8 @@ export default function AdministrationCenter({
               </div>
 
               {/* Logs Table Layout */}
-              <div className="overflow-x-auto border border-slate-105 dark:border-zinc-800 rounded-xl">
-                <table className="w-full text-left border-collapse">
+              <div data-crm-scroll="horizontal" className="overflow-x-auto border border-slate-105 dark:border-zinc-800 rounded-xl">
+                <table data-crm-table="" className="w-full text-left border-collapse">
                   <thead>
                     <tr className="bg-slate-50 dark:bg-neutral-900 text-[10px] font-bold font-mono text-slate-400 uppercase border-b border-slate-100">
                       <th className="p-3">{L("Kullanıcı", "User")}</th>
@@ -2087,9 +2087,9 @@ export default function AdministrationCenter({
 
           {/* ==================== SECTION 7: AI SETTINGS ==================== */}
           {activeSubTab === "aisettings" && (
-            <div className="space-y-6 animate-in fade-in duration-100">
+            <div data-crm-stack="" className="space-y-6 animate-in fade-in duration-100">
               <div className="border-b border-slate-100 dark:border-zinc-800 pb-4 text-left">
-                <h3 className="text-lg font-bold text-slate-805 dark:text-zinc-150">
+                <h3 data-crm-heading="section" className="text-lg font-bold text-slate-805 dark:text-zinc-150">
                   {L("7. Yapay Zeka ve Prompt Yönetimi", "7. AI Settings & Prompt Management")}
                 </h3>
               </div>
@@ -2121,8 +2121,8 @@ export default function AdministrationCenter({
               </div>
 
               {/* Prompt template modifiers */}
-              <div className="space-y-4">
-                <span className="text-[10px] font-bold text-slate-450 block uppercase font-mono tracking-wider">
+              <div data-crm-stack="" className="space-y-4">
+                <span data-crm-caption="" className="text-[10px] font-bold text-slate-450 block uppercase font-mono tracking-wider">
                   {L("PROMPT ŞABLONLARINI DÜZENLE", "EDIT PROMPT TEMPLATES")}
                 </span>
                 
@@ -2132,7 +2132,7 @@ export default function AdministrationCenter({
                       <span className="font-bold text-slate-800 dark:text-zinc-200 text-xs">{item.name}</span>
                       <span className="text-[10px] bg-indigo-50 text-indigo-750 px-2 py-0.5 rounded font-bold font-mono uppercase">{item.type}</span>
                     </div>
-                    <textarea
+                    <textarea data-crm-field="multiline"
                       rows={3}
                       defaultValue={item.prompt}
                       onBlur={(e) => handleSavePrompt(idx, e.target.value)}
@@ -2149,16 +2149,16 @@ export default function AdministrationCenter({
               {/* Dynamic Skill Controls */}
               <div className="pt-4 border-t border-slate-100 dark:border-zinc-800 space-y-3.5">
                 <div>
-                  <h4 className="text-xs font-bold text-slate-800 dark:text-zinc-200 uppercase tracking-widest font-mono">
+                  <h4 data-crm-heading="section" className="text-xs font-bold text-slate-800 dark:text-zinc-200 uppercase tracking-widest font-mono">
                     {L("Yapay Zeka Ajanı Yetenek Aktivasyon Listesi", "AI Agent Skill Activation List")}
                   </h4>
                 </div>
 
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+                <div data-crm-flow="" data-crm-grid="layout" className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
                   {aiAgentSkills.map((skill, index) => (
-                    <div key={index} className="flex items-center justify-between p-3.5 rounded-xl border border-slate-200/60 dark:border-zinc-800/80 bg-white dark:bg-black/15 text-xs">
+                    <div data-crm-card="padded" key={index} className="flex items-center justify-between p-3.5 rounded-xl border border-slate-200/60 dark:border-zinc-800/80 bg-white dark:bg-black/15 text-xs">
                       <span className="font-bold text-slate-755 dark:text-zinc-300">{skill.name}</span>
-                      <button
+                      <button data-crm-button=""
                         type="button"
                         onClick={() => {
                           const updated = [...aiAgentSkills];
@@ -2183,10 +2183,10 @@ export default function AdministrationCenter({
 
           {/* ==================== SECTION 8: SYSTEM HEALTH ==================== */}
           {activeSubTab === "systemhealth" && (
-            <div className="space-y-6 animate-in fade-in duration-100">
+            <div data-crm-stack="" className="space-y-6 animate-in fade-in duration-100">
               <div className="border-b border-slate-100 dark:border-zinc-800 pb-4 text-left flex items-center justify-between gap-3">
                 <div>
-                  <h3 className="text-lg font-bold text-slate-800 dark:text-zinc-150">
+                  <h3 data-crm-heading="section" className="text-lg font-bold text-slate-800 dark:text-zinc-150">
                     {L("8. Sistem ve Entegrasyon Sağlığı Gösterge Paneli", "8. System & Integration Health Dashboard")}
                   </h3>
                   {integrationHealth.lastChecked && (
@@ -2195,7 +2195,7 @@ export default function AdministrationCenter({
                     </p>
                   )}
                 </div>
-                <button
+                <button data-crm-button=""
                   type="button"
                   onClick={handleRefreshHealth}
                   disabled={isRefreshingHealth}
@@ -2205,7 +2205,7 @@ export default function AdministrationCenter({
                 </button>
               </div>
 
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+              <div data-crm-flow="" data-crm-grid="layout" className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                 
                 <div className="p-4 bg-emerald-50/20 rounded-2xl border border-emerald-200/50 space-y-1">
                   <span className="text-[9px] font-bold text-emerald-500 font-mono block uppercase">
@@ -2227,8 +2227,8 @@ export default function AdministrationCenter({
                   <p className="text-[10px] text-slate-405 leading-none">{L("Aktif / Tanımlı depolama kanalı", "Active / defined storage channels")}</p>
                 </div>
 
-                <div className="p-4 bg-white dark:bg-black/10 rounded-2xl border border-slate-200/80 space-y-1">
-                  <span className="text-[9px] font-bold text-slate-500 font-mono block uppercase">
+                <div data-crm-card="padded" className="p-4 bg-white dark:bg-black/10 rounded-2xl border border-slate-200/80 space-y-1">
+                  <span data-crm-caption="" className="text-[9px] font-bold text-slate-500 font-mono block uppercase">
                     {L("VERİTABANI DEPOLAMASI", "DATABASE STORAGE")}
                   </span>
                   <div className="text-xl font-black text-slate-800 dark:text-zinc-300">62.8 MB</div>
@@ -2240,7 +2240,7 @@ export default function AdministrationCenter({
 
               {/* Status and telemetry lines */}
               <div className="pt-4 border-t border-slate-100 dark:border-zinc-800/80 space-y-3">
-                <span className="text-[10px] font-bold text-slate-450 block uppercase font-mono">
+                <span data-crm-caption="" className="text-[10px] font-bold text-slate-450 block uppercase font-mono">
                   {L("GERÇEK ZAMANLI SERVİS TELEMETRİSİ", "REAL-TIME SERVICE TELEMETRY")}
                 </span>
                 
@@ -2250,7 +2250,7 @@ export default function AdministrationCenter({
                       {L("Microsoft Graph API Kimlik Bilgileri (Azure AD):", "Microsoft Graph API Credentials (Azure AD):")}
                     </span>
                     {integrationHealth.hasGraphCredentials === null ? (
-                      <span className="text-slate-400 font-bold font-mono uppercase">{L("KONTROL EDİLİYOR…", "CHECKING…")}</span>
+                      <span data-crm-caption="" className="text-slate-400 font-bold font-mono uppercase">{L("KONTROL EDİLİYOR…", "CHECKING…")}</span>
                     ) : integrationHealth.hasGraphCredentials ? (
                       <span className="text-emerald-600 font-bold flex items-center gap-1 font-mono uppercase">{L("🟢 YAPILANDIRILMIŞ", "🟢 CONFIGURED")}</span>
                     ) : (
@@ -2263,7 +2263,7 @@ export default function AdministrationCenter({
                       {L("Google Gemini API Anahtarı (GEMINI_API_KEY):", "Google Gemini API Key (GEMINI_API_KEY):")}
                     </span>
                     {integrationHealth.hasGeminiKey === null ? (
-                      <span className="text-slate-400 font-bold font-mono uppercase">{L("KONTROL EDİLİYOR…", "CHECKING…")}</span>
+                      <span data-crm-caption="" className="text-slate-400 font-bold font-mono uppercase">{L("KONTROL EDİLİYOR…", "CHECKING…")}</span>
                     ) : integrationHealth.hasGeminiKey ? (
                       <span className="text-emerald-600 font-bold flex items-center gap-1 font-mono uppercase">{L("🟢 YAPILANDIRILMIŞ", "🟢 CONFIGURED")}</span>
                     ) : (
@@ -2276,7 +2276,7 @@ export default function AdministrationCenter({
                       {L("Tavily Arama Motoru API Anahtarı:", "Tavily Search Engine API Key:")}
                     </span>
                     {integrationHealth.hasTavilyKey === null ? (
-                      <span className="text-slate-400 font-bold font-mono uppercase">{L("KONTROL EDİLİYOR…", "CHECKING…")}</span>
+                      <span data-crm-caption="" className="text-slate-400 font-bold font-mono uppercase">{L("KONTROL EDİLİYOR…", "CHECKING…")}</span>
                     ) : integrationHealth.hasTavilyKey ? (
                       <span className="text-emerald-600 font-bold flex items-center gap-1 font-mono uppercase">{L("🟢 YAPILANDIRILMIŞ", "🟢 CONFIGURED")}</span>
                     ) : (
@@ -2317,7 +2317,7 @@ export default function AdministrationCenter({
           <div className="fixed bottom-6 right-6 z-[9999] p-4 rounded-xl shadow-2xl border text-xs font-bold flex items-center gap-3 animate-in fade-in slide-in-from-bottom-5 duration-300 max-w-sm font-sans bg-white dark:bg-zinc-900 border-slate-200 dark:border-zinc-800 text-slate-800 dark:text-zinc-100">
             <div className={`w-2.5 h-2.5 rounded-full ${toast.type === "success" ? "bg-emerald-500" : toast.type === "error" ? "bg-rose-500" : "bg-blue-500"}`} />
             <p className="flex-1">{toast.message}</p>
-            <button type="button" onClick={() => setToast(null)} className="text-[10px] text-slate-400 hover:text-slate-650 cursor-pointer">
+            <button data-crm-button="" type="button" onClick={() => setToast(null)} className="text-[10px] text-slate-400 hover:text-slate-650 cursor-pointer">
               [{L("Kapat", "Close")}]
             </button>
           </div>

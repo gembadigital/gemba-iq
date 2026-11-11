@@ -659,18 +659,18 @@ export default function SalesDashboardView({ deals, onSelectDeal }: SalesDashboa
   const [dashboardPageTab, setDashboardPageTab] = useState<"metrics" | "coach">("metrics");
 
   return (
-    <div className="sales-dashboard space-y-6 text-slate-800 dark:text-slate-100 font-sans">
+    <div data-crm-stack="" data-crm-screen="SalesDashboardView" className="sales-dashboard space-y-6 text-slate-800 dark:text-slate-100 font-sans">
       
       {/* SECTION HEADER / TOP NAV */}
-      <div className="sales-dashboard-header flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-white dark:bg-[#1b1a19] border border-[#EDEBE9] dark:border-[#323130] p-5 rounded-2xl shadow-sm relative overflow-hidden">
-        <div aria-hidden="true" className="sales-header-stripe absolute top-0 left-0 right-0 h-1.5 bg-gradient-to-r from-emerald-500 via-[#0078D4] to-blue-500" />
-        <div>
+      <div data-crm-card="padded" data-crm-header="" className="sales-dashboard-header flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-white dark:bg-[#1b1a19] border border-[#EDEBE9] dark:border-[#323130] p-5 rounded-2xl shadow-sm relative overflow-hidden">
+        <div data-crm-decoration="" aria-hidden="true" className="sales-header-stripe absolute top-0 left-0 right-0 h-1.5 bg-gradient-to-r from-emerald-500 via-[#0078D4] to-blue-500" />
+        <div data-crm-header-copy="">
           <div className="flex items-center gap-2">
             <span className="sales-header-icon p-2 bg-gradient-to-tr from-blue-500 to-indigo-600 rounded-lg text-white shadow-sm">
               <BarChart2 className="w-5 h-5" />
             </span>
             <div>
-              <h1 className="text-lg font-extrabold tracking-tight text-slate-900 dark:text-slate-100 uppercase font-sans">
+              <h1 data-crm-heading="page" className="text-lg font-extrabold tracking-tight text-slate-900 dark:text-slate-100 uppercase font-sans">
                 {lang === "TR" ? "Satışa genel bakış" : "Sales overview"}
               </h1>
               <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
@@ -681,9 +681,9 @@ export default function SalesDashboardView({ deals, onSelectDeal }: SalesDashboa
         </div>
 
         {/* Global Filter Trigger & Controls */}
-        <div className="flex items-center gap-2 w-full sm:w-auto">
+        <div data-crm-header-actions="" className="flex items-center gap-2 w-full sm:w-auto">
           {isAnyFilterActive && (
-            <button
+            <button data-crm-button=""
               onClick={resetAllFilters}
               className="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 dark:bg-[#323130] dark:hover:bg-[#424140] text-slate-700 dark:text-slate-200 text-xs font-bold rounded-lg flex items-center gap-1 cursor-pointer transition-all border border-slate-200/50 dark:border-[#424140]"
             >
@@ -692,7 +692,7 @@ export default function SalesDashboardView({ deals, onSelectDeal }: SalesDashboa
             </button>
           )}
 
-          <button
+          <button data-crm-button=""
             onClick={() => setIsFilterOpen(true)}
             className={`px-4 py-2 text-xs font-bold rounded-lg flex items-center justify-center gap-2 cursor-pointer transition-all border ${
               isAnyFilterActive 
@@ -710,8 +710,8 @@ export default function SalesDashboardView({ deals, onSelectDeal }: SalesDashboa
       </div>
 
       {/* Dynamic Sub-Tabs bar */}
-      <div className="sales-dashboard-tabs flex items-center border-b border-slate-200/60 dark:border-zinc-800 gap-1.5 select-none bg-slate-50/50 dark:bg-[#121212] p-1 rounded-xl">
-        <button
+      <div data-crm-toolbar="" className="sales-dashboard-tabs flex items-center border-b border-slate-200/60 dark:border-zinc-800 gap-1.5 select-none bg-slate-50/50 dark:bg-[#121212] p-1 rounded-xl">
+        <button data-crm-button=""
           type="button"
           onClick={() => setDashboardPageTab("metrics")}
           aria-pressed={dashboardPageTab === "metrics"}
@@ -725,7 +725,7 @@ export default function SalesDashboardView({ deals, onSelectDeal }: SalesDashboa
           <span>{lang === "TR" ? "Genel bakış" : "Overview"}</span>
         </button>
 
-        <button
+        <button data-crm-button=""
           type="button"
           onClick={() => setDashboardPageTab("coach")}
           aria-pressed={dashboardPageTab === "coach"}
@@ -756,7 +756,7 @@ export default function SalesDashboardView({ deals, onSelectDeal }: SalesDashboa
                   {lang === "TR" ? "Satış filtreleri" : "Sales filters"}
                 </span>
               </div>
-              <button
+              <button data-crm-button=""
                 onClick={() => setIsFilterOpen(false)}
                 className="p-1 border border-transparent rounded hover:bg-slate-100 dark:hover:bg-[#252423] cursor-pointer"
                 aria-label={t("Close")}
@@ -766,16 +766,16 @@ export default function SalesDashboardView({ deals, onSelectDeal }: SalesDashboa
             </div>
 
             {/* Drawer Body - Filter Controls */}
-            <div className="flex-1 overflow-y-auto p-5 space-y-4">
+            <div data-crm-stack="" className="flex-1 overflow-y-auto p-5 space-y-4">
               
               {/* Preset Date Range */}
               <div className="space-y-1.5">
-                <label className="text-[10px] uppercase font-extrabold tracking-wider text-slate-500 block">
+                <label data-crm-label="" className="text-[10px] uppercase font-extrabold tracking-wider text-slate-500 block">
                   {lang === "TR" ? "Tarih Aralığı Penceresi" : "Date Range Window"}
                 </label>
-                <div className="grid grid-cols-4 gap-1 p-1 bg-white dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 rounded-lg">
+                <div data-crm-card="surface" data-crm-grid="layout" className="grid grid-cols-4 gap-1 p-1 bg-white dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 rounded-lg">
                   {(["All", "Month", "Quarter", "Year"] as const).map((preset) => (
-                    <button
+                    <button data-crm-button=""
                       key={preset}
                       onClick={() => setDateRangePreset(preset)}
                       className={`py-1 text-[10px] font-bold rounded transition-all cursor-pointer ${
@@ -798,10 +798,10 @@ export default function SalesDashboardView({ deals, onSelectDeal }: SalesDashboa
 
               {/* Status Filter */}
               <div className="space-y-1">
-                <label className="text-[10px] uppercase font-extrabold tracking-wider text-slate-500 block">
+                <label data-crm-label="" className="text-[10px] uppercase font-extrabold tracking-wider text-slate-500 block">
                   {lang === "TR" ? "Teklif Durumu" : "Proposal Status"}
                 </label>
-                <select
+                <select data-crm-field="control"
                   value={filterStatus}
                   onChange={(e) => setFilterStatus(e.target.value)}
                   className="w-full px-3 py-2 text-xs bg-white dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 rounded-lg"
@@ -815,10 +815,10 @@ export default function SalesDashboardView({ deals, onSelectDeal }: SalesDashboa
 
               {/* Salesperson Filter */}
               <div className="space-y-1">
-                <label className="text-[10px] uppercase font-extrabold tracking-wider text-slate-505 block">
+                <label data-crm-label="" className="text-[10px] uppercase font-extrabold tracking-wider text-slate-505 block">
                   {lang === "TR" ? "Satış Temsilcisi" : "Salesperson"}
                 </label>
-                <select
+                <select data-crm-field="control"
                   value={filterSalesperson}
                   onChange={(e) => setFilterSalesperson(e.target.value)}
                   className="w-full px-3 py-2 text-xs bg-white dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 rounded-lg"
@@ -833,10 +833,10 @@ export default function SalesDashboardView({ deals, onSelectDeal }: SalesDashboa
 
               {/* Customer Filter */}
               <div className="space-y-1">
-                <label className="text-[10px] uppercase font-extrabold tracking-wider text-slate-505 block">
+                <label data-crm-label="" className="text-[10px] uppercase font-extrabold tracking-wider text-slate-505 block">
                   {lang === "TR" ? "Müşteri / Hesap" : "Customer / Account"}
                 </label>
-                <select
+                <select data-crm-field="control"
                   value={filterCustomer}
                   onChange={(e) => setFilterCustomer(e.target.value)}
                   className="w-full px-3 py-2 text-xs bg-white dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 rounded-lg"
@@ -851,10 +851,10 @@ export default function SalesDashboardView({ deals, onSelectDeal }: SalesDashboa
 
               {/* Sector Industry Filter */}
               <div className="space-y-1">
-                <label className="text-[10px] uppercase font-extrabold tracking-wider text-slate-505 block">
+                <label data-crm-label="" className="text-[10px] uppercase font-extrabold tracking-wider text-slate-505 block">
                   {lang === "TR" ? "Sektör" : "Sector / Industry"}
                 </label>
-                <select
+                <select data-crm-field="control"
                   value={filterSector}
                   onChange={(e) => setFilterSector(e.target.value)}
                   className="w-full px-3 py-2 text-xs bg-white dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 rounded-lg"
@@ -869,10 +869,10 @@ export default function SalesDashboardView({ deals, onSelectDeal }: SalesDashboa
 
               {/* Region Filter */}
               <div className="space-y-1">
-                <label className="text-[10px] uppercase font-extrabold tracking-wider text-slate-550 block">
+                <label data-crm-label="" className="text-[10px] uppercase font-extrabold tracking-wider text-slate-550 block">
                   {lang === "TR" ? "Coğrafi Bölge" : "Geographic Region"}
                 </label>
-                <select
+                <select data-crm-field="control"
                   value={filterRegion}
                   onChange={(e) => setFilterRegion(e.target.value)}
                   className="w-full px-3 py-2 text-xs bg-white dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 rounded-lg"
@@ -887,10 +887,10 @@ export default function SalesDashboardView({ deals, onSelectDeal }: SalesDashboa
 
               {/* Business Unit Filter */}
               <div className="space-y-1">
-                <label className="text-[10px] uppercase font-extrabold tracking-wider text-slate-550 block">
+                <label data-crm-label="" className="text-[10px] uppercase font-extrabold tracking-wider text-slate-550 block">
                   {lang === "TR" ? "İş Birimi (BU)" : "Business Unit (BU)"}
                 </label>
-                <select
+                <select data-crm-field="control"
                   value={filterBusinessUnit}
                   onChange={(e) => setFilterBusinessUnit(e.target.value)}
                   className="w-full px-3 py-2 text-xs bg-white dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 rounded-lg"
@@ -905,10 +905,10 @@ export default function SalesDashboardView({ deals, onSelectDeal }: SalesDashboa
 
               {/* Proposal Subject Filter */}
               <div className="space-y-1">
-                <label className="text-[10px] uppercase font-extrabold tracking-wider text-slate-550 block">
+                <label data-crm-label="" className="text-[10px] uppercase font-extrabold tracking-wider text-slate-550 block">
                   {lang === "TR" ? "Teklif Konusu / Başlığı" : "Proposal Topic / Subject"}
                 </label>
-                <select
+                <select data-crm-field="control"
                   value={filterSubject}
                   onChange={(e) => setFilterSubject(e.target.value)}
                   className="w-full px-3 py-2 text-xs bg-white dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 rounded-lg"
@@ -923,10 +923,10 @@ export default function SalesDashboardView({ deals, onSelectDeal }: SalesDashboa
 
               {/* Deal Stage Filter */}
               <div className="space-y-1">
-                <label className="text-[10px] uppercase font-extrabold tracking-wider text-slate-550 block">
+                <label data-crm-label="" className="text-[10px] uppercase font-extrabold tracking-wider text-slate-550 block">
                   {lang === "TR" ? "Fırsat Aşaması" : "Deal Stage Lifecycle"}
                 </label>
-                <select
+                <select data-crm-field="control"
                   value={filterStage}
                   onChange={(e) => setFilterStage(e.target.value)}
                   className="w-full px-3 py-2 text-xs bg-white dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 rounded-lg"
@@ -959,13 +959,13 @@ export default function SalesDashboardView({ deals, onSelectDeal }: SalesDashboa
 
             {/* Drawer Footer */}
             <div className="p-4 border-t border-[#EDEBE9] dark:border-[#323130] bg-white dark:bg-[#201f1e] flex items-center justify-between">
-              <button
+              <button data-crm-button=""
                 onClick={resetAllFilters}
                 className="px-3 py-2 text-xs font-bold border border-slate-200 dark:border-zinc-800 text-slate-700 dark:text-slate-300 rounded hover:bg-slate-50 cursor-pointer"
               >
                 {lang === "TR" ? "Sıfırla" : "Clear Preset"}
               </button>
-              <button
+              <button data-crm-button=""
                 onClick={() => setIsFilterOpen(false)}
                 className="px-4 py-2 text-xs font-bold bg-[#0078D4] hover:bg-[#005a9e] text-white rounded cursor-pointer"
               >
@@ -977,10 +977,10 @@ export default function SalesDashboardView({ deals, onSelectDeal }: SalesDashboa
       )}
 
       {/* SECTION 1 - KPI SUMMARY CARDS */}
-      <div className="sales-kpis grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-6 gap-4">
+      <div data-crm-flow="" data-crm-grid="layout" className="sales-kpis grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-6 gap-4">
         
         {/* Card 1: Total Proposal Value */}
-        <div className="bg-white dark:bg-[#1b1a19] border border-[#EDEBE9] dark:border-[#323130] rounded-2xl p-5 shadow-xs relative overflow-hidden flex flex-col justify-between">
+        <div data-crm-card="padded" className="bg-white dark:bg-[#1b1a19] border border-[#EDEBE9] dark:border-[#323130] rounded-2xl p-5 shadow-xs relative overflow-hidden flex flex-col justify-between">
           <div className="flex items-center justify-between text-slate-400">
             <span className="text-[10px] font-extrabold uppercase tracking-widest text-[#0078D4] dark:text-blue-400">
               {lang === "TR" ? "Toplam Teklifler" : "Total Proposals"}
@@ -998,7 +998,7 @@ export default function SalesDashboardView({ deals, onSelectDeal }: SalesDashboa
         </div>
 
         {/* Card 2: Won Proposal Value */}
-        <div className="bg-white dark:bg-[#1b1a19] border border-[#EDEBE9] dark:border-[#323130] rounded-2xl p-5 shadow-xs relative overflow-hidden flex flex-col justify-between">
+        <div data-crm-card="padded" className="bg-white dark:bg-[#1b1a19] border border-[#EDEBE9] dark:border-[#323130] rounded-2xl p-5 shadow-xs relative overflow-hidden flex flex-col justify-between">
           <div className="flex items-center justify-between text-slate-400">
             <span className="text-[10px] font-extrabold uppercase tracking-widest text-emerald-500">
               {lang === "TR" ? "Kazanılan Değer" : "Won Value"}
@@ -1019,7 +1019,7 @@ export default function SalesDashboardView({ deals, onSelectDeal }: SalesDashboa
         </div>
 
         {/* Card 3: Lost Proposal Value */}
-        <div className="bg-white dark:bg-[#1b1a19] border border-[#EDEBE9] dark:border-[#323130] rounded-2xl p-5 shadow-xs relative overflow-hidden flex flex-col justify-between">
+        <div data-crm-card="padded" className="bg-white dark:bg-[#1b1a19] border border-[#EDEBE9] dark:border-[#323130] rounded-2xl p-5 shadow-xs relative overflow-hidden flex flex-col justify-between">
           <div className="flex items-center justify-between text-slate-400">
             <span className="text-[10px] font-extrabold uppercase tracking-widest text-rose-500">
               {lang === "TR" ? "Kaybedilen Değer" : "Lost Value"}
@@ -1040,7 +1040,7 @@ export default function SalesDashboardView({ deals, onSelectDeal }: SalesDashboa
         </div>
 
         {/* Card 4: Win Rate */}
-        <div className="bg-white dark:bg-[#1b1a19] border border-[#EDEBE9] dark:border-[#323130] rounded-2xl p-5 shadow-xs relative overflow-hidden flex flex-col justify-between">
+        <div data-crm-card="padded" className="bg-white dark:bg-[#1b1a19] border border-[#EDEBE9] dark:border-[#323130] rounded-2xl p-5 shadow-xs relative overflow-hidden flex flex-col justify-between">
           <div className="flex items-center justify-between text-slate-400">
             <span className="text-[10px] font-extrabold uppercase tracking-widest text-indigo-500">
               {lang === "TR" ? "Kazanma Oranı" : "Win Rate"}
@@ -1058,7 +1058,7 @@ export default function SalesDashboardView({ deals, onSelectDeal }: SalesDashboa
         </div>
 
         {/* Card 5: Average Deal Size */}
-        <div className="bg-white dark:bg-[#1b1a19] border border-[#EDEBE9] dark:border-[#323130] rounded-2xl p-5 shadow-xs relative overflow-hidden flex flex-col justify-between">
+        <div data-crm-card="padded" className="bg-white dark:bg-[#1b1a19] border border-[#EDEBE9] dark:border-[#323130] rounded-2xl p-5 shadow-xs relative overflow-hidden flex flex-col justify-between">
           <div className="flex items-center justify-between text-slate-400">
             <span className="text-[10px] font-extrabold uppercase tracking-widest text-sky-500">
               {lang === "TR" ? "Ort. Fırsat Büyüklüğü" : "Avg Deal Size"}
@@ -1079,7 +1079,7 @@ export default function SalesDashboardView({ deals, onSelectDeal }: SalesDashboa
         </div>
 
         {/* Card 6: Average Sales Cycle */}
-        <div className="bg-white dark:bg-[#1b1a19] border border-[#EDEBE9] dark:border-[#323130] rounded-2xl p-5 shadow-xs relative overflow-hidden flex flex-col justify-between">
+        <div data-crm-card="padded" className="bg-white dark:bg-[#1b1a19] border border-[#EDEBE9] dark:border-[#323130] rounded-2xl p-5 shadow-xs relative overflow-hidden flex flex-col justify-between">
           <div className="flex items-center justify-between text-slate-400">
             <span className="text-[10px] font-extrabold uppercase tracking-widest text-amber-500">
               {lang === "TR" ? "Satış Döngüsü" : "Sales Cycle"}
@@ -1102,18 +1102,18 @@ export default function SalesDashboardView({ deals, onSelectDeal }: SalesDashboa
       <div className="sales-insights">
         <div className="flex items-center gap-2 mb-3">
           <Sparkles className="w-4 h-4 text-amber-500 animate-pulse" />
-          <h2 className="text-xs font-extrabold uppercase tracking-widest text-slate-500 dark:text-slate-400">
+          <h2 data-crm-heading="section" className="text-xs font-extrabold uppercase tracking-widest text-slate-500 dark:text-slate-400">
             {lang === "TR" ? "Fırsatların sağlığı" : "Opportunity health"}
           </h2>
         </div>
         
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div data-crm-flow="" data-crm-grid="layout" className="grid grid-cols-1 md:grid-cols-3 gap-4">
           
           {/* KPI 1 - WEIGHTED PIPELINE VALUE */}
-          <button type="button" className="sales-insight-card bg-white dark:bg-[#1b1a19] border border-[#EDEBE9] dark:border-[#323130] rounded-2xl p-5 shadow-xs flex flex-col justify-between hover:border-[#0078D4] transition-all cursor-pointer"
+          <button data-crm-button="" type="button" className="sales-insight-card bg-white dark:bg-[#1b1a19] border border-[#EDEBE9] dark:border-[#323130] rounded-2xl p-5 shadow-xs flex flex-col justify-between hover:border-[#0078D4] transition-all cursor-pointer"
                onClick={() => setActiveDrillDown("weighted")}>
             <div className="flex items-center justify-between">
-              <span className="text-[11px] font-extrabold uppercase tracking-widest text-slate-500 dark:text-slate-450 block">
+              <span data-crm-caption="" className="text-[11px] font-extrabold uppercase tracking-widest text-slate-500 dark:text-slate-450 block">
                 {lang === "TR" ? "Ağırlıklı Süreç Değeri" : "Weighted Pipeline Value"}
               </span>
               <span className="text-[10px] text-xs font-bold text-[#0078D4] dark:text-blue-400 flex items-center gap-0.5">
@@ -1152,10 +1152,10 @@ export default function SalesDashboardView({ deals, onSelectDeal }: SalesDashboa
           </button>
 
           {/* KPI 2 - PROPOSAL CONVERSION RATE */}
-          <button type="button" className="sales-insight-card bg-white dark:bg-[#1b1a19] border border-[#EDEBE9] dark:border-[#323130] rounded-2xl p-5 shadow-xs flex flex-col justify-between hover:border-emerald-500/80 transition-all cursor-pointer"
+          <button data-crm-button="" type="button" className="sales-insight-card bg-white dark:bg-[#1b1a19] border border-[#EDEBE9] dark:border-[#323130] rounded-2xl p-5 shadow-xs flex flex-col justify-between hover:border-emerald-500/80 transition-all cursor-pointer"
                onClick={() => setActiveDrillDown("conversion")}>
             <div className="flex items-center justify-between">
-              <span className="text-[11px] font-extrabold uppercase tracking-widest text-slate-500 dark:text-slate-450 block">
+              <span data-crm-caption="" className="text-[11px] font-extrabold uppercase tracking-widest text-slate-500 dark:text-slate-450 block">
                 {lang === "TR" ? "Teklif Dönüşüm Oranı" : "Proposal Conversion Rate"}
               </span>
               <span className="text-[10px] text-xs font-bold text-emerald-500 flex items-center gap-0.5">
@@ -1201,10 +1201,10 @@ export default function SalesDashboardView({ deals, onSelectDeal }: SalesDashboa
           </button>
  
           {/* KPI 3 - OPPORTUNITY AGING ANALYSIS */}
-          <button type="button" className="sales-insight-card bg-white dark:bg-[#1b1a19] border border-[#EDEBE9] dark:border-[#323130] rounded-2xl p-5 shadow-xs flex flex-col justify-between hover:border-yellow-500/85 transition-all cursor-pointer"
+          <button data-crm-button="" type="button" className="sales-insight-card bg-white dark:bg-[#1b1a19] border border-[#EDEBE9] dark:border-[#323130] rounded-2xl p-5 shadow-xs flex flex-col justify-between hover:border-yellow-500/85 transition-all cursor-pointer"
                onClick={() => setActiveDrillDown("aging")}>
             <div className="flex items-center justify-between">
-              <span className="text-[11px] font-extrabold uppercase tracking-widest text-slate-500 dark:text-slate-450 block">
+              <span data-crm-caption="" className="text-[11px] font-extrabold uppercase tracking-widest text-slate-500 dark:text-slate-450 block">
                 {lang === "TR" ? "Fırsat Yaşlandırma (Gün)" : "Opportunity Aging (Days)"}
               </span>
               <span className="text-[10px] text-xs font-bold text-amber-500 flex items-center gap-0.5">
@@ -1249,20 +1249,20 @@ export default function SalesDashboardView({ deals, onSelectDeal }: SalesDashboa
       
       {/* Weighted Pipeline Drill-down */}
       {activeDrillDown === "weighted" && (
-        <div className="bg-slate-50 dark:bg-zinc-900 border border-[#EDEBE9] dark:border-[#323130] p-6 rounded-2xl space-y-4 animate-in fade-in duration-200">
+        <div data-crm-stack="" className="bg-slate-50 dark:bg-zinc-900 border border-[#EDEBE9] dark:border-[#323130] p-6 rounded-2xl space-y-4 animate-in fade-in duration-200">
           <div className="flex justify-between items-center pb-3 border-b border-slate-200 dark:border-zinc-800">
             <div>
-              <h3 className="text-sm font-extrabold uppercase tracking-widest text-[#0078D4] dark:text-blue-400">{lang === "TR" ? "Ağırlıklı Süreç Öngörüsü Gezgini" : "Weighted Pipeline Forecast Explorer"}</h3>
+              <h3 data-crm-heading="section" className="text-sm font-extrabold uppercase tracking-widest text-[#0078D4] dark:text-blue-400">{lang === "TR" ? "Ağırlıklı Süreç Öngörüsü Gezgini" : "Weighted Pipeline Forecast Explorer"}</h3>
               <p className="text-xs text-slate-500">{lang === "TR" ? "Olasılık ve iş birimine göre en iyi 10 fırsatın detaylı öngörü katkısı" : "Detailed forecast contributions of top 10 opportunities by probability and business unit"}</p>
             </div>
-            <button onClick={() => setActiveDrillDown(null)} className="p-1 hover:bg-slate-200 dark:hover:bg-zinc-800 rounded font-black cursor-pointer">
+            <button data-crm-button="" onClick={() => setActiveDrillDown(null)} className="p-1 hover:bg-slate-200 dark:hover:bg-zinc-800 rounded font-black cursor-pointer">
               <X className="w-4 h-4" />
             </button>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div data-crm-flow="" data-crm-grid="layout" className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {/* Left side contribution list */}
-            <div className="space-y-2 bg-white dark:bg-[#1b1a19] p-4 rounded-xl border border-slate-200/60 dark:border-zinc-800">
+            <div data-crm-card="padded" className="space-y-2 bg-white dark:bg-[#1b1a19] p-4 rounded-xl border border-slate-200/60 dark:border-zinc-800">
               <span className="text-[10px] font-extrabold uppercase tracking-widest text-[#0078D4] dark:text-blue-400 block mb-2">{lang === "TR" ? "Öngörüye Katkıda Bulunan En Büyük Fırsatlar" : "Top Opportunities contributing to Forecast"}</span>
               <div className="divide-y divide-slate-100 dark:divide-zinc-800/60 max-h-[250px] overflow-y-auto">
                 {filteredDeals.slice(0, 5).map((d) => (
@@ -1287,8 +1287,8 @@ export default function SalesDashboardView({ deals, onSelectDeal }: SalesDashboa
             </div>
 
             {/* Right side chart */}
-            <div className="bg-white dark:bg-[#1b1a19] p-4 rounded-xl border border-slate-200/60 dark:border-zinc-800 h-[280px]">
-              <span className="text-[10px] font-extrabold uppercase tracking-widest text-slate-500 block mb-3">{lang === "TR" ? "Aylık Gelir Öngörü Trendi (Süreç Ağırlıklı)" : "Revenue Forecast Trend by Month (Pipeline Weighted)"}</span>
+            <div data-crm-card="padded" className="bg-white dark:bg-[#1b1a19] p-4 rounded-xl border border-slate-200/60 dark:border-zinc-800 h-[280px]">
+              <span data-crm-caption="" className="text-[10px] font-extrabold uppercase tracking-widest text-slate-500 block mb-3">{lang === "TR" ? "Aylık Gelir Öngörü Trendi (Süreç Ağırlıklı)" : "Revenue Forecast Trend by Month (Pipeline Weighted)"}</span>
               <ResponsiveContainer width="100%" height="90%">
                 <ComposedChart data={forecastChartData}>
                   <CartesianGrid strokeDasharray="3 3" opacity={0.1} />
@@ -1308,21 +1308,21 @@ export default function SalesDashboardView({ deals, onSelectDeal }: SalesDashboa
 
       {/* Conversion Rate Drill-down */}
       {activeDrillDown === "conversion" && (
-        <div className="bg-slate-50 dark:bg-zinc-900 border border-[#EDEBE9] dark:border-[#323130] p-6 rounded-2xl space-y-4 animate-in fade-in duration-200">
+        <div data-crm-stack="" className="bg-slate-50 dark:bg-zinc-900 border border-[#EDEBE9] dark:border-[#323130] p-6 rounded-2xl space-y-4 animate-in fade-in duration-200">
           <div className="flex justify-between items-center pb-3 border-b border-slate-200 dark:border-zinc-800">
             <div>
-              <h3 className="text-sm font-extrabold uppercase tracking-widest text-emerald-500">{lang === "TR" ? "Teklif Dönüşüm Matrisi Gezgini" : "Proposal Conversion Matrix Explorer"}</h3>
+              <h3 data-crm-heading="section" className="text-sm font-extrabold uppercase tracking-widest text-emerald-500">{lang === "TR" ? "Teklif Dönüşüm Matrisi Gezgini" : "Proposal Conversion Matrix Explorer"}</h3>
               <p className="text-xs text-slate-500">{lang === "TR" ? "Sektör, satış temsilcisi ve teklif konusuna göre dönüşüm oranları" : "Conversion rates segmented by Industry Sector, Salesperson, and Proposal Subject matter"}</p>
             </div>
-            <button onClick={() => setActiveDrillDown(null)} className="p-1 hover:bg-slate-200 dark:hover:bg-zinc-800 rounded font-black cursor-pointer">
+            <button data-crm-button="" onClick={() => setActiveDrillDown(null)} className="p-1 hover:bg-slate-200 dark:hover:bg-zinc-800 rounded font-black cursor-pointer">
               <X className="w-4 h-4" />
             </button>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div data-crm-flow="" data-crm-grid="layout" className="grid grid-cols-1 md:grid-cols-3 gap-4">
             {/* Sector Breakdown */}
-            <div className="bg-white dark:bg-[#1b1a19] p-4 rounded-xl border border-slate-200/60 dark:border-zinc-800">
-              <span className="text-[10px] font-extrabold uppercase tracking-widest text-slate-400 block mb-2">{lang === "TR" ? "Sektör Bazlı Dönüşüm" : "Conversion by Industry"}</span>
+            <div data-crm-card="padded" className="bg-white dark:bg-[#1b1a19] p-4 rounded-xl border border-slate-200/60 dark:border-zinc-800">
+              <span data-crm-caption="" className="text-[10px] font-extrabold uppercase tracking-widest text-slate-400 block mb-2">{lang === "TR" ? "Sektör Bazlı Dönüşüm" : "Conversion by Industry"}</span>
               <div className="space-y-2 mt-2">
                 {sectors.slice(1, 5).map((sec) => {
                   const secDeals = filteredDeals.filter(d => d.industry === sec);
@@ -1344,8 +1344,8 @@ export default function SalesDashboardView({ deals, onSelectDeal }: SalesDashboa
             </div>
 
             {/* Salesperson Breakdown */}
-            <div className="bg-white dark:bg-[#1b1a19] p-4 rounded-xl border border-slate-200/60 dark:border-zinc-800">
-              <span className="text-[10px] font-extrabold uppercase tracking-widest text-slate-400 block mb-2">{lang === "TR" ? "Temsilci Bazlı Dönüşüm" : "Conversion by Salesperson"}</span>
+            <div data-crm-card="padded" className="bg-white dark:bg-[#1b1a19] p-4 rounded-xl border border-slate-200/60 dark:border-zinc-800">
+              <span data-crm-caption="" className="text-[10px] font-extrabold uppercase tracking-widest text-slate-400 block mb-2">{lang === "TR" ? "Temsilci Bazlı Dönüşüm" : "Conversion by Salesperson"}</span>
               <div className="space-y-2 mt-2">
                 {leaderboardData.slice(0, 4).map((rep) => {
                   return (
@@ -1364,8 +1364,8 @@ export default function SalesDashboardView({ deals, onSelectDeal }: SalesDashboa
             </div>
 
             {/* Product breakdown */}
-            <div className="bg-white dark:bg-[#1b1a19] p-4 rounded-xl border border-slate-200/60 dark:border-zinc-800">
-              <span className="text-[10px] font-extrabold uppercase tracking-widest text-slate-400 block mb-2">{lang === "TR" ? "Konu Bazlı Dönüşüm" : "Conversion by Subject"}</span>
+            <div data-crm-card="padded" className="bg-white dark:bg-[#1b1a19] p-4 rounded-xl border border-slate-200/60 dark:border-zinc-800">
+              <span data-crm-caption="" className="text-[10px] font-extrabold uppercase tracking-widest text-slate-400 block mb-2">{lang === "TR" ? "Konu Bazlı Dönüşüm" : "Conversion by Subject"}</span>
               <div className="space-y-2 mt-2">
                 {topicsData.slice(0, 4).map((top) => {
                   const rate = top.count > 0 ? Math.round((top.won / top.count) * 100) : 0;
@@ -1389,19 +1389,19 @@ export default function SalesDashboardView({ deals, onSelectDeal }: SalesDashboa
 
       {/* Aging Analysis Drill-down */}
       {activeDrillDown === "aging" && (
-        <div className="bg-slate-50 dark:bg-zinc-900 border border-[#EDEBE9] dark:border-[#323130] p-6 rounded-2xl space-y-4 animate-in fade-in duration-200">
+        <div data-crm-stack="" className="bg-slate-50 dark:bg-zinc-900 border border-[#EDEBE9] dark:border-[#323130] p-6 rounded-2xl space-y-4 animate-in fade-in duration-200">
           <div className="flex justify-between items-center pb-3 border-b border-slate-200 dark:border-zinc-800">
             <div>
-              <h3 className="text-sm font-extrabold uppercase tracking-widest text-rose-500">{lang === "TR" ? "Fırsat Yaşlandırma Risk Paneli" : "Opportunity Aging Risk Panel"}</h3>
+              <h3 data-crm-heading="section" className="text-sm font-extrabold uppercase tracking-widest text-rose-500">{lang === "TR" ? "Fırsat Yaşlandırma Risk Paneli" : "Opportunity Aging Risk Panel"}</h3>
               <p className="text-xs text-slate-500">{lang === "TR" ? "Hemen takip edilmesi gereken inaktif/bayat tekliflerin tespiti" : "Identification of inactive/stale proposals requiring immediate follow-up actions"}</p>
             </div>
-            <button onClick={() => setActiveDrillDown(null)} className="p-1 hover:bg-slate-200 dark:hover:bg-zinc-800 rounded font-black cursor-pointer">
+            <button data-crm-button="" onClick={() => setActiveDrillDown(null)} className="p-1 hover:bg-slate-200 dark:hover:bg-zinc-800 rounded font-black cursor-pointer">
               <X className="w-4 h-4" />
             </button>
           </div>
 
-          <div className="bg-white dark:bg-[#1b1a19] p-4 rounded-xl border border-slate-200 dark:border-[#323130] overflow-x-auto">
-            <table className="w-full text-left text-xs">
+          <div data-crm-card="padded" data-crm-scroll="horizontal" className="bg-white dark:bg-[#1b1a19] p-4 rounded-xl border border-slate-200 dark:border-[#323130] overflow-x-auto">
+            <table data-crm-table="" className="w-full text-left text-xs">
               <thead>
                 <tr className="border-b border-slate-100 dark:border-zinc-800 text-[10px] font-extrabold uppercase tracking-wider text-slate-400">
                   <th className="py-2.5">{lang === "TR" ? "Müşteri / Cari" : "Account / Customer"}</th>
@@ -1462,7 +1462,7 @@ export default function SalesDashboardView({ deals, onSelectDeal }: SalesDashboa
                       </td>
                       <td className="text-right">
                         {isStale ? (
-                          <button
+                          <button data-crm-button=""
                             onClick={() => {
                               if (onSelectDeal) onSelectDeal(d);
                               setActiveDrillDown(null);
@@ -1485,12 +1485,12 @@ export default function SalesDashboardView({ deals, onSelectDeal }: SalesDashboa
       )}
 
       {/* INTERACTIVE DATA VISUALIZATIONS GRID */}
-      <div className="sales-chart-row grid grid-cols-1 md:grid-cols-12 gap-5">
+      <div data-crm-flow="" data-crm-grid="layout" className="sales-chart-row grid grid-cols-1 md:grid-cols-12 gap-5">
         
         {/* SECTION 2 - SALES FUNNEL */}
-        <div className="sales-panel bg-white dark:bg-[#1b1a19] border border-[#EDEBE9] dark:border-[#323130] rounded-2xl p-5 shadow-xs md:col-span-6 flex flex-col justify-between">
+        <div data-crm-card="padded" className="sales-panel bg-white dark:bg-[#1b1a19] border border-[#EDEBE9] dark:border-[#323130] rounded-2xl p-5 shadow-xs md:col-span-6 flex flex-col justify-between">
           <div>
-            <h3 className="text-xs font-black uppercase tracking-widest text-[#0078D4] dark:text-blue-400 mb-1">
+            <h3 data-crm-heading="section" className="text-xs font-black uppercase tracking-widest text-[#0078D4] dark:text-blue-400 mb-1">
               {lang === "TR" ? "Satış hunisi" : "Sales funnel"}
             </h3>
             <p className="text-[10px] text-slate-400 mb-4">
@@ -1527,12 +1527,12 @@ export default function SalesDashboardView({ deals, onSelectDeal }: SalesDashboa
         </div>
 
         {/* SECTION 3 - SOLD MAN-DAY PERFORMANCE */}
-        <div className="sales-panel bg-white dark:bg-[#1b1a19] border border-[#EDEBE9] dark:border-[#323130] rounded-2xl p-5 shadow-xs md:col-span-6 flex flex-col justify-between">
+        <div data-crm-card="padded" className="sales-panel bg-white dark:bg-[#1b1a19] border border-[#EDEBE9] dark:border-[#323130] rounded-2xl p-5 shadow-xs md:col-span-6 flex flex-col justify-between">
           <div className="flex justify-between items-center mb-1">
-            <h3 className="text-xs font-black uppercase tracking-widest text-[#0078D4] dark:text-blue-400">
+            <h3 data-crm-heading="section" className="text-xs font-black uppercase tracking-widest text-[#0078D4] dark:text-blue-400">
               {lang === "TR" ? "Satılan Adam-Gün Performansı" : "Sold Man-Day Performance"}
             </h3>
-            <button
+            <button data-crm-button=""
               onClick={() => {
                 setTempTargets({ ...targets });
                 setIsTargetModalOpen(true);
@@ -1547,10 +1547,10 @@ export default function SalesDashboardView({ deals, onSelectDeal }: SalesDashboa
             {lang === "TR" ? "Satılan adam-günlerin dönem hedefiyle karşılaştırması." : "Sold consultant man-days compared with the period target."}
           </p>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 flex-1">
+          <div data-crm-flow="" data-crm-grid="layout" className="grid grid-cols-1 sm:grid-cols-2 gap-4 flex-1">
             {/* Visual Gauge representation as simple elegant SVG */}
             <div className="bg-[#FAF9F8] dark:bg-zinc-900/50 p-4 rounded-xl border border-slate-200/50 dark:border-zinc-800/40 flex flex-col items-center justify-center relative">
-              <span className="text-[10px] font-extrabold uppercase text-slate-400 block mb-2 text-center">{lang === "TR" ? "İlerleme Göstergesi" : "Progress Gauge"}</span>
+              <span data-crm-caption="" className="text-[10px] font-extrabold uppercase text-slate-400 block mb-2 text-center">{lang === "TR" ? "İlerleme Göstergesi" : "Progress Gauge"}</span>
               
               <div className="relative w-32 h-32 flex items-center justify-center">
                 {/* SVG Semi Circle Gauge */}
@@ -1564,7 +1564,7 @@ export default function SalesDashboardView({ deals, onSelectDeal }: SalesDashboa
                   <span className="block text-2xl font-black font-mono tracking-tighter text-slate-800 dark:text-white">
                     {targetPercentage}%
                   </span>
-                  <span className="text-[9px] uppercase font-bold text-slate-400">{lang === "TR" ? "Tamamlanma" : "Completion"}</span>
+                  <span data-crm-caption="" className="text-[9px] uppercase font-bold text-slate-400">{lang === "TR" ? "Tamamlanma" : "Completion"}</span>
                 </div>
               </div>
             </div>
@@ -1572,7 +1572,7 @@ export default function SalesDashboardView({ deals, onSelectDeal }: SalesDashboa
             {/* Target Card items */}
             <div className={`p-4 rounded-xl border ${targetBgColorClass} flex flex-col justify-between`}>
               <div>
-                <span className="text-[10px] uppercase font-extrabold tracking-widest text-slate-500 block mb-1">{lang === "TR" ? "Hedef Gerçekleşme" : "Target Achievement"}</span>
+                <span data-crm-caption="" className="text-[10px] uppercase font-extrabold tracking-widest text-slate-500 block mb-1">{lang === "TR" ? "Hedef Gerçekleşme" : "Target Achievement"}</span>
                 <span className={`text-4xl font-extrabold font-mono tracking-tighter block ${targetColorClass}`}>
                   {stats.totalSoldManDays} MD
                 </span>
@@ -1600,22 +1600,22 @@ export default function SalesDashboardView({ deals, onSelectDeal }: SalesDashboa
       </div>
 
       {/* SECOND GRAPH ROW (SECTION 4 & 5) */}
-      <div className="sales-chart-row grid grid-cols-1 md:grid-cols-12 gap-5">
+      <div data-crm-flow="" data-crm-grid="layout" className="sales-chart-row grid grid-cols-1 md:grid-cols-12 gap-5">
         
         {/* SECTION 4 - SALES TREND ANALYSIS */}
-        <div className="sales-panel bg-white dark:bg-[#1b1a19] border border-[#EDEBE9] dark:border-[#323130] rounded-2xl p-5 shadow-xs md:col-span-8 flex flex-col justify-between h-[340px]">
+        <div data-crm-card="padded" className="sales-panel bg-white dark:bg-[#1b1a19] border border-[#EDEBE9] dark:border-[#323130] rounded-2xl p-5 shadow-xs md:col-span-8 flex flex-col justify-between h-[340px]">
           <div className="flex justify-between items-center mb-1">
             <div>
-              <h3 className="text-xs font-black uppercase tracking-widest text-[#0078D4] dark:text-blue-400">
+              <h3 data-crm-heading="section" className="text-xs font-black uppercase tracking-widest text-[#0078D4] dark:text-blue-400">
                 {lang === "TR" ? "Satış Trend Analizi" : "Sales Trend Analysis"}
               </h3>
               <p className="text-[10px] text-slate-400">{lang === "TR" ? "Zaman içindeki teklif gönderim, kazanma ve kayıp değerlerinin geçmişi" : "Historical Proposal Sent, Won, and Lost values over time"}</p>
             </div>
             
             {/* Period select */}
-            <div className="grid grid-cols-3 gap-0.5 p-1 bg-[#FAF8F5] dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 rounded-lg">
+            <div data-crm-grid="layout" className="grid grid-cols-3 gap-0.5 p-1 bg-[#FAF8F5] dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 rounded-lg">
               {(["Monthly", "Quarterly", "Yearly"] as const).map((period) => (
-                <button
+                <button data-crm-button=""
                   key={period}
                   onClick={() => setTrendPeriod(period)}
                   aria-pressed={trendPeriod === period}
@@ -1658,19 +1658,19 @@ export default function SalesDashboardView({ deals, onSelectDeal }: SalesDashboa
         </div>
 
         {/* SECTION 5 - CUSTOMER ACQUISITION */}
-        <div className="sales-panel bg-white dark:bg-[#1b1a19] border border-[#EDEBE9] dark:border-[#323130] rounded-2xl p-5 shadow-xs md:col-span-4 flex flex-col justify-between">
+        <div data-crm-card="padded" className="sales-panel bg-white dark:bg-[#1b1a19] border border-[#EDEBE9] dark:border-[#323130] rounded-2xl p-5 shadow-xs md:col-span-4 flex flex-col justify-between">
           <div>
-            <h3 className="text-xs font-black uppercase tracking-widest text-[#0078D4] dark:text-blue-400 mb-1">
+            <h3 data-crm-heading="section" className="text-xs font-black uppercase tracking-widest text-[#0078D4] dark:text-blue-400 mb-1">
               {lang === "TR" ? "Yeni Müşteri Kazanımı" : "Customer Acquisition"}
             </h3>
             <p className="text-[10px] text-slate-400 mb-4">{lang === "TR" ? "Bu dönemde kazanılan yeni logolar" : "New logos converted this period"}</p>
           </div>
 
-          <div className="space-y-4">
+          <div data-crm-stack="" className="space-y-4">
             {/* Monthly */}
             <div className="p-3 bg-slate-50 dark:bg-zinc-900 border border-slate-200/50 dark:border-zinc-805/40 rounded-xl flex justify-between items-center">
               <div>
-                <span className="text-[10px] uppercase font-bold text-slate-400 block">{lang === "TR" ? "Kazanılan Logo (Filtreli)" : "Logos Acquired (Filtered)"}</span>
+                <span data-crm-caption="" className="text-[10px] uppercase font-bold text-slate-400 block">{lang === "TR" ? "Kazanılan Logo (Filtreli)" : "Logos Acquired (Filtered)"}</span>
                 <span className="text-xl font-black font-mono text-slate-800 dark:text-white">
                   {stats.wonCount} {lang === "TR" ? "Müşteri" : "Clients"}
                 </span>
@@ -1683,12 +1683,12 @@ export default function SalesDashboardView({ deals, onSelectDeal }: SalesDashboa
       </div>
 
       {/* SECTION 9 & 10: FORECAST & HEALTH */}
-      <div className="sales-chart-row grid grid-cols-1 md:grid-cols-12 gap-5">
+      <div data-crm-flow="" data-crm-grid="layout" className="sales-chart-row grid grid-cols-1 md:grid-cols-12 gap-5">
 
         {/* SECTION 9 - SALES FORECAST */}
-        <div className="sales-panel bg-white dark:bg-[#1b1a19] border border-[#EDEBE9] dark:border-[#323130] rounded-2xl p-5 shadow-xs md:col-span-8 flex flex-col justify-between h-[320px]">
+        <div data-crm-card="padded" className="sales-panel bg-white dark:bg-[#1b1a19] border border-[#EDEBE9] dark:border-[#323130] rounded-2xl p-5 shadow-xs md:col-span-8 flex flex-col justify-between h-[320px]">
           <div>
-            <h3 className="text-xs font-black uppercase tracking-widest text-[#0078D4] dark:text-blue-400 mb-1">
+            <h3 data-crm-heading="section" className="text-xs font-black uppercase tracking-widest text-[#0078D4] dark:text-blue-400 mb-1">
               {t("Sales Forecast Projection Matrix")}
             </h3>
             <p className="text-[10px] text-slate-400">{t("Comparing Gross Pipeline Value against Weighted Revenue targets")}</p>
@@ -1711,9 +1711,9 @@ export default function SalesDashboardView({ deals, onSelectDeal }: SalesDashboa
         </div>
 
         {/* SECTION 10 - OPPORTUNITY HEALTH (AGING LIST) */}
-        <div className="sales-panel bg-white dark:bg-[#1b1a19] border border-[#EDEBE9] dark:border-[#323130] rounded-2xl p-5 shadow-xs md:col-span-4 flex flex-col justify-between h-[320px]">
+        <div data-crm-card="padded" className="sales-panel bg-white dark:bg-[#1b1a19] border border-[#EDEBE9] dark:border-[#323130] rounded-2xl p-5 shadow-xs md:col-span-4 flex flex-col justify-between h-[320px]">
           <div>
-            <h3 className="text-xs font-black uppercase tracking-widest text-[#0078D4] dark:text-blue-400 mb-1">
+            <h3 data-crm-heading="section" className="text-xs font-black uppercase tracking-widest text-[#0078D4] dark:text-blue-400 mb-1">
               {t("Opportunity Aging Categories")}
             </h3>
             <p className="text-[10px] text-slate-400 mb-4">{t("Pipeline duration health profiling")}</p>
@@ -1752,12 +1752,12 @@ export default function SalesDashboardView({ deals, onSelectDeal }: SalesDashboa
         </summary>
         <div className="sales-supporting-body">
       {/* THIRD GRAPH ROW (SECTION 6 & 7) */}
-      <div className="sales-chart-row grid grid-cols-1 md:grid-cols-12 gap-5">
+      <div data-crm-flow="" data-crm-grid="layout" className="sales-chart-row grid grid-cols-1 md:grid-cols-12 gap-5">
         
         {/* SECTION 6 - MOST COMMON PROPOSAL TOPICS */}
-        <div className="sales-panel bg-white dark:bg-[#1b1a19] border border-[#EDEBE9] dark:border-[#323130] rounded-2xl p-5 shadow-xs md:col-span-6 flex flex-col justify-between h-[320px]">
+        <div data-crm-card="padded" className="sales-panel bg-white dark:bg-[#1b1a19] border border-[#EDEBE9] dark:border-[#323130] rounded-2xl p-5 shadow-xs md:col-span-6 flex flex-col justify-between h-[320px]">
           <div>
-            <h3 className="text-xs font-black uppercase tracking-widest text-[#0078D4] dark:text-blue-400 mb-1">
+            <h3 data-crm-heading="section" className="text-xs font-black uppercase tracking-widest text-[#0078D4] dark:text-blue-400 mb-1">
               {t("Top 10 Proposal Topics by Revenue")}
             </h3>
             <p className="text-[10px] text-slate-400 mb-4">{t("Total revenue generated vs offer count per subject theme")}</p>
@@ -1777,22 +1777,22 @@ export default function SalesDashboardView({ deals, onSelectDeal }: SalesDashboa
         </div>
 
         {/* SECTION 7 - MEETING PERFORMANCE */}
-        <div className="sales-panel bg-white dark:bg-[#1b1a19] border border-[#EDEBE9] dark:border-[#323130] rounded-2xl p-5 shadow-xs md:col-span-6 flex flex-col justify-between h-[320px]">
+        <div data-crm-card="padded" className="sales-panel bg-white dark:bg-[#1b1a19] border border-[#EDEBE9] dark:border-[#323130] rounded-2xl p-5 shadow-xs md:col-span-6 flex flex-col justify-between h-[320px]">
           <div>
-            <h3 className="text-xs font-black uppercase tracking-widest text-[#0078D4] dark:text-blue-400 mb-1">
+            <h3 data-crm-heading="section" className="text-xs font-black uppercase tracking-widest text-[#0078D4] dark:text-blue-400 mb-1">
               {t("Monthly Meeting Stats & Trend")}
             </h3>
             <p className="text-[10px] text-slate-400 mb-3">{t("Total logged meetings across filtered opportunities, by month")}</p>
           </div>
 
           {/* Quick Stats Grid */}
-          <div className="grid grid-cols-2 gap-2 mb-3">
+          <div data-crm-flow="" data-crm-grid="layout" className="grid grid-cols-2 gap-2 mb-3">
             <div className="p-2 bg-slate-50 dark:bg-zinc-900 border border-slate-100 dark:border-zinc-800 rounded-lg text-center">
-              <span className="text-[8px] uppercase text-slate-400 font-extrabold block">{t("Total Meet")}</span>
+              <span data-crm-caption="" className="text-[8px] uppercase text-slate-400 font-extrabold block">{t("Total Meet")}</span>
               <span className="text-sm font-black font-mono text-[#0078D4] block">{totalMeetingsCount}</span>
             </div>
             <div className="p-2 bg-[#FAF8F5] dark:bg-zinc-900 rounded-lg text-center">
-              <span className="text-[8px] uppercase text-slate-400 font-extrabold block">{t("Avg / Person")}</span>
+              <span data-crm-caption="" className="text-[8px] uppercase text-slate-400 font-extrabold block">{t("Avg / Person")}</span>
               <span className="text-sm font-black font-mono text-slate-805 block">{Math.max(0, Math.round(totalMeetingsCount / Math.max(1, salespeople.length)))}</span>
             </div>
           </div>
@@ -1814,15 +1814,15 @@ export default function SalesDashboardView({ deals, onSelectDeal }: SalesDashboa
       </div>
 
       {/* SECTION 8 - TEAM LEADERBOARD */}
-      <div className="sales-panel bg-white dark:bg-[#1b1a19] border border-[#EDEBE9] dark:border-[#323130] rounded-2xl p-5 shadow-xs">
-        <h3 className="text-xs font-black uppercase tracking-widest text-[#0078D4] dark:text-blue-400 mb-1 flex items-center gap-1.5">
+      <div data-crm-card="padded" className="sales-panel bg-white dark:bg-[#1b1a19] border border-[#EDEBE9] dark:border-[#323130] rounded-2xl p-5 shadow-xs">
+        <h3 data-crm-heading="section" className="text-xs font-black uppercase tracking-widest text-[#0078D4] dark:text-blue-400 mb-1 flex items-center gap-1.5">
           <Award className="w-4 h-4 text-amber-500 animate-bounce" />
           {t("Sales Account Executive Leaderboard (Performance Ranking)")}
         </h3>
         <p className="text-[10px] text-slate-450 mb-3">{t("Ranking pipeline conversion efficiency, Sold Man-days and generated contract revenues")}</p>
 
-        <div className="overflow-x-auto">
-          <table className="w-full text-left text-xs">
+        <div data-crm-scroll="horizontal" className="overflow-x-auto">
+          <table data-crm-table="" className="w-full text-left text-xs">
             <thead>
               <tr className="border-b border-slate-100 dark:border-zinc-850 text-[9px] uppercase tracking-wider font-extrabold text-slate-400">
                 <th className="py-2.5">{t("Sales Executive")}</th>
@@ -1870,16 +1870,16 @@ export default function SalesDashboardView({ deals, onSelectDeal }: SalesDashboa
       </div>
 
       {/* SECTION 11 - ACTIVITY DASHBOARD */}
-      <div className="sales-panel bg-white dark:bg-[#1b1a19] border border-[#EDEBE9] dark:border-[#323130] rounded-2xl p-5 shadow-xs">
-        <h3 className="text-xs font-black uppercase tracking-widest text-[#0078D4] dark:text-blue-400 mb-1">
+      <div data-crm-card="padded" className="sales-panel bg-white dark:bg-[#1b1a19] border border-[#EDEBE9] dark:border-[#323130] rounded-2xl p-5 shadow-xs">
+        <h3 data-crm-heading="section" className="text-xs font-black uppercase tracking-widest text-[#0078D4] dark:text-blue-400 mb-1">
           {t("Activity Health & Warning Dashboard")}
         </h3>
         <p className="text-[10px] text-slate-400 mb-4">{t("Administrative checklists and action blockages tracker")}</p>
 
-        <div className="grid grid-cols-1 sm:grid-cols-4 gap-4">
+        <div data-crm-flow="" data-crm-grid="layout" className="grid grid-cols-1 sm:grid-cols-4 gap-4">
           {/* Card 1: Open Tasks */}
           <div className="p-4 bg-slate-50 dark:bg-zinc-900 border border-slate-150 dark:border-zinc-800 rounded-xl relative">
-            <span className="text-[9px] uppercase tracking-widest font-black text-slate-400 block mb-1">{t("Open Action Tasks")}</span>
+            <span data-crm-caption="" className="text-[9px] uppercase tracking-widest font-black text-slate-400 block mb-1">{t("Open Action Tasks")}</span>
             <span className="text-2xl font-black font-mono block mb-1">{t("{count} Pending").replace("{count}", "4")}</span>
             <span className="text-[10px] text-slate-500 block">{t("SLA activities on-course")}</span>
           </div>
@@ -1918,19 +1918,19 @@ export default function SalesDashboardView({ deals, onSelectDeal }: SalesDashboa
 
       {/* EDITABLE TARGETS MODAL */}
       {isTargetModalOpen && (
-        <div role="dialog" aria-modal="true" className="fixed inset-0 bg-black/70 backdrop-blur-xs flex items-center justify-center z-50 p-4 animate-in fade-in duration-200">
-          <div className="bg-white dark:bg-[#1f1e1d] rounded-2xl border border-slate-200 dark:border-[#323130] w-full max-w-sm overflow-hidden shadow-2xl flex flex-col">
+        <div data-crm-overlay="" role="dialog" aria-modal="true" className="fixed inset-0 bg-black/70 backdrop-blur-xs flex items-center justify-center z-50 p-4 animate-in fade-in duration-200">
+          <div data-crm-modal="" data-crm-card="surface" className="bg-white dark:bg-[#1f1e1d] rounded-2xl border border-slate-200 dark:border-[#323130] w-full max-w-sm overflow-hidden shadow-2xl flex flex-col">
             <div className="px-5 py-4 border-b border-slate-100 dark:border-[#323130] bg-[#FAF9F8] dark:bg-[#201f1e] flex items-center justify-between">
               <span className="text-sm font-extrabold uppercase tracking-widest text-[#0078D4]">{t("Adjust Sales targets")}</span>
-              <button onClick={() => setIsTargetModalOpen(false)} className="p-1 hover:bg-slate-200 rounded cursor-pointer" aria-label={t("Close")}>
+              <button data-crm-button="" onClick={() => setIsTargetModalOpen(false)} className="p-1 hover:bg-slate-200 rounded cursor-pointer" aria-label={t("Close")}>
                 <X className="w-4 h-4" />
               </button>
             </div>
 
-            <div className="p-5 space-y-4">
+            <div data-crm-stack="" className="p-5 space-y-4">
               <div className="space-y-1.5">
-                <label className="text-[10px] uppercase font-bold text-slate-400">{t("Monthly Man-Day Target")}</label>
-                <input
+                <label data-crm-label="" className="text-[10px] uppercase font-bold text-slate-400">{t("Monthly Man-Day Target")}</label>
+                <input data-crm-field="control"
                   type="number"
                   value={tempTargets.monthly}
                   onChange={(e) => setTempTargets({ ...tempTargets, monthly: parseInt(e.target.value, 10) || 0 })}
@@ -1939,8 +1939,8 @@ export default function SalesDashboardView({ deals, onSelectDeal }: SalesDashboa
               </div>
 
               <div className="space-y-1.5">
-                <label className="text-[10px] uppercase font-bold text-slate-400">{t("Quarterly Man-Day Target")}</label>
-                <input
+                <label data-crm-label="" className="text-[10px] uppercase font-bold text-slate-400">{t("Quarterly Man-Day Target")}</label>
+                <input data-crm-field="control"
                   type="number"
                   value={tempTargets.quarterly}
                   onChange={(e) => setTempTargets({ ...tempTargets, quarterly: parseInt(e.target.value, 10) || 0 })}
@@ -1949,8 +1949,8 @@ export default function SalesDashboardView({ deals, onSelectDeal }: SalesDashboa
               </div>
 
               <div className="space-y-1.5">
-                <label className="text-[10px] uppercase font-bold text-slate-400">{t("Annual Man-Day Target")}</label>
-                <input
+                <label data-crm-label="" className="text-[10px] uppercase font-bold text-slate-400">{t("Annual Man-Day Target")}</label>
+                <input data-crm-field="control"
                   type="number"
                   value={tempTargets.annual}
                   onChange={(e) => setTempTargets({ ...tempTargets, annual: parseInt(e.target.value, 10) || 0 })}
@@ -1960,13 +1960,13 @@ export default function SalesDashboardView({ deals, onSelectDeal }: SalesDashboa
             </div>
 
             <div className="px-5 py-4.5 bg-slate-50 dark:bg-zinc-900 border-t border-slate-100 dark:border-[#323130] flex justify-end gap-2">
-              <button
+              <button data-crm-button=""
                 onClick={() => setIsTargetModalOpen(false)}
                 className="px-3 py-2 text-xs font-bold border border-slate-200 dark:border-zinc-800 text-slate-700 dark:text-slate-300 rounded hover:bg-slate-50 cursor-pointer"
               >
                 {t("Cancel")}
               </button>
-              <button
+              <button data-crm-button=""
                 onClick={handleSaveTargets}
                 className="px-4 py-2 text-xs font-bold bg-[#0078D4] hover:bg-[#005a9e] text-white rounded cursor-pointer"
               >

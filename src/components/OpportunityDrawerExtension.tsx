@@ -308,12 +308,12 @@ export function TimelineActivitiesSection({ deal, onUpdateDeal, lang, t }: Timel
           {t("📅 Add New Meeting / Activity")}
         </span>
 
-        <div className="grid grid-cols-2 gap-3">
+        <div data-crm-grid="form" className="grid grid-cols-2 gap-3">
           <div className="col-span-2 sm:col-span-1">
-            <label className="block text-[8px] text-slate-450 uppercase font-mono font-bold mb-1">
+            <label data-crm-label="" className="block text-[8px] text-slate-450 uppercase font-mono font-bold mb-1">
               {t("Meeting Subject *")}
             </label>
-            <input 
+            <input data-crm-field="control"
               type="text" 
               required
               placeholder={t("e.g., SMED Prep Alignment")}
@@ -324,10 +324,10 @@ export function TimelineActivitiesSection({ deal, onUpdateDeal, lang, t }: Timel
           </div>
 
           <div className="col-span-2 sm:col-span-1">
-            <label className="block text-[8px] text-slate-455 uppercase font-mono font-bold mb-1">
+            <label data-crm-label="" className="block text-[8px] text-slate-455 uppercase font-mono font-bold mb-1">
               {t("Activity Type")}
             </label>
-            <select 
+            <select data-crm-field="control"
               value={newActType}
               onChange={(e) => setNewActType(e.target.value)}
               className="w-full p-2 bg-white dark:bg-zinc-850 border border-slate-250 dark:border-zinc-750 text-slate-800 dark:text-zinc-100 rounded focus:ring-1 focus:ring-emerald-500 outline-none cursor-pointer"
@@ -341,10 +341,10 @@ export function TimelineActivitiesSection({ deal, onUpdateDeal, lang, t }: Timel
           </div>
 
           <div>
-            <label className="block text-[8px] text-slate-455 uppercase font-mono font-bold mb-1">
+            <label data-crm-label="" className="block text-[8px] text-slate-455 uppercase font-mono font-bold mb-1">
               {t("Meeting Date *")}
             </label>
-            <input 
+            <input data-crm-field="control"
               type="date" 
               required
               value={newActDate}
@@ -354,10 +354,10 @@ export function TimelineActivitiesSection({ deal, onUpdateDeal, lang, t }: Timel
           </div>
 
           <div className="col-span-2">
-            <label className="block text-[8px] text-slate-455 uppercase font-mono font-bold mb-1">
+            <label data-crm-label="" className="block text-[8px] text-slate-455 uppercase font-mono font-bold mb-1">
               {t("Summary / Meeting Content *")}
             </label>
-            <textarea 
+            <textarea data-crm-field="multiline"
               rows={2}
               required
               placeholder={t("Describe decisions and highlights...")}
@@ -369,7 +369,7 @@ export function TimelineActivitiesSection({ deal, onUpdateDeal, lang, t }: Timel
         </div>
 
         <div className="flex justify-end">
-          <button
+          <button data-crm-button=""
             type="button"
             disabled={!newActTitle.trim() || !newActSummary.trim()}
             onClick={handleCreateActivity}
@@ -395,22 +395,22 @@ export function TimelineActivitiesSection({ deal, onUpdateDeal, lang, t }: Timel
                 
                 {editingId === a.id ? (
                   /* Edit Row Inline */
-                  <div className="bg-white dark:bg-zinc-900 p-3 rounded-lg border border-slate-200 dark:border-zinc-700 space-y-2 mt-1">
-                    <div className="grid grid-cols-2 gap-2">
-                      <input 
+                  <div data-crm-card="surface" className="bg-white dark:bg-zinc-900 p-3 rounded-lg border border-slate-200 dark:border-zinc-700 space-y-2 mt-1">
+                    <div data-crm-grid="layout" className="grid grid-cols-2 gap-2">
+                      <input data-crm-field="control"
                         type="text" 
                         value={editTitle} 
                         onChange={(e) => setEditTitle(e.target.value)}
                         className="p-1 border rounded w-full dark:bg-zinc-800 dark:text-white"
                         placeholder={t("Title")}
                       />
-                      <input 
+                      <input data-crm-field="control"
                         type="date" 
                         value={editDate} 
                         onChange={(e) => setEditDate(e.target.value)}
                         className="p-1 border rounded w-full dark:bg-zinc-800 dark:text-white font-mono"
                       />
-                      <select 
+                      <select data-crm-field="control"
                         value={editType} 
                         onChange={(e) => setEditType(e.target.value)}
                         className="p-1 border rounded w-full dark:bg-zinc-800 dark:text-white"
@@ -422,7 +422,7 @@ export function TimelineActivitiesSection({ deal, onUpdateDeal, lang, t }: Timel
                         <option value="Diğer">Diğer</option>
                       </select>
                     </div>
-                    <textarea 
+                    <textarea data-crm-field="multiline"
                       value={editSummary} 
                       onChange={(e) => setEditSummary(e.target.value)}
                       className="p-1.5 border rounded w-full dark:bg-zinc-800 dark:text-white text-[11px]"
@@ -430,13 +430,13 @@ export function TimelineActivitiesSection({ deal, onUpdateDeal, lang, t }: Timel
                       placeholder={t("Summary content...")}
                     />
                     <div className="flex justify-end gap-2 text-[10px]">
-                      <button 
+                      <button data-crm-button=""
                         onClick={() => setEditingId(null)}
                         className="px-2.5 py-1 bg-slate-100 hover:bg-slate-200 dark:bg-zinc-850 rounded text-slate-700 dark:text-zinc-300 font-bold"
                       >
                         {t("İptal")}
                       </button>
-                      <button 
+                      <button data-crm-button=""
                         onClick={() => handleSaveEdit(a.id)}
                         className="px-2.5 py-1 bg-emerald-600 hover:bg-emerald-700 text-white rounded font-bold"
                       >
@@ -462,7 +462,7 @@ export function TimelineActivitiesSection({ deal, onUpdateDeal, lang, t }: Timel
                         
                         {/* 3 Dot Action Button */}
                         <div className="relative inline-block text-left">
-                          <button
+                          <button data-crm-button=""
                             type="button"
                             onClick={() => setActiveMenuId(activeMenuId === a.id ? null : a.id)}
                             className="p-1 text-slate-400 hover:text-slate-600 dark:hover:text-zinc-200 rounded hover:bg-slate-150/40 cursor-pointer"
@@ -475,21 +475,21 @@ export function TimelineActivitiesSection({ deal, onUpdateDeal, lang, t }: Timel
                               ref={menuRef}
                               className="absolute right-0 mt-1 w-32 bg-white dark:bg-zinc-900 rounded-lg shadow-lg border border-slate-150 dark:border-zinc-800 py-1 z-50 text-left font-sans text-[11px]"
                             >
-                              <button
+                              <button data-crm-button=""
                                 onClick={() => handleStartEdit(a)}
                                 className="w-full px-3 py-1.5 hover:bg-slate-50 dark:hover:bg-zinc-850 flex items-center gap-1.5 font-medium text-slate-750 dark:text-zinc-200"
                               >
                                 <Edit2 className="w-3 h-3 text-blue-500" />
                                 <span>{t("Edit")}</span>
                               </button>
-                              <button
+                              <button data-crm-button=""
                                 onClick={() => handleDuplicate(a)}
                                 className="w-full px-3 py-1.5 hover:bg-slate-50 dark:hover:bg-zinc-850 flex items-center gap-1.5 font-medium text-slate-750 dark:text-zinc-200"
                               >
                                 <Copy className="w-3 h-3 text-emerald-500" />
                                 <span>{t("Duplicate")}</span>
                               </button>
-                              <button
+                              <button data-crm-button=""
                                 onClick={() => handleMoveUp(idx)}
                                 disabled={idx === 0}
                                 className="w-full px-3 py-1.5 hover:bg-slate-50 dark:hover:bg-zinc-850 flex items-center gap-1.5 font-medium text-slate-750 dark:text-zinc-200 disabled:opacity-40"
@@ -497,7 +497,7 @@ export function TimelineActivitiesSection({ deal, onUpdateDeal, lang, t }: Timel
                                 <ArrowUp className="w-3 h-3 text-indigo-500" />
                                 <span>{t("Move Up")}</span>
                               </button>
-                              <button
+                              <button data-crm-button=""
                                 onClick={() => handleMoveDown(idx)}
                                 disabled={idx === (deal.activities || []).length - 1}
                                 className="w-full px-3 py-1.5 hover:bg-slate-50 dark:hover:bg-zinc-850 flex items-center gap-1.5 font-medium text-slate-750 dark:text-zinc-200 disabled:opacity-40"
@@ -506,7 +506,7 @@ export function TimelineActivitiesSection({ deal, onUpdateDeal, lang, t }: Timel
                                 <span>{t("Move Down")}</span>
                               </button>
                               <div className="border-t border-slate-100 dark:border-zinc-800 my-0.5" />
-                              <button
+                              <button data-crm-button=""
                                 onClick={() => handleDeleteActivity(a.id, a.title)}
                                 className="w-full px-3 py-1.5 hover:bg-rose-50 dark:hover:bg-rose-950/20 flex items-center gap-1.5 font-bold text-rose-600"
                               >
@@ -848,10 +848,10 @@ export function OpexAssessmentSection({ deal, onUpdateDeal, lang, t, readOnly = 
     <div className="space-y-6 animate-in fade-in duration-100 text-xs">
       
       {/* 2-Column Split: Notes Editor & Attachments Uploader */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+      <div data-crm-grid="layout" className="grid grid-cols-1 lg:grid-cols-12 gap-6">
         
         {/* LEFT COLUMN: Rich Text Consultant Notes */}
-        <div className="lg:col-span-7 bg-white dark:bg-zinc-900/60 p-4 rounded-xl border border-slate-200 dark:border-zinc-800 space-y-3">
+        <div data-crm-card="padded" className="lg:col-span-7 bg-white dark:bg-zinc-900/60 p-4 rounded-xl border border-slate-200 dark:border-zinc-800 space-y-3">
           <div className="flex items-center justify-between border-b pb-2">
             <div className="flex items-center gap-1.5">
               <span className="font-extrabold text-slate-800 dark:text-zinc-150 uppercase tracking-wide font-sans text-xs">
@@ -863,8 +863,8 @@ export function OpexAssessmentSection({ deal, onUpdateDeal, lang, t, readOnly = 
             </div>
 
             <div className="flex items-center gap-1.5">
-              <label className="text-[10px] text-slate-450 font-bold font-mono">{t("Author:")}</label>
-              <input 
+              <label data-crm-label="" className="text-[10px] text-slate-450 font-bold font-mono">{t("Author:")}</label>
+              <input data-crm-field="control"
                 type="text" 
                 value={editorAuthor}
                 onChange={(e) => setEditorAuthor(e.target.value)}
@@ -877,20 +877,20 @@ export function OpexAssessmentSection({ deal, onUpdateDeal, lang, t, readOnly = 
           {/* Editor Format Toolbar */}
           {!readOnly && (
             <div className="flex flex-wrap items-center gap-1 bg-slate-100 dark:bg-zinc-850 p-1.5 rounded-lg border border-slate-200/50 dark:border-zinc-750">
-              <button onClick={() => execCommand("bold")} className="p-1 px-1.5 hover:bg-white dark:hover:bg-zinc-800 rounded font-bold" title={t("Bold")}>B</button>
-              <button onClick={() => execCommand("italic")} className="p-1 px-1.5 hover:bg-white dark:hover:bg-zinc-800 rounded italic" title={t("Italic")}>I</button>
-              <button onClick={() => execCommand("underline")} className="p-1 px-1.5 hover:bg-white dark:hover:bg-zinc-800 rounded underline" title={t("Underline")}>U</button>
+              <button data-crm-button="" onClick={() => execCommand("bold")} className="p-1 px-1.5 hover:bg-white dark:hover:bg-zinc-800 rounded font-bold" title={t("Bold")}>B</button>
+              <button data-crm-button="" onClick={() => execCommand("italic")} className="p-1 px-1.5 hover:bg-white dark:hover:bg-zinc-800 rounded italic" title={t("Italic")}>I</button>
+              <button data-crm-button="" onClick={() => execCommand("underline")} className="p-1 px-1.5 hover:bg-white dark:hover:bg-zinc-800 rounded underline" title={t("Underline")}>U</button>
               <div className="w-[1px] h-4 bg-slate-300 dark:bg-zinc-700 mx-1" />
-              <button onClick={() => execCommand("insertUnorderedList")} className="p-1 px-1.5 hover:bg-white dark:hover:bg-zinc-800 rounded" title={t("Bullet List")}>• List</button>
-              <button onClick={() => execCommand("insertOrderedList")} className="p-1 px-1.5 hover:bg-white dark:hover:bg-zinc-800 rounded" title={t("Numbered List")}>1. List</button>
-              <button onClick={insertTable} className="p-1 px-1.5 hover:bg-white dark:hover:bg-zinc-800 rounded" title={t("Insert Table")}>📊 Table</button>
-              <button onClick={insertLink} className="p-1 px-1.5 hover:bg-white dark:hover:bg-zinc-800 rounded" title={t("Insert Link")}>🔗 Link</button>
-              <button onClick={insertImage} className="p-1 px-1.5 hover:bg-white dark:hover:bg-zinc-800 rounded" title={t("Insert Image")}>🖼️ Image</button>
+              <button data-crm-button="" onClick={() => execCommand("insertUnorderedList")} className="p-1 px-1.5 hover:bg-white dark:hover:bg-zinc-800 rounded" title={t("Bullet List")}>• List</button>
+              <button data-crm-button="" onClick={() => execCommand("insertOrderedList")} className="p-1 px-1.5 hover:bg-white dark:hover:bg-zinc-800 rounded" title={t("Numbered List")}>1. List</button>
+              <button data-crm-button="" onClick={insertTable} className="p-1 px-1.5 hover:bg-white dark:hover:bg-zinc-800 rounded" title={t("Insert Table")}>📊 Table</button>
+              <button data-crm-button="" onClick={insertLink} className="p-1 px-1.5 hover:bg-white dark:hover:bg-zinc-800 rounded" title={t("Insert Link")}>🔗 Link</button>
+              <button data-crm-button="" onClick={insertImage} className="p-1 px-1.5 hover:bg-white dark:hover:bg-zinc-800 rounded" title={t("Insert Image")}>🖼️ Image</button>
             </div>
           )}
 
           {/* Editable Area */}
-          <div 
+          <div data-crm-document="true"
             ref={editableRef}
             contentEditable={!readOnly}
             onInput={handleEditorChange}
@@ -910,7 +910,7 @@ export function OpexAssessmentSection({ deal, onUpdateDeal, lang, t, readOnly = 
             </span>
             
             {!readOnly && (
-              <button
+              <button data-crm-button=""
                 type="button"
                 onClick={handleManualSave}
                 className="px-3 py-1 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded cursor-pointer uppercase font-mono tracking-tight"
@@ -955,16 +955,16 @@ export function OpexAssessmentSection({ deal, onUpdateDeal, lang, t, readOnly = 
         </div>
 
         {/* RIGHT COLUMN: Attachments Area with Drag & Drop */}
-        <div className="lg:col-span-5 bg-white dark:bg-zinc-900/60 p-4 rounded-xl border border-slate-200 dark:border-zinc-800 space-y-4">
+        <div data-crm-card="padded" className="lg:col-span-5 bg-white dark:bg-zinc-900/60 p-4 rounded-xl border border-slate-200 dark:border-zinc-800 space-y-4">
           <span className="font-extrabold text-slate-800 dark:text-zinc-150 uppercase tracking-wide font-sans text-xs block">
             📎 {t("Attachments & Documents")}
           </span>
 
           {/* Configurable max size & Proposal associations */}
-          <div className="grid grid-cols-2 gap-2 text-[10px] bg-slate-50 dark:bg-black/20 p-2 rounded-lg border border-slate-150 dark:border-zinc-800">
+          <div data-crm-grid="form" className="grid grid-cols-2 gap-2 text-[10px] bg-slate-50 dark:bg-black/20 p-2 rounded-lg border border-slate-150 dark:border-zinc-800">
             <div>
-              <label className="block text-slate-455 font-bold uppercase font-mono mb-1">{t("Max File Size (MB)")}</label>
-              <input 
+              <label data-crm-label="" className="block text-slate-455 font-bold uppercase font-mono mb-1">{t("Max File Size (MB)")}</label>
+              <input data-crm-field="control"
                 type="number" 
                 value={maxFileSize}
                 min={1}
@@ -975,8 +975,8 @@ export function OpexAssessmentSection({ deal, onUpdateDeal, lang, t, readOnly = 
             </div>
 
             <div>
-              <label className="block text-slate-455 font-bold uppercase font-mono mb-1">{t("Linked Proposal Version")}</label>
-              <select
+              <label data-crm-label="" className="block text-slate-455 font-bold uppercase font-mono mb-1">{t("Linked Proposal Version")}</label>
+              <select data-crm-field="control"
                 value={associatedProposalId}
                 onChange={(e) => setAssociatedProposalId(e.target.value)}
                 className="w-full p-1 bg-white dark:bg-zinc-800 border rounded outline-none"
@@ -1011,7 +1011,7 @@ export function OpexAssessmentSection({ deal, onUpdateDeal, lang, t, readOnly = 
                 onChange={handleFileInputChange}
                 className="hidden" 
               />
-              <label htmlFor="file-upload" className="cursor-pointer space-y-2 block">
+              <label data-crm-label="" htmlFor="file-upload" className="cursor-pointer space-y-2 block">
                 <Upload className="w-8 h-8 text-slate-400 mx-auto" />
                 <div className="font-bold text-slate-700 dark:text-zinc-300">
                   {t("Drag & Drop files or browse")}
@@ -1036,7 +1036,7 @@ export function OpexAssessmentSection({ deal, onUpdateDeal, lang, t, readOnly = 
             ) : (
               <div className="space-y-1.5 max-h-[160px] overflow-y-auto">
                 {attachments.map((att) => (
-                  <div 
+                  <div data-crm-card="surface"
                     key={att.id}
                     className="p-2 border border-slate-150 dark:border-zinc-800 bg-white dark:bg-[#181817] rounded-lg flex items-center justify-between gap-2 text-xs"
                   >
@@ -1057,7 +1057,7 @@ export function OpexAssessmentSection({ deal, onUpdateDeal, lang, t, readOnly = 
                     </div>
 
                     <div className="flex items-center gap-1 shrink-0">
-                      <button
+                      <button data-crm-button=""
                         onClick={() => setPreviewFile(att)}
                         className="p-1 text-slate-400 hover:text-indigo-600 hover:bg-slate-50 dark:hover:bg-zinc-800 rounded transition-all cursor-pointer"
                         title={t("Preview File")}
@@ -1065,7 +1065,7 @@ export function OpexAssessmentSection({ deal, onUpdateDeal, lang, t, readOnly = 
                         <Eye className="w-3.5 h-3.5" />
                       </button>
 
-                      <button
+                      <button data-crm-button=""
                         onClick={() => {
                           alert(`💾 '${att.name}' indiriliyor (Simüle edildi). Boyut: ${att.size}`);
                         }}
@@ -1076,7 +1076,7 @@ export function OpexAssessmentSection({ deal, onUpdateDeal, lang, t, readOnly = 
                       </button>
 
                       {!readOnly && (
-                        <button
+                        <button data-crm-button=""
                           onClick={() => handleDeleteAttachment(att.id, att.name)}
                           className="p-1 text-slate-400 hover:text-rose-600 hover:bg-slate-50 dark:hover:bg-zinc-800 rounded transition-all cursor-pointer"
                           title={t("Delete File")}
@@ -1096,14 +1096,14 @@ export function OpexAssessmentSection({ deal, onUpdateDeal, lang, t, readOnly = 
 
       {/* File Preview Modal overlay */}
       {previewFile && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-xs">
-          <div className="w-full max-w-md bg-white dark:bg-zinc-900 rounded-xl p-5 shadow-2xl border border-slate-200 dark:border-zinc-800 animate-in zoom-in-95 duration-100">
+        <div data-crm-overlay="" className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-xs">
+          <div data-crm-modal="" data-crm-card="padded" className="w-full max-w-md bg-white dark:bg-zinc-900 rounded-xl p-5 shadow-2xl border border-slate-200 dark:border-zinc-800 animate-in zoom-in-95 duration-100">
             <div className="flex items-center justify-between border-b pb-3">
-              <h3 className="font-extrabold text-slate-800 dark:text-zinc-150 text-sm flex items-center gap-1.5">
+              <h3 data-crm-heading="section" className="font-extrabold text-slate-800 dark:text-zinc-150 text-sm flex items-center gap-1.5">
                 <File className="text-indigo-600 w-4 h-4" />
                 <span>🔍 Document Preview / Meta Info</span>
               </h3>
-              <button onClick={() => setPreviewFile(null)} className="text-slate-400 hover:text-slate-600">
+              <button data-crm-button="" onClick={() => setPreviewFile(null)} className="text-slate-400 hover:text-slate-600">
                 <X className="w-4 h-4" />
               </button>
             </div>
@@ -1115,7 +1115,7 @@ export function OpexAssessmentSection({ deal, onUpdateDeal, lang, t, readOnly = 
                 <span className="text-[10px] text-slate-450 block">{t("Formatted Ext:")} .{previewFile.type}</span>
               </div>
 
-              <div className="grid grid-cols-2 gap-2 text-[10px] font-sans">
+              <div data-crm-grid="layout" className="grid grid-cols-2 gap-2 text-[10px] font-sans">
                 <div className="p-2 bg-slate-50 dark:bg-black/10 rounded">
                   <span className="text-slate-450 block uppercase font-mono font-bold">{t("Uploaded By")}</span>
                   <span className="font-semibold text-slate-800 dark:text-zinc-200">{previewFile.uploadedBy}</span>
@@ -1151,7 +1151,7 @@ export function OpexAssessmentSection({ deal, onUpdateDeal, lang, t, readOnly = 
             </div>
 
             <div className="flex justify-end gap-2 border-t pt-3">
-              <button 
+              <button data-crm-button=""
                 onClick={() => setPreviewFile(null)} 
                 className="px-4 py-2 bg-slate-100 hover:bg-slate-200 dark:bg-zinc-800 dark:hover:bg-zinc-700 text-slate-750 dark:text-zinc-200 rounded-lg text-xs font-bold"
               >
@@ -1667,7 +1667,7 @@ export function ProposalContractSection({
       <div className="space-y-5 animate-in fade-in duration-100 py-6 text-center text-xs">
         <div className="max-w-md mx-auto p-6 bg-slate-50 dark:bg-black/15 border border-dashed border-slate-250 dark:border-zinc-800 rounded-xl space-y-4">
           <AlertTriangle className="w-10 h-10 text-amber-500 mx-auto" />
-          <h4 className="text-sm font-bold text-slate-800 dark:text-zinc-150">
+          <h4 data-crm-heading="section" className="text-sm font-bold text-slate-800 dark:text-zinc-150">
             {t("No Official Proposal Created")}
           </h4>
           <p className="text-slate-500 leading-relaxed text-[11px]">
@@ -1675,7 +1675,7 @@ export function ProposalContractSection({
           </p>
 
           <div className="flex flex-col gap-2 pt-2">
-            <button 
+            <button data-crm-button=""
               type="button" 
               onClick={handleOpenProposalWizard}
               className="px-5 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white font-extrabold text-xs rounded-lg inline-flex items-center justify-center gap-1.5 cursor-pointer shadow-md active:scale-95 transition-all"
@@ -1685,7 +1685,7 @@ export function ProposalContractSection({
             </button>
 
             {/* Admin recover toggle */}
-            <button
+            <button data-crm-button=""
               onClick={() => setShowDeletedProposals(true)}
               className="text-[10px] text-slate-400 hover:text-indigo-500 hover:underline mt-2"
             >
@@ -1704,10 +1704,10 @@ export function ProposalContractSection({
       {/* Selector of multiple proposals or versions */}
       <div className="flex items-center justify-between bg-slate-50 dark:bg-black/15 p-3 rounded-lg border border-slate-200 dark:border-zinc-800 gap-4">
         <div className="flex items-center gap-2 flex-1">
-          <label className="font-bold text-slate-500 font-mono tracking-wide uppercase">
+          <label data-crm-label="" className="font-bold text-slate-500 font-mono tracking-wide uppercase">
             {t("Select Offer:")}
           </label>
-          <select
+          <select data-crm-field="control"
             value={selectedProposalId}
             onChange={(e) => handleSelectProposal(e.target.value)}
             className="p-1.5 bg-white dark:bg-zinc-850 border border-slate-250 dark:border-zinc-750 rounded text-xs text-slate-800 dark:text-zinc-200 outline-none flex-1 max-w-[280px]"
@@ -1722,7 +1722,7 @@ export function ProposalContractSection({
 
         <div className="flex items-center gap-2">
           {/* Admin Mode toggle */}
-          <label className="flex items-center gap-1.5 text-[10px] text-slate-400 cursor-pointer font-mono font-bold select-none">
+          <label data-crm-label="" className="flex items-center gap-1.5 text-[10px] text-slate-400 cursor-pointer font-mono font-bold select-none">
             <input 
               type="checkbox" 
               checked={showDeletedProposals} 
@@ -1732,7 +1732,7 @@ export function ProposalContractSection({
             <span>{t("Archived Logs")}</span>
           </label>
 
-          <button
+          <button data-crm-button=""
             onClick={handleOpenProposalWizard}
             className="px-3 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded font-bold inline-flex items-center gap-1 cursor-pointer"
           >
@@ -1749,7 +1749,7 @@ export function ProposalContractSection({
           {(activeProposal as any).isDeleted && (
             <div className="p-3 bg-rose-500/10 border border-rose-500/20 text-rose-600 rounded-lg flex items-center justify-between font-bold">
               <span>🗑️ {t("This proposal has been soft-deleted.")}</span>
-              <button 
+              <button data-crm-button=""
                 onClick={() => handleRecoverProposal(activeProposal.id)}
                 className="px-3 py-1 bg-rose-600 hover:bg-rose-700 text-white rounded text-[10px] font-black uppercase flex items-center gap-1 cursor-pointer"
               >
@@ -1767,7 +1767,7 @@ export function ProposalContractSection({
               <div className="flex items-center gap-2">
                 <FileText className="w-5 h-5 text-indigo-600" />
                 <div>
-                  <h4 className="font-extrabold text-slate-800 dark:text-zinc-150 text-sm">
+                  <h4 data-crm-heading="section" className="font-extrabold text-slate-800 dark:text-zinc-150 text-sm">
                     {activeProposal.proposalSubject}
                   </h4>
                   <span className="font-mono text-[9px] text-slate-400 font-bold">
@@ -1796,7 +1796,7 @@ export function ProposalContractSection({
             </div>
 
             {/* Row 2: Grid of Key Meta fields */}
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-[11px]">
+            <div data-crm-grid="layout" className="grid grid-cols-2 md:grid-cols-4 gap-4 text-[11px]">
               <div>
                 <span className="block text-[8px] font-bold text-slate-400 uppercase tracking-wide font-mono">Customer Name</span>
                 <span className="font-semibold text-slate-750 dark:text-zinc-200">{activeProposal.companyName}</span>
@@ -1853,7 +1853,7 @@ export function ProposalContractSection({
 
             {/* Row 4: Interactive Proposal Action Buttons */}
             <div className="flex flex-wrap items-center gap-2 border-t border-slate-200 dark:border-zinc-800 pt-3">
-              <button
+              <button data-crm-button=""
                 onClick={handleViewProposal}
                 className="px-3 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-lg inline-flex items-center gap-1 cursor-pointer transition-all active:scale-95 text-[10.5px] uppercase"
               >
@@ -1861,7 +1861,7 @@ export function ProposalContractSection({
                 <span>{t("View Proposal")}</span>
               </button>
 
-              <button
+              <button data-crm-button=""
                 onClick={() => handleDownloadPDF(activeProposal)}
                 className="px-3 py-1.5 bg-slate-200 dark:bg-zinc-800 hover:bg-slate-300 dark:hover:bg-zinc-700 text-slate-800 dark:text-zinc-200 font-bold rounded-lg inline-flex items-center gap-1 cursor-pointer transition-all active:scale-95 text-[10.5px] uppercase"
               >
@@ -1871,7 +1871,7 @@ export function ProposalContractSection({
 
               {!readOnly && (
                 <>
-                  <button
+                  <button data-crm-button=""
                     onClick={handleOpenRevisionModal}
                     className="px-3 py-1.5 bg-amber-600 hover:bg-amber-700 text-white font-bold rounded-lg inline-flex items-center gap-1 cursor-pointer transition-all active:scale-95 text-[10.5px] uppercase"
                   >
@@ -1879,7 +1879,7 @@ export function ProposalContractSection({
                     <span>{t("Create Revision")}</span>
                   </button>
 
-                  <button
+                  <button data-crm-button=""
                     onClick={() => handleDuplicateProposal(activeProposal)}
                     className="px-3 py-1.5 bg-slate-200 dark:bg-zinc-800 hover:bg-slate-300 dark:hover:bg-zinc-700 text-slate-800 dark:text-zinc-200 font-bold rounded-lg inline-flex items-center gap-1 cursor-pointer transition-all active:scale-95 text-[10.5px] uppercase"
                   >
@@ -1887,7 +1887,7 @@ export function ProposalContractSection({
                     <span>{t("Duplicate")}</span>
                   </button>
 
-                  <button
+                  <button data-crm-button=""
                     onClick={handleConvertToContract}
                     className="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-lg inline-flex items-center gap-1 cursor-pointer transition-all active:scale-95 text-[10.5px] uppercase"
                   >
@@ -1895,7 +1895,7 @@ export function ProposalContractSection({
                     <span>{t("Convert to Contract")}</span>
                   </button>
 
-                  <button
+                  <button data-crm-button=""
                     onClick={handleOpenSendEmailModal}
                     className="p-1.5 bg-slate-200 dark:bg-zinc-800 hover:bg-slate-300 dark:hover:bg-zinc-700 text-slate-800 dark:text-zinc-200 rounded-lg cursor-pointer"
                     title={t("Send by Email")}
@@ -1905,7 +1905,7 @@ export function ProposalContractSection({
                 </>
               )}
 
-              <button
+              <button data-crm-button=""
                 onClick={handleShareLink}
                 className="p-1.5 bg-slate-200 dark:bg-zinc-800 hover:bg-slate-300 dark:hover:bg-zinc-700 text-slate-800 dark:text-zinc-200 rounded-lg cursor-pointer"
                 title={t("Shareable Public Link")}
@@ -1914,7 +1914,7 @@ export function ProposalContractSection({
               </button>
 
               {!readOnly && !(activeProposal as any).isDeleted && (
-                <button
+                <button data-crm-button=""
                   onClick={() => handleDeleteProposal(activeProposal)}
                   className="p-1.5 bg-rose-50 dark:bg-rose-950/20 hover:bg-rose-100 text-rose-600 rounded-lg cursor-pointer ml-auto"
                   title={t("Soft Delete")}
@@ -1928,14 +1928,14 @@ export function ProposalContractSection({
 
           {/* Revisions History Timeline & Version Comparison */}
           {activeProposal.versions && activeProposal.versions.length > 0 && (
-            <div className="bg-white dark:bg-zinc-900/40 p-4 rounded-xl border border-slate-200 dark:border-zinc-800 space-y-3">
+            <div data-crm-card="padded" className="bg-white dark:bg-zinc-900/40 p-4 rounded-xl border border-slate-200 dark:border-zinc-800 space-y-3">
               <div className="flex items-center justify-between">
                 <span className="font-extrabold text-slate-800 dark:text-zinc-150 uppercase tracking-wide font-sans">
                   📜 {t("Proposal Version Management")}
                 </span>
 
                 {activeProposal.versions.length >= 2 && (
-                  <button
+                  <button data-crm-button=""
                     onClick={handleCompareVersions}
                     className="text-[10px] text-indigo-600 dark:text-indigo-400 font-extrabold hover:underline"
                   >
@@ -1975,7 +1975,7 @@ export function ProposalContractSection({
           )}
 
           {/* Audit Trail for the specific opportunity/proposal */}
-          <div className="bg-white dark:bg-zinc-900/40 p-4 rounded-xl border border-slate-200 dark:border-zinc-800 space-y-3">
+          <div data-crm-card="padded" className="bg-white dark:bg-zinc-900/40 p-4 rounded-xl border border-slate-200 dark:border-zinc-800 space-y-3">
             <span className="font-extrabold text-slate-800 dark:text-zinc-150 uppercase tracking-wide font-sans block">
               📊 {t("Audit Trail & Full Traceability")}
             </span>
@@ -2021,7 +2021,7 @@ export function ProposalContractSection({
 
       {/* Embedded Premium PDF Viewer Drawer overlay */}
       {showPdfViewer && activeProposal && (
-        <div className="fixed inset-0 z-55 flex items-center justify-center bg-black/70 backdrop-blur-xs">
+        <div data-crm-overlay="" className="fixed inset-0 z-55 flex items-center justify-center bg-black/70 backdrop-blur-xs">
           <div className="w-full max-w-3xl bg-[#1e1e1e] h-[90vh] shadow-2xl flex flex-col rounded-xl overflow-hidden border border-zinc-800 animate-in zoom-in-95 duration-100">
             
             {/* Viewer Toolbar Header */}
@@ -2037,7 +2037,7 @@ export function ProposalContractSection({
                 {/* Search query input */}
                 <div className="relative">
                   <Search className="w-3.5 h-3.5 text-zinc-400 absolute left-2.5 top-2" />
-                  <input 
+                  <input data-crm-field="control"
                     type="text" 
                     placeholder={t("Search query...")}
                     value={pdfSearchQuery}
@@ -2048,17 +2048,17 @@ export function ProposalContractSection({
 
                 {/* Zoom tools */}
                 <div className="flex items-center gap-1.5 bg-zinc-800 p-0.5 rounded border border-zinc-700">
-                  <button onClick={() => setPdfZoom(prev => Math.max(50, prev - 10))} className="p-1 hover:bg-zinc-700 rounded text-zinc-300">
+                  <button data-crm-button="" onClick={() => setPdfZoom(prev => Math.max(50, prev - 10))} className="p-1 hover:bg-zinc-700 rounded text-zinc-300">
                     <ZoomOut className="w-3.5 h-3.5" />
                   </button>
                   <span className="text-[10px] font-mono px-1 select-none">{pdfZoom}%</span>
-                  <button onClick={() => setPdfZoom(prev => Math.min(200, prev + 10))} className="p-1 hover:bg-zinc-700 rounded text-zinc-300">
+                  <button data-crm-button="" onClick={() => setPdfZoom(prev => Math.min(200, prev + 10))} className="p-1 hover:bg-zinc-700 rounded text-zinc-300">
                     <ZoomIn className="w-3.5 h-3.5" />
                   </button>
                 </div>
 
                 {/* Print button */}
-                <button 
+                <button data-crm-button=""
                   onClick={() => window.print()}
                   className="p-1.5 hover:bg-zinc-800 rounded text-zinc-300 border border-zinc-700" 
                   title={t("Print proposal")}
@@ -2067,7 +2067,7 @@ export function ProposalContractSection({
                 </button>
 
                 {/* Download PDF button */}
-                <button 
+                <button data-crm-button=""
                   onClick={() => handleDownloadPDF(activeProposal)}
                   className="p-1.5 hover:bg-zinc-800 rounded text-zinc-300 border border-zinc-700" 
                   title={t("Download File")}
@@ -2076,7 +2076,7 @@ export function ProposalContractSection({
                 </button>
 
                 {/* Full Screen toggle */}
-                <button 
+                <button data-crm-button=""
                   onClick={() => setIsPdfFullScreen(!isPdfFullScreen)}
                   className="p-1.5 hover:bg-zinc-800 rounded text-zinc-300 border border-zinc-700" 
                   title={t("Toggle Full Screen")}
@@ -2085,7 +2085,7 @@ export function ProposalContractSection({
                 </button>
 
                 {/* Close */}
-                <button 
+                <button data-crm-button=""
                   onClick={() => {
                     setShowPdfViewer(false);
                     setIsPdfFullScreen(false);
@@ -2099,7 +2099,7 @@ export function ProposalContractSection({
 
             {/* Scrollable Virtual Canvas Paper */}
             <div className="flex-1 bg-zinc-850 overflow-auto p-8 flex justify-center items-start">
-              <div 
+              <div data-crm-document="true"
                 style={{ transform: `scale(${pdfZoom / 100})`, transformOrigin: "top center" }}
                 className="w-[210mm] min-h-[297mm] bg-white p-12 shadow-2xl rounded border border-zinc-200 text-zinc-850 font-sans flex flex-col justify-between transition-all"
               >
@@ -2213,19 +2213,19 @@ export function ProposalContractSection({
 
       {/* Comparison Modal Popup */}
       {showCompareModal && activeProposal && (
-        <div className="fixed inset-0 z-55 flex items-center justify-center bg-black/60 backdrop-blur-xs">
-          <div className="w-full max-w-2xl bg-white dark:bg-zinc-900 rounded-xl p-5 shadow-2xl border border-slate-200 dark:border-zinc-800 animate-in zoom-in-95 duration-100">
+        <div data-crm-overlay="" className="fixed inset-0 z-55 flex items-center justify-center bg-black/60 backdrop-blur-xs">
+          <div data-crm-modal="" data-crm-card="padded" className="w-full max-w-2xl bg-white dark:bg-zinc-900 rounded-xl p-5 shadow-2xl border border-slate-200 dark:border-zinc-800 animate-in zoom-in-95 duration-100">
             <div className="flex items-center justify-between border-b pb-3">
-              <h3 className="font-extrabold text-slate-800 dark:text-zinc-150 text-sm flex items-center gap-1.5 font-sans">
+              <h3 data-crm-heading="section" className="font-extrabold text-slate-800 dark:text-zinc-150 text-sm flex items-center gap-1.5 font-sans">
                 <FileSignature className="text-indigo-600 w-4 h-4" />
                 <span>📊 Proposal Version Side-by-Side Comparison</span>
               </h3>
-              <button onClick={() => setShowCompareModal(false)} className="text-slate-400 hover:text-slate-600">
+              <button data-crm-button="" onClick={() => setShowCompareModal(false)} className="text-slate-400 hover:text-slate-600">
                 <X className="w-4 h-4" />
               </button>
             </div>
 
-            <div className="py-4 grid grid-cols-2 gap-4 text-xs font-sans">
+            <div data-crm-grid="layout" className="py-4 grid grid-cols-2 gap-4 text-xs font-sans">
               <div className="p-3 bg-slate-50 dark:bg-black/15 rounded-lg border">
                 <span className="block font-bold text-indigo-600 text-xs mb-1">Version A ({compareV1 || "V1"})</span>
                 {(() => {
@@ -2266,7 +2266,7 @@ export function ProposalContractSection({
             </div>
 
             <div className="flex justify-end gap-2 border-t pt-3">
-              <button 
+              <button data-crm-button=""
                 onClick={() => setShowCompareModal(false)} 
                 className="px-4 py-2 bg-slate-100 hover:bg-slate-200 dark:bg-zinc-800 dark:hover:bg-zinc-700 text-slate-750 dark:text-zinc-200 rounded-lg text-xs font-bold"
               >
@@ -2280,14 +2280,14 @@ export function ProposalContractSection({
       {/* Revision Modal Popup */}
       {/* Item 9: gönderen posta kutusu seçimi onay penceresi */}
       {showSendEmailModal && activeProposal && (
-        <div className="fixed inset-0 z-55 flex items-center justify-center bg-black/60 backdrop-blur-xs">
-          <div className="w-full max-w-md bg-white dark:bg-zinc-900 rounded-xl p-5 shadow-2xl border border-slate-200 dark:border-zinc-800 animate-in zoom-in-95 duration-100">
+        <div data-crm-overlay="" className="fixed inset-0 z-55 flex items-center justify-center bg-black/60 backdrop-blur-xs">
+          <div data-crm-modal="" data-crm-card="padded" className="w-full max-w-md bg-white dark:bg-zinc-900 rounded-xl p-5 shadow-2xl border border-slate-200 dark:border-zinc-800 animate-in zoom-in-95 duration-100">
             <div className="flex items-center justify-between border-b pb-3">
-              <h3 className="font-extrabold text-slate-800 dark:text-zinc-150 text-sm flex items-center gap-1.5 font-sans">
+              <h3 data-crm-heading="section" className="font-extrabold text-slate-800 dark:text-zinc-150 text-sm flex items-center gap-1.5 font-sans">
                 <Send className="text-indigo-600 w-4 h-4" />
                 <span>{t("Send by Email")}</span>
               </h3>
-              <button onClick={() => setShowSendEmailModal(false)} className="text-slate-400 hover:text-slate-600">
+              <button data-crm-button="" onClick={() => setShowSendEmailModal(false)} className="text-slate-400 hover:text-slate-600">
                 <X className="w-4 h-4" />
               </button>
             </div>
@@ -2307,8 +2307,8 @@ export function ProposalContractSection({
               )}
 
               <div>
-                <label className="block text-[9px] uppercase font-bold text-slate-400 mb-1">{t("Send From *")}</label>
-                <select
+                <label data-crm-label="" className="block text-[9px] uppercase font-bold text-slate-400 mb-1">{t("Send From *")}</label>
+                <select data-crm-field="control"
                   required
                   value={selectedSender}
                   onChange={(e) => setSelectedSender(e.target.value as "organization" | "personal" | "")}
@@ -2325,14 +2325,14 @@ export function ProposalContractSection({
             </div>
 
             <div className="flex justify-end gap-2 border-t border-dashed border-slate-200 dark:border-zinc-800 pt-3">
-              <button
+              <button data-crm-button=""
                 type="button"
                 onClick={() => setShowSendEmailModal(false)}
                 className="px-3.5 py-1.5 bg-slate-200 hover:bg-slate-300 dark:bg-zinc-800 dark:hover:bg-zinc-700 text-slate-700 dark:text-zinc-200 rounded font-semibold cursor-pointer text-xs"
               >
                 {t("Cancel")}
               </button>
-              <button
+              <button data-crm-button=""
                 type="button"
                 onClick={handleSendEmail}
                 disabled={isSendingProposalEmail || isLoadingSenders || senderOptions.length === 0}
@@ -2347,22 +2347,22 @@ export function ProposalContractSection({
       )}
 
       {showRevisionModal && activeProposal && (
-        <div className="fixed inset-0 z-55 flex items-center justify-center bg-black/60 backdrop-blur-xs">
-          <div className="w-full max-w-md bg-white dark:bg-zinc-900 rounded-xl p-5 shadow-2xl border border-slate-200 dark:border-zinc-800 animate-in zoom-in-95 duration-100">
+        <div data-crm-overlay="" className="fixed inset-0 z-55 flex items-center justify-center bg-black/60 backdrop-blur-xs">
+          <div data-crm-modal="" data-crm-card="padded" className="w-full max-w-md bg-white dark:bg-zinc-900 rounded-xl p-5 shadow-2xl border border-slate-200 dark:border-zinc-800 animate-in zoom-in-95 duration-100">
             <div className="flex items-center justify-between border-b pb-3">
-              <h3 className="font-extrabold text-slate-800 dark:text-zinc-150 text-sm flex items-center gap-1.5 font-sans">
+              <h3 data-crm-heading="section" className="font-extrabold text-slate-800 dark:text-zinc-150 text-sm flex items-center gap-1.5 font-sans">
                 <Edit2 className="text-indigo-600 w-4 h-4" />
                 <span>📝 Create Proposal Revision ({activeProposal.currentVersion} → V{(parseInt(activeProposal.currentVersion.replace("V", "")) || 1) + 1})</span>
               </h3>
-              <button onClick={() => setShowRevisionModal(false)} className="text-slate-400 hover:text-slate-600">
+              <button data-crm-button="" onClick={() => setShowRevisionModal(false)} className="text-slate-400 hover:text-slate-600">
                 <X className="w-4 h-4" />
               </button>
             </div>
 
             <div className="py-4 space-y-3 font-sans text-xs">
               <div>
-                <label className="block text-slate-455 uppercase font-mono font-bold mb-1">Revision Reason *</label>
-                <input 
+                <label data-crm-label="" className="block text-slate-455 uppercase font-mono font-bold mb-1">Revision Reason *</label>
+                <input data-crm-field="control"
                   type="text" 
                   required
                   placeholder={t("e.g. Scope alignment, rate adjustment")}
@@ -2373,8 +2373,8 @@ export function ProposalContractSection({
               </div>
 
               <div>
-                <label className="block text-slate-455 uppercase font-mono font-bold mb-1">Revision Notes & Scope Changes *</label>
-                <textarea 
+                <label data-crm-label="" className="block text-slate-455 uppercase font-mono font-bold mb-1">Revision Notes & Scope Changes *</label>
+                <textarea data-crm-field="multiline"
                   rows={3}
                   required
                   placeholder={t("Describe what has changed in this revision...")}
@@ -2384,10 +2384,10 @@ export function ProposalContractSection({
                 />
               </div>
 
-              <div className="grid grid-cols-2 gap-3">
+              <div data-crm-grid="form" className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-slate-455 uppercase font-mono font-bold mb-1">Base Budget Amount</label>
-                  <input 
+                  <label data-crm-label="" className="block text-slate-455 uppercase font-mono font-bold mb-1">Base Budget Amount</label>
+                  <input data-crm-field="control"
                     type="number" 
                     value={revAmount}
                     onChange={(e) => setRevAmount(Number(e.target.value) || 0)}
@@ -2395,8 +2395,8 @@ export function ProposalContractSection({
                   />
                 </div>
                 <div>
-                  <label className="block text-slate-455 uppercase font-mono font-bold mb-1">Discount Amount</label>
-                  <input 
+                  <label data-crm-label="" className="block text-slate-455 uppercase font-mono font-bold mb-1">Discount Amount</label>
+                  <input data-crm-field="control"
                     type="number" 
                     value={revDiscount}
                     onChange={(e) => setRevDiscount(Number(e.target.value) || 0)}
@@ -2407,13 +2407,13 @@ export function ProposalContractSection({
             </div>
 
             <div className="flex justify-end gap-2 border-t pt-3 text-xs font-bold">
-              <button 
+              <button data-crm-button=""
                 onClick={() => setShowRevisionModal(false)} 
                 className="px-4 py-2 bg-slate-100 hover:bg-slate-200 dark:bg-zinc-800 dark:hover:bg-zinc-700 text-slate-750 dark:text-zinc-200 rounded-lg"
               >
                 {t("İptal")}
               </button>
-              <button 
+              <button data-crm-button=""
                 onClick={handleSaveRevision}
                 disabled={!revReason.trim() || !revNotes.trim()}
                 className="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg disabled:opacity-50"

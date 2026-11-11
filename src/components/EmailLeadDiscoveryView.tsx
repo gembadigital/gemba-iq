@@ -776,7 +776,7 @@ export default function EmailLeadDiscoveryView({
   const unmanagedRelationshipsCount = discoveredLeads.filter(l => l.relationshipScore < 60).length;
 
   return (
-    <div className="space-y-6 font-sans">
+    <div data-crm-stack="" data-crm-screen="EmailLeadDiscoveryView" className="space-y-6 font-sans">
       
       {/* Toast Feedback */}
       {toast && (
@@ -789,9 +789,9 @@ export default function EmailLeadDiscoveryView({
       )}
 
       {/* Linear-styled Hero Panel */}
-      <div className="relative overflow-hidden rounded-2xl border border-slate-200 bg-white p-6 shadow-sm dark:border-zinc-800 dark:bg-zinc-950">
-        <div className="absolute top-0 left-0 right-0 h-1.5 bg-gradient-to-r from-indigo-500 via-primary-500 to-emerald-500" />
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
+      <div data-crm-card="padded" data-crm-header="" className="relative overflow-hidden rounded-2xl border border-slate-200 bg-white p-6 shadow-sm dark:border-zinc-800 dark:bg-zinc-950">
+        <div data-crm-decoration="" className="absolute top-0 left-0 right-0 h-1.5 bg-gradient-to-r from-indigo-500 via-primary-500 to-emerald-500" />
+        <div data-crm-header-copy="" className="flex flex-col md:flex-row md:items-center justify-between gap-6">
           <div className="space-y-1 md:max-w-2xl">
             <div className="flex items-center gap-2">
               <span className="inline-flex items-center gap-1 rounded bg-indigo-50 px-2 py-0.5 text-[10px] font-bold text-indigo-700 dark:bg-indigo-950/60 dark:text-indigo-400">
@@ -801,7 +801,7 @@ export default function EmailLeadDiscoveryView({
                 {t("Contacted List")}
               </span>
             </div>
-            <h2 className="text-xl font-bold tracking-tight text-slate-900 dark:text-slate-100">
+            <h2 data-crm-heading="page" className="text-xl font-bold tracking-tight text-slate-900 dark:text-slate-100">
               {t("Email Lead Discovery Portal")}
             </h2>
             <p className="text-xs text-slate-500 dark:text-slate-400 leading-relaxed">
@@ -809,7 +809,7 @@ export default function EmailLeadDiscoveryView({
             </p>
           </div>
           <div className="flex flex-wrap gap-2.5">
-            <button
+            <button data-crm-button=""
               onClick={handleScanEmails}
               disabled={isScanning || connections.length === 0}
               className={`inline-flex items-center gap-2 rounded-xl px-4 py-2 text-xs font-bold text-white transition-all cursor-pointer shadow-sm ${
@@ -827,7 +827,7 @@ export default function EmailLeadDiscoveryView({
 
       {/* Mailbox connection status — kept intentionally simple/honest */}
       {isLoadingConnections ? (
-        <div className="rounded-2xl border border-slate-200 dark:border-zinc-800 bg-white dark:bg-zinc-950 p-4 text-xs text-slate-500 dark:text-slate-400">
+        <div data-crm-card="padded" className="rounded-2xl border border-slate-200 dark:border-zinc-800 bg-white dark:bg-zinc-950 p-4 text-xs text-slate-500 dark:text-slate-400">
           {t("Loading mailbox connections...")}
         </div>
       ) : connections.length > 0 ? (
@@ -848,12 +848,12 @@ export default function EmailLeadDiscoveryView({
       )}
 
       {/* Connection & Configuration Panel (Compact Linear Block) */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      <div data-crm-flow="" data-crm-grid="layout" className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         
         {/* Left Col: Connection Manager */}
-        <div className="lg:col-span-1 rounded-2xl border border-slate-200 bg-white p-5 space-y-4 shadow-xs dark:border-zinc-800 dark:bg-zinc-950">
+        <div data-crm-stack="" data-crm-card="padded" className="lg:col-span-1 rounded-2xl border border-slate-200 bg-white p-5 space-y-4 shadow-xs dark:border-zinc-800 dark:bg-zinc-950">
           <div className="flex items-center justify-between pb-3 border-b border-slate-100 dark:border-zinc-900">
-            <h3 className="text-xs font-bold text-slate-950 dark:text-slate-100 uppercase tracking-wider font-mono flex items-center gap-2">
+            <h3 data-crm-heading="section" className="text-xs font-bold text-slate-950 dark:text-slate-100 uppercase tracking-wider font-mono flex items-center gap-2">
               <Mail className="w-4 h-4 text-indigo-500" />
               {t("Connected Accounts ({count})").replace("{count}", String(connections.length))}
             </h3>
@@ -928,24 +928,24 @@ export default function EmailLeadDiscoveryView({
         </div>
 
         {/* Right Col: Folders & Params */}
-        <div className="lg:col-span-2 rounded-2xl border border-slate-200 bg-white p-5 space-y-4 shadow-xs dark:border-zinc-800 dark:bg-zinc-950">
+        <div data-crm-stack="" data-crm-card="padded" className="lg:col-span-2 rounded-2xl border border-slate-200 bg-white p-5 space-y-4 shadow-xs dark:border-zinc-800 dark:bg-zinc-950">
           <div className="flex items-center justify-between pb-3 border-b border-slate-100 dark:border-zinc-900">
-            <h3 className="text-xs font-bold text-slate-950 dark:text-slate-100 uppercase tracking-wider font-mono flex items-center gap-2">
+            <h3 data-crm-heading="section" className="text-xs font-bold text-slate-950 dark:text-slate-100 uppercase tracking-wider font-mono flex items-center gap-2">
               <FolderOpen className="w-4 h-4 text-indigo-500" />
               {t("Folder & Filter Parameters")}
             </h3>
             <span className="text-[10px] text-slate-400 font-mono">{t("Secure Scan Mode")}</span>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+          <div data-crm-flow="" data-crm-grid="form" className="grid grid-cols-1 sm:grid-cols-3 gap-4">
             
             {/* Folder Select */}
             <div className="space-y-1.5">
-              <label className="text-[10px] font-bold uppercase text-slate-450 dark:text-zinc-500 tracking-wider flex items-center gap-1">
+              <label data-crm-label="" className="text-[10px] font-bold uppercase text-slate-450 dark:text-zinc-500 tracking-wider flex items-center gap-1">
                 <span>{t("Mail Folder")}</span>
               </label>
               <div className="flex rounded-lg border border-slate-200 p-0.5 bg-slate-50/50 dark:border-zinc-800 dark:bg-zinc-900">
-                <button
+                <button data-crm-button=""
                   type="button"
                   onClick={() => setSelectedFolder("Inbox")}
                   className={`flex-1 text-center py-1.5 text-[11px] font-semibold rounded-md transition-colors cursor-pointer ${
@@ -954,7 +954,7 @@ export default function EmailLeadDiscoveryView({
                 >
                   {t("Inbox Folder")}
                 </button>
-                <button
+                <button data-crm-button=""
                   type="button"
                   onClick={() => setSelectedFolder("Sent Items")}
                   className={`flex-1 text-center py-1.5 text-[11px] font-semibold rounded-md transition-colors cursor-pointer ${
@@ -963,7 +963,7 @@ export default function EmailLeadDiscoveryView({
                 >
                   {t("Sent Folder")}
                 </button>
-                <button
+                <button data-crm-button=""
                   type="button"
                   onClick={() => setSelectedFolder("Both")}
                   className={`flex-1 text-center py-1.5 text-[11px] font-semibold rounded-md transition-colors cursor-pointer ${
@@ -977,11 +977,11 @@ export default function EmailLeadDiscoveryView({
 
             {/* Start Date */}
             <div className="space-y-1.5">
-              <label className="text-[10px] font-bold uppercase text-slate-450 dark:text-zinc-500 tracking-wider flex items-center gap-1">
+              <label data-crm-label="" className="text-[10px] font-bold uppercase text-slate-450 dark:text-zinc-500 tracking-wider flex items-center gap-1">
                 <Calendar className="w-3.5 h-3.5 text-slate-400" />
                 <span>{t("Start Date")}</span>
               </label>
-              <input
+              <input data-crm-field="control"
                 type="date"
                 value={startDate}
                 onChange={(e) => setStartDate(e.target.value)}
@@ -991,11 +991,11 @@ export default function EmailLeadDiscoveryView({
 
             {/* End Date */}
             <div className="space-y-1.5">
-              <label className="text-[10px] font-bold uppercase text-slate-450 dark:text-zinc-500 tracking-wider flex items-center gap-1">
+              <label data-crm-label="" className="text-[10px] font-bold uppercase text-slate-450 dark:text-zinc-500 tracking-wider flex items-center gap-1">
                 <Calendar className="w-3.5 h-3.5 text-slate-400" />
                 <span>{t("End Date")}</span>
               </label>
-              <input
+              <input data-crm-field="control"
                 type="date"
                 value={endDate}
                 onChange={(e) => setEndDate(e.target.value)}
@@ -1031,7 +1031,7 @@ export default function EmailLeadDiscoveryView({
               )}
             </div>
             <div className="flex-1 space-y-1">
-              <h4 className="text-xs font-bold uppercase tracking-wider font-mono text-slate-900 dark:text-slate-100">
+              <h4 data-crm-heading="section" className="text-xs font-bold uppercase tracking-wider font-mono text-slate-900 dark:text-slate-100">
                 {scanStatus.success ? t("Live scan completed successfully") : t("Live mailbox scan error")}
               </h4>
               <p className="text-xs text-slate-600 dark:text-slate-300 leading-relaxed">
@@ -1056,7 +1056,7 @@ export default function EmailLeadDiscoveryView({
 
               {/* Real scan statistics */}
               {scanStatus.success && scanStatus.source === "live" && (
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2 text-[11px] font-mono border-t border-emerald-250/20 mt-3">
+                <div data-crm-grid="layout" className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2 text-[11px] font-mono border-t border-emerald-250/20 mt-3">
                   <div>
                     <span className="font-bold text-slate-700 dark:text-zinc-400">{t("Resolved Corporate Candidates:")}</span>{" "}
                     <span className="text-emerald-600 dark:text-emerald-400 font-bold">{scanStatus.totalParsed}</span>
@@ -1074,7 +1074,7 @@ export default function EmailLeadDiscoveryView({
 
       {/* LIVE PROGRESS DIALOG (Only shows when actively scanning) */}
       {isScanning && (
-        <div className="p-5 rounded-2xl border border-indigo-200 bg-indigo-50/10 space-y-4 animate-pulse dark:border-zinc-800 dark:bg-zinc-950/20">
+        <div data-crm-stack="" className="p-5 rounded-2xl border border-indigo-200 bg-indigo-50/10 space-y-4 animate-pulse dark:border-zinc-800 dark:bg-zinc-950/20">
           <div className="flex items-center justify-between">
             <span className="text-xs font-bold text-indigo-700 dark:text-indigo-400 uppercase tracking-widest font-mono flex items-center gap-1.5">
               <RefreshCw className="w-4 h-4 animate-spin" /> {t("Email Scan Intelligence Pool")}
@@ -1105,28 +1105,28 @@ export default function EmailLeadDiscoveryView({
       )}
 
       {/* DASHBOARDS KPI CARDS AND BENTO BLOCKS */}
-      <div className="grid grid-cols-2 md:grid-cols-6 gap-4">
+      <div data-crm-flow="" data-crm-grid="layout" className="grid grid-cols-2 md:grid-cols-6 gap-4">
         
-        <div className="bg-white dark:bg-zinc-950 p-4 rounded-xl border border-slate-200 dark:border-zinc-800 shadow-xs flex flex-col justify-between">
-          <span className="text-[10px] font-bold text-slate-450 dark:text-zinc-500 uppercase tracking-wider">{t("Discovered Contacts")}</span>
+        <div data-crm-card="padded" className="bg-white dark:bg-zinc-950 p-4 rounded-xl border border-slate-200 dark:border-zinc-800 shadow-xs flex flex-col justify-between">
+          <span data-crm-caption="" className="text-[10px] font-bold text-slate-450 dark:text-zinc-500 uppercase tracking-wider">{t("Discovered Contacts")}</span>
           <div className="text-2xl font-bold font-mono text-indigo-600 mt-1 dark:text-indigo-400">{newContactsCount}</div>
           <span className="text-[9px] text-[#16a34a] mt-1">▲ {t("100% fresh contacts")}</span>
         </div>
 
-        <div className="bg-white dark:bg-zinc-950 p-4 rounded-xl border border-slate-200 dark:border-zinc-800 shadow-xs flex flex-col justify-between">
-          <span className="text-[10px] font-bold text-slate-450 dark:text-zinc-500 uppercase tracking-wider">{t("New B2B Companies")}</span>
+        <div data-crm-card="padded" className="bg-white dark:bg-zinc-950 p-4 rounded-xl border border-slate-200 dark:border-zinc-800 shadow-xs flex flex-col justify-between">
+          <span data-crm-caption="" className="text-[10px] font-bold text-slate-450 dark:text-zinc-500 uppercase tracking-wider">{t("New B2B Companies")}</span>
           <div className="text-2xl font-bold font-mono text-emerald-600 mt-1 mt-1 dark:text-emerald-400">{newCompaniesCount}</div>
           <span className="text-[9px] text-slate-450">{t("External domain")}</span>
         </div>
 
-        <div className="bg-white dark:bg-zinc-950 p-4 rounded-xl border border-slate-200 dark:border-zinc-800 shadow-xs flex flex-col justify-between">
-          <span className="text-[10px] font-bold text-slate-450 dark:text-zinc-500 uppercase tracking-wider">{t("Missing CRM Records")}</span>
+        <div data-crm-card="padded" className="bg-white dark:bg-zinc-950 p-4 rounded-xl border border-slate-200 dark:border-zinc-800 shadow-xs flex flex-col justify-between">
+          <span data-crm-caption="" className="text-[10px] font-bold text-slate-450 dark:text-zinc-500 uppercase tracking-wider">{t("Missing CRM Records")}</span>
           <div className="text-2xl font-bold font-mono text-amber-500 mt-1 dark:text-amber-400">{missingInCRMCount}</div>
           <span className="text-[9px] text-amber-600 font-semibold">{t("Needs refresh")}</span>
         </div>
 
-        <div className="bg-white dark:bg-zinc-950 p-4 rounded-xl border border-slate-200 dark:border-zinc-800 shadow-xs flex flex-col justify-between col-span-1 md:col-span-2">
-          <span className="text-[10px] font-bold text-slate-450 dark:text-zinc-500 uppercase tracking-wider">{t("Most Active Contact")}</span>
+        <div data-crm-card="padded" className="bg-white dark:bg-zinc-950 p-4 rounded-xl border border-slate-200 dark:border-zinc-800 shadow-xs flex flex-col justify-between col-span-1 md:col-span-2">
+          <span data-crm-caption="" className="text-[10px] font-bold text-slate-450 dark:text-zinc-500 uppercase tracking-wider">{t("Most Active Contact")}</span>
           <div className="text-sm font-bold text-slate-800 mt-1.5 dark:text-slate-200 truncate">
             {mostActiveContact.name} ({t("{count} Interactions").replace("{count}", String(mostActiveContact.interactionsCount))})
           </div>
@@ -1142,7 +1142,7 @@ export default function EmailLeadDiscoveryView({
       </div>
 
       {/* RESULTS WORKSPACE (DISCOVERED AND FILTERED OUT SIDE-BY-SIDE TABS) */}
-      <div className="bg-white rounded-2xl border border-slate-200 shadow-xs overflow-hidden dark:border-zinc-800 dark:bg-zinc-950">
+      <div data-crm-card="surface" className="bg-white rounded-2xl border border-slate-200 shadow-xs overflow-hidden dark:border-zinc-800 dark:bg-zinc-950">
         
         {/* Results tab Header and Filter belt */}
         <div className="px-5 py-4 border-b border-slate-100 bg-slate-50/50 flex flex-wrap items-center justify-between gap-4 dark:border-zinc-900 dark:bg-zinc-900/60">
@@ -1150,7 +1150,7 @@ export default function EmailLeadDiscoveryView({
           <div className="flex items-center gap-3">
             <span className="w-2.5 h-2.5 rounded-full bg-indigo-500" />
             <div>
-              <h3 className="text-xs font-bold text-slate-900 dark:text-slate-100 uppercase tracking-widest font-mono">
+              <h3 data-crm-heading="section" className="text-xs font-bold text-slate-900 dark:text-slate-100 uppercase tracking-widest font-mono">
                 {t("Discovered Lead List")}
               </h3>
               <p className="text-[10px] text-slate-500 dark:text-slate-400">
@@ -1166,7 +1166,7 @@ export default function EmailLeadDiscoveryView({
               <span className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none text-slate-400">
                 <Search className="w-3.5 h-3.5" />
               </span>
-              <input
+              <input data-crm-field="control"
                 type="text"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
@@ -1176,8 +1176,8 @@ export default function EmailLeadDiscoveryView({
             </div>
 
             {/* Score Filters */}
-            <div className="flex rounded-lg border border-slate-200 p-0.5 bg-white dark:border-zinc-800 dark:bg-zinc-900">
-              <button
+            <div data-crm-card="surface" className="flex rounded-lg border border-slate-200 p-0.5 bg-white dark:border-zinc-800 dark:bg-zinc-900">
+              <button data-crm-button=""
                 type="button"
                 onClick={() => setScoreFilter("all")}
                 className={`px-2.5 py-1 text-[10px] font-semibold rounded-md transition-colors cursor-pointer ${
@@ -1186,7 +1186,7 @@ export default function EmailLeadDiscoveryView({
               >
                 {t("All")}
               </button>
-              <button
+              <button data-crm-button=""
                 type="button"
                 onClick={() => setScoreFilter("hot")}
                 className={`px-2.5 py-1 text-[10px] font-semibold rounded-md transition-colors cursor-pointer ${
@@ -1195,7 +1195,7 @@ export default function EmailLeadDiscoveryView({
               >
                 {t("High Score")} (🔥)
               </button>
-              <button
+              <button data-crm-button=""
                 type="button"
                 onClick={() => setScoreFilter("unassigned")}
                 className={`px-2.5 py-1 text-[10px] font-semibold rounded-md transition-colors cursor-pointer ${
@@ -1207,7 +1207,7 @@ export default function EmailLeadDiscoveryView({
             </div>
 
             {/* Bulk Button (acts on every "new" lead, ignoring selection) */}
-            <button
+            <button data-crm-button=""
               onClick={handleBulkAddToLeads}
               className="text-[11px] font-bold bg-indigo-650 hover:bg-indigo-600 text-white px-3 py-1.5 rounded-lg flex items-center gap-1 cursor-pointer transition-all shadow-sm"
             >
@@ -1226,7 +1226,7 @@ export default function EmailLeadDiscoveryView({
               {t("{count} leads selected").replace("{count}", String(selectedLeadIds.length))}
             </span>
             <div className="flex flex-wrap items-center gap-2">
-              <button
+              <button data-crm-button=""
                 type="button"
                 onClick={handleBulkAddSelectedToLeads}
                 className="text-[10px] font-bold bg-indigo-650 hover:bg-indigo-600 text-white px-2.5 py-1.5 rounded-lg flex items-center gap-1 cursor-pointer transition-all"
@@ -1234,7 +1234,7 @@ export default function EmailLeadDiscoveryView({
                 <UserPlus className="w-3 h-3" />
                 <span>{t("Add Selected to Master Leads")}</span>
               </button>
-              <button
+              <button data-crm-button=""
                 type="button"
                 onClick={handleBulkAddSelectedToCompanies}
                 className="text-[10px] font-bold bg-emerald-600 hover:bg-emerald-500 text-white px-2.5 py-1.5 rounded-lg flex items-center gap-1 cursor-pointer transition-all"
@@ -1242,7 +1242,7 @@ export default function EmailLeadDiscoveryView({
                 <Building className="w-3 h-3" />
                 <span>{t("Add Selected to Customers")}</span>
               </button>
-              <button
+              <button data-crm-button=""
                 type="button"
                 onClick={handleBulkAddSelectedToTargetAccounts}
                 className="text-[10px] font-bold bg-sky-650 hover:bg-sky-600 text-white px-2.5 py-1.5 rounded-lg flex items-center gap-1 cursor-pointer transition-all"
@@ -1250,7 +1250,7 @@ export default function EmailLeadDiscoveryView({
                 <Target className="w-3 h-3" />
                 <span>{t("Add Selected to Target Accounts")}</span>
               </button>
-              <button
+              <button data-crm-button=""
                 type="button"
                 onClick={() => setSelectedLeadIds([])}
                 className="text-[10px] font-semibold text-indigo-600 dark:text-indigo-400 px-2 py-1.5 rounded-lg cursor-pointer hover:underline"
@@ -1269,8 +1269,8 @@ export default function EmailLeadDiscoveryView({
             <p className="text-[10px] text-slate-450">{t("Try changing filters or scanning another mailbox.")}</p>
           </div>
         ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full border-collapse text-left text-xs">
+          <div data-crm-scroll="horizontal" className="overflow-x-auto">
+            <table data-crm-table="" className="w-full border-collapse text-left text-xs">
               <thead>
                 <tr className="border-b border-slate-100 bg-slate-50 text-[10px] font-extrabold uppercase text-slate-400 tracking-wider dark:border-zinc-900 dark:bg-zinc-900/40">
                   <th className="px-4 py-3 w-8">
@@ -1318,7 +1318,7 @@ export default function EmailLeadDiscoveryView({
                           <span className="font-bold text-slate-900 dark:text-slate-100 text-sm">
                             {lead.name}
                           </span>
-                          <span className="text-[9px] px-1.5 py-0.5 rounded-full font-bold uppercase tracking-widest bg-slate-100 text-slate-600 dark:bg-zinc-800 dark:text-zinc-400">
+                          <span data-crm-caption="" className="text-[9px] px-1.5 py-0.5 rounded-full font-bold uppercase tracking-widest bg-slate-100 text-slate-600 dark:bg-zinc-800 dark:text-zinc-400">
                             {t(lead.sourceFolder === "Inbox" ? "Inbox" : "Sent Items")}
                           </span>
                         </div>
@@ -1383,13 +1383,13 @@ export default function EmailLeadDiscoveryView({
                     <td className="px-4 py-4">
                       <div className="space-y-1.5">
                         <div className="flex items-center gap-2">
-                          <span className="text-[10px] text-slate-400 font-bold uppercase w-12 text-right">{t("Lead:")}</span>
+                          <span data-crm-caption="" className="text-[10px] text-slate-400 font-bold uppercase w-12 text-right">{t("Lead:")}</span>
                           <span className={`px-2 py-0.5 rounded border text-[10.5px] font-extrabold font-mono ${getScoreColor(lead.leadScore)}`}>
                             {lead.leadScore}
                           </span>
                         </div>
                         <div className="flex items-center gap-2">
-                          <span className="text-[10px] text-slate-400 font-bold uppercase w-12 text-right">{t("Relationship:")}</span>
+                          <span data-crm-caption="" className="text-[10px] text-slate-400 font-bold uppercase w-12 text-right">{t("Relationship:")}</span>
                           <span className={`px-2 py-0.5 rounded border text-[10.5px] font-extrabold font-mono ${getScoreColor(lead.relationshipScore)}`}>
                             {lead.relationshipScore}
                           </span>
@@ -1399,7 +1399,7 @@ export default function EmailLeadDiscoveryView({
 
                     {/* Sorumlu Atama */}
                     <td className="px-4 py-4">
-                      <select
+                      <select data-crm-field="control"
                         value={lead.assignedSalesperson}
                         onChange={(e) => handleAssignSalesperson(lead.id, e.target.value)}
                         className="text-[11px] font-medium bg-white border border-slate-250 px-3 py-1.5 rounded-lg focus:outline-none focus:ring-1 focus:ring-indigo-500 dark:border-zinc-800 dark:bg-zinc-90 select-none cursor-pointer text-slate-800"
@@ -1417,7 +1417,7 @@ export default function EmailLeadDiscoveryView({
                       <div className="flex justify-end gap-1.5">
                         {lead.status === "new" ? (
                           <div className="space-y-1.5 flex flex-col items-stretch max-w-[130px] w-full">
-                            <button
+                            <button data-crm-button=""
                               type="button"
                               onClick={() => handleAddToLeadsSingle(lead)}
                               className="text-[10px] font-bold bg-indigo-650 hover:bg-indigo-600 text-white px-2.5 py-1.5 rounded-lg transition-all flex items-center justify-center gap-1"
@@ -1427,7 +1427,7 @@ export default function EmailLeadDiscoveryView({
                               <UserPlus className="w-3 h-3" />
                               <span>{t("Add to Master Leads")}</span>
                             </button>
-                            <button
+                            <button data-crm-button=""
                               type="button"
                               onClick={() => handleAddToCompaniesSingle(lead)}
                               className="text-[10px] font-bold bg-emerald-600 hover:bg-emerald-500 text-white px-2.5 py-1.5 rounded-lg transition-all flex items-center justify-center gap-1"
@@ -1437,7 +1437,7 @@ export default function EmailLeadDiscoveryView({
                               <Building className="w-3 h-3" />
                               <span>{t("Add to Customers")}</span>
                             </button>
-                            <button
+                            <button data-crm-button=""
                               type="button"
                               onClick={() => handleAddToTargetAccountsSingle(lead)}
                               className="text-[10px] font-bold bg-sky-650 hover:bg-sky-600 text-white px-2.5 py-1.5 rounded-lg transition-all flex items-center justify-center gap-1"
@@ -1469,11 +1469,11 @@ export default function EmailLeadDiscoveryView({
       </div>
 
       {/* FILTERED OUT SUMMARY (Linear styled collapsed table) */}
-      <div className="bg-white rounded-2xl border border-slate-200 overflow-hidden dark:border-zinc-800 dark:bg-zinc-950">
+      <div data-crm-card="surface" className="bg-white rounded-2xl border border-slate-200 overflow-hidden dark:border-zinc-800 dark:bg-zinc-950">
         <div className="px-5 py-4 border-b border-slate-100 bg-slate-50 flex items-center justify-between dark:border-zinc-900 dark:bg-zinc-900/60">
           <div className="flex items-center gap-2.5">
             <Lock className="w-4 h-4 text-amber-500" />
-            <h4 className="text-xs font-bold text-slate-800 dark:text-slate-200 uppercase tracking-wider font-mono">
+            <h4 data-crm-heading="section" className="text-xs font-bold text-slate-800 dark:text-slate-200 uppercase tracking-wider font-mono">
               {t("Blocked & Filtered Addresses ({count})").replace("{count}", String(filteredOutLeads.length))}
             </h4>
           </div>
@@ -1481,14 +1481,14 @@ export default function EmailLeadDiscoveryView({
         </div>
         
         <div className="divide-y divide-slate-100 text-xs dark:divide-zinc-900">
-          <div className="grid grid-cols-1 sm:grid-cols-4 gap-4 p-3 bg-slate-50 font-bold text-slate-400 uppercase tracking-widest text-[9.5px] dark:bg-zinc-900/20">
+          <div data-crm-grid="layout" className="grid grid-cols-1 sm:grid-cols-4 gap-4 p-3 bg-slate-50 font-bold text-slate-400 uppercase tracking-widest text-[9.5px] dark:bg-zinc-900/20">
             <span>{t("Blocked Address")}</span>
             <span>{t("Reason")}</span>
             <span>{t("Folder")}</span>
             <span>{t("Detected Date")}</span>
           </div>
           {filteredOutLeads.map((f, idx) => (
-            <div key={idx} className="grid grid-cols-1 sm:grid-cols-4 gap-4 p-3.5 hover:bg-slate-50/50 text-slate-600 font-mono text-[11px] dark:hover:bg-zinc-900/10">
+            <div data-crm-grid="layout" key={idx} className="grid grid-cols-1 sm:grid-cols-4 gap-4 p-3.5 hover:bg-slate-50/50 text-slate-600 font-mono text-[11px] dark:hover:bg-zinc-900/10">
               <span className="font-semibold text-slate-800 dark:text-slate-350">{f.email}</span>
               <span className="text-rose-500 font-sans flex items-center gap-1 font-semibold">
                 <AlertCircle className="w-3.5 h-3.5 flex-shrink-0" /> {f.reason}

@@ -669,13 +669,13 @@ export default function SendingProgressView({
   );
 
   return (
-    <div className="space-y-6">
+    <div data-crm-stack="" data-crm-screen="SendingProgressView" className="space-y-6">
       
       {/* HEADER CARD */}
-      <div className="bg-white dark:bg-[#1b1a19] p-5 rounded-lg border border-[#EDEBE9] dark:border-[#323130] shadow-sm relative overflow-hidden flex flex-col sm:flex-row items-center justify-between gap-4">
-        <div className="absolute top-0 left-0 right-0 h-1.5 bg-gradient-to-r from-emerald-500 via-[#0078D4] to-blue-500" />
-        <div className="flex items-center gap-3">
-          <button
+      <div data-crm-card="padded" data-crm-header="" className="bg-white dark:bg-[#1b1a19] p-5 rounded-lg border border-[#EDEBE9] dark:border-[#323130] shadow-sm relative overflow-hidden flex flex-col sm:flex-row items-center justify-between gap-4">
+        <div data-crm-decoration="" className="absolute top-0 left-0 right-0 h-1.5 bg-gradient-to-r from-emerald-500 via-[#0078D4] to-blue-500" />
+        <div data-crm-header-copy="" className="flex items-center gap-3">
+          <button data-crm-button=""
             id="btn-back-designer"
             onClick={onBackToDesigner}
             className="p-2 bg-slate-50 hover:bg-slate-100 text-slate-500 dark:bg-zinc-800 dark:hover:bg-zinc-750 dark:text-slate-300 rounded-lg transition-colors cursor-pointer"
@@ -684,35 +684,35 @@ export default function SendingProgressView({
             <ArrowLeft className="w-5 h-5" />
           </button>
           <div>
-            <h2 className="text-base font-bold text-slate-800 dark:text-zinc-100 font-sans">{t("Campaign Launch Center")}</h2>
+            <h2 data-crm-heading="page" className="text-base font-bold text-slate-800 dark:text-zinc-100 font-sans">{t("Campaign Launch Center")}</h2>
             <p className="text-xs text-slate-500 font-sans">{t("Ready to broadcast mail merges and analyze automated live telemetry.")}</p>
           </div>
         </div>
-        <span className="text-[10px] uppercase font-mono tracking-widest bg-[#F3F2F1] dark:bg-[#252423] border border-[#EDEBE9] dark:border-[#323130] px-3 py-1 rounded text-slate-500 font-[#252423] shrink-0 font-semibold">
+        <span data-crm-caption="" className="text-[10px] uppercase font-mono tracking-widest bg-[#F3F2F1] dark:bg-[#252423] border border-[#EDEBE9] dark:border-[#323130] px-3 py-1 rounded text-slate-500 font-[#252423] shrink-0 font-semibold">
           {t("Ready to dispatch")}
         </span>
       </div>
 
       {/* STATE 1: Campaign not started yet */}
       {!campaignStarted ? (
-        <div className="grid grid-cols-1 md:grid-cols-12 gap-6">
-          <div className="md:col-span-8 space-y-6">
+        <div data-crm-flow="" data-crm-grid="layout" className="grid grid-cols-1 md:grid-cols-12 gap-6">
+          <div data-crm-stack="" className="md:col-span-8 space-y-6">
             
             {/* Launchpad Pre-flight checklist Card */}
-            <div className="bg-white dark:bg-[#1b1a19] border border-[#EDEBE9] dark:border-[#323130] rounded p-6 shadow-sm">
-              <h3 className="text-sm font-semibold text-slate-800 dark:text-slate-100 mb-4 flex items-center gap-2">
+            <div data-crm-card="padded" className="bg-white dark:bg-[#1b1a19] border border-[#EDEBE9] dark:border-[#323130] rounded p-6 shadow-sm">
+              <h3 data-crm-heading="section" className="text-sm font-semibold text-slate-800 dark:text-slate-100 mb-4 flex items-center gap-2">
                 <Users className="w-4.5 h-4.5 text-[#0078D4]" />
                 {t("Campaign Launchpad Pre-Flight Checklist")}
               </h3>
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div data-crm-flow="" data-crm-grid="layout" className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 {/* Check item 1 */}
                 <div className="p-3.5 rounded border border-[#EDEBE9] dark:border-[#323130] bg-[#F3F2F1]/30 dark:bg-[#252423]/10 flex gap-3">
-                  <div className="h-8 w-8 rounded-full bg-white dark:bg-[#252423] border border-[#EDEBE9] dark:border-[#323130] flex items-center justify-center font-bold text-xs text-slate-600 dark:text-slate-300 flex-shrink-0">
+                  <div data-crm-icon-box="" data-crm-card="surface" className="h-8 w-8 rounded-full bg-white dark:bg-[#252423] border border-[#EDEBE9] dark:border-[#323130] flex items-center justify-center font-bold text-xs text-slate-600 dark:text-slate-300 flex-shrink-0">
                     1
                   </div>
                   <div>
-                    <h4 className="text-xs font-bold text-slate-800 dark:text-slate-200">{t("Exchange Online Server")}</h4>
+                    <h4 data-crm-heading="section" className="text-xs font-bold text-slate-800 dark:text-slate-200">{t("Exchange Online Server")}</h4>
                     <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5 leading-tight">
                       {session?.isConnected
                         ? `${session.displayName} (${t("Organization Mailbox Active")})`
@@ -723,11 +723,11 @@ export default function SendingProgressView({
 
                 {/* Check item 2 */}
                 <div className="p-3.5 rounded border border-[#EDEBE9] dark:border-[#323130] bg-[#F3F2F1]/30 dark:bg-[#252423]/10 flex gap-3">
-                  <div className="h-8 w-8 rounded-full bg-white dark:bg-[#252423] border border-[#EDEBE9] dark:border-[#323130] flex items-center justify-center font-bold text-xs text-slate-600 dark:text-slate-300 flex-shrink-0">
+                  <div data-crm-icon-box="" data-crm-card="surface" className="h-8 w-8 rounded-full bg-white dark:bg-[#252423] border border-[#EDEBE9] dark:border-[#323130] flex items-center justify-center font-bold text-xs text-slate-600 dark:text-slate-300 flex-shrink-0">
                     2
                   </div>
                   <div>
-                    <h4 className="text-xs font-bold text-slate-800 dark:text-slate-200">{t("Spreadsheet Unlimited Capacity")}</h4>
+                    <h4 data-crm-heading="section" className="text-xs font-bold text-slate-800 dark:text-slate-200">{t("Spreadsheet Unlimited Capacity")}</h4>
                     <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5 leading-tight">
 {t("Batch contains {n} recipients. Unlimited bulk processor is fully enabled.").replace("{n}", String(recipients.length))}
                     </p>
@@ -736,11 +736,11 @@ export default function SendingProgressView({
 
                 {/* Check item 3 */}
                 <div className="p-3.5 rounded border border-[#EDEBE9] dark:border-[#323130] bg-[#F3F2F1]/30 dark:bg-[#252423]/10 flex gap-3">
-                  <div className="h-8 w-8 rounded-full bg-white dark:bg-[#252423] border border-[#EDEBE9] dark:border-[#323130] flex items-center justify-center font-bold text-xs text-slate-600 dark:text-slate-300 flex-shrink-0">
+                  <div data-crm-icon-box="" data-crm-card="surface" className="h-8 w-8 rounded-full bg-white dark:bg-[#252423] border border-[#EDEBE9] dark:border-[#323130] flex items-center justify-center font-bold text-xs text-slate-600 dark:text-slate-300 flex-shrink-0">
                     3
                   </div>
                   <div>
-                    <h4 className="text-xs font-bold text-slate-805 dark:text-slate-200">{t("Email Body templates")}</h4>
+                    <h4 data-crm-heading="section" className="text-xs font-bold text-slate-805 dark:text-slate-200">{t("Email Body templates")}</h4>
                     <p className="text-[11px] text-slate-400 mt-0.5 truncate max-w-[200px]">
 {t('Subject: "{subject}"').replace("{subject}", subject || t("Missing subject"))}
                     </p>
@@ -749,11 +749,11 @@ export default function SendingProgressView({
 
                 {/* Check item 4 */}
                 <div className="p-3.5 rounded border border-[#EDEBE9] dark:border-[#323130] bg-[#F3F2F1]/30 dark:bg-[#252423]/10 flex gap-3">
-                  <div className="h-8 w-8 rounded-full bg-white dark:bg-[#252423] border border-[#EDEBE9] dark:border-[#323130] flex items-center justify-center font-bold text-xs text-slate-600 dark:text-slate-300 flex-shrink-0">
+                  <div data-crm-icon-box="" data-crm-card="surface" className="h-8 w-8 rounded-full bg-white dark:bg-[#252423] border border-[#EDEBE9] dark:border-[#323130] flex items-center justify-center font-bold text-xs text-slate-600 dark:text-slate-300 flex-shrink-0">
                     4
                   </div>
                   <div>
-                    <h4 className="text-xs font-bold text-slate-805 dark:text-slate-200">{t("File Attachments")}</h4>
+                    <h4 data-crm-heading="section" className="text-xs font-bold text-slate-805 dark:text-slate-200">{t("File Attachments")}</h4>
                     <p className="text-[11px] text-slate-400 mt-0.5">
 {attachments.length > 0 ? t("{n} files enclosed").replace("{n}", String(attachments.length)) : t("No attachments included")}
                     </p>
@@ -779,7 +779,7 @@ export default function SendingProgressView({
               )}
 
               {/* {t("Campaign Dispatch & Scheduling Parameters")} */}
-              <div className="mt-5 p-5 rounded-lg bg-slate-50 dark:bg-[#11100f] border border-[#EDEBE9] dark:border-[#323130] space-y-4">
+              <div data-crm-stack="" className="mt-5 p-5 rounded-lg bg-slate-50 dark:bg-[#11100f] border border-[#EDEBE9] dark:border-[#323130] space-y-4">
                 <div className="flex items-center gap-2 border-b border-[#EDEBE9] dark:border-[#323130] pb-2">
                   <Clock className="w-4.5 h-4.5 text-[#0078D4]" />
                   <span className="text-xs font-bold text-slate-800 dark:text-slate-100 uppercase tracking-wider">
@@ -789,11 +789,11 @@ export default function SendingProgressView({
 
                 {/* Delivery Option Selector (Outlook Style) */}
                 <div className="space-y-2">
-                  <label className="text-[10px] uppercase font-bold text-slate-450 dark:text-slate-400 tracking-wider block">
+                  <label data-crm-label="" className="text-[10px] uppercase font-bold text-slate-450 dark:text-slate-400 tracking-wider block">
                     {t("Campaign Delivery Timing (Outlook Style)")}
                   </label>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                    <button
+                  <div data-crm-flow="" data-crm-grid="layout" className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <button data-crm-button=""
                       type="button"
                       onClick={() => setDeliveryTiming("now")}
                       className={`flex flex-col items-start text-left p-3.5 rounded-lg border transition-all cursor-pointer ${
@@ -815,7 +815,7 @@ export default function SendingProgressView({
                       </span>
                     </button>
 
-                    <button
+                    <button data-crm-button=""
                       type="button"
                       onClick={() => setDeliveryTiming("scheduled")}
                       className={`flex flex-col items-start text-left p-3.5 rounded-lg border transition-all cursor-pointer ${
@@ -841,12 +841,12 @@ export default function SendingProgressView({
 
                 {/* Scheduling Parameters Form */}
                 {deliveryTiming === "scheduled" && (
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 bg-white dark:bg-[#1b1a19] p-4 rounded-lg border border-[#EDEBE9] dark:border-[#323130] animate-fadeIn">
+                  <div data-crm-card="padded" data-crm-grid="form" className="grid grid-cols-1 md:grid-cols-2 gap-4 bg-white dark:bg-[#1b1a19] p-4 rounded-lg border border-[#EDEBE9] dark:border-[#323130] animate-fadeIn">
                     <div className="space-y-1">
-                      <label className="text-[10px] font-bold text-indigo-600 dark:text-indigo-400 uppercase tracking-widest block">
+                      <label data-crm-label="" className="text-[10px] font-bold text-indigo-600 dark:text-indigo-400 uppercase tracking-widest block">
                         {t("Simulation target Run Date & Time")}
                       </label>
-                      <input
+                      <input data-crm-field="control"
                         type="datetime-local"
                         value={currentRunDateTime}
                         onChange={(e) => setCurrentRunDateTime(e.target.value)}
@@ -873,7 +873,7 @@ export default function SendingProgressView({
                 {/* Mailing Dispatch Mode (Only for active Organization Mailbox connections) */}
                 {!session?.isSandbox && session?.isConnected && (
                   <div className="pt-3 border-t border-[#EDEBE9] dark:border-[#323130]/60 space-y-2">
-                    <span className="text-[10px] uppercase font-bold text-slate-400 tracking-wide block">
+                    <span data-crm-caption="" className="text-[10px] uppercase font-bold text-slate-400 tracking-wide block">
                       {t("Outlook Exchange API Mode")}
                     </span>
                     <div className="flex items-start gap-3 p-3 rounded-lg border border-[#0078D4] bg-[#0078D4]/5 dark:bg-[#0078D4]/10">
@@ -903,14 +903,14 @@ export default function SendingProgressView({
               )}
 
               <div className="mt-6 pt-5 border-t border-[#EDEBE9] dark:border-[#323130] flex items-center justify-end gap-3">
-                <button
+                <button data-crm-button=""
                   id="btn-checklist-cancel"
                   onClick={onBackToDesigner}
                   className="text-xs font-bold text-slate-600 dark:text-slate-300 border border-[#EDEBE9] dark:border-[#323130] hover:bg-slate-100 dark:hover:bg-[#252423] px-4 py-2.5 rounded transition-all cursor-pointer"
                 >
                   {t("Edit Campaign")}
                 </button>
-                <button
+                <button data-crm-button=""
                   id="btn-checklist-start"
                   onClick={triggerCampaignStart}
                   disabled={!session?.isConnected || !subject || !subject.trim() || !templateBody || !templateBody.trim()}
@@ -928,9 +928,9 @@ export default function SendingProgressView({
 
           </div>
 
-          <div className="md:col-span-4 bg-white dark:bg-[#1b1a19] border border-[#EDEBE9] dark:border-[#323130] rounded p-6 shadow-sm flex flex-col justify-between">
-            <div className="space-y-4">
-              <h4 className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">{t("Pre-Merge Summary")}</h4>
+          <div data-crm-card="padded" className="md:col-span-4 bg-white dark:bg-[#1b1a19] border border-[#EDEBE9] dark:border-[#323130] rounded p-6 shadow-sm flex flex-col justify-between">
+            <div data-crm-stack="" className="space-y-4">
+              <h4 data-crm-heading="section" className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">{t("Pre-Merge Summary")}</h4>
               
               <div className="space-y-3">
                 <div className="flex justify-between border-b border-[#EDEBE9] dark:border-[#323130] pb-2">
@@ -970,13 +970,13 @@ export default function SendingProgressView({
         </div>
       ) : (
         // STATE 2: Active Processing Monitor
-        <div className="space-y-6">
+        <div data-crm-stack="" className="space-y-6">
           
           {/* Main Progress Control Card */}
-          <div className="bg-white dark:bg-[#1b1a19] border border-[#EDEBE9] dark:border-[#323130] rounded p-6 shadow-sm">
+          <div data-crm-card="padded" className="bg-white dark:bg-[#1b1a19] border border-[#EDEBE9] dark:border-[#323130] rounded p-6 shadow-sm">
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6 border-b border-[#EDEBE9] dark:border-[#323130] pb-5">
               <div>
-                <h3 className="text-sm font-bold text-slate-805 dark:text-slate-100">
+                <h3 data-crm-heading="section" className="text-sm font-bold text-slate-805 dark:text-slate-100">
                   {campaignFinished ? t("Mail Merge Campaign Finished") : t("Live Mail Merge Execution Monitor")}
                 </h3>
                 <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
@@ -990,7 +990,7 @@ export default function SendingProgressView({
               <div className="flex items-center gap-2">
                 {!campaignFinished ? (
                   <>
-                    <button
+                    <button data-crm-button=""
                       id="btn-monitor-pause"
                       onClick={togglePlayback}
                       className={`text-xs font-bold px-4 py-2.5 rounded border transition-all flex items-center gap-1.5 cursor-pointer ${
@@ -1011,7 +1011,7 @@ export default function SendingProgressView({
                         </>
                       )}
                     </button>
-                    <button
+                    <button data-crm-button=""
                       id="btn-monitor-stop"
                       onClick={stopCampaign}
                       className="text-xs font-bold bg-rose-50 border border-rose-200 text-rose-700 hover:bg-rose-100 px-4 py-2.5 rounded transition-all flex items-center gap-1.5 cursor-pointer"
@@ -1024,7 +1024,7 @@ export default function SendingProgressView({
                   // finished buttons
                   <div className="flex items-center gap-2">
                     {failedCount > 0 && (
-                      <button
+                      <button data-crm-button=""
                         id="btn-monitor-retry"
                         onClick={triggerRetryFailed}
                         className="text-xs font-bold bg-white dark:bg-[#252423] border border-[#EDEBE9] dark:border-[#323130] hover:bg-slate-50 dark:hover:bg-slate-800 text-indigo-650 px-3 py-2 rounded transition-all flex items-center gap-1.5 cursor-pointer"
@@ -1033,7 +1033,7 @@ export default function SendingProgressView({
 {t("Retry Failed ({count})").replace("{count}", String(failedCount))}
                       </button>
                     )}
-                    <button
+                    <button data-crm-button=""
                       id="btn-monitor-download-pdf"
                       onClick={handleDownloadPDF}
                       className="text-xs font-bold bg-[#0078D4] hover:bg-[#006cc0] text-white px-4 py-2.5 rounded shadow-sm flex items-center gap-1.5 transition-all cursor-pointer"
@@ -1047,11 +1047,11 @@ export default function SendingProgressView({
             </div>
 
             {/* Progress metrics and graphs */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-6 gap-4 mb-6">
+            <div data-crm-flow="" data-crm-grid="layout" className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-6 gap-4 mb-6">
               
               {/* Progress counter */}
               <div className="bg-[#F3F2F1] dark:bg-[#11100f] p-4 rounded border border-[#EDEBE9] dark:border-[#323130]">
-                <span className="text-[10px] font-bold text-slate-405 uppercase tracking-wider block">{t("Completed Progress")}</span>
+                <span data-crm-caption="" className="text-[10px] font-bold text-slate-405 uppercase tracking-wider block">{t("Completed Progress")}</span>
                 <div className="text-xl font-bold text-slate-800 dark:text-slate-100 mt-1">{progressPercent}%</div>
                 <div className="w-full bg-slate-200 dark:bg-slate-800 h-1.5 rounded overflow-hidden mt-2.5">
                   <div
@@ -1063,7 +1063,7 @@ export default function SendingProgressView({
 
               {/* Total Sent */}
               <div className="bg-[#F3F2F1] dark:bg-[#11100f] p-4 rounded border border-[#EDEBE9] dark:border-[#323130]">
-                <span className="text-[10px] font-bold text-slate-405 uppercase tracking-wider block">{t("Sent Queue")}</span>
+                <span data-crm-caption="" className="text-[10px] font-bold text-slate-405 uppercase tracking-wider block">{t("Sent Queue")}</span>
                 <div className="text-xl font-bold text-slate-800 dark:text-slate-100 mt-1">
                   {currentIndex} / {activeRecipients.length}
                 </div>
@@ -1072,7 +1072,7 @@ export default function SendingProgressView({
 
               {/* Successful Sends */}
               <div className="bg-[#F3F2F1] dark:bg-[#11100f] p-4 rounded border border-[#EDEBE9] dark:border-[#323130]">
-                <span className="text-[10px] font-bold text-slate-405 uppercase tracking-wider block">{t("Successful Outgoing")}</span>
+                <span data-crm-caption="" className="text-[10px] font-bold text-slate-405 uppercase tracking-wider block">{t("Successful Outgoing")}</span>
                 <div className="text-xl font-bold text-emerald-600 dark:text-emerald-400 mt-1">
                   {successCount}
                 </div>
@@ -1081,7 +1081,7 @@ export default function SendingProgressView({
 
               {/* Failed Sends */}
               <div className="bg-[#F3F2F1] dark:bg-[#11100f] p-4 rounded border border-[#EDEBE9] dark:border-[#323130]">
-                <span className="text-[10px] font-bold text-slate-420 uppercase tracking-wider block">{t("Failed Handovers")}</span>
+                <span data-crm-caption="" className="text-[10px] font-bold text-slate-420 uppercase tracking-wider block">{t("Failed Handovers")}</span>
                 <div className={`text-xl font-bold mt-1 ${failedCount > 0 ? "text-rose-600 font-extrabold" : "text-slate-400"}`}>
                   {failedCount}
                 </div>
@@ -1109,7 +1109,7 @@ export default function SendingProgressView({
             </div>
 
             {/* Real-Time Deliverability Dashboard & Simulator */}
-            <div className="mb-6 border border-[#EDEBE9] dark:border-[#323130] rounded p-4 bg-white dark:bg-[#11100f] space-y-4">
+            <div data-crm-stack="" data-crm-card="padded" className="mb-6 border border-[#EDEBE9] dark:border-[#323130] rounded p-4 bg-white dark:bg-[#11100f] space-y-4">
               <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 bg-[#f3f9fe] dark:bg-blue-950/10 p-4 border border-[#0078D4]/20 rounded-md">
                 <div className="flex items-center gap-2.5">
                   <span className="relative flex h-3 w-3">
@@ -1117,7 +1117,7 @@ export default function SendingProgressView({
                     <span className="relative inline-flex rounded-full h-3 w-3 bg-[#0078D4]"></span>
                   </span>
                   <div>
-                    <h4 className="text-xs font-bold text-[#0078D4] dark:text-brand-300 uppercase tracking-wider flex items-center gap-1.5">
+                    <h4 data-crm-heading="section" className="text-xs font-bold text-[#0078D4] dark:text-brand-300 uppercase tracking-wider flex items-center gap-1.5">
 <span>{t("Method A: Microsoft Graph Subscription Router")}</span>
 <span className="bg-[#0078D4]/10 text-[#0078D4] text-[9px] px-1.5 py-0.5 rounded uppercase font-semibold">{t("Production Node")}</span>
                     </h4>
@@ -1136,9 +1136,9 @@ export default function SendingProgressView({
               </div>
 
               {/* Simulation Hub */}
-              <div className="bg-[#FAF9F8] dark:bg-[#252423]/50 p-4 rounded border border-[#EDEBE9] dark:border-[#323130] space-y-4">
+              <div data-crm-stack="" className="bg-[#FAF9F8] dark:bg-[#252423]/50 p-4 rounded border border-[#EDEBE9] dark:border-[#323130] space-y-4">
                 <div>
-                  <h4 className="text-xs font-bold text-slate-705 dark:text-slate-200 flex items-center gap-1.5">
+                  <h4 data-crm-heading="section" className="text-xs font-bold text-slate-705 dark:text-slate-200 flex items-center gap-1.5">
                     <Flame className="w-4 h-4 text-orange-500" />
                     <span>{t("Architect Telemetry Integration Test Bench")}</span>
                   </h4>
@@ -1149,8 +1149,8 @@ export default function SendingProgressView({
 
                 <div className="flex flex-col sm:flex-row sm:items-center gap-3 text-xs">
                   <div className="flex items-center gap-1.5">
-                    <span className="font-bold text-slate-400 uppercase text-[9px] tracking-wide block">{t("Recipient:")}</span>
-                    <select
+                    <span data-crm-caption="" className="font-bold text-slate-400 uppercase text-[9px] tracking-wide block">{t("Recipient:")}</span>
+                    <select data-crm-field="control"
                       id="simulate-recipient-select"
                       className="p-1.5 text-[11px] bg-white dark:bg-[#11100f] border border-[#EDEBE9] dark:border-[#323130] rounded outline-none font-mono text-slate-700 dark:text-slate-200 pr-5"
                     >
@@ -1162,7 +1162,7 @@ export default function SendingProgressView({
                   </div>
 
                   <div className="flex flex-wrap items-center gap-2">
-                    <button
+                    <button data-crm-button=""
                       type="button"
                       onClick={async () => {
                         const select = document.getElementById("simulate-recipient-select") as HTMLSelectElement;
@@ -1194,7 +1194,7 @@ export default function SendingProgressView({
                       {t("MOCK Hard Bounce (5.1.1)")}
                     </button>
 
-                    <button
+                    <button data-crm-button=""
                       type="button"
                       onClick={async () => {
                         const select = document.getElementById("simulate-recipient-select") as HTMLSelectElement;
@@ -1226,7 +1226,7 @@ export default function SendingProgressView({
                       {t("MOCK Soft Bounce (5.2.2)")}
                     </button>
 
-                    <button
+                    <button data-crm-button=""
                       type="button"
                       onClick={async () => {
                         const select = document.getElementById("simulate-recipient-select") as HTMLSelectElement;
@@ -1249,7 +1249,7 @@ export default function SendingProgressView({
                       {t("MOCK Open (Pixel)")}
                     </button>
                     
-                    <button
+                    <button data-crm-button=""
                       type="button"
                       onClick={async () => {
                         try {
@@ -1271,11 +1271,11 @@ export default function SendingProgressView({
             </div>
 
             {hasPermissionError && (
-              <div id="alert-permission-denied" className="mb-6 p-5 rounded border border-rose-200/80 dark:border-rose-900/50 bg-rose-50/50 dark:bg-rose-950/20 text-slate-800 dark:text-slate-100 space-y-4">
+              <div data-crm-stack="" id="alert-permission-denied" className="mb-6 p-5 rounded border border-rose-200/80 dark:border-rose-900/50 bg-rose-50/50 dark:bg-rose-950/20 text-slate-800 dark:text-slate-100 space-y-4">
                 <div className="flex gap-2.5 items-start">
                   <AlertCircle className="w-5 h-5 text-rose-600 flex-shrink-0 mt-0.5" />
                   <div>
-                    <h4 className="text-xs font-bold text-rose-700 dark:text-rose-400 uppercase tracking-wider flex items-center gap-1.5">
+                    <h4 data-crm-heading="section" className="text-xs font-bold text-rose-700 dark:text-rose-400 uppercase tracking-wider flex items-center gap-1.5">
                       {t("Microsoft Graph API Access Problem Detected")}
                     </h4>
                     <p className="text-xs text-rose-600 dark:text-rose-400 font-semibold mt-1 leading-normal">
@@ -1284,8 +1284,8 @@ export default function SendingProgressView({
                   </div>
                 </div>
 
-                <div className="grid grid-cols-1 gap-4 text-xs font-medium text-slate-650 dark:text-slate-350">
-                  <div className="p-3.5 bg-white dark:bg-[#11100f] border border-[#EDEBE9] dark:border-[#323130] rounded space-y-2">
+                <div data-crm-flow="" data-crm-grid="layout" className="grid grid-cols-1 gap-4 text-xs font-medium text-slate-650 dark:text-slate-350">
+                  <div data-crm-card="padded" className="p-3.5 bg-white dark:bg-[#11100f] border border-[#EDEBE9] dark:border-[#323130] rounded space-y-2">
                     <p className="font-bold text-[#0078D4] dark:text-brand-300 flex items-center gap-1.5">
 <span className="bg-[#0078D4]/10 text-[#0078D4] px-1.5 py-0.5 rounded text-[10px]">{t("ADMIN")}</span>
 <span>{t("Organization Mailbox permission check")}</span>
@@ -1307,11 +1307,11 @@ export default function SendingProgressView({
             )}
 
             {hasTokenExpiredError && (
-              <div id="alert-token-expired" className="mb-6 p-5 rounded border border-amber-350/80 dark:border-amber-900/50 bg-amber-50/50 dark:bg-amber-950/20 text-slate-800 dark:text-slate-100 space-y-4">
+              <div data-crm-stack="" id="alert-token-expired" className="mb-6 p-5 rounded border border-amber-350/80 dark:border-amber-900/50 bg-amber-50/50 dark:bg-amber-950/20 text-slate-800 dark:text-slate-100 space-y-4">
                 <div className="flex gap-2.5 items-start">
                   <AlertCircle className="w-5 h-5 text-amber-600 flex-shrink-0 mt-0.5" />
                   <div>
-                    <h4 className="text-xs font-bold text-amber-700 dark:text-amber-400 uppercase tracking-wider flex items-center gap-1.5">
+                    <h4 data-crm-heading="section" className="text-xs font-bold text-amber-700 dark:text-amber-400 uppercase tracking-wider flex items-center gap-1.5">
                       {t("Organization Mailbox Token Refresh Required")}
                     </h4>
                     <p className="text-xs text-amber-600 dark:text-amber-450 font-semibold mt-1 leading-normal">
@@ -1323,10 +1323,10 @@ export default function SendingProgressView({
                   </div>
                 </div>
 
-                <div className="p-4 bg-white dark:bg-[#11100f] border border-[#EDEBE9] dark:border-[#323130] rounded space-y-3">
+                <div data-crm-card="padded" className="p-4 bg-white dark:bg-[#11100f] border border-[#EDEBE9] dark:border-[#323130] rounded space-y-3">
                   <div className="space-y-1">
-                    <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">{t("Organization Mailbox Token Refresh")}</label>
-                    <button
+                    <label data-crm-label="" className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">{t("Organization Mailbox Token Refresh")}</label>
+                    <button data-crm-button=""
                       type="button"
                       onClick={() => {
                         setActiveRecipients((prev) =>
@@ -1362,9 +1362,9 @@ export default function SendingProgressView({
             {/* IFRAME PDF PREVIEW ELEMENT (FOR VIEW REQUIREMENT) */}
             {campaignFinished && pdfBlobUrl && (
               <div className="mb-6 border border-[#EDEBE9] dark:border-[#323130] rounded p-4 bg-[#F3F2F1]/50 dark:bg-[#11100f]">
-                <h4 className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-2 flex items-center justify-between">
+                <h4 data-crm-heading="section" className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-2 flex items-center justify-between">
                   <span>{t("Executive Campaign Report (Embed Visualizer)")}</span>
-                  <button
+                  <button data-crm-button=""
                     id="btn-embed-download-pdf"
                     onClick={handleDownloadPDF}
                     className="text-[10px] text-[#0078D4] hover:underline font-bold"
@@ -1372,7 +1372,7 @@ export default function SendingProgressView({
                     {t("Download PDF File")}
                   </button>
                 </h4>
-                <div className="h-64 border border-[#EDEBE9] dark:border-[#323130] rounded bg-white dark:bg-[#1b1a19] overflow-hidden shadow-inner">
+                <div data-crm-card="surface" className="h-64 border border-[#EDEBE9] dark:border-[#323130] rounded bg-white dark:bg-[#1b1a19] overflow-hidden shadow-inner">
 <iframe src={`${pdfBlobUrl}#toolbar=0&navpanes=0`} className="w-full h-full" title={t("Campaign Report Performance Analyzer")}></iframe>
                 </div>
               </div>
@@ -1380,11 +1380,11 @@ export default function SendingProgressView({
           </div>
 
           {/* Recipient Processing Queue Logs */}
-          <div className="bg-white dark:bg-[#1b1a19] border border-[#EDEBE9] dark:border-[#323130] rounded p-6 shadow-sm">
-            <h4 className="text-[10px] font-bold text-slate-405 uppercase tracking-wider mb-3 block">{t("Recipient Transmissions Queue")}</h4>
+          <div data-crm-card="padded" className="bg-white dark:bg-[#1b1a19] border border-[#EDEBE9] dark:border-[#323130] rounded p-6 shadow-sm">
+            <h4 data-crm-heading="section" className="text-[10px] font-bold text-slate-405 uppercase tracking-wider mb-3 block">{t("Recipient Transmissions Queue")}</h4>
             
             <div className="border border-[#EDEBE9] dark:border-[#323130] rounded overflow-hidden max-h-80 overflow-y-auto">
-              <table className="w-full text-xs text-left border-collapse">
+              <div data-crm-scroll="horizontal"><table data-crm-table="" className="w-full text-xs text-left border-collapse">
                 <thead className="bg-[#F3F2F1] dark:bg-[#11100f] text-slate-500 font-bold sticky top-0 border-b border-[#EDEBE9] dark:border-[#323130]">
                   <tr>
                     <th className="p-3">{t("Email Address")}</th>
@@ -1409,7 +1409,7 @@ export default function SendingProgressView({
                         <td className="p-3 text-slate-400 truncate max-w-[180px]">{mergedSub}</td>
                         <td className="p-3">
                           {rec.status === "idle" && (
-                            <span className="bg-slate-100 dark:bg-slate-800 text-slate-500 px-2 py-0.5 rounded text-[10px] font-medium uppercase font-mono border border-slate-200/40">{t("Idle")}</span>
+                            <span data-crm-caption="" className="bg-slate-100 dark:bg-slate-800 text-slate-500 px-2 py-0.5 rounded text-[10px] font-medium uppercase font-mono border border-slate-200/40">{t("Idle")}</span>
                           )}
                           {rec.status === "sending" && (
                             <span className="bg-[#f3f9fe] text-[#0078D4] dark:bg-blue-950/20 dark:text-brand-300 px-2 py-0.5 rounded text-[10px] font-bold uppercase animate-pulse font-mono border border-blue-200/40">{t("Sending")}</span>
@@ -1457,7 +1457,7 @@ export default function SendingProgressView({
                     );
                   })}
                 </tbody>
-              </table>
+              </table></div>
             </div>
           </div>
         </div>

@@ -724,14 +724,14 @@ export default function AISalesAssistant({ onOpenSettings }: AISalesAssistantPro
       <div className="w-14 h-14 rounded-full bg-amber-500/10 text-amber-500 flex items-center justify-center mb-4">
         <ShieldAlert className="w-7 h-7" />
       </div>
-      <h4 className="text-base font-bold text-slate-800 dark:text-slate-100 mb-3">
+      <h4 data-crm-heading="section" className="text-base font-bold text-slate-800 dark:text-slate-100 mb-3">
         {t("Tavily API key not found")}
       </h4>
       <p className="text-xs text-slate-500 dark:text-slate-400 leading-relaxed mb-6">
         {t(TAVILY_KEY_MESSAGE)}
       </p>
       {onOpenSettings && (
-        <button
+        <button data-crm-button=""
           onClick={onOpenSettings}
           className="px-5 py-2.5 bg-[#0078D4] hover:bg-[#106ebe] text-white text-xs font-bold rounded-lg shadow transition-all cursor-pointer"
         >
@@ -742,8 +742,8 @@ export default function AISalesAssistant({ onOpenSettings }: AISalesAssistantPro
   );
 
   return (
-    <div className="bg-white dark:bg-[#1b1a19] rounded-xl border border-[#EDEBE9] dark:border-[#323130] shadow-sm overflow-hidden flex flex-col md:flex-row h-[760px] relative">
-      <div className="absolute top-0 left-0 right-0 h-1.5 bg-gradient-to-r from-emerald-500 via-[#0078D4] to-blue-500 z-10" />
+    <div data-crm-screen="AISalesAssistant" data-crm-card="surface" className="bg-white dark:bg-[#1b1a19] rounded-xl border border-[#EDEBE9] dark:border-[#323130] shadow-sm overflow-hidden flex flex-col md:flex-row h-[760px] relative">
+      <div data-crm-decoration="" className="absolute top-0 left-0 right-0 h-1.5 bg-gradient-to-r from-emerald-500 via-[#0078D4] to-blue-500 z-10" />
       
       {/* Toast Notification */}
       <AnimatePresence>
@@ -767,7 +767,7 @@ export default function AISalesAssistant({ onOpenSettings }: AISalesAssistantPro
             <div className="p-1 px-2 rounded bg-amber-500/10 text-amber-500 font-bold text-[9px] uppercase select-none tracking-wider font-mono">
               {lang === "TR" ? "Kıdemli Danışman" : "Veteran Consultant"}
             </div>
-            <h3 className="text-sm font-bold text-slate-800 dark:text-slate-100 flex items-center gap-1.5 font-display">
+            <h3 data-crm-heading="section" className="text-sm font-bold text-slate-800 dark:text-slate-100 flex items-center gap-1.5 font-display">
               <Sparkles className="w-4 h-4 text-brand-500 animate-pulse" />
               {lang === "TR" ? "Gemini Satış Asistanı" : "Gemini Sales Assistant"}
             </h3>
@@ -785,11 +785,11 @@ export default function AISalesAssistant({ onOpenSettings }: AISalesAssistantPro
 
           <form onSubmit={handleSearchCompany} className="space-y-3 mb-6">
             <div>
-              <label className="block text-[9px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500 mb-1.5 font-mono">
+              <label data-crm-label="" className="block text-[9px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500 mb-1.5 font-mono">
                 {t("TARGET COMPANY OR FACTORY NAME")}
               </label>
               <div className="relative">
-                <input
+                <input data-crm-leading-icon data-crm-field="control"
                   type="text"
                   required
                   value={companyInput}
@@ -802,7 +802,7 @@ export default function AISalesAssistant({ onOpenSettings }: AISalesAssistantPro
               </div>
             </div>
 
-            <button
+            <button data-crm-button=""
               type="submit"
               disabled={loading || !companyInput.trim() || !hasTavilyKey}
               className="w-full py-2.5 px-4 bg-gradient-to-r from-[#0078D4] to-[#106ebe] text-white rounded-lg text-xs font-bold shadow hover:from-[#106ebe] hover:to-[#005a9e] focus:outline-none transition-all flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer mb-2.5"
@@ -825,14 +825,14 @@ export default function AISalesAssistant({ onOpenSettings }: AISalesAssistantPro
         {/* Saved Research History */}
         <div className="flex-1 flex flex-col min-h-[250px] border-t border-[#EDEBE9] dark:border-[#323130] pt-4">
           <div className="flex items-center justify-between mb-3">
-            <span className="text-[9px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500 flex items-center gap-1 font-mono">
+            <span data-crm-caption="" className="text-[9px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500 flex items-center gap-1 font-mono">
               <Clock className="w-3 h-3" />
               {t("ANALYSIS HISTORY")} ({savedAnalyses.length})
             </span>
           </div>
 
           {savedAnalyses.length === 0 ? (
-            <div className="flex-1 flex flex-col items-center justify-center text-center p-4 border border-dashed border-[#EDEBE9] dark:border-[#323130] rounded-lg bg-white/50 dark:bg-black/5">
+            <div data-crm-card="padded" className="flex-1 flex flex-col items-center justify-center text-center p-4 border border-dashed border-[#EDEBE9] dark:border-[#323130] rounded-lg bg-white/50 dark:bg-black/5">
               <TrendingUp className="w-6 h-6 text-slate-300 dark:text-slate-700 mb-2" />
               <p className="text-[10px] text-slate-400 dark:text-slate-500 font-medium font-sans">{t("Analysis history is empty so far.")}</p>
             </div>
@@ -841,7 +841,7 @@ export default function AISalesAssistant({ onOpenSettings }: AISalesAssistantPro
               {savedAnalyses.map((item) => {
                 const isActive = activeAnalysis?.id === item.id;
                 return (
-                  <div
+                  <div data-crm-card="surface"
                     key={item.id}
                     onClick={() => setActiveAnalysis(item)}
                     className={`group w-full text-left px-3 py-2 rounded-lg text-xs font-medium cursor-pointer transition-all flex items-center justify-between border ${
@@ -858,7 +858,7 @@ export default function AISalesAssistant({ onOpenSettings }: AISalesAssistantPro
                       </div>
                     </div>
                     
-                    <button
+                    <button data-crm-button=""
                       onClick={(e) => handleDeleteAnalysis(item.id, e)}
                       className="opacity-0 group-hover:opacity-100 p-1 rounded hover:bg-red-500/10 text-slate-400 hover:text-red-500 transition-all cursor-pointer"
                       title={t("Delete from History")}
@@ -892,10 +892,10 @@ export default function AISalesAssistant({ onOpenSettings }: AISalesAssistantPro
               exit={{ opacity: 0, y: -10 }}
               className="text-center max-w-sm"
             >
-              <h4 className="text-[10px] font-bold text-[#106ebe] dark:text-brand-400 mb-2 font-display uppercase tracking-widest font-mono">
+              <h4 data-crm-heading="section" className="text-[10px] font-bold text-[#106ebe] dark:text-brand-400 mb-2 font-display uppercase tracking-widest font-mono">
                 {t("TAVILY + GEMINI RESEARCH")}
               </h4>
-              <h4 className="text-xs font-bold text-slate-700 dark:text-slate-200 mb-2 font-display leading-relaxed">
+              <h4 data-crm-heading="section" className="text-xs font-bold text-slate-700 dark:text-slate-200 mb-2 font-display leading-relaxed">
                 {loadingMessages[loadingStep]}
               </h4>
               <p className="text-[10px] text-slate-500 dark:text-slate-400 leading-relaxed font-sans">
@@ -907,13 +907,13 @@ export default function AISalesAssistant({ onOpenSettings }: AISalesAssistantPro
           <TavilyMissingScreen />
         ) : error ? (
           <div className="flex-1 flex flex-col items-center justify-center p-8 max-w-xl mx-auto">
-            <div className="bg-white dark:bg-[#201f1e] p-6 rounded-2xl border border-red-200 dark:border-red-950/20 shadow-lg text-center space-y-4">
-              <div className="w-12 h-12 rounded-full bg-red-100 dark:bg-red-950/30 text-red-600 dark:text-red-400 flex items-center justify-center mx-auto mb-2">
+            <div data-crm-stack="" data-crm-card="padded" className="bg-white dark:bg-[#201f1e] p-6 rounded-2xl border border-red-200 dark:border-red-950/20 shadow-lg text-center space-y-4">
+              <div data-crm-icon-box="" className="w-12 h-12 rounded-full bg-red-100 dark:bg-red-950/30 text-red-600 dark:text-red-400 flex items-center justify-center mx-auto mb-2">
                 <ShieldAlert className="w-6 h-6" />
               </div>
-              <h4 className="text-sm font-bold text-slate-800 dark:text-slate-200">{t("Research Could Not Be Completed")}</h4>
+              <h4 data-crm-heading="section" className="text-sm font-bold text-slate-800 dark:text-slate-200">{t("Research Could Not Be Completed")}</h4>
               <p className="text-xs text-red-500 dark:text-red-400 text-center max-w-md mb-6">{t(error || "")}</p>
-              <button
+              <button data-crm-button=""
                 onClick={() => setError(null)}
                 className="px-4 py-2 bg-slate-100 dark:bg-[#252423] hover:bg-slate-200 text-xs font-bold rounded-lg transition-colors cursor-pointer"
               >
@@ -928,29 +928,29 @@ export default function AISalesAssistant({ onOpenSettings }: AISalesAssistantPro
               <TrendingUp className="w-8 h-8 animate-pulse" />
             </div>
 
-            <h3 className="text-lg font-extrabold text-slate-800 dark:text-slate-100 font-display tracking-tight mb-2">
+            <h3 data-crm-heading="section" className="text-lg font-extrabold text-slate-800 dark:text-slate-100 font-display tracking-tight mb-2">
               {t("Gemini Sales Assistant: B2B Business Developer")}
             </h3>
             <p className="text-xs text-slate-500 dark:text-slate-400 max-w-md leading-relaxed mb-8">
               {t("Enter a company name to scan real web sources with the Tavily Search API. Gemini only analyzes the data found.")}
             </p>
 
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 max-w-2xl text-left">
-              <div className="p-4 bg-white dark:bg-[#201f1e] border border-[#EDEBE9] dark:border-[#323130] rounded-xl shadow-sm">
+            <div data-crm-flow="" data-crm-grid="layout" className="grid grid-cols-1 sm:grid-cols-3 gap-4 max-w-2xl text-left">
+              <div data-crm-card="padded" className="p-4 bg-white dark:bg-[#201f1e] border border-[#EDEBE9] dark:border-[#323130] rounded-xl shadow-sm">
                 <Building2 className="w-5 h-5 text-[#0078D4] mb-2.5" />
                 <h5 className="text-[11px] font-bold text-slate-800 dark:text-slate-200 mb-1">{t("Company Summary")}</h5>
                 <p className="text-[10px] text-slate-400 leading-relaxed font-sans">
                   {t("Sector, product and location information found in sources is summarized.")}
                 </p>
               </div>
-              <div className="p-4 bg-white dark:bg-[#201f1e] border border-[#EDEBE9] dark:border-[#323130] rounded-xl shadow-sm">
+              <div data-crm-card="padded" className="p-4 bg-white dark:bg-[#201f1e] border border-[#EDEBE9] dark:border-[#323130] rounded-xl shadow-sm">
                 <Target className="w-5 h-5 text-indigo-500 mb-2.5" />
                 <h5 className="text-[11px] font-bold text-slate-800 dark:text-slate-200 mb-1">{t("Decision Makers")}</h5>
                 <p className="text-[10px] text-slate-400 leading-relaxed font-sans">
                   {t("Only verifiable names and titles are listed.")}
                 </p>
               </div>
-              <div className="p-4 bg-white dark:bg-[#201f1e] border border-[#EDEBE9] dark:border-[#323130] rounded-xl shadow-sm">
+              <div data-crm-card="padded" className="p-4 bg-white dark:bg-[#201f1e] border border-[#EDEBE9] dark:border-[#323130] rounded-xl shadow-sm">
                 <Mail className="w-5 h-5 text-emerald-500 mb-2.5" />
                 <h5 className="text-[11px] font-bold text-slate-800 dark:text-slate-200 mb-1">{t("Email Discovery")}</h5>
                 <p className="text-[10px] text-slate-400 leading-relaxed font-sans">
@@ -967,7 +967,7 @@ export default function AISalesAssistant({ onOpenSettings }: AISalesAssistantPro
             <div className="px-6 py-4 border-b border-[#EDEBE9] dark:border-[#323130] bg-[#FAF9F8] dark:bg-[#201f1e] flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 shrink-0">
               <div>
                 <div className="flex items-center gap-2">
-                  <h4 className="text-sm font-extrabold text-slate-800 dark:text-slate-100 font-display">
+                  <h4 data-crm-heading="section" className="text-sm font-extrabold text-slate-800 dark:text-slate-100 font-display">
                     {activeAnalysis.companyInput.toUpperCase()} {t("SALES DEVELOPMENT REPORT")}
                   </h4>
                   <span className="text-[9px] font-mono text-slate-400 dark:text-slate-500 bg-white dark:bg-black/10 border border-[#EDEBE9] dark:border-[#323130] px-2 py-0.5 rounded-full">
@@ -986,7 +986,7 @@ export default function AISalesAssistant({ onOpenSettings }: AISalesAssistantPro
 
               {/* Top Controls Action row */}
               <div className="flex flex-wrap items-center gap-2">
-                <button
+                <button data-crm-button=""
                   onClick={handlePushToTargetAccounts}
                   className="px-3 py-1.5 bg-gradient-to-r from-emerald-600 to-green-600 text-white hover:from-emerald-700 hover:to-green-700 text-xs font-bold rounded-lg shadow-sm flex items-center gap-1.5 transition-all cursor-pointer"
                   title={t("Send to Target Accounts List")}
@@ -995,8 +995,8 @@ export default function AISalesAssistant({ onOpenSettings }: AISalesAssistantPro
                   {t("Add to Customer List")}
                 </button>
 
-                <div className="flex bg-slate-100 dark:bg-black/20 p-1 rounded-lg border border-[#EDEBE9] dark:border-[#323130]">
-                  <button
+                <div data-crm-toolbar="" className="flex bg-slate-100 dark:bg-black/20 p-1 rounded-lg border border-[#EDEBE9] dark:border-[#323130]">
+                  <button data-crm-button=""
                     onClick={() => setActiveTab("visual")}
                     className={`px-3 py-1 rounded-md text-[10px] font-bold uppercase transition-all cursor-pointer ${
                       activeTab === "visual"
@@ -1006,7 +1006,7 @@ export default function AISalesAssistant({ onOpenSettings }: AISalesAssistantPro
                   >
                     {t("Visual Panel")}
                   </button>
-                  <button
+                  <button data-crm-button=""
                     onClick={() => setActiveTab("raw")}
                     className={`px-3 py-1 rounded-md text-[10px] font-bold uppercase transition-all cursor-pointer ${
                       activeTab === "raw"
@@ -1025,10 +1025,10 @@ export default function AISalesAssistant({ onOpenSettings }: AISalesAssistantPro
               
               {activeTab === "raw" ? (
                 /* Raw Markdown Text tab */
-                <div className="space-y-4">
+                <div data-crm-stack="" className="space-y-4">
                   <div className="flex items-center justify-between">
-                    <span className="text-[9px] font-bold text-slate-400 uppercase tracking-widest block font-mono">{t("RAW ANALYSIS REPORT (TAVILY)")}</span>
-                    <button
+                    <span data-crm-caption="" className="text-[9px] font-bold text-slate-400 uppercase tracking-widest block font-mono">{t("RAW ANALYSIS REPORT (TAVILY)")}</span>
+                    <button data-crm-button=""
                       onClick={() => copyToClipboard(activeAnalysis.rawOutput, "raw")}
                       className="text-slate-400 hover:text-[#0078D4] p-1.5 bg-white dark:bg-[#201f1e] hover:bg-slate-100 dark:hover:bg-[#252423] rounded-lg border border-[#EDEBE9] dark:border-[#323130] text-xs font-semibold flex items-center gap-1.5 transition-all cursor-pointer"
                     >
@@ -1051,10 +1051,10 @@ export default function AISalesAssistant({ onOpenSettings }: AISalesAssistantPro
                 </div>
               ) : (
                 /* Dynamic visual panel cards */
-                <div className="space-y-6">
+                <div data-crm-stack="" className="space-y-6">
                   
                   {/* Company Summary */}
-                  <div className="bg-white dark:bg-[#201f1e] rounded-xl border border-[#EDEBE9] dark:border-[#323130] shadow-sm overflow-hidden p-5">
+                  <div data-crm-card="padded" className="bg-white dark:bg-[#201f1e] rounded-xl border border-[#EDEBE9] dark:border-[#323130] shadow-sm overflow-hidden p-5">
                     <div className="flex items-center gap-2 mb-3 pb-2 border-b border-slate-100 dark:border-[#323130]">
                       <Building2 className="w-4 h-4 text-[#0078D4]" />
                       <h5 className="text-xs font-bold text-slate-800 dark:text-slate-200 uppercase tracking-wider font-mono">
@@ -1067,7 +1067,7 @@ export default function AISalesAssistant({ onOpenSettings }: AISalesAssistantPro
                   </div>
 
                   {/* Financial Data */}
-                  <div className="bg-white dark:bg-[#201f1e] rounded-xl border border-rose-500/10 dark:border-rose-500/20 shadow-sm overflow-hidden p-5">
+                  <div data-crm-card="padded" className="bg-white dark:bg-[#201f1e] rounded-xl border border-rose-500/10 dark:border-rose-500/20 shadow-sm overflow-hidden p-5">
                     <div className="flex items-center justify-between mb-3 pb-2 border-b border-rose-100 dark:border-[#323130]">
                       <div className="flex items-center gap-2">
                         <TrendingUp className="w-4 h-4 text-rose-500" />
@@ -1076,7 +1076,7 @@ export default function AISalesAssistant({ onOpenSettings }: AISalesAssistantPro
                         </h5>
                       </div>
                       <div className="flex items-center gap-2">
-                        <button
+                        <button data-crm-button=""
                           onClick={() => setIsFinancialExpanded(true)}
                           className="text-[10px] text-slate-500 hover:text-rose-600 dark:hover:text-[#dfdfde] font-bold px-2 py-1 bg-white dark:bg-[#11100f] border border-[#D2D0CE] dark:border-[#323130] rounded cursor-pointer flex items-center gap-1 transition-all"
                           title={t("Expand Screen")}
@@ -1085,7 +1085,7 @@ export default function AISalesAssistant({ onOpenSettings }: AISalesAssistantPro
                           <Maximize2 className="w-3 h-3 text-rose-500" />
                           {t("Expand")}
                         </button>
-                        <button
+                        <button data-crm-button=""
                           onClick={() => copyToClipboard(activeAnalysis.parsed.financialData, "financial")}
                           className="text-[10px] text-slate-500 hover:text-[#0078D4] dark:hover:text-brand-400 font-bold px-2 py-1 bg-white dark:bg-[#11100f] border border-[#D2D0CE] dark:border-[#323130] rounded cursor-pointer flex items-center gap-1 transition-all"
                         >
@@ -1100,7 +1100,7 @@ export default function AISalesAssistant({ onOpenSettings }: AISalesAssistantPro
                   </div>
 
                   {/* Email Discovery */}
-                  <div className="bg-white dark:bg-[#201f1e] rounded-xl border border-[#EDEBE9] dark:border-[#323130] shadow-sm overflow-hidden p-5">
+                  <div data-crm-card="padded" className="bg-white dark:bg-[#201f1e] rounded-xl border border-[#EDEBE9] dark:border-[#323130] shadow-sm overflow-hidden p-5">
                     <div className="flex items-center justify-between mb-3 pb-2 border-b border-[#EDEBE9] dark:border-[#323130]">
                       <div className="flex items-center gap-2">
                         <Mail className="w-4 h-4 text-rose-500" />
@@ -1116,7 +1116,7 @@ export default function AISalesAssistant({ onOpenSettings }: AISalesAssistantPro
                   </div>
 
                   {/* Decision Makers */}
-                  <div className="bg-white dark:bg-[#201f1e] rounded-xl border border-[#EDEBE9] dark:border-[#323130] shadow-sm overflow-hidden p-5">
+                  <div data-crm-card="padded" className="bg-white dark:bg-[#201f1e] rounded-xl border border-[#EDEBE9] dark:border-[#323130] shadow-sm overflow-hidden p-5">
                     <div className="flex items-center gap-2 mb-3 pb-2 border-b border-indigo-100 dark:border-[#323130]">
                       <Target className="w-4 h-4 text-indigo-500" />
                       <h5 className="text-xs font-bold text-slate-800 dark:text-slate-200 uppercase tracking-wider font-mono">
@@ -1137,7 +1137,7 @@ export default function AISalesAssistant({ onOpenSettings }: AISalesAssistantPro
                           # {t("Opportunity Analysis")}
                         </h5>
                       </div>
-                      <button
+                      <button data-crm-button=""
                         onClick={() => copyToClipboard(activeAnalysis.parsed.opportunityAnalysis, "outreach")}
                         className="text-slate-500 hover:text-[#0078D4] dark:hover:text-brand-400 px-2.5 py-1 bg-white dark:bg-[#11100f] hover:bg-slate-50 border border-[#D2D0CE] dark:border-[#323130] rounded-md text-[9px] font-bold uppercase transition-all flex items-center gap-1 cursor-pointer"
                       >
@@ -1155,14 +1155,14 @@ export default function AISalesAssistant({ onOpenSettings }: AISalesAssistantPro
                       </button>
                     </div>
                     <div className="p-5">
-                      <div className="text-xs text-slate-700 dark:text-slate-200 whitespace-pre-wrap leading-relaxed font-sans bg-white dark:bg-black/20 p-4 rounded-lg border border-slate-100 dark:border-[#323130]">
+                      <div data-crm-card="padded" className="text-xs text-slate-700 dark:text-slate-200 whitespace-pre-wrap leading-relaxed font-sans bg-white dark:bg-black/20 p-4 rounded-lg border border-slate-100 dark:border-[#323130]">
                         {activeAnalysis.parsed.opportunityAnalysis}
                       </div>
                     </div>
                   </div>
 
                   {/* B2B E-Posta Oluşturucu */}
-                  <div className="bg-white dark:bg-[#201f1e] rounded-xl border border-indigo-200 dark:border-indigo-950/40 shadow-sm overflow-hidden p-5">
+                  <div data-crm-card="padded" className="bg-white dark:bg-[#201f1e] rounded-xl border border-indigo-200 dark:border-indigo-950/40 shadow-sm overflow-hidden p-5">
                     <div className="flex items-center justify-between mb-4 pb-2 border-b border-indigo-100 dark:border-[#323130]">
                       <div className="flex items-center gap-2">
                         <Sparkles className="w-4 h-4 text-indigo-500 animate-pulse" />
@@ -1171,7 +1171,7 @@ export default function AISalesAssistant({ onOpenSettings }: AISalesAssistantPro
                         </h5>
                       </div>
                       <div className="flex items-center gap-2">
-                        <button
+                        <button data-crm-button=""
                           onClick={() => setIsEmailWizardExpanded(true)}
                           className="text-[10px] text-slate-500 hover:text-indigo-600 dark:hover:text-[#dfdfde] font-bold px-2 py-1 bg-white dark:bg-[#11100f] border border-[#D2D0CE] dark:border-[#323130] rounded cursor-pointer flex items-center gap-1 transition-all"
                           title={t("Expand Screen")}
@@ -1188,14 +1188,14 @@ export default function AISalesAssistant({ onOpenSettings }: AISalesAssistantPro
                       {t("Generate cold/warm email drafts tailored to the company analysis, targeted continuous-improvement topics, and contact type.")}
                     </p>
 
-                    <div className="grid grid-cols-1 md:grid-cols-12 gap-5 mb-4">
+                    <div data-crm-flow="" data-crm-grid="form" className="grid grid-cols-1 md:grid-cols-12 gap-5 mb-4">
                       {/* Left configuration settings */}
-                      <div className="md:col-span-5 space-y-4">
+                      <div data-crm-stack="" className="md:col-span-5 space-y-4">
                         {/* 1. İletişim Tipi */}
                         <div>
-                          <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block mb-1.5 font-mono">1. {t("CONTACT AREA")}</label>
-                          <div className="grid grid-cols-2 gap-2">
-                            <button
+                          <label data-crm-label="" className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block mb-1.5 font-mono">1. {t("CONTACT AREA")}</label>
+                          <div data-crm-flow="" data-crm-grid="layout" className="grid grid-cols-2 gap-2">
+                            <button data-crm-button=""
                               type="button"
                               onClick={() => setGeneratorMailType("cold")}
                               className={`p-2.5 rounded-lg border text-center transition-all cursor-pointer ${
@@ -1207,7 +1207,7 @@ export default function AISalesAssistant({ onOpenSettings }: AISalesAssistantPro
                               <div className="text-[11px]">{t("Cold Contact (Cold)")}</div>
                               <div className="text-[8px] opacity-75 mt-0.5">{t("First introduction")}</div>
                             </button>
-                            <button
+                            <button data-crm-button=""
                               type="button"
                               onClick={() => setGeneratorMailType("warm")}
                               className={`p-2.5 rounded-lg border text-center transition-all cursor-pointer ${
@@ -1224,7 +1224,7 @@ export default function AISalesAssistant({ onOpenSettings }: AISalesAssistantPro
 
                         {/* 2. Odak Konusu */}
                         <div>
-                          <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block mb-1.5 font-mono">2. {t("SELECT FOCUS TOPIC")}</label>
+                          <label data-crm-label="" className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block mb-1.5 font-mono">2. {t("SELECT FOCUS TOPIC")}</label>
                           <div className="flex flex-wrap gap-1.5 mb-2">
                             {[
                               "OEE (Ekipman Etkinliği) & Çevrim İyileştirme",
@@ -1233,7 +1233,7 @@ export default function AISalesAssistant({ onOpenSettings }: AISalesAssistantPro
                               "Kaizen, 5S & Hücresel Üretim Kurulumu",
                               "ISO & Süreç Standardizasyonu Danışmanlığı"
                             ].map((tp) => (
-                              <button
+                              <button data-crm-button=""
                                 key={tp}
                                 type="button"
                                 onClick={() => setGeneratorTopic(tp)}
@@ -1248,7 +1248,7 @@ export default function AISalesAssistant({ onOpenSettings }: AISalesAssistantPro
                             ))}
                           </div>
 
-                          <input
+                          <input data-crm-field="control"
                             type="text"
                             value={generatorTopic}
                             onChange={(e) => setGeneratorTopic(e.target.value)}
@@ -1259,8 +1259,8 @@ export default function AISalesAssistant({ onOpenSettings }: AISalesAssistantPro
 
                         {/* 3. İletişim Tonu */}
                         <div>
-                          <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block mb-1 font-mono">3. {t("CONTACT TONE")}</label>
-                          <select
+                          <label data-crm-label="" className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block mb-1 font-mono">3. {t("CONTACT TONE")}</label>
+                          <select data-crm-field="control"
                             value={generatorTone}
                             onChange={(e) => setGeneratorTone(e.target.value)}
                             className="w-full text-xs bg-slate-50 dark:bg-[#11100f] text-slate-900 dark:text-white px-3 py-2 border border-slate-200 dark:border-[#323130] rounded-lg focus:outline-none focus:border-indigo-500 font-bold"
@@ -1274,8 +1274,8 @@ export default function AISalesAssistant({ onOpenSettings }: AISalesAssistantPro
 
                         {/* 4. Ekstra Notlar */}
                         <div>
-                          <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block mb-1 font-mono">4. {t("EXTRA NOTES (OPTIONAL)")}</label>
-                          <textarea
+                          <label data-crm-label="" className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block mb-1 font-mono">4. {t("EXTRA NOTES (OPTIONAL)")}</label>
+                          <textarea data-crm-field="multiline"
                             value={generatorExtraContext}
                             onChange={(e) => setGeneratorExtraContext(e.target.value)}
                             className="w-full text-xs bg-slate-50 dark:bg-black/20 text-slate-800 dark:text-slate-200 px-3 py-2 border border-slate-200 dark:border-[#323130] rounded-lg focus:outline-none focus:border-indigo-500 h-16 resize-none"
@@ -1284,7 +1284,7 @@ export default function AISalesAssistant({ onOpenSettings }: AISalesAssistantPro
                         </div>
 
                         {/* Generate Button */}
-                        <button
+                        <button data-crm-button=""
                           type="button"
                           onClick={handleGenerateCustomPitch}
                           disabled={generatorLoading}
@@ -1311,7 +1311,7 @@ export default function AISalesAssistant({ onOpenSettings }: AISalesAssistantPro
                             <div>
                               <div className="flex items-center justify-between mb-2">
                                 <span className="text-[9px] font-bold text-emerald-600 bg-emerald-500/10 px-2 py-0.5 rounded font-mono uppercase">{t("Draft Ready")}</span>
-                                <button
+                                <button data-crm-button=""
                                   type="button"
                                   onClick={() => copyToClipboard(generatedEmailResult, "wizard_email")}
                                   className="text-slate-500 hover:text-indigo-600 dark:hover:text-brand-400 px-2.5 py-1 bg-white dark:bg-[#11100f] hover:bg-slate-50 border border-[#D2D0CE] dark:border-[#323130] rounded-md text-[9px] font-bold uppercase transition-all flex items-center gap-1 cursor-pointer font-mono"
@@ -1329,7 +1329,7 @@ export default function AISalesAssistant({ onOpenSettings }: AISalesAssistantPro
                                   )}
                                 </button>
                               </div>
-                              <div className="text-xs p-3.5 bg-white dark:bg-[#11100f] border border-slate-200 dark:border-[#323130] rounded-lg text-slate-700 dark:text-slate-200 font-sans whitespace-pre-wrap leading-relaxed shadow-sm max-h-[295px] overflow-y-auto">
+                              <div data-crm-card="padded" className="text-xs p-3.5 bg-white dark:bg-[#11100f] border border-slate-200 dark:border-[#323130] rounded-lg text-slate-700 dark:text-slate-200 font-sans whitespace-pre-wrap leading-relaxed shadow-sm max-h-[295px] overflow-y-auto">
                                 {generatedEmailResult}
                               </div>
                             </div>
@@ -1353,7 +1353,7 @@ export default function AISalesAssistant({ onOpenSettings }: AISalesAssistantPro
                   {/* Sources Grounding Citation details footer panel */}
                   {activeAnalysis.sources.length > 0 && (
                     <div className="p-4 bg-slate-100/50 dark:bg-black/10 rounded-xl border border-[#EDEBE9] dark:border-[#323130]">
-                      <span className="text-[9px] font-bold text-slate-400 uppercase tracking-wider block mb-3 font-mono">
+                      <span data-crm-caption="" className="text-[9px] font-bold text-slate-400 uppercase tracking-wider block mb-3 font-mono">
                         {t("Sources (Tavily Search API)")}
                       </span>
                       <div className="space-y-2">
@@ -1388,8 +1388,8 @@ export default function AISalesAssistant({ onOpenSettings }: AISalesAssistantPro
 
         {/* MODAL OVERLAYS FOR SCREEN EXPANSION */}
         {isFinancialExpanded && activeAnalysis && (
-          <div role="dialog" aria-modal="true" className="fixed inset-0 bg-slate-900/60 dark:bg-black/85 backdrop-blur-md flex items-center justify-center z-50 p-4 md:p-8">
-            <div className="bg-white dark:bg-[#1a1a1a] w-full max-w-5xl max-h-[92vh] rounded-2xl border border-rose-500/20 dark:border-rose-500/10 shadow-2xl flex flex-col overflow-hidden animate-in fade-in zoom-in-95 duration-200">
+          <div data-crm-overlay="" role="dialog" aria-modal="true" className="fixed inset-0 bg-slate-900/60 dark:bg-black/85 backdrop-blur-md flex items-center justify-center z-50 p-4 md:p-8">
+            <div data-crm-modal="" data-crm-card="surface" className="bg-white dark:bg-[#1a1a1a] w-full max-w-5xl max-h-[92vh] rounded-2xl border border-rose-500/20 dark:border-rose-500/10 shadow-2xl flex flex-col overflow-hidden animate-in fade-in zoom-in-95 duration-200">
 
               {/* Header */}
               <div className="flex items-center justify-between p-5 border-b border-rose-100 dark:border-[#323130] bg-slate-50/50 dark:bg-black/25">
@@ -1400,14 +1400,14 @@ export default function AISalesAssistant({ onOpenSettings }: AISalesAssistantPro
                   </h5>
                 </div>
                 <div className="flex items-center gap-2">
-                  <button
+                  <button data-crm-button=""
                     onClick={() => copyToClipboard(activeAnalysis.parsed.financialData, "financial")}
                     className="text-xs text-slate-600 dark:text-slate-300 hover:text-[#0078D4] dark:hover:text-brand-400 font-bold px-3 py-1.5 bg-white dark:bg-[#11100f] border border-[#D2D0CE] dark:border-[#323130] rounded-lg cursor-pointer flex items-center gap-1.5 transition-all"
                   >
                     {copiedSection === "financial" ? <Check className="w-3.5 h-3.5 text-emerald-500" /> : <Copy className="w-0.5 h-3.5" />}
                     {t("Copy Report")}
                   </button>
-                  <button
+                  <button data-crm-button=""
                     onClick={() => setIsFinancialExpanded(false)}
                     className="p-1 px-3 bg-rose-50 hover:bg-rose-100 dark:bg-[#321111] dark:hover:bg-[#4a1c1c] border border-rose-200 dark:border-rose-950/40 rounded-lg text-xs font-bold font-mono text-rose-700 dark:text-rose-300 transition-all cursor-pointer flex items-center gap-1"
                     aria-label={t("Close")}
@@ -1419,7 +1419,7 @@ export default function AISalesAssistant({ onOpenSettings }: AISalesAssistantPro
               </div>
 
               {/* Body */}
-              <div className="p-6 md:p-8 overflow-y-auto space-y-6 flex-1 bg-white dark:bg-[#1c1c1a]">
+              <div data-crm-stack="" className="p-6 md:p-8 overflow-y-auto space-y-6 flex-1 bg-white dark:bg-[#1c1c1a]">
                 
                 {/* Main analysis text */}
                 <div className="text-xs md:text-sm text-slate-700 dark:text-slate-200 whitespace-pre-line leading-relaxed font-sans bg-slate-50/50 dark:bg-black/20 p-6 rounded-xl border border-slate-100 dark:border-[#323130] shadow-inner select-text">
@@ -1432,8 +1432,8 @@ export default function AISalesAssistant({ onOpenSettings }: AISalesAssistantPro
 
         {/* B2B EMAIL WIZARD SCREEN EXPANSION MODAL OVERLAY */}
         {isEmailWizardExpanded && activeAnalysis && (
-          <div role="dialog" aria-modal="true" className="fixed inset-0 bg-slate-900/60 dark:bg-black/85 backdrop-blur-md flex items-center justify-center z-50 p-4 md:p-8">
-            <div className="bg-white dark:bg-[#1a1a1a] w-full max-w-6xl max-h-[92vh] rounded-2xl border border-indigo-500/20 dark:border-indigo-500/10 shadow-2xl flex flex-col overflow-hidden animate-in fade-in zoom-in-95 duration-200">
+          <div data-crm-overlay="" role="dialog" aria-modal="true" className="fixed inset-0 bg-slate-900/60 dark:bg-black/85 backdrop-blur-md flex items-center justify-center z-50 p-4 md:p-8">
+            <div data-crm-modal="" data-crm-card="surface" className="bg-white dark:bg-[#1a1a1a] w-full max-w-6xl max-h-[92vh] rounded-2xl border border-indigo-500/20 dark:border-indigo-500/10 shadow-2xl flex flex-col overflow-hidden animate-in fade-in zoom-in-95 duration-200">
 
               {/* Header */}
               <div className="flex items-center justify-between p-5 border-b border-indigo-100 dark:border-[#323130] bg-slate-50/50 dark:bg-black/25">
@@ -1443,7 +1443,7 @@ export default function AISalesAssistant({ onOpenSettings }: AISalesAssistantPro
                     # 📬 {t("B2B EMAIL WIZARD & DRAFT GENERATOR (Expanded Powerful Editor)")}
                   </h5>
                 </div>
-                <button
+                <button data-crm-button=""
                   onClick={() => setIsEmailWizardExpanded(false)}
                   className="p-1 px-3 bg-indigo-50 hover:bg-indigo-100 dark:bg-[#1b1c32] dark:hover:bg-[#20224a] border border-indigo-100 dark:border-indigo-950/40 rounded-lg text-xs font-bold font-mono text-indigo-700 dark:text-indigo-300 transition-all cursor-pointer flex items-center gap-1"
                   aria-label={t("Close")}
@@ -1454,21 +1454,21 @@ export default function AISalesAssistant({ onOpenSettings }: AISalesAssistantPro
               </div>
 
               {/* Body */}
-              <div className="p-6 md:p-8 overflow-y-auto flex-1 bg-white dark:bg-[#1a1a1a] space-y-6">
+              <div data-crm-stack="" className="p-6 md:p-8 overflow-y-auto flex-1 bg-white dark:bg-[#1a1a1a] space-y-6">
                 <p className="text-xs text-slate-500 dark:text-slate-400 leading-relaxed font-sans max-w-3xl">
                   {t("Generate cold/warm email drafts tailored to the company analysis, targeted continuous-improvement topics, and contact type. A strategic template editor that turns weaknesses in the OpEx methodology into an advantage.")}
                 </p>
 
-                <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-stretch">
+                <div data-crm-flow="" data-crm-grid="form" className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-stretch">
 
                   {/* Left Column Config */}
-                  <div className="lg:col-span-5 space-y-5 bg-slate-50/50 dark:bg-black/15 p-5 rounded-xl border border-slate-100 dark:border-slate-800/45">
+                  <div data-crm-stack="" className="lg:col-span-5 space-y-5 bg-slate-50/50 dark:bg-black/15 p-5 rounded-xl border border-slate-100 dark:border-slate-800/45">
 
                     {/* 1. İletişim Tipi */}
                     <div>
-                      <label className="text-[10px] font-bold text-slate-450 dark:text-slate-500 uppercase tracking-wider block mb-2 font-mono">1. {t("CONTACT AREA")}</label>
-                      <div className="grid grid-cols-2 gap-3">
-                        <button
+                      <label data-crm-label="" className="text-[10px] font-bold text-slate-450 dark:text-slate-500 uppercase tracking-wider block mb-2 font-mono">1. {t("CONTACT AREA")}</label>
+                      <div data-crm-flow="" data-crm-grid="layout" className="grid grid-cols-2 gap-3">
+                        <button data-crm-button=""
                           type="button"
                           onClick={() => setGeneratorMailType("cold")}
                           className={`p-3 rounded-lg border text-center transition-all cursor-pointer ${
@@ -1480,7 +1480,7 @@ export default function AISalesAssistant({ onOpenSettings }: AISalesAssistantPro
                           <div className="text-[12px]">{t("Cold Contact (Cold)")}</div>
                           <div className="text-[9px] opacity-75 mt-0.5">{t("First introduction")}</div>
                         </button>
-                        <button
+                        <button data-crm-button=""
                           type="button"
                           onClick={() => setGeneratorMailType("warm")}
                           className={`p-3 rounded-lg border text-center transition-all cursor-pointer ${
@@ -1497,7 +1497,7 @@ export default function AISalesAssistant({ onOpenSettings }: AISalesAssistantPro
 
                     {/* 2. Odak Konusu */}
                     <div>
-                      <label className="text-[10px] font-bold text-slate-450 dark:text-slate-500 uppercase tracking-wider block mb-2 font-mono">2. {t("SELECT FOCUS TOPIC")}</label>
+                      <label data-crm-label="" className="text-[10px] font-bold text-slate-450 dark:text-slate-500 uppercase tracking-wider block mb-2 font-mono">2. {t("SELECT FOCUS TOPIC")}</label>
                       <div className="flex flex-wrap gap-2 mb-3">
                         {[
                           "OEE (Ekipman Etkinliği) & Çevrim İyileştirme",
@@ -1506,7 +1506,7 @@ export default function AISalesAssistant({ onOpenSettings }: AISalesAssistantPro
                           "Kaizen, 5S & Hücresel Üretim Kurulumu",
                           "ISO & Süreç Standardizasyonu Danışmanlığı"
                         ].map((tp) => (
-                          <button
+                          <button data-crm-button=""
                             key={tp}
                             type="button"
                             onClick={() => setGeneratorTopic(tp)}
@@ -1521,7 +1521,7 @@ export default function AISalesAssistant({ onOpenSettings }: AISalesAssistantPro
                         ))}
                       </div>
 
-                      <input
+                      <input data-crm-field="control"
                         type="text"
                         value={generatorTopic}
                         onChange={(e) => setGeneratorTopic(e.target.value)}
@@ -1532,8 +1532,8 @@ export default function AISalesAssistant({ onOpenSettings }: AISalesAssistantPro
 
                     {/* 3. İletişim Tonu */}
                     <div>
-                      <label className="text-[10px] font-bold text-slate-450 dark:text-slate-500 uppercase tracking-wider block mb-2 font-mono">3. {t("CONTACT TONE")}</label>
-                      <select
+                      <label data-crm-label="" className="text-[10px] font-bold text-slate-450 dark:text-slate-500 uppercase tracking-wider block mb-2 font-mono">3. {t("CONTACT TONE")}</label>
+                      <select data-crm-field="control"
                         value={generatorTone}
                         onChange={(e) => setGeneratorTone(e.target.value)}
                         className="w-full text-xs bg-white dark:bg-[#11100f] text-slate-900 dark:text-white px-3 py-2.5 border border-slate-200 dark:border-[#323130] rounded-lg focus:outline-none focus:border-indigo-500 font-bold"
@@ -1547,8 +1547,8 @@ export default function AISalesAssistant({ onOpenSettings }: AISalesAssistantPro
 
                     {/* 4. Ekstra Notlar */}
                     <div>
-                      <label className="text-[10px] font-bold text-slate-450 dark:text-slate-500 uppercase tracking-wider block mb-2 font-mono">4. {t("EXTRA NOTES (OPTIONAL)")}</label>
-                      <textarea
+                      <label data-crm-label="" className="text-[10px] font-bold text-slate-450 dark:text-slate-500 uppercase tracking-wider block mb-2 font-mono">4. {t("EXTRA NOTES (OPTIONAL)")}</label>
+                      <textarea data-crm-field="multiline"
                         value={generatorExtraContext}
                         onChange={(e) => setGeneratorExtraContext(e.target.value)}
                         className="w-full text-xs bg-white dark:bg-black/35 text-slate-800 dark:text-slate-200 px-3 py-2.5 border border-slate-200 dark:border-[#323130] rounded-lg focus:outline-none focus:border-indigo-500 h-24 resize-none"
@@ -1557,7 +1557,7 @@ export default function AISalesAssistant({ onOpenSettings }: AISalesAssistantPro
                     </div>
 
                     {/* Generate Button */}
-                    <button
+                    <button data-crm-button=""
                       type="button"
                       onClick={handleGenerateCustomPitch}
                       disabled={generatorLoading}
@@ -1580,11 +1580,11 @@ export default function AISalesAssistant({ onOpenSettings }: AISalesAssistantPro
                   {/* Right Column Monitor */}
                   <div className="lg:col-span-7 flex flex-col justify-between border border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-black/25 rounded-xl p-6 min-h-[450px]">
                     {generatedEmailResult ? (
-                      <div className="flex-1 flex flex-col justify-between h-full space-y-4">
+                      <div data-crm-stack="" className="flex-1 flex flex-col justify-between h-full space-y-4">
                         <div>
                           <div className="flex items-center justify-between mb-4">
                             <span className="text-[10px] font-bold text-emerald-600 bg-emerald-500/10 px-3 py-1 rounded font-mono uppercase">{t("Email Draft Ready")}</span>
-                            <button
+                            <button data-crm-button=""
                               type="button"
                               onClick={() => copyToClipboard(generatedEmailResult, "wizard_email")}
                               className="text-[#37352f] dark:text-[#dfdfde] hover:text-indigo-600 dark:hover:text-brand-400 px-3.5 py-1.5 bg-white dark:bg-[#11100f] hover:bg-slate-50 border border-[#D2D0CE] dark:border-[#323130] rounded-md text-xs font-bold uppercase transition-all flex items-center gap-1.5 cursor-pointer font-mono"
@@ -1602,7 +1602,7 @@ export default function AISalesAssistant({ onOpenSettings }: AISalesAssistantPro
                               )}
                             </button>
                           </div>
-                          <div className="text-xs md:text-sm p-5 bg-white dark:bg-[#11100f] border border-slate-200 dark:border-[#323130] rounded-lg text-slate-700 dark:text-slate-200 font-sans whitespace-pre-wrap leading-relaxed shadow-xs max-h-[480px] overflow-y-auto select-text">
+                          <div data-crm-card="padded" className="text-xs md:text-sm p-5 bg-white dark:bg-[#11100f] border border-slate-200 dark:border-[#323130] rounded-lg text-slate-700 dark:text-slate-200 font-sans whitespace-pre-wrap leading-relaxed shadow-xs max-h-[480px] overflow-y-auto select-text">
                             {generatedEmailResult}
                           </div>
                         </div>

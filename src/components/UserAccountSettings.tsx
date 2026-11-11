@@ -100,14 +100,14 @@ export default function UserAccountSettings({
   const status = mailbox?.status || "Disconnected";
 
   return (
-    <div className="space-y-5">
-      <section className="rounded-2xl border border-slate-200/80 dark:border-slate-800 bg-white dark:bg-[#11100f] p-5">
+    <div data-crm-stack="" data-crm-screen="UserAccountSettings" className="space-y-5">
+      <section data-crm-card="padded" className="rounded-2xl border border-slate-200/80 dark:border-slate-800 bg-white dark:bg-[#11100f] p-5">
         <div className="flex flex-wrap items-start justify-between gap-4">
           <div>
             <p className="text-[10px] font-black uppercase tracking-wider text-slate-400">
               {t("Personal Scope")}
             </p>
-            <h3 className="text-base font-bold text-slate-900 dark:text-slate-100 mt-1">
+            <h3 data-crm-heading="section" className="text-base font-bold text-slate-900 dark:text-slate-100 mt-1">
               {t("My Account")}
             </h3>
             <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">
@@ -121,13 +121,13 @@ export default function UserAccountSettings({
         </div>
       </section>
 
-      <section className="rounded-2xl border border-slate-200/80 dark:border-slate-800 bg-white dark:bg-[#11100f] p-5">
+      <section data-crm-card="padded" className="rounded-2xl border border-slate-200/80 dark:border-slate-800 bg-white dark:bg-[#11100f] p-5">
         <div className="flex items-start gap-3">
-          <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-slate-100 dark:bg-slate-800/80 text-slate-600 dark:text-slate-300">
+          <div data-crm-icon-box="" className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-slate-100 dark:bg-slate-800/80 text-slate-600 dark:text-slate-300">
             <User className="h-4 w-4" />
           </div>
           <div className="min-w-0 flex-1">
-            <h3 className="text-sm font-semibold text-slate-900 dark:text-slate-100">
+            <h3 data-crm-heading="section" className="text-sm font-semibold text-slate-900 dark:text-slate-100">
               {t("My Profile")}
             </h3>
             <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">
@@ -137,17 +137,17 @@ export default function UserAccountSettings({
         </div>
       </section>
 
-      <section className="rounded-2xl border border-blue-200/80 dark:border-blue-950/50 bg-blue-50/20 dark:bg-blue-950/10 p-5 space-y-4">
+      <section data-crm-stack="" className="rounded-2xl border border-blue-200/80 dark:border-blue-950/50 bg-blue-50/20 dark:bg-blue-950/10 p-5 space-y-4">
         <div className="flex items-start gap-3">
-          <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-blue-100 dark:bg-blue-950/50 text-blue-700 dark:text-blue-300">
+          <div data-crm-icon-box="" className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-blue-100 dark:bg-blue-950/50 text-blue-700 dark:text-blue-300">
             <Mail className="h-4 w-4" />
           </div>
           <div className="min-w-0 flex-1">
             <div className="flex items-center gap-2 flex-wrap">
-              <h3 className="text-sm font-semibold text-slate-900 dark:text-slate-100">
+              <h3 data-crm-heading="section" className="text-sm font-semibold text-slate-900 dark:text-slate-100">
                 {t("Personal Mailbox")}
               </h3>
-              <span
+              <span data-crm-caption=""
                 className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-black uppercase ${
                   status === "Connected"
                     ? "bg-emerald-50 text-emerald-700 dark:bg-emerald-950/30 dark:text-emerald-300"
@@ -184,7 +184,7 @@ export default function UserAccountSettings({
             )}
 
             <div className="flex flex-col sm:flex-row gap-2">
-              <input
+              <input data-crm-field="control"
                 type="email"
                 value={mailboxAddress}
                 onChange={(e) => setMailboxAddress(e.target.value)}
@@ -193,7 +193,7 @@ export default function UserAccountSettings({
                 className="flex-1 text-xs bg-white dark:bg-black/35 text-slate-800 dark:text-slate-200 px-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-zinc-800 focus:outline-none focus:ring-1 focus:ring-blue-500 font-semibold disabled:opacity-60"
               />
               <div className="flex gap-2">
-                <button
+                <button data-crm-button=""
                   type="button"
                   onClick={handleConnect}
                   disabled={busy || !mailboxAddress.trim()}
@@ -204,7 +204,7 @@ export default function UserAccountSettings({
                 </button>
                 {status !== "Disconnected" && (
                   <>
-                    <button
+                    <button data-crm-button=""
                       type="button"
                       onClick={handleTest}
                       disabled={busy || status !== "Connected"}
@@ -213,7 +213,7 @@ export default function UserAccountSettings({
                       <CheckCircle2 className="w-4 h-4" />
                       {t("Test")}
                     </button>
-                    <button
+                    <button data-crm-button=""
                       type="button"
                       onClick={handleDisconnect}
                       disabled={busy}

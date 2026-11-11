@@ -14,7 +14,7 @@ export default function AdministrationPage() {
   } = useOrganizationMailboxController();
 
   return (
-    <div className="min-h-screen bg-[#FAFAFA] dark:bg-[#09090b]">
+    <div data-crm-screen="AdministrationPage" className="min-h-screen bg-[#FAFAFA] dark:bg-[#09090b]">
       <div className="max-w-[1400px] mx-auto p-6 md:p-8">
         <AdministrationCenter
           onClose={() => navigate("/")}

@@ -615,7 +615,7 @@ export default function LeadProfilesView({
   }, [totalPages, currentPage]);
 
   return (
-    <div id="lead-profiles-view-root" className="space-y-6">
+    <div data-crm-stack="" data-crm-screen="LeadProfilesView" id="lead-profiles-view-root" className="space-y-6">
       
       {/* Toast Alert pop notification overlay */}
       {toast && (
@@ -633,7 +633,7 @@ export default function LeadProfilesView({
 
       {/* Tab Switcher Navigation - Fits perfectly and makes the selected tab look like a completely new page */}
       <div className="flex border-b border-slate-200 dark:border-zinc-800 pb-px relative z-10 no-print">
-        <button
+        <button data-crm-button=""
           type="button"
           onClick={() => setCurrentActiveSubTab("leads-registry")}
           className={`px-5 py-3 text-xs font-bold tracking-tight border-b-2 transition-all cursor-pointer flex items-center gap-2 ${
@@ -645,7 +645,7 @@ export default function LeadProfilesView({
           <Database className="w-4 h-4 text-emerald-500" />
           <span>{t("Master Lead Database")}</span>
         </button>
-        <button
+        <button data-crm-button=""
           type="button"
           onClick={() => setCurrentActiveSubTab("email-discovery")}
           className={`px-5 py-3 text-xs font-bold tracking-tight border-b-2 transition-all cursor-pointer flex items-center gap-2 ${
@@ -767,12 +767,12 @@ export default function LeadProfilesView({
       ) : (
         <>
           {/* Title Header with Metrics Ribbon */}
-          <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 bg-white dark:bg-[#1b1a19] p-6 border border-[#EDEBE9] dark:border-[#323130] rounded shadow-sm relative overflow-hidden">
-            <div className="absolute top-0 left-0 right-0 h-1.5 bg-gradient-to-r from-emerald-500 via-[#0078D4] to-blue-500" />
-        <div className="space-y-1">
+          <div data-crm-card="padded" data-crm-header="" className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 bg-white dark:bg-[#1b1a19] p-6 border border-[#EDEBE9] dark:border-[#323130] rounded shadow-sm relative overflow-hidden">
+            <div data-crm-decoration="" className="absolute top-0 left-0 right-0 h-1.5 bg-gradient-to-r from-emerald-500 via-[#0078D4] to-blue-500" />
+        <div data-crm-header-copy="" className="space-y-1">
           <div className="flex items-center gap-2">
             <Users className="w-5 h-5 text-[#0078D4] dark:text-brand-300" />
-            <h2 className="text-base font-bold text-slate-800 dark:text-slate-100">{t("Lead Database & Profile Manager")}</h2>
+            <h2 data-crm-heading="page" className="text-base font-bold text-slate-800 dark:text-slate-100">{t("Lead Database & Profile Manager")}</h2>
           </div>
           <p className="text-xs text-slate-500 max-w-2xl">
             {t("Maintain your master prospecting database with full fields matching Excel structures. Update segments, analyze open engagement metrics, and batch transfer qualified leads directly into your Mail Merge Builder campaign in real-time.")}
@@ -780,7 +780,7 @@ export default function LeadProfilesView({
         </div>
 
         {/* Action Belt */}
-        <div className="flex flex-wrap items-center gap-2">
+        <div data-crm-header-actions="" className="flex flex-wrap items-center gap-2">
           {/* File Upload Element */}
           <input
             ref={fileInputRef}
@@ -790,7 +790,7 @@ export default function LeadProfilesView({
             className="hidden"
           />
           
-          <button
+          <button data-crm-button=""
             type="button"
             onClick={() => fileInputRef.current?.click()}
             className="text-xs font-bold bg-[#FAF9F8] hover:bg-[#EDEBE9] dark:bg-[#252423] dark:hover:bg-[#323130] text-slate-700 dark:text-slate-200 px-3 py-2 border border-[#EDEBE9] dark:border-[#323130] rounded flex items-center gap-1.5 cursor-pointer transition-all shadow-sm"
@@ -802,7 +802,7 @@ export default function LeadProfilesView({
           {/* Item 11: tek tip indirme butonu — tıklayınca CSV/Excel seçenekleri açılır
               (eskiden ayrı "Export CSV" ve "Download XLS" butonları vardı). */}
           <div className="relative">
-            <button
+            <button data-crm-button=""
               type="button"
               onClick={() => setShowExportMenu(prev => !prev)}
               className="text-xs font-bold bg-[#FAF9F8] hover:bg-[#EDEBE9] dark:bg-[#252423] dark:hover:bg-[#323130] text-slate-700 dark:text-slate-200 px-3 py-2 border border-[#EDEBE9] dark:border-[#323130] rounded flex items-center gap-1.5 cursor-pointer transition-all shadow-sm"
@@ -814,14 +814,14 @@ export default function LeadProfilesView({
               <>
                 <div className="fixed inset-0 z-10" onClick={() => setShowExportMenu(false)} />
                 <div className="absolute right-0 mt-1 w-40 bg-white dark:bg-[#252423] border border-[#EDEBE9] dark:border-[#323130] rounded shadow-lg z-20 overflow-hidden">
-                  <button
+                  <button data-crm-button=""
                     type="button"
                     onClick={() => { handleExportCSV(); setShowExportMenu(false); }}
                     className="w-full text-left text-xs font-semibold px-3 py-2 hover:bg-slate-50 dark:hover:bg-[#323130] text-slate-700 dark:text-slate-200 cursor-pointer"
                   >
                     CSV (.csv)
                   </button>
-                  <button
+                  <button data-crm-button=""
                     type="button"
                     onClick={() => { handleExportXLS(); setShowExportMenu(false); }}
                     className="w-full text-left text-xs font-semibold px-3 py-2 hover:bg-slate-50 dark:hover:bg-[#323130] text-slate-700 dark:text-slate-200 cursor-pointer border-t border-[#EDEBE9] dark:border-[#323130]"
@@ -833,7 +833,7 @@ export default function LeadProfilesView({
             )}
           </div>
 
-          <button
+          <button data-crm-button=""
             type="button"
             onClick={handleManualSaveAll}
             className="text-xs font-bold bg-white hover:bg-slate-50 dark:bg-[#1b1a19] dark:hover:bg-[#252423] text-[#0078D4] dark:text-brand-300 px-3 py-2 border border-[#0078D4]/30 rounded flex items-center gap-1.5 cursor-pointer transition-all shadow-sm"
@@ -842,7 +842,7 @@ export default function LeadProfilesView({
             <span>{t("Save List")}</span>
           </button>
 
-          <button
+          <button data-crm-button=""
             type="button"
             onClick={() => setIsAddingLead(!isAddingLead)}
             className="text-xs font-bold bg-[#0078D4] hover:bg-[#005a9e] text-white px-3.5 py-2.5 rounded flex items-center gap-1.5 cursor-pointer transition-all shadow-sm"
@@ -856,7 +856,7 @@ export default function LeadProfilesView({
       {/* Inline diagnostic block */}
       {importError && (
         <div className="p-4 bg-rose-50 dark:bg-rose-950/20 border border-rose-300 dark:border-rose-900 rounded text-xs text-rose-800 dark:text-rose-300 flex items-center gap-3">
-          <button type="button" onClick={() => setImportError(null)} aria-label={t("Close")} className="flex-shrink-0 hover:opacity-80 cursor-pointer">
+          <button data-crm-button="" type="button" onClick={() => setImportError(null)} aria-label={t("Close")} className="flex-shrink-0 hover:opacity-80 cursor-pointer">
             <X className="w-4.5 h-4.5" />
           </button>
           <span>{importError}</span>
@@ -864,27 +864,27 @@ export default function LeadProfilesView({
       )}
 
       {/* Bento Stats Ribbons */}
-      <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
-        <div className="bg-white dark:bg-[#1b1a19] p-4 rounded border border-[#EDEBE9] dark:border-[#323130] shadow-sm">
-          <span className="text-[10px] font-bold text-slate-400 uppercase">{t("Grand Total Database")}</span>
+      <div data-crm-flow="" data-crm-grid="layout" className="grid grid-cols-2 md:grid-cols-5 gap-4">
+        <div data-crm-card="padded" className="bg-white dark:bg-[#1b1a19] p-4 rounded border border-[#EDEBE9] dark:border-[#323130] shadow-sm">
+          <span data-crm-caption="" className="text-[10px] font-bold text-slate-400 uppercase">{t("Grand Total Database")}</span>
           <div className="text-xl font-bold text-[#0078D4] mt-1">{t("{count} leads").replace("{count}", String(totalCount))}</div>
           <p className="text-[10px] text-slate-450 mt-1">{t("In-Memory synced")}</p>
         </div>
 
-        <div className="bg-white dark:bg-[#1b1a19] p-4 rounded border border-[#EDEBE9] dark:border-[#323130] shadow-sm">
-          <span className="text-[10px] font-bold text-slate-400 uppercase">{t("Hot Leads")}</span>
+        <div data-crm-card="padded" className="bg-white dark:bg-[#1b1a19] p-4 rounded border border-[#EDEBE9] dark:border-[#323130] shadow-sm">
+          <span data-crm-caption="" className="text-[10px] font-bold text-slate-400 uppercase">{t("Hot Leads")}</span>
           <div className="text-xl font-bold text-orange-600 mt-1">{t("{count} prospects").replace("{count}", String(hotLeadsCount))}</div>
           <p className="text-[10px] text-slate-450 mt-1">{t("Highest priority engagement")}</p>
         </div>
 
-        <div className="bg-white dark:bg-[#1b1a19] p-4 rounded border border-[#EDEBE9] dark:border-[#323130] shadow-sm">
-          <span className="text-[10px] font-bold text-slate-400 uppercase">{t("Uncontacted / New")}</span>
+        <div data-crm-card="padded" className="bg-white dark:bg-[#1b1a19] p-4 rounded border border-[#EDEBE9] dark:border-[#323130] shadow-sm">
+          <span data-crm-caption="" className="text-[10px] font-bold text-slate-400 uppercase">{t("Uncontacted / New")}</span>
           <div className="text-xl font-bold text-indigo-500 mt-1">{t("{count} items").replace("{count}", String(newLeadsCount))}</div>
           <p className="text-[10px] text-slate-450 mt-1">{t("Awaiting outbox dispatch")}</p>
         </div>
 
-        <div className="bg-white dark:bg-[#1b1a19] p-4 rounded border border-[#EDEBE9] dark:border-[#323130] shadow-sm">
-          <span className="text-[10px] font-bold text-slate-450 uppercase">{t("Current Selected leads")}</span>
+        <div data-crm-card="padded" className="bg-white dark:bg-[#1b1a19] p-4 rounded border border-[#EDEBE9] dark:border-[#323130] shadow-sm">
+          <span data-crm-caption="" className="text-[10px] font-bold text-slate-450 uppercase">{t("Current Selected leads")}</span>
           <div className="text-xl font-bold text-emerald-600 mt-1">{t("{count} leads").replace("{count}", String(selectedCount))}</div>
           <p className="text-[10px] text-slate-450 mt-1">{t("Ready for sending list")}</p>
         </div>
@@ -897,7 +897,7 @@ export default function LeadProfilesView({
       </div>
 
       {/* Main Database Table & Control Panel */}
-      <div className={isWide 
+      <div data-crm-stack="" className={isWide
         ? "fixed inset-0 z-50 bg-[#FAF9F8] dark:bg-[#121110] p-6 overflow-y-auto flex flex-col space-y-4 animate-fadeIn" 
         : "bg-white dark:bg-[#1b1a19] border border-[#EDEBE9] dark:border-[#323130] rounded shadow-sm overflow-hidden"
       }>
@@ -906,14 +906,14 @@ export default function LeadProfilesView({
         <div className="px-4 py-3 border-b border-[#EDEBE9] dark:border-[#323130] bg-[#FAF9F8] dark:bg-[#201f1e] flex flex-wrap items-center justify-between gap-2.5">
           <div className="flex items-center gap-2">
             <Users className="w-4.5 h-4.5 text-[#0078D4]" />
-            <h3 className="text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider font-mono">
+            <h3 data-crm-heading="section" className="text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider font-mono">
               {t("Customer / Lead Candidate List")}
             </h3>
           </div>
           <div className="flex items-center gap-2">
             {/* 1. Ekran Genişletme oku — ikon-only, ikinci mükerrer buton (eskiden filtre
                 topbarında da vardı) kaldırıldı, tek genişletme kontrolü burada kalıyor. */}
-            <button
+            <button data-crm-button=""
               type="button"
               onClick={() => setIsWide(!isWide)}
               className="bg-white hover:bg-slate-50 dark:bg-[#252423] dark:hover:bg-[#323130] text-[#0078D4] dark:text-brand-300 p-1.5 border border-[#EDEBE9] dark:border-[#323130] rounded flex items-center justify-center cursor-pointer transition-all shadow-sm hover:scale-[1.02]"
@@ -929,28 +929,28 @@ export default function LeadProfilesView({
           <div className="flex items-center justify-between border-b border-[#EDEBE9] dark:border-[#323130] pb-3 flex-shrink-0 px-4 pt-1">
             <div className="flex items-center gap-2">
               <Sparkles className="w-4 h-4 text-[#0078D4]" />
-              <h3 className="text-sm font-bold text-slate-800 dark:text-slate-100 uppercase tracking-wider">{t("Lead Database Studio (Expanded Mode)")}</h3>
+              <h3 data-crm-heading="section" className="text-sm font-bold text-slate-800 dark:text-slate-100 uppercase tracking-wider">{t("Lead Database Studio (Expanded Mode)")}</h3>
             </div>
           </div>
         )}
 
         {/* Manual Lead append slider layout inside the container so it works in both regular and wide views */}
         {isAddingLead && (
-          <form onSubmit={handleManualAddSubmit} className="bg-white dark:bg-[#1b1a19] border border-[#0078D4]/20 rounded p-6 shadow-md animate-fadeIn space-y-4">
+          <form data-crm-stack="" onSubmit={handleManualAddSubmit} className="bg-white dark:bg-[#1b1a19] border border-[#0078D4]/20 rounded p-6 shadow-md animate-fadeIn space-y-4">
             <div className="border-b border-[#EDEBE9] dark:border-[#323130] pb-3 flex items-center justify-between">
-              <h3 className="text-xs font-bold text-slate-705 uppercase tracking-wide flex items-center gap-1.5">
+              <h3 data-crm-heading="section" className="text-xs font-bold text-slate-705 uppercase tracking-wide flex items-center gap-1.5">
                 <Plus className="w-4 h-4 text-emerald-500" />
                 <span>{t("Input Manual Profile Candidate")}</span>
               </h3>
-              <button type="button" onClick={() => setIsAddingLead(false)} className="text-slate-400 hover:text-slate-600" aria-label={t("Close")}>
+              <button data-crm-button="" type="button" onClick={() => setIsAddingLead(false)} className="text-slate-400 hover:text-slate-600" aria-label={t("Close")}>
                 <X className="w-4 h-4" />
               </button>
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4 text-xs">
+            <div data-crm-flow="" data-crm-grid="form" className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4 text-xs">
               <div>
-                <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block mb-1">{t("First Name *")}</label>
-                <input
+                <label data-crm-label="" className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block mb-1">{t("First Name *")}</label>
+                <input data-crm-field="control"
                   type="text"
                   placeholder="Sofia"
                   value={newProfile.firstName}
@@ -961,8 +961,8 @@ export default function LeadProfilesView({
               </div>
 
               <div>
-                <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block mb-1">{t("Last Name *")}</label>
-                <input
+                <label data-crm-label="" className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block mb-1">{t("Last Name *")}</label>
+                <input data-crm-field="control"
                   type="text"
                   placeholder="Vargas"
                   value={newProfile.lastName}
@@ -973,8 +973,8 @@ export default function LeadProfilesView({
               </div>
 
               <div>
-                <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block mb-1">{t("Email Address *")}</label>
-                <input
+                <label data-crm-label="" className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block mb-1">{t("Email Address *")}</label>
+                <input data-crm-field="control"
                   type="email"
                   placeholder="s.vargas@corporate.com"
                   value={newProfile.email}
@@ -985,7 +985,7 @@ export default function LeadProfilesView({
               </div>
 
               <div>
-                <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block mb-1">{t("Company")}</label>
+                <label data-crm-label="" className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block mb-1">{t("Company")}</label>
                 <CompanyAutocomplete
                   value={newProfile.company}
                   onChange={company => setNewProfile({ ...newProfile, company: company.name })}
@@ -993,8 +993,8 @@ export default function LeadProfilesView({
               </div>
 
               <div>
-                <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block mb-1">{t("Department")}</label>
-                <input
+                <label data-crm-label="" className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block mb-1">{t("Department")}</label>
+                <input data-crm-field="control"
                   type="text"
                   placeholder="Enterprise DevOps"
                   value={newProfile.department}
@@ -1004,8 +1004,8 @@ export default function LeadProfilesView({
               </div>
 
               <div>
-                <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block mb-1">{t("Address")}</label>
-                <input
+                <label data-crm-label="" className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block mb-1">{t("Address")}</label>
+                <input data-crm-field="control"
                   type="text"
                   placeholder="Bermuda Way, Austin"
                   value={newProfile.address}
@@ -1015,8 +1015,8 @@ export default function LeadProfilesView({
               </div>
 
               <div>
-                <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block mb-1">{t("Industry")}</label>
-                <input
+                <label data-crm-label="" className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block mb-1">{t("Industry")}</label>
+                <input data-crm-field="control"
                   type="text"
                   placeholder="Cybersecurity Solutions"
                   value={newProfile.industry}
@@ -1026,8 +1026,8 @@ export default function LeadProfilesView({
               </div>
 
               <div>
-                <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block mb-1">{t("Requested Service Type")}</label>
-                <input
+                <label data-crm-label="" className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block mb-1">{t("Requested Service Type")}</label>
+                <input data-crm-field="control"
                   type="text"
                   placeholder={t("e.g. Standard Audit, Enterprise...")}
                   value={newProfile.leadDemand}
@@ -1037,8 +1037,8 @@ export default function LeadProfilesView({
               </div>
 
               <div>
-                <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block mb-1">{t("Lead Status")}</label>
-                <select
+                <label data-crm-label="" className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block mb-1">{t("Lead Status")}</label>
+                <select data-crm-field="control"
                   value={newProfile.leadStatus}
                   onChange={e => setNewProfile({ ...newProfile, leadStatus: e.target.value })}
                   className="w-full p-2 border border-[#EDEBE9] dark:border-[#323130] bg-[#faf9f8] dark:bg-[#252423] rounded outline-none"
@@ -1051,8 +1051,8 @@ export default function LeadProfilesView({
               </div>
 
               <div>
-                <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block mb-1">{t("Lead Segment")}</label>
-                <select
+                <label data-crm-label="" className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block mb-1">{t("Lead Segment")}</label>
+                <select data-crm-field="control"
                   value={newProfile.leadSegment}
                   onChange={e => setNewProfile({ ...newProfile, leadSegment: e.target.value })}
                   className="w-full p-2 border border-[#EDEBE9] dark:border-[#323130] bg-[#faf9f8] dark:bg-[#252423] rounded outline-none"
@@ -1064,8 +1064,8 @@ export default function LeadProfilesView({
               </div>
 
               <div>
-                <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block mb-1">{t("Custom Field 1")}</label>
-                <input
+                <label data-crm-label="" className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block mb-1">{t("Custom Field 1")}</label>
+                <input data-crm-field="control"
                   type="text"
                   placeholder="Partner priority log"
                   value={newProfile.customField1}
@@ -1075,8 +1075,8 @@ export default function LeadProfilesView({
               </div>
 
               <div>
-                <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block mb-1">{t("Custom Field 2")}</label>
-                <input
+                <label data-crm-label="" className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block mb-1">{t("Custom Field 2")}</label>
+                <input data-crm-field="control"
                   type="text"
                   placeholder="Optional tag key"
                   value={newProfile.customField2}
@@ -1087,14 +1087,14 @@ export default function LeadProfilesView({
             </div>
 
             <div className="flex justify-end gap-2 border-t border-[#EDEBE9] dark:border-[#323130] pt-4 mt-2">
-              <button
+              <button data-crm-button=""
                 type="button"
                 onClick={() => setIsAddingLead(false)}
                 className="text-xs font-bold text-slate-500 hover:text-slate-650 px-3 py-2 border border-[#EDEBE9] dark:border-[#323130] rounded cursor-pointer bg-[#faf9f8] dark:bg-[#252423]"
               >
                 {t("Cancel")}
               </button>
-              <button
+              <button data-crm-button=""
                 type="submit"
                 className="text-xs font-bold bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2 rounded flex items-center gap-1 cursor-pointer"
               >
@@ -1110,7 +1110,7 @@ export default function LeadProfilesView({
           <div className="flex flex-wrap items-center gap-2 text-xs w-full md:w-auto">
             <div className="relative">
               <Search className="w-3.5 h-3.5 text-slate-400 absolute left-3 top-2.5" />
-              <input
+              <input data-crm-leading-icon data-crm-field="control"
                 type="text"
                 placeholder={t("Search leads, sectors, or segments...")}
                 value={searchTerm}
@@ -1121,7 +1121,7 @@ export default function LeadProfilesView({
 
             <div className="flex items-center gap-1">
               <Filter className="w-3.5 h-3.5 text-slate-400" />
-              <select
+              <select data-crm-field="control"
                 value={statusFilter}
                 onChange={e => setStatusFilter(e.target.value)}
                 className="bg-white dark:bg-[#252423] border border-[#EDEBE9] dark:border-[#323130] text-xs p-1.5 rounded outline-none text-slate-600 dark:text-slate-200"
@@ -1134,7 +1134,7 @@ export default function LeadProfilesView({
               </select>
             </div>
 
-            <select
+            <select data-crm-field="control"
               value={segmentFilter}
               onChange={e => setSegmentFilter(e.target.value)}
               className="bg-white dark:bg-[#252423] border border-[#EDEBE9] dark:border-[#323130] text-xs p-1.5 rounded outline-none text-slate-600 dark:text-slate-200"
@@ -1145,7 +1145,7 @@ export default function LeadProfilesView({
               <option value="Cold">{t("Cold")}</option>
             </select>
 
-            <button
+            <button data-crm-button=""
               type="button"
               onClick={() => setShowDuplicatesOnly(v => !v)}
               disabled={duplicateProfilesCount === 0}
@@ -1168,7 +1168,7 @@ export default function LeadProfilesView({
           </div>
 
           <div className="flex items-center gap-2.5 w-full md:w-auto justify-end">
-            <button
+            <button data-crm-button=""
               type="button"
               onClick={handleTransferToRecipientList}
               disabled={selectedCount === 0}
@@ -1182,7 +1182,7 @@ export default function LeadProfilesView({
               <span>{t("Transfer to Recipient List ({count})").replace("{count}", String(selectedCount))}</span>
             </button>
 
-            <button
+            <button data-crm-button=""
               type="button"
               onClick={() => void deleteSelectedProfiles()}
               disabled={selectedCount === 0}
@@ -1200,8 +1200,8 @@ export default function LeadProfilesView({
         </div>
 
         {/* Dense Excel-Style Multi-Field Grid View */}
-        <div className="overflow-auto max-h-[calc(100vh-380px)] min-h-[240px]">
-          <table className="w-full text-left border-collapse">
+        <div data-crm-scroll="horizontal" className="overflow-auto max-h-[calc(100vh-380px)] min-h-[240px]">
+          <table data-crm-table="" className="w-full text-left border-collapse">
             <thead className="sticky top-0 z-10">
               <tr className="bg-[#FAF9F8] dark:bg-[#201f1e] text-[10px] font-bold text-slate-450 uppercase border-b border-[#EDEBE9] dark:border-[#323130] tracking-wider select-none">
                 <th className="p-3 w-10 text-center">
@@ -1260,7 +1260,7 @@ export default function LeadProfilesView({
                       {/* First Name */}
                       <td className="p-3 whitespace-nowrap">
                         {isEditing && editForm ? (
-                          <input
+                          <input data-crm-field="control"
                             type="text"
                             value={editForm.firstName}
                             onChange={e => setEditForm({ ...editForm, firstName: e.target.value })}
@@ -1274,7 +1274,7 @@ export default function LeadProfilesView({
                       {/* Last Name */}
                       <td className="p-3 whitespace-nowrap">
                         {isEditing && editForm ? (
-                          <input
+                          <input data-crm-field="control"
                             type="text"
                             value={editForm.lastName}
                             onChange={e => setEditForm({ ...editForm, lastName: e.target.value })}
@@ -1288,7 +1288,7 @@ export default function LeadProfilesView({
                       {/* Email Address */}
                       <td className="p-3 font-mono text-[11px]">
                         {isEditing && editForm ? (
-                          <input
+                          <input data-crm-field="control"
                             type="email"
                             value={editForm.email}
                             onChange={e => setEditForm({ ...editForm, email: e.target.value })}
@@ -1331,7 +1331,7 @@ export default function LeadProfilesView({
                       {/* Department */}
                       <td className="p-3 text-[11px] text-slate-500 whitespace-nowrap">
                         {isEditing && editForm ? (
-                          <input
+                          <input data-crm-field="control"
                             type="text"
                             value={editForm.department}
                             onChange={e => setEditForm({ ...editForm, department: e.target.value })}
@@ -1345,7 +1345,7 @@ export default function LeadProfilesView({
                       {/* Address */}
                       <td className="p-3 text-[11px] text-slate-500 max-w-[120px] truncate" title={p.address}>
                         {isEditing && editForm ? (
-                          <input
+                          <input data-crm-field="control"
                             type="text"
                             value={editForm.address}
                             onChange={e => setEditForm({ ...editForm, address: e.target.value })}
@@ -1359,7 +1359,7 @@ export default function LeadProfilesView({
                       {/* Industry */}
                       <td className="p-3 text-[11px] whitespace-nowrap text-slate-500">
                         {isEditing && editForm ? (
-                          <input
+                          <input data-crm-field="control"
                             type="text"
                             value={editForm.industry}
                             onChange={e => setEditForm({ ...editForm, industry: e.target.value })}
@@ -1373,7 +1373,7 @@ export default function LeadProfilesView({
                       {/* Lead Demand */}
                       <td className="p-3 whitespace-nowrap">
                         {isEditing && editForm ? (
-                          <input
+                          <input data-crm-field="control"
                             type="text"
                             placeholder={t("Service Type...")}
                             value={editForm.leadDemand || ""}
@@ -1400,7 +1400,7 @@ export default function LeadProfilesView({
                       {/* Lead Status */}
                       <td className="p-3 whitespace-nowrap">
                         {isEditing && editForm ? (
-                          <select
+                          <select data-crm-field="control"
                             value={editForm.leadStatus}
                             onChange={e => setEditForm({ ...editForm, leadStatus: e.target.value })}
                             className="bg-white dark:bg-[#252423] p-1 border rounded"
@@ -1418,7 +1418,7 @@ export default function LeadProfilesView({
                       {/* Lead Segment */}
                       <td className="p-3 whitespace-nowrap">
                         {isEditing && editForm ? (
-                          <select
+                          <select data-crm-field="control"
                             value={editForm.leadSegment}
                             onChange={e => setEditForm({ ...editForm, leadSegment: e.target.value })}
                             className="bg-white dark:bg-[#252423] p-1 border rounded text-[11px]"
@@ -1443,7 +1443,7 @@ export default function LeadProfilesView({
                       {/* Custom Field 1 */}
                       <td className="p-3 text-[11px] text-slate-550 max-w-[120px] truncate" title={p.customField1}>
                         {isEditing && editForm ? (
-                          <input
+                          <input data-crm-field="control"
                             type="text"
                             value={editForm.customField1}
                             onChange={e => setEditForm({ ...editForm, customField1: e.target.value })}
@@ -1457,7 +1457,7 @@ export default function LeadProfilesView({
                       {/* Custom Field 2 */}
                       <td className="p-3 text-[11px] text-slate-550 max-w-[120px] truncate" title={p.customField2}>
                         {isEditing && editForm ? (
-                          <input
+                          <input data-crm-field="control"
                             type="text"
                             value={editForm.customField2}
                             onChange={e => setEditForm({ ...editForm, customField2: e.target.value })}
@@ -1471,7 +1471,7 @@ export default function LeadProfilesView({
                       {/* Delivery Status */}
                       <td className="p-3 text-center whitespace-nowrap">
                         {isEditing && editForm ? (
-                          <select
+                          <select data-crm-field="control"
                             value={editForm.deliveryStatus}
                             onChange={e => setEditForm({ ...editForm, deliveryStatus: e.target.value })}
                             className="bg-white dark:bg-[#252423] p-1 border rounded text-[11px]"
@@ -1481,7 +1481,7 @@ export default function LeadProfilesView({
                             <option value="failed">{t("failed")}</option>
                           </select>
                         ) : (
-                          <span className={`inline-flex items-center gap-1 text-[10px] uppercase font-bold ${
+                          <span data-crm-caption="" className={`inline-flex items-center gap-1 text-[10px] uppercase font-bold ${
                             p.deliveryStatus === "success"
                               ? "text-green-600"
                               : p.deliveryStatus === "failed"
@@ -1503,7 +1503,7 @@ export default function LeadProfilesView({
                       {/* Open Count */}
                       <td className="p-3 text-center font-mono font-bold text-slate-700 dark:text-slate-300">
                         {isEditing && editForm ? (
-                          <input
+                          <input data-crm-field="control"
                             type="number"
                             value={editForm.openCount}
                             onChange={e => setEditForm({ ...editForm, openCount: parseInt(e.target.value, 10) || 0 })}
@@ -1519,7 +1519,7 @@ export default function LeadProfilesView({
                         <div className="flex items-center justify-center gap-1">
                           {isEditing ? (
                             <>
-                              <button
+                              <button data-crm-button=""
                                 type="button"
                                 onClick={saveEditedProfile}
                                 className="p-1 text-emerald-600 hover:text-emerald-700 rounded hover:bg-emerald-50 dark:hover:bg-emerald-950/20"
@@ -1527,7 +1527,7 @@ export default function LeadProfilesView({
                               >
                                 <Check className="w-3.5 h-3.5" />
                               </button>
-                              <button
+                              <button data-crm-button=""
                                 type="button"
                                 onClick={() => {
                                   setEditingProfileId(null);
@@ -1541,7 +1541,7 @@ export default function LeadProfilesView({
                             </>
                           ) : (
                             <>
-                              <button
+                              <button data-crm-button=""
                                 type="button"
                                 onClick={() => startEditingProfile(p)}
                                 className="p-1 text-[#0078D4] hover:text-[#005a9e] rounded hover:bg-blue-50 dark:hover:bg-blue-950/20"
@@ -1549,7 +1549,7 @@ export default function LeadProfilesView({
                               >
                                 <Edit className="w-3.5 h-3.5" />
                               </button>
-                              <button
+                              <button data-crm-button=""
                                 type="button"
                                 onClick={() => void deleteSingleProfile(p.id)}
                                 className="p-1 text-rose-500 hover:text-rose-600 rounded hover:bg-rose-50 dark:hover:bg-rose-950/25"
@@ -1586,7 +1586,7 @@ export default function LeadProfilesView({
             </span>
 
             <div className="flex items-center gap-1.5">
-              <button
+              <button data-crm-button=""
                 type="button"
                 disabled={currentPage === 1}
                 onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
@@ -1605,7 +1605,7 @@ export default function LeadProfilesView({
                     …
                   </span>
                 ) : (
-                  <button
+                  <button data-crm-button=""
                     key={token}
                     type="button"
                     onClick={() => setCurrentPage(token as number)}
@@ -1620,7 +1620,7 @@ export default function LeadProfilesView({
                 )
               )}
 
-              <button
+              <button data-crm-button=""
                 type="button"
                 disabled={currentPage === totalPages}
                 onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}

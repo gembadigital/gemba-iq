@@ -148,9 +148,9 @@ export default function CompanyAutocomplete({
   };
 
   return (
-    <div className={`relative ${className}`} ref={containerRef}>
+    <div data-crm-screen="CompanyAutocomplete" className={`relative ${className}`} ref={containerRef}>
       <div className="relative">
-        <input
+        <input data-crm-field="control"
           type="text"
           value={inputValue}
           onChange={(e) => {
@@ -173,7 +173,7 @@ export default function CompanyAutocomplete({
           {suggestions.length > 0 ? (
             <div className="space-y-0.5">
               {suggestions.map((c) => (
-                <button
+                <button data-crm-button=""
                   type="button"
                   key={c.id}
                   onClick={() => handleSelect(c)}
@@ -195,7 +195,7 @@ export default function CompanyAutocomplete({
           ) : (
             <div className="p-3 text-center">
               <p className="text-xs text-slate-400 mb-2">{t("No company found")}</p>
-              <button
+              <button data-crm-button=""
                 type="button"
                 onClick={openCreationModal}
                 className="w-full flex items-center justify-center gap-1.5 px-3 py-1.5 bg-indigo-50 dark:bg-zinc-800 hover:bg-indigo-100 dark:hover:bg-zinc-700 text-indigo-650 dark:text-zinc-200 text-[11px] font-bold rounded-lg transition-all cursor-pointer"
@@ -210,16 +210,16 @@ export default function CompanyAutocomplete({
 
       {/* CREATE NEW COMPANY MODAL */}
       {isModalOpen && (
-        <div className="fixed inset-0 bg-slate-900/40 dark:bg-black/60 backdrop-blur-xs flex items-center justify-center z-50 p-4 animate-in fade-in duration-200">
-          <div className="bg-white dark:bg-[#141414] border border-slate-200 dark:border-zinc-800 rounded-2xl shadow-xl w-full max-w-lg max-h-[90vh] overflow-y-auto animate-in zoom-in-95 duration-200">
+        <div data-crm-overlay="" className="fixed inset-0 bg-slate-900/40 dark:bg-black/60 backdrop-blur-xs flex items-center justify-center z-50 p-4 animate-in fade-in duration-200">
+          <div data-crm-modal="" data-crm-card="surface" className="bg-white dark:bg-[#141414] border border-slate-200 dark:border-zinc-800 rounded-2xl shadow-xl w-full max-w-lg max-h-[90vh] overflow-y-auto animate-in zoom-in-95 duration-200">
             <div className="flex items-center justify-between p-4 border-b border-slate-100 dark:border-zinc-800/60">
               <div className="flex items-center gap-2">
                 <Building className="w-4 h-4 text-indigo-500" />
-                <h3 className="text-sm font-bold text-slate-800 dark:text-zinc-100">
+                <h3 data-crm-heading="section" className="text-sm font-bold text-slate-800 dark:text-zinc-100">
                   {t("Create New Company")}
                 </h3>
               </div>
-              <button
+              <button data-crm-button=""
                 type="button"
                 onClick={() => setIsModalOpen(false)}
                 className="p-1.5 rounded-full hover:bg-slate-100 dark:hover:bg-zinc-800 text-slate-400 hover:text-slate-600 cursor-pointer"
@@ -231,10 +231,10 @@ export default function CompanyAutocomplete({
             {/* Item: iç içe <form> riskinden kaçınmak için bu artık bir <form>
                 değil, düz bir <div> — bkz. handleCreateCompanySubmit üstündeki not. */}
             <div className="p-4 space-y-4">
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div data-crm-grid="form" className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wide font-mono">{t("Company Name *")}</label>
-                  <input
+                  <label data-crm-label="" className="block text-[10px] font-bold text-slate-500 uppercase tracking-wide font-mono">{t("Company Name *")}</label>
+                  <input data-crm-field="control"
                     type="text"
                     required
                     value={newCompanyForm.name}
@@ -253,8 +253,8 @@ export default function CompanyAutocomplete({
                 </div>
 
                 <div>
-                  <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wide font-mono">{t("Website")}</label>
-                  <input
+                  <label data-crm-label="" className="block text-[10px] font-bold text-slate-500 uppercase tracking-wide font-mono">{t("Website")}</label>
+                  <input data-crm-field="control"
                     type="text"
                     value={newCompanyForm.website}
                     onChange={(e) => setNewCompanyForm({ ...newCompanyForm, website: e.target.value })}
@@ -264,8 +264,8 @@ export default function CompanyAutocomplete({
                 </div>
 
                 <div>
-                  <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wide font-mono">{t("Phone")}</label>
-                  <input
+                  <label data-crm-label="" className="block text-[10px] font-bold text-slate-500 uppercase tracking-wide font-mono">{t("Phone")}</label>
+                  <input data-crm-field="control"
                     type="text"
                     value={newCompanyForm.phone}
                     onChange={(e) => setNewCompanyForm({ ...newCompanyForm, phone: e.target.value })}
@@ -275,8 +275,8 @@ export default function CompanyAutocomplete({
                 </div>
 
                 <div>
-                  <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wide font-mono">{t("Industry")}</label>
-                  <input
+                  <label data-crm-label="" className="block text-[10px] font-bold text-slate-500 uppercase tracking-wide font-mono">{t("Industry")}</label>
+                  <input data-crm-field="control"
                     type="text"
                     value={newCompanyForm.industry}
                     onChange={(e) => setNewCompanyForm({ ...newCompanyForm, industry: e.target.value })}
@@ -286,8 +286,8 @@ export default function CompanyAutocomplete({
                 </div>
 
                 <div>
-                  <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wide font-mono">{t("Employee Count")}</label>
-                  <input
+                  <label data-crm-label="" className="block text-[10px] font-bold text-slate-500 uppercase tracking-wide font-mono">{t("Employee Count")}</label>
+                  <input data-crm-field="control"
                     type="number"
                     value={newCompanyForm.employeeCount}
                     onChange={(e) => setNewCompanyForm({ ...newCompanyForm, employeeCount: Number(e.target.value) })}
@@ -296,15 +296,15 @@ export default function CompanyAutocomplete({
                 </div>
 
                 <div>
-                  <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wide font-mono">{t("Annual Revenue")}</label>
+                  <label data-crm-label="" className="block text-[10px] font-bold text-slate-500 uppercase tracking-wide font-mono">{t("Annual Revenue")}</label>
                   <div className="flex gap-2 mt-1">
-                    <input
+                    <input data-crm-field="control"
                       type="text"
                       value={newCompanyForm.annualRevenue}
                       onChange={(e) => setNewCompanyForm({ ...newCompanyForm, annualRevenue: e.target.value })}
                       className="w-full p-2 border border-slate-200 dark:border-zinc-800 bg-slate-50 dark:bg-zinc-900 rounded outline-none text-xs text-slate-800 dark:text-zinc-100 focus:ring-1 focus:ring-indigo-500"
                     />
-                    <select
+                    <select data-crm-field="control"
                       value={newCompanyForm.annualRevenueCurrency}
                       onChange={(e) => setNewCompanyForm({ ...newCompanyForm, annualRevenueCurrency: e.target.value as any })}
                       className="p-2 border border-slate-200 dark:border-zinc-800 bg-slate-50 dark:bg-zinc-900 rounded outline-none text-xs font-bold text-slate-700 dark:text-zinc-305"
@@ -317,8 +317,8 @@ export default function CompanyAutocomplete({
                 </div>
 
                 <div>
-                  <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wide font-mono">{t("Customer Status")}</label>
-                  <select
+                  <label data-crm-label="" className="block text-[10px] font-bold text-slate-500 uppercase tracking-wide font-mono">{t("Customer Status")}</label>
+                  <select data-crm-field="control"
                     value={newCompanyForm.customerStatus}
                     onChange={(e) => setNewCompanyForm({ ...newCompanyForm, customerStatus: e.target.value })}
                     className="w-full p-2 border border-slate-200 dark:border-zinc-800 bg-slate-50 dark:bg-zinc-900 rounded outline-none text-xs mt-1 text-slate-850 dark:text-zinc-200 focus:ring-1 focus:ring-indigo-500"
@@ -332,8 +332,8 @@ export default function CompanyAutocomplete({
                 </div>
 
                 <div>
-                  <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wide font-mono">{t("Billing City")}</label>
-                  <input
+                  <label data-crm-label="" className="block text-[10px] font-bold text-slate-500 uppercase tracking-wide font-mono">{t("Billing City")}</label>
+                  <input data-crm-field="control"
                     type="text"
                     value={newCompanyForm.billingCity}
                     onChange={(e) => setNewCompanyForm({ ...newCompanyForm, billingCity: e.target.value })}
@@ -344,8 +344,8 @@ export default function CompanyAutocomplete({
               </div>
 
               <div>
-                <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wide font-mono">{t("Billing Address")}</label>
-                <textarea
+                <label data-crm-label="" className="block text-[10px] font-bold text-slate-500 uppercase tracking-wide font-mono">{t("Billing Address")}</label>
+                <textarea data-crm-field="multiline"
                   value={newCompanyForm.billingAddress}
                   onChange={(e) => setNewCompanyForm({ ...newCompanyForm, billingAddress: e.target.value })}
                   rows={2}
@@ -355,8 +355,8 @@ export default function CompanyAutocomplete({
               </div>
 
               <div>
-                <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wide font-mono">{t("Management Team (Comma Separated)")}</label>
-                <input
+                <label data-crm-label="" className="block text-[10px] font-bold text-slate-500 uppercase tracking-wide font-mono">{t("Management Team (Comma Separated)")}</label>
+                <input data-crm-field="control"
                   type="text"
                   value={newCompanyForm.managementTeam}
                   onChange={(e) => setNewCompanyForm({ ...newCompanyForm, managementTeam: e.target.value })}
@@ -366,14 +366,14 @@ export default function CompanyAutocomplete({
               </div>
 
               <div className="flex items-center justify-end gap-3 border-t border-slate-100 dark:border-zinc-800/60 pt-4">
-                <button
+                <button data-crm-button=""
                   type="button"
                   onClick={() => setIsModalOpen(false)}
                   className="px-4 py-2 border border-slate-200 dark:border-zinc-800 hover:bg-slate-50 dark:hover:bg-zinc-800/60 text-xs text-slate-600 dark:text-zinc-350 rounded-xl transition-all cursor-pointer"
                 >
                   {t("Cancel")}
                 </button>
-                <button
+                <button data-crm-button=""
                   type="button"
                   onClick={() => handleCreateCompanySubmit()}
                   className="px-4 py-2 bg-indigo-650 hover:bg-indigo-700 text-white text-xs font-bold rounded-xl shadow-md transition-all cursor-pointer"

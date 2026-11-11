@@ -152,14 +152,14 @@ export default function CompanyDetailView({
   };
 
   return (
-    <div className="company-detail bg-[#FAF9F8] dark:bg-[#0B0B0C] min-h-screen p-5 rounded-2xl border border-slate-100 dark:border-zinc-900/60 shadow-lg space-y-4 animate-slideIn">
+    <div data-crm-stack="" data-crm-screen="CompanyDetailView" className="company-detail bg-[#FAF9F8] dark:bg-[#0B0B0C] min-h-screen p-5 rounded-2xl border border-slate-100 dark:border-zinc-900/60 shadow-lg space-y-4 animate-slideIn">
       
       {/* Header Action breadcrumb */}
-      <div className="company-detail-header flex flex-col md:flex-row items-start md:items-center justify-between gap-3 border-b border-slate-100 dark:border-zinc-900/60 pb-4">
+      <div data-crm-header="" className="company-detail-header flex flex-col md:flex-row items-start md:items-center justify-between gap-3 border-b border-slate-100 dark:border-zinc-900/60 pb-4">
         
-        <div className="flex items-start gap-3 w-full md:w-auto">
+        <div data-crm-header-copy="" className="flex items-start gap-3 w-full md:w-auto">
           {showCloseButtonOnly ? (
-            <button
+            <button data-crm-button=""
               type="button"
               onClick={onClose}
               className="p-1.5 bg-white dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 text-slate-500 hover:text-rose-600 dark:hover:text-rose-400 rounded-lg cursor-pointer transition-colors"
@@ -168,7 +168,7 @@ export default function CompanyDetailView({
               <X className="w-4 h-4" />
             </button>
           ) : (
-            <button
+            <button data-crm-button=""
               type="button"
               onClick={onClose}
               className="p-1.5 bg-white dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 text-slate-500 hover:text-slate-800 dark:hover:text-zinc-200 rounded-lg cursor-pointer transition-colors"
@@ -181,7 +181,7 @@ export default function CompanyDetailView({
           <div aria-hidden="true" className="company-monogram">{company.name.slice(0, 2).toLocaleUpperCase(lang === "TR" ? "tr-TR" : "en")}</div>
           <div className="company-heading space-y-1 flex-1">
             <div className="flex flex-wrap items-center gap-2">
-              <h2 className="text-lg font-black text-slate-900 dark:text-white font-display">
+              <h2 data-crm-heading="page" className="text-lg font-black text-slate-900 dark:text-white font-display">
                 {company.name}
               </h2>
               <span className={`company-status inline-block px-2.5 py-0.5 rounded-full text-[9px] font-mono font-bold uppercase tracking-wider ${
@@ -218,9 +218,9 @@ export default function CompanyDetailView({
         </div>
 
         {/* Quick action triggers */}
-        <div className="flex items-center gap-1.5 shrink-0 ml-auto md:ml-0">
+        <div data-crm-header-actions="" className="flex items-center gap-1.5 shrink-0 ml-auto md:ml-0">
           {onOpenEditForm && (
-            <button
+            <button data-crm-button=""
               type="button"
               onClick={() => onOpenEditForm(company)}
               className="company-profile-edit px-3.5 py-1.5 bg-white hover:bg-slate-50 dark:bg-zinc-900 dark:hover:bg-zinc-800 border border-slate-205 dark:border-zinc-800 text-slate-700 dark:text-zinc-300 rounded-lg font-semibold flex items-center gap-1 cursor-pointer transition-colors text-xs"
@@ -231,7 +231,7 @@ export default function CompanyDetailView({
           )}
 
           {onDeleteCompany && (
-            <button
+            <button data-crm-button=""
               type="button"
               onClick={() => onDeleteCompany(company.id, company.name)}
               className="company-profile-delete px-3 py-1.5 bg-rose-50 hover:bg-rose-100 dark:bg-rose-950/20 text-rose-600 dark:text-rose-400 rounded-lg font-bold flex items-center gap-1 cursor-pointer transition-colors text-xs"
@@ -245,7 +245,7 @@ export default function CompanyDetailView({
       </div>
 
       {/* CRM Navigation Tabs selectors (10 TAB) */}
-      <div className="company-detail-tabs overflow-x-auto border-b border-slate-100 dark:border-zinc-900/60 pb-1 flex items-center gap-1 scrollbar-thin z-10 sticky top-0 bg-[#FAF9F8] dark:bg-[#0B0B0C] pt-1">
+      <div data-crm-scroll="horizontal" className="company-detail-tabs overflow-x-auto border-b border-slate-100 dark:border-zinc-900/60 pb-1 flex items-center gap-1 scrollbar-thin z-10 sticky top-0 bg-[#FAF9F8] dark:bg-[#0B0B0C] pt-1">
         {[
           { id: "overview", label: t("Overview"), icon: <Building className="w-3.5 h-3.5" /> },
           { id: "contacts", label: t("Contacts"), icon: <Users className="w-3.5 h-3.5" /> },
@@ -260,7 +260,7 @@ export default function CompanyDetailView({
         ].map((tab) => {
           const active = detailTab === tab.id;
           return (
-            <button
+            <button data-crm-button=""
               key={tab.id}
               data-active={active}
               type="button"
@@ -313,9 +313,9 @@ export default function CompanyDetailView({
 
         {/* Tab 4: Opportunities List */}
         {detailTab === "opportunities" && (
-          <div className="bg-white dark:bg-[#151515] p-5 rounded-xl border border-slate-100 dark:border-zinc-800/80 space-y-4">
+          <div data-crm-stack="" data-crm-card="padded" className="bg-white dark:bg-[#151515] p-5 rounded-xl border border-slate-100 dark:border-zinc-800/80 space-y-4">
             <div className="flex items-center justify-between border-b border-slate-150 dark:border-zinc-800 pb-2">
-              <h4 className="text-xs font-bold uppercase text-slate-800 dark:text-zinc-200 tracking-wider font-mono">
+              <h4 data-crm-heading="section" className="text-xs font-bold uppercase text-slate-800 dark:text-zinc-200 tracking-wider font-mono">
                 {t("Linked Opportunity Pipeline")}
               </h4>
             </div>
@@ -326,8 +326,8 @@ export default function CompanyDetailView({
                 <span className="text-slate-405">{t("No deals registered for this account yet.")}</span>
               </div>
             ) : (
-              <div className="overflow-x-auto">
-                <table className="w-full text-left border-collapse text-xs">
+              <div data-crm-scroll="horizontal" className="overflow-x-auto">
+                <table data-crm-table="" className="w-full text-left border-collapse text-xs">
                   <thead>
                     <tr className="bg-slate-50 dark:bg-zinc-900 border-b border-slate-100 dark:border-zinc-800 text-[10px] uppercase font-bold text-slate-400 font-mono tracking-wider">
                       <th className="p-3 pl-4">{t("Deal Name")}</th>
@@ -362,9 +362,9 @@ export default function CompanyDetailView({
 
         {/* Tab 5: Proposals List */}
         {detailTab === "proposals" && (
-          <div className="bg-white dark:bg-[#151515] p-5 rounded-xl border border-slate-100 dark:border-zinc-800/80 space-y-4">
+          <div data-crm-stack="" data-crm-card="padded" className="bg-white dark:bg-[#151515] p-5 rounded-xl border border-slate-100 dark:border-zinc-800/80 space-y-4">
             <div className="flex items-center justify-between border-b border-slate-150 dark:border-zinc-800 pb-2">
-              <h4 className="text-xs font-bold uppercase text-slate-800 dark:text-zinc-200 tracking-wider font-mono">
+              <h4 data-crm-heading="section" className="text-xs font-bold uppercase text-slate-800 dark:text-zinc-200 tracking-wider font-mono">
                 {t("Linked Proposal History")}
               </h4>
             </div>
@@ -375,8 +375,8 @@ export default function CompanyDetailView({
                 <span className="text-slate-450">{t("No proposals registered for this company yet.")}</span>
               </div>
             ) : (
-              <div className="overflow-x-auto">
-                <table className="w-full text-left border-collapse text-xs">
+              <div data-crm-scroll="horizontal" className="overflow-x-auto">
+                <table data-crm-table="" className="w-full text-left border-collapse text-xs">
                   <thead>
                     <tr className="bg-slate-50 dark:bg-zinc-900 border-b border-slate-100 dark:border-zinc-800 text-[10px] uppercase font-bold text-slate-400 font-mono tracking-wider">
                       <th className="p-3 pl-4">{t("Proposal Number")}</th>
@@ -407,7 +407,7 @@ export default function CompanyDetailView({
                         <td className="p-3 font-semibold text-slate-800 dark:text-zinc-200">{prop.proposalSubject}</td>
                         <td className="p-3 font-mono text-slate-500">{prop.date || "-"}</td>
                         <td className="p-3">
-                          <span className={`inline-block px-2 py-0.5 rounded-full text-[9px] font-mono font-bold uppercase ${
+                          <span data-crm-caption="" className={`inline-block px-2 py-0.5 rounded-full text-[9px] font-mono font-bold uppercase ${
                             prop.status === "Approved" || prop.status === "Accepted"
                               ? "bg-emerald-50 text-emerald-600 dark:bg-emerald-950/20 dark:text-emerald-400"
                               : prop.status === "Draft"
@@ -478,22 +478,22 @@ export default function CompanyDetailView({
             segmesi ekle. buraya not ekleme özelliği olsun. girilen her
             notun yanında kimin tarafından girildi, giriş tarihi olsun." */}
         {detailTab === "research" && (
-          <div className="bg-white dark:bg-[#151515] p-5 rounded-xl border border-slate-100 dark:border-zinc-800/80 space-y-4">
+          <div data-crm-stack="" data-crm-card="padded" className="bg-white dark:bg-[#151515] p-5 rounded-xl border border-slate-100 dark:border-zinc-800/80 space-y-4">
             <div className="flex items-center justify-between border-b border-slate-150 dark:border-zinc-800 pb-2">
-              <h4 className="text-xs font-bold uppercase text-slate-800 dark:text-zinc-200 tracking-wider font-mono">
+              <h4 data-crm-heading="section" className="text-xs font-bold uppercase text-slate-800 dark:text-zinc-200 tracking-wider font-mono">
                 {t("Research & Activity Info")}
               </h4>
             </div>
 
             <div className="space-y-2">
-              <textarea
+              <textarea data-crm-field="multiline"
                 value={researchNoteText}
                 onChange={(e) => setResearchNoteText(e.target.value)}
                 placeholder={t("Add a research or activity note about this company...")}
                 className="w-full p-2.5 bg-white dark:bg-zinc-800 border border-slate-205 dark:border-zinc-700 rounded-lg text-xs text-slate-700 dark:text-zinc-200 focus:outline-none focus:border-blue-400 min-h-[80px] resize-y"
               />
               <div className="flex justify-end">
-                <button
+                <button data-crm-button=""
                   type="button"
                   onClick={handleAddResearchNote}
                   disabled={!researchNoteText.trim()}

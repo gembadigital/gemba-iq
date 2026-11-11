@@ -284,14 +284,14 @@ export default function CompanyEmailsTab({
   };
 
   return (
-    <div className="space-y-4 font-sans text-xs">
+    <div data-crm-stack="" data-crm-screen="CompanyEmailsTab" className="space-y-4 font-sans text-xs">
       
       {/* Top action block */}
-      <div className="flex items-center justify-between bg-white dark:bg-[#151515] p-3.5 rounded-xl border border-slate-100 dark:border-zinc-800/80 shadow-[0_1px_2px_rgba(0,0,0,0.01)]">
-        <h4 className="text-xs font-bold uppercase text-slate-800 dark:text-zinc-200 tracking-wider">
+      <div data-crm-card="padded" className="flex items-center justify-between bg-white dark:bg-[#151515] p-3.5 rounded-xl border border-slate-100 dark:border-zinc-800/80 shadow-[0_1px_2px_rgba(0,0,0,0.01)]">
+        <h4 data-crm-heading="section" className="text-xs font-bold uppercase text-slate-800 dark:text-zinc-200 tracking-wider">
           {t("Client Email Communications")}
         </h4>
-        <button
+        <button data-crm-button=""
           type="button"
           onClick={() => setIsComposerOpen(!isComposerOpen)}
           className="px-3.5 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg font-bold flex items-center gap-1.5 cursor-pointer transition-all text-xs"
@@ -312,7 +312,7 @@ export default function CompanyEmailsTab({
               <Mail className="w-4 h-4 text-indigo-500 animate-pulse" />
               {t("SaaS Core Mail Composer")}
             </span>
-            <button
+            <button data-crm-button=""
               type="button"
               onClick={() => setIsComposerOpen(false)}
               className="p-1 hover:bg-slate-200 dark:hover:bg-zinc-800 rounded text-slate-400"
@@ -331,8 +331,8 @@ export default function CompanyEmailsTab({
           )}
 
           <div>
-            <label className="block text-[9px] uppercase font-bold text-slate-400 mb-1">{t("Send From *")}</label>
-            <select
+            <label data-crm-label="" className="block text-[9px] uppercase font-bold text-slate-400 mb-1">{t("Send From *")}</label>
+            <select data-crm-field="control"
               required
               value={selectedSender}
               onChange={(e) => setSelectedSender(e.target.value as "organization" | "personal" | "")}
@@ -347,10 +347,10 @@ export default function CompanyEmailsTab({
             </select>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+          <div data-crm-flow="" data-crm-grid="form" className="grid grid-cols-1 md:grid-cols-2 gap-3">
             <div>
-              <label className="block text-[9px] uppercase font-bold text-slate-400 mb-1">{t("Recipient Email *")}</label>
-              <input
+              <label data-crm-label="" className="block text-[9px] uppercase font-bold text-slate-400 mb-1">{t("Recipient Email *")}</label>
+              <input data-crm-field="control"
                 type="email"
                 required
                 value={formState.recipient}
@@ -359,8 +359,8 @@ export default function CompanyEmailsTab({
               />
             </div>
             <div>
-              <label className="block text-[9px] uppercase font-bold text-slate-400 mb-1">{t("Select CRM Template")}</label>
-              <select
+              <label data-crm-label="" className="block text-[9px] uppercase font-bold text-slate-400 mb-1">{t("Select CRM Template")}</label>
+              <select data-crm-field="control"
                 value={selectedTemplate}
                 onChange={handleTemplateChange}
                 className="w-full bg-white dark:bg-zinc-800 border border-slate-200 dark:border-zinc-700 rounded p-1.5 text-xs text-slate-800 dark:text-zinc-200 focus:outline-none"
@@ -374,8 +374,8 @@ export default function CompanyEmailsTab({
           </div>
 
           <div>
-            <label className="block text-[9px] uppercase font-bold text-slate-400 mb-1">{t("CC (Optional)")}</label>
-            <input
+            <label data-crm-label="" className="block text-[9px] uppercase font-bold text-slate-400 mb-1">{t("CC (Optional)")}</label>
+            <input data-crm-field="control"
               type="text"
               placeholder={t("name@company.com, another@company.com")}
               value={formState.cc}
@@ -387,7 +387,7 @@ export default function CompanyEmailsTab({
                 {orgMembers
                   .filter((m) => m.email)
                   .map((m) => (
-                    <button
+                    <button data-crm-button=""
                       key={m.user_id}
                       type="button"
                       onClick={() => {
@@ -412,8 +412,8 @@ export default function CompanyEmailsTab({
           </div>
 
           <div>
-            <label className="block text-[9px] uppercase font-bold text-slate-400 mb-1">{t("Subject *")}</label>
-            <input
+            <label data-crm-label="" className="block text-[9px] uppercase font-bold text-slate-400 mb-1">{t("Subject *")}</label>
+            <input data-crm-field="control"
               type="text"
               required
               placeholder={t("e.g. Diagnostic diagnostic schedule follow-up")}
@@ -424,8 +424,8 @@ export default function CompanyEmailsTab({
           </div>
 
           <div>
-            <label className="block text-[9px] uppercase font-bold text-slate-400 mb-1">{t("Email Body *")}</label>
-            <textarea
+            <label data-crm-label="" className="block text-[9px] uppercase font-bold text-slate-400 mb-1">{t("Email Body *")}</label>
+            <textarea data-crm-field="multiline"
               required
               value={formState.body}
               onChange={(e) => setFormState({ ...formState, body: e.target.value })}
@@ -434,7 +434,7 @@ export default function CompanyEmailsTab({
           </div>
 
           <div>
-            <label className="block text-[9px] uppercase font-bold text-slate-400 mb-1 flex items-center gap-1">
+            <label data-crm-label="" className="block text-[9px] uppercase font-bold text-slate-400 mb-1 flex items-center gap-1">
               <Upload className="w-3 h-3" />
               <span>{t("Attach File")}</span>
             </label>
@@ -480,7 +480,7 @@ export default function CompanyEmailsTab({
                   >
                     <FileText className="w-3 h-3" />
                     {f.name}
-                    <button
+                    <button data-crm-button=""
                       type="button"
                       onClick={() => handleRemoveUploadedFile(i)}
                       className="ml-0.5 hover:text-rose-500"
@@ -494,11 +494,11 @@ export default function CompanyEmailsTab({
 
             {documents.length > 0 && (
               <div className="mt-2">
-                <label className="block text-[9px] uppercase font-bold text-slate-400 mb-1 flex items-center gap-1">
+                <label data-crm-label="" className="block text-[9px] uppercase font-bold text-slate-400 mb-1 flex items-center gap-1">
                   <Paperclip className="w-3 h-3" />
                   <span>{t("Attach Company Document Reference")}</span>
                 </label>
-                <select
+                <select data-crm-field="control"
                   value={formState.attachmentName}
                   onChange={(e) => setFormState({ ...formState, attachmentName: e.target.value })}
                   className="w-full bg-white dark:bg-zinc-800 border border-slate-200 dark:border-zinc-700 rounded p-1.5 text-xs text-slate-800 dark:text-zinc-200 focus:outline-none"
@@ -516,14 +516,14 @@ export default function CompanyEmailsTab({
           </div>
 
           <div className="flex justify-end gap-2 border-t border-dashed border-slate-200 dark:border-zinc-800 pt-3">
-            <button
+            <button data-crm-button=""
               type="button"
               onClick={() => setIsComposerOpen(false)}
               className="px-3.5 py-1.5 bg-slate-200 hover:bg-slate-300 text-slate-700 rounded font-semibold cursor-pointer"
             >
               {t("Cancel")}
             </button>
-            <button
+            <button data-crm-button=""
               type="submit"
               disabled={isSending || isLoadingSenders || senderOptions.length === 0}
               className="px-4.5 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded font-bold flex items-center gap-1.5 cursor-pointer shadow-sm disabled:opacity-50 disabled:cursor-not-allowed"
@@ -542,7 +542,7 @@ export default function CompanyEmailsTab({
       {/* Email Inbox/Outbox List */}
       <div className="space-y-3">
         {emails.length === 0 ? (
-          <div className="p-12 text-center bg-white dark:bg-[#151515] border border-dashed border-slate-200 dark:border-zinc-800 rounded-xl">
+          <div data-crm-card="surface" className="p-12 text-center bg-white dark:bg-[#151515] border border-dashed border-slate-200 dark:border-zinc-800 rounded-xl">
             <Mail className="w-8 h-8 text-slate-300 mx-auto mb-2" />
             <span className="text-slate-400 block">
               {t("No emails exchanged with this client record yet.")}
@@ -550,7 +550,7 @@ export default function CompanyEmailsTab({
           </div>
         ) : (
           emails.map((email) => (
-            <div
+            <div data-crm-card="padded"
               key={email.id}
               className="p-4 bg-white dark:bg-[#151515] border border-slate-100 dark:border-zinc-800/80 rounded-xl hover:border-[#0078D4]/40 transition-colors space-y-2 text-xs font-sans"
             >
@@ -585,7 +585,7 @@ export default function CompanyEmailsTab({
 
               {email.attachments && email.attachments.length > 0 && (
                 <div className="flex flex-wrap items-center gap-2 pt-2 border-t border-dashed border-slate-50 dark:border-zinc-850">
-                  <span className="text-[9px] uppercase font-bold text-slate-400 font-mono flex items-center gap-1">
+                  <span data-crm-caption="" className="text-[9px] uppercase font-bold text-slate-400 font-mono flex items-center gap-1">
                     <Paperclip className="w-3.5 h-3.5" />
                     {t("Attachments:")}
                   </span>

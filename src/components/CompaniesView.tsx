@@ -794,18 +794,18 @@ export default function CompaniesView() {
   };
 
   return (
-    <div className="company-registry p-5 font-sans bg-[#F8F9FA] dark:bg-zinc-950 min-h-screen text-xs space-y-4">
+    <div data-crm-stack="" data-crm-screen="CompaniesView" className="company-registry p-5 font-sans bg-[#F8F9FA] dark:bg-zinc-950 min-h-screen text-xs space-y-4">
       
       {/* -------------------------------------------------------------
           1. COMPANIES LIST PAGE TABLE VIEW
           ------------------------------------------------------------- */}
       {!selectedCompany && (
-        <div className="space-y-4 animate-fadeIn">
+        <div data-crm-stack="" className="space-y-4 animate-fadeIn">
           
           {/* Page Title & Actions Header */}
-          <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-3">
-            <div>
-              <h1 className="text-xl font-black text-slate-800 dark:text-zinc-100 flex items-center gap-2">
+          <div data-crm-header="" className="flex flex-col md:flex-row justify-between items-start md:items-center gap-3">
+            <div data-crm-header-copy="">
+              <h1 data-crm-heading="page" className="text-xl font-black text-slate-800 dark:text-zinc-100 flex items-center gap-2">
                 <Building className="w-5.5 h-5.5 text-[#0078D4]" />
                 <span>{t("Client Portfolio & Accounts")}</span>
               </h1>
@@ -814,8 +814,8 @@ export default function CompaniesView() {
               </p>
             </div>
 
-            <div className="flex flex-wrap items-center gap-2 w-full md:w-auto shrink-0">
-              <button
+            <div data-crm-header-actions="" className="flex flex-wrap items-center gap-2 w-full md:w-auto shrink-0">
+              <button data-crm-button=""
                 type="button"
                 onClick={() => setIsFieldCustomizerOpen(true)}
                 className="px-3 py-1.5 bg-slate-50 hover:bg-slate-100 dark:bg-zinc-900 dark:hover:bg-zinc-800 border border-slate-205 dark:border-zinc-800 text-slate-650 dark:text-zinc-300 rounded-lg font-semibold flex items-center gap-1.5 cursor-pointer shadow-xs transition-colors"
@@ -824,7 +824,7 @@ export default function CompaniesView() {
                 <span>{t("Custom Fields")}</span>
               </button>
               
-              <button
+              <button data-crm-button=""
                 type="button"
                 onClick={handleOpenAddForm}
                 className="px-4 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg font-bold flex items-center gap-1.5 cursor-pointer shadow-sm transition-all"
@@ -836,14 +836,14 @@ export default function CompaniesView() {
           </div>
 
           {/* Filters, Search, and Bulk Actions Toolbar */}
-          <div className="bg-white dark:bg-[#131313] p-4 rounded-xl border border-slate-100 dark:border-zinc-900/80 shadow-[0_1px_3px_rgba(0,0,0,0.01)] space-y-3">
+          <div data-crm-card="padded" className="bg-white dark:bg-[#131313] p-4 rounded-xl border border-slate-100 dark:border-zinc-900/80 shadow-[0_1px_3px_rgba(0,0,0,0.01)] space-y-3">
             
             <div className="flex flex-col lg:flex-row gap-3">
 
               {/* Search input */}
               <div className="relative flex-1">
                 <Search className="w-4 h-4 text-slate-400 absolute left-3 top-3" />
-                <input
+                <input data-crm-leading-icon data-crm-field="control"
                   type="text"
                   placeholder={t("Search corporate grid...")}
                   value={searchTerm}
@@ -854,7 +854,7 @@ export default function CompaniesView() {
 
               {/* Item 7: filtre ikonu — geniş filtre/toplu işlem/içe-dışa aktarma
                   satırları artık burada açılıp kapanıyor, varsayılan gizli. */}
-              <button
+              <button data-crm-button=""
                 type="button"
                 onClick={() => setShowFilters(prev => !prev)}
                 className={`px-3 py-2 rounded-lg border flex items-center gap-1.5 text-xs font-bold cursor-pointer transition-colors shrink-0 ${
@@ -875,8 +875,8 @@ export default function CompaniesView() {
             {showFilters && (
               <>
                 {/* Grid Filter select options */}
-                <div className="grid grid-cols-2 md:grid-cols-3 gap-2 border-t border-dashed border-slate-100 dark:border-zinc-800 pt-3">
-                  <select
+                <div data-crm-grid="layout" className="grid grid-cols-2 md:grid-cols-3 gap-2 border-t border-dashed border-slate-100 dark:border-zinc-800 pt-3">
+                  <select data-crm-field="control"
                     value={industryFilter}
                     onChange={(e) => { setIndustryFilter(e.target.value); setCurrentPage(1); }}
                     className="p-2 bg-slate-50 dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 rounded-lg focus:outline-none"
@@ -887,7 +887,7 @@ export default function CompaniesView() {
                     <option value="Textiles">{t("Textiles")}</option>
                   </select>
 
-                  <select
+                  <select data-crm-field="control"
                     value={statusFilter}
                     onChange={(e) => { setStatusFilter(e.target.value); setCurrentPage(1); }}
                     className="p-2 bg-slate-50 dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 rounded-lg focus:outline-none"
@@ -899,7 +899,7 @@ export default function CompaniesView() {
                     <option value="Former Customer">{t("Former Customer")}</option>
                   </select>
 
-                  <select
+                  <select data-crm-field="control"
                     value={ownerFilter}
                     onChange={(e) => { setOwnerFilter(e.target.value); setCurrentPage(1); }}
                     className="p-2 bg-slate-50 dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 rounded-lg focus:outline-none col-span-2 md:col-span-1"
@@ -920,7 +920,7 @@ export default function CompaniesView() {
                       {selectedCompanyIds.length} {t("Selected")}
                     </span>
 
-                    <select
+                    <select data-crm-field="control"
                       disabled={selectedCompanyIds.length === 0}
                       value={bulkAction}
                       onChange={(e) => setBulkAction(e.target.value)}
@@ -934,7 +934,7 @@ export default function CompaniesView() {
                       <option value="target_accounts">{t("Move to Target Accounts")}</option>
                     </select>
 
-                    <button
+                    <button data-crm-button=""
                       type="button"
                       disabled={!bulkAction || selectedCompanyIds.length === 0}
                       onClick={handleExecuteBulkAction}
@@ -974,7 +974,7 @@ export default function CompaniesView() {
                       }}
                     />
 
-                    <button
+                    <button data-crm-button=""
                       type="button"
                       onClick={() => setIsFullWidthTable(!isFullWidthTable)}
                       className={`p-1.5 rounded border transition-colors cursor-pointer hidden md:block ${
@@ -989,11 +989,11 @@ export default function CompaniesView() {
                     </button>
 
                     {/* Import Buttons */}
-                    <span className="text-[10px] font-mono font-black text-slate-400 dark:text-zinc-500 uppercase ml-1">
+                    <span data-crm-caption="" className="text-[10px] font-mono font-black text-slate-400 dark:text-zinc-500 uppercase ml-1">
                       {t("IMPORT:")}
                     </span>
                     <div className="inline-flex rounded-lg border border-slate-205 dark:border-zinc-800 overflow-hidden">
-                      <button
+                      <button data-crm-button=""
                         type="button"
                         onClick={() => csvImportInputRef.current?.click()}
                         className="p-1.5 bg-slate-50 hover:bg-slate-100 dark:bg-zinc-900 dark:hover:bg-zinc-800 text-slate-550 hover:text-slate-800 dark:hover:text-zinc-350 border-r border-slate-205 dark:border-zinc-800 cursor-pointer text-[10px] font-bold flex items-center gap-1"
@@ -1002,7 +1002,7 @@ export default function CompaniesView() {
                         <Upload className="w-3.5 h-3.5 text-indigo-550" />
                         <span>CSV</span>
                       </button>
-                      <button
+                      <button data-crm-button=""
                         type="button"
                         onClick={() => xlsImportInputRef.current?.click()}
                         className="p-1.5 bg-slate-50 hover:bg-slate-100 dark:bg-zinc-900 dark:hover:bg-zinc-800 text-slate-550 hover:text-slate-800 dark:hover:text-zinc-355 cursor-pointer text-[10px] font-bold flex items-center gap-1"
@@ -1014,11 +1014,11 @@ export default function CompaniesView() {
                     </div>
 
                     {/* Export Buttons */}
-                    <span className="text-[10px] font-mono font-black text-slate-400 dark:text-zinc-500 uppercase ml-1">
+                    <span data-crm-caption="" className="text-[10px] font-mono font-black text-slate-400 dark:text-zinc-500 uppercase ml-1">
                       {t("EXPORT:")}
                     </span>
                     <div className="inline-flex rounded-lg border border-slate-205 dark:border-zinc-800 overflow-hidden">
-                      <button
+                      <button data-crm-button=""
                         type="button"
                         onClick={handleExportCSV}
                         className="p-1.5 bg-slate-50 hover:bg-slate-100 dark:bg-zinc-900 dark:hover:bg-zinc-800 text-slate-500 hover:text-slate-800 dark:hover:text-zinc-300 border-r border-slate-205 dark:border-zinc-800 cursor-pointer text-[10px] font-bold flex items-center gap-1"
@@ -1026,7 +1026,7 @@ export default function CompaniesView() {
                         <Download className="w-3.5 h-3.5" />
                         <span>CSV</span>
                       </button>
-                      <button
+                      <button data-crm-button=""
                         type="button"
                         onClick={handleExportXLS}
                         className="p-1.5 bg-slate-50 hover:bg-slate-100 dark:bg-zinc-900 dark:hover:bg-zinc-800 text-slate-500 hover:text-slate-800 dark:hover:text-zinc-300 cursor-pointer text-[10px] font-bold flex items-center gap-1"
@@ -1056,7 +1056,7 @@ export default function CompaniesView() {
                   <Building className="w-4 h-4 text-[#0078D4]" />
                   {t("Client Portfolio & Accounts")}
                 </span>
-                <button
+                <button data-crm-button=""
                   type="button"
                   onClick={() => setIsFullWidthTable(false)}
                   className="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 dark:bg-zinc-800 dark:hover:bg-zinc-700 text-slate-700 dark:text-zinc-200 rounded-lg font-bold flex items-center gap-1.5 cursor-pointer text-[11px]"
@@ -1066,8 +1066,8 @@ export default function CompaniesView() {
                 </button>
               </div>
             )}
-            <div className={isFullWidthTable ? "overflow-auto max-h-[calc(100vh-160px)]" : "overflow-auto max-h-[calc(100vh-380px)] min-h-[240px]"}>
-              <table className="w-full text-left border-collapse text-xs font-sans min-w-[900px]">
+            <div data-crm-scroll="horizontal" className={isFullWidthTable ? "overflow-auto max-h-[calc(100vh-160px)]" : "overflow-auto max-h-[calc(100vh-380px)] min-h-[240px]"}>
+              <table data-crm-table="" className="w-full text-left border-collapse text-xs font-sans min-w-[900px]">
                 <thead>
                   <tr className="bg-slate-50 dark:bg-zinc-900/80 border-b border-slate-150 dark:border-zinc-850/80 text-[10px] uppercase font-black text-slate-450 dark:text-zinc-500 font-mono tracking-wider sticky top-0 z-10">
                     <th className="p-3 pl-5 w-10">
@@ -1136,7 +1136,7 @@ export default function CompaniesView() {
                               : t("Try adjusting your search or filters.")}
                           </p>
                           {companies.length === 0 && (
-                            <button
+                            <button data-crm-button=""
                               type="button"
                               onClick={handleOpenAddForm}
                               className="mt-1.5 px-4 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg font-bold flex items-center gap-1.5 cursor-pointer text-[11px]"
@@ -1160,7 +1160,7 @@ export default function CompaniesView() {
                         />
                       </td>
                       <td className="p-3 font-semibold">
-                        <button
+                        <button data-crm-button=""
                           type="button"
                           onClick={() => { setSelectedCompany(c); setDetailTab("overview"); }}
                           className="hover:text-indigo-600 dark:hover:text-indigo-400 hover:underline font-extrabold text-slate-800 dark:text-zinc-200 cursor-pointer text-left block text-[13px]"
@@ -1188,7 +1188,7 @@ export default function CompaniesView() {
                         <span className="text-[10px] text-slate-400 block mt-0.5">{c.productionType || "Serial Batch"}</span>
                       </td>
                       <td className="p-3">
-                        <span className={`inline-block px-2.5 py-0.5 rounded-full text-[9px] font-mono font-bold uppercase tracking-wide ${
+                        <span data-crm-caption="" className={`inline-block px-2.5 py-0.5 rounded-full text-[9px] font-mono font-bold uppercase tracking-wide ${
                           c.customerStatus === "Active Customer" || c.customerStatus === "Existing Customer"
                             ? "bg-emerald-50 text-emerald-600 dark:bg-emerald-950/20 dark:text-emerald-400"
                             : c.customerStatus === "Prospect" || c.customerStatus === "Lead"
@@ -1218,7 +1218,7 @@ export default function CompaniesView() {
                       </td>
                       <td className="p-3 text-right pr-5">
                         <div className="inline-flex items-center gap-1">
-                          <button
+                          <button data-crm-button=""
                             type="button"
                             onClick={() => handleOpenEditForm(c)}
                             className="p-1.5 bg-slate-50 hover:bg-slate-100 dark:bg-zinc-900 border border-slate-205 dark:border-zinc-800 text-slate-550 dark:text-zinc-400 hover:text-indigo-600 dark:hover:text-indigo-400 rounded cursor-pointer"
@@ -1227,7 +1227,7 @@ export default function CompaniesView() {
                           >
                             <Edit2 className="w-3.5 h-3.5" />
                           </button>
-                          <button
+                          <button data-crm-button=""
                             type="button"
                             onClick={() => handleDeleteCompany(c.id, c.name)}
                             className="p-1.5 bg-rose-50 hover:bg-rose-100 dark:bg-rose-950/20 border border-rose-200 dark:border-rose-900/40 text-rose-600 dark:text-rose-400 rounded cursor-pointer"
@@ -1255,7 +1255,7 @@ export default function CompaniesView() {
                 </span>
 
                 <div className="flex items-center gap-1">
-                  <button
+                  <button data-crm-button=""
                     type="button"
                     disabled={currentPage === 1}
                     onClick={() => setCurrentPage(p => Math.max(p - 1, 1))}
@@ -1269,7 +1269,7 @@ export default function CompaniesView() {
                         …
                       </span>
                     ) : (
-                      <button
+                      <button data-crm-button=""
                         key={token}
                         type="button"
                         onClick={() => setCurrentPage(token as number)}
@@ -1283,7 +1283,7 @@ export default function CompaniesView() {
                       </button>
                     )
                   )}
-                  <button
+                  <button data-crm-button=""
                     type="button"
                     disabled={currentPage === totalPages}
                     onClick={() => setCurrentPage(p => Math.min(p + 1, totalPages))}
@@ -1319,8 +1319,8 @@ export default function CompaniesView() {
           3. FULL PROFILE CREATE & EDIT SLIDING MODAL FORM
           ------------------------------------------------------------- */}
       {isFormOpen && (
-        <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-xs flex items-center justify-center p-4" role="dialog" aria-modal="true">
-          <form
+        <div data-crm-overlay="" className="fixed inset-0 z-50 bg-black/50 backdrop-blur-xs flex items-center justify-center p-4" role="dialog" aria-modal="true">
+          <form data-crm-modal=""
             onSubmit={handleSaveCompanySubmit}
             className="bg-white dark:bg-[#121212] border border-slate-205 dark:border-zinc-800 rounded-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto shadow-2xl animate-scaleIn text-xs"
           >
@@ -1332,7 +1332,7 @@ export default function CompaniesView() {
                   ? t("Edit Account Profile: {name}").replace("{name}", editingCompany.name)
                   : (t("Create Enterprise Client Record"))}
               </span>
-              <button
+              <button data-crm-button=""
                 type="button"
                 onClick={() => setIsFormOpen(false)}
                 className="p-1 hover:bg-slate-200 dark:hover:bg-zinc-800 rounded-lg text-slate-400"
@@ -1342,12 +1342,12 @@ export default function CompaniesView() {
               </button>
             </div>
 
-            <div className="p-6 space-y-4">
+            <div data-crm-stack="" className="p-6 space-y-4">
               
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+              <div data-crm-flow="" data-crm-grid="form" className="grid grid-cols-1 md:grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-[9px] uppercase font-bold text-slate-400 mb-1">{t("Company Name *")}</label>
-                  <input
+                  <label data-crm-label="" className="block text-[9px] uppercase font-bold text-slate-400 mb-1">{t("Company Name *")}</label>
+                  <input data-crm-field="control"
                     type="text"
                     required
                     value={formState.name}
@@ -1366,10 +1366,10 @@ export default function CompaniesView() {
                 </div>
 
                 <div>
-                  <label className="block text-[9px] uppercase font-bold text-slate-400 mb-1">
+                  <label data-crm-label="" className="block text-[9px] uppercase font-bold text-slate-400 mb-1">
                     {t("Customer Status")}
                   </label>
-                  <select
+                  <select data-crm-field="control"
                     value={formState.customerStatus}
                     onChange={(e) => setFormState({ ...formState, customerStatus: e.target.value })}
                     className="w-full bg-white dark:bg-zinc-800 border border-slate-200 dark:border-zinc-700 rounded p-1.5 focus:outline-none"
@@ -1383,8 +1383,8 @@ export default function CompaniesView() {
                 </div>
 
                 <div>
-                  <label className="block text-[9px] uppercase font-bold text-slate-400 mb-1">{t("Phone")}</label>
-                  <input
+                  <label data-crm-label="" className="block text-[9px] uppercase font-bold text-slate-400 mb-1">{t("Phone")}</label>
+                  <input data-crm-field="control"
                     type="text"
                     value={formState.phone}
                     onChange={(e) => setFormState({ ...formState, phone: e.target.value })}
@@ -1393,8 +1393,8 @@ export default function CompaniesView() {
                 </div>
 
                 <div>
-                  <label className="block text-[9px] uppercase font-bold text-slate-400 mb-1">{t("Web Site")}</label>
-                  <input
+                  <label data-crm-label="" className="block text-[9px] uppercase font-bold text-slate-400 mb-1">{t("Web Site")}</label>
+                  <input data-crm-field="control"
                     type="text"
                     placeholder={t("example.com")}
                     value={formState.website}
@@ -1404,10 +1404,10 @@ export default function CompaniesView() {
                 </div>
 
                 <div>
-                  <label className="block text-[9px] uppercase font-bold text-slate-400 mb-1">
+                  <label data-crm-label="" className="block text-[9px] uppercase font-bold text-slate-400 mb-1">
                     {t("Industry")}
                   </label>
-                  <select
+                  <select data-crm-field="control"
                     value={formState.industry}
                     onChange={(e) => setFormState({ ...formState, industry: e.target.value })}
                     className="w-full bg-white dark:bg-zinc-800 border border-slate-200 dark:border-zinc-700 rounded p-1.5 focus:outline-none"
@@ -1422,10 +1422,10 @@ export default function CompaniesView() {
 
                 {(formState.industry === "Other" || formState.industry === "Diğer" || formState.industry === "diğer") && (
                   <div className="col-span-1 md:col-span-2">
-                    <label className="block text-[9px] uppercase font-bold text-slate-400 mb-1">
+                    <label data-crm-label="" className="block text-[9px] uppercase font-bold text-slate-400 mb-1">
                       {t("Custom Industry Explanation *")}
                     </label>
-                    <input
+                    <input data-crm-field="control"
                       type="text"
                       required
                       value={formState.sector || ""}
@@ -1437,10 +1437,10 @@ export default function CompaniesView() {
                 )}
 
                 <div>
-                  <label className="block text-[9px] uppercase font-bold text-slate-400 mb-1">
+                  <label data-crm-label="" className="block text-[9px] uppercase font-bold text-slate-400 mb-1">
                     {t("Account Owner")}
                   </label>
-                  <input
+                  <input data-crm-field="control"
                     type="text"
                     value={formState.accountOwner}
                     onChange={(e) => setFormState({ ...formState, accountOwner: e.target.value })}
@@ -1449,10 +1449,10 @@ export default function CompaniesView() {
                 </div>
 
                 <div>
-                  <label className="block text-[9px] uppercase font-bold text-slate-400 mb-1">
+                  <label data-crm-label="" className="block text-[9px] uppercase font-bold text-slate-400 mb-1">
                     {t("City")}
                   </label>
-                  <input
+                  <input data-crm-field="control"
                     type="text"
                     value={formState.billingCity || ""}
                     onChange={(e) => setFormState({ ...formState, billingCity: e.target.value })}
@@ -1461,10 +1461,10 @@ export default function CompaniesView() {
                 </div>
 
                 <div>
-                  <label className="block text-[9px] uppercase font-bold text-slate-400 mb-1">
+                  <label data-crm-label="" className="block text-[9px] uppercase font-bold text-slate-400 mb-1">
                     {t("District")}
                   </label>
-                  <input
+                  <input data-crm-field="control"
                     type="text"
                     value={formState.billingDistrict || ""}
                     onChange={(e) => setFormState({ ...formState, billingDistrict: e.target.value })}
@@ -1473,10 +1473,10 @@ export default function CompaniesView() {
                 </div>
 
                 <div>
-                  <label className="block text-[9px] uppercase font-bold text-slate-400 mb-1">
+                  <label data-crm-label="" className="block text-[9px] uppercase font-bold text-slate-400 mb-1">
                     {t("Tax Office")}
                   </label>
-                  <input
+                  <input data-crm-field="control"
                     type="text"
                     value={formState.taxOffice || ""}
                     onChange={(e) => setFormState({ ...formState, taxOffice: e.target.value })}
@@ -1485,10 +1485,10 @@ export default function CompaniesView() {
                 </div>
 
                 <div>
-                  <label className="block text-[9px] uppercase font-bold text-slate-400 mb-1">
+                  <label data-crm-label="" className="block text-[9px] uppercase font-bold text-slate-400 mb-1">
                     {t("Tax Number")}
                   </label>
-                  <input
+                  <input data-crm-field="control"
                     type="text"
                     value={formState.taxNo || ""}
                     onChange={(e) => setFormState({ ...formState, taxNo: e.target.value })}
@@ -1497,10 +1497,10 @@ export default function CompaniesView() {
                 </div>
 
                 <div className="col-span-1 md:col-span-2">
-                  <label className="block text-[9px] uppercase font-bold text-slate-400 mb-1">
+                  <label data-crm-label="" className="block text-[9px] uppercase font-bold text-slate-400 mb-1">
                     {t("Address")}
                   </label>
-                  <textarea
+                  <textarea data-crm-field="multiline"
                     value={formState.billingAddress || ""}
                     onChange={(e) => setFormState({ ...formState, billingAddress: e.target.value })}
                     className="w-full bg-white dark:bg-zinc-800 border border-slate-200 dark:border-zinc-700 rounded p-1.5 focus:outline-none text-xs min-h-[50px] resize-y"
@@ -1509,8 +1509,8 @@ export default function CompaniesView() {
               </div>
 
               <div>
-                <label className="block text-[9px] uppercase font-bold text-slate-400 mb-1">{t("Description")}</label>
-                <textarea
+                <label data-crm-label="" className="block text-[9px] uppercase font-bold text-slate-400 mb-1">{t("Description")}</label>
+                <textarea data-crm-field="multiline"
                   value={formState.description}
                   onChange={(e) => setFormState({ ...formState, description: e.target.value })}
                   className="w-full bg-white dark:bg-zinc-800 border border-slate-200 dark:border-zinc-700 rounded p-2 focus:outline-none min-h-[60px]"
@@ -1521,13 +1521,13 @@ export default function CompaniesView() {
               {customFieldDefs.length > 0 && (
                 <div className="border-t border-slate-100 dark:border-zinc-800 pt-3 space-y-3">
                   <h5 className="font-bold uppercase tracking-wider text-[10px] text-slate-400 font-mono">{t("Custom field inputs")}</h5>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                  <div data-crm-flow="" data-crm-grid="form" className="grid grid-cols-1 md:grid-cols-2 gap-3">
                     {customFieldDefs.map(def => {
                       const curVal = formState.customFields?.[def.id] || "";
                       return (
                         <div key={def.id}>
-                          <label className="block text-[9px] uppercase font-bold text-slate-400 mb-1">{def.name}</label>
-                          <input
+                          <label data-crm-label="" className="block text-[9px] uppercase font-bold text-slate-400 mb-1">{def.name}</label>
+                          <input data-crm-field="control"
                             type="text"
                             value={curVal}
                             onChange={(e) => {
@@ -1549,14 +1549,14 @@ export default function CompaniesView() {
             </div>
 
             <div className="p-4 bg-slate-50 dark:bg-zinc-900 border-t border-slate-100 dark:border-zinc-800/80 flex justify-end gap-2">
-              <button
+              <button data-crm-button=""
                 type="button"
                 onClick={() => setIsFormOpen(false)}
                 className="px-4 py-1.5 bg-slate-200 hover:bg-slate-300 text-slate-700 rounded-lg font-semibold"
               >
                 {t("Cancel")}
               </button>
-              <button
+              <button data-crm-button=""
                 type="submit"
                 className="px-5 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg font-bold"
               >
@@ -1572,15 +1572,15 @@ export default function CompaniesView() {
           4. CUSTOM FIELD DEFINITION CONFIGURATION MODAL
           ------------------------------------------------------------- */}
       {isFieldCustomizerOpen && (
-        <div className="fixed inset-0 z-[55] bg-black/50 backdrop-blur-xs flex items-center justify-center p-4" role="dialog" aria-modal="true">
-          <div className="bg-white dark:bg-[#121212] border border-slate-205 dark:border-zinc-800 rounded-2xl w-full max-w-lg shadow-2xl animate-scaleIn text-xs">
+        <div data-crm-overlay="" className="fixed inset-0 z-[55] bg-black/50 backdrop-blur-xs flex items-center justify-center p-4" role="dialog" aria-modal="true">
+          <div data-crm-modal="" data-crm-card="surface" className="bg-white dark:bg-[#121212] border border-slate-205 dark:border-zinc-800 rounded-2xl w-full max-w-lg shadow-2xl animate-scaleIn text-xs">
             
             <div className="p-4 bg-slate-50 dark:bg-zinc-900 border-b border-slate-100 dark:border-zinc-800 flex justify-between items-center">
               <span className="font-bold text-slate-800 dark:text-zinc-200 text-sm flex items-center gap-2">
                 <Settings className="w-5 h-5 text-indigo-500" />
                 {t("Manage Custom CRM Fields")}
               </span>
-              <button
+              <button data-crm-button=""
                 type="button"
                 onClick={() => setIsFieldCustomizerOpen(false)}
                 className="p-1 hover:bg-slate-200 dark:hover:bg-zinc-800 rounded-lg text-slate-400"
@@ -1590,16 +1590,16 @@ export default function CompaniesView() {
               </button>
             </div>
 
-            <div className="p-5 space-y-4">
+            <div data-crm-stack="" className="p-5 space-y-4">
               
               {/* Form to add definition */}
               <form onSubmit={handleAddCustomFieldDef} className="bg-slate-50 dark:bg-zinc-900 p-3.5 border border-slate-150 dark:border-zinc-850 rounded-xl space-y-3">
-                <span className="font-bold text-[10px] uppercase font-mono tracking-wider block text-slate-400">{t("Add custom column")}</span>
+                <span data-crm-caption="" className="font-bold text-[10px] uppercase font-mono tracking-wider block text-slate-400">{t("Add custom column")}</span>
                 
-                <div className="grid grid-cols-2 gap-2">
+                <div data-crm-flow="" data-crm-grid="form" className="grid grid-cols-2 gap-2">
                   <div>
-                    <label className="block text-[8px] uppercase font-bold text-slate-400 mb-1">{t("Field Label *")}</label>
-                    <input
+                    <label data-crm-label="" className="block text-[8px] uppercase font-bold text-slate-400 mb-1">{t("Field Label *")}</label>
+                    <input data-crm-field="control"
                       type="text"
                       required
                       placeholder={t("e.g. ERP Vendor, ISO Cert")}
@@ -1609,8 +1609,8 @@ export default function CompaniesView() {
                     />
                   </div>
                   <div>
-                    <label className="block text-[8px] uppercase font-bold text-slate-400 mb-1">{t("Type")}</label>
-                    <select
+                    <label data-crm-label="" className="block text-[8px] uppercase font-bold text-slate-400 mb-1">{t("Type")}</label>
+                    <select data-crm-field="control"
                       value={newFieldForm.type}
                       onChange={(e: any) => setNewFieldForm({ ...newFieldForm, type: e.target.value })}
                       className="w-full bg-white dark:bg-zinc-800 border border-slate-200 dark:border-zinc-700 rounded p-1.5 focus:outline-none"
@@ -1621,7 +1621,7 @@ export default function CompaniesView() {
                   </div>
                 </div>
 
-                <button
+                <button data-crm-button=""
                   type="submit"
                   className="w-full py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded font-bold cursor-pointer"
                 >
@@ -1631,7 +1631,7 @@ export default function CompaniesView() {
 
               {/* List of current custom definitions */}
               <div className="space-y-2">
-                <span className="font-bold text-[10px] uppercase font-mono tracking-wider block text-slate-400">{t("Current dynamic definitions")}</span>
+                <span data-crm-caption="" className="font-bold text-[10px] uppercase font-mono tracking-wider block text-slate-400">{t("Current dynamic definitions")}</span>
                 
                 {customFieldDefs.length === 0 ? (
                   <p className="text-slate-400 italic text-center py-4">{t("No custom fields defined yet.")}</p>
@@ -1645,7 +1645,7 @@ export default function CompaniesView() {
                             {def.type}
                           </span>
                         </div>
-                        <button
+                        <button data-crm-button=""
                           type="button"
                           onClick={() => handleDeleteCustomFieldDef(def.id)}
                           className="p-1 hover:bg-rose-100 dark:hover:bg-rose-950/20 text-rose-600 rounded cursor-pointer"
@@ -1663,7 +1663,7 @@ export default function CompaniesView() {
             </div>
 
             <div className="p-4 bg-slate-50 dark:bg-zinc-900 border-t border-slate-100 dark:border-zinc-800 flex justify-end">
-              <button
+              <button data-crm-button=""
                 type="button"
                 onClick={() => setIsFieldCustomizerOpen(false)}
                 className="px-4 py-1.5 bg-slate-200 hover:bg-slate-300 text-slate-700 rounded-lg font-semibold"

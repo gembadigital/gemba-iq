@@ -43,27 +43,27 @@ export default function HistoryAndLogsView({ logs, onDeleteLog, session }: Histo
   };
 
   return (
-    <div className="space-y-6">
+    <div data-crm-stack="" data-crm-screen="HistoryAndLogsView" className="space-y-6">
       {/* HEADER CARD */}
-      <div className="bg-white dark:bg-[#1b1a19] p-5 rounded-lg border border-[#EDEBE9] dark:border-[#323130] shadow-sm relative overflow-hidden">
-        <div className="absolute top-0 left-0 right-0 h-1.5 bg-gradient-to-r from-emerald-500 via-[#0078D4] to-blue-500" />
-        <div className="flex items-center gap-3">
+      <div data-crm-card="padded" data-crm-header="" className="bg-white dark:bg-[#1b1a19] p-5 rounded-lg border border-[#EDEBE9] dark:border-[#323130] shadow-sm relative overflow-hidden">
+        <div data-crm-decoration="" className="absolute top-0 left-0 right-0 h-1.5 bg-gradient-to-r from-emerald-500 via-[#0078D4] to-blue-500" />
+        <div data-crm-header-copy="" className="flex items-center gap-3">
           <div className="p-2 bg-blue-50 text-blue-600 dark:bg-blue-955/40 dark:text-blue-400 rounded-lg">
             <Clock className="w-5 h-5 animate-pulse" />
           </div>
           <div>
-            <h2 className="text-base font-bold text-slate-800 dark:text-zinc-100 font-sans">{t("Campaign Audit Logs")}</h2>
+            <h2 data-crm-heading="page" className="text-base font-bold text-slate-800 dark:text-zinc-100 font-sans">{t("Campaign Audit Logs")}</h2>
             <p className="text-xs text-slate-505 dark:text-slate-400 font-sans">{t("Audit dispatch records, open-rate metrics, and historical metadata database stored locally.")}</p>
           </div>
         </div>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+      <div data-crm-flow="" data-crm-grid="layout" className="grid grid-cols-1 lg:grid-cols-12 gap-6">
         
         {/* Index of past campaigns */}
-        <div className="lg:col-span-5 bg-white dark:bg-[#1b1a19] border border-[#EDEBE9] dark:border-[#323130] rounded p-6 shadow-sm space-y-4">
+        <div data-crm-stack="" data-crm-card="padded" className="lg:col-span-5 bg-white dark:bg-[#1b1a19] border border-[#EDEBE9] dark:border-[#323130] rounded p-6 shadow-sm space-y-4">
           <div>
-            <h3 className="text-sm font-bold text-slate-800 dark:text-slate-100 flex items-center gap-2">
+            <h3 data-crm-heading="section" className="text-sm font-bold text-slate-800 dark:text-slate-100 flex items-center gap-2">
               <Clock className="w-4 h-4 text-[#0078D4]" />
               {t("Historical Audit List")}
             </h3>
@@ -109,7 +109,7 @@ export default function HistoryAndLogsView({ logs, onDeleteLog, session }: Histo
                         </span>
                         <span className="text-[9px] font-mono text-slate-400">{timeStr}</span>
                       </div>
-                      <h4 className={`text-xs font-bold truncate mt-1 ${isSelected ? "text-slate-900 dark:text-brand-300" : "text-slate-700 dark:text-slate-300"}`}>
+                      <h4 data-crm-heading="section" className={`text-xs font-bold truncate mt-1 ${isSelected ? "text-slate-900 dark:text-brand-300" : "text-slate-700 dark:text-slate-300"}`}>
                         {tx(log.subject)}
                       </h4>
                       <div className="flex items-center gap-3 mt-1.5 text-[10px] text-slate-400 font-medium">
@@ -119,7 +119,7 @@ export default function HistoryAndLogsView({ logs, onDeleteLog, session }: Histo
                     </div>
                     
                     <div className="flex items-center gap-1 flex-shrink-0">
-                      <button
+                      <button data-crm-button=""
                         id={`btn-log-download-${log.id}`}
                         onClick={(e) => {
                           e.stopPropagation();
@@ -130,7 +130,7 @@ export default function HistoryAndLogsView({ logs, onDeleteLog, session }: Histo
                       >
                         <Download className="w-3.5 h-3.5" />
                       </button>
-                      <button
+                      <button data-crm-button=""
                         id={`btn-log-delete-${log.id}`}
                         onClick={(e) => {
                           e.stopPropagation();
@@ -153,17 +153,17 @@ export default function HistoryAndLogsView({ logs, onDeleteLog, session }: Histo
         </div>
 
         {/* Audit Detail Inspector panel */}
-        <div className="lg:col-span-7 space-y-6">
+        <div data-crm-stack="" className="lg:col-span-7 space-y-6">
           {selectedCampaign ? (
-            <div className="bg-white dark:bg-[#1b1a19] border border-[#EDEBE9] dark:border-[#323130] rounded p-6 shadow-sm space-y-5">
+            <div data-crm-stack="" data-crm-card="padded" className="bg-white dark:bg-[#1b1a19] border border-[#EDEBE9] dark:border-[#323130] rounded p-6 shadow-sm space-y-5">
               <div className="flex items-center justify-between gap-4 border-b border-[#EDEBE9] dark:border-[#323130] pb-4">
                 <div>
-                  <h3 className="text-sm font-bold text-slate-800 dark:text-slate-100">
+                  <h3 data-crm-heading="section" className="text-sm font-bold text-slate-800 dark:text-slate-100">
                     {t("Campaign Audit performance report")}
                   </h3>
                   <p className="text-[10px] text-slate-400 mt-1 font-mono">{t("ID:")} {selectedCampaign.id}</p>
                 </div>
-                <button
+                <button data-crm-button=""
                   id="btn-audit-download"
                   onClick={() => handleDownloadPDF(selectedCampaign)}
                   className="flex items-center gap-1.5 text-xs text-[#0078D4] dark:text-brand-300 border border-[#EDEBE9] dark:border-[#323130] hover:bg-[#F3F2F1] px-3 py-1.5 rounded font-bold transition-all"
@@ -173,21 +173,21 @@ export default function HistoryAndLogsView({ logs, onDeleteLog, session }: Histo
                 </button>
               </div>
 
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+              <div data-crm-flow="" data-crm-grid="layout" className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                 <div className="bg-[#F3F2F1] dark:bg-[#11100f] p-3 rounded border border-[#EDEBE9] dark:border-[#323130] text-center">
-                  <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">{t("Audited Batch")}</span>
+                  <span data-crm-caption="" className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">{t("Audited Batch")}</span>
                   <span className="text-sm font-bold text-slate-800 dark:text-slate-100 mt-1 block">
                     {selectedCampaign.recipients.length} {t("recipients")}
                   </span>
                 </div>
                 <div className="bg-[#F3F2F1] dark:bg-[#11100f] p-3 rounded border border-[#EDEBE9] dark:border-[#323130] text-center">
-                  <span className="text-[10px] font-bold text-slate-405 uppercase tracking-wider block">{t("Success transfers")}</span>
+                  <span data-crm-caption="" className="text-[10px] font-bold text-slate-405 uppercase tracking-wider block">{t("Success transfers")}</span>
                   <span className="text-sm font-bold text-emerald-600 dark:text-emerald-450 mt-1 block">
                     {selectedCampaign.successCount} {t("sends")}
                   </span>
                 </div>
                 <div className="bg-[#F3F2F1] dark:bg-[#11100f] p-3 rounded border border-[#EDEBE9] dark:border-[#323130] text-center">
-                  <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">{t("Fail Bounces")}</span>
+                  <span data-crm-caption="" className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">{t("Fail Bounces")}</span>
                   <span className={`text-sm font-bold mt-1 block ${selectedCampaign.failedCount > 0 ? "text-rose-600" : "text-slate-500"}`}>
                     {selectedCampaign.failedCount} {t("failed")}
                   </span>
@@ -196,7 +196,7 @@ export default function HistoryAndLogsView({ logs, onDeleteLog, session }: Histo
 
               {/* Campaign info block */}
               <div className="space-y-3">
-                <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">{t("General details")}</label>
+                <label data-crm-label="" className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">{t("General details")}</label>
                 <div className="p-4 bg-[#F3F2F1]/30 dark:bg-[#252423]/10 border border-[#EDEBE9] dark:border-[#323130] rounded text-xs space-y-2 leading-relaxed">
                   <p className="text-slate-650 dark:text-slate-350">
                     <strong className="text-slate-850 dark:text-slate-100 font-bold">{t("Subject Lines:")}</strong> {tx(selectedCampaign.subject)}
@@ -226,9 +226,9 @@ export default function HistoryAndLogsView({ logs, onDeleteLog, session }: Histo
 
               {/* Individual logs check */}
               <div className="space-y-3">
-                <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">{t("Recipient logs")}</label>
+                <label data-crm-label="" className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">{t("Recipient logs")}</label>
                 <div className="border border-[#EDEBE9] dark:border-[#323130] rounded overflow-hidden max-h-56 overflow-y-auto">
-                  <table className="w-full text-xs text-left border-collapse">
+                  <div data-crm-scroll="horizontal"><table data-crm-table="" className="w-full text-xs text-left border-collapse">
                     <thead className="bg-[#F3F2F1] dark:bg-[#11100f] text-slate-500 font-bold border-b border-[#EDEBE9] dark:border-[#323130]">
                       <tr>
                         <th className="p-2.5">{t("Email address")}</th>
@@ -255,13 +255,13 @@ export default function HistoryAndLogsView({ logs, onDeleteLog, session }: Histo
                         </tr>
                       ))}
                     </tbody>
-                  </table>
+                  </table></div>
                 </div>
               </div>
 
             </div>
           ) : (
-            <div className="bg-white dark:bg-[#1b1a19] border border-[#EDEBE9] dark:border-[#323130] rounded p-6 shadow-sm h-64 flex flex-col items-center justify-center text-center">
+            <div data-crm-card="padded" className="bg-white dark:bg-[#1b1a19] border border-[#EDEBE9] dark:border-[#323130] rounded p-6 shadow-sm h-64 flex flex-col items-center justify-center text-center">
               <FileText className="w-10 h-10 text-slate-300 mb-2" />
               <p className="text-xs text-slate-505 font-bold">{t("Select a historical campaign log to review performance statistics and audit lists.")}</p>
             </div>

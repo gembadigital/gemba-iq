@@ -1,6 +1,8 @@
 import React, { useEffect, useRef, useState } from "react";
 import "./styles/stitch-theme.css";
 import "./styles/workspace-layout.css";
+import "./styles/workspace-pages.css";
+import "./styles/workspace-mobile.css";
 import DashboardView from "./components/DashboardView";
 import CampaignDesigner from "./components/CampaignDesigner";
 import SendingProgressView from "./components/SendingProgressView";
@@ -1511,7 +1513,7 @@ export default function App() {
           {/* Theme switcher & Collapse toggler */}
           <div className={`flex ${sidebarCollapsed ? "flex-col items-center gap-3" : "items-center justify-between"}`}>
             {!sidebarCollapsed && (
-              <span className="text-[10px] font-semibold text-slate-400 dark:text-slate-500 uppercase">Dark mode toggle</span>
+              <span data-crm-caption className="text-[10px] font-semibold text-slate-400 dark:text-slate-500 uppercase">Dark mode toggle</span>
             )}
             <div className={`flex items-center ${sidebarCollapsed ? "flex-col gap-2" : "gap-2"}`}>
               <button
@@ -1986,10 +1988,10 @@ export default function App() {
         </div>
 
         {/* Core Main Container */}
-        <div className="max-w-7xl mx-auto w-full px-6 py-6 space-y-6 flex-1 min-h-0 overflow-y-auto">
+        <div data-crm-viewport className="max-w-7xl mx-auto w-full px-6 py-6 space-y-6 flex-1 min-h-0 overflow-y-auto">
 
           {/* Content Routing tabs container */}
-          <div className="transition-all duration-300">
+          <div data-crm-route={activeTab} className="transition-all duration-300">
             {activeTab === "company-discovery" && (
               <CompanyDiscoveryView />
             )}
@@ -2181,7 +2183,7 @@ export default function App() {
             />
             
             {/* Wide Drawer Panel Content (Right-Opening Wide Screen) */}
-            <div className="relative w-full max-w-[92vw] lg:max-w-[85vw] xl:max-w-[78vw] bg-[#FAFAFA] dark:bg-[#09090b] h-full shadow-2xl border-l border-slate-200 dark:border-zinc-800 flex flex-col z-10 animate-in slide-in-from-right duration-300">
+            <div data-crm-drawer="settings" className="relative w-full max-w-[92vw] lg:max-w-[85vw] xl:max-w-[78vw] bg-[#FAFAFA] dark:bg-[#09090b] h-full shadow-2xl border-l border-slate-200 dark:border-zinc-800 flex flex-col z-10 animate-in slide-in-from-right duration-300">
               
               {/* Drawer Header */}
               <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between p-5 border-b border-slate-200 dark:border-zinc-800/80 bg-white dark:bg-[#121212] gap-4">
@@ -2310,7 +2312,7 @@ export default function App() {
                     <div className="space-y-3 pt-6 border-t border-slate-100 dark:border-zinc-800/60">
                       <div className="bg-[#fcfcfa] dark:bg-black/15 p-4 rounded-xl border border-slate-150 dark:border-slate-800 flex flex-col md:flex-row md:items-center justify-between gap-4">
                         <div className="space-y-1">
-                          <span className="text-[9px] font-bold text-indigo-500 uppercase tracking-widest font-mono block">PLATFORM PERMISSIONS</span>
+                          <span data-crm-caption className="text-[9px] font-bold text-indigo-500 uppercase tracking-widest font-mono block">PLATFORM PERMISSIONS</span>
                           <p className="text-xs font-bold text-slate-800 dark:text-emerald-400">
                             {t("Active Permissions & API Infrastructure (Google AI Studio Build)")}
                           </p>
@@ -2335,7 +2337,7 @@ export default function App() {
         )}
 
         {isUserAccountSettingsOpen && (
-          <div className="fixed inset-0 z-[200] flex justify-end">
+          <div data-crm-drawer="account" className="fixed inset-0 z-[200] flex justify-end">
             <div
               className="absolute inset-0 bg-black/40 backdrop-blur-sm"
               onClick={() => setIsUserAccountSettingsOpen(false)}

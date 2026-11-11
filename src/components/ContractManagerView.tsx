@@ -1307,20 +1307,20 @@ export default function ContractManagerView() {
   };
 
   return (
-    <div id="contract-manager-module-wrapper" className="flex flex-col xl:flex-row gap-6 w-full text-slate-700 dark:text-slate-350 antialiased font-sans">
+    <div data-crm-screen="ContractManagerView" id="contract-manager-module-wrapper" className="flex flex-col xl:flex-row gap-6 w-full text-slate-700 dark:text-slate-350 antialiased font-sans">
       
       {/* LEFT SECTION: CONTRACT VARIABLES FORM & TEMPLATE OPTIONS */}
-      <div className="flex-1 max-w-xl flex flex-col space-y-5">
+      <div data-crm-stack="" className="flex-1 max-w-xl flex flex-col space-y-5">
         
         {/* Module Header card */}
-        <div className="bg-white dark:bg-[#1b1a19] p-5 rounded-lg border border-[#EDEBE9] dark:border-[#323130] shadow-sm relative overflow-hidden">
-          <div className="absolute top-0 left-0 right-0 h-1.5 bg-gradient-to-r from-emerald-500 via-[#0078D4] to-blue-500" />
-          <div className="flex items-start gap-3.5 mt-1">
+        <div data-crm-card="padded" data-crm-header="" className="bg-white dark:bg-[#1b1a19] p-5 rounded-lg border border-[#EDEBE9] dark:border-[#323130] shadow-sm relative overflow-hidden">
+          <div data-crm-decoration="" className="absolute top-0 left-0 right-0 h-1.5 bg-gradient-to-r from-emerald-500 via-[#0078D4] to-blue-500" />
+          <div data-crm-header-copy="" className="flex items-start gap-3.5 mt-1">
             <div className="p-2.5 bg-[#0078D4]/10 rounded-lg text-[#0078D4] dark:bg-blue-950/40">
               <FileSignature className="w-6 h-6" />
             </div>
             <div>
-              <h1 className="text-xl font-black text-slate-900 dark:text-white flex items-center gap-1.5 tracking-tight">
+              <h1 data-crm-heading="page" className="text-xl font-black text-slate-900 dark:text-white flex items-center gap-1.5 tracking-tight">
                 Sözleşme Yöneticisi
                 <span className="text-[10px] font-bold px-2 py-0.5 bg-blue-50 text-blue-650 dark:bg-blue-950/50 dark:text-blue-400 rounded-full select-none">
                   Beta v1.5
@@ -1334,16 +1334,16 @@ export default function ContractManagerView() {
         </div>
 
         {/* Template & Letterhead Choices */}
-        <div className="bg-white dark:bg-[#1b1a19] p-5 rounded-lg border border-[#EDEBE9] dark:border-[#323130] shadow-sm space-y-4">
+        <div data-crm-stack="" data-crm-card="padded" className="bg-white dark:bg-[#1b1a19] p-5 rounded-lg border border-[#EDEBE9] dark:border-[#323130] shadow-sm space-y-4">
           <div className="flex items-center gap-1.5 pb-2.5 border-b border-[#EDEBE9] dark:border-[#323130]">
             <Settings className="w-4 h-4 text-[#0078D4]" />
             <span className="text-xs font-bold uppercase tracking-wider text-slate-800 dark:text-white">Şablon ve Tasarım Ayarları</span>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div data-crm-flow="" data-crm-grid="form" className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             {/* Template Selection */}
             <div className="space-y-1.5 font-sans">
-              <label className="text-[11px] font-black uppercase text-slate-500 tracking-wider flex items-center gap-1">
+              <label data-crm-label="" className="text-[11px] font-black uppercase text-slate-500 tracking-wider flex items-center gap-1">
                 <BookOpen className="w-3.5 h-3.5 text-blue-500" />
                 Sözleşme Şablon Tipi
               </label>
@@ -1362,7 +1362,7 @@ export default function ContractManagerView() {
 
             {/* Letterhead selector */}
             <div className="space-y-1.5 font-sans">
-              <label className="text-[11px] font-black uppercase text-slate-500 tracking-wider flex items-center gap-1">
+              <label data-crm-label="" className="text-[11px] font-black uppercase text-slate-500 tracking-wider flex items-center gap-1">
                 <Award className="w-3.5 h-3.5 text-blue-500" />
                 Antetli Kağıt Modeli
               </label>
@@ -1382,7 +1382,7 @@ export default function ContractManagerView() {
             {/* Word Template File Uploader */}
             <div className="sm:col-span-2 pt-3 border-t border-[#EDEBE9] dark:border-[#323130] flex flex-col md:flex-row items-start md:items-center justify-between gap-3 font-sans">
               <div className="space-y-1">
-                <span className="text-[11px] font-black uppercase text-slate-500 tracking-wider flex items-center gap-1">
+                <span data-crm-caption="" className="text-[11px] font-black uppercase text-slate-500 tracking-wider flex items-center gap-1">
                   <Upload className="w-3.5 h-3.5 text-[#0078D4]" />
                   Özel Word / Şablon Yükleme (Mevcut Sözleşme Düzeltme)
                 </span>
@@ -1403,7 +1403,7 @@ export default function ContractManagerView() {
                   />
                 </label>
                 {customTemplateText && (
-                  <button
+                  <button data-crm-button=""
                     type="button"
                     onClick={() => {
                       if (confirm("Yüklenmiş olan özel şablonu silmek ve varsayılana dönmek istiyor musunuz?")) {
@@ -1425,18 +1425,18 @@ export default function ContractManagerView() {
         </div>
 
         {/* INPUT VARIABLES PANEL FORM */}
-        <div className="bg-white dark:bg-[#1b1a19] p-5 rounded-lg border border-[#EDEBE9] dark:border-[#323130] shadow-sm space-y-4">
+        <div data-crm-stack="" data-crm-card="padded" className="bg-white dark:bg-[#1b1a19] p-5 rounded-lg border border-[#EDEBE9] dark:border-[#323130] shadow-sm space-y-4">
           <div className="flex items-center gap-1.5 pb-2.5 border-b border-[#EDEBE9] dark:border-[#323130]">
             <Plus className="w-4 h-4 text-[#0078D4]" />
             <span className="text-xs font-bold uppercase tracking-wider text-slate-800 dark:text-white">Sözleşme Değişkenleri Formu</span>
           </div>
 
-          <div className="space-y-4">
+          <div data-crm-stack="" className="space-y-4">
             
             {/* Field 0: Sözleşme No / Sıra Numarası */}
             <div className="space-y-1.5 font-sans">
               <div className="flex items-center justify-between">
-                <label className="text-xs font-bold text-slate-700 dark:text-slate-350 flex items-center gap-1">
+                <label data-crm-label="" className="text-xs font-bold text-slate-700 dark:text-slate-350 flex items-center gap-1">
                   <Hash className="w-3.5 h-3.5 text-[#0078D4]" />
                   Sözleşme No / Sıra Numarası *
                 </label>
@@ -1450,7 +1450,7 @@ export default function ContractManagerView() {
                   onChange={(e) => setContractNo(e.target.value)}
                   className="w-full bg-slate-50 dark:bg-[#252423] border border-[#EDEBE9] dark:border-[#323130] rounded p-2.5 text-xs focus:ring-1 focus:ring-[#0078D4] focus:outline-hidden font-mono font-bold text-[#0078D4] dark:text-blue-400"
                 />
-                <button
+                <button data-crm-button=""
                   type="button"
                   onClick={() => {
                     setContractNo(prev => incrementSequenceNumber(prev));
@@ -1466,7 +1466,7 @@ export default function ContractManagerView() {
             {/* Field 1: Company Title (with Autocomplete from Müşteriler / Companies list) */}
             <div className="space-y-1.5 relative font-sans">
               <div className="flex items-center justify-between">
-                <label className="text-xs font-bold text-slate-700 dark:text-slate-350 flex items-center gap-1">
+                <label data-crm-label="" className="text-xs font-bold text-slate-700 dark:text-slate-350 flex items-center gap-1">
                   <Building className="w-3.5 h-3.5 text-[#0078D4]" />
                   Firma Unvanı (Müşteri) *
                 </label>
@@ -1529,7 +1529,7 @@ export default function ContractManagerView() {
                       <p className="text-amber-800 dark:text-amber-300 font-medium leading-relaxed">
                         ⚠️ <strong>"{companyTitle}"</strong> firması müşteri (Companies) listesinde kayıtlı değil.
                       </p>
-                      <button
+                      <button data-crm-button=""
                         type="button"
                         onClick={handleAddNewCompanyFromForm}
                         className="mt-2 w-full bg-amber-600 hover:bg-amber-700 text-white font-bold py-1.5 px-2.5 rounded transition text-center text-[10.5px] block border border-amber-500 select-none shadow-xs"
@@ -1546,7 +1546,7 @@ export default function ContractManagerView() {
             {/* Field 2: Company Address */}
             <div className="space-y-1.5 font-sans">
               <div className="flex items-center justify-between">
-                <label className="text-xs font-bold text-slate-700 dark:text-slate-350">
+                <label data-crm-label="" className="text-xs font-bold text-slate-700 dark:text-slate-350">
                   Firma Tebligat Adresi *
                 </label>
               </div>
@@ -1560,10 +1560,10 @@ export default function ContractManagerView() {
             </div>
 
             {/* Field 2.1: Tax Office (Vergi Dairesi) and Tax No (Vergi Numarası) */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 font-sans">
+            <div data-crm-flow="" data-crm-grid="form" className="grid grid-cols-1 sm:grid-cols-2 gap-4 font-sans">
               <div className="space-y-1.5">
                 <div className="flex items-center justify-between">
-                  <label className="text-xs font-bold text-slate-700 dark:text-slate-350">
+                  <label data-crm-label="" className="text-xs font-bold text-slate-700 dark:text-slate-350">
                     Vergi Dairesi
                   </label>
                 </div>
@@ -1578,7 +1578,7 @@ export default function ContractManagerView() {
 
               <div className="space-y-1.5">
                 <div className="flex items-center justify-between">
-                  <label className="text-xs font-bold text-slate-700 dark:text-slate-350">
+                  <label data-crm-label="" className="text-xs font-bold text-slate-700 dark:text-slate-350">
                     Vergi Numarası
                   </label>
                 </div>
@@ -1596,7 +1596,7 @@ export default function ContractManagerView() {
             {/* Field 3: Subject of Contract */}
             <div className="space-y-1.5 font-sans">
               <div className="flex items-center justify-between">
-                <label className="text-xs font-bold text-slate-700 dark:text-slate-350">
+                <label data-crm-label="" className="text-xs font-bold text-slate-700 dark:text-slate-350">
                   Sözleşme Konusu / Kapsamı *
                 </label>
               </div>
@@ -1610,10 +1610,10 @@ export default function ContractManagerView() {
             </div>
 
             {/* Field 4: Contract Date and Expiration Duration */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 font-sans">
+            <div data-crm-flow="" data-crm-grid="form" className="grid grid-cols-1 sm:grid-cols-2 gap-4 font-sans">
               <div className="space-y-1.5">
                 <div className="flex items-center justify-between">
-                  <label className="text-xs font-bold text-slate-700 dark:text-slate-350 flex items-center gap-1">
+                  <label data-crm-label="" className="text-xs font-bold text-slate-700 dark:text-slate-350 flex items-center gap-1">
                     <CalendarIcon className="w-3.5 h-3.5 text-slate-400" />
                     Sözleşme Tarihi *
                   </label>
@@ -1628,7 +1628,7 @@ export default function ContractManagerView() {
 
               <div className="space-y-1.5">
                 <div className="flex items-center justify-between">
-                  <label className="text-xs font-bold text-slate-700 dark:text-slate-350">
+                  <label data-crm-label="" className="text-xs font-bold text-slate-700 dark:text-slate-350">
                     Geçerlilik Süresi (Ay sayısı seçin/yazın)
                   </label>
                 </div>
@@ -1664,11 +1664,11 @@ export default function ContractManagerView() {
               </div>
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 font-sans">
+            <div data-crm-flow="" data-crm-grid="form" className="grid grid-cols-1 sm:grid-cols-2 gap-4 font-sans">
               {/* Field 5: Project Manager */}
               <div className="space-y-1.5">
                 <div className="flex items-center justify-between">
-                  <label className="text-xs font-bold text-slate-700 dark:text-slate-350 flex items-center gap-1">
+                  <label data-crm-label="" className="text-xs font-bold text-slate-700 dark:text-slate-350 flex items-center gap-1">
                     <UserCheck className="w-3.5 h-3.5 text-slate-400" />
                     Proje Yöneticisi *
                   </label>
@@ -1706,7 +1706,7 @@ export default function ContractManagerView() {
               {/* Field 6: Project Manager National ID / TC No */}
               <div className="space-y-1.5 flex flex-col justify-between">
                 <div className="flex items-center justify-between">
-                  <label className="text-xs font-bold text-slate-700 dark:text-slate-350 flex items-center gap-1">
+                  <label data-crm-label="" className="text-xs font-bold text-slate-700 dark:text-slate-350 flex items-center gap-1">
                     <Building className="w-3.5 h-3.5 text-slate-400" />
                     Proje Yöneticisi T.C. No *
                   </label>
@@ -1724,11 +1724,11 @@ export default function ContractManagerView() {
               </div>
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div data-crm-flow="" data-crm-grid="form" className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               {/* Field 7: Contract Value */}
               <div className="space-y-1.5">
                 <div className="flex items-center justify-between">
-                  <label className="text-xs font-bold text-slate-700 dark:text-slate-350 flex items-center gap-1">
+                  <label data-crm-label="" className="text-xs font-bold text-slate-700 dark:text-slate-350 flex items-center gap-1">
                     <Tag className="w-3.5 h-3.5 text-slate-400" />
                     Sözleşme Bedeli (TL) *
                   </label>
@@ -1764,7 +1764,7 @@ export default function ContractManagerView() {
         </div>
 
         {/* Reset variables state tool button */}
-        <button
+        <button data-crm-button=""
           type="button"
           onClick={() => {
             if (confirm("Girdiğiniz tüm alanları fabrika ayarlarına sıfırlamak istiyor musunuz?")) {
@@ -1786,10 +1786,10 @@ export default function ContractManagerView() {
       </div>
 
       {/* RIGHT SECTION: DYNAMIC A4 PAPER PREVIEW & EDITING */}
-      <div className={`flex-1 flex flex-col space-y-4 ${isFullscreen ? "fixed inset-0 bg-[#0c0d0e]/95 z-50 p-6 overflow-y-auto" : ""}`}>
+      <div data-crm-stack="" className={`flex-1 flex flex-col space-y-4 ${isFullscreen ? "fixed inset-0 bg-[#0c0d0e]/95 z-50 p-6 overflow-y-auto" : ""}`}>
         
         {/* ACTION BUTTON PANEL (Exports & Toggles) */}
-        <div className="bg-white dark:bg-[#1b1a19] p-4 rounded-lg border border-[#EDEBE9] dark:border-[#323130] shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div data-crm-card="padded" className="bg-white dark:bg-[#1b1a19] p-4 rounded-lg border border-[#EDEBE9] dark:border-[#323130] shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div className="flex items-center gap-2">
             <span className="flex h-2 w-2 relative">
               <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
@@ -1802,7 +1802,7 @@ export default function ContractManagerView() {
           <div className="flex items-center flex-wrap gap-2">
             
             {/* IN PLACE EDIT TOGGLE */}
-            <button
+            <button data-crm-button=""
               type="button"
               onClick={handleSaveAndLock}
               className={`px-3 py-1.5 rounded text-xs font-bold flex items-center gap-1.5 transition-all outline-hidden cursor-pointer ${
@@ -1817,7 +1817,7 @@ export default function ContractManagerView() {
             </button>
 
             {/* EXPAND MODAL TOGGLE */}
-            <button
+            <button data-crm-button=""
               type="button"
               onClick={() => setIsFullscreen(!isFullscreen)}
               className="bg-slate-100 hover:bg-slate-200 dark:bg-[#252423] dark:hover:bg-[#323130] text-slate-700 dark:text-slate-200 border border-[#EDEBE9] dark:border-[#323130] p-1.5 rounded text-xs cursor-pointer flex items-center justify-center"
@@ -1830,7 +1830,7 @@ export default function ContractManagerView() {
             <div className="h-4 w-px bg-slate-200 dark:bg-zinc-800 mx-1 hidden sm:block" />
 
             {/* WORD EXPORTER */}
-            <button
+            <button data-crm-button=""
               type="button"
               onClick={handleExportToWord}
               className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:opacity-90 text-white px-3 py-1.5 rounded text-xs font-bold flex items-center gap-1.5 shadow-xs transition-opacity cursor-pointer"
@@ -1840,7 +1840,7 @@ export default function ContractManagerView() {
             </button>
 
             {/* PDF EXPORTER */}
-            <button
+            <button data-crm-button=""
               type="button"
               onClick={handleExportToPDF}
               disabled={isExportingPDF}
@@ -1853,7 +1853,7 @@ export default function ContractManagerView() {
             </button>
 
             {/* HIGH FIDELITY PRINT EXPORTER */}
-            <button
+            <button data-crm-button=""
               type="button"
               onClick={handlePrintDocument}
               className="bg-slate-800 hover:bg-slate-900 dark:bg-zinc-700 dark:hover:bg-zinc-650 text-white px-3 py-1.5 rounded text-xs font-bold flex items-center gap-1.5 cursor-pointer"
@@ -1871,7 +1871,7 @@ export default function ContractManagerView() {
               <FileText className="w-5 h-5 text-[#0078D4]" />
               <span className="text-sm font-bold tracking-wide">DIKKAT DAĞITMAYAN YAZMA ODASI (Çıkmak için ESC tuşuna basın veya sağdaki simgeye tıklayın)</span>
             </div>
-            <button
+            <button data-crm-button=""
               onClick={() => setIsFullscreen(false)}
               className="p-1 px-3 bg-red-650 hover:bg-red-700 text-white font-bold rounded text-xs"
             >
@@ -1881,7 +1881,7 @@ export default function ContractManagerView() {
         )}
 
         {/* THE PHYSICAL A4 PAPER SIMULATION AREA */}
-        <div ref={paperRef} className="w-full flex flex-col gap-8 pb-12">
+        <div data-crm-document="true" ref={paperRef} className="w-full flex flex-col gap-8 pb-12">
           {isEditMode ? (
             /* CONVENIENT SINGLE-SCREEN PAGE VIEW FOR EDITING TEXT AREA */
             <div 

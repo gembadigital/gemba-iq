@@ -11,15 +11,15 @@ interface AuthLayoutProps {
 
 export default function AuthLayout({ title, subtitle, children, footer, logoSrc = "/logos/Giqlogo.png" }: AuthLayoutProps) {
   return (
-    <div className="min-h-screen flex items-center justify-center bg-[#FAFAFA] dark:bg-[#09090b] px-4 py-10">
+    <div data-crm-screen="AuthLayout" className="min-h-screen flex items-center justify-center bg-[#FAFAFA] dark:bg-[#09090b] px-4 py-10">
       <div className="w-full max-w-md">
         <div className="flex flex-col items-center mb-8">
           <img src={logoSrc} alt="Gemba IQ" className="h-12 w-auto object-contain mb-4" />
-          <h1 className="text-2xl font-bold text-slate-900 dark:text-zinc-100 tracking-tight">{title}</h1>
+          <h1 data-crm-heading="page" className="text-2xl font-bold text-slate-900 dark:text-zinc-100 tracking-tight">{title}</h1>
           <p className="text-sm text-slate-500 dark:text-zinc-400 mt-1 text-center">{subtitle}</p>
         </div>
 
-        <div className="bg-white dark:bg-[#121215] border border-slate-200/80 dark:border-zinc-800 rounded-2xl shadow-sm p-6 sm:p-8">
+        <div data-crm-card="padded" className="bg-white dark:bg-[#121215] border border-slate-200/80 dark:border-zinc-800 rounded-2xl shadow-sm p-6 sm:p-8">
           {children}
         </div>
 
@@ -58,10 +58,10 @@ export function AuthField({
 }: AuthFieldProps) {
   return (
     <div>
-      <label htmlFor={id} className="block text-xs font-semibold text-slate-600 dark:text-zinc-300 mb-1.5">
+      <label data-crm-label htmlFor={id} className="block text-xs font-semibold text-slate-600 dark:text-zinc-300 mb-1.5">
         {label}
       </label>
-      <input
+      <input data-crm-field="control"
         id={id}
         type={type}
         value={value}
@@ -94,7 +94,7 @@ export function AuthButton({ children, loading, disabled, type = "submit", onCli
       : "bg-slate-100 dark:bg-zinc-800 text-slate-700 dark:text-zinc-200 hover:bg-slate-200 dark:hover:bg-zinc-700";
 
   return (
-    <button type={type} onClick={onClick} disabled={loading || disabled} className={`${base} ${styles}`}>
+    <button data-crm-button type={type} onClick={onClick} disabled={loading || disabled} className={`${base} ${styles}`}>
       {loading && (
         <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
       )}

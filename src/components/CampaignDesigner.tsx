@@ -654,28 +654,28 @@ export default function CampaignDesigner({
   );
 
   return (
-    <div className="space-y-6">
+    <div data-crm-stack="" data-crm-screen="CampaignDesigner" className="space-y-6">
       {/* HEADER CARD */}
-      <div className="bg-white dark:bg-[#1b1a19] p-5 rounded-lg border border-[#EDEBE9] dark:border-[#323130] shadow-sm relative overflow-hidden">
-        <div className="absolute top-0 left-0 right-0 h-1.5 bg-gradient-to-r from-emerald-500 via-[#0078D4] to-blue-500" />
-        <div className="flex items-center gap-3">
+      <div data-crm-card="padded" data-crm-header="" className="bg-white dark:bg-[#1b1a19] p-5 rounded-lg border border-[#EDEBE9] dark:border-[#323130] shadow-sm relative overflow-hidden">
+        <div data-crm-decoration="" className="absolute top-0 left-0 right-0 h-1.5 bg-gradient-to-r from-emerald-500 via-[#0078D4] to-blue-500" />
+        <div data-crm-header-copy="" className="flex items-center gap-3">
           <div className="p-2 bg-blue-55 text-blue-700 dark:bg-blue-955/45 dark:text-blue-405 rounded-lg">
             <Sparkles className="w-5 h-5 animate-pulse text-amber-500" />
           </div>
           <div>
-            <h2 className="text-base font-bold text-slate-800 dark:text-zinc-100 font-sans">{t("Campaign Draft Designer")}</h2>
+            <h2 data-crm-heading="page" className="text-base font-bold text-slate-800 dark:text-zinc-100 font-sans">{t("Campaign Draft Designer")}</h2>
             <p className="text-xs text-slate-500 font-sans">{t("Upload your recipient database, design personalized HTML email blueprints, and configure smart attachment overrides.")}</p>
           </div>
         </div>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+      <div data-crm-flow="" data-crm-grid="layout" className="grid grid-cols-1 lg:grid-cols-12 gap-6">
       
       {/* Left Columns - Inputs and lists */}
-      <div className="lg:col-span-8 space-y-6">
+      <div data-crm-stack="" className="lg:col-span-8 space-y-6">
         
         {/* Recipient Management Box */}
-        <div className={isListExpanded
+        <div data-crm-stack="" className={isListExpanded
           ? "fixed inset-0 z-50 bg-[#FAF9F8] dark:bg-[#121110] p-6 overflow-y-auto flex flex-col space-y-4 animate-fadeIn"
           : "bg-white dark:bg-[#1b1a19] border border-[#EDEBE9] dark:border-[#323130] rounded p-6 shadow-sm"
         }>
@@ -689,7 +689,7 @@ export default function CampaignDesigner({
           />
           <div className="flex items-center justify-between gap-4 mb-4">
             <div>
-              <h3 className="text-sm font-semibold text-slate-800 dark:text-slate-100 flex items-center gap-2">
+              <h3 data-crm-heading="section" className="text-sm font-semibold text-slate-800 dark:text-slate-100 flex items-center gap-2">
                 <UserCheck className="w-4.5 h-4.5 text-[#0078D4]" />
 {t("1. Recipient List")}
               </h3>
@@ -703,7 +703,7 @@ export default function CampaignDesigner({
             </div>
             {recipients.length > 0 && (
               <div id="recipient-actions-group" className="flex items-center gap-2">
-                <button
+                <button data-crm-button=""
                   type="button"
                   id="btn-save-recipients-draft"
                   onClick={handleSaveList}
@@ -726,7 +726,7 @@ export default function CampaignDesigner({
                     </>
                   )}
                 </button>
-                <button
+                <button data-crm-button=""
                   type="button"
                   id="btn-import-recipients"
                   onClick={() => fileInputRef.current?.click()}
@@ -737,7 +737,7 @@ title={t("Import a new spreadsheet to replace or update the active recipient lis
                   <span>{t("Import List")}</span>
                 </button>
                 <span className="text-slate-300 dark:text-[#323130] w-px h-5 self-center" />
-                <button
+                <button data-crm-button=""
                   type="button"
                   id="btn-export-recipients-xlsx"
                   onClick={() => exportRecipients("xlsx")}
@@ -747,7 +747,7 @@ title={t("Export current Recipient list to Excel")}
                   <FileSpreadsheet className="w-3.5 h-3.5" />
                   <span>{t("Excel (XLSX)")}</span>
                 </button>
-                <button
+                <button data-crm-button=""
                   type="button"
                   id="btn-export-recipients-csv"
                   onClick={() => exportRecipients("csv")}
@@ -758,7 +758,7 @@ title={t("Export current Recipient list to CSV")}
                   <span>{t("CSV")}</span>
                 </button>
                 <span className="text-slate-300 dark:text-[#323130] w-px h-5 self-center" />
-                <button
+                <button data-crm-button=""
                   id="btn-clear-recipients"
                   onClick={clearRecipients}
                   className="text-xs font-bold text-rose-500 hover:text-rose-600 px-3 py-1.5 rounded hover:bg-rose-50 dark:hover:bg-rose-950/20 transition-all cursor-pointer"
@@ -787,7 +787,7 @@ title={t("Export current Recipient list to CSV")}
               </p>
               <p className="text-[11px] text-slate-400 mt-1 mb-4">{t("or choose from local directory")}</p>
               
-              <button
+              <button data-crm-button=""
                 id="btn-upload-browse"
                 onClick={() => fileInputRef.current?.click()}
                 className="bg-white dark:bg-[#252423] hover:bg-slate-50 dark:hover:bg-[#252423] border border-[#EDEBE9] dark:border-[#323130] text-slate-700 dark:text-slate-200 text-xs font-bold px-4 py-2.5 rounded shadow-sm transition-all cursor-pointer"
@@ -802,7 +802,7 @@ title={t("Export current Recipient list to CSV")}
             </div>
           ) : (
             // Recipients Table view
-            <div className="space-y-4">
+            <div data-crm-stack="" className="space-y-4">
               {/* TOP OF RECIPIENTS SHEET CONTROLS
                   Kullanıcı hatası: "listede ekranı genişlet fonksiyonu çalıştıktan sonra
                   ekran tekrardan daraltma fonksiyonu gözükmüyor."
@@ -821,7 +821,7 @@ title={t("Export current Recipient list to CSV")}
                 </div>
                 <div className="flex items-center gap-2">
                   {/* 1. Ekran Genişletme oku */}
-                  <button
+                  <button data-crm-button=""
                     type="button"
                     onClick={() => setIsListExpanded(!isListExpanded)}
                     className="text-xs font-bold bg-white hover:bg-slate-50 dark:bg-[#252423] dark:hover:bg-[#323130] text-[#0078D4] dark:text-brand-300 px-3 py-1.5 border border-[#EDEBE9] dark:border-[#323130] rounded flex items-center gap-1.5 cursor-pointer transition-all shadow-sm hover:scale-[1.02]"
@@ -832,7 +832,7 @@ title={t("Export current Recipient list to CSV")}
                   </button>
 
                   {/* 2. Export İndirme oku (.xls biçiminde) */}
-                  <button
+                  <button data-crm-button=""
                     type="button"
                     onClick={() => exportRecipients("xls")}
                     className="text-xs font-bold bg-[#107c41] hover:bg-[#0b592e] text-white px-3 py-1.5 rounded flex items-center gap-1.5 cursor-pointer transition-all shadow-sm hover:scale-[1.02]"
@@ -843,7 +843,7 @@ title={t("Export current Recipient list to CSV")}
                   </button>
 
                   {/* 3. E-posta Doğrulama (umuterturk/email-verifier tabanlı ücretsiz genel API) */}
-                  <button
+                  <button data-crm-button=""
                     type="button"
                     onClick={handleVerifyEmails}
                     disabled={isVerifyingEmails}
@@ -888,7 +888,7 @@ title={t("Export current Recipient list to CSV")}
                     )}
                   </div>
                   {emailVerificationSummary.invalid > 0 && (
-                    <button
+                    <button data-crm-button=""
                       type="button"
                       onClick={handleRemoveInvalidEmails}
                       className="text-[11px] font-bold text-rose-600 hover:text-rose-700 dark:text-rose-400 px-2.5 py-1 border border-rose-200 dark:border-rose-900/50 rounded hover:bg-rose-50 dark:hover:bg-rose-950/20 transition-all cursor-pointer flex items-center gap-1"
@@ -908,7 +908,7 @@ title={t("Export current Recipient list to CSV")}
                     {t("Interactive Bulk Filter & Checkbox Selector")}
                   </span>
                   {(filterCompany || filterAddress || filterIndustry || filterDate) && (
-                    <button
+                    <button data-crm-button=""
                       type="button"
                       onClick={clearBatchFilters}
                       className="text-xs text-[#0078D4] hover:text-[#006cc0] font-bold transition-all cursor-pointer"
@@ -918,10 +918,10 @@ title={t("Export current Recipient list to CSV")}
                   )}
                 </div>
                 
-                <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 text-xs">
+                <div data-crm-flow="" data-crm-grid="form" className="grid grid-cols-2 lg:grid-cols-4 gap-3 text-xs">
                   <div>
-                    <label className="text-[10px] font-bold text-slate-450 dark:text-slate-400 uppercase tracking-wider block mb-1">{t("Company Name")}</label>
-                    <input
+                    <label data-crm-label="" className="text-[10px] font-bold text-slate-450 dark:text-slate-400 uppercase tracking-wider block mb-1">{t("Company Name")}</label>
+                    <input data-crm-field="control"
                       type="text"
                       value={filterCompany}
                       onChange={(e) => setFilterCompany(e.target.value)}
@@ -930,8 +930,8 @@ placeholder={t("e.g., Apple, ACME")}
                     />
                   </div>
                   <div>
-                    <label className="text-[10px] font-bold text-slate-450 dark:text-slate-400 uppercase tracking-wider block mb-1">{t("City / Address")}</label>
-                    <input
+                    <label data-crm-label="" className="text-[10px] font-bold text-slate-450 dark:text-slate-400 uppercase tracking-wider block mb-1">{t("City / Address")}</label>
+                    <input data-crm-field="control"
                       type="text"
                       value={filterAddress}
                       onChange={(e) => setFilterAddress(e.target.value)}
@@ -940,8 +940,8 @@ placeholder={t("e.g., London, Paris")}
                     />
                   </div>
                   <div>
-<label className="text-[10px] font-bold text-slate-450 dark:text-slate-400 uppercase tracking-wider block mb-1">{t("Industry")}</label>
-                    <input
+<label data-crm-label="" className="text-[10px] font-bold text-slate-450 dark:text-slate-400 uppercase tracking-wider block mb-1">{t("Industry")}</label>
+                    <input data-crm-field="control"
                       type="text"
                       value={filterIndustry}
                       onChange={(e) => setFilterIndustry(e.target.value)}
@@ -950,8 +950,8 @@ placeholder={t("e.g., Finance, Retail")}
                     />
                   </div>
                   <div>
-                    <label className="text-[10px] font-bold text-slate-450 dark:text-slate-400 uppercase tracking-wider block mb-1">{t("Planned Date")}</label>
-                    <input
+                    <label data-crm-label="" className="text-[10px] font-bold text-slate-450 dark:text-slate-400 uppercase tracking-wider block mb-1">{t("Planned Date")}</label>
+                    <input data-crm-field="control"
                       type="text"
                       value={filterDate}
                       onChange={(e) => setFilterDate(e.target.value)}
@@ -963,14 +963,14 @@ placeholder={t("e.g., 2026-06-15")}
 
                 <div className="flex flex-wrap items-center gap-3 pt-2 border-t border-[#EDEBE9] dark:border-[#323130]/60 text-xs">
                   <span className="text-[11px] text-slate-500 font-medium">{t("Bulk Action for matching rows:")}</span>
-                  <button
+                  <button data-crm-button=""
                     type="button"
                     onClick={() => handleBulkSelect(true)}
                     className="bg-[#f3f9fe] hover:bg-brand-100 dark:bg-blue-950/30 dark:hover:bg-blue-900/40 text-[#0078D4] dark:text-brand-300 border border-[#b8daf7]/60 dark:border-brand-900/50 text-[10px] font-bold px-2.5 py-1 rounded transition-all cursor-pointer"
                   >
                     {t("☑ Select All Matches")}
                   </button>
-                  <button
+                  <button data-crm-button=""
                     type="button"
                     onClick={() => handleBulkSelect(false)}
                     className="bg-white dark:bg-[#252423] hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-300 border border-[#EDEBE9] dark:border-slate-700 text-[10px] font-bold px-2.5 py-1 rounded transition-all cursor-pointer"
@@ -980,9 +980,9 @@ placeholder={t("e.g., 2026-06-15")}
                 </div>
               </div>
 
-              <div className="border border-[#EDEBE9] dark:border-[#323130] rounded overflow-hidden bg-white dark:bg-[#11100f]">
-                <div className="overflow-x-auto max-h-72 scrollbar-thin">
-                  <table className="w-full text-left text-xs border-collapse">
+              <div data-crm-card="surface" className="border border-[#EDEBE9] dark:border-[#323130] rounded overflow-hidden bg-white dark:bg-[#11100f]">
+                <div data-crm-scroll="horizontal" className="overflow-x-auto max-h-72 scrollbar-thin">
+                  <table data-crm-table="" className="w-full text-left text-xs border-collapse">
                     <thead className="bg-[#F3F2F1] dark:bg-[#1b1a19] text-slate-500 font-bold sticky top-0 border-b border-[#EDEBE9] dark:border-[#323130] z-10">
                       <tr>
 <th className="p-3 w-10 text-center" title={t("Include/Choose Email in Merge")}>
@@ -1063,14 +1063,14 @@ placeholder={t("e.g., 2026-06-15")}
                               <>
                                 <td className="p-1 min-w-[140px]" onClick={(e) => e.stopPropagation()}>
                                   <div className="flex gap-1">
-                                    <input
+                                    <input data-crm-field="control"
                                       type="text"
                                       value={rec.FirstName}
                                       onChange={(e) => handleUpdateRecipientField(rec.id, "FirstName", e.target.value)}
                                       className="w-1/2 px-1.5 py-1 text-xs border border-slate-300 dark:border-[#323130] bg-white dark:bg-[#11100f] rounded text-slate-800 dark:text-slate-100 focus:outline-none focus:border-[#0078D4]"
                                       placeholder={t("First")}
                                     />
-                                    <input
+                                    <input data-crm-field="control"
                                       type="text"
                                       value={rec.LastName}
                                       onChange={(e) => handleUpdateRecipientField(rec.id, "LastName", e.target.value)}
@@ -1081,7 +1081,7 @@ placeholder={t("e.g., 2026-06-15")}
                                 </td>
                                 <td className="p-1 min-w-[120px]" onClick={(e) => e.stopPropagation()}>
                                   <div className="relative">
-                                    <input
+                                    <input data-crm-field="control"
                                       type="email"
                                       value={rec.Email}
                                       onChange={(e) => handleUpdateRecipientField(rec.id, "Email", e.target.value)}
@@ -1093,7 +1093,7 @@ placeholder={t("e.g., 2026-06-15")}
                                   </div>
                                 </td>
                                 <td className="p-1 min-w-[80px]" onClick={(e) => e.stopPropagation()}>
-                                  <input
+                                  <input data-crm-field="control"
                                     type="text"
                                     value={rec.Company || ""}
                                     onChange={(e) => handleUpdateRecipientField(rec.id, "Company", e.target.value)}
@@ -1101,7 +1101,7 @@ placeholder={t("e.g., 2026-06-15")}
                                   />
                                 </td>
                                 <td className="p-1 min-w-[100px]" onClick={(e) => e.stopPropagation()}>
-                                  <input
+                                  <input data-crm-field="control"
                                     type="text"
                                     value={rec.Address || ""}
                                     onChange={(e) => handleUpdateRecipientField(rec.id, "Address", e.target.value)}
@@ -1109,7 +1109,7 @@ placeholder={t("e.g., 2026-06-15")}
                                   />
                                 </td>
                                 <td className="p-1 min-w-[80px]" onClick={(e) => e.stopPropagation()}>
-                                  <input
+                                  <input data-crm-field="control"
                                     type="text"
                                     value={rec.Industry || ""}
                                     onChange={(e) => handleUpdateRecipientField(rec.id, "Industry", e.target.value)}
@@ -1117,7 +1117,7 @@ placeholder={t("e.g., 2026-06-15")}
                                   />
                                 </td>
                                 <td className="p-1 min-w-[140px]" onClick={(e) => e.stopPropagation()}>
-                                  <input
+                                  <input data-crm-field="control"
                                     type="datetime-local"
                                     value={rec.ScheduledDate || ""}
                                     onChange={(e) => handleUpdateRecipientField(rec.id, "ScheduledDate", e.target.value)}
@@ -1125,7 +1125,7 @@ placeholder={t("e.g., 2026-06-15")}
                                   />
                                 </td>
                                 <td className="p-1 min-w-[80px]" onClick={(e) => e.stopPropagation()}>
-                                  <input
+                                  <input data-crm-field="control"
                                     type="text"
                                     value={rec.Department || ""}
                                     onChange={(e) => handleUpdateRecipientField(rec.id, "Department", e.target.value)}
@@ -1134,21 +1134,21 @@ placeholder={t("e.g., 2026-06-15")}
                                 </td>
                                 <td className="p-1 min-w-[150px]" onClick={(e) => e.stopPropagation()}>
                                   <div className="flex gap-1">
-                                    <input
+                                    <input data-crm-field="control"
                                       type="text"
                                       value={rec.CustomField1 || ""}
                                       placeholder={t("c1")}
                                       onChange={(e) => handleUpdateRecipientField(rec.id, "CustomField1", e.target.value)}
                                       className="w-1/3 px-1 py-1 text-[10px] border border-slate-300 dark:border-[#323130] bg-white dark:bg-[#11100f] rounded focus:outline-none text-slate-800 dark:text-slate-100 placeholder-slate-405"
                                     />
-                                    <input
+                                    <input data-crm-field="control"
                                       type="text"
                                       value={rec.CustomField2 || ""}
                                       placeholder={t("c2")}
                                       onChange={(e) => handleUpdateRecipientField(rec.id, "CustomField2", e.target.value)}
                                       className="w-1/3 px-1 py-1 text-[10px] border border-slate-300 dark:border-[#323130] bg-white dark:bg-[#11100f] rounded focus:outline-none text-slate-800 dark:text-slate-100 placeholder-slate-405"
                                     />
-                                    <input
+                                    <input data-crm-field="control"
                                       type="text"
                                       value={rec.CustomField3 || ""}
                                       placeholder={t("c3")}
@@ -1182,7 +1182,7 @@ placeholder={t("e.g., 2026-06-15")}
                             <td className="p-3 text-center" onClick={(e) => e.stopPropagation()}>
                               <div className="flex items-center justify-center gap-1.5 w-16">
                                 {editingRecipientId === rec.id ? (
-                                  <button
+                                  <button data-crm-button=""
                                     type="button"
                                     onClick={() => setEditingRecipientId(null)}
                                     className="text-emerald-500 hover:text-emerald-600 hover:bg-emerald-50 dark:hover:bg-emerald-950/20 p-1.5 rounded transition-colors cursor-pointer"
@@ -1191,7 +1191,7 @@ placeholder={t("e.g., 2026-06-15")}
                                     <Check className="w-3.5 h-3.5 animate-bounce" />
                                   </button>
                                 ) : (
-                                  <button
+                                  <button data-crm-button=""
                                     type="button"
                                     onClick={() => setEditingRecipientId(rec.id)}
                                     className="text-[#0078D4] hover:text-[#006cc0] hover:bg-blue-50 dark:hover:bg-blue-950/20 p-1.5 rounded transition-colors cursor-pointer"
@@ -1200,7 +1200,7 @@ placeholder={t("e.g., 2026-06-15")}
                                     <Edit3 className="w-3.5 h-3.5" />
                                   </button>
                                 )}
-                                <button
+                                <button data-crm-button=""
                                   type="button"
                                   onClick={() => {
                                     const newList = recipients.filter((r) => r.id !== rec.id);
@@ -1234,14 +1234,14 @@ placeholder={t("e.g., 2026-06-15")}
 
           {/* Manual Email Input addition container */}
           <div className="mt-4 border border-[#EDEBE9] dark:border-[#323130] rounded p-4 bg-[#F3F2F1]/30 dark:bg-[#11100f]/15 space-y-3">
-            <h4 className="text-xs font-bold text-slate-800 dark:text-slate-200 flex items-center justify-between">
+            <h4 data-crm-heading="section" className="text-xs font-bold text-slate-800 dark:text-slate-200 flex items-center justify-between">
               <span>{t("Add Recipient Manually")}</span>
               <span className="text-[10px] text-slate-400 font-normal">{t("Enter details instantly")}</span>
             </h4>
-            <form onSubmit={handleAddManualRecipient} className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+            <form data-crm-flow="" data-crm-grid="form" onSubmit={handleAddManualRecipient} className="grid grid-cols-2 lg:grid-cols-4 gap-3">
               <div>
-<label className="text-[10px] uppercase text-slate-400 font-bold block mb-1">{t("First Name")}</label>
-                <input
+<label data-crm-label="" className="text-[10px] uppercase text-slate-400 font-bold block mb-1">{t("First Name")}</label>
+                <input data-crm-field="control"
                   type="text"
 placeholder={t("John")}
                   value={manFirstName}
@@ -1250,8 +1250,8 @@ placeholder={t("John")}
                 />
               </div>
               <div>
-<label className="text-[10px] uppercase text-slate-400 font-bold block mb-1">{t("Last Name")}</label>
-                <input
+<label data-crm-label="" className="text-[10px] uppercase text-slate-400 font-bold block mb-1">{t("Last Name")}</label>
+                <input data-crm-field="control"
                   type="text"
 placeholder={t("Doe")}
                   value={manLastName}
@@ -1260,10 +1260,10 @@ placeholder={t("Doe")}
                 />
               </div>
               <div>
-                <label className="text-[10px] uppercase text-slate-450 font-bold block mb-1 text-slate-700 dark:text-slate-300">
+                <label data-crm-label="" className="text-[10px] uppercase text-slate-450 font-bold block mb-1 text-slate-700 dark:text-slate-300">
 {t("Email")} <span className="text-rose-500 font-bold">*</span>
                 </label>
-                <input
+                <input data-crm-field="control"
                   type="email"
 placeholder={t("johndoe@email.com")}
                   value={manEmail}
@@ -1273,8 +1273,8 @@ placeholder={t("johndoe@email.com")}
                 />
               </div>
               <div>
-<label className="text-[10px] uppercase text-slate-400 font-bold block mb-1">{t("Company")}</label>
-                <input
+<label data-crm-label="" className="text-[10px] uppercase text-slate-400 font-bold block mb-1">{t("Company")}</label>
+                <input data-crm-field="control"
                   type="text"
 placeholder={t("ACME Corp")}
                   value={manCompany}
@@ -1283,8 +1283,8 @@ placeholder={t("ACME Corp")}
                 />
               </div>
               <div>
-<label className="text-[10px] uppercase text-slate-400 font-bold block mb-1">{t("Department")}</label>
-                <input
+<label data-crm-label="" className="text-[10px] uppercase text-slate-400 font-bold block mb-1">{t("Department")}</label>
+                <input data-crm-field="control"
                   type="text"
 placeholder={t("Marketing")}
                   value={manDept}
@@ -1293,8 +1293,8 @@ placeholder={t("Marketing")}
                 />
               </div>
               <div>
-<label className="text-[10px] uppercase text-slate-400 font-bold block mb-1">{t("Address (City/Street)")}</label>
-                <input
+<label data-crm-label="" className="text-[10px] uppercase text-slate-400 font-bold block mb-1">{t("Address (City/Street)")}</label>
+                <input data-crm-field="control"
                   type="text"
 placeholder={t("e.g., London, UK")}
                   value={manAddress}
@@ -1303,8 +1303,8 @@ placeholder={t("e.g., London, UK")}
                 />
               </div>
               <div>
-<label className="text-[10px] uppercase text-slate-400 font-bold block mb-1">{t("Industry")}</label>
-                <input
+<label data-crm-label="" className="text-[10px] uppercase text-slate-400 font-bold block mb-1">{t("Industry")}</label>
+                <input data-crm-field="control"
                   type="text"
 placeholder={t("e.g., Technology")}
                   value={manIndustry}
@@ -1313,8 +1313,8 @@ placeholder={t("e.g., Technology")}
                 />
               </div>
               <div>
-<label className="text-[10px] uppercase text-indigo-500 font-bold block mb-1">{t("Scheduled Date & Time")}</label>
-                <input
+<label data-crm-label="" className="text-[10px] uppercase text-indigo-500 font-bold block mb-1">{t("Scheduled Date & Time")}</label>
+                <input data-crm-field="control"
                   type="datetime-local"
                   value={manScheduledDate}
                   onChange={(e) => setManScheduledDate(e.target.value)}
@@ -1322,8 +1322,8 @@ placeholder={t("e.g., Technology")}
                 />
               </div>
               <div>
-<label className="text-[10px] uppercase text-slate-400 font-bold block mb-1">{t("Custom 1")}</label>
-                <input
+<label data-crm-label="" className="text-[10px] uppercase text-slate-400 font-bold block mb-1">{t("Custom 1")}</label>
+                <input data-crm-field="control"
                   type="text"
 placeholder={t("Merge Tag 1")}
                   value={manField1}
@@ -1332,8 +1332,8 @@ placeholder={t("Merge Tag 1")}
                 />
               </div>
               <div>
-<label className="text-[10px] uppercase text-slate-400 font-bold block mb-1">{t("Custom 2")}</label>
-                <input
+<label data-crm-label="" className="text-[10px] uppercase text-slate-400 font-bold block mb-1">{t("Custom 2")}</label>
+                <input data-crm-field="control"
                   type="text"
 placeholder={t("Merge Tag 2")}
                   value={manField2}
@@ -1342,8 +1342,8 @@ placeholder={t("Merge Tag 2")}
                 />
               </div>
               <div>
-<label className="text-[10px] uppercase text-slate-400 font-bold block mb-1">{t("Custom 3")}</label>
-                <input
+<label data-crm-label="" className="text-[10px] uppercase text-slate-400 font-bold block mb-1">{t("Custom 3")}</label>
+                <input data-crm-field="control"
                   type="text"
 placeholder={t("Merge Tag 3")}
                   value={manField3}
@@ -1352,7 +1352,7 @@ placeholder={t("Merge Tag 3")}
                 />
               </div>
               <div className="flex items-end">
-                <button
+                <button data-crm-button=""
                   type="submit"
                   className="w-full bg-[#0078D4] hover:bg-[#006cc0] text-white font-bold text-xs py-2 px-3 rounded transition-all cursor-pointer shadow-sm flex items-center justify-center gap-1.5 h-[34px]"
                 >
@@ -1374,16 +1374,16 @@ placeholder={t("Merge Tag 3")}
         </div>
 
         {/* Email Composer and Attachments */}
-        <div className="bg-white dark:bg-[#1b1a19] border border-[#EDEBE9] dark:border-[#323130] rounded p-6 shadow-sm space-y-4">
+        <div data-crm-stack="" data-crm-card="padded" className="bg-white dark:bg-[#1b1a19] border border-[#EDEBE9] dark:border-[#323130] rounded p-6 shadow-sm space-y-4">
           <div className="flex items-center justify-between gap-4 border-b border-[#EDEBE9] dark:border-[#323130] pb-3">
             <div>
-              <h3 className="text-sm font-semibold text-slate-800 dark:text-slate-100 flex items-center gap-2">
+              <h3 data-crm-heading="section" className="text-sm font-semibold text-slate-800 dark:text-slate-100 flex items-center gap-2">
                 <Type className="w-4.5 h-4.5 text-[#0078D4]" />
 {t("2. Email Template Composer")}
               </h3>
               <p className="text-xs text-slate-500 dark:text-slate-400">{t("Formulate rich HTML body templates with placement parameters")}</p>
             </div>
-            <button
+            <button data-crm-button=""
               id="btn-composer-help"
               onClick={() => setShowEditorHelp(!showEditorHelp)}
               className="text-[11px] text-[#0078D4] dark:text-brand-300 hover:underline flex items-center gap-1 font-bold"
@@ -1394,7 +1394,7 @@ placeholder={t("Merge Tag 3")}
           </div>
 
           {showEditorHelp && (
-            <div className="p-3.5 rounded bg-[#F3F2F1] dark:bg-[#252423] border border-[#EDEBE9] dark:border-[#323130] text-xs text-slate-600 dark:text-slate-300 leading-relaxed grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div data-crm-grid="layout" className="p-3.5 rounded bg-[#F3F2F1] dark:bg-[#252423] border border-[#EDEBE9] dark:border-[#323130] text-xs text-slate-600 dark:text-slate-300 leading-relaxed grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
 <strong>{t("Supported HTML formatting parameters:")}</strong>
                 <ul className="list-disc pl-4 mt-1 space-y-1 text-slate-500 font-mono text-[10px]">
@@ -1416,8 +1416,8 @@ placeholder={t("Merge Tag 3")}
 
           {/* Subject string */}
           <div className="space-y-1.5">
-            <label className="text-[10px] font-bold text-slate-405 uppercase tracking-wider block">{t("Subject Line")}</label>
-            <input
+            <label data-crm-label="" className="text-[10px] font-bold text-slate-405 uppercase tracking-wider block">{t("Subject Line")}</label>
+            <input data-crm-field="control"
               id="composer-subject-input"
               type="text"
               value={subject}
@@ -1429,13 +1429,13 @@ placeholder={t("e.g., Exclusive Corporate Partnership Update for {{Company}}")}
 
           {/* Drag merge tag actions row */}
           <div className="space-y-2">
-            <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider flex items-center gap-1">
+            <label data-crm-label="" className="text-[10px] font-bold text-slate-400 uppercase tracking-wider flex items-center gap-1">
               <Sparkles className="w-3.5 h-3.5 text-[#0078D4]" />
               {t("Click metadata chips to inject parameter:")}
             </label>
             <div className="flex flex-wrap gap-1.5">
               {mergeTags.map((tag) => (
-                <button
+                <button data-crm-button=""
                   id={`chip-tag-${tag}`}
                   key={tag}
                   onClick={() => insertMergeTag(tag)}
@@ -1449,23 +1449,23 @@ placeholder={t("e.g., Exclusive Corporate Partnership Update for {{Company}}")}
           </div>
 
           {/* HTML Quick Formats Bar */}
-          <div className="bg-[#F3F2F1] dark:bg-[#11100f] border border-[#EDEBE9] dark:border-[#323130] rounded px-2.5 py-1.5 flex items-center justify-between">
+          <div data-crm-editor-tools className="bg-[#F3F2F1] dark:bg-[#11100f] border border-[#EDEBE9] dark:border-[#323130] rounded px-2.5 py-1.5 flex items-center justify-between">
             <div className="flex items-center gap-1">
-              <button
+              <button data-crm-button=""
                 title={t("Bold")}
                 onClick={() => applyFormat("<b>", "</b>")}
                 className="editor-bubble-btn text-xs font-bold font-mono"
               >
                 B
               </button>
-              <button
+              <button data-crm-button=""
                 title={t("Italic")}
                 onClick={() => applyFormat("<i>", "</i>")}
                 className="editor-bubble-btn text-xs italic font-serif"
               >
                 I
               </button>
-              <button
+              <button data-crm-button=""
                 title={t("Underline")}
                 onClick={() => applyFormat("<u>", "</u>")}
                 className="editor-bubble-btn text-xs underline"
@@ -1473,21 +1473,21 @@ placeholder={t("e.g., Exclusive Corporate Partnership Update for {{Company}}")}
                 U
               </button>
               <div className="w-px h-4 bg-slate-200 dark:bg-slate-805 mx-1"></div>
-              <button
+              <button data-crm-button=""
                 title={t("Paragraph")}
                 onClick={() => applyFormat("<p>", "</p>")}
                 className="editor-bubble-btn text-xs font-semibold"
               >
                 P
               </button>
-              <button
+              <button data-crm-button=""
                 title={t("Header 2")}
                 onClick={() => applyFormat("<h2>", "</h2>")}
                 className="editor-bubble-btn text-xs font-bold"
               >
                 H2
               </button>
-              <button
+              <button data-crm-button=""
                 title={t("Link")}
                 onClick={() => applyFormat('<a href="https://">', "</a>")}
                 className="editor-bubble-btn text-xs font-mono"
@@ -1500,8 +1500,8 @@ placeholder={t("e.g., Exclusive Corporate Partnership Update for {{Company}}")}
 
           {/* HTML editor body */}
           <div className="space-y-1.5">
-            <label className="text-[10px] font-bold text-slate-405 uppercase tracking-wider block">{t("HTML Rich text content")}</label>
-            <textarea
+            <label data-crm-label="" className="text-[10px] font-bold text-slate-405 uppercase tracking-wider block">{t("HTML Rich text content")}</label>
+            <textarea data-crm-field="multiline"
               id="composer-body-textarea"
               ref={textAreaRef}
               value={templateBody}
@@ -1520,7 +1520,7 @@ placeholder={t("e.g., Exclusive Corporate Partnership Update for {{Company}}")}
                   <Sparkles className="w-3.5 h-3.5" />
                 </div>
                 <div>
-                  <h4 className="text-xs font-bold text-slate-800 dark:text-slate-200 flex items-center gap-1.5 leading-none">
+                  <h4 data-crm-heading="section" className="text-xs font-bold text-slate-800 dark:text-slate-200 flex items-center gap-1.5 leading-none">
                     {t("Gemini AI Strategy Assistant")}
                     <span className="bg-amber-100 text-amber-800 dark:bg-amber-900/60 dark:text-amber-300 text-[9px] px-1.5 py-0.5 rounded font-bold uppercase tracking-wide">{t("Pro Draft Tool")}</span>
                   </h4>
@@ -1545,8 +1545,8 @@ placeholder={t("e.g., Exclusive Corporate Partnership Update for {{Company}}")}
             )}
 
             <div className="space-y-1.5">
-              <label htmlFor="ai-assist-prompt" className="text-[10px] font-bold text-slate-450 uppercase tracking-wider block">{t("AI Copy Directions & Copywriting Strategy")}</label>
-              <input
+              <label data-crm-label="" htmlFor="ai-assist-prompt" className="text-[10px] font-bold text-slate-450 uppercase tracking-wider block">{t("AI Copy Directions & Copywriting Strategy")}</label>
+              <input data-crm-field="control"
                 id="ai-assist-prompt"
                 type="text"
                 placeholder={t("e.g., exciting product update, friendly payment reminder, high-interest marketing outreach")}
@@ -1557,7 +1557,7 @@ placeholder={t("e.g., Exclusive Corporate Partnership Update for {{Company}}")}
             </div>
 
             <div className="flex flex-wrap items-center gap-2">
-              <button
+              <button data-crm-button=""
                 id="btn-ai-write-draft"
                 type="button"
                 onClick={() => handleAiAssist("write")}
@@ -1581,7 +1581,7 @@ placeholder={t("e.g., Exclusive Corporate Partnership Update for {{Company}}")}
                 )}
               </button>
 
-              <button
+              <button data-crm-button=""
                 id="btn-ai-polish-mail"
                 type="button"
                 onClick={() => handleAiAssist("polish")}
@@ -1601,12 +1601,12 @@ placeholder={t("e.g., Exclusive Corporate Partnership Update for {{Company}}")}
 
           {/* Attachments Upload section */}
           <div className="space-y-3 pt-3 border-t border-[#EDEBE9] dark:border-[#323130]">
-            <label className="text-[10px] font-bold text-slate-405 uppercase tracking-wider block">
+            <label data-crm-label="" className="text-[10px] font-bold text-slate-405 uppercase tracking-wider block">
               {t("3. Campaign Attachments (Included on all sends)")}
             </label>
             
             {attachments.length > 0 && (
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 mb-3">
+              <div data-crm-flow="" data-crm-grid="layout" className="grid grid-cols-1 sm:grid-cols-2 gap-2 mb-3">
                 {attachments.map((file) => (
                   <div
                     key={file.name}
@@ -1619,7 +1619,7 @@ placeholder={t("e.g., Exclusive Corporate Partnership Update for {{Company}}")}
                         <p className="text-[10px] text-slate-400 font-medium">{(file.size / 1024).toFixed(1)}{t(" KB")}</p>
                       </div>
                     </div>
-                    <button
+                    <button data-crm-button=""
                       id={`btn-del-file-${file.name}`}
                       onClick={() => deleteAttachment(file.name)}
                       className="text-slate-400 hover:text-rose-500 p-1 rounded hover:bg-slate-200 dark:hover:bg-slate-800 transition-colors"
@@ -1648,7 +1648,7 @@ placeholder={t("e.g., Exclusive Corporate Partnership Update for {{Company}}")}
                 <div className="text-left">
                   <p className="text-xs font-bold text-slate-700 dark:text-slate-200">
                     {t("Drag and drop attachments or")}{" "}
-                    <button
+                    <button data-crm-button=""
                       id="btn-attachment-browse"
                       onClick={() => attachmentInputRef.current?.click()}
                       className="text-[#0078D4] underline font-bold hover:text-[#006cc0] inline cursor-pointer animate-pulse"
@@ -1673,12 +1673,12 @@ placeholder={t("e.g., Exclusive Corporate Partnership Update for {{Company}}")}
       </div>
 
       {/* Right Column - Personalized visual preview & summaries */}
-      <div className="lg:col-span-4 space-y-6">
+      <div data-crm-stack="" className="lg:col-span-4 space-y-6">
         
         {/* Visual Live card merge preview */}
-        <div className="bg-white dark:bg-[#1b1a19] border border-[#EDEBE9] dark:border-[#323130] rounded p-6 shadow-sm sticky top-6 space-y-5">
+        <div data-crm-stack="" data-crm-card="padded" className="bg-white dark:bg-[#1b1a19] border border-[#EDEBE9] dark:border-[#323130] rounded p-6 shadow-sm sticky top-6 space-y-5">
           <div>
-            <h3 className="text-sm font-semibold text-slate-800 dark:text-slate-100 flex items-center gap-2">
+            <h3 data-crm-heading="section" className="text-sm font-semibold text-slate-800 dark:text-slate-100 flex items-center gap-2">
               <Eye className="w-4.5 h-4.5 text-[#0078D4]" />
 {t("Live Merge Preview")}
             </h3>
@@ -1710,7 +1710,7 @@ placeholder={t("e.g., Exclusive Corporate Partnership Update for {{Company}}")}
             {/* Simulated Live preview iframe / HTML panel */}
             <div className="p-5 min-h-[160px] bg-white dark:bg-[#1b1a19] text-xs text-slate-800 dark:text-slate-300 leading-relaxed font-sans">
               {templateBody ? (
-                <div
+                <div data-crm-document="true"
                   className="prose prose-sm dark:prose-invert max-w-none space-y-2 text-slate-700 dark:text-slate-300"
                   dangerouslySetInnerHTML={{ __html: renderedBodyHTML }}
                 />
@@ -1723,7 +1723,7 @@ placeholder={t("e.g., Exclusive Corporate Partnership Update for {{Company}}")}
               {/* Attachments footer in preview */}
               {attachments.length > 0 && (
                 <div className="mt-6 pt-4 border-t border-[#EDEBE9] dark:border-[#323130]">
-                  <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block mb-1.5">{t("Attachments Enclosed")}</span>
+                  <span data-crm-caption="" className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block mb-1.5">{t("Attachments Enclosed")}</span>
                   <div className="flex flex-wrap gap-1.5">
                     {attachments.map((file) => (
                       <span
@@ -1755,7 +1755,7 @@ placeholder={t("e.g., Exclusive Corporate Partnership Update for {{Company}}")}
                     <span>{t("Formatting warning: Subject line or Email body is currently empty. You can still proceed to preview the distribution queue, configure dispatch method, and save draft.")}</span>
                   </div>
                 )}
-                <button
+                <button data-crm-button=""
                   id="btn-launch-campaign-designer"
                   onClick={onLaunchCampaign}
                   className="w-full bg-[#0078D4] hover:bg-[#006cc0] text-white font-bold text-xs py-3 px-4 rounded shadow-sm transition-all flex items-center justify-center gap-2 cursor-pointer"
