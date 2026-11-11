@@ -3,6 +3,7 @@ import { useLanguage } from "../lib/LanguageContext";
 import { getSystemCurrency, formatSystemNumber } from "../lib/currencyHelper";
 import {
   FileText,
+  Copy,
   Search,
   Filter,
   ArrowUpRight,
@@ -30,6 +31,7 @@ import {
 } from "lucide-react";
 import { Proposal, ProposalVersion, ProposalOption, ProposalTemplate, ProposalTimelineEvent, ProposalAuditLog, ProposalApprovalStatus } from "../types/proposal";
 import { PROPOSAL_PLACEHOLDERS } from "../lib/proposalPlaceholderEngine";
+import ProposalActionsMenu from "./ProposalActionsMenu";
 import ProposalFormModal from "./ProposalFormModal";
 import ProposalLetterheadBody from "./ProposalLetterheadBody";
 import { Company } from "./CompaniesView";
@@ -359,6 +361,7 @@ export default function ProposalManagementView() {
   // geri dolduruyor ve kaydedince yeni bir kayıt değil AYNI teklifi
   // güncelliyor (bkz. ServicesView.tsx revisingProposalId).
   const handleReviseInWizard = (proposal: Proposal) => {
+    CrmDb.setKv("crm_copy_proposal_id", "");
     CrmDb.setKv("crm_revise_proposal_id", proposal.id);
     window.dispatchEvent(new CustomEvent("crm-navigate", { detail: { tab: "create-proposal" } }));
   };
@@ -398,7 +401,7 @@ export default function ProposalManagementView() {
     const restoredProposal: Proposal = {
       ...proposal,
       currentVersion: ver.version,
-      ...Object.fromEntries(["coverPage", "activityTableHtml", "serviceName", "serviceCode", "methodology", "projectPlan", "timeline", "terms", "coverImage", "pageImage"].filter(key => Object.prototype.hasOwnProperty.call(ver, key)).map(key => [key, ver[key]])),
+      ...Object.fromEntries(["coverPage", "activityTableHtml", "serviceName", "serviceCode", "methodology", "projectPlan", "timeline", "terms", "coverImage", "pageImage", "documentHtml", "documentSource", "companyName", "contactPerson", "contactEmail", "clientAddress"].filter(key => Object.prototype.hasOwnProperty.call(ver, key)).map(key => [key, ver[key]])),
       proposalSubject: ver.subject,
       currency: ver.currency as any,
       options: ver.options,
@@ -409,7 +412,8 @@ export default function ProposalManagementView() {
       lastUpdate: new Date().toISOString()
     };
 
-    setProposals((prev) => prev.map((p) => (p.id === proposal.id ? restoredProposal : p)));
+    // Viewing history must never persist an older version over the latest record.
+    setViewingProposalDoc(restoredProposal);
   };
 
   // Microsoft Graph Outlook Dispatcher trigger
@@ -1066,81 +1070,21 @@ export default function ProposalManagementView() {
                       {p.currency} {formatSystemNumber(p.grandTotal)}
                     </td>
                     <td className="p-3 text-center" onClick={(e) => e.stopPropagation()}>
-                      <div className="flex items-center justify-center gap-2">
-                        
-                        {/* Edit Opportunity Button */}
-                        <button
-                          onClick={() => handleEditProposal(p)}
-                          className="p-1.5 hover:bg-slate-100 dark:hover:bg-zinc-800 text-slate-650 dark:text-zinc-400 rounded cursor-pointer"
-                          title={t("Edit Opportunity & Proposal Details")}
-                        >
-                          <Edit className="w-3.5 h-3.5" />
-                        </button>
- 
-                        {/* Revize Et — Teklif Oluştur sihirbazına yönlendirip tüm alanları geri yükler */}
-                        <button
-                          onClick={() => handleReviseInWizard(p)}
-                          className="p-1.5 hover:bg-emerald-50 text-emerald-600 dark:hover:bg-green-955/20 rounded cursor-pointer"
-                          title={t("Revise this proposal in the wizard")}
-                        >
-                          <RefreshCw className="w-3.5 h-3.5" />
-                        </button>
- 
-                        {/* Sparkles / Gemini Advisor Trigger */}
-                        <button
-                          onClick={() => handleRunAiAnalysis(p)}
-                          className="p-1.5 hover:bg-gradient-to-r hover:from-amber-500 hover:to-orange-500 hover:text-white text-orange-600 dark:hover:bg-amber-955 rounded cursor-pointer"
-                          title={t("Run Gemini Sales & Strategy Risk Assessment")}
-                        >
-                          <Sparkles className="w-3.5 h-3.5" />
-                        </button>
- 
-                        {/* Dispatch Outlook Panel Button */}
-                        <button
-                          onClick={() => handleOpenSendPanel(p)}
-                          className="p-1.5 hover:bg-blue-50 text-blue-600 dark:hover:bg-blue-955/35 rounded cursor-pointer"
-                          title={t("Draft proposal presentation email & sync with Outlook")}
-                        >
-                          <Send className="w-3.5 h-3.5" />
-                        </button>
- 
-                        {/* Download PDF (primary format — user asked for PDF over Word where possible) */}
-                        <button
-                          onClick={() => handleDownloadPdf(p)}
-                          className="p-1.5 hover:bg-emerald-50 text-emerald-700 dark:hover:bg-emerald-955/20 rounded cursor-pointer"
-                          title={t("Download Proposal as PDF")}
-                        >
-                          <FileText className="w-3.5 h-3.5" />
-                        </button>
-
-                        {/* Download Word Doc */}
-                        <button
-                          onClick={() => handleDownloadWordDoc(p)}
-                          className="p-1.5 hover:bg-amber-50 text-amber-700 dark:hover:bg-amber-955/20 rounded cursor-pointer"
-                          title={t("Download Word Document Proposal/Contract Template")}
-                        >
-                          <Download className="w-3.5 h-3.5" />
-                        </button>
-
-                        {/* Live document rendering Preview */}
-                        <button
-                          onClick={() => setViewingProposalDoc(p)}
-                          className="p-1.5 hover:bg-slate-100 dark:hover:bg-zinc-800 text-slate-500 rounded cursor-pointer"
-                          title={t("Live Letterhead Render Preview")}
-                        >
-                          <Eye className="w-3.5 h-3.5" />
-                        </button>
- 
-                        {/* Delete Proposal */}
-                        <button
-                          onClick={() => handleDeleteProposal(p.id)}
-                          className="p-1.5 hover:bg-red-55/15 text-red-650 dark:hover:bg-red-955/20 rounded cursor-pointer"
-                          title={t("Delete Proposal")}
-                        >
-                          <Trash2 className="w-3.5 h-3.5" />
-                        </button>
- 
-                      </div>
+                      <ProposalActionsMenu proposalNumber={p.proposalNumber} actions={[
+                        { label: "Sihirbazda revize et", icon: <RefreshCw size={15} />, run: () => handleReviseInWizard(p) },
+                        { label: "Kopya oluştur", icon: <Copy size={15} />, run: () => {
+                          CrmDb.setKv("crm_revise_proposal_id", "");
+                          CrmDb.setKv("crm_copy_proposal_id", p.id);
+                          window.dispatchEvent(new CustomEvent("crm-navigate", { detail: { tab: "create-proposal" } }));
+                        } },
+                        { label: "Teklif detaylarını düzenle", icon: <Edit size={15} />, run: () => handleEditProposal(p) },
+                        { label: "Önizle", icon: <Eye size={15} />, run: () => setViewingProposalDoc(p) },
+                        { label: "PDF indir", icon: <FileText size={15} />, run: () => { void handleDownloadPdf(p); } },
+                        { label: "Word indir", icon: <Download size={15} />, run: () => { void handleDownloadWordDoc(p); } },
+                        { label: "E-posta gönder", icon: <Send size={15} />, run: () => handleOpenSendPanel(p) },
+                        { label: "Yapay zekâ analizi", icon: <Sparkles size={15} />, run: () => { void handleRunAiAnalysis(p); } },
+                        { label: "Teklifi sil", icon: <Trash2 size={15} />, danger: true, run: () => handleDeleteProposal(p.id) },
+                      ]} />
                     </td>
                   </tr>
                 ))

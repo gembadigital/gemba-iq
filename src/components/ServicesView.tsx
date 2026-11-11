@@ -75,6 +75,7 @@ import { formatSystemNumber } from "../lib/currencyHelper";
 import importedServiceCatalog from "../data/serviceCatalog.json";
 import { serviceDefinitionBlocks } from "../lib/serviceDefinition";
 import type { ProposalOption } from "../types/proposal";
+import { nextProposalVersion, proposalContentKey, copyProposalForWizard, proposalOptionRows } from "../lib/proposalSnapshot";
 import { buildProposalDocument } from "../lib/proposalDocument";
 import { renderElementToPdfBase64 } from "../lib/htmlToPdf";
 
@@ -196,7 +197,7 @@ export const OptionRowEditor: React.FC<OptionRowEditorProps> = ({ rows, onChange
     <div className="space-y-3 pt-3 border-t border-slate-200 dark:border-zinc-800">
       <div className="flex items-center justify-between">
         <span className="text-[10px] font-black uppercase text-slate-500 tracking-wider">
-          {optionLabel} Teklif Tablosu Kalemleri ({"{{Teklif" + optionLabel.slice(-1) + "Tablo}}"})
+          {optionLabel} Teklif Tablosu Kalemleri
         </span>
         <button
           type="button"
@@ -561,9 +562,14 @@ export default function ServicesView({
   // yeni kayıt yerine bu id'yi koruyarak günceller (bkz. loadProposalForRevision
   // aşağıda, ve handleCreateAndSaveProposal içindeki kullanım).
   const [revisingProposalId, setRevisingProposalId] = useState<string | null>(null);
+  // Saved customer content remains authoritative for the whole wizard session.
+  const savedProposalRef = useRef<any>(null);
+  const manualDocumentRef = useRef<{ html: string; source: string } | null>(null);
+  const savingProposalRef = useRef(false);
 
   // Dynamic proposal sequence calculation from proposal archive
   useEffect(() => {
+    if (savedProposalRef.current) return;
     const list = CrmDb.getProposals();
     let maxSeq = 43; // Default highest sequence in standard seed demo
     if (list.length > 0) {
@@ -657,13 +663,7 @@ export default function ServicesView({
   const [serviceFilterQuery, setServiceFilterQuery] = useState("");
   const [toastMessage, setToastMessage] = useState<string | null>(null);
 
-  // "CRM'e Kaydet" butonunun çalışıp çalışmadığı belli olmuyordu — tek geri
-  // bildirim, birkaç saniyede kaybolan bir toast'tı, buton hiçbir zaman
-  // durum göstermiyordu. Artık başarılı kayıttan sonra buton kalıcı bir
-  // "Kaydedildi" durumuna geçiyor; aynı taslak (proposalNumber değişmeden)
-  // tekrar tıklanırsa yeniden kayıt/üzerine yazma yapılmıyor (bu, kaydedilen
-  // fırsatın aşamasını sessizce sıfırlayabilirdi — bkz. buildAndPersistProposal),
-  // bunun yerine "zaten kayıtlı" mesajı gösteriliyor.
+  // Subsequent saves keep the record ID and create another version.
   const [savedProposalInfo, setSavedProposalInfo] = useState<{ number: string } | null>(null);
   useEffect(() => {
     setSavedProposalInfo(null);
@@ -713,6 +713,7 @@ export default function ServicesView({
 
   // Load persistent general terms across all templates, or fall back to service default if empty
   useEffect(() => {
+    if (savedProposalRef.current) return;
     const savedGlobalTerms = CrmDb.getKv("crm_persistent_general_terms", "");
     if (savedGlobalTerms) {
       setWizardTermsAndConditions(savedGlobalTerms);
@@ -799,31 +800,17 @@ export default function ServicesView({
     });
   };
 
-  // Kullanıcı hatası: "teklifi revize et fonksiyonu sadece müşteri ismine
-  // göre teklif bilgilerini getiriyor. opsiyonları, opsiyon içeriklerini,
-  // birim fiyat vb gibi bilgileri getirmiyor." Kök neden: aşağıdaki
-  // "Auto-sync cover letter whenever chosen card changes" effect'i
-  // (bkz. [selectedCardId, selectedService] dependency'li useEffect),
-  // loadProposalForRevision'ın setSelectedCardId çağrısı yüzünden HEMEN
-  // ardından tekrar tetikleniyor ve az önce yüklenen opsiyon adı/açıklama/
-  // satır/kapak verisini o hizmet kartının kayıtlı ŞABLON varsayılanlarıyla
-  // sessizce EZİYORDU — bu yüzden sadece o effect'in dokunmadığı alanlar
-  // (müşteri adı, tarih, sorumlu vb.) doğru geliyordu. Bu ref, revizyon
-  // yüklemesinden hemen sonra o effect'in bir kerelik bu ezme davranışını
-  // atlamasını sağlar (bkz. effect içindeki kullanım).
-  const skipTemplateAutoSyncRef = useRef(false);
-
-  // Kullanıcı talebi: "teklif bir kere oluşturulduktan sonra revize
-  // edilemiyor... Teklif yönetiminde ilgili teklifi revize et seçeneği
-  // koyarsan otomatik olarak teklif oluştura yönlendirir. tüm teklif
-  // formatı o müşteri için geri gelir... kaldığı yerden devam etsin."
+  // Hydrate the complete saved customer proposal. Catalog effects stay disabled
+  // throughout this session, including asynchronous catalog refreshes.
   const loadProposalForRevision = (proposal: any) => {
-    // Hizmet kartı eşleşip setSelectedCardId çağrılırsa aşağıdaki auto-sync
-    // effect'i tetiklenecek — bu bayrak o effect'e "bu sefer şablon
-    // varsayılanlarıyla ezme" der (effect kendini bir kerelik tüketip false'a
-    // döndürür).
-    skipTemplateAutoSyncRef.current = true;
-    setRevisingProposalId(proposal.id);
+    savedProposalRef.current = structuredClone(proposal);
+    manualDocumentRef.current = proposal.documentHtml && proposal.documentSource
+      ? { html: proposal.documentHtml, source: proposal.documentSource } : null;
+    setIsAssemblyEditable(false);
+    setLiveAssemblyHtml("");
+    setSavedProposalInfo(null);
+    setSeqNumber(String(proposal.sequenceNo || proposal.proposalNumber?.split("-").pop() || ""));
+    setRevisingProposalId(proposal.id || null);
     setClientTitle(proposal.companyName || "");
     setIsShortNameManuallyEdited(false);
     setClientAddress(proposal.clientAddress || "");
@@ -863,60 +850,25 @@ export default function ServicesView({
           }))
         : [];
 
-    // Kullanıcı hatası: "opsiyonları, opsiyon içeriklerini, birim fiyat vb
-    // gibi bilgileri getirmiyor" — kök neden, kaydedilen opsiyon nesnesinde
-    // sadece satırlar (rows) vardı, opsiyonun kendi başlığı (name) ve
-    // açıklama metni (desc) hiç saklanmıyordu; bu yüzden geri yüklerken
-    // eski/varsayılan başlık-açıklama kalıyordu. Artık her ikisi de
-    // buildAndPersistProposal içinde kaydediliyor (bkz. mappedOptions),
-    // burada da geri okunuyor. Eski (bu düzeltmeden önce kaydedilmiş)
-    // teklifler için name/desc alanları boş gelebilir — bu durumda mevcut
-    // (şablon) değer korunur, üzerine boş yazılmaz.
-    if (opts["Option 1"]) {
-      setOption1Active(true);
-      if (opts["Option 1"].name) setOption1Name(opts["Option 1"].name);
-      if (opts["Option 1"].desc) setOption1Desc(opts["Option 1"].desc);
-      if (opts["Option 1"].duration) setOption1Duration(opts["Option 1"].duration);
-      const rows = toRows(opts["Option 1"].rows);
-      if (rows.length > 0) setOption1Rows(rows);
-    } else {
-      setOption1Active(false);
-    }
-    if (opts["Option 2"]) {
-      setOption2Active(true);
-      if (opts["Option 2"].name) setOption2Name(opts["Option 2"].name);
-      if (opts["Option 2"].desc) setOption2Desc(opts["Option 2"].desc);
-      if (opts["Option 2"].duration) setOption2Duration(opts["Option 2"].duration);
-      const rows = toRows(opts["Option 2"].rows);
-      if (rows.length > 0) setOption2Rows(rows);
-    } else {
-      setOption2Active(false);
-    }
-    if (opts["Option 3"]) {
-      setOption3Active(true);
-      if (opts["Option 3"].name) setOption3Name(opts["Option 3"].name);
-      if (opts["Option 3"].desc) setOption3Desc(opts["Option 3"].desc);
-      if (opts["Option 3"].duration) setOption3Duration(opts["Option 3"].duration);
-      const rows = toRows(opts["Option 3"].rows);
-      if (rows.length > 0) setOption3Rows(rows);
-    } else {
-      setOption3Active(false);
-    }
+    // Hydrate every field, including empty or absent options; never retain demo/catalog values.
+    const setters = [
+      [setOption1Active, setOption1Name, setOption1Desc, setOption1Duration, setOption1Rows],
+      [setOption2Active, setOption2Name, setOption2Desc, setOption2Duration, setOption2Rows],
+      [setOption3Active, setOption3Name, setOption3Desc, setOption3Duration, setOption3Rows],
+    ] as const;
+    setters.forEach(([active, name, desc, duration, rows], i) => {
+      const option = opts[`Option ${i + 1}`];
+      active(!!option); name(option?.name ?? ""); desc(option?.desc ?? "");
+      duration(option?.duration ?? ""); rows(toRows(proposalOptionRows(option)));
+    });
 
     setActiveTab("wizard");
     setWizardStep(1);
-    setToastMessage(t("Loaded existing proposal for revision: {number}").replace("{number}", proposal.proposalNumber || ""));
-    setTimeout(() => setToastMessage(null), 3000);
+    const loadedMessage = t("Loaded existing proposal for revision: {number}").replace("{number}", proposal.proposalNumber || "");
+    setToastMessage(loadedMessage);
+    setTimeout(() => setToastMessage(current => current === loadedMessage ? null : current), 3000);
 
-    // Güvenlik ağı: eşleşen hizmet kartı bulunamadıysa VEYA zaten seçili
-    // olan kartla aynıysa, yukarıdaki auto-sync effect'i hiç yeniden
-    // tetiklenmeyeceği için skipTemplateAutoSyncRef bayrağını hiçbir zaman
-    // tüketmeyecek — bu durumda bayrak takılı kalıp sonraki, tamamen
-    // alakasız bir hizmet kartı değişiminde (kullanıcı elle başka kart
-    // seçtiğinde) o senkronu yanlışlıkla atlayabilirdi. Bir sonraki
-    // event loop turunda, effect zaten tüketmişse bu no-op'tur; tüketmediyse
-    // bayrağı burada temizleyerek sızıntıyı önler.
-    setTimeout(() => { skipTemplateAutoSyncRef.current = false; }, 0);
+
   };
 
   // Teklif Yönetimi'nden "Revize Et" tıklandığında (CrmDb.setKv("crm_revise_proposal_id", id)
@@ -925,10 +877,12 @@ export default function ServicesView({
   // açıkken gelen crm-navigate olayında kontrol edilir.
   useEffect(() => {
     const openFromPendingId = () => {
-      const pendingId = CrmDb.getKv("crm_revise_proposal_id", "");
+      const copyId = CrmDb.getKv("crm_copy_proposal_id", "");
+      const pendingId = copyId || CrmDb.getKv("crm_revise_proposal_id", "");
       if (pendingId) {
         const match = CrmDb.getProposals().find((p: any) => p.id === pendingId);
-        if (match) loadProposalForRevision(match);
+        if (match) loadProposalForRevision(copyId ? copyProposalForWizard(match, CrmDb.getProposals()) : match);
+        CrmDb.setKv("crm_copy_proposal_id", "");
         CrmDb.setKv("crm_revise_proposal_id", "");
       }
     };
@@ -1220,23 +1174,10 @@ export default function ServicesView({
     `;
   };
 
-  // Auto-sync cover letter whenever chosen card changes
-  //
-  // Kullanıcı hatası: "teklifi revize et fonksiyonu sadece müşteri ismine
-  // göre teklif bilgilerini getiriyor. opsiyonları, opsiyon içeriklerini,
-  // birim fiyat vb gibi bilgileri getirmiyor." Kök neden: loadProposalForRevision
-  // doğru opsiyon adı/açıklama/satır verisini yükledikten hemen sonra,
-  // kendi setSelectedCardId çağrısı bu effect'i TEKRAR tetikliyordu — bu
-  // effect de o hizmet kartının kayıtlı ŞABLON varsayılanlarını (varsa)
-  // üzerine yazarak az önce yüklenen gerçek müşteri/teklif verisini
-  // sessizce eziyordu. skipTemplateAutoSyncRef, revizyon yüklemesinden
-  // hemen sonraki bu bir kerelik tetiklenmeyi atlar (bkz. loadProposalForRevision).
+  // Catalog defaults apply only to a new proposal.
   useEffect(() => {
     if (selectedService) {
-      if (skipTemplateAutoSyncRef.current) {
-        skipTemplateAutoSyncRef.current = false;
-        return;
-      }
+      if (savedProposalRef.current) return;
       setWizardCoverPage(selectedService.defaultCoverPage);
       setWizardTableHtml(selectedService.activityTableHtml || "");
 
@@ -1263,6 +1204,7 @@ export default function ServicesView({
 
   // Auto-select uploaded template design if available for the chosen service card
   useEffect(() => {
+    if (savedProposalRef.current) return;
     if (selectedCardId && (uploadedCoverTemplates[selectedCardId] || uploadedPageTemplates[selectedCardId])) {
       setLetterheadId("uploaded_template");
     } else {
@@ -1281,15 +1223,17 @@ export default function ServicesView({
     entries.forEach(({ active, ...option }, i) => {
       if (active) options[`Option ${i + 1}`] = { ...option, training: true, consulting: true, workshop: false, expenses: 0, manDays: 0, dailyRate: 0 };
     });
-    return buildProposalDocument({
+    const document = {
       proposalNumber, date: proposalDate, companyName: clientTitle, contactPerson: clientContactPerson,
-      proposalSubject: mailSubject || selectedService.name, currency: "₺", options,
-      serviceName: selectedService.name, serviceCode: selectedService.code,
+      proposalSubject: mailSubject || selectedService.name, currency: savedProposalRef.current?.currency ?? "₺", options,
+      serviceName: savedProposalRef.current?.serviceName ?? selectedService.name, serviceCode: savedProposalRef.current?.serviceCode ?? selectedService.code,
       coverPage: wizardCoverPage, description: "", activityTableHtml: wizardTableHtml,
       terms: wizardTermsAndConditions,
-      coverImage: inMemoryCoverTemplates[selectedCardId] || "/cover.png",
-      pageImage: inMemoryPageTemplates[selectedCardId] || "/page.png",
-    });
+      coverImage: savedProposalRef.current?.coverImage ?? (inMemoryCoverTemplates[selectedCardId] || "/cover.png"),
+      pageImage: savedProposalRef.current?.pageImage ?? (inMemoryPageTemplates[selectedCardId] || "/page.png"),
+    };
+    const manual = manualDocumentRef.current;
+    return buildProposalDocument({ ...document, documentHtml: manual?.html, documentSource: manual?.source });
   };
 
   // Sync email templates changes to local storage
@@ -1299,6 +1243,7 @@ export default function ServicesView({
 
   // Compile mail template variables reactively based on placeholders
   useEffect(() => {
+    if (savedProposalRef.current) return;
     const template = emailTemplates.find(t => t.id === selectedEmailTemplateId);
     if (template && selectedService) {
       let sub = template.subject;
@@ -1361,7 +1306,7 @@ export default function ServicesView({
   // Builds the Proposal + Deal records and writes them into CrmDb. Shared by
   // the plain "Save" action and the real e-mail send action below, so both
   // paths persist exactly the same data instead of duplicating this logic.
-  const buildAndPersistProposal = (saveAsDraft = false): { newProposal: any; newDeal: any } | null => {
+  const buildAndPersistProposal = async (saveAsDraft = false): Promise<{ newProposal: any; newDeal: any } | null> => {
     if (!clientTitle.trim()) {
       alert(t("Please fill in the Client Legal Name field!"));
       return null;
@@ -1373,8 +1318,15 @@ export default function ServicesView({
     const existingProposal = revisingProposalId
       ? CrmDb.getProposals().find((p: any) => p.id === revisingProposalId)
       : undefined;
+    if (existingProposal && savedProposalRef.current?.id === existingProposal.id &&
+        savedProposalRef.current.lastUpdate !== existingProposal.lastUpdate) {
+      throw new Error("Bu teklif başka bir oturumda güncellendi. Son kaydı yeniden açın; değişiklikleriniz üzerine yazılmadı.");
+    }
     const proposalId = existingProposal?.id || "prop-" + Date.now();
-    const cleanSeq = parseInt(seqNumber) || 44;
+    if (CrmDb.getProposals().some(p => p.id !== proposalId && p.proposalNumber === proposalNumber)) {
+      throw new Error("Bu teklif numarası başka bir kayıtta kullanılıyor. Lütfen farklı bir numara seçin.");
+    }
+    const cleanSeq = parseInt(proposalNumber.split("-").pop() || seqNumber, 10);
 
     // Derived totals from active option pricing rows — bu formül sihirbazın
     // önizleme/PDF çıktısında her opsiyon için gösterdiği ile BİREBİR aynı
@@ -1524,11 +1476,7 @@ export default function ServicesView({
     // işaretlenir ki Teklif Yönetimi'nde "revize edildi, tekrar gönderilmeyi
     // bekliyor" ayrımı yapılabilsin — ama bu basit sürümde önceki statüyü
     // koruyoruz, sadece taslak bayrağı override eder.
-    const prevVersionNum = existingProposal?.currentVersion
-      ? parseFloat(String(existingProposal.currentVersion).replace(/^v/i, "")) || 1.0
-      : 1.0;
-    const nextVersionNum = existingProposal ? Math.round((prevVersionNum + 0.1) * 10) / 10 : 1.0;
-    const nextVersionLabel = `v${nextVersionNum.toFixed(1)}`;
+    const nextVersionLabel = nextProposalVersion(existingProposal?.currentVersion);
     const resolvedStatus = saveAsDraft ? "Draft" : (existingProposal ? (existingProposal.status || "Draft") : "Draft");
     // Kullanıcı hatası: "eski tekliflerin hepsine [Taslak] takısı konulmuş"
     // — [Taslak] etiketi artık status="Draft" yerine bu açık bayrağa
@@ -1538,6 +1486,8 @@ export default function ServicesView({
     const resolvedIsDraft = saveAsDraft;
 
     const newProposal = {
+      ...existingProposal,
+      clientAddress,
       id: proposalId,
       sequenceNo: cleanSeq,
       proposalNumber: proposalNumber,
@@ -1547,7 +1497,7 @@ export default function ServicesView({
       contactEmail: clientContactEmail,
       proposalSubject: mailSubject.trim() || selectedService?.name || "Yalın Dönüşüm Hizmet Şablona",
       date: proposalDate,
-      currency: "₺" as const,
+      currency: savedProposalRef.current?.currency ?? "₺",
       owner: assignedPm,
       description: realDescription,
       status: resolvedStatus,
@@ -1556,8 +1506,8 @@ export default function ServicesView({
       terms: wizardTermsAndConditions || "",
       coverPage: wizardCoverPage || "",
       activityTableHtml: wizardTableHtml || "",
-      serviceName: selectedService?.name,
-      serviceCode: selectedService?.code,
+      serviceName: savedProposalRef.current?.serviceName ?? selectedService?.name,
+      serviceCode: savedProposalRef.current?.serviceCode ?? selectedService?.code,
       // Item: "her ne kadar şablon coverpng ve page.png yüklü olsa da pdf
       // görüntüsü yeşil başka bir şablon çıkıyor" — kök neden, kaydedilen
       // teklif kaydı hiçbir zaman gerçek kapak/sayfa görsellerini
@@ -1565,8 +1515,8 @@ export default function ServicesView({
       // Teklif Yönetimi'nin PDF/e-posta/önizleme akışları bu yüzden hep
       // varsayılan (bazen uyumsuz/yeşil) şablona düşüyordu. Artık gerçek
       // kullanılan görsel, kayıtla birlikte kalıcı olarak saklanıyor.
-      coverImage: inMemoryCoverTemplates[selectedCardId] || "/cover.png",
-      pageImage: inMemoryPageTemplates[selectedCardId] || "/page.png",
+      coverImage: savedProposalRef.current?.coverImage ?? (inMemoryCoverTemplates[selectedCardId] || "/cover.png"),
+      pageImage: savedProposalRef.current?.pageImage ?? (inMemoryPageTemplates[selectedCardId] || "/page.png"),
       options: mappedOptions,
       totalBudget: totalBudget,
       taxes: taxes,
@@ -1583,17 +1533,17 @@ export default function ServicesView({
             : "Teklif Sihirbazı (Proposal Wizard) ile otomatik oluşturuldu.",
           owner: assignedPm,
           subject: mailSubject.trim() || selectedService?.name || "Yalın Dönüşüm Hizmeti",
-          currency: "₺",
+          currency: savedProposalRef.current?.currency ?? "₺",
           options: mappedOptions,
           services: realServicesList,
           totalBudget: totalBudget,
           taxes: taxes,
           grandTotal: grandTotal,
           coverPage: wizardCoverPage, activityTableHtml: wizardTableHtml,
-          serviceName: selectedService?.name, serviceCode: selectedService?.code,
+          serviceName: savedProposalRef.current?.serviceName ?? selectedService?.name, serviceCode: savedProposalRef.current?.serviceCode ?? selectedService?.code,
           terms: wizardTermsAndConditions,
-          coverImage: inMemoryCoverTemplates[selectedCardId] || "/cover.png",
-          pageImage: inMemoryPageTemplates[selectedCardId] || "/page.png",
+          coverImage: savedProposalRef.current?.coverImage ?? (inMemoryCoverTemplates[selectedCardId] || "/cover.png"),
+          pageImage: savedProposalRef.current?.pageImage ?? (inMemoryPageTemplates[selectedCardId] || "/page.png"),
         }
       ],
       createdBy: existingProposal?.createdBy || assignedPm,
@@ -1604,9 +1554,19 @@ export default function ServicesView({
     let proposalsList = CrmDb.getProposals();
     // Mevcut kaydı (id ile) veya aynı teklif numarasına sahip başka bir
     // kaydı (mükerrer numara) listeden çıkar, sonra güncel/yeni kaydı başa ekle.
-    proposalsList = proposalsList.filter((p: any) => p.id !== proposalId && p.proposalNumber !== proposalNumber);
+    const rendered = assembleDocument();
+    newProposal.documentHtml = rendered;
+    newProposal.documentSource = proposalContentKey(newProposal);
+    Object.assign(newProposal.versions[newProposal.versions.length - 1], {
+      documentHtml: rendered, documentSource: newProposal.documentSource,
+      companyName: clientTitle, contactPerson: clientContactPerson, contactEmail: clientContactEmail, clientAddress,
+    });
+    proposalsList = proposalsList.filter((p: any) => p.id !== proposalId);
     proposalsList.unshift(newProposal);
-    CrmDb.saveProposals(proposalsList);
+    await CrmDb.saveProposalsConfirmed(proposalsList);
+    setRevisingProposalId(newProposal.id);
+    savedProposalRef.current = structuredClone(newProposal);
+    manualDocumentRef.current = { html: rendered, source: newProposal.documentSource };
 
     // Save/push into Deal Management Pipeline list ("smart_mailmerge_deals")
     // Revizyonda aynı fırsat kaydını YENİDEN kullan (id korunur) — her
@@ -1650,6 +1610,11 @@ export default function ServicesView({
       ]
     };
 
+    // A proposal revision must not reset the linked sales opportunity or its history.
+    if (existingDeal) Object.assign(newDeal, existingDeal, {
+      opportunityValue: totalBudget, proposalNumber, companyId: newProposal.companyId,
+      companyName: clientTitle, contactPerson: clientContactPerson, contactEmail: clientContactEmail,
+    });
     let dealsList = CrmDb.getDeals();
     // Avoid double creation of same sequence — hem eski numarayla eşleşeni
     // (mükerrer teklif no) hem de revizyonda yeniden kullanılan asıl fırsat
@@ -1671,43 +1636,35 @@ export default function ServicesView({
   // SPA underneath sits frozen. None of that popup/navigation juggling
   // happens here anymore — saving is just saving.
   const handleCreateAndSaveProposal = async (silent = false) => {
-    if (savedProposalInfo && savedProposalInfo.number === proposalNumber && !revisingProposalId) {
-      if (!silent) {
-        setToastMessage(t("This proposal is already saved in the system. (PROP-{number})").replace("{number}", savedProposalInfo.number));
-      }
-      return;
-    }
-    const result = buildAndPersistProposal(false);
-    if (!result) return;
-    setSavedProposalInfo({ number: proposalNumber });
-    // Kaydetme tamamlandı — bu artık "revize edilen" değil, güncel/kayıtlı
-    // teklif olduğundan revisingProposalId sıfırlanır. Aksi halde aynı
-    // wizard oturumunda bir sonraki "CRM'e Kaydet" yine bu id'yi yeniden
-    // kullanmaya devam eder ki bu doğrudur; ama kullanıcı proposalNumber'ı
-    // elle değiştirip TAMAMEN yeni bir teklif başlatmak isterse karışıklığı
-    // önlemek için id referansını temizliyoruz.
-    setRevisingProposalId(null);
-    if (!silent) {
-      setToastMessage(t("Proposal and opportunity saved!"));
-    }
-
+    if (savingProposalRef.current) return false;
+    savingProposalRef.current = true;
+    try {
+      const result = await buildAndPersistProposal(false);
+      if (!result) return false;
+      setSavedProposalInfo({ number: result.newProposal.proposalNumber });
+      if (!silent) setToastMessage("Teklif kaydedildi. PDF hazırlanıyor…");
     // Fix 2 ("teklif yönetiminde gösterilen pdf hala hatalı"): CRM'e Kaydet
     // anında, Teklif Yönetimi'nin kendi görüntüleme akışıyla birebir aynı
     // markalı (letterhead) PDF'i üretip Documents'a saklıyoruz. Böylece
     // Teklif Yönetimi ilk açıldığında kayıt anındaki gerçek içerikle üretilmiş
     // PDF'i gösterebilir (kendi yeniden üretimi hâlâ bir fallback olarak
     // kalır, ama artık kaynak veri kayıt anında da persist ediliyor).
-    // Kaydetme akışını bloklamasın diye hata sessizce yutuluyor — kullanıcı
-    // teklif/fırsat kaydının başarıyla oluştuğunu zaten üstteki toast'tan
-    // görüyor.
+    // Report PDF failure separately from a successfully persisted proposal.
     try {
       const pdfResult = await capturePdfForSave(result.newProposal);
-      if (pdfResult) {
-        await storeProposalPdf(result.newProposal, lang, pdfResult.blob);
-      }
+      if (!pdfResult) throw new Error("PDF oluşturulamadı.");
+      await storeProposalPdf(result.newProposal, lang, pdfResult.blob);
     } catch (err) {
       console.error("Proposal PDF store-on-save failed:", err);
+      setToastMessage("Teklif içeriği kaydedildi, ancak PDF kaydedilemedi. PDF işlemini yeniden deneyin.");
+      return false;
     }
+      if (!silent) setToastMessage("Teklif ve PDF kaydedildi.");
+      return true;
+    } catch (err) {
+      setToastMessage(err instanceof Error ? err.message : "Teklif kaydedilemedi. Lütfen yeniden deneyin.");
+      return false;
+    } finally { savingProposalRef.current = false; }
   };
 
   // Kullanıcı talebi: "teklif oluşturda taslak oluştur butonu koyarsan
@@ -1715,15 +1672,17 @@ export default function ServicesView({
   // gözükür." — bu, buildAndPersistProposal'ı saveAsDraft=true ile çağırıp
   // status'u her zaman "Draft" olarak zorlar (revizyon olsa bile), PDF
   // üretmez (taslak henüz gönderime hazır değildir) ve wizard'da kalınır.
-  const handleSaveAsDraft = () => {
-    const result = buildAndPersistProposal(true);
-    if (!result) return;
-    setSavedProposalInfo({ number: proposalNumber });
-    // Aynı taslağı tekrar tekrar "Taslak Oluştur"a basınca her seferinde
-    // mükerrer kayıt açmak yerine güncellemeye devam etsin diye id'yi
-    // referans olarak tutuyoruz.
-    setRevisingProposalId(result.newProposal.id);
-    setToastMessage(t("Saved as draft."));
+  const handleSaveAsDraft = async () => {
+    if (savingProposalRef.current) return;
+    savingProposalRef.current = true;
+    try {
+      const result = await buildAndPersistProposal(true);
+      if (!result) return;
+      setSavedProposalInfo({ number: result.newProposal.proposalNumber });
+      setToastMessage(t("Saved as draft."));
+    } catch (err) {
+      setToastMessage(err instanceof Error ? err.message : "Taslak kaydedilemedi.");
+    } finally { savingProposalRef.current = false; }
   };
 
   // Opens the user's chosen external mail client (Outlook desktop/web, Gmail)
@@ -1745,7 +1704,7 @@ export default function ServicesView({
   // the flow degrades to "PDF is on your device, attach it yourself" even
   // if the external client never opens.
   const handleOpenMailClient = async () => {
-    handleCreateAndSaveProposal(true);
+    if (!await handleCreateAndSaveProposal(true)) return;
 
     setIsExportingPdf(true);
     let pdfDownloaded = false;
@@ -2116,7 +2075,7 @@ export default function ServicesView({
       // board's "Teklif Gönderildi / Proposal Submitted" column (silent =
       // skip the print dialog and external mail client, since we already
       // sent for real).
-      handleCreateAndSaveProposal(true);
+      if (!await handleCreateAndSaveProposal(true)) return;
 
       // Log into the matched company's email history, mirroring the pattern
       // used in CompanyEmailsTab.tsx / OpportunityDrawerExtension.tsx.
@@ -2489,7 +2448,7 @@ export default function ServicesView({
                   <div className="space-y-1.5 pb-2">
                     <div className="flex items-center justify-between">
                       <label className="text-[11px] font-bold text-slate-500 dark:text-slate-400 flex items-center gap-1.5">
-                        Ürün Tablosu Düzenleme Alanı <span className="text-[9px] text-slate-450 dark:text-slate-450 font-mono bg-slate-100 dark:bg-zinc-800 px-1 py-0.5 rounded opacity-75 font-normal">{"{{EforTablosu}}"}</span> {t("(Source HTML)")}
+                        Ürün Tablosu Düzenleme Alanı  {t("(Source HTML)")}
                       </label>
                       <button 
                         type="button" 
@@ -2517,7 +2476,7 @@ export default function ServicesView({
                   <div className="space-y-1.5">
                     <label className="text-[11px] font-bold text-slate-500 dark:text-slate-400 flex items-center gap-1">
                       <FileSignature className="w-3.5 h-3.5" />
-                      Hizmete Özel Varsayılan Sözleşme Genel Şartları <span className="text-[9px] text-slate-450 dark:text-slate-450 font-mono bg-slate-100 dark:bg-zinc-800 px-1 py-0.5 rounded opacity-75 font-normal">{"{{GenelSartlar}}"}</span> {t("(Text Lines)")}
+                      Hizmete Özel Varsayılan Sözleşme Genel Şartları  {t("(Text Lines)")}
                     </label>
                     <textarea
                       rows={4}
@@ -2831,7 +2790,7 @@ export default function ServicesView({
                     <div className="space-y-4">
                       <div className="space-y-1">
                         <div className="flex items-center justify-between">
-                          <label className="text-xs font-bold text-slate-700 dark:text-slate-300">Müşteri Ticari Unvanı * <span className="text-[9px] text-slate-450 dark:text-slate-450 font-mono bg-slate-100 dark:bg-zinc-800 px-1 py-0.5 rounded opacity-75 font-normal">{"{{FirmaAdı}}"}</span></label>
+                          <label className="text-xs font-bold text-slate-700 dark:text-slate-300">Müşteri Ticari Unvanı * </label>
                           {registeredCompanies.length > 0 && (
                             <span className="text-[10px] text-[#0078D4] dark:text-[#5caff3] font-bold flex items-center gap-1 bg-blue-50 dark:bg-blue-950/20 px-1.5 py-0.5 rounded">
                               <Building className="w-3 h-3" />
@@ -2933,7 +2892,7 @@ export default function ServicesView({
 
                       <div className="grid grid-cols-2 gap-3">
                         <div className="space-y-1">
-                          <label className="text-xs font-bold text-slate-700 dark:text-slate-300">Sorumlu Kişi <span className="text-[9px] text-slate-450 dark:text-slate-450 font-mono bg-slate-100 dark:bg-zinc-800 px-1 py-0.5 rounded opacity-75 font-normal">{"{{Yönetici}}"}</span></label>
+                          <label className="text-xs font-bold text-slate-700 dark:text-slate-300">Sorumlu Kişi </label>
                           <input
                             type="text"
                             value={assignedPm}
@@ -2943,7 +2902,7 @@ export default function ServicesView({
                         </div>
 
                         <div className="space-y-1">
-                          <label className="text-xs font-bold text-slate-700 dark:text-slate-300">Teklif Tarihi <span className="text-[9px] text-slate-450 dark:text-slate-450 font-mono bg-slate-100 dark:bg-zinc-800 px-1 py-0.5 rounded opacity-75 font-normal">{"{{TeklifTarihi}}"}</span></label>
+                          <label className="text-xs font-bold text-slate-700 dark:text-slate-300">Teklif Tarihi </label>
                           <input
                             type="date"
                             value={proposalDate}
@@ -2955,7 +2914,7 @@ export default function ServicesView({
 
                       <div className="grid grid-cols-2 gap-3">
                         <div className="space-y-1">
-                          <label className="text-xs font-bold text-slate-700 dark:text-slate-300">Müşteri İlgili Kişi <span className="text-[9px] text-slate-450 dark:text-slate-450 font-mono bg-slate-100 dark:bg-zinc-800 px-1 py-0.5 rounded opacity-75 font-normal">{"{{İlgiliKişi}}"}</span></label>
+                          <label className="text-xs font-bold text-slate-700 dark:text-slate-300">Müşteri İlgili Kişi </label>
                           <input
                             type="text"
                             value={clientContactPerson}
@@ -2979,7 +2938,7 @@ export default function ServicesView({
 
                       <div className="space-y-1">
                         <div className="flex items-center justify-between">
-                          <label className="text-xs font-bold text-slate-700 dark:text-slate-300">Teklif Numarası <span className="text-[9px] text-slate-450 dark:text-slate-450 font-mono bg-slate-100 dark:bg-zinc-800 px-1 py-0.5 rounded opacity-75 font-normal">{"{{TeklifNo}}"}</span></label>
+                          <label className="text-xs font-bold text-slate-700 dark:text-slate-300">Teklif Numarası </label>
                           {isNumberManuallyEdited && (
                             <button
                               type="button"
@@ -3022,7 +2981,7 @@ export default function ServicesView({
                     {/* Right: Service Select & Cover Letter Editor! */}
                     <div className="space-y-4">
                       <div className="space-y-1">
-                        <label className="text-xs font-bold text-slate-700 dark:text-slate-300">Hizmet Seçici Dropdown <span className="text-[9px] text-slate-450 dark:text-slate-450 font-mono bg-slate-100 dark:bg-zinc-800 px-1 py-0.5 rounded opacity-75 font-normal">{"{{HizmetAdı}}"}</span> *</label>
+                        <label className="text-xs font-bold text-slate-700 dark:text-slate-300">Hizmet  *</label>
                         
                         {/* Interactive Filter Field */}
                         <div className="relative mb-2">
@@ -3049,7 +3008,11 @@ export default function ServicesView({
 
                         <select
                           value={selectedCardId}
-                          onChange={(e) => setSelectedCardId(e.target.value)}
+                          onChange={(e) => {
+                            const card = serviceCards.find(c => c.id === e.target.value);
+                            if (savedProposalRef.current && card) savedProposalRef.current = { ...savedProposalRef.current, serviceName: card.name, serviceCode: card.code };
+                            setSelectedCardId(e.target.value);
+                          }}
                           className="w-full bg-slate-50 dark:bg-[#252423] border border-[#EDEBE9] dark:border-[#323130] rounded p-2.5 text-xs font-bold text-slate-900 dark:text-white focus:ring-1 focus:ring-[#0078D4] focus:outline-hidden cursor-pointer"
                         >
                           {filteredServiceCards.map(c => (
@@ -3085,7 +3048,7 @@ export default function ServicesView({
                     <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 bg-slate-50 dark:bg-[#252423] p-3 rounded-lg border border-[#EDEBE9] dark:border-[#323130]">
                       <div className="flex items-center gap-1.5 text-xs font-black text-slate-800 dark:text-white uppercase tracking-wider">
                         <Table className="w-4 h-4 text-[#0078D4]" />
-                        <span>Süreç, Faaliyet ve Efor Tablosu Editörü <span className="text-[9px] text-slate-450 dark:text-slate-450 font-mono bg-slate-100 dark:bg-zinc-800 px-1 py-0.5 rounded opacity-75 font-normal">{"{{EforTablosu}}"}</span></span>
+                        <span>Süreç, Faaliyet ve Efor Tablosu Editörü </span>
                       </div>
                       <div className="flex items-center gap-2">
                         <button
@@ -3271,7 +3234,7 @@ export default function ServicesView({
                           </div>
                           
                           <div className="space-y-1">
-                            <label className="text-xs font-bold text-slate-700 dark:text-slate-300">Opsiyon Başlığı <span className="text-[9px] text-slate-450 dark:text-slate-450 font-mono bg-slate-100 dark:bg-zinc-800 px-1 py-0.5 rounded opacity-75 font-normal">{"{{Teklif1}}"}</span></label>
+                            <label className="text-xs font-bold text-slate-700 dark:text-slate-300">Opsiyon Başlığı </label>
                             <input
                               type="text"
                               value={option1Name}
@@ -3281,7 +3244,7 @@ export default function ServicesView({
                           </div>
 
                           <div className="space-y-1">
-                            <label className="text-xs font-bold text-slate-700 dark:text-slate-300">Kapsam Özeti & Açıklaması <span className="text-[9px] text-slate-450 dark:text-slate-450 font-mono bg-slate-100 dark:bg-zinc-800 px-1 py-0.5 rounded opacity-75 font-normal">{"{{Teklif1Açıklama}}"}</span></label>
+                            <label className="text-xs font-bold text-slate-700 dark:text-slate-300">Kapsam Özeti & Açıklaması </label>
                             <textarea
                               rows={3}
                               value={option1Desc}
@@ -3317,7 +3280,7 @@ export default function ServicesView({
                           </div>
                           
                           <div className="space-y-1">
-                            <label className="text-xs font-bold text-slate-700 dark:text-slate-300">Opsiyon Başlığı <span className="text-[9px] text-slate-450 dark:text-slate-450 font-mono bg-slate-100 dark:bg-zinc-800 px-1 py-0.5 rounded opacity-75 font-normal">{"{{Teklif2}}"}</span></label>
+                            <label className="text-xs font-bold text-slate-700 dark:text-slate-300">Opsiyon Başlığı </label>
                             <input
                               type="text"
                               value={option2Name}
@@ -3327,7 +3290,7 @@ export default function ServicesView({
                           </div>
 
                           <div className="space-y-1">
-                            <label className="text-xs font-bold text-slate-700 dark:text-slate-300">Kapsam Özeti & Açıklaması <span className="text-[9px] text-slate-450 dark:text-slate-450 font-mono bg-slate-100 dark:bg-zinc-800 px-1 py-0.5 rounded opacity-75 font-normal">{"{{Teklif2Açıklama}}"}</span></label>
+                            <label className="text-xs font-bold text-slate-700 dark:text-slate-300">Kapsam Özeti & Açıklaması </label>
                             <textarea
                               rows={3}
                               value={option2Desc}
@@ -3363,7 +3326,7 @@ export default function ServicesView({
                           </div>
                           
                           <div className="space-y-1">
-                            <label className="text-xs font-bold text-slate-700 dark:text-slate-300">Opsiyon Başlığı <span className="text-[9px] text-slate-450 dark:text-slate-450 font-mono bg-slate-100 dark:bg-zinc-800 px-1 py-0.5 rounded opacity-75 font-normal">{"{{Teklif3}}"}</span></label>
+                            <label className="text-xs font-bold text-slate-700 dark:text-slate-300">Opsiyon Başlığı </label>
                             <input
                               type="text"
                               value={option3Name}
@@ -3373,7 +3336,7 @@ export default function ServicesView({
                           </div>
 
                           <div className="space-y-1">
-                            <label className="text-xs font-bold text-slate-700 dark:text-slate-300">Kapsam Özeti & Açıklaması <span className="text-[9px] text-slate-450 dark:text-slate-450 font-mono bg-slate-100 dark:bg-zinc-800 px-1 py-0.5 rounded opacity-75 font-normal">{"{{Teklif3Açıklama}}"}</span></label>
+                            <label className="text-xs font-bold text-slate-700 dark:text-slate-300">Kapsam Özeti & Açıklaması </label>
                             <textarea
                               rows={3}
                               value={option3Desc}
@@ -3463,7 +3426,7 @@ export default function ServicesView({
                 <div id="wizard-step-3-card" className="bg-white dark:bg-[#1b1a19] p-6 rounded-lg border border-[#EDEBE9] dark:border-[#323130] shadow-sm space-y-4">
                   <div className="flex items-center gap-1.5 pb-2.5 border-b border-[#EDEBE9] dark:border-[#323130]">
                     <FileText className="w-5 h-5 text-[#0078D4]" />
-                    <span className="text-sm font-black uppercase text-slate-900 dark:text-white tracking-wider flex items-center gap-1.5">Aşama 3: Genel Ticari Şartlar <span className="text-[10px] text-slate-450 font-mono bg-slate-150/45 dark:bg-zinc-850 px-1.5 py-0.5 rounded font-normal normal-case opacity-75">{"{{GenelSartlar}}"}</span></span>
+                    <span className="text-sm font-black uppercase text-slate-900 dark:text-white tracking-wider flex items-center gap-1.5">Aşama 3: Genel Ticari Şartlar </span>
                   </div>
 
                   <div className="space-y-2">
@@ -3566,7 +3529,7 @@ export default function ServicesView({
                   >
                     {savedProposalInfo && savedProposalInfo.number === proposalNumber ? (
                       <>
-                        <CheckCircle2 className="w-4 h-4 text-emerald-100" /> {t("Saved to CRM ✓ — click again to check")}
+                        <CheckCircle2 className="w-4 h-4 text-emerald-100" /> Kaydedildi · Yeni sürüm olarak kaydet
                       </>
                     ) : (
                       <>
@@ -3851,7 +3814,25 @@ export default function ServicesView({
                     <textarea
                       rows={24}
                       value={liveAssemblyHtml}
-                      onChange={(e) => setLiveAssemblyHtml(e.target.value)}
+                      onChange={(e) => {
+                        const html = e.target.value;
+                        const source = proposalContentKey({
+                          proposalNumber, date: proposalDate, companyName: clientTitle, contactPerson: clientContactPerson,
+                          proposalSubject: mailSubject || selectedService?.name, currency: savedProposalRef.current?.currency ?? "₺",
+                          options: Object.fromEntries([
+                            [option1Active, option1Name, option1Desc, option1Duration, option1Rows],
+                            [option2Active, option2Name, option2Desc, option2Duration, option2Rows],
+                            [option3Active, option3Name, option3Desc, option3Duration, option3Rows],
+                          ].flatMap(([active, name, desc, duration, rows], i) => active ? [[`Option ${i + 1}`, { name, desc, duration, rows }]] : [])),
+                          coverPage: wizardCoverPage, activityTableHtml: wizardTableHtml, terms: wizardTermsAndConditions,
+                          serviceName: savedProposalRef.current?.serviceName ?? selectedService?.name,
+                          serviceCode: savedProposalRef.current?.serviceCode ?? selectedService?.code,
+                          coverImage: savedProposalRef.current?.coverImage ?? (inMemoryCoverTemplates[selectedCardId] || "/cover.png"),
+                          pageImage: savedProposalRef.current?.pageImage ?? (inMemoryPageTemplates[selectedCardId] || "/page.png"),
+                        });
+                        manualDocumentRef.current = { html, source };
+                        setLiveAssemblyHtml(html);
+                      }}
                       className="w-full bg-[#1e1e1e] text-emerald-300 font-mono text-xs p-4 rounded-lg border border-[#323130] tracking-wide"
                     />
                   </div>

@@ -1,10 +1,11 @@
+import { proposalContentKey } from "./proposalSnapshot";
 import DOMPurify from "dompurify";
 import { convertCurrencyToTurkishWords } from "./currencyWords";
 import type { Proposal, ProposalOption } from "../types/proposal";
 import { serviceDefinitionBlocks } from "./serviceDefinition";
 import { paginateProposalTables, paginateProposalActivityTables } from "./proposalTableLayout";
 
-export type ProposalDocument = Pick<Proposal, "proposalNumber" | "date" | "companyName" | "contactPerson" | "proposalSubject" | "currency" | "options" | "coverPage" | "terms" | "coverImage" | "pageImage" | "activityTableHtml" | "serviceName" | "serviceCode" | "methodology" | "projectPlan" | "timeline" | "description">;
+export type ProposalDocument = Pick<Proposal, "documentHtml" | "documentSource" | "proposalNumber" | "date" | "companyName" | "contactPerson" | "proposalSubject" | "currency" | "options" | "coverPage" | "terms" | "coverImage" | "pageImage" | "activityTableHtml" | "serviceName" | "serviceCode" | "methodology" | "projectPlan" | "timeline" | "description">;
 const escape = (value: unknown) => String(value ?? "").replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]!));
 const mm = (n: number) => n * 96 / 25.4;
 const WIDTH = mm(170), HEIGHT = mm(223);
@@ -82,6 +83,9 @@ function paginateBlocks(blocks: string[], height: number): string[] {
 }
 
 export function buildProposalDocument(doc: ProposalDocument): string {
+  if (doc.documentHtml && doc.documentSource === proposalContentKey(doc)) {
+    return DOMPurify.sanitize(doc.documentHtml);
+  }
   const pages: { section: string; title: string; html: string }[] = [];
   const addText = (section: string, title: string, blocks: string[]) => {
     paginateBlocks(blocks, HEIGHT - 48).forEach((html, i) => pages.push({ section, title: title + (i ? " (devamı)" : ""), html }));

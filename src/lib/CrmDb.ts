@@ -769,6 +769,22 @@ export const CrmDb = {
     persistSoon(() => persistProposals(cache.proposals));
   },
 
+  async saveProposalsConfirmed(proposals: Proposal[]) {
+    const previous = cache.proposals;
+    cache.proposals = structuredClone(proposals);
+    const attempted = cache.proposals;
+    try {
+      const result = await persistProposals(attempted);
+      if (result.conflictIds.length || result.blockedDeletes) {
+        await handlePersistResult(result);
+        throw new Error("Teklif başka bir oturumda değişmiş. Son kaydı açıp yeniden deneyin; değişiklikler kaydedilmedi.");
+      }
+    } catch (err) {
+      if (cache.proposals === attempted) cache.proposals = previous;
+      throw err;
+    }
+  },
+
   getProposalsByCompany(companyId: string): Proposal[] {
     return this.getProposals().filter((p) => p.companyId === companyId);
   },

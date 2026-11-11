@@ -1470,7 +1470,6 @@ export default function ContractManagerView() {
                   <Building className="w-3.5 h-3.5 text-[#0078D4]" />
                   Firma Unvanı (Müşteri) *
                 </label>
-                <span className="text-[10px] text-slate-400">{"{{COMPANY_TITLE}}"}</span>
               </div>
               
               <div className="relative">
@@ -1550,7 +1549,6 @@ export default function ContractManagerView() {
                 <label className="text-xs font-bold text-slate-700 dark:text-slate-350">
                   Firma Tebligat Adresi *
                 </label>
-                <span className="text-[10px] text-slate-400">{"{{COMPANY_ADDRESS}}"}</span>
               </div>
               <textarea
                 rows={2}
@@ -1568,7 +1566,6 @@ export default function ContractManagerView() {
                   <label className="text-xs font-bold text-slate-700 dark:text-slate-350">
                     Vergi Dairesi
                   </label>
-                  <span className="text-[10px] text-slate-400">{"{{TAX_OFFICE}}"}</span>
                 </div>
                 <input
                   type="text"
@@ -1584,7 +1581,6 @@ export default function ContractManagerView() {
                   <label className="text-xs font-bold text-slate-700 dark:text-slate-350">
                     Vergi Numarası
                   </label>
-                  <span className="text-[10px] text-slate-400">{"{{TAX_No}}"}</span>
                 </div>
                 <input
                   type="text"
@@ -1603,7 +1599,6 @@ export default function ContractManagerView() {
                 <label className="text-xs font-bold text-slate-700 dark:text-slate-350">
                   Sözleşme Konusu / Kapsamı *
                 </label>
-                <span className="text-[10px] text-slate-400">{"{{SUBJECT}}"}</span>
               </div>
               <input
                 type="text"
@@ -1622,7 +1617,6 @@ export default function ContractManagerView() {
                     <CalendarIcon className="w-3.5 h-3.5 text-slate-400" />
                     Sözleşme Tarihi *
                   </label>
-                  <span className="text-[10px] text-slate-400">{"{{DATE}}"}</span>
                 </div>
                 <input
                   type="date"
@@ -1637,7 +1631,6 @@ export default function ContractManagerView() {
                   <label className="text-xs font-bold text-slate-700 dark:text-slate-350">
                     Geçerlilik Süresi (Ay sayısı seçin/yazın)
                   </label>
-                  <span className="text-[10px] text-slate-400">{"{{EXP_DATE}}"}</span>
                 </div>
                 <div className="flex gap-1.5">
                   <input
@@ -1679,7 +1672,6 @@ export default function ContractManagerView() {
                     <UserCheck className="w-3.5 h-3.5 text-slate-400" />
                     Proje Yöneticisi *
                   </label>
-                  <span className="text-[10px] text-slate-400">{"{{PROJECT_MANAGER}}"}</span>
                 </div>
                 <div className="space-y-2">
                   <select
@@ -1718,7 +1710,6 @@ export default function ContractManagerView() {
                     <Building className="w-3.5 h-3.5 text-slate-400" />
                     Proje Yöneticisi T.C. No *
                   </label>
-                  <span className="text-[10px] text-slate-400">{"{{TC_NO}}"}</span>
                 </div>
                 <div className="mt-auto">
                   <input

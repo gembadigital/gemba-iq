@@ -75,6 +75,9 @@ export interface ProposalVersion {
   taxes: number;
   grandTotal: number;
   notes?: string;
+  documentHtml?: string;
+  documentSource?: string;
+  clientAddress?: string;
   activityTableHtml?: string;
   serviceName?: string;
   serviceCode?: string;
@@ -153,6 +156,9 @@ export interface Proposal {
   timelineEvents?: ProposalTimelineEvent[];
   auditLog?: ProposalAuditLog[];
 
+  documentHtml?: string;
+  documentSource?: string;
+  clientAddress?: string;
   activityTableHtml?: string;
   serviceName?: string;
   serviceCode?: string;
