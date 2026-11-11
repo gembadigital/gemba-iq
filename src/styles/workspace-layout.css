@@ -159,5 +159,29 @@
   .gemba-stitch-skin .crm-data-table td:nth-child(4) { white-space: normal !important; overflow-wrap: anywhere; text-overflow: clip !important; }
   .gemba-stitch-skin .crm-data-table td:nth-child(3) > div, .gemba-stitch-skin .crm-data-table td:nth-child(3) > div > span { min-width: 0; overflow-wrap: anywhere; }
 
+  /* Keep the table on the same card edge as the header and filter. Legacy
+     page-wrapper padding must not create another nested frame. */
+  .gemba-stitch-skin .proposal-content-layout { padding: 0 !important; border: 0 !important; background: transparent !important; box-shadow: none !important; min-width: 0; }
+  .gemba-stitch-skin .crm-data-table { table-layout: fixed; min-width: 900px; }
+  .gemba-stitch-skin .crm-data-table :is(th,td) { padding: 12px 10px !important; min-width: 0 !important; }
+  .gemba-stitch-skin .crm-data-table th:nth-child(1) { width: 4.5%; }
+  .gemba-stitch-skin .crm-data-table th:nth-child(2) { width: 8.5%; white-space: normal; }
+  .gemba-stitch-skin .crm-data-table th:nth-child(3) { width: 16%; }
+  .gemba-stitch-skin .crm-data-table th:nth-child(4) { width: 18%; white-space: normal; }
+  .gemba-stitch-skin .crm-data-table th:nth-child(5) { width: 11.5%; white-space: normal; }
+  .gemba-stitch-skin .crm-data-table th:nth-child(6) { width: 12%; }
+  .gemba-stitch-skin .crm-data-table th:nth-child(7) { width: 7%; }
+  .gemba-stitch-skin .crm-data-table th:nth-child(8) { width: 11%; white-space: normal; }
+  .gemba-stitch-skin .crm-data-table th:nth-child(9) { width: 11.5%; }
+  .gemba-stitch-skin .crm-data-table :is(td,th):nth-child(3),
+  .gemba-stitch-skin .crm-data-table td:nth-child(4),
+  .gemba-stitch-skin .crm-data-table td:nth-child(5),
+  .gemba-stitch-skin .crm-data-table td:nth-child(6) { min-width: 0 !important; }
+  .gemba-stitch-skin .crm-data-table :is(th,td):last-child { padding-inline: 8px !important; }
+  .gemba-stitch-skin .crm-data-table td:nth-child(8) { font-family: inherit !important; font-size: 12px !important; }
+  .gemba-stitch-skin .crm-data-table td:nth-child(7) > div { flex-wrap: wrap; gap: 4px !important; }
+  .gemba-stitch-skin .crm-data-table td:nth-child(7) > div:has(select) > span { display: none; }
+  .gemba-stitch-skin .crm-data-table td:nth-child(7) select { width: 100%; min-width: 0; font: 400 11px/1.4 Inter,sans-serif !important; }
+
 }
 }
