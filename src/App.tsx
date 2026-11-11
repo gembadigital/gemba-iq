@@ -153,6 +153,42 @@ function getInitialActiveTab(): ActiveTab {
   return "revenue-management";
 }
 
+type SidebarGroup = "activityReport" | "companies" | "deals" | "leads" | "campaign" | "marketing";
+
+function getSidebarGroup(activeTab: ActiveTab): SidebarGroup | null {
+    if (["revenue-management", "management-pl"].includes(activeTab)) return "activityReport";
+    if (["services", "deal-management", "proposal-management", "create-proposal", "sales-dashboard"].includes(activeTab)) {
+      return "deals";
+    }
+    if (["companies-registry", "company-discovery"].includes(activeTab)) {
+      return "companies";
+    }
+    if (["lead-generator", "lead-profiles", "ai-sales-assistant"].includes(activeTab)) {
+      return "leads";
+    }
+    if (["dashboard", "designer", "progress", "history"].includes(activeTab)) {
+      return "campaign";
+    }
+    if (
+      [
+        "target-accounts",
+        "marketing-ai-coach",
+        "marketing-overview",
+        "marketing-industry-intel",
+        "marketing-target-market",
+        "marketing-bd-pipeline",
+        "marketing-growth-health",
+        "marketing-digital-intel",
+        "marketing-kpi-okr",
+        "campaign-manager",
+        "outreach-approval",
+      ].includes(activeTab)
+    ) {
+      return "marketing";
+    }
+    return null;
+}
+
 export default function App() {
   const { lang, setLang, t } = useLanguage();
   const { signOut } = useAuth();
@@ -399,12 +435,16 @@ export default function App() {
 
   // Navigation State
   const [activeTab, setActiveTab] = useState<ActiveTab>(getInitialActiveTab);
-  const [activityReportMenuExpanded, setActivityReportMenuExpanded] = useState<boolean>(true);
-  const [companiesMenuExpanded, setCompaniesMenuExpanded] = useState<boolean>(true);
-  const [dealsMenuExpanded, setDealsMenuExpanded] = useState<boolean>(true);
-  const [leadsMenuExpanded, setLeadsMenuExpanded] = useState<boolean>(true);
-  const [campaignMenuExpanded, setCampaignMenuExpanded] = useState<boolean>(true);
-  const [marketingMenuExpanded, setMarketingMenuExpanded] = useState<boolean>(true);
+  const [expandedMenu, setExpandedMenu] = useState<SidebarGroup | null>(() => getSidebarGroup(activeTab));
+  const toggleMenu = (group: SidebarGroup) => {
+    setExpandedMenu(current => current === group ? null : group);
+  };
+  const activityReportMenuExpanded = expandedMenu === "activityReport";
+  const companiesMenuExpanded = expandedMenu === "companies";
+  const dealsMenuExpanded = expandedMenu === "deals";
+  const leadsMenuExpanded = expandedMenu === "leads";
+  const campaignMenuExpanded = expandedMenu === "campaign";
+  const marketingMenuExpanded = expandedMenu === "marketing";
   const [sidebarCollapsed, setSidebarCollapsed] = useState<boolean>(() => {
     return localStorage.getItem("sidebar-collapsed") === "true";
   });
@@ -526,37 +566,9 @@ export default function App() {
     return () => window.removeEventListener("crm-navigate", handleCrmNavigate);
   }, []);
 
-  // Auto-expand Deals, Companies, Leads and Campaign submenus if one of them is the active tab
+  // Search, notifications and restored pages open only their own group.
   useEffect(() => {
-    if (["services", "deal-management", "proposal-management", "create-proposal", "sales-dashboard"].includes(activeTab)) {
-      setDealsMenuExpanded(true);
-    }
-    if (["companies-registry", "company-discovery"].includes(activeTab)) {
-      setCompaniesMenuExpanded(true);
-    }
-    if (["lead-generator", "lead-profiles", "ai-sales-assistant"].includes(activeTab)) {
-      setLeadsMenuExpanded(true);
-    }
-    if (["dashboard", "designer", "progress", "history"].includes(activeTab)) {
-      setCampaignMenuExpanded(true);
-    }
-    if (
-      [
-        "target-accounts",
-        "marketing-ai-coach",
-        "marketing-overview",
-        "marketing-industry-intel",
-        "marketing-target-market",
-        "marketing-bd-pipeline",
-        "marketing-growth-health",
-        "marketing-digital-intel",
-        "marketing-kpi-okr",
-        "campaign-manager",
-        "outreach-approval",
-      ].includes(activeTab)
-    ) {
-      setMarketingMenuExpanded(true);
-    }
+    setExpandedMenu(getSidebarGroup(activeTab));
   }, [activeTab]);
 
   useEffect(() => {
@@ -971,7 +983,7 @@ export default function App() {
             <div className="flex flex-col gap-[4px]">
               <button
                 type="button"
-                onClick={() => setActivityReportMenuExpanded(!activityReportMenuExpanded)}
+                onClick={() => toggleMenu("activityReport")}
                 data-ui-nav-row="true"
                 data-ui-nav-group="true"
                 aria-expanded={activityReportMenuExpanded}
@@ -1036,7 +1048,7 @@ export default function App() {
             <div className="flex flex-col gap-[4px]">
               <button
                 type="button"
-                onClick={() => setLeadsMenuExpanded(!leadsMenuExpanded)}
+                onClick={() => toggleMenu("leads")}
                 data-ui-nav-row="true"
                 data-ui-nav-group="true"
                 aria-expanded={leadsMenuExpanded}
@@ -1108,7 +1120,7 @@ export default function App() {
             <div className="flex flex-col gap-[4px]">
               <button
                 type="button"
-                onClick={() => setCompaniesMenuExpanded(!companiesMenuExpanded)}
+                onClick={() => toggleMenu("companies")}
                 data-ui-nav-row="true"
                 data-ui-nav-group="true"
                 aria-expanded={companiesMenuExpanded}
@@ -1174,7 +1186,7 @@ export default function App() {
             <div className="flex flex-col gap-[4px]">
               <button
                 type="button"
-                onClick={() => setDealsMenuExpanded(!dealsMenuExpanded)}
+                onClick={() => toggleMenu("deals")}
                 data-ui-nav-row="true"
                 data-ui-nav-group="true"
                 aria-expanded={dealsMenuExpanded}
@@ -1280,7 +1292,7 @@ export default function App() {
             <div className="flex flex-col gap-[4px]">
               <button
                 type="button"
-                onClick={() => setMarketingMenuExpanded(!marketingMenuExpanded)}
+                onClick={() => toggleMenu("marketing")}
                 data-ui-nav-row="true"
                 data-ui-nav-group="true"
                 aria-expanded={marketingMenuExpanded}
@@ -1405,7 +1417,7 @@ export default function App() {
             <div className="flex flex-col gap-[4px]">
               <button
                 type="button"
-                onClick={() => setCampaignMenuExpanded(!campaignMenuExpanded)}
+                onClick={() => toggleMenu("campaign")}
                 data-ui-nav-row="true"
                 data-ui-nav-group="true"
                 aria-expanded={campaignMenuExpanded}

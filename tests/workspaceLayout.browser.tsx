@@ -22,6 +22,7 @@ function aligned(selector:string,axis:'left'|'right'|'center'='left'){
 }
 async function test(){
  await document.fonts.ready;await delay(300);
+ expect(document.querySelectorAll('[data-ui-nav-group][aria-expanded="true"]').length===1&&document.getElementById('sidebar-nav-proposal-management'),'İlk yüklemede yalnızca etkin sayfanın ana menüsü açık');
  expect(aligned('[data-ui-sidebar] [data-ui-nav-icon]'),'Ana, alt, aktif ve pasif satırlarda ikonlar aynı sütunda');
  expect(aligned('[data-ui-sidebar] [data-ui-nav-label]'),'Tüm menü metinleri aynı başlangıç çizgisinde');
  expect(aligned('[data-ui-sidebar] [data-ui-nav-chevron]','right'),'Altı menü açma oku aynı sağ sütunda');
@@ -35,6 +36,19 @@ async function test(){
  const expanded=group.getAttribute('aria-expanded');group.click();await delay();
  expect(group.getAttribute('aria-expanded')!==expanded,'Menü açma/kapatma işlevi korunuyor');group.click();await delay();
  expect(aligned('[data-ui-sidebar] [data-ui-nav-icon]'),'Yeniden açılan menüde hizalar korunuyor');
+ const groups=Array.from(document.querySelectorAll<HTMLButtonElement>('[data-ui-nav-group]'));
+ const openGroups=()=>groups.filter(el=>el.getAttribute('aria-expanded')==='true');
+ expect(openGroups().length<=1,'Aynı anda en fazla bir ana bölüm açık');
+ for(const item of groups){
+   if(item.getAttribute('aria-expanded')==='true'){item.click();await delay();}
+   item.click();await delay();
+   expect(openGroups().length===1&&openGroups()[0]===item,'Başka ana menü açılınca önceki kapanıyor: '+item.getAttribute('aria-label'));
+ }
+ groups[groups.length-1].click();await delay();
+ expect(openGroups().length===0,'Açık ana menü yeniden tıklanarak kapanabiliyor');
+ const deals=groups.find(el=>el.getAttribute('aria-label')==='Fırsat ve Süreç Yönetimi')!;
+ deals.click();await delay();document.getElementById('sidebar-nav-proposal-management')!.click();await delay();
+ expect(openGroups().length===1&&openGroups()[0]===deals,'Alt sayfaya geçerken çalışılan ana menü açık kalıyor');
  const sourceBefore=JSON.stringify(fixtures.proposals);
  root.render(<PreviewBoundary><LanguageProvider><ProposalFormModal isOpen onClose={()=>{fixtures.closed=true}} onSave={p=>{fixtures.saved=p}} initialProposal={base} companies={[company as any]} onAddCompany={()=>{}} /></LanguageProvider></PreviewBoundary>);await delay();
  const submit=document.querySelector<HTMLButtonElement>('.crm-dialog-footer button[type="submit"]')!;

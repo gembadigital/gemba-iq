@@ -4,6 +4,8 @@ Referans: Müşteriler sayfasındaki mevcut müşteri kartı ve düzenleme alan�
 
 ## Menü
 
+Menü akordeon olarak çalışır: aynı anda yalnızca bir ana bölüm açık olabilir. Başka bölüm açıldığında önceki kapanır; açık başlığa yeniden basmak o bölümü kapatır. İlk yüklemede, yenilemede ve arama/bildirim üzerinden gezinmede yalnızca etkin sayfanın ana bölümü açılır. Bağımsız sayfalarda tüm gruplar kapalıdır.
+
 Bütün satırlar tek ızgara kullanır: **20 px ikon / esnek metin / 16 px açılır ok**, sütunlar arasında 12 px. Menü panelinde 8 px, satırda 16 px yatay iç boşluk bulunur; böylece ikonlar panelin solundan 24 px, metinler 56 px çizgisinde başlar. Ana ve alt menüler aynı sütunlara oturur; hiyerarşi grup aralığı, açılır ok ve başlık ağırlığıyla belirtilir. Uzun başlıklar satıra sarılır, üç noktayla kesilmez.
 
 Asgari satır yüksekliği 44 px; seçili/pasif satır ölçüsü aynıdır. Aktif işaret mutlak konumlanır ve metni kaydırmaz. Geniş menü 280 px, dar menü 80 px. Dar durumda bütün ikonlar aynı merkezde kalır. Satırlar gerçek düğmedir; grup düğmeleri `aria-expanded`, sayfalar `aria-current="page"` ve açıklayıcı ad taşır. Renkli vurgu ve mevcut tema korunur.
