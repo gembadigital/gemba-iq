@@ -1559,7 +1559,8 @@ export default function DealManagementView({ initialTab = "dashboard", onNavigat
     }
     setEmailSendError(null);
 
-    const toEmail = reminderSelectedDeal.contactEmail || "client@company.com";
+    const toEmail = reminderSelectedDeal.contactEmail?.trim();
+    if (!toEmail) { alert(t("Please fill out all required fields!")); return; }
     const encodedSubject = encodeURIComponent(reminderMailSubject);
     const encodedBody = encodeURIComponent(reminderMailBody);
     let finalLink = "";
@@ -1732,42 +1733,8 @@ export default function DealManagementView({ initialTab = "dashboard", onNavigat
     setEmailComposeBcc("");
     setEmailComposeFile("");
 
-    // Setup interactive automated reply after 1.5 seconds!
-    setTimeout(() => {
-      const incomingReply = {
-        id: `mail-reply-${Date.now()}`,
-        sender: selectedDeal.contactPerson,
-        recipient: "Gemba Partner (GP) Admin",
-        date: new Date().toISOString().replace("T", " ").substring(0, 16),
-        subject: `Re: ${newMail.subject}`,
-        body: `Hello Admin, We appreciate your mail regarding our discussion on "${newMail.subject}". Our engineering plant review board will evaluate the assessment criteria. Let's schedule another status meeting for next Tuesday. Regards.`,
-        isIncoming: true
-      };
+    // Incoming correspondence must come from the mailbox, never a generated reply.
 
-      setDeals(prev =>
-        prev.map(d => {
-          if (d.id === selectedDeal.id) {
-            const emails = d.dealEmails || [];
-            return {
-              ...d,
-              dealEmails: [...emails, incomingReply]
-            };
-          }
-          return d;
-        })
-      );
-
-      setSelectedDeal(prev => {
-        if (!prev) return null;
-        if (prev.id === selectedDeal.id) {
-          return {
-            ...prev,
-            dealEmails: [...(prev.dealEmails || []), incomingReply]
-          };
-        }
-        return prev;
-      });
-    }, 1500);
   };
 
   const getCardBgColor = (prob: number) => {
@@ -2950,7 +2917,7 @@ export default function DealManagementView({ initialTab = "dashboard", onNavigat
                               companyId: company.id,
                               companyName: company.name,
                               contactPerson: primaryContact ? `${primaryContact.firstName} ${primaryContact.lastName}` : (company.managementTeam || dealFormState.contactPerson),
-                              contactEmail: primaryContact ? primaryContact.email : (company.website ? `info@${company.website.replace(/^https?:\/\//, "")}` : dealFormState.contactEmail),
+                              contactEmail: primaryContact ? primaryContact.email : dealFormState.contactEmail,
                               contactPhone: primaryContact ? primaryContact.phone : (company.phone || dealFormState.contactPhone),
                             });
                           }}
@@ -4125,7 +4092,7 @@ export default function DealManagementView({ initialTab = "dashboard", onNavigat
 
                         <div className="flex items-center justify-between gap-4 pt-1">
                           <span className="text-[9px] text-slate-400 dark:text-zinc-500 italic">
-                            {t("After sending, a simulated reply will appear from {name}.").replace("{name}", selectedDeal.contactPerson)}
+                            {lang === "TR" ? "E-posta istemcisi açılır. Gelen yanıtlar otomatik olarak üretilmez." : "The email client opens. Incoming replies are never generated."}
                           </span>
                           <button data-crm-button=""
                             type="submit"

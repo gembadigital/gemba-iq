@@ -1788,7 +1788,6 @@ CRITICAL FORMATTING INSTRUCTIONS: Your response MUST be output as beautiful, pro
               </span>
               <div className="flex items-baseline gap-1.5 mt-2.5">
                 <span className="text-xl md:text-2xl font-black text-slate-900 dark:text-slate-100">{formatSystemNumber(metrics.totalRevenue)} TL</span>
-                <span className="text-xs text-emerald-500 font-mono flex items-center gap-0.5"><TrendingUp className="w-3 h-3" />+12%</span>
               </div>
               <div className="text-[10px] text-slate-500 mt-2 font-mono flex items-center justify-between">
                 <span>{t("Direct project invoicing")}</span>
@@ -1842,7 +1841,7 @@ CRITICAL FORMATTING INSTRUCTIONS: Your response MUST be output as beautiful, pro
               </div>
               <div className="text-[10px] text-slate-500 mt-2 font-mono flex items-center justify-between">
                 <span>{t("Remaining")}: {metrics.remainingDays} {t("unsold days")}</span>
-                <span className="text-rose-600 font-bold tracking-tight">{t("Avg rate")}: 18,000 TL</span>
+                <span className="text-rose-600 font-bold tracking-tight">{t("Avg rate")}: {formatSystemNumber(metrics.averageDailyRate || 18000)} TL ({t("Estimate")})</span>
               </div>
             </div>
 

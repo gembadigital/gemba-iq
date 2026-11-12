@@ -75,6 +75,13 @@ async function main(){
  await CrmDb.hydrateFromSupabase(org,{force:true});assert.equal(CrmDb.getDeals()[0].description,'unsaved edit');ok('A failed row save is protected from refresh and can be retried');
  await reset();const saved=clone(aux());casFailures=4;
  await assert.rejects(persistAuxiliary({...saved,pipelineStages:['Unsafe']},[],['pipelineStages']),/çakıştı/);assert.deepEqual(aux().pipelineStages,['Solution Design']);ok('Repeated conflicts never bypass compare-and-swap');
+ await reset();
+ const customer=CrmDb.createCompany({name:'Alan koruma kontrolü',employeeCount:0,annualRevenue:'123456',annualRevenueCurrency:'€',sector:'Kablo',healthScore:0,squareMeter:'2500',productionType:'Kablo imalatı',isoCertifications:['ISO 9001'],customFields:{audit:'korunacak'}});
+ await CrmDb.flushPendingWrites();CrmDb.resetCache();await CrmDb.hydrateFromSupabase(org);
+ const persisted=CrmDb.getCompanyById(customer.id)!;
+ for(const key of ['employeeCount','annualRevenue','annualRevenueCurrency','sector','healthScore','squareMeter','productionType','isoCertifications','customFields'] as const)assert.deepEqual(persisted[key],customer[key]);
+ assert.equal(persisted.healthScore,0);assert.equal(persisted.sector,'Kablo');assert.equal(persisted.annualRevenue,'123456');
+ ok('New customer numeric, production, sector and custom fields survive a fresh database load, including valid zeros');
  console.log(`${passed} persistence integration tests passed using real CrmDb and service with an isolated fake transport.`);
 }
 main().catch(err=>{console.error(err);process.exitCode=1;});

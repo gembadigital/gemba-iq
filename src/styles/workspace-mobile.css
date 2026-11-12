@@ -7,8 +7,8 @@
 }
 @media screen and (max-width: 767px) {
   .gemba-stitch-skin [data-crm-viewport] { padding: 16px 12px max(20px,env(safe-area-inset-bottom)) !important; scrollbar-gutter: auto; }
-  .gemba-stitch-skin [data-crm-header] { padding: 18px 16px !important; flex-direction: column !important; align-items: stretch !important; gap: 14px !important; }
-  .gemba-stitch-skin [data-crm-heading="page"] { font-size: 19px !important; flex-wrap: wrap; }
+  .gemba-stitch-skin [data-crm-header] { padding: 4px 0 10px !important; flex-direction: column !important; align-items: stretch !important; gap: 14px !important; }
+  .gemba-stitch-skin [data-crm-header] [data-crm-heading="page"], .gemba-stitch-skin [data-crm-heading="page"] { font-size: 20px !important; flex-wrap: wrap; }
   .gemba-stitch-skin [data-crm-header] p { font-size: 13px !important; max-width: 100%; }
   .gemba-stitch-skin [data-crm-header-copy] { flex-basis: auto; }
   .gemba-stitch-skin [data-crm-wizard-steps] { width: 100%; display: grid !important; grid-template-columns: repeat(2,minmax(0,1fr)) !important; gap: 10px !important; }

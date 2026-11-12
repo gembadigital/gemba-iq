@@ -93,7 +93,7 @@ export default function EmailLeadDiscoveryView({
   onAddCompaniesToMaster,
   onAddTargetAccount
 }: EmailLeadDiscoveryViewProps) {
-  const { t } = useLanguage();
+  const { t, lang } = useLanguage();
   const { actorName, isAdmin } = useOrganization();
 
   // Tab/State states
@@ -137,175 +137,10 @@ export default function EmailLeadDiscoveryView({
     setTimeout(() => setToast(null), 3000);
   };
 
-  // Seed sample leads discovered
-  const seedDiscoveredData = () => {
-    const list: DiscoveredLead[] = [
-      {
-        id: "disc-1",
-        name: "Atakan Zehir",
-        email: "atakan@zehirenergy.com",
-        company: "Zehir Energy Materials A.Ş.",
-        jobTitle: "Direct of Logistics & Supply Chain",
-        phone: "+90 532 999 1122",
-        website: "zehirenergy.com",
-        sourceFolder: "Inbox",
-        firstContactDate: "2026-05-15",
-        lastContactDate: "2026-06-20",
-        interactionsCount: 14,
-        leadScore: 94,
-        relationshipScore: 88,
-        companySuggestion: "Zehir Energy A.Ş. (Turkey Corp)",
-        assignedSalesperson: "Sarah Connor",
-        status: "new",
-        detectedSignature: "Warm Regards, Atakan Zehir\nDirector of Logistics & Supply Chain\nZehir Energy Materials A.Ş.\nm: +90 532 999 1122 | w: zehirenergy.com"
-      },
-      {
-        id: "disc-2",
-        name: "Marcus Vance",
-        email: "m.vance@contosotech.co.uk",
-        company: "Contoso Tech UK",
-        jobTitle: "VP Systems Architecture",
-        phone: "+44 7911 123456",
-        website: "contosotech.co.uk",
-        sourceFolder: "Sent Items",
-        firstContactDate: "2026-04-10",
-        lastContactDate: "2026-06-18",
-        interactionsCount: 27,
-        leadScore: 96,
-        relationshipScore: 94,
-        companySuggestion: "Contoso Ltd London Branch",
-        assignedSalesperson: "Unassigned",
-        status: "new",
-        detectedSignature: "Marcus Vance\nVP Systems Architecture, Contoso Tech UK\nOffice: +44 7911 123456\nLet's integrate operational excellence!"
-      },
-      {
-        id: "disc-3",
-        name: "David Miller",
-        email: "d.miller@toyota-industrial.de",
-        company: "Toyota Industrial Systems",
-        jobTitle: "VP Quality & Six Sigma Lead",
-        phone: "+49 172 884422",
-        website: "toyota-industrial.de",
-        sourceFolder: "Inbox",
-        firstContactDate: "2026-03-01",
-        lastContactDate: "2026-06-05",
-        interactionsCount: 8,
-        leadScore: 82,
-        relationshipScore: 68,
-        companySuggestion: "Toyota Manufacturing Europe",
-        assignedSalesperson: "Atakan Zehir",
-        status: "new",
-        detectedSignature: "Mit freundlichen Grüßen,\nDavid Miller\nToyota Industrial Systems Europe GmbH"
-      },
-      {
-        id: "disc-4",
-        name: "Kaan Yılmaz",
-        email: "kaan.yilmaz@sabanci-enerjisa.com",
-        company: "Enerjisa Üretim A.Ş.",
-        jobTitle: "Business Development Director",
-        phone: "+90 216 555 4433",
-        website: "sabanci-enerjisa.com",
-        sourceFolder: "Inbox",
-        firstContactDate: "2026-06-01",
-        lastContactDate: "2026-06-21",
-        interactionsCount: 19,
-        leadScore: 91,
-        relationshipScore: 85,
-        companySuggestion: "Sabancı Holding / Enerjisa",
-        assignedSalesperson: "David Miller",
-        status: "new",
-        detectedSignature: "Kaan Yılmaz - Bd Director\nEnerjisa Üretim\nkaan.yilmaz@sabanci-enerjisa.com"
-      },
-      {
-        id: "disc-5",
-        name: "Clara Oswald",
-        email: "clara.oswald@skoda-mobility.cz",
-        company: "Skoda Mobility Solutions",
-        jobTitle: "Lead Logistics Strategy Planner",
-        phone: "+420 224 881 99`,",
-        website: "skoda-mobility.cz",
-        sourceFolder: "Sent Items",
-        firstContactDate: "2026-05-18",
-        lastContactDate: "2026-06-19",
-        interactionsCount: 5,
-        leadScore: 78,
-        relationshipScore: 59,
-        companySuggestion: "Skoda Auto Group Europe",
-        assignedSalesperson: "Unassigned",
-        status: "new",
-        detectedSignature: "Clara Oswald | Skoda Mobility\nStrat Planning - Prague Office"
-      },
-      {
-        id: "disc-6",
-        name: "Hans Gruber",
-        email: "hans@nakatomi-holdings.jp",
-        company: "Nakatomi Holdings",
-        jobTitle: "Chief Security Officer",
-        phone: "+81 3 5555 0192",
-        website: "nakatomi-holdings.jp",
-        sourceFolder: "Inbox",
-        firstContactDate: "2026-06-05",
-        lastContactDate: "2026-06-12",
-        interactionsCount: 3,
-        leadScore: 68,
-        relationshipScore: 42,
-        companySuggestion: "Nakatomi Corp (Japan)",
-        assignedSalesperson: "Unassigned",
-        status: "new",
-        detectedSignature: "Regards, Hans Gruber\nNakatomi Plaza"
-      }
-    ];
-
-    const filtered: FilteredOutLead[] = [
-      {
-        email: "bill.internal@gemba-operasyonel.com",
-        reason: t("Internal domain excluded ({domain})").replace("{domain}", "gemba-operasyonel.com"),
-        folder: "Inbox",
-        date: "2026-06-20"
-      },
-      {
-        email: "marketing-camp@gmail.com",
-        reason: t("Excluded public email provider ({domain})").replace("{domain}", "gmail.com"),
-        folder: "Inbox",
-        date: "2026-06-18"
-      },
-      {
-        email: "customer-support-junk@hotmail.com",
-        reason: t("Excluded public email provider ({domain})").replace("{domain}", "hotmail.com"),
-        folder: "Sent Items",
-        date: "2026-06-15"
-      },
-      {
-        email: "team-activities@yahoo.co.uk",
-        reason: t("Excluded public email provider ({domain})").replace("{domain}", "yahoo.co.uk"),
-        folder: "Inbox",
-        date: "2026-06-12"
-      },
-      {
-        email: "no-reply@hubspot.com",
-        reason: t("Automated newsletter / drip sender"),
-        folder: "Inbox",
-        date: "2026-06-21"
-      },
-      {
-        email: "alert@aws-infra-monitor.com",
-        reason: t("Automated alert key phrase detected"),
-        folder: "Inbox",
-        date: "2026-06-22"
-      }
-    ];
-
-    setDiscoveredLeads(list);
-    setFilteredOutLeads(filtered);
-  };
 
   const [isLoadingConnections, setIsLoadingConnections] = useState(true);
 
-  // Load both possible real mailbox connections (Organization + the caller's
-  // own Personal mailbox) before deciding anything. Only falls back to demo
-  // data once we've genuinely confirmed neither is connected — previously
-  // this fired a fake "sandbox" fallback on first render, before the real
-  // check even resolved, which is why the scan always used made-up data.
+  // Load real mailbox connections. An unconnected account stays empty.
   useEffect(() => {
     let isMounted = true;
 
@@ -364,7 +199,8 @@ export default function EmailLeadDiscoveryView({
           setSession(null);
           setConnections([]);
           setSelectedMailboxIds([]);
-          seedDiscoveredData();
+          setDiscoveredLeads([]);
+          setFilteredOutLeads([]);
         }
         setIsLoadingConnections(false);
       }
@@ -453,8 +289,8 @@ export default function EmailLeadDiscoveryView({
         firstContactDate: msg.date,
         lastContactDate: msg.date,
         interactionsCount: 1,
-        leadScore: Math.floor(Math.random() * 15) + 80,
-        relationshipScore: Math.floor(Math.random() * 15) + 75,
+        leadScore: 0,
+        relationshipScore: 0,
         companySuggestion: companyName + " A.Ş.",
         assignedSalesperson,
         status: "new",
@@ -464,7 +300,7 @@ export default function EmailLeadDiscoveryView({
   };
 
   // Action: Scan Email Process — real Microsoft Graph read for connected
-  // mailboxes, or demo data when nothing is connected yet.
+  // mailboxes; disconnected mailboxes never generate leads.
   const handleScanEmails = async () => {
     setIsScanning(true);
     setScanStep(0);
@@ -478,14 +314,15 @@ export default function EmailLeadDiscoveryView({
     const log = (line: string) => setScanLogs(prev => [...prev, `[${new Date().toLocaleTimeString()}] ${line}`]);
 
     if (realConnections.length === 0) {
-      log(t("No real mailbox connected — loading demo signature data instead."));
-      seedDiscoveredData();
+      log(t("Connect a mailbox before scanning."));
+      setDiscoveredLeads([]);
+          setFilteredOutLeads([]);
       setScanStatus({
-        success: true,
-        message: t("No real mailbox connected, so sample/demo data is being shown."),
+        success: false,
+        message: t("Connect a mailbox before scanning."),
         source: "sandbox",
-        totalParsed: 6,
-        totalFiltered: 6
+        totalParsed: 0,
+        totalFiltered: 0
       });
       setIsScanning(false);
       setHasScanned(true);
@@ -842,7 +679,7 @@ export default function EmailLeadDiscoveryView({
         <div className="bg-amber-50 dark:bg-amber-950/20 border border-amber-200 dark:border-amber-900/45 rounded-2xl p-4 flex items-start gap-3">
           <AlertCircle className="w-5 h-5 text-amber-600 dark:text-amber-400 shrink-0 mt-0.5" />
           <p className="text-[11px] text-slate-700 dark:text-slate-300 leading-relaxed">
-            {t("No mailbox connected yet, so the list below shows demo data. Connect the Organization Mailbox (Organization Settings → Shared Mailboxes) or your own Personal Mailbox (My Account) to scan real emails.")}
+            {lang === "TR" ? "Posta kutusu bağlı değil. Gerçek yazışmaları taramak için organizasyon veya kişisel posta kutunuzu bağlayın. Örnek kişi oluşturulmaz." : "No mailbox is connected. Connect an organization or personal mailbox to scan real messages. No sample contacts are generated."}
           </p>
         </div>
       )}

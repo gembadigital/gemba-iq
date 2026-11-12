@@ -58,7 +58,7 @@ import CompanyDocumentsTab from "./company-tabs/CompanyDocumentsTab";
 import CompanyRevenueTab from "./company-tabs/CompanyRevenueTab";
 import CompanyDetailView from "./CompanyDetailView";
 import { TargetAccount } from "../types";
-import { getActiveOrganizationId } from "../lib/tenantStorage";
+import { getTenantActorName, getActiveOrganizationId } from "../lib/tenantStorage";
 import { ConfirmModal } from "./shared/ConfirmModal";
 import { useConfirm } from "../lib/useConfirm";
 
@@ -174,23 +174,23 @@ export default function CompaniesView() {
             customerStatus: getVal(["status", "customerstatus", "customer status"], ["müşteri durumu", "durum"], "Lead"),
             industry: getVal(["industry", "sector group"], ["sektör", "ana sektör"], "Manufacturing"),
             sector: getVal(["sub-industry", "sub industry", "sector segment"], ["alt sektör", "segment"]),
-            employeeCount: Number(getVal(["employee count", "employees", "headcount"], ["çalışan sayısı", "çalışan"], "50")) || 50,
-            annualRevenue: getVal(["annual revenue", "revenue"], ["ciro", "ciro değeri"], "1,000,000"),
+            employeeCount: Number(getVal(["employee count", "employees", "headcount"], ["çalışan sayısı", "çalışan"])) || undefined,
+            annualRevenue: getVal(["annual revenue", "revenue"], ["ciro", "ciro değeri"]),
             annualRevenueCurrency: getVal(["currency"], ["para birimi"], "₺"),
-            accountOwner: getVal(["account owner", "owner"], ["hesap temsilcisi", "sorumlu"], "Atakan Zehir"),
+            accountOwner: getVal(["account owner", "owner"], ["hesap temsilcisi", "sorumlu"], getTenantActorName()),
             billingAddress: getVal(["address", "billing address"], ["açık adres", "adres"]),
-            billingCity: getVal(["city", "billing city"], ["şehir", "il"], "Bursa"),
-            billingDistrict: getVal(["district", "billing district"], ["ilçe"], "Nilüfer"),
+            billingCity: getVal(["city", "billing city"], ["şehir", "il"]),
+            billingDistrict: getVal(["district", "billing district"], ["ilçe"]),
             billingCountry: getVal(["country", "billing country"], ["ülke"], "Türkiye"),
             billingPostalCode: getVal(["postal code", "zip", "billing postal code"], ["posta kodu"]),
             shift: getVal(["shift", "shift pattern"], ["vardiya", "vardiya düzeni"], "1 Shift"),
-            productionType: getVal(["production type", "production flow"], ["üretim tipi", "üretim akış tipi"], "Serial Batch"),
-            squareMeter: getVal(["square meters", "square meter", "area"], ["fabrika alanı", "m2", "metrekare"], "2500"),
+            productionType: getVal(["production type", "production flow"], ["üretim tipi", "üretim akış tipi"]),
+            squareMeter: getVal(["square meters", "square meter", "area"], ["fabrika alanı", "m2", "metrekare"]),
             digitalInfrastructure: getVal(["digital infrastructure", "erp"], ["dijital altyapı", "erp altyapısı"], "ERP"),
             description: getVal(["description", "info"], ["açıklama", "not"]),
             taxOffice: getVal(["tax office"], ["vergi dairesi"]),
             taxNo: getVal(["tax no", "tax number", "tax id"], ["vergi no", "vergi numarası"]),
-            healthScore: Number(getVal(["health score", "health"], ["sağlık skoru"], "75")) || 75,
+            healthScore: Number(getVal(["health score", "health"], ["sağlık skoru"])) || undefined,
             customFields: {}
           };
         }).filter(Boolean) as Company[];
@@ -240,24 +240,24 @@ export default function CompaniesView() {
     customerStatus: "Lead",
     industry: "Manufacturing",
     sector: "",
-    employeeCount: 50,
-    annualRevenue: "1,000,000",
+    employeeCount: undefined,
+    annualRevenue: "",
     annualRevenueCurrency: "₺",
-    accountOwner: "Atakan Zehir",
+    accountOwner: getTenantActorName(),
     billingAddress: "",
-    billingCity: "Bursa",
-    billingDistrict: "Nilüfer",
+    billingCity: "",
+    billingDistrict: "",
     billingCountry: "Türkiye",
     billingPostalCode: "",
     shift: "1 Shift",
-    productionType: "Serial Batch",
-    squareMeter: "2500",
+    productionType: "",
+    squareMeter: "",
     digitalInfrastructure: "ERP",
     description: "",
     managementTeam: "",
     taxOffice: "",
     taxNo: "",
-    healthScore: 75,
+    healthScore: undefined,
     customFields: {}
   });
 
@@ -351,7 +351,7 @@ export default function CompaniesView() {
 
     // If change details are supplied, log a system audit event automatically!
     if (fieldChanged && oldValue !== newValue) {
-      logAudit(updated.id, fieldChanged, oldValue || "N/A", newValue || "N/A", "Atakan Zehir");
+      logAudit(updated.id, fieldChanged, oldValue || "N/A", newValue || "N/A", getTenantActorName());
     }
   };
 
@@ -515,7 +515,7 @@ export default function CompaniesView() {
       const targetStatus = bulkAction.replace("status:", "");
       setCompanies(prev => prev.map(c => {
         if (selectedCompanyIds.includes(c.id)) {
-          logAudit(c.id, "Account Status", c.customerStatus, targetStatus, "Atakan Zehir (Bulk)");
+          logAudit(c.id, "Account Status", c.customerStatus, targetStatus, getTenantActorName());
           return { ...c, customerStatus: targetStatus };
         }
         return c;
@@ -526,7 +526,7 @@ export default function CompaniesView() {
       const targetOwner = bulkAction.replace("owner:", "");
       setCompanies(prev => prev.map(c => {
         if (selectedCompanyIds.includes(c.id)) {
-          logAudit(c.id, "Account Owner", c.accountOwner, targetOwner, "Atakan Zehir (Bulk)");
+          logAudit(c.id, "Account Owner", c.accountOwner, targetOwner, getTenantActorName());
           return { ...c, accountOwner: targetOwner };
         }
         return c;
@@ -593,16 +593,17 @@ export default function CompaniesView() {
         }
         return c;
       }));
-      logAudit(editingCompany.id, "Profile Updated", "Form Edit", "Modified all properties", "Atakan Zehir");
+      logAudit(editingCompany.id, "Profile Updated", "Form Edit", "Modified all properties", getTenantActorName());
     } else {
       // Create relational linking inside CrmDb
       const newComp = CrmDb.createCompany({
+        ...formState,
         name: formState.name!,
         phone: formState.phone,
         website: formState.website,
         customerStatus: formState.customerStatus || "Lead",
         industry: formState.industry || "Manufacturing",
-        accountOwner: formState.accountOwner || "Atakan Zehir",
+        accountOwner: formState.accountOwner || getTenantActorName(),
         billingCity: formState.billingCity,
         billingDistrict: formState.billingDistrict,
         billingAddress: formState.billingAddress,
@@ -612,7 +613,7 @@ export default function CompaniesView() {
         managementTeam: formState.managementTeam,
         taxOffice: formState.taxOffice,
         taxNo: formState.taxNo,
-        healthScore: Number(formState.healthScore) || 75,
+        healthScore: formState.healthScore == null ? undefined : Number(formState.healthScore),
         customFields: formState.customFields || {}
       }) as unknown as Company;
 
@@ -640,24 +641,24 @@ export default function CompaniesView() {
       customerStatus: "Lead",
       industry: "Manufacturing",
       sector: "",
-      employeeCount: 50,
-      annualRevenue: "1,000,000",
+      employeeCount: undefined,
+      annualRevenue: "",
       annualRevenueCurrency: "₺",
-      accountOwner: "Atakan Zehir",
+      accountOwner: getTenantActorName(),
       billingAddress: "",
-      billingCity: "Bursa",
-      billingDistrict: "Nilüfer",
+      billingCity: "",
+      billingDistrict: "",
       billingCountry: "Türkiye",
       billingPostalCode: "",
       shift: "1 Shift",
-      productionType: "Serial Batch",
-      squareMeter: "2500",
+      productionType: "",
+      squareMeter: "",
       digitalInfrastructure: "ERP",
       description: "",
       managementTeam: "",
       taxOffice: "",
       taxNo: "",
-      healthScore: 75,
+      healthScore: undefined,
       customFields: {}
     });
     setIsFormOpen(true);
@@ -1178,14 +1179,14 @@ export default function CompaniesView() {
                         )}
                       </td>
                       <td className="p-3 text-slate-600 dark:text-zinc-400">
-                        {c.billingCity ? `${c.billingCity}, ${c.billingDistrict || ""}` : (t("Bursa, TR"))}
+                        {c.billingCity ? `${c.billingCity}, ${c.billingDistrict || ""}` : "—"}
                       </td>
-                      <td className="p-3 font-mono font-bold text-slate-700 dark:text-zinc-350">{c.employeeCount || 50}</td>
+                      <td className="p-3 font-mono font-bold text-slate-700 dark:text-zinc-350">{c.employeeCount ?? "—"}</td>
                       <td className="p-3">
                         <span className="font-extrabold text-slate-800 dark:text-zinc-200 font-mono">
-                          {c.annualRevenue ? `${getSystemCurrency().symbol}${c.annualRevenue}` : `${getSystemCurrency().symbol}1.2M`}
+                          {c.annualRevenue ? `${getSystemCurrency().symbol}${c.annualRevenue}` : "—"}
                         </span>
-                        <span className="text-[10px] text-slate-400 block mt-0.5">{c.productionType || "Serial Batch"}</span>
+                        <span className="text-[10px] text-slate-400 block mt-0.5">{c.productionType || "—"}</span>
                       </td>
                       <td className="p-3">
                         <span data-crm-caption="" className={`inline-block px-2.5 py-0.5 rounded-full text-[9px] font-mono font-bold uppercase tracking-wide ${
@@ -1198,20 +1199,20 @@ export default function CompaniesView() {
                           {getTranslatedValue(c.customerStatus, "customerStatus")}
                         </span>
                       </td>
-                      <td className="p-3 font-semibold text-slate-700 dark:text-zinc-300">{c.accountOwner || "Atakan Zehir"}</td>
+                      <td className="p-3 font-semibold text-slate-700 dark:text-zinc-300">{c.accountOwner || "—"}</td>
                       <td className="p-3">
                         <div className="flex items-center gap-1.5">
                           <span className={`font-mono font-bold text-xs ${
-                            (c.healthScore || 75) >= 80 ? "text-emerald-500" : (c.healthScore || 75) >= 60 ? "text-amber-500" : "text-rose-500"
+                            (c.healthScore ?? 0) >= 80 ? "text-emerald-500" : (c.healthScore ?? 0) >= 60 ? "text-amber-500" : "text-rose-500"
                           }`}>
-                            {c.healthScore || 75}%
+                            {c.healthScore == null ? "—" : `${c.healthScore}%`}
                           </span>
                           <div className="w-12 bg-slate-100 dark:bg-zinc-800 rounded-full h-1.5 overflow-hidden">
                             <div 
                               className={`h-full ${
-                                (c.healthScore || 75) >= 80 ? "bg-emerald-500" : (c.healthScore || 75) >= 60 ? "bg-amber-500" : "bg-rose-500"
+                                (c.healthScore ?? 0) >= 80 ? "bg-emerald-500" : (c.healthScore ?? 0) >= 60 ? "bg-amber-500" : "bg-rose-500"
                               }`}
-                              style={{ width: `${c.healthScore || 75}%` }}
+                              style={{ width: `${c.healthScore ?? 0}%` }}
                             />
                           </div>
                         </div>

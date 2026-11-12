@@ -129,7 +129,7 @@ export default function CompanyDetailView({
         field: fieldChanged,
         oldValue: oldValue || "N/A",
         newValue: newValue || "N/A",
-        user: "Atakan Zehir",
+        user: getTenantActorName(),
         timestamp: new Date().toISOString()
       });
       CrmDb.setKv(key, logs);
@@ -262,6 +262,7 @@ export default function CompanyDetailView({
           return (
             <button data-crm-button=""
               key={tab.id}
+              data-crm-company-tab={tab.id}
               data-active={active}
               type="button"
               onClick={() => setDetailTab(tab.id)}

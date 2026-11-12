@@ -1,3 +1,4 @@
+import { runGeneralAudit } from './generalAudit.browser';
 import React from 'react';import{createRoot}from'react-dom/client';import{MemoryRouter}from'react-router-dom';
 import App from '../src/App';import AdministrationCenter from '../src/components/AdministrationCenter';import UserAccountSettings from '../src/components/UserAccountSettings';import AuthLayout,{AuthField,AuthButton} from '../src/components/auth/AuthLayout';import ProposalFormModal from '../src/components/ProposalFormModal';import{LanguageProvider}from'../src/lib/LanguageContext';
 class PreviewBoundary extends React.Component<{children:React.ReactNode},{error:string}> {
@@ -24,7 +25,7 @@ if(query.has('dense')) {
 }
 (window as any).workspaceFixture=fixtures;
 const root=createRoot(document.getElementById('root')!);
-if(query.get('screen')) root.render(<PreviewBoundary><LanguageProvider><div style={{padding:16}}>{query.get('screen')==='admin'?<AdministrationCenter onClose={()=>{}} />:query.get('screen')==='account'?<UserAccountSettings onClose={()=>{}} darkMode={false} onToggleTheme={()=>{}} />:<AuthLayout title="Gemba IQ hesabınıza giriş yapın" subtitle="Çalışma alanınıza güvenle bağlanın"><AuthField id="email" label="E-posta" value="" onChange={()=>{}} /><div style={{marginTop:16}}><AuthButton>Giriş yap</AuthButton></div></AuthLayout>}</div></LanguageProvider></PreviewBoundary>);
+if(query.get('screen')) root.render(<PreviewBoundary><LanguageProvider><div style={{padding:16}}>{query.get('screen')==='admin'?<AdministrationCenter onClose={()=>{}} initialSubTab={query.get("panel") || undefined} />:query.get('screen')==='account'?<UserAccountSettings onClose={()=>{}} darkMode={false} onToggleTheme={()=>{}} />:<AuthLayout title="Gemba IQ hesabınıza giriş yapın" subtitle="Çalışma alanınıza güvenle bağlanın"><AuthField id="email" label="E-posta" value="" onChange={()=>{}} /><div style={{marginTop:16}}><AuthButton>Giriş yap</AuthButton></div></AuthLayout>}</div></LanguageProvider></PreviewBoundary>);
 else if(query.has('editor')) root.render(<PreviewBoundary><LanguageProvider><ProposalFormModal isOpen onClose={()=>{}} onSave={p=>{fixtures.saved=p}} initialProposal={base} companies={[company as any]} onAddCompany={()=>{}} /></LanguageProvider></PreviewBoundary>);
 else root.render(<PreviewBoundary><MemoryRouter><LanguageProvider><App /></LanguageProvider></MemoryRouter></PreviewBoundary>);
 const delay=(ms=150)=>new Promise(r=>setTimeout(r,ms));
@@ -83,3 +84,5 @@ async function test(){
  const panel=document.createElement('div');panel.id='layout-report';panel.setAttribute('role','status');panel.style.cssText='position:fixed;top:0;left:0;z-index:9999;background:white;color:#166534;font:14px Arial;padding:12px';panel.textContent=`GEÇTİ: ${results.length} düzen ve form testi`;document.body.append(panel);
 }
 if(query.has('test'))test().catch(err=>{const el=document.createElement('p');el.style.cssText='position:fixed;top:0;left:0;z-index:9999;background:white;color:red;padding:12px';el.textContent='BAŞARISIZ: '+err.message;document.body.append(el);console.error(err);});
+
+if(query.has("audit"))runGeneralAudit(root,fixtures).catch(error=>{const p=document.createElement("p");p.id="audit-result";p.textContent="BAŞARISIZ: "+error.message;document.body.append(p);console.error(error);});

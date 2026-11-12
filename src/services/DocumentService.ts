@@ -104,7 +104,7 @@ export const DocumentService = {
         lastModified: d.date,
         deleted: false,
         isCurrent: true,
-        fileContent: "", // empty placeholder
+        fileContent: d.content || "", // preserve existing document content
         description: "Migrated from standard CRM repository."
       };
     });
@@ -178,20 +178,20 @@ export const DocumentService = {
       if (activeDefault) {
         if (activeDefault.provider.includes("SharePoint")) {
           selectedProvider = "SHAREPOINT";
-          storageStatus = "Synced";
+          storageStatus = "Pending External Storage";
         } else if (activeDefault.provider.includes("OneDrive")) {
           selectedProvider = "ONEDRIVE";
-          storageStatus = "Synced";
+          storageStatus = "Pending External Storage";
         } else if (activeDefault.provider.includes("Azure")) {
           selectedProvider = "AZURE";
-          storageStatus = "Synced";
+          storageStatus = "Pending External Storage";
         }
       }
     }
 
     if (params.customStorageProvider) {
       selectedProvider = params.customStorageProvider;
-      storageStatus = selectedProvider === "LOCAL" ? "Pending External Storage" : "Synced";
+      storageStatus = "Pending External Storage";
     }
 
     // Abstract storage path builder

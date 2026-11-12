@@ -128,7 +128,7 @@ export default function CompanyEmailsTab({
 
   // Composer Form State
   const [formState, setFormState] = useState({
-    recipient: contactEmail || `info@${companyName.toLowerCase().replace(/[^a-z0-9]/g, "")}.com`,
+    recipient: contactEmail || "",
     cc: "",
     subject: "",
     body: "",
@@ -266,7 +266,7 @@ export default function CompanyEmailsTab({
 
       // Reset composer
       setFormState({
-        recipient: contactEmail || `info@${companyName.toLowerCase().replace(/[^a-z0-9]/g, "")}.com`,
+        recipient: contactEmail || "",
         cc: "",
         subject: "",
         body: "",

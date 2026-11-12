@@ -1,0 +1,38 @@
+[
+  {
+    "view": "320-False",
+    "status": "TAMAMLANDI: 61 ekran/durum · 320 px · 0 sorun",
+    "rows": 61,
+    "issues": []
+  },
+  {
+    "view": "390-False",
+    "status": "TAMAMLANDI: 61 ekran/durum · 390 px · 0 sorun",
+    "rows": 61,
+    "issues": []
+  },
+  {
+    "view": "768-False",
+    "status": "TAMAMLANDI: 61 ekran/durum · 768 px · 0 sorun",
+    "rows": 61,
+    "issues": []
+  },
+  {
+    "view": "1280-False",
+    "status": "TAMAMLANDI: 61 ekran/durum · 1280 px · 0 sorun",
+    "rows": 61,
+    "issues": []
+  },
+  {
+    "view": "390-True",
+    "status": "TAMAMLANDI: 61 ekran/durum · 390 px · 0 sorun",
+    "rows": 61,
+    "issues": []
+  },
+  {
+    "view": "1280-True",
+    "status": "TAMAMLANDI: 61 ekran/durum · 1280 px · 0 sorun",
+    "rows": 61,
+    "issues": []
+  }
+]

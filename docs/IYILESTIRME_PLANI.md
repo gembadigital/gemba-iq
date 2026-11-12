@@ -2,7 +2,70 @@
 
 Bu dosya, projenin kaynak kodu üzerinden yapılan UI/UX değerlendirmesini ve dil (TR/EN) tutarlılığı taramasını fazlara bölünmüş, uygulanabilir bir plana çeviriyor. Ekip bu dosyayı çalışma listesi olarak kullanabilir — her fazın altında **Durum** satırı var ve ilerledikçe güncellenmeli.
 
-Son güncelleme: 2026-07-27 (Pazarlama & İş Geliştirme modülü eklendi)
+Son güncelleme: 2026-11-12 (CRM güvenilirliği ve iş akışı öncelikleri eklendi)
+
+## CRM iyileştirme öncelikleri — 2026-11-12
+
+Kullanıcı talebiyle aşağıdaki beş çalışma bu sırayla plana alındı. Bu bölüm iş listesidir; maddelerin tamamlandığı veya canlıda doğrulandığı anlamına gelmez. Mevcut işlevler korunacak; çalışan özellikler yeniden geliştirilmeden önce kontrol edilecek.
+
+### 1. Kayıtların korunması ve geri dönüş doğrulaması
+
+**Durum:** Kısmen uygulandı (12 Kasım 2026). Genel denetimde müşteri alanları, satış hedefleri, sözleşme tarihi/para birimi ve kayıt başarı bildirimi hataları giderildi. İzole kayıt testleri genişletildi; tam geri dönüş tatbikatı ve tüm canlı akışların doğrulanması açık. Ayrıntı: `GENEL_KONTROL_2026-11-12.md`.
+
+- Müşteri, fırsat, teklif revizyonu ve finans kayıtlarında kaydetme → yenileme → yeniden açma akışını doğrula.
+- Eş zamanlı kullanıcı düzenlemeleri, geciken istekler ve ağ kesintilerinde kayıtların korunmasını, hata görünürlüğünü ve yeniden denemeyi kontrol et.
+- Teklifin müşteriye özel son içeriğini, fiyatlarını, opsiyonlarını ve sürümünü katalog varsayılanlarından bağımsız koruduğunu doğrula.
+- Yedeklerin bütünlüğünü kontrol et; canlı veriye geri yükleme yapmadan izole ortamda geri dönüş denemesi hazırla.
+
+**Tamamlanma ölçütü:** Kritik kayıt akışları doğrulanmış, hata senaryoları belgelenmiş ve izole geri dönüş denemesi başarıyla tamamlanmış olmalı.
+
+### 2. Outlook yazışmalarının müşteri kartına eşitlenmesi
+
+**Durum:** Planlandı; mevcut gönderim ve posta tarama altyapısı kullanılacak.
+
+- Microsoft posta okuma yetkisini ve bağlı hesap kapsamını doğrula.
+- Gelen/giden mesajları müşteri iletişim kişilerinin e-posta adresleriyle eşleştir; eşleşmeyen kişisel yazışmaları aktarma.
+- Geçmiş yazışma aktarımı ve devam eden eşitlemede konu, tarih, gönderen, alıcı, içerik ve konuşma ilişkisini koru.
+- Mesaj kimliğiyle mükerrer kaydı engelle; eşitleme hatalarını ve son başarılı çalışmayı görünür kıl.
+
+**Tamamlanma ölçütü:** Eşleşen gelen/giden yazışmalar doğru müşteri kartında görünmeli; tekrar eşitleme kayıt çoğaltmamalı, yetkisiz kullanıcıya yazışma açmamalı.
+
+### 3. Türkiye–Almanya veri ve yetki ayrımı
+
+**Durum:** Planlandı; kullanıcının kota nedeniyle ertelediği çalışma, devam talebi gelene kadar beklemede.
+
+- Atakan Zehir için superadmin; Almanya organizasyonu için admin ve kullanıcı rolleri uygula. Hesap kimliğini doğrulamadan rol atama.
+- Almanya yalnızca kendi müşterilerini ve kayıtlarını görmeli; superadmin iki organizasyona erişebilmeli.
+- Ekranlar, API'ler, dosyalar ve veritabanı erişiminde organizasyon ayrımını karşılıklı olumsuz erişim testleriyle doğrula.
+- Yapay zekâ API'lerini kaldırma talebini bu çalışmada ele al.
+
+**Tamamlanma ölçütü:** Almanya ve Türkiye kullanıcıları birbirlerinin kayıtlarına erişememeli; superadmin kontrollü organizasyon seçimiyle her ikisine erişebilmeli.
+
+**Referans:** Çalışma alanı kökündeki `DEVAM_NOTU_ALMANYA_ORGANIZASYONU.md`.
+
+### 4. Mevcut teklif sonrası takip otomasyonunun doğrulanması ve iyileştirilmesi
+
+**Durum:** Mevcut özellik; kullanıcı otomasyonun daha önce kurulduğunu belirtti. Yeni ve eksik bir modül olarak değerlendirilmez.
+
+- Mevcut aşama hatırlatma motorunu, sunucu cron akışını, görev bildirimlerini ve teklif–fırsat bağlantısını incele (`lib/server/dealReminderCron.js`, `src/lib/dealReminderEngine.ts`, `src/components/TasksView.tsx`).
+- Yapılandırılan sürelerde doğru teklif/fırsat ve sorumlu için takibin tetiklendiğini; başarısız işlemlerin görünür olduğunu kontrol et.
+- Canlı e-posta göndermeden test ortamında mükerrer çalışma, aşama değişimi, kazanılan/kaybedilen fırsat ve takibin durdurulması senaryolarını doğrula.
+- Yalnızca tespit edilen hata veya eksikleri gider; mevcut kullanıcı ayarlarını ve çalışan akışı koru.
+
+**Tamamlanma ölçütü:** Kurulu otomasyonun hangi koşullarda çalıştığı belgelenmiş; tetikleme, durdurma ve mükerrer işlem koruması testlerle doğrulanmış olmalı.
+
+### 5. Yönetim raporlarının güçlendirilmesi
+
+**Durum:** Kısmen uygulandı (12 Kasım 2026). Satış dönem filtreleri, hedeflerin kaydı ve örnek verilerin gerçek metrik gibi sunulması düzeltildi. Tam finansal mutabakat ve gelişmiş raporlama açık.
+
+- Satış tahmini, aşamada bekleyen fırsatlar, tekliften satışa dönüşüm ve tahsilat görünümünü ortak tanımlarla doğrula.
+- Tarih, sorumlu ve organizasyon filtrelerinin tutarlılığını; farklı para birimlerinin toplamlarda doğru ele alındığını kontrol et.
+- Fırsat tahmini, kabul edilen teklif, faturalanan gelir ve tahsilatı ayrı göster; aynı işin mükerrer gelir sayılmasını önle.
+- Kullanıcının talebine uygun şekilde net fatura tutarı ve KDV'yi ayrı hesapla; toplamı net + KDV olarak göster. Gelir/P&L hesaplarının kaynak kayıtlarla mutabakatını yap.
+
+**Tamamlanma ölçütü:** Rapor toplamları kaynak kayıtlara kadar izlenebilmeli; örnek dönemlerde satış, net gelir, KDV ve tahsilat hesapları mutabık olmalı.
+
+---
 
 ## Yeni Modül: Pazarlama & İş Geliştirme (2026-07-27)
 

@@ -1581,7 +1581,7 @@ export default function ServicesView({
       companyName: clientTitle,
       contactPerson: clientContactPerson,
       contactEmail: clientContactEmail,
-      contactPhone: "+90 (532) " + (Math.floor(Math.random() * 900) + 100) + " " + (Math.floor(Math.random() * 9000) + 1000),
+      contactPhone: existingDeal?.contactPhone || linkedCompany?.phone || "",
       opportunityValue: totalBudget,
       expectedCloseDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0].split('-').reverse().join('.'), // DD.MM.YYYY
       opportunityScore: 80,

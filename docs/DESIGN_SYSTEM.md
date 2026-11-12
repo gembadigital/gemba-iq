@@ -1,4 +1,4 @@
-# Gemba IQ CRM düzen sistemi — v2
+# Gemba IQ CRM düzen sistemi — v3
 
 Referans: Müşteriler sayfasındaki mevcut müşteri kartı ve düzenleme alanı. Amaç görsel düzeni tutarlı hale getirmektir. Ana renk paleti, yazı tipi ailesi, erişim yetkileri, veri alanları, hesaplamalar ve iş akışları bu sistemin kapsamıyla değiştirilmez.
 
@@ -12,9 +12,9 @@ Asgari satır yüksekliği 44 px; seçili/pasif satır ölçüsü aynıdır. Akt
 
 ## Sayfa, kart ve form
 
-- Başlık: 22×24 px boşluk; 44 px ikon alanı, başlık/açıklama ve sağda eylemler. Renkli üst şerit ve yanıp sönen ana düğme kullanılmaz.
+- Başlık: çalışma zemini üzerinde 4 px üst / 12 px alt boşluk; başlık/açıklama ve sağda eylemler. Ayrı beyaz kutu, renkli üst şerit ve yanıp sönen ana düğme kullanılmaz. Hem başlık hem kart işareti taşıyan öğelerde başlık kuralı önceliklidir.
 - Kart: 12 px köşe, 1 px mevcut tema çizgisi, 22 px iç boşluk. Bölümler arasında 20 px. İç içe gereksiz çerçeveler kullanılmaz.
-- Başlık 21 px, bölüm başlığı 14 px; mevcut Inter ailesi. Alan etiketi 12 px, alan metni 13 px; gereksiz monospace, büyük harf ve aşırı kalın yazı kullanılmaz.
+- Sayfa başlığı 24 px (telefonda 20 px), bölüm başlığı 14 px; mevcut Inter ailesi. Alan etiketi 12 px, alan metni 13 px; gereksiz monospace, büyük harf ve aşırı kalın yazı kullanılmaz.
 - Alan: en az 40 px yükseklik, 9×11 px iç boşluk, 7 px köşe. Izgaralarda 18 px aralık; dar ekranda tek sütuna düşer.
 - Özet rakamları tek beyaz yüzeyde ayrılan hücreler halinde; hesaplama ve para birimi mantığı korunur.
 - Liste: okunabilir satır aralığı; küçük ekranda kaydırma yalnızca tablo içinde. İşlemler sütunu sağda sabittir. Mevcut eylemler aynı açılır menüde kalır.
@@ -53,3 +53,11 @@ Derlemeden sonra `node tests/buildWorkspacePreview.mjs /tmp/gemba-ui-preview /ya
 - Karşılaştırma tablolarında otomatik sütun yerleşimi, okunabilir asgari hücre genişliği ve çok sütunlu tablolar için daha geniş iç tablo kullanılır. Panoların kolonları küçük telefonun içine sığar; diğer kolonlar kendi pano alanında kayar.
 - `tests/responsiveReview.html`: 30 ana sayfa + 3 yönetim/giriş durumu ve 11 detay/form/liste geçişi. Uzun şirket/kişi/hizmet adları ve dolu örnek kayıtlarla; kök sayfa taşması, ezilen hücre, kartların üst üste binmesi, içeriğin kart dışına çıkması, dar teklif başlığı ve pencere taşması ölçülür. Boş listenin taşmaması tek başına başarı değildir.
 - Teklif düzenleme, müşteri detay/düzenleme, görev liste/ekleme, gelir veri/fatura, P&L tablosu, fırsat listesi, sihirbaz ikinci aşama ve hizmet tanımı görünümü açılarak doğrulanır. Test taşıma/kayıt üretim servisine bağlanmaz. `responsive.html?width=390` ve `width=320/768/844` kullanılabilir; sonuçlar her ekran/durum için ayrı listelenir.
+
+## Genel kontrol — 12 Kasım 2026
+
+Ortak başlık/kart çakışması giderildi; tabloların metni 13 px, hücrelerde gereksiz monospace ve aşırı kalın yazı normalleştirildi. Bütün ekranlarda aynı başlık, form ve kart işaretleri kullanılır. PDF/A4 içeriğine bu çalışmada tasarım müdahalesi yapılmadı.
+
+`tests/responsiveReview.html` artık 30 ana sayfa, 3 yönetim/hesap/giriş görünümü ve 28 detay/form/sekme durumu içerir (61 toplam). 320/390/768/1280 px açık, 390/1280 px koyu temada kontrol edilir. Yönetim alt sekmeleri ve müşteri kartının tüm sekmeleri kapsamdadır. Sonuçlar ve kapsam sınırları `docs/GENEL_KONTROL_2026-11-12.md` dosyasındadır.
+
+`tests/generalAudit.browser.tsx`, gerçek React bileşenlerini izole CRM taşıyıcısıyla kontrol eder. `tests/runCrmPersistenceTest.mjs` gerçek kayıt/birleştirme katmanında dokuz hata ve yeniden yükleme senaryosunu doğrular. Canlı veri üzerinde test kaydı veya e-posta gönderilmez. Bu denetimde açıkça belgelenen davranış hataları da düzeltildiğinden, önceki yalnız-görsel AST karşılaştırması bu sürümün davranış doğrulaması yerine kullanılmaz. Gelecek yalnız-görsel çalışmalarda o karşılaştırmaya bu denetimden sonraki commit taban olarak verilmelidir.

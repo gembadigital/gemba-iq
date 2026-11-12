@@ -37,9 +37,6 @@ import {
   Consultant,
   ProjectAssignment,
   Invoice as RevenueInvoice,
-  INITIAL_CONSULTANTS,
-  INITIAL_ASSIGNMENTS,
-  INITIAL_INVOICES as REVENUE_INITIAL_INVOICES,
 } from "../data/revenueData";
 import {
   PLGroupKey,
@@ -98,17 +95,6 @@ const STICKY_CELL_CLASS = "sticky left-0 z-10 shadow-[4px_0_6px_-4px_rgba(0,0,0,
 // the Fatura Yükleme tab for categories Revenue Management doesn't cover
 // (e.g. Yazılım Geliri).
 const REVENUE_MANAGEMENT_INVOICES_KEY = "crm_revenue_invoices";
-
-// ---------------------------------------------------------------------------
-// Seed / demo data — mirrors the exact example given when this page was
-// specified (Haziran 2026: Net Satış Geliri Plan 1.500.000). Gerçekleşen for
-// that month now comes from Revenue Management's own seeded invoices, so no
-// separate seed invoice is needed here any more.
-// ---------------------------------------------------------------------------
-
-const DEFAULT_CATEGORY_PLANS: Record<string, Record<string, number>> = {
-  [revenueRowKey("consulting")]: { "2026-06": 1_500_000 },
-};
 
 // ---------------------------------------------------------------------------
 // Pure calculation helpers (all operate over an arbitrary list of months, so
@@ -1348,20 +1334,20 @@ export default function ManagementPLView() {
   const [pinError, setPinError] = useState(false);
 
   const monthOptions = useMemo(() => generateMonthOptions(), []);
-  const [selectedMonth, setSelectedMonth] = useState("2026-06");
+  const [selectedMonth, setSelectedMonth] = useState(new Date().toLocaleDateString("sv-SE").slice(0, 7));
   const [activeSection, setActiveSection] = useState<PLSection>("dashboard");
   const [trendWindow, setTrendWindow] = useState<6 | 12>(6);
 
   const [periodMode, setPeriodMode] = useState<PLPeriodMode>("single");
-  const [rangeStart, setRangeStart] = useState("2026-06");
+  const [rangeStart, setRangeStart] = useState(new Date().toLocaleDateString("sv-SE").slice(0, 7));
   const [rangeEnd, setRangeEnd] = useState("2026-08");
   const [quarterYear, setQuarterYear] = useState(2026);
   const [quarterIndex, setQuarterIndex] = useState(2);
 
-  const [consultants, setConsultants] = useState<Consultant[]>(INITIAL_CONSULTANTS);
-  const [assignments, setAssignments] = useState<ProjectAssignment[]>(INITIAL_ASSIGNMENTS);
-  const [revenueInvoices, setRevenueInvoices] = useState<RevenueInvoice[]>(REVENUE_INITIAL_INVOICES);
-  const [categoryPlans, setCategoryPlans] = useState<Record<string, Record<string, number>>>(DEFAULT_CATEGORY_PLANS);
+  const [consultants, setConsultants] = useState<Consultant[]>([]);
+  const [assignments, setAssignments] = useState<ProjectAssignment[]>([]);
+  const [revenueInvoices, setRevenueInvoices] = useState<RevenueInvoice[]>([]);
+  const [categoryPlans, setCategoryPlans] = useState<Record<string, Record<string, number>>>({});
   const [consultantPlans, setConsultantPlans] = useState<Record<string, Record<string, number>>>({});
   const [recurringEntries, setRecurringEntries] = useState<RecurringCostEntry[]>([]);
   const [invoices, setInvoices] = useState<PLInvoiceRecord[]>([]);
@@ -1381,10 +1367,10 @@ export default function ManagementPLView() {
   const invoiceFileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
-    setConsultants(CrmDb.getKv<Consultant[]>("crm_revenue_consultants", INITIAL_CONSULTANTS));
-    setAssignments(CrmDb.getKv<ProjectAssignment[]>("crm_revenue_assignments", INITIAL_ASSIGNMENTS));
-    setRevenueInvoices(CrmDb.getKv<RevenueInvoice[]>(REVENUE_MANAGEMENT_INVOICES_KEY, REVENUE_INITIAL_INVOICES));
-    setCategoryPlans(CrmDb.getKv(PL_CATEGORY_PLANS_KEY, DEFAULT_CATEGORY_PLANS));
+    setConsultants(CrmDb.getKv<Consultant[]>("crm_revenue_consultants", []));
+    setAssignments(CrmDb.getKv<ProjectAssignment[]>("crm_revenue_assignments", []));
+    setRevenueInvoices(CrmDb.getKv<RevenueInvoice[]>(REVENUE_MANAGEMENT_INVOICES_KEY, []));
+    setCategoryPlans(CrmDb.getKv(PL_CATEGORY_PLANS_KEY, {}));
     setConsultantPlans(CrmDb.getKv(PL_CONSULTANT_PLANS_KEY, {}));
     setRecurringEntries(CrmDb.getKv(PL_RECURRING_ENTRIES_KEY, []));
     setInvoices(CrmDb.getKv(PL_INVOICES_KEY, []));

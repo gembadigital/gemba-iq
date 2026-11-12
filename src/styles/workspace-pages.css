@@ -17,6 +17,17 @@
     box-shadow: none !important; gap: 18px !important; min-width: 0;
   }
   .gemba-stitch-skin [data-crm-header] { flex-wrap: wrap; margin-top: 0 !important; }
+  /* v3: a page heading is part of the workspace, not another boxed panel.
+     These explicit UI hooks never reach proposal/PDF document markup. */
+  .gemba-stitch-skin [data-crm-header], .gemba-stitch-skin [data-crm-header][data-crm-card] {
+    background: transparent !important; border: 0 !important;
+    border-radius: 0 !important; padding: 4px 0 12px !important;
+  }
+  .gemba-stitch-skin [data-crm-header] [data-crm-heading="page"] { font-size: 24px !important; }
+  .gemba-stitch-skin [data-crm-header-copy] > p { max-width: 76ch; }
+  .gemba-stitch-skin [data-crm-screen] > [data-crm-card]:not([data-crm-header]) { border-width: 1px !important; }
+  .gemba-stitch-skin [data-crm-card] > [data-crm-heading="section"] { margin-bottom: 16px !important; }
+  .gemba-stitch-skin [data-crm-card] > [data-crm-card] { box-shadow: none !important; }
   .gemba-stitch-skin [data-crm-header] > [class*="mt-"] { margin-top: 0 !important; }
   .gemba-stitch-skin [data-crm-screen="AISalesAssistant"] { padding: 0 !important; }
   .gemba-stitch-skin [data-crm-header-actions] { display: flex; flex-wrap: wrap; flex-shrink: 0; gap: 8px; max-width: 100%; }
@@ -53,7 +64,9 @@
   .gemba-stitch-skin [data-crm-scroll="horizontal"] { min-width: 0; max-width: 100%; overflow-x: auto; overscroll-behavior-x: contain; scrollbar-width: thin; scrollbar-color: var(--stitch-line) transparent; -webkit-overflow-scrolling: touch; }
   .gemba-stitch-skin [data-crm-table] { display: table !important; max-width: none !important; overflow: visible !important; width: 100%; min-width: 640px; border-collapse: separate; border-spacing: 0; font-family: Inter,sans-serif; }
   .gemba-stitch-skin [data-crm-table] th { background: var(--stitch-field) !important; color: var(--stitch-muted) !important; text-transform: none !important; letter-spacing: 0 !important; font: 500 12px/1.5 Inter,sans-serif !important; padding: 12px 14px !important; border-color: var(--stitch-line) !important; }
-  .gemba-stitch-skin [data-crm-table] td { padding: 13px 14px !important; font-size: 12px !important; line-height: 1.6; border-color: var(--stitch-line) !important; vertical-align: middle; }
+  .gemba-stitch-skin [data-crm-table] td { padding: 13px 14px !important; font-size: 13px !important; line-height: 1.6; border-color: var(--stitch-line) !important; vertical-align: middle; }
+  .gemba-stitch-skin [data-crm-table] td [class*="font-mono"] { font-family: Inter,sans-serif !important; font-variant-numeric: tabular-nums; }
+  .gemba-stitch-skin [data-crm-table] td [class*="font-extrabold"] { font-weight: 600 !important; }
   .gemba-stitch-skin [data-crm-table] tbody tr:hover { background-color: var(--stitch-field); }
   .gemba-stitch-skin [data-crm-table] [data-crm-field] { min-height: 34px; padding: 6px 8px !important; }
   .gemba-stitch-skin [data-crm-modal] { background: var(--stitch-surface) !important; border: 1px solid var(--stitch-line) !important; border-radius: 14px !important; box-shadow: 0 24px 80px #080f2430 !important; min-width: 0; }

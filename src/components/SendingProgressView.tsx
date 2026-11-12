@@ -369,8 +369,8 @@ export default function SendingProgressView({
           setSuccessCount((prev) => prev + 1);
           updateRecipientStatus(recipient.id, "success");
           
-          // Add sent email details (personalized subject & body) to the Email Campaigns Agenda
-          try {
+          // Sandbox results never enter the real campaign ledger.
+          if (!session?.isSandbox) try {
             const mergeTags = ["FirstName", "LastName", "Company", "Email", "Department", "Address", "Industry", "ScheduledDate", "CustomField1", "CustomField2", "CustomField3"];
             let mSubject = subject;
             let mBody = templateBody;
@@ -445,7 +445,7 @@ export default function SendingProgressView({
           }
 
           // Trigger asynchronous simulated open triggers if tracking pixels are enabled
-          if (trackingService !== "none") {
+          if (session?.isSandbox && trackingService !== "none") {
             triggerTrackedOpenSimulation(recipient.id);
           }
 
@@ -500,39 +500,18 @@ export default function SendingProgressView({
     // Schedule simulated open in 4-8 seconds
     const delay = 4000 + Math.random() * 4000;
     setTimeout(() => {
-      let isOpened = false;
       setActiveRecipients((prev) =>
         prev.map((r) => {
           if (r.id === recipientId && r.status === "success" && r.openCount === 0) {
             // Random open propensity (e.g., 60% chance)
             const opens = Math.random() < 0.65 ? 1 : 0;
-            if (opens > 0) isOpened = true;
             return { ...r, openCount: opens };
           }
           return r;
         })
       );
 
-      if (isOpened) {
-        try {
-          let list = CrmDb.getKv<any[]>("crm_email_campaigns", []);
-          let updated = false;
-          list = list.map((item: any) => {
-            if (item.id.includes(`_sent_${recipientId}_`)) {
-              updated = true;
-              return {
-                ...item,
-                opensCount: (item.opensCount || 0) + 1,
-                clicksCount: Math.random() < 0.35 ? (item.clicksCount || 0) + 1 : (item.clicksCount || 0)
-              };
-            }
-            return item;
-          });
-          if (updated) {
-            CrmDb.setKv("crm_email_campaigns", list);
-          }
-        } catch (_) {}
-      }
+
     }, delay);
   };
 
@@ -597,7 +576,7 @@ export default function SendingProgressView({
       // Keep state correct when completing
       finishedCampaign.status = "completed";
       
-      if (onCampaignComplete) {
+      if (onCampaignComplete && !session?.isSandbox) {
         onCampaignComplete(finishedCampaign);
       }
 
@@ -1135,8 +1114,8 @@ export default function SendingProgressView({
                 </div>
               </div>
 
-              {/* Simulation Hub */}
-              <div data-crm-stack="" className="bg-[#FAF9F8] dark:bg-[#252423]/50 p-4 rounded border border-[#EDEBE9] dark:border-[#323130] space-y-4">
+              {/* Explicit sandbox tools never appear in a real sending session. */}
+              {session?.isSandbox && <div data-crm-stack="" className="bg-[#FAF9F8] dark:bg-[#252423]/50 p-4 rounded border border-[#EDEBE9] dark:border-[#323130] space-y-4">
                 <div>
                   <h4 data-crm-heading="section" className="text-xs font-bold text-slate-705 dark:text-slate-200 flex items-center gap-1.5">
                     <Flame className="w-4 h-4 text-orange-500" />
@@ -1267,7 +1246,7 @@ export default function SendingProgressView({
                     </button>
                   </div>
                 </div>
-              </div>
+              </div>}
             </div>
 
             {hasPermissionError && (

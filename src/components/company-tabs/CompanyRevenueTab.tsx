@@ -47,16 +47,7 @@ export default function CompanyRevenueTab({
   const [billingList, setBillingList] = useState<BillingItem[]>(() => {
     const key = `crm_company_billing_${companyId}`;
     const saved = CrmDb.getKv<BillingItem[] | null>(key, null);
-    if (saved && saved.length > 0) return saved;
-
-    // Default mock milestones based on deals
-    const defaults: BillingItem[] = [
-      { id: "b1", milestone: lang === "TR" ? "Aşama 1: Yalın Ön Teşhis ve VSM Değerlendirmesi (%30)" : "Milestone 1: Lean Diagnosis & VSM Assessment (30%)", amount: 15000, date: "2026-06-15", status: "Paid" },
-      { id: "b2", milestone: lang === "TR" ? "Aşama 2: Kaizen Blitz & SMED Kalıp Hızlandırma (%40)" : "Milestone 2: Kaizen Blitz & SMED Speedup (40%)", amount: 20000, date: "2026-07-20", status: "Pending" },
-      { id: "b3", milestone: lang === "TR" ? "Aşama 3: Standart İş SOP Kartları ve OEE Kapanış Raporu (%30)" : "Milestone 3: Standard SOP Deployment & Final OEE Audit (30%)", amount: 15000, date: "2026-08-30", status: "Draft" }
-    ];
-    CrmDb.setKv(key, defaults);
-    return defaults;
+    return saved ?? [];
   });
 
   const saveBillingList = (updated: BillingItem[]) => {
@@ -77,15 +68,10 @@ export default function CompanyRevenueTab({
         signedValue += val;
       } else if (d.stage !== "Lost" && d.stage !== "Closed Lost") {
         pipelineValue += val;
-        weightedPipeline += val * ((Number(d.winProbability) || 50) / 100);
+        weightedPipeline += val * ((Number(d.winProbability) || 0) / 100);
         activeDealsCount++;
       }
     });
-
-    // If no deals exist, default some values for realistic mock rendering
-    if (signedValue === 0 && deals.length === 0) {
-      signedValue = 50000; // default initial contract
-    }
 
     return {
       signedValue,
@@ -100,19 +86,10 @@ export default function CompanyRevenueTab({
     const updated = billingList.map(b => b.id === id ? { ...b, status: "Paid" as const } : b);
     saveBillingList(updated);
 
-    // Create a mock invoice document automatically!
-    CrmDb.createDocument({
-      companyId,
-      name: `Invoice_${milestone.replace(/[^a-zA-Z0-9]/g, "_").slice(0, 20)}.pdf`,
-      type: "application/pdf",
-      size: "124 KB",
-      date: new Date().toISOString().split("T")[0]
-    });
-
     if (onLogTimelineEvent) {
       onLogTimelineEvent(
         lang === "TR" ? "Fatura Tahsil Edildi" : "Milestone Invoice Collected",
-        `${milestone} ödemesi olan ${getSystemCurrency().symbol}${formatSystemNumber(amount)} tutar tahsil edildi ve faturası düzenlendi.`,
+        `${milestone}: ${getSystemCurrency().symbol}${formatSystemNumber(amount)} ödeme durumu tahsil edildi olarak işaretlendi.`,
         "opex"
       );
     }

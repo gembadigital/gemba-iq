@@ -186,12 +186,12 @@ export default function AdministrationCenter({
     const defaultSettings = {
       name: companyName || "Organization",
       website: "https://gembapartner.com",
-      phone: "+90 216 444 04 62",
-      address: "Kolektif House Ataşehir, İstanbul, Türkiye",
-      taxInfo: "Göztepe V.D. - 3900482910",
+      phone: "",
+      address: "",
+      taxInfo: "",
       defaultCurrency: "EUR (€)",
       defaultLanguage: "TR",
-      timezone: "UTC+03:55 (İstanbul)",
+      timezone: "UTC+03:00 (İstanbul)",
       businessDays: ["Pazartesi", "Salı", "Çarşamba", "Perşembe", "Cuma"],
       workingHours: "09:00 - 18:00",
       fiscalYear: "Ocak - Aralık",
@@ -580,7 +580,7 @@ export default function AdministrationCenter({
     }));
 
     if (conn.defaultStorage) {
-      setDataHubConnections(prev => prev.map(c => c.id === conn.id ? { ...c, defaultStorage: true, enabled: true, status: "Connected" } : { ...c, defaultStorage: false }));
+      setDataHubConnections(prev => prev.map(c => c.id === conn.id ? { ...c, defaultStorage: true, enabled: true, status: c.provider === "Local Storage" ? "Connected" : "Disconnected" } : { ...c, defaultStorage: false }));
     }
 
     addAuditLog(actorName, "Bağlantı Ayarları Güncellendi", `${conn.name} bağlantı parametreleri güncellendi.`, "Data Hub");
@@ -592,8 +592,8 @@ export default function AdministrationCenter({
   const handleToggleConnection = (id: string, enable: boolean) => {
     setDataHubConnections(dataHubConnections.map(c => {
       if (c.id === id) {
-        const status = enable ? "Connected" : "Disconnected";
-        const health = enable ? "Healthy" : "Untested";
+        const status = enable && c.provider === "Local Storage" ? "Connected" : "Disconnected";
+        const health = "Untested";
         addAuditLog(actorName, enable ? "Bulut Bağlantısı Aktifleştirildi" : "Bulut Bağlantısı Devre Dışı", `${c.name} kanalı ${enable ? "aktif" : "pasif"} edildi.`, "Data Hub");
         
         // If disabling the default storage, fall back to Local Storage as default
@@ -639,43 +639,24 @@ export default function AdministrationCenter({
     setDataHubConnections(dataHubConnections.map(c => {
       if (c.id === id) {
         addAuditLog(actorName, "Varsayılan Depolama Değiştirildi", `${c.name} varsayılan depolama kanalı yapıldı.`, "Data Hub");
-        return { ...c, defaultStorage: true, enabled: true, status: "Connected", connectionHealth: "Healthy" as any };
+        return { ...c, defaultStorage: true, enabled: true, status: c.provider === "Local Storage" ? "Connected" : "Disconnected", connectionHealth: "Untested" as any };
       }
       return { ...c, defaultStorage: false };
     }));
-    alert("Varsayılan depolama kanalı değiştirildi. Tüm yeni belgeler otomatik olarak bu kanala yüklenecektir.");
+    alert("Varsayılan depolama tercihi kaydedildi. Harici sağlayıcıya yükleme ve bağlantı testi henüz uygulanmamıştır; belgeler CRM kaydında korunur.");
   };
 
   const handleTestConnection = (id: string) => {
     const conn = dataHubConnections.find(c => c.id === id);
     if (!conn) return;
-    
-    // Simulate testing
-    const isLocal = conn.provider === "Local Storage";
-    const hasCredentials = isLocal || (conn.clientId && conn.clientSecret && conn.defaultRootFolder);
-
-    if (hasCredentials) {
-      setDataHubConnections(dataHubConnections.map(c => {
-        if (c.id === id) {
-          return { ...c, connectionHealth: "Healthy" as any, status: "Connected" as any };
-        }
-        return c;
-      }));
-      alert(`✅ BAĞLANTI TESTİ BAŞARILI!\n\n${conn.name} (${conn.provider}) bulut sunucusu ile güvenli iletişim doğrulandı.\nBağlantı Durumu: SAĞLIKLI / AKTİF\nKök Klasör: ${conn.defaultRootFolder}`);
-      addAuditLog(actorName, "Bağlantı Test Başarılı", `${conn.name} için yapılan iletişim testi başarıyla tamamlandı.`, "Data Hub", "Success");
-    } else {
-      setDataHubConnections(dataHubConnections.map(c => {
-        if (c.id === id) {
-          return { ...c, connectionHealth: "Unhealthy" as any, status: "Disconnected" as any };
-        }
-        return c;
-      }));
-      alert(`❌ BAĞLANTI TESTİ BAŞARISIZ!\n\n${conn.name} (${conn.provider}) bulut sunucusuna erişim sağlanamadı!\nSebep: Kimlik doğrulama anahtarları (Client ID / Client Secret) veya Kök Klasör tanımlı değil. Lütfen bilgileri kontrol edin.`);
-      addAuditLog(actorName, "Bağlantı Test Başarısız", `${conn.name} için erişim testi başarısız oldu.`, "Data Hub", "Warning");
-    }
+    // Merely filling credential fields is not a provider connection test.
+    setDataHubConnections(prev => prev.map(c => c.id === id ? { ...c, connectionHealth: "Untested", status: "Disconnected" } : c));
+    alert(L("Bu depolama kanalı için sunucu bağlantı testi uygulanmamış. Ayarların dolu olması bağlantının doğrulandığı anlamına gelmez.", "A server connection test is not implemented for this storage channel. Filled settings do not confirm connectivity."));
   };
 
-  const handleSaveAndClose = () => {
+  const handleSaveAndClose = async () => {
+    try { await CrmDb.flushPendingWrites(); }
+    catch (error) { showToast(error instanceof Error ? error.message : L("Kayıt başarısız", "Save failed"), "error"); return; }
     setShowSavedMsg(true);
     addAuditLog(actorName, "Ayarlar Kaydedildi", "Yönetim portalı ayarları değiştirildi ve kapatıldı.", "Sistem Ayarları");
     setTimeout(() => {
@@ -694,49 +675,9 @@ export default function AdministrationCenter({
     { name: "Ocak_Faturasi_Kurumsal_Egitim.pdf", type: "Invoice Uploads", size: "1.1 MB", date: "2026-06-18" }
   ];
 
-  // 6. Audit Logs Flow (Dynamic system logging simulation)
-  const [auditLogs, setAuditLogs] = useState<AuditLogItem[]>([
-    {
-      id: "log-1",
-      user: "Atakan Zehir (a.zehir@gembapartner.com)",
-      timestamp: "2026-06-22 10:14",
-      action: "Bağlantı Güncelleme",
-      module: "Microsoft Graph API",
-      result: "Success"
-    },
-    {
-      id: "log-2",
-      user: "Atakan Zehir (a.zehir@gembapartner.com)",
-      timestamp: "2026-06-22 09:30",
-      action: "E-posta Gönderimi",
-      module: "Sözleşme ve Teklif",
-      result: "Success"
-    },
-    {
-      id: "log-3",
-      user: "Banu Kaya (b.kaya@gembapartner.com)",
-      timestamp: "2026-06-22 08:45",
-      action: "Yönetim Oturumu Açıldı",
-      module: "Sistem Güvenliği",
-      result: "Success"
-    },
-    {
-      id: "log-4",
-      user: "Efe Yılmaz (e.yilmaz@gembapartner.com)",
-      timestamp: "2026-06-21 17:15",
-      action: "Teklif Dosya İndirme",
-      module: "Müşteri Dosyaları",
-      result: "Success"
-    },
-    {
-      id: "log-5",
-      user: "Misafir Aday (Destek)",
-      timestamp: "2026-06-21 12:20",
-      action: "Hatalı Giriş Denemesi",
-      module: "Sistem Güvenliği",
-      result: "Failure"
-    }
-  ]);
+  // Application events only. Empty history must never fabricate audit events.
+  const [auditLogs, setAuditLogs] = useState<AuditLogItem[]>(() => CrmDb.getKv("crm_admin_audit_logs", []));
+  useEffect(() => { CrmDb.setKv("crm_admin_audit_logs", auditLogs); }, [auditLogs]);
 
   const addAuditLog = (user: string, action: string, detail: string, module: string, outcome: "Success" | "Failure" | "Warning" = "Success") => {
     const nextLog: AuditLogItem = {
@@ -747,7 +688,7 @@ export default function AdministrationCenter({
       module: module,
       result: outcome
     };
-    setAuditLogs(prev => [nextLog, ...prev]);
+    setAuditLogs(prev => [nextLog, ...prev].slice(0, 1000));
   };
 
   // 7. AI Assistant & Skill settings
@@ -1348,7 +1289,15 @@ export default function AdministrationCenter({
                 )}
                 <button data-crm-button=""
                   type="button"
-                  onClick={() => {
+                  onClick={async () => {
+                    setShowSavedMsg(false);
+                    try {
+                      CrmDb.setKv(ADMIN_ORG_SETTINGS_KEY, orgSettings);
+                      await CrmDb.flushPendingWrites();
+                    } catch (error) {
+                      showToast(error instanceof Error ? error.message : L("Kayıt başarısız", "Save failed"), "error");
+                      return;
+                    }
                     setShowSavedMsg(true);
                     addAuditLog(actorName, "Organizasyon Güncellendi", "Şirket vergi, takvim ve saat ayarları yenilendi.", "Bulut Entegrasyonu");
                     setTimeout(() => {
@@ -1374,6 +1323,7 @@ export default function AdministrationCenter({
               />
 
               {/* Dynamic Permissions Matrix component */}
+              <p className="text-sm text-slate-500">{L("Bu matris henüz erişim denetimine bağlı değildir. Gerçek kullanıcı rolleri yukarıdaki kullanıcı yönetiminden belirlenir.", "This matrix is not connected to access enforcement. Manage actual user roles in the user management section above.")}</p>
 
               {/* Dynamic Permissions Matrix component */}
               <div data-crm-stack="" className="pt-6 border-t border-slate-100 dark:border-zinc-800 space-y-4">
@@ -1381,7 +1331,7 @@ export default function AdministrationCenter({
                   <div>
                     <h4 data-crm-heading="section" className="text-sm font-bold text-slate-800 dark:text-zinc-200 uppercase tracking-wide font-mono flex items-center gap-1.5">
                       <Lock className="w-4 h-4 text-slate-400" />
-                      {L("Rol Bazlı Menü İzin Matrisi", "Role-Based Menu Permission Matrix")}
+                      {L("Rol Bazlı Menü İzin Matrisi — Taslak", "Role-Based Menu Permission Matrix — Draft")}
                     </h4>
                   </div>
 
@@ -1422,6 +1372,8 @@ export default function AdministrationCenter({
                                 <td key={perm} className="p-3">
                                   <button data-crm-button=""
                                     type="button"
+                                    disabled
+                                    title={L("Taslak görünüm; erişim yetkilerini değiştirmez.", "Draft view; does not change access permissions.")}
                                     onClick={() => togglePermission(menu, perm)}
                                     className={`w-5.5 h-5.5 rounded-md flex items-center justify-center border transition-all mx-auto ${
                                       hasPerm

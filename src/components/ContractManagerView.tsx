@@ -269,13 +269,15 @@ export default function ContractManagerView() {
 
   // --- STATE FOR VARIABLES FORM ---
   const [contractNo, setContractNo] = useState(() => CrmDb.getKv("crm_contract_no", "1001"));
-  const [companyTitle, setCompanyTitle] = useState(() => CrmDb.getKv("crm_contract_company_title", "Acme Endüstriyel Çözümler San. ve Tic. Ltd. Şti."));
-  const [companyAddress, setCompanyAddress] = useState(() => CrmDb.getKv("crm_contract_company_address", "Hadımköy Organize Sanayi Bölgesi, 3. Cadde No:14, Arnavutköy/İstanbul"));
+  const [companyTitle, setCompanyTitle] = useState(() => CrmDb.getKv("crm_contract_company_title", ""));
+  const [companyAddress, setCompanyAddress] = useState(() => CrmDb.getKv("crm_contract_company_address", ""));
   const [taxOffice, setTaxOffice] = useState(() => CrmDb.getKv("crm_contract_tax_office", ""));
   const [taxNo, setTaxNo] = useState(() => CrmDb.getKv("crm_contract_tax_no", ""));
   
-  const [subject, setSubject] = useState(() => CrmDb.getKv("crm_contract_subject", "Yalın Üretim Hattı Kurulumu ve Operasyonel İsraf Analizi projesi"));
+  const [subject, setSubject] = useState(() => CrmDb.getKv("crm_contract_subject", ""));
   const [contractDate, setContractDate] = useState(() => {
+    const saved = CrmDb.getKv("crm_contract_date", "");
+    if (saved) return saved;
     const today = new Date();
     const offset = today.getTimezoneOffset();
     const localToday = new Date(today.getTime() - (offset * 60 * 1000));
@@ -286,14 +288,14 @@ export default function ContractManagerView() {
     return saved ? parseInt(saved) : 12;
   });
 
-  const [projectManager, setProjectManager] = useState(() => CrmDb.getKv("crm_contract_pm", "Ahmet Yılmaz"));
-  const [projectManagerTC, setProjectManagerTC] = useState(() => CrmDb.getKv("crm_contract_pm_tc", "12345678901"));
+  const [projectManager, setProjectManager] = useState(() => CrmDb.getKv("crm_contract_pm", ""));
+  const [projectManagerTC, setProjectManagerTC] = useState(() => CrmDb.getKv("crm_contract_pm_tc", ""));
   const [contractValue, setContractValue] = useState<number>(() => {
     const saved = CrmDb.getKv("crm_contract_value", "");
-    return saved ? parseFloat(saved) : 250000;
+    return saved ? parseFloat(saved) : 0;
   });
   
-  const [currency, setCurrency] = useState("TRY");
+  const [currency, setCurrency] = useState(() => CrmDb.getKv("crm_contract_currency", "TRY"));
   const [contractValueWords, setContractValueWords] = useState("");
 
   const [customTemplateText, setCustomTemplateText] = useState(() => CrmDb.getKv("crm_contract_custom_template", ""));
@@ -311,12 +313,6 @@ export default function ContractManagerView() {
   useEffect(() => {
     setCompanies(CrmDb.getCompanies());
     
-    // Default contract date to today's date
-    const today = new Date();
-    const offset = today.getTimezoneOffset();
-    const localToday = new Date(today.getTime() - (offset * 60 * 1000));
-    setContractDate(localToday.toISOString().split('T')[0]);
-
     // Automatically fill contract subject with selected proposal service if it changed
     const activeService = CrmDb.getKv("crm_contract_selected_service_name", "");
     if (activeService) {
@@ -346,9 +342,10 @@ export default function ContractManagerView() {
     CrmDb.setKv("crm_contract_pm", projectManager);
     CrmDb.setKv("crm_contract_pm_tc", projectManagerTC);
     CrmDb.setKv("crm_contract_value", contractValue.toString());
+    CrmDb.setKv("crm_contract_currency", currency);
     CrmDb.setKv("crm_contract_custom_template", customTemplateText);
     CrmDb.setKv("crm_contract_custom_template_name", customTemplateName);
-  }, [contractNo, companyTitle, companyAddress, taxOffice, taxNo, subject, contractDate, validityMonths, projectManager, projectManagerTC, contractValue, customTemplateText, customTemplateName]);
+  }, [contractNo, companyTitle, companyAddress, taxOffice, taxNo, subject, contractDate, validityMonths, projectManager, projectManagerTC, contractValue, currency, customTemplateText, customTemplateName]);
 
   // --- TEMPLATE & LETTERHEAD SELECTORS ---
   const [selectedTemplateId, setSelectedTemplateId] = useState(() => {

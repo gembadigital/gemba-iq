@@ -90,84 +90,6 @@ const STOCK_IMAGES = [
   }
 ];
 
-const INITIAL_POSTS: LinkedInPost[] = [
-  {
-    id: "post_1",
-    channel: "Gemba Lean",
-    text: `Kaliteyi bir adım ileriye taşımak istiyorsak, ilk yapmamız gereken "iyi ürün" standartlarını net bir şekilde tanımlamaktır.\n\nÇünkü kalite, son kontrolde değil; proseste üretilir.\n\nPeki, süreçlerimizi güvence altına alan bu şartları sadece dokümanlar üzerinde mi tanımlıyoruz, yoksa sahada gerçekten uygulayabiliyor muşuz?\n\nAsıl başarı; ilk seferde doğru ürünü üreterek müşteri beklentilerini eksiksiz karşılamak ve bunu sürdürülebilir bir memnuniyete dönüştürmektir.\n\nUnutmayalım:\nKaliteyi kontrol etmek sadece bir tespittir; kaliteyi süreçte inşa etmek ise gerçek bir rekabet üstünlüğüdür.`,
-    tags: ["leanmanagement", "gemba", "qualityprocess"],
-    date: "2026-06-14",
-    time: "09:30",
-    imageUrl: STOCK_IMAGES[0].url,
-    status: "POSTED",
-    reactions: 14,
-    comments: 1,
-    reposts: 2
-  },
-  {
-    id: "post_2",
-    channel: "Gemba Digital",
-    text: `Manufacturing is undergoing a fundamental shift. Cloud operations, real-time telemetry, and automated shopfloor tracking are no longer premium upgrades—they are essential survivability tools.\n\nAt Gemba Digital, we are preparing a comprehensive playbook on integrating legacy SCADA systems with serverless analytic layers.\n\nStay tuned for the official release next Tuesday!`,
-    tags: ["industry40", "digitaltwin", "operationalexcellence"],
-    date: "2026-06-20",
-    time: "14:00",
-    imageUrl: STOCK_IMAGES[1].url,
-    status: "SCHEDULED",
-    reactions: 0,
-    comments: 0,
-    reposts: 0
-  },
-  {
-    id: "post_3",
-    channel: "Personal",
-    text: `Spent the morning auditing a lean logistics center in Prague. The biggest takeaway? Floor clutter is a leading indicator of communication waste. When teams don't trust the replenishment signal, they overcompensate with physical buffer stock.\n\nSimplify the signaling mechanism first, then watch the floor clear out naturally.`,
-    tags: ["leadership", "logistics", "supplychain"],
-    date: "2026-06-24",
-    time: "11:15",
-    imageUrl: STOCK_IMAGES[2].url,
-    status: "SCHEDULED",
-    reactions: 0,
-    comments: 0,
-    reposts: 0
-  }
-];
-
-const INITIAL_EMAIL_CAMPAIGNS: EmailCampaign[] = [
-  {
-    id: "camp_1",
-    subject: "Executive Audit Roadmap for {{Company}} Partner Account",
-    body: `Dear {{FirstName}},\n\nI hope this message finds you well.\n\nFollowing our brief conversation on digital transformation milestones patterns, I have structured an introductory **Lean SCADA Audit Roadmap** focused specifically on {{Company}}'s logistics framework.\n\nIn our initial review of the {{Industry}} sector, we discovered that implementing floor-level visual signals yields an average 24% reduction in lead-time errors.\n\nWould you have 10 minutes next Thursday at 10 AM to evaluate these audit milestones?\n\nSincerely,\nGemba Consulting Team`,
-    targetSegment: "Warm Enterprise Leads",
-    date: "2026-06-18",
-    time: "09:00",
-    status: "SCHEDULED",
-    clicksCount: 0,
-    opensCount: 0
-  },
-  {
-    id: "camp_2",
-    subject: "Weekly Operations Digest: Process Excellence Standardizations",
-    body: `Hi {{FirstName}},\n\nQuality is not manufactured in the final QA audit box; quality is integrated into every step of the shopfloor process.\n\nIn this week's Gemba Partner Digest, we investigate: \n- Defining strict standard operating sheets.\n- Standardizing tool arrangements on site.\n- Setting real-time response targets.\n\nWe trust these steps assist your operations at {{Company}}.\n\nBest regards,\nOperations Research Team`,
-    targetSegment: "All Contacted Profiles",
-    date: "2026-06-12",
-    time: "11:00",
-    status: "DISPATCHED",
-    clicksCount: 8,
-    opensCount: 22
-  },
-  {
-    id: "camp_3",
-    subject: "Monthly Workshop Invitation - Digital Twin & SCADA Innovations",
-    body: `Hello {{FirstName}},\n\nWith {{Company}} leading innovation in {{Industry}} solutions, we would love to invite your engineering squad to our closed-door workshop:\n\n**Topic**: Integrating legacy plant systems with cloud telemetry protocols.\n\nWe hope to see {{Company}} there!\n\nBest,\nGemba Digital Strategy Partner`,
-    targetSegment: "Hot Cyber & Ops Leads",
-    date: "2026-06-25",
-    time: "15:30",
-    status: "SCHEDULED",
-    clicksCount: 0,
-    opensCount: 0
-  }
-];
-
 interface CampaignManagerViewProps {
   onPushToMailComposer?: (subject: string, body: string) => void;
 }
@@ -198,29 +120,29 @@ export default function CampaignManagerView({ onPushToMailComposer }: CampaignMa
 
   // --- LinkedIn States ---
   const [posts, setPosts] = useState<LinkedInPost[]>(() =>
-    CrmDb.getKv<LinkedInPost[]>(LINKEDIN_POSTS_KEY, INITIAL_POSTS)
+    CrmDb.getKv<LinkedInPost[]>(LINKEDIN_POSTS_KEY, [])
   );
   const [targetChannel, setTargetChannel] = useState<"Gemba Lean" | "Gemba Digital" | "Personal">("Gemba Lean");
   const [postText, setPostText] = useState("");
   const [hashtagInput, setHashtagInput] = useState("");
   const [tags, setTags] = useState<string[]>(["leanmanagement", "gemba", "digitalization"]);
-  const [scheduleDate, setScheduleDate] = useState("2026-06-16");
+  const [scheduleDate, setScheduleDate] = useState(new Date().toLocaleDateString("sv-SE"));
   const [scheduleTime, setScheduleTime] = useState("12:00");
   const [selectedImage, setSelectedImage] = useState(STOCK_IMAGES[0].url);
   const [aiTopic, setAiTopic] = useState("");
   const [aiLoading, setAiLoading] = useState(false);
   const [aiError, setAiError] = useState("");
   const [previewLiked, setPreviewLiked] = useState(false);
-  const [previewReactionsCount, setPreviewReactionsCount] = useState(14);
+  const [previewReactionsCount, setPreviewReactionsCount] = useState(0);
 
   // --- Email States ---
   const [campaigns, setCampaigns] = useState<EmailCampaign[]>(() =>
-    CrmDb.getKv<EmailCampaign[]>(EMAIL_CAMPAIGNS_KEY, INITIAL_EMAIL_CAMPAIGNS)
+    CrmDb.getKv<EmailCampaign[]>(EMAIL_CAMPAIGNS_KEY, [])
   );
   const [emailSubject, setEmailSubject] = useState("");
   const [emailBodyText, setEmailBodyText] = useState("");
   const [targetSegment, setTargetSegment] = useState("Warm Enterprise Leads");
-  const [emailScheduleDate, setEmailScheduleDate] = useState("2026-06-18");
+  const [emailScheduleDate, setEmailScheduleDate] = useState(new Date().toLocaleDateString("sv-SE"));
   const [emailScheduleTime, setEmailScheduleTime] = useState("09:00");
   const [showEditorHelp, setShowEditorHelp] = useState(false);
   const [aiEmailTopic, setAiEmailTopic] = useState("");
@@ -230,8 +152,8 @@ export default function CampaignManagerView({ onPushToMailComposer }: CampaignMa
 
   // Common shared indicators
   const [isSyncing, setIsSyncing] = useState(false);
-  const [currentYear, setCurrentYear] = useState(2026);
-  const [currentMonth, setCurrentMonth] = useState(5); // June
+  const [currentYear, setCurrentYear] = useState(new Date().getFullYear());
+  const [currentMonth, setCurrentMonth] = useState(new Date().getMonth());
 
 
   // --- Save lists to the shared organization CRM store (Supabase-backed) ---
@@ -243,85 +165,14 @@ export default function CampaignManagerView({ onPushToMailComposer }: CampaignMa
     CrmDb.setKv(EMAIL_CAMPAIGNS_KEY, campaigns);
   }, [campaigns]);
 
-  // --- Post publishing & Email dispatch automatic checks ---
-  useEffect(() => {
-    const interval = setInterval(() => {
-      const now = new Date();
-      let changedPosts = false;
-      let changedEmails = false;
-
-      // 1. Process LinkedIn Posts Auto-Publish
-      const updatedPosts = posts.map(p => {
-        if (p.status === "SCHEDULED") {
-          const postDateTime = new Date(`${p.date}T${p.time}`);
-          if (postDateTime <= now) {
-            changedPosts = true;
-            return {
-              ...p,
-              status: "POSTED" as const,
-              reactions: Math.floor(Math.random() * 25) + 5,
-              comments: Math.floor(Math.random() * 3),
-              reposts: Math.floor(Math.random() * 2)
-            };
-          }
-        }
-        return p;
-      });
-
-      if (changedPosts) {
-        setPosts(updatedPosts);
-      }
-
-      // 2. Process {t("Email Campaigns")} Auto-Dispatch
-      const updatedEmails = campaigns.map(c => {
-        if (c.status === "SCHEDULED") {
-          const campDateTime = new Date(`${c.date}T${c.time}`);
-          if (campDateTime <= now) {
-            changedEmails = true;
-            return {
-              ...c,
-              status: "DISPATCHED" as const,
-              opensCount: Math.floor(Math.random() * 15) + 5,
-              clicksCount: Math.floor(Math.random() * 5)
-            };
-          }
-        }
-        return c;
-      });
-
-      if (changedEmails) {
-        setCampaigns(updatedEmails);
-      }
-    }, 15000);
-
-    return () => clearInterval(interval);
-  }, [posts, campaigns]);
-
-  // --- Operational Actions: Seed & Sync ---
-  const handleSeedCampaignData = () => {
-    if (subTab === "linkedin") {
-      setPosts(INITIAL_POSTS);
-      setSelectedImage(STOCK_IMAGES[0].url);
-      setTags(["leanmanagement", "gemba", "digitalization"]);
-      setPostText("");
-      setAiTopic("");
-    } else {
-      setCampaigns(INITIAL_EMAIL_CAMPAIGNS);
-      setEmailSubject("");
-      setEmailBodyText("");
-      setAiEmailTopic("");
-    }
-  };
-
+  // This screen stores plans. Sending/publishing requires a real provider response.
+  // Do not advance scheduled records or fabricate engagement from a timer.
   const handleSync = () => {
-    setIsSyncing(true);
-    setTimeout(() => {
-      setIsSyncing(false);
-    }, 1000);
+    setPosts(CrmDb.getKv<LinkedInPost[]>(LINKEDIN_POSTS_KEY, []));
+    setCampaigns(CrmDb.getKv<EmailCampaign[]>(EMAIL_CAMPAIGNS_KEY, []));
   };
-
   const handleConfigureCookies = () => {
-    alert(t("Simulation: LinkedIn Auth Cookies successfully authenticated & loaded into Playwright background launcher!"));
+    alert(lang === "TR" ? "LinkedIn yayın bağlantısı kurulu değil." : "LinkedIn publishing is not connected.");
   };
 
   // --- LinkedIn Handler Logics ---
@@ -361,26 +212,15 @@ export default function CampaignManagerView({ onPushToMailComposer }: CampaignMa
 
     setPosts([newPost, ...posts]);
     setPostText("");
-    alert(t("Successfully registered LinkedIn update template! Scheduled queue will deploy this to your {channel} page.").replace("{channel}", formatChannel(targetChannel)));
+    alert(lang === "TR" ? "Yayın planı kaydedildi. LinkedIn otomatik yayını bağlı değil." : "Publishing plan saved. Automatic LinkedIn publishing is not connected.");
   };
 
   const handleDeletePost = (id: string) => {
     setPosts(posts.filter(p => p.id !== id));
   };
 
-  const handlePublishNow = (id: string) => {
-    setPosts(posts.map(p => {
-      if (p.id === id) {
-        return {
-          ...p,
-          status: "POSTED" as const,
-          reactions: Math.floor(Math.random() * 20) + 10,
-          comments: Math.floor(Math.random() * 4),
-          reposts: Math.floor(Math.random() * 3)
-        };
-      }
-      return p;
-    }));
+  const handlePublishNow = (_id: string) => {
+    alert(lang === "TR" ? "LinkedIn yayın bağlantısı kurulu değil; kayıt yayımlandı olarak işaretlenmedi." : "LinkedIn publishing is not connected; the record was not marked as posted.");
   };
 
   // --- Email Handler Logics ---
@@ -418,25 +258,15 @@ export default function CampaignManagerView({ onPushToMailComposer }: CampaignMa
     setCampaigns([newCampaign, ...campaigns]);
     setEmailSubject("");
     setEmailBodyText("");
-    alert(t("Successfully registered Email Campaign! It has been locked on the dispatch calendar."));
+    alert(lang === "TR" ? "E-posta planı kaydedildi. Gerçek gönderim için e-posta düzenleyicisini kullanın." : "Email plan saved. Use the email composer to send.");
   };
 
   const handleDeleteCampaign = (id: string) => {
     setCampaigns(campaigns.filter(c => c.id !== id));
   };
 
-  const handleDispatchEmailCampaignNow = (id: string) => {
-    setCampaigns(campaigns.map(c => {
-      if (c.id === id) {
-        return {
-          ...c,
-          status: "DISPATCHED" as const,
-          opensCount: Math.floor(Math.random() * 18) + 12,
-          clicksCount: Math.floor(Math.random() * 5) + 1
-        };
-      }
-      return c;
-    }));
+  const handleDispatchEmailCampaignNow = (_id: string) => {
+    alert(lang === "TR" ? "Bu ekran gönderim planını kaydeder. Gerçek gönderim için şablonu e-posta düzenleyicisine aktarın; kayıt gönderildi olarak işaretlenmedi." : "This screen saves sending plans. Transfer the template to the email composer to send; the record was not marked as dispatched.");
   };
 
   const handlePushToMailMergeEditor = (subj: string, body: string) => {
@@ -675,16 +505,6 @@ export default function CampaignManagerView({ onPushToMailComposer }: CampaignMa
 
         {/* Header Action Toolkit */}
         <div data-crm-header-actions="" className="flex items-center gap-2 self-start xl:self-auto flex-wrap">
-          <button data-crm-button=""
-            onClick={handleSeedCampaignData}
-            id="campaign-manager-seed-demo"
-            className="px-3 py-1.5 rounded bg-[#FAF9F8] dark:bg-[#252423] hover:bg-slate-100 dark:hover:bg-[#323130] text-xs text-slate-700 dark:text-slate-200 border border-[#EDEBE9] dark:border-[#323130] font-semibold transition flex items-center gap-1.5 cursor-pointer shadow-sm text-[11px]"
-            title={t("Seed baseline schedules for selected channel")}
-          >
-            <Compass className="w-3.5 h-3.5 text-indigo-500" />
-{isEmail ? t("Seed Emails") : t("Seed Posts")}
-          </button>
-
           <button data-crm-button=""
             onClick={handleSync}
             id="campaign-manager-sync"
@@ -1957,7 +1777,7 @@ placeholder={t("Enter custom post topic (e.g. Digitizing Gemba board values)")}
                       2
                     </span>
                     <p>
-<strong>{t("Simulation Fallbacks Enabled")}</strong>: {t("If active LinkedIn session cookies are missing or stale, the scheduler initiates browser automation in simulation mode to log active posts.")}
+{lang === "TR" ? "Bu ekran yayın ve gönderim planını saklar; LinkedIn yayını veya otomatik e-posta gönderimi yapmaz. E-postalar gönderim düzenleyicisinden gönderilir." : "This screen stores publishing and sending plans; it does not publish to LinkedIn or send email automatically. Send emails from the email composer."}
                     </p>
                   </div>
                 </div>

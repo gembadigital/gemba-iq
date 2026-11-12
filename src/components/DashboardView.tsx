@@ -48,7 +48,7 @@ export default function DashboardView({
   // Configured tracking toggle
   const isTrackingActive = trackingService !== "none";
 
-  // Mock chart data from audit logs or placeholders if empty
+  // Empty history stays empty; never present sample campaign results as real.
   const chartData = logs.length > 0
     ? [...logs].reverse().map(log => ({
         name: log.subject.length > 15 ? log.subject.substring(0, 15) + "..." : log.subject,
@@ -56,13 +56,7 @@ export default function DashboardView({
         Failed: log.failedCount,
         Total: log.recipients.length
       }))
-    : [
-        { name: t("Campaign {n}").replace("{n}", "1"), Success: 12, Failed: 1, Total: 13 },
-        { name: t("Campaign {n}").replace("{n}", "2"), Success: 38, Failed: 2, Total: 40 },
-        { name: t("Campaign {n}").replace("{n}", "3"), Success: 45, Failed: 0, Total: 45 },
-        { name: t("Campaign {n}").replace("{n}", "4"), Success: 22, Failed: 3, Total: 25 },
-        { name: t("Campaign {n}").replace("{n}", "5"), Success: 49, Failed: 1, Total: 50 }
-      ];
+    : [];
 
   return (
     <div data-crm-stack="" data-crm-screen="DashboardView" className="space-y-6">

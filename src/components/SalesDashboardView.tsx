@@ -128,11 +128,11 @@ export default function SalesDashboardView({ deals, onSelectDeal }: SalesDashboa
 
   // --- STATE FOR EDTIABLE TARGETS (SECTION 3) ---
   const [isTargetModalOpen, setIsTargetModalOpen] = useState(false);
-  const [targets, setTargets] = useState({
-    monthly: 450,
-    quarterly: 1350,
-    annual: 5000,
-  });
+  const [targets, setTargets] = useState(() => CrmDb.getKv("crm_sales_dashboard_targets", {
+    monthly: 0, quarterly: 0, annual: 0,
+  }));
+  const [isSavingTargets, setIsSavingTargets] = useState(false);
+  const [targetSaveError, setTargetSaveError] = useState("");
 
   // Target input temp states
   const [tempTargets, setTempTargets] = useState({ ...targets });
@@ -182,26 +182,14 @@ export default function SalesDashboardView({ deals, onSelectDeal }: SalesDashboa
     return enrichedDeals.filter((d) => {
       // Date Range Filter
       if (dateRangePreset !== "All") {
-        const year = 2026; // Default active context year
-        const closeDateParts = d.expectedCloseDate.split(".");
-        let closeMonth = 0;
-        if (closeDateParts.length === 3) {
-          closeMonth = parseInt(closeDateParts[1], 10);
-        } else {
-          const dateObj = new Date(d.expectedCloseDate);
-          closeMonth = dateObj.getMonth() + 1;
-        }
-
-        if (dateRangePreset === "Month") {
-          // Cur month is June (6) in metadata context
-          if (closeMonth !== 6) return false;
-        } else if (dateRangePreset === "Quarter") {
-          // Q2: April, May, June (4, 5, 6)
-          if (closeMonth < 4 || closeMonth > 6) return false;
-        } else if (dateRangePreset === "Year") {
-          // Whole 2026
-          // we keep standard year items
-        }
+        const now = new Date();
+        const parts = (d.expectedCloseDate || "").split(".");
+        const closeDate = parts.length === 3
+          ? new Date(Number(parts[2]), Number(parts[1]) - 1, Number(parts[0]))
+          : new Date(d.expectedCloseDate);
+        if (!Number.isFinite(closeDate.getTime()) || closeDate.getFullYear() !== now.getFullYear()) return false;
+        if (dateRangePreset === "Month" && closeDate.getMonth() !== now.getMonth()) return false;
+        if (dateRangePreset === "Quarter" && Math.floor(closeDate.getMonth() / 3) !== Math.floor(now.getMonth() / 3)) return false;
       }
 
       // Dropdowns filter mapping
@@ -286,7 +274,7 @@ export default function SalesDashboardView({ deals, onSelectDeal }: SalesDashboa
 
     filteredDeals.forEach((d) => {
       totalVal += d.opportunityValue;
-      weightedVal += d.opportunityValue * ((d.winProbability || 50) / 100);
+      weightedVal += d.opportunityValue * ((d.winProbability ?? 0) / 100);
       // manDay kullanıcı tarafından elle girilen isteğe bağlı bir alan (çoğu fırsatta boş
       // string). Önceden boş/geçersiz değerler sabit "15 gün" varsayımıyla dolduruluyor,
       // bu da toplam "Satılan Adam-Gün" rakamını gerçekte teklif edilmemiş günlerle
@@ -360,9 +348,18 @@ export default function SalesDashboardView({ deals, onSelectDeal }: SalesDashboa
   }, [targetPercentage]);
 
   // Save targets callback
-  const handleSaveTargets = () => {
-    setTargets({ ...tempTargets });
-    setIsTargetModalOpen(false);
+  const handleSaveTargets = async () => {
+    setIsSavingTargets(true);
+    setTargetSaveError("");
+    try {
+      const next = Object.fromEntries(Object.entries(tempTargets).map(([key, value]) => [key, Math.max(0, Number(value) || 0)])) as typeof targets;
+      CrmDb.setKv("crm_sales_dashboard_targets", next);
+      await CrmDb.flushPendingWrites();
+      setTargets(next);
+      setIsTargetModalOpen(false);
+    } catch (error) {
+      setTargetSaveError(error instanceof Error ? error.message : t("Save failed"));
+    } finally { setIsSavingTargets(false); }
   };
 
   // --- SECTIONS DATA PREPARATION ---
@@ -636,7 +633,7 @@ export default function SalesDashboardView({ deals, onSelectDeal }: SalesDashboa
         if (closeMonthIdx === idx) {
           if (!isWonStage(d.stage) && !isLostStage(d.stage)) {
             pipe += d.opportunityValue;
-            weight += d.opportunityValue * ((d.winProbability || 50) / 100);
+            weight += d.opportunityValue * ((d.winProbability ?? 0) / 100);
           }
         }
       });
@@ -785,11 +782,11 @@ export default function SalesDashboardView({ deals, onSelectDeal }: SalesDashboa
                       }`}
                     >
                       {preset === "Month"
-                        ? (lang === "TR" ? "Haziran 26" : "June 26")
+                        ? new Date().toLocaleDateString(lang === "TR" ? "tr-TR" : "en-US", {month:"long",year:"numeric"})
                         : preset === "Quarter"
-                        ? "Q2-2026"
+                        ? `Q${Math.floor(new Date().getMonth() / 3) + 1}-${new Date().getFullYear()}`
                         : preset === "Year"
-                        ? "FY-2026"
+                        ? `FY-${new Date().getFullYear()}`
                         : (lang === "TR" ? "Tümü" : "All")}
                     </button>
                   ))}
@@ -1517,7 +1514,7 @@ export default function SalesDashboardView({ deals, onSelectDeal }: SalesDashboa
                          style={{ width: `${node.conversionRate}%` }} />
                     <div className="z-10 text-[10px] opacity-80 flex justify-between w-full font-mono font-extrabold pr-2">
                       <span className="text-[#0078D4] dark:text-blue-300">STAGE {i + 1}</span>
-                      {i > 0 && <span className="text-amber-500">{lang === "TR" ? "Kayıp" : "Drop-off"}: {leak > 0 ? leak : 10}%</span>}
+                      {i > 0 && <span className="text-amber-500">{lang === "TR" ? "Kayıp" : "Drop-off"}: {Math.max(0, leak)}%</span>}
                     </div>
                   </div>
                 </div>
@@ -1646,7 +1643,7 @@ export default function SalesDashboardView({ deals, onSelectDeal }: SalesDashboa
                 </defs>
                 <CartesianGrid strokeDasharray="3 3" opacity={0.1} />
                 <XAxis dataKey="name" fontSize={9} tickLine={false} />
-                <YAxis fontSize={9} tickLine={false} tickFormatter={(v: any) => `$${v / 1000}k`} />
+                <YAxis fontSize={9} tickLine={false} tickFormatter={(v: any) => `${getSystemCurrency().symbol}${v / 1000}k`} />
                 <Tooltip formatter={(value: any) => formatCur(value)} />
                 <Legend wrapperStyle={{ fontSize: 9 }} />
                 <Area type="monotone" dataKey="proposal" name={lang === "TR" ? "Gönderilen Teklifler" : "Proposal Sent"} stroke="#3b82f6" strokeWidth={2} fillOpacity={1} fill="url(#colorProposal)" />
@@ -1699,7 +1696,7 @@ export default function SalesDashboardView({ deals, onSelectDeal }: SalesDashboa
               <ComposedChart data={forecastChartData}>
                 <CartesianGrid strokeDasharray="3 3" opacity={0.1} />
                 <XAxis dataKey="month" fontSize={9} tickLine={false} />
-                <YAxis fontSize={9} tickLine={false} tickFormatter={(v: any) => `$${v / 1000}k`} />
+                <YAxis fontSize={9} tickLine={false} tickFormatter={(v: any) => `${getSystemCurrency().symbol}${v / 1000}k`} />
                 <Tooltip formatter={(value: any) => formatCur(value)} />
                 <Legend wrapperStyle={{ fontSize: 9 }} />
                 <Bar dataKey="pipeline" name={t("Current Active Pipeline")} fill="#3b82f6" opacity={0.8} barSize={25} />
@@ -1767,7 +1764,7 @@ export default function SalesDashboardView({ deals, onSelectDeal }: SalesDashboa
             <ResponsiveContainer width="100%" height="90%">
               <BarChart data={topicsData} layout="vertical" margin={{ left: 10, right: 10, top: 0, bottom: 0 }}>
                 <CartesianGrid strokeDasharray="3 3" opacity={0.1} />
-                <XAxis type="number" fontSize={8} tickLine={false} tickFormatter={(v: any) => `$${v / 1000}k`} />
+                <XAxis type="number" fontSize={8} tickLine={false} tickFormatter={(v: any) => `${getSystemCurrency().symbol}${v / 1000}k`} />
                 <YAxis dataKey="subject" type="category" fontSize={8} axisLine={false} tickLine={false} width={100} />
                 <Tooltip formatter={(value: any) => typeof value === "number" ? formatCur(value) : value} />
                 <Bar dataKey="revenue" name={t("Revenue Generated")} fill="#0078D4" barSize={12} radius={[0, 4, 4, 0]} />
@@ -1959,6 +1956,7 @@ export default function SalesDashboardView({ deals, onSelectDeal }: SalesDashboa
               </div>
             </div>
 
+            {targetSaveError && <p role="alert" className="px-5 text-sm text-red-600">{targetSaveError}</p>}
             <div className="px-5 py-4.5 bg-slate-50 dark:bg-zinc-900 border-t border-slate-100 dark:border-[#323130] flex justify-end gap-2">
               <button data-crm-button=""
                 onClick={() => setIsTargetModalOpen(false)}
@@ -1968,6 +1966,7 @@ export default function SalesDashboardView({ deals, onSelectDeal }: SalesDashboa
               </button>
               <button data-crm-button=""
                 onClick={handleSaveTargets}
+                disabled={isSavingTargets}
                 className="px-4 py-2 text-xs font-bold bg-[#0078D4] hover:bg-[#005a9e] text-white rounded cursor-pointer"
               >
                 {t("Save administrative Targets")}
