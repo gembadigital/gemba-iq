@@ -1512,9 +1512,6 @@ export default function App() {
         <div className={`shrink-0 p-4 border-t space-y-3.5 text-xs ${isNotionMode ? "border-[#1f1f1f]/10 dark:border-white/10" : "border-[#EDEBE9] dark:border-[#323130]"}`}>
           {/* Theme switcher & Collapse toggler */}
           <div className={`flex ${sidebarCollapsed ? "flex-col items-center gap-3" : "items-center justify-between"}`}>
-            {!sidebarCollapsed && (
-              <span data-crm-caption className="text-[10px] font-semibold text-slate-400 dark:text-slate-500 uppercase">Dark mode toggle</span>
-            )}
             <div className={`flex items-center ${sidebarCollapsed ? "flex-col gap-2" : "gap-2"}`}>
               <button
                 id="btn-theme-toggle"
