@@ -1,5 +1,7 @@
 # Gemba IQ CRM düzen sistemi — v3
 
+17 Kasım 2026: Takvim aynı başlık/kart/alan diline eklendi. Masaüstünde gün ızgarası ve günlük ajanda, telefonda gün başına adet ve altında tam başlıklı ajanda kullanılır. Günler gerçek düğme, seçili gün `aria-pressed`; randevu penceresi yerel `dialog` ile odak sınırı, Escape ve sabit alt eylemler sağlar. Ayrıntılar ve kapsam: [Takvim / Outlook](TAKVIM_OUTLOOK.md).
+
 Referans: Müşteriler sayfasındaki mevcut müşteri kartı ve düzenleme alanı. Amaç görsel düzeni tutarlı hale getirmektir. Ana renk paleti, yazı tipi ailesi, erişim yetkileri, veri alanları, hesaplamalar ve iş akışları bu sistemin kapsamıyla değiştirilmez.
 
 ## Menü

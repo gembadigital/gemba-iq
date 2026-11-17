@@ -5,6 +5,7 @@ import { useOrganization } from "../../lib/OrganizationContext";
 import { CrmDb } from "../../lib/CrmDb";
 import { fetchPersonalMailbox } from "../../lib/personalMailbox";
 import { createPersonalCalendarEvent, deletePersonalCalendarEvent } from "../../lib/personalCalendar";
+import { istanbulDateTime } from "../../lib/calendarViewModel";
 
 // Item 1: "Müşteriler sayfası, müşteriler kartında opex puanı kısmını
 // kaldır. bunun yerine. Toplantı segmesi ekle. tarih eklensin ve toplantı
@@ -86,12 +87,10 @@ export default function CompanyMeetingsTab({
     if (mailboxConnected) {
       try {
         const start = `${newDate}T${newTime || "10:00"}:00`;
-        const endDate = new Date(`${start}`);
-        endDate.setHours(endDate.getHours() + 1);
-        const end = endDate.toISOString().slice(0, 19);
+        const end = `${istanbulDateTime(new Date(Date.parse(`${start}+03:00`) + 3600000))}:00`;
         const result = await createPersonalCalendarEvent({
           subject: `${t("Meeting")}: ${companyName}`,
-          body: newNotes.trim().replace(/\n/g, "<br />"),
+          body: newNotes.trim().replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/\n/g, "<br />"),
           start,
           end,
         });

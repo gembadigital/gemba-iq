@@ -8,6 +8,9 @@ import {
 import {
   createPersonalCalendarEvent,
   deletePersonalCalendarEvent,
+  listPersonalCalendarEvents,
+  savePersonalCalendarAppointment,
+  removePersonalCalendarAppointment,
 } from "../../lib/server/personalCalendar.js";
 
 // Outlook Calendar (createPersonalCalendarEvent/deletePersonalCalendarEvent)
@@ -22,7 +25,9 @@ import {
 // natural fit, not just a function-count workaround.
 export default async function handler(request, response) {
   try {
+    response.setHeader("Cache-Control", "private, no-store");
     if (request.method === "GET") {
+      if (request.query?.action === "calendar-list") return response.status(200).json(await listPersonalCalendarEvents(request, request.query));
       return response.status(200).json(await getPersonalMailboxStatus(request));
     }
 
@@ -36,6 +41,8 @@ export default async function handler(request, response) {
 
     if (request.method === "POST") {
       const action = request.body?.action || "connect";
+      if (action === "calendar-save") return response.status(200).json(await savePersonalCalendarAppointment(request, request.body));
+      if (action === "calendar-remove") return response.status(200).json(await removePersonalCalendarAppointment(request, request.body));
       if (action === "test") {
         return response.status(200).json(await sendPersonalMailboxTest(request));
       }

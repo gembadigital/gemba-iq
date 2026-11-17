@@ -17,6 +17,41 @@ export interface CreateCalendarEventResult {
   mailbox: string;
 }
 
+export interface OutlookCalendarEvent {
+  id: string;
+  subject: string;
+  start: { dateTime: string; timeZone: string };
+  end: { dateTime: string; timeZone: string };
+  location: string;
+  isAllDay: boolean;
+  editable: boolean;
+  webLink: string;
+}
+
+async function calendarFetch(path: string, body?: Record<string, unknown>, signal?: AbortSignal) {
+  const token = await getAccessToken();
+  const response = await fetch(`/api/user/mailbox${path}`, {
+    method: body ? 'POST' : 'GET', cache: 'no-store', signal,
+    headers: { Authorization: `Bearer ${token}`, ...(body ? { 'Content-Type': 'application/json' } : {}) },
+    ...(body ? { body: JSON.stringify(body) } : {}),
+  });
+  const data = await response.json();
+  if (!response.ok) throw new Error(data.error || 'Outlook takvim isteği tamamlanamadı.');
+  return data;
+}
+
+export async function fetchPersonalCalendarEvents(start: string, end: string, signal?: AbortSignal): Promise<{ events: OutlookCalendarEvent[]; mailbox: string; syncedAt: string }> {
+  return calendarFetch(`?${new URLSearchParams({ action: 'calendar-list', start, end })}`, undefined, signal);
+}
+
+export async function savePersonalCalendarAppointment(input: { subject: string; start: string; end: string; location: string; transactionId: string; eventId?: string }): Promise<{ success: true; eventId: string }> {
+  return calendarFetch('', { action: 'calendar-save', ...input });
+}
+
+export async function removePersonalCalendarAppointment(eventId: string): Promise<void> {
+  await calendarFetch('', { action: 'calendar-remove', eventId });
+}
+
 async function getAccessToken(): Promise<string> {
   const client = getSupabase();
   if (!client) {

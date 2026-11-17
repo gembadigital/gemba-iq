@@ -16,6 +16,7 @@ import DealManagementView from "./components/DealManagementView";
 import CompaniesView from "./components/CompaniesView";
 import ProposalManagementView from "./components/ProposalManagementView";
 import TasksView from "./components/TasksView";
+import CalendarView from "./components/CalendarView";
 import ContractManagerView from "./components/ContractManagerView";
 import OutreachApprovalView from "./components/OutreachApprovalView";
 import DocumentsView from "./components/documents/DocumentsView";
@@ -128,6 +129,7 @@ const ACTIVE_TABS = [
   "companies-registry",
   "proposal-management",
   "todo-list",
+  "calendar",
   "contract-manager",
   "documents",
   "marketing-ai-coach",
@@ -890,6 +892,7 @@ export default function App() {
       "proposal-management": { parent: "Deal Management", child: "Proposal Management" },
       "create-proposal": { parent: "Deal Management", child: "Create Proposal" },
       "todo-list": { parent: "CRM", child: "Tasks" },
+      "calendar": { parent: "CRM", child: "Takvim" },
       "documents": { parent: "CRM", child: "Documents" },
       "marketing-ai-coach": { parent: "Marketing & Business Development", child: "AI Marketing Coach" },
       "marketing-overview": { parent: "Marketing & Business Development", child: "Marketing Hub Overview" },
@@ -1281,6 +1284,8 @@ export default function App() {
               activeBorderClass="border-l-[#0078D4]"
               isSubmenu={false}
             />
+
+            <SidebarButton id="calendar" icon={<Calendar className="w-[20px] h-[20px] flex-shrink-0 text-blue-500" />} label={lang === "TR" ? "Takvim" : "Calendar"} isSubmenu={false} />
 
             <SidebarButton
               id="documents"
@@ -2091,6 +2096,8 @@ export default function App() {
             {activeTab === "todo-list" && (
               <TasksView />
             )}
+
+            {activeTab === "calendar" && <CalendarView />}
 
             {activeTab === "documents" && (
               <DocumentsView />

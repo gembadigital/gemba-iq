@@ -1,0 +1,53 @@
+{
+  "server_checks": 14,
+  "views": [
+    {
+      "width": 320,
+      "dark": false,
+      "passed": 6,
+      "total": 6
+    },
+    {
+      "width": 390,
+      "dark": false,
+      "passed": 6,
+      "total": 6
+    },
+    {
+      "width": 768,
+      "dark": false,
+      "passed": 6,
+      "total": 6
+    },
+    {
+      "width": 1280,
+      "dark": false,
+      "passed": 6,
+      "total": 6
+    },
+    {
+      "width": 320,
+      "dark": true,
+      "passed": 6,
+      "total": 6
+    },
+    {
+      "width": 390,
+      "dark": true,
+      "passed": 6,
+      "total": 6
+    },
+    {
+      "width": 768,
+      "dark": true,
+      "passed": 6,
+      "total": 6
+    },
+    {
+      "width": 1280,
+      "dark": true,
+      "passed": 6,
+      "total": 6
+    }
+  ]
+}
