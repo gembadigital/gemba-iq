@@ -1,0 +1,55 @@
+{
+  "server_checks": 27,
+  "local_postgres_rls_check": true,
+  "views": [
+    {
+      "width": 320,
+      "dark": false,
+      "passed": 7,
+      "total": 7
+    },
+    {
+      "width": 390,
+      "dark": false,
+      "passed": 7,
+      "total": 7
+    },
+    {
+      "width": 768,
+      "dark": false,
+      "passed": 7,
+      "total": 7
+    },
+    {
+      "width": 1280,
+      "dark": false,
+      "passed": 7,
+      "total": 7
+    },
+    {
+      "width": 320,
+      "dark": true,
+      "passed": 7,
+      "total": 7
+    },
+    {
+      "width": 390,
+      "dark": true,
+      "passed": 7,
+      "total": 7
+    },
+    {
+      "width": 768,
+      "dark": true,
+      "passed": 7,
+      "total": 7
+    },
+    {
+      "width": 1280,
+      "dark": true,
+      "passed": 7,
+      "total": 7
+    }
+  ],
+  "live_mailbox_read": false
+}

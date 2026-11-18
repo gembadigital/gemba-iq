@@ -8,6 +8,7 @@ import { fetchPersonalMailbox } from "../../lib/personalMailbox";
 import { fetchOrganizationDirectory } from "../../lib/invitationService";
 import type { OrganizationDirectoryMember } from "../../types/organization";
 import { getSupabase } from "../../lib/supabaseClient";
+import CompanyOutlookArchive from './CompanyOutlookArchive';
 
 // Reads a browser File into the {name, contentType, contentBytes} shape the
 // mail API (Microsoft Graph fileAttachment) expects — contentBytes is raw
@@ -301,6 +302,8 @@ export default function CompanyEmailsTab({
         </button>
       </div>
 
+      <CompanyOutlookArchive key={companyId} companyId={companyId} />
+
       {/* Composer Container */}
       {isComposerOpen && (
         <form
@@ -541,6 +544,7 @@ export default function CompanyEmailsTab({
 
       {/* Email Inbox/Outbox List */}
       <div className="space-y-3">
+        <h4 data-crm-heading="section">{lang === 'TR' ? 'Gemba IQ e-posta kayıtları' : 'Gemba IQ email records'}</h4>
         {emails.length === 0 ? (
           <div data-crm-card="surface" className="p-12 text-center bg-white dark:bg-[#151515] border border-dashed border-slate-200 dark:border-zinc-800 rounded-xl">
             <Mail className="w-8 h-8 text-slate-300 mx-auto mb-2" />

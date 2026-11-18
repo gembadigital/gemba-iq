@@ -4,6 +4,8 @@
 
 18 Kasım 2026: Genel takvimde kişi seçici ve renk açıklaması eklendi. Faaliyetlerde başlangıç–bitiş saati ayrı satırdır; günlük ajandada takvim sahibi açıkça yazılır. Kişiler yalnızca renk üzerinden ayırt edilmez. Paylaşılan etkinlik ayrıntılarında yalnızca faaliyet ve saat bulunur; yazma eylemleri yoktur.
 
+18 Kasım 2026: Müşteri E-postalar sekmesinde Outlook arşivi mevcut kart dilini kullanır. Kaynak posta kutusu, yön, tarih, konu ve önizleme ayrı satırlarda; uzun adresler taşmadan sarılır. Konu gerçek `aria-expanded` düğmesiyle metni açar. Hata arşivi gizlemez; eski Gemba IQ kayıtları ayrı ve korunmuş kalır. Kapsam ve veri davranışı: [Outlook şirket yazışmaları](OUTLOOK_SIRKET_YAZISMALARI.md).
+
 Referans: Müşteriler sayfasındaki mevcut müşteri kartı ve düzenleme alanı. Amaç görsel düzeni tutarlı hale getirmektir. Ana renk paleti, yazı tipi ailesi, erişim yetkileri, veri alanları, hesaplamalar ve iş akışları bu sistemin kapsamıyla değiştirilmez.
 
 ## Menü

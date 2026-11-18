@@ -9,6 +9,8 @@ import {
   handlePersonalMailboxError,
 } from "../../lib/server/personalMailbox.js";
 import { listMicrosoftGraphMailMessages } from "../../lib/server/microsoftGraphMailService.js";
+import { companyCorrespondenceHandler } from '../../lib/server/companyCorrespondence.js';
+import { assertOwnMailConnection } from '../../lib/server/companyMailMatching.js';
 
 // Consolidated into a single Vercel catch-all route (covers /api/mail/send,
 // /api/mail/draft, /api/mail/scan) to stay under the Hobby plan's 12
@@ -122,6 +124,8 @@ export async function scanHandler(request, response) {
     return response.status(405).json({ error: "Method not allowed" });
   }
 
+  if (typeof request.body?.mode === 'string' && request.body.mode.startsWith('company-')) return companyCorrespondenceHandler(request, response);
+
   const source = String(request.body?.source || "").trim();
   if (!["organization", "personal"].includes(source)) {
     return response.status(400).json({ error: "source must be 'organization' or 'personal'." });
@@ -144,7 +148,7 @@ export async function scanHandler(request, response) {
       mailboxAddress = context.mailbox?.organizationMailbox || context.mailbox?.mailbox_email || "";
     } else {
       const context = await getPersonalMailboxForRequest(request, { requireConnected: true });
-      mailboxAddress = context.mailbox?.mailbox_address || "";
+      mailboxAddress = assertOwnMailConnection(context.user, context.mailbox);
     }
 
     if (!mailboxAddress) {

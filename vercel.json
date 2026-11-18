@@ -1,5 +1,6 @@
 {
   "functions": {
+    "api/mail/[...action].js": { "maxDuration": 60 },
     "api/gemini/[...action].js": { "maxDuration": 60 },
     "api/gemini/analyze-proposal.js": { "maxDuration": 60 },
     "api/gemini/generate-proposal-email.js": { "maxDuration": 60 }
