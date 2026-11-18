@@ -33,7 +33,17 @@
   .gemba-stitch-skin .crm-calendar-empty { padding:32px 8px !important; text-align:center !important; color:var(--stitch-muted) !important; }
   .gemba-stitch-skin .crm-calendar-empty svg { margin:0 auto 10px !important; }
   .gemba-stitch-skin .crm-calendar button.crm-calendar-event { display:flex !important; width:100% !important; border:0 !important; border-bottom:1px solid var(--stitch-line) !important; border-radius:0 !important; gap:16px !important; padding:16px 0 !important; text-align:left !important; justify-content:flex-start !important; }
-  .gemba-stitch-skin .crm-calendar-time { width:76px !important; flex-shrink:0 !important; font-size:12px !important; }
+  .gemba-stitch-skin .crm-calendar-time { width:106px !important; flex-shrink:0 !important; font-size:12px !important; }
+  .gemba-stitch-skin .crm-calendar-legend { display:flex !important; flex-wrap:wrap !important; gap:12px !important; margin-bottom:16px !important; font-size:12px !important; }
+  .gemba-stitch-skin .crm-calendar-legend > span { display:inline-flex !important; align-items:center !important; gap:6px !important; color:var(--stitch-text) !important; }
+  .gemba-stitch-skin .crm-calendar-legend i { width:9px !important; height:9px !important; border-radius:50% !important; background:var(--calendar-owner-ink) !important; }
+  .gemba-stitch-skin .crm-calendar [data-calendar-color="0"] { --calendar-owner-ink:light-dark(#245d9c,#b5d5ff); --calendar-owner-bg:light-dark(#eaf1ff,#243b5a); }
+  .gemba-stitch-skin .crm-calendar [data-calendar-color="1"] { --calendar-owner-ink:light-dark(#966016,#ffd18a); --calendar-owner-bg:light-dark(#fff3dc,#43351f); }
+  .gemba-stitch-skin .crm-calendar [data-calendar-color="2"] { --calendar-owner-ink:light-dark(#28735a,#a9dfcc); --calendar-owner-bg:light-dark(#e4f6ef,#203c35); }
+  .gemba-stitch-skin .crm-calendar [data-calendar-color="3"] { --calendar-owner-ink:light-dark(#7545a1,#d9b8f7); --calendar-owner-bg:light-dark(#f1e9fb,#382945); }
+  .gemba-stitch-skin .crm-calendar :is(.crm-calendar-chip,.crm-calendar-tag)[data-calendar-color] { background:var(--calendar-owner-bg) !important; color:var(--calendar-owner-ink) !important; }
+  .gemba-stitch-skin .crm-calendar-chip > span { display:block !important; overflow:hidden !important; text-overflow:ellipsis !important; }
+  .gemba-stitch-skin .crm-calendar-chip-time { font-size:10px !important; font-weight:600 !important; }
   .gemba-stitch-skin .crm-calendar-event-title { flex:1 !important; min-width:0 !important; display:flex !important; flex-direction:column !important; gap:5px !important; overflow-wrap:anywhere !important; }
   .gemba-stitch-skin .crm-calendar-event-title strong { font-size:13px !important; font-weight:600 !important; }
   .gemba-stitch-skin .crm-calendar-event-title > span { font-size:12px !important; color:var(--stitch-muted) !important; }
@@ -58,8 +68,8 @@
     .gemba-stitch-skin .crm-calendar-mobile-count { display:block !important; font-size:10px !important; color:var(--stitch-accent) !important; }
     .gemba-stitch-skin .crm-calendar-weekday { font-size:10px !important; }
     .gemba-stitch-skin .crm-calendar button.crm-calendar-event { gap:8px !important; flex-wrap:wrap !important; }
-    .gemba-stitch-skin .crm-calendar-time { width:62px !important; }
-    .gemba-stitch-skin .crm-calendar-tag { margin-left:70px !important; }
+    .gemba-stitch-skin .crm-calendar-time { width:88px !important; }
+    .gemba-stitch-skin .crm-calendar-tag { margin-left:96px !important; }
     .gemba-stitch-skin .crm-calendar-form-dates { grid-template-columns:minmax(0,1fr) !important; }
     .gemba-stitch-skin .crm-calendar-form input { font-size:16px !important; min-height:44px !important; }
     .gemba-stitch-skin .crm-calendar-dialog header,.gemba-stitch-skin .crm-calendar-dialog footer,.gemba-stitch-skin .crm-calendar-form,.gemba-stitch-skin .crm-calendar-detail { padding:16px !important; }

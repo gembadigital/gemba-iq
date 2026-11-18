@@ -4,6 +4,7 @@ export type CalendarMode = 'month' | 'week' | 'day';
 export interface CalendarItem {
   id: string; subject: string; start: string; end: string; location: string;
   source: 'outlook' | 'crm'; editable: boolean; allDay: boolean; webLink?: string; notes?: string; crmLinked?: boolean;
+  ownerId?: string; ownerName?: string; isOwn?: boolean; colorIndex?: number; graphEventId?: string;
 }
 
 // A single explicit display timezone avoids browser/host timezone and DST shifts.
@@ -27,9 +28,10 @@ export function calendarDays(day: string, mode: CalendarMode): string[] {
 
 export function normalizeOutlookEvent(event: OutlookCalendarEvent): CalendarItem {
   const instant = (value: string) => new Date(/(?:Z|[+-]\d{2}:\d{2})$/.test(value) ? value : `${value}Z`);
-  return { id: event.id, subject: event.subject, start: istanbulDateTime(instant(event.start.dateTime)),
+  return { id: event.isOwn === false ? `${event.ownerId}:${event.id}` : event.id, graphEventId: event.id, subject: event.subject, start: istanbulDateTime(instant(event.start.dateTime)),
     end: istanbulDateTime(instant(event.end.dateTime)),
-    location: event.location, source: 'outlook', editable: event.editable, allDay: event.isAllDay, webLink: event.webLink };
+    location: event.location, source: 'outlook', editable: event.isOwn !== false && event.editable, allDay: event.isAllDay, webLink: event.webLink,
+    ownerId: event.ownerId, ownerName: event.ownerName, isOwn: event.isOwn, colorIndex: event.colorIndex };
 }
 
 export function itemsForDay(items: CalendarItem[], day: string): CalendarItem[] {

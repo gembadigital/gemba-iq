@@ -2,6 +2,8 @@
 
 17 Kasım 2026: Takvim aynı başlık/kart/alan diline eklendi. Masaüstünde gün ızgarası ve günlük ajanda, telefonda gün başına adet ve altında tam başlıklı ajanda kullanılır. Günler gerçek düğme, seçili gün `aria-pressed`; randevu penceresi yerel `dialog` ile odak sınırı, Escape ve sabit alt eylemler sağlar. Ayrıntılar ve kapsam: [Takvim / Outlook](TAKVIM_OUTLOOK.md).
 
+18 Kasım 2026: Genel takvimde kişi seçici ve renk açıklaması eklendi. Faaliyetlerde başlangıç–bitiş saati ayrı satırdır; günlük ajandada takvim sahibi açıkça yazılır. Kişiler yalnızca renk üzerinden ayırt edilmez. Paylaşılan etkinlik ayrıntılarında yalnızca faaliyet ve saat bulunur; yazma eylemleri yoktur.
+
 Referans: Müşteriler sayfasındaki mevcut müşteri kartı ve düzenleme alanı. Amaç görsel düzeni tutarlı hale getirmektir. Ana renk paleti, yazı tipi ailesi, erişim yetkileri, veri alanları, hesaplamalar ve iş akışları bu sistemin kapsamıyla değiştirilmez.
 
 ## Menü

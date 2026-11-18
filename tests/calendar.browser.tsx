@@ -6,8 +6,8 @@ import { istanbulDateTime } from '../src/lib/calendarViewModel';
 
 const day = istanbulDateTime(new Date()).slice(0, 10);
 const query = new URLSearchParams(location.search);
-const event = (id: string, subject: string, time = '07:00') => ({ id, subject, start: { dateTime: `${day}T${time}:00.0000000`, timeZone: 'UTC' }, end: { dateTime: `${day}T08:00:00.0000000`, timeZone: 'UTC' }, location: 'İstanbul', editable: true, isAllDay: false, webLink: 'https://outlook.office.com/calendar/item/test' });
-(window as any).calendarFixture = { events: [event('linked', 'Uzun unvanlı müşteriyle üretim süreçleri ve operasyonel mükemmellik değerlendirme toplantısı'), event('private', 'Kişisel randevu')], connected: !query.has('disconnected'), failure: query.has('failure'), saveFailure: false, createCount: 0, updates: 0, deletes: 0, meetings: [{ id: 'meeting-1', date: day, time: '10:00', notes: 'CRM toplantı notu', graphEventId: 'linked' }] };
+const event = (id: string, subject: string, time = '07:00') => ({ id, subject, start: { dateTime: `${day}T${time}:00.0000000`, timeZone: 'UTC' }, end: { dateTime: `${day}T08:00:00.0000000`, timeZone: 'UTC' }, location: 'İstanbul', editable: true, isAllDay: false, webLink: 'https://outlook.office.com/calendar/item/test', ownerId: 'self', ownerName: 'Örnek Kullanıcı', isOwn: true, colorIndex: 0 });
+(window as any).calendarFixture = { events: [event('linked', 'Uzun unvanlı müşteriyle üretim süreçleri ve operasyonel mükemmellik değerlendirme toplantısı'), event('private', 'Kişisel randevu'), { ...event('peer-1','Ekip arkadaşı saha ziyareti'), ownerId: 'peer', ownerName: 'Örnek Ekip Arkadaşı', isOwn: false, editable: false, colorIndex: 1, location: '', webLink: '' }, { ...event('peer-2','Meşgul'), ownerId: 'peer', ownerName: 'Örnek Ekip Arkadaşı', isOwn: false, editable: false, colorIndex: 1, location: '', webLink: '' }], connected: !query.has('disconnected'), failure: query.has('failure'), saveFailure: false, createCount: 0, updates: 0, deletes: 0, meetings: [{ id: 'meeting-1', date: day, time: '10:00', notes: 'CRM toplantı notu', graphEventId: 'linked' }] };
 document.documentElement.classList.add('gemba-stitch-skin', 'saas-layout');
 if (query.has('dark')) document.documentElement.classList.add('dark');
 document.body.style.margin = '0';
@@ -22,14 +22,23 @@ const input = (index: number, value: string) => { const el = document.querySelec
 async function run() {
   const check = async (name: string, fn: () => Promise<void>) => { try { await fn(); results.push({ name, passed: true }); } catch (e) { results.push({ name, passed: false, error: String(e) }); } };
   await wait(() => !!button('Randevu ekle') && !button('Randevu ekle').disabled);
-  await check('Linked CRM record is deduplicated', async () => { expect(document.querySelectorAll('.crm-calendar-event').length === 2, 'Expected exactly 2 agenda entries'); });
+  await check('Both calendars show activity and start/end times; CRM is deduplicated', async () => { expect(document.querySelectorAll('.crm-calendar-event').length === 4, 'Expected exactly 4 agenda entries'); expect(document.querySelector('.crm-calendar-time')?.textContent === '10:00–11:00', 'Missing start/end time'); expect(document.querySelectorAll('.crm-calendar-legend > span').length === 2, 'Missing owner legend'); });
+  await check('Peer detail is read only and has no location or Outlook link', async () => {
+    [...document.querySelectorAll<HTMLButtonElement>('.crm-calendar-event')].find(b => b.textContent?.includes('Ekip arkadaşı saha ziyareti'))!.click(); await delay();
+    const dialog = document.querySelector('dialog[open]')!; expect(![...dialog.querySelectorAll('button')].some(b => ['Düzenle','Sil'].includes(b.textContent || '')), 'Peer write controls exposed'); expect(!dialog.querySelector('a'), 'Peer deep link exposed'); button('Vazgeç').click(); await delay();
+  });
+  await check('Owner filter shows only the selected calendar', async () => {
+    const select = document.querySelector<HTMLSelectElement>('[aria-label="Takvim sahibi"]')!; select.value = 'peer'; select.dispatchEvent(new Event('change', { bubbles: true }));
+    await wait(() => document.querySelectorAll('.crm-calendar-event').length === 2); expect(![...document.querySelectorAll('.crm-calendar-event')].some(e => e.textContent?.includes('Kişisel randevu')), 'Own activity leaked into peer filter');
+    select.value = 'all'; select.dispatchEvent(new Event('change', { bubbles: true })); await wait(() => document.querySelectorAll('.crm-calendar-event').length === 4);
+  });
   await check('Create appointment then reload from Outlook source', async () => {
     button('Randevu ekle').click(); await wait(() => !!document.querySelector('dialog[open] input'));
     const bounds = document.querySelector('dialog[open]')!.getBoundingClientRect(); expect(bounds.left >= 0 && bounds.right <= innerWidth + 1, 'Appointment dialog overflows viewport');
     input(0, 'Tarayıcı kayıt testi'); await delay();
     document.querySelector<HTMLFormElement>('dialog form')!.requestSubmit();
     await wait(() => (window as any).calendarFixture.createCount === 1 && !document.querySelector('dialog[open]'));
-    await wait(() => document.querySelectorAll('.crm-calendar-event').length === 3);
+    await wait(() => document.querySelectorAll('.crm-calendar-event').length === 5);
     button('Eşitle').click(); await delay(100);
     expect(document.body.textContent?.includes('Tarayıcı kayıt testi'), 'New appointment lost after refresh');
   });
@@ -40,7 +49,7 @@ async function run() {
     (window as any).calendarFixture.saveFailure = true; button('Randevu ekle').click(); await delay(); input(0, 'Korunacak içerik'); await delay(); document.querySelector<HTMLFormElement>('dialog form')!.requestSubmit(); await wait(() => !!document.querySelector('dialog [role=alert]')); expect(document.querySelector<HTMLInputElement>('dialog input')?.value === 'Korunacak içerik', 'Input disappeared'); expect(!!document.querySelector('dialog[open]'), 'Dialog closed on failure'); (window as any).calendarFixture.saveFailure = false; [...document.querySelectorAll<HTMLButtonElement>('dialog button')].find(b => b.textContent === 'Vazgeç')!.click(); await delay();
   });
   await check('Delete requires confirmation and removes remote record', async () => {
-    [...document.querySelectorAll<HTMLButtonElement>('.crm-calendar-event')].find(b => b.textContent?.includes('Güncellenmiş randevu'))!.click(); await delay(); button('Sil').click(); await delay(); expect((window as any).calendarFixture.deletes === 0, 'Deleted before confirmation'); button('Silmeyi onayla').click(); await wait(() => (window as any).calendarFixture.deletes === 1 && !document.querySelector('dialog[open]')); await wait(() => document.querySelectorAll('.crm-calendar-event').length === 2);
+    [...document.querySelectorAll<HTMLButtonElement>('.crm-calendar-event')].find(b => b.textContent?.includes('Güncellenmiş randevu'))!.click(); await delay(); button('Sil').click(); await delay(); expect((window as any).calendarFixture.deletes === 0, 'Deleted before confirmation'); button('Silmeyi onayla').click(); await wait(() => (window as any).calendarFixture.deletes === 1 && !document.querySelector('dialog[open]')); await wait(() => document.querySelectorAll('.crm-calendar-event').length === 4);
   });
   await check('Month week day navigation and no page overflow', async () => {
     button('Hafta').click(); await delay(); expect(document.querySelectorAll('.crm-calendar-day').length === 7, 'Week should have 7 days'); button('Gün').click(); await delay(); expect(!document.querySelector('.crm-calendar-grid'), 'Day should show agenda'); button('Ay').click(); await delay(); expect(document.querySelectorAll('.crm-calendar-day').length === 42, 'Month should have 42 days'); expect(document.documentElement.scrollWidth <= innerWidth + 1, 'Page overflows horizontally');

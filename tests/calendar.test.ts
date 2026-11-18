@@ -3,6 +3,8 @@ import { assertOwnCalendar, assertSimpleAppointment, validateAppointment, valida
 import { listMicrosoftGraphCalendarEvents, updateMicrosoftGraphAppointment } from '../lib/server/microsoftGraphCalendarService.js';
 import { calendarDays, itemsForDay, normalizeOutlookEvent, istanbulDateTime } from '../src/lib/calendarViewModel';
 import handler from '../api/user/mailbox.js';
+import { getCalendarOwners, selectCalendarOwners } from '../lib/server/teamCalendarAccess.js';
+import { calendarDirectoryFixture, ownerId, peerId, outsiderId } from './calendarDirectoryFixture';
 let passed = 0;
 const check = (label: string, fn: () => void) => { fn(); passed++; console.log(`PASS ${label}`); };
 const own = { user: { email: 'owner@example.test', email_confirmed_at: '2026-01-01' }, mailbox: { mailbox_address: 'OWNER@example.test' } };
@@ -53,7 +55,8 @@ try {
   responses = [{ body: { isOrganizer: true, type: 'occurrence', attendees: [] } }];
   await assert.rejects(() => updateMicrosoftGraphAppointment({ mailboxAddress: 'owner@example.test', eventId: '1', remove: true }), /tekrarlayan/); passed++; console.log('PASS Delete rechecks appointment eligibility');
   // The route is bundled with only its authentication/mailbox adapter mocked.
-  (globalThis as any).calendarTestContext = own;
+  const directory = calendarDirectoryFixture();
+  (globalThis as any).calendarTestContext = directory.context;
   responses = [{ body: { value: [] } }];
   const response: any = { statusCode: 0, headers: {}, setHeader(k, v) { this.headers[k] = v; }, status(s) { this.statusCode = s; return this; }, json(v) { this.data = v; return this; } };
   await handler({ method: 'GET', query: { action: 'calendar-list', start: '2026-11-01T00:00:00Z', end: '2026-12-01T00:00:00Z' } }, response);
@@ -64,5 +67,46 @@ try {
   (globalThis as any).calendarTestContext = { ...own, mailbox: { mailbox_address: 'other@example.test' } };
   await handler({ method: 'POST', body: { action: 'calendar-save', subject: 'x' } }, response);
   check('Cross-mailbox route write blocked before any Graph request', () => assert.equal(response.statusCode, 403));
+  (globalThis as any).calendarTestContext = directory.context;
+  responses = [{ body: { value: [{ id: 'own', subject: 'Own event', start: {}, end: {} }] } }, { body: { value: [
+    { id: 'peer-normal', subject: 'Shared activity', start: {}, end: {}, sensitivity: 'normal', location: { displayName: 'Secret location' }, webLink: 'https://outlook.office.com/private' },
+    { id: 'peer-private', subject: 'Private title', start: {}, end: {}, sensitivity: 'private' },
+    { id: 'peer-confidential', subject: 'Confidential title', start: {}, end: {}, sensitivity: 'confidential' },
+  ] } }];
+  await handler({ method: 'GET', query: { action: 'calendar-list', owner: 'all', start: '2026-11-01T00:00:00Z', end: '2026-12-01T00:00:00Z' } }, response);
+  check('Team calendar merges only the explicitly approved pair', () => { assert.equal(response.statusCode, 200); assert.equal(response.data.events.length, 4); assert.deepEqual(response.data.calendars.map(c => c.userId), [ownerId, peerId]); assert.equal(response.data.calendars.some(c => c.mailboxAddress), false); });
+  check('Peer read returns title/time only and masks private/confidential titles', () => {
+    const peer = response.data.events.filter(e => e.ownerId === peerId); assert.deepEqual(peer.map(e => e.subject), ['Shared activity', 'Meşgul', 'Meşgul']);
+    assert.ok(peer.every(e => !e.editable && !e.webLink && !e.location)); assert.equal(JSON.stringify(response.data).includes('Secret location'), false);
+    const request = calls.find(c => c.url.includes('peer%40example.test/calendarView'))!; const select = new URL(request.url).searchParams.get('$select')!;
+    assert.ok(!select.includes('attendees') && !select.includes('location') && !select.includes('body'));
+  });
+  const beforeDenied = calls.length;
+  await handler({ method: 'GET', query: { action: 'calendar-list', owner: outsiderId, start: '2026-11-01T00:00:00Z', end: '2026-12-01T00:00:00Z' } }, response);
+  check('Unapproved member read is denied before Graph', () => { assert.equal(response.statusCode, 403); assert.equal(calls.length, beforeDenied); });
+  for (const action of ['calendar-save', 'calendar-remove', 'calendar-create']) {
+    await handler({ method: 'POST', body: { action, ownerId: peerId, eventId: 'peer-normal' } }, response);
+    check(`${action}: peer write cannot be forged`, () => { assert.equal(response.statusCode, 403); assert.equal(calls.length, beforeDenied); });
+  }
+  const third = await getCalendarOwners({ ...directory.context, user: directory.users[2], mailbox: { mailbox_address: 'third@example.test' } });
+  check('A later third member gains no access to the shared pair', () => assert.deepEqual(third.map(c => c.userId), [outsiderId]));
+  directory.tables.organization_members = directory.tables.organization_members.filter(m => m.user_id !== peerId);
+  const revoked = await getCalendarOwners(directory.context);
+  check('Membership removal revokes access despite stale sharing registry', () => { assert.deepEqual(revoked.map(c => c.userId), [ownerId]); assert.throws(() => selectCalendarOwners(revoked, peerId)); });
+  const alias = calendarDirectoryFixture(); alias.tables.user_mailbox_connections.find(c => c.user_id === peerId).mailbox_address = 'other@example.test';
+  const invalid = await getCalendarOwners(alias.context);
+  check('Peer mailbox must match its verified account email', () => assert.equal(invalid.find(c => c.userId === peerId)?.available, false));
+  (globalThis as any).calendarTestContext = alias.context;
+  responses = [{ body: { value: [{ id: 'own', subject: 'Own event', start: {}, end: {} }] } }];
+  await handler({ method: 'GET', query: { action: 'calendar-list', owner: 'all', start: '2026-11-01T00:00:00Z', end: '2026-12-01T00:00:00Z' } }, response);
+  check('Partial calendar failures are explicit and never reported fully synced', () => { assert.equal(response.data.events.length, 1); assert.equal(response.data.warnings.length, 1); assert.equal(response.data.syncedAt, ''); });
+  const disabled = calendarDirectoryFixture(); disabled.tables.organization_settings[0].microsoft_graph_application.calendar_sharing.enabled = false;
+  const disabledOwners = await getCalendarOwners(disabled.context);
+  check('Disabling sharing immediately falls back to own calendar', () => assert.deepEqual(disabledOwners.map(c => c.userId), [ownerId]));
+  const foreignOrg = calendarDirectoryFixture(); foreignOrg.tables.organization_members.find(m => m.user_id === peerId).organization_id = 'different-org';
+  const scoped = await getCalendarOwners(foreignOrg.context);
+  check('Sharing registry cannot bypass organization isolation', () => assert.deepEqual(scoped.map(c => c.userId), [ownerId]));
+  const unverified = calendarDirectoryFixture(); unverified.context.user.email_confirmed_at = '';
+  await assert.rejects(() => getCalendarOwners(unverified.context), /Doğrulanmış/); passed++; console.log('PASS Unverified requester cannot read shared calendars');
 } finally { globalThis.fetch = originalFetch; }
 console.log(`${passed} calendar checks passed; no live mailbox read or writes.`);

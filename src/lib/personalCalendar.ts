@@ -26,7 +26,13 @@ export interface OutlookCalendarEvent {
   isAllDay: boolean;
   editable: boolean;
   webLink: string;
+  ownerId?: string;
+  ownerName?: string;
+  isOwn?: boolean;
+  colorIndex?: number;
 }
+
+export interface CalendarOwner { userId: string; ownerName: string; isOwn: boolean; colorIndex: number; available: boolean }
 
 async function calendarFetch(path: string, body?: Record<string, unknown>, signal?: AbortSignal) {
   const token = await getAccessToken();
@@ -40,8 +46,8 @@ async function calendarFetch(path: string, body?: Record<string, unknown>, signa
   return data;
 }
 
-export async function fetchPersonalCalendarEvents(start: string, end: string, signal?: AbortSignal): Promise<{ events: OutlookCalendarEvent[]; mailbox: string; syncedAt: string }> {
-  return calendarFetch(`?${new URLSearchParams({ action: 'calendar-list', start, end })}`, undefined, signal);
+export async function fetchPersonalCalendarEvents(start: string, end: string, signal?: AbortSignal, owner = 'all'): Promise<{ events: OutlookCalendarEvent[]; mailbox: string; syncedAt: string; calendars: CalendarOwner[]; warnings: string[] }> {
+  return calendarFetch(`?${new URLSearchParams({ action: 'calendar-list', start, end, owner })}`, undefined, signal);
 }
 
 export async function savePersonalCalendarAppointment(input: { subject: string; start: string; end: string; location: string; transactionId: string; eventId?: string }): Promise<{ success: true; eventId: string }> {

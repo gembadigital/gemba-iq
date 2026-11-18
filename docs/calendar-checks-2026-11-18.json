@@ -1,0 +1,60 @@
+{
+  "server_checks": 27,
+  "views": [
+    {
+      "width": 320,
+      "dark": false,
+      "passed": 8,
+      "total": 8
+    },
+    {
+      "width": 390,
+      "dark": false,
+      "passed": 8,
+      "total": 8
+    },
+    {
+      "width": 768,
+      "dark": false,
+      "passed": 8,
+      "total": 8
+    },
+    {
+      "width": 1280,
+      "dark": false,
+      "passed": 8,
+      "total": 8
+    },
+    {
+      "width": 320,
+      "dark": true,
+      "passed": 8,
+      "total": 8
+    },
+    {
+      "width": 390,
+      "dark": true,
+      "passed": 8,
+      "total": 8
+    },
+    {
+      "width": 768,
+      "dark": true,
+      "passed": 8,
+      "total": 8
+    },
+    {
+      "width": 1280,
+      "dark": true,
+      "passed": 8,
+      "total": 8
+    }
+  ],
+  "app_mobile": {
+    "width": 320,
+    "root_width": 290,
+    "scroll_width": 290,
+    "issues": 0
+  },
+  "live_mailbox_content_read": false
+}

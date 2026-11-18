@@ -4,6 +4,7 @@ import { useLanguage } from '../lib/LanguageContext';
 import { CrmDb } from '../lib/CrmDb';
 import { fetchPersonalMailbox } from '../lib/personalMailbox';
 import { fetchPersonalCalendarEvents, savePersonalCalendarAppointment, removePersonalCalendarAppointment } from '../lib/personalCalendar';
+import type { CalendarOwner } from '../lib/personalCalendar';
 import { addCalendarDays, calendarDays, istanbulDateTime, itemsForDay, normalizeOutlookEvent, type CalendarItem, type CalendarMode } from '../lib/calendarViewModel';
 import type { CompanyMeeting } from './company-tabs/CompanyMeetingsTab';
 import '../styles/calendar.css';
@@ -23,6 +24,9 @@ export default function CalendarView() {
   const [syncedAt, setSyncedAt] = useState('');
   const [refresh, setRefresh] = useState(0);
   const [source, setSource] = useState('all');
+  const [owner, setOwner] = useState('all');
+  const [calendars, setCalendars] = useState<CalendarOwner[]>([]);
+  const [warnings, setWarnings] = useState<string[]>([]);
   const [revision, setRevision] = useState(0);
   const [details, setDetails] = useState<CalendarItem | null>(null);
   const [form, setForm] = useState<{ subject: string; start: string; end: string; location: string; transactionId: string; eventId?: string } | null>(null);
@@ -39,22 +43,22 @@ export default function CalendarView() {
 
   useEffect(() => {
     const controller = new AbortController();
-    setLoading(true); setError(''); setEvents([]); setSyncedAt(''); setRevision(n => n + 1);
+    setLoading(true); setError(''); setEvents([]); setSyncedAt(''); setWarnings([]); setRevision(n => n + 1);
     (async () => {
       try {
         const status = await fetchPersonalMailbox();
         if (controller.signal.aborted) return;
         setMailbox(status.mailbox_address || ''); setConnected(status.status === 'Connected');
-        if (status.status !== 'Connected') return;
-        const result = await fetchPersonalCalendarEvents(`${rangeStart}T00:00:00+03:00`, `${rangeEnd}T00:00:00+03:00`, controller.signal);
+        const result = await fetchPersonalCalendarEvents(`${rangeStart}T00:00:00+03:00`, `${rangeEnd}T00:00:00+03:00`, controller.signal, owner);
         if (controller.signal.aborted) return;
         setEvents(result.events.map(normalizeOutlookEvent)); setSyncedAt(result.syncedAt);
+        setCalendars(result.calendars || []); setWarnings(result.warnings || []);
       } catch (e) {
         if (!controller.signal.aborted) setError(e instanceof Error ? e.message : 'Outlook takvimi yüklenemedi.');
       } finally { if (!controller.signal.aborted) setLoading(false); }
     })();
     return () => controller.abort();
-  }, [rangeStart, rangeEnd, refresh]);
+  }, [rangeStart, rangeEnd, refresh, owner]);
 
   // Personal Outlook data stays in memory; it is never copied into org-shared KV.
   const meetings = useMemo(() => CrmDb.getCompanies().flatMap(company =>
@@ -65,11 +69,13 @@ export default function CalendarView() {
         source: 'crm', editable: false, allDay: false, location: '', notes: meeting.notes, graphId: meeting.graphEventId } as CalendarItem & { graphId?: string };
     })), [revision]);
   const items = useMemo(() => {
-    const ids = new Set(events.map(e => e.id));
+    const ids = new Set(events.map(e => e.graphEventId || e.id));
     const linked = new Map(meetings.filter(m => m.graphId).map(m => [m.graphId, m]));
-    const outlook = events.map(event => { const meeting = linked.get(event.id); return meeting ? { ...event, editable: false, notes: meeting.notes, crmLinked: true } : event; });
-    return [...outlook, ...meetings.filter(m => source === 'crm' || !m.graphId || !ids.has(m.graphId))].filter(e => source === 'all' || e.source === source);
-  }, [events, meetings, source]);
+    const outlook = events.map(event => { const meeting = event.isOwn === false ? undefined : linked.get(event.id); return meeting ? { ...event, editable: false, notes: meeting.notes, crmLinked: true } : event; });
+    // Company logs are org-shared records without a reliable owner id. Show
+    // them in the general view, never attribute them to a selected person.
+    return [...outlook, ...(owner === 'all' ? meetings.filter(m => source === 'crm' || !m.graphId || !ids.has(m.graphId)) : [])].filter(e => source === 'all' || e.source === source);
+  }, [events, meetings, source, owner]);
   const selectedItems = itemsForDay(items, day);
 
   const closeDialog = useCallback(() => {
@@ -101,7 +107,7 @@ export default function CalendarView() {
     setSaving(true); setFormError('');
     try {
       await savePersonalCalendarAppointment({ ...form, start: `${form.start}:00`, end: `${form.end}:00` });
-      setForm(null); setDetails(null); setNotice(text('Randevu Outlook’a kaydedildi.', 'Appointment saved to Outlook.')); setRefresh(n => n + 1);
+      setForm(null); setDetails(null); setOwner('all'); setNotice(text('Randevu Outlook’a kaydedildi.', 'Appointment saved to Outlook.')); setRefresh(n => n + 1);
     } catch (e) { setFormError(e instanceof Error ? e.message : text('Kayıt başarısız.', 'Save failed.')); }
     finally { setSaving(false); }
   };
@@ -113,6 +119,7 @@ export default function CalendarView() {
     finally { setSaving(false); }
   };
   const safeLink = (url?: string) => { try { const parsed = new URL(url || ''); return parsed.protocol === 'https:' && /(^|\.)outlook\.(office\.com|office365\.com|live\.com)$/.test(parsed.hostname) ? parsed.href : ''; } catch { return ''; } };
+  const eventTime = (item: CalendarItem) => item.allDay ? text('Tüm gün', 'All day') : `${item.start.slice(11)}–${item.end.slice(0, 10) !== item.start.slice(0, 10) ? `${item.end.slice(8, 10)}.${item.end.slice(5, 7)} ` : ''}${item.end.slice(11)}`;
 
   return <section data-crm-screen="CalendarView" className="crm-page-section crm-calendar">
     <header data-crm-header="" className="crm-page-header">
@@ -122,6 +129,7 @@ export default function CalendarView() {
     <div className="crm-calendar-status" role="status">{mailbox || text('Outlook bağlı değil', 'Outlook disconnected')}<span>· {text('Türkiye saati (UTC+3)', 'Istanbul time (UTC+3)')}</span>{syncedAt && <span>· {text('Son eşitleme', 'Last synced')}: {istanbulDateTime(new Date(syncedAt)).slice(11)}</span>}{loading && <span>· {text('Yükleniyor…', 'Loading…')}</span>}</div>
     {!connected && !loading && <p className="crm-calendar-banner">{text('Outlook randevularını görmek ve eklemek için Ayarlar → Hesabım → Kişisel Posta Kutusu bölümünden kendi Microsoft 365 adresinizi bağlayın. Müşteri toplantıları aşağıda görüntülenir.', 'Connect your own Microsoft 365 address in Settings → My Account → Personal Mailbox to view and create Outlook appointments. CRM meetings are shown below.')}</p>}
     {error && <p role="alert" className="crm-calendar-banner crm-calendar-error">{error} {text('Outlook verileri yüklenmedi; yalnızca CRM kayıtları gösteriliyor.', 'Outlook data could not be loaded; only CRM records are shown.')}</p>}
+    {warnings.length > 0 && <div role="alert" className="crm-calendar-banner crm-calendar-error"><strong>{text('Bazı takvimler yüklenemedi', 'Some calendars could not be loaded')}</strong>{warnings.map(warning => <p key={warning}>{warning}</p>)}</div>}
     {notice && <p role="status" className="crm-calendar-banner">{notice}</p>}
     <div data-crm-card="padded" className="crm-panel">
       <div className="crm-calendar-toolbar">
@@ -129,18 +137,23 @@ export default function CalendarView() {
         <h2 aria-live="polite">{formatDay(day, mode === 'month' ? { month: 'long', year: 'numeric' } : { day: 'numeric', month: 'long', year: 'numeric' })}</h2>
         <div className="crm-calendar-views" aria-label={text('Takvim görünümü', 'Calendar view')}>{(['month', 'week', 'day'] as const).map(value => <button key={value} type="button" aria-pressed={mode === value} onClick={() => setMode(value)}>{value === 'month' ? text('Ay', 'Month') : value === 'week' ? text('Hafta', 'Week') : text('Gün', 'Day')}</button>)}</div>
       </div>
-      <div className="crm-calendar-filter"><label>{text('Göster', 'Show')} <select aria-label={text('Etkinlik kaynağı', 'Event source')} value={source} onChange={e => setSource(e.target.value)}><option value="all">{text('Tümü', 'All')}</option><option value="outlook">Outlook</option><option value="crm">{text('Müşteri toplantıları', 'CRM meetings')}</option></select></label><span className="crm-calendar-muted">{text('Ekran açıldığında ve Eşitle ile güncellenir.', 'Updated on opening and with Sync.')}</span></div>
+      <div className="crm-calendar-filter">
+        <label>{text('Takvim', 'Calendar')} <select aria-label={text('Takvim sahibi', 'Calendar owner')} value={owner} onChange={e => setOwner(e.target.value)}><option value="all">{text('Genel takvim', 'Team calendar')}</option>{calendars.map(calendar => <option key={calendar.userId} value={calendar.userId}>{calendar.ownerName}{calendar.isOwn ? text(' (Ben)', ' (Me)') : ''}</option>)}</select></label>
+        <label>{text('Göster', 'Show')} <select aria-label={text('Etkinlik kaynağı', 'Event source')} value={source} onChange={e => setSource(e.target.value)}><option value="all">{text('Tümü', 'All')}</option><option value="outlook">Outlook</option><option value="crm">{text('Müşteri toplantıları', 'CRM meetings')}</option></select></label>
+        <span className="crm-calendar-muted">{text('Ekran açıldığında ve Eşitle ile güncellenir.', 'Updated on opening and with Sync.')}</span>
+      </div>
+      {calendars.length > 0 && <div className="crm-calendar-legend" aria-label={text('Takvim renkleri', 'Calendar colors')}>{calendars.map(calendar => <span key={calendar.userId} data-calendar-color={calendar.colorIndex % 4}><i aria-hidden="true" />{calendar.ownerName}{!calendar.available && <small> · {text('Bağlantı gerekli', 'Connection required')}</small>}</span>)}</div>}
       {mode !== 'day' && <div className={`crm-calendar-grid ${mode === 'week' ? 'crm-calendar-week' : ''}`} aria-label={text('Takvim günleri', 'Calendar days')}>
         {days.slice(0, 7).map(date => <div key={`label-${date}`} className="crm-calendar-weekday">{formatDay(date, { weekday: 'short' })}</div>)}
-        {days.map(date => { const entries = itemsForDay(items, date); return <button type="button" key={date} className="crm-calendar-day" data-selected={date === day} data-today={date === today} data-outside={date.slice(0, 7) !== day.slice(0, 7)} aria-pressed={date === day} aria-label={`${formatDay(date)} · ${entries.length} ${text('etkinlik', 'events')}`} onClick={() => setDay(date)}><span className="crm-calendar-date">{Number(date.slice(8))}</span>{entries.slice(0, 2).map(item => <span key={item.id} className={`crm-calendar-chip crm-calendar-${item.source}`}>{item.allDay ? '' : `${item.start.slice(11)} `}{item.subject}</span>)}{entries.length > 2 && <span className="crm-calendar-count">+{entries.length - 2}</span>}{entries.length > 0 && <span className="crm-calendar-mobile-count">{entries.length}</span>}</button>; })}
+        {days.map(date => { const entries = itemsForDay(items, date); return <button type="button" key={date} className="crm-calendar-day" data-selected={date === day} data-today={date === today} data-outside={date.slice(0, 7) !== day.slice(0, 7)} aria-pressed={date === day} aria-label={`${formatDay(date)} · ${entries.length} ${text('etkinlik', 'events')}`} onClick={() => setDay(date)}><span className="crm-calendar-date">{Number(date.slice(8))}</span>{entries.slice(0, 3).map(item => <span key={item.id} data-calendar-color={item.colorIndex === undefined ? undefined : item.colorIndex % 4} className={`crm-calendar-chip crm-calendar-${item.source}`} title={`${item.ownerName || 'CRM'} · ${eventTime(item)} · ${item.subject}`}><span className="crm-calendar-chip-time">{eventTime(item)}</span><span>{item.subject}</span></span>)}{entries.length > 3 && <span className="crm-calendar-count">+{entries.length - 3}</span>}{entries.length > 0 && <span className="crm-calendar-mobile-count">{entries.length}</span>}</button>; })}
       </div>}
     </div>
     <div data-crm-card="padded" className="crm-panel crm-calendar-agenda"><h2>{formatDay(day)} <span className="crm-calendar-muted">· {selectedItems.length} {text('etkinlik', 'events')}</span></h2>
-      {selectedItems.length === 0 ? <div className="crm-calendar-empty"><CalendarDays size={28} /><p>{text('Bu güne ait kayıt yok.', 'No events for this day.')}</p></div> : selectedItems.map(item => <button type="button" key={item.id} className="crm-calendar-event" onClick={() => { setDetails(item); setFormError(''); setDeleteConfirm(false); }}><span className="crm-calendar-time">{item.allDay ? text('Tüm gün', 'All day') : item.start.slice(0, 10) < day ? text('Devam ediyor', 'Continues') : item.start.slice(11)}</span><span className="crm-calendar-event-title"><strong>{item.subject}</strong><span>{item.location || (item.source === 'crm' ? text('Müşteri kartı toplantı kaydı', 'CRM meeting record') : 'Outlook')}</span></span><span className={`crm-calendar-tag crm-calendar-${item.source}`}>{item.source === 'crm' ? 'CRM' : 'Outlook'}</span></button>)}
+      {selectedItems.length === 0 ? <div className="crm-calendar-empty"><CalendarDays size={28} /><p>{text('Bu güne ait kayıt yok.', 'No events for this day.')}</p></div> : selectedItems.map(item => <button type="button" key={item.id} className="crm-calendar-event" onClick={() => { setDetails(item); setFormError(''); setDeleteConfirm(false); }}><span className="crm-calendar-time">{eventTime(item)}</span><span className="crm-calendar-event-title"><strong>{item.subject}</strong><span>{item.ownerName || (item.source === 'crm' ? text('Müşteri kartı toplantı kaydı', 'CRM meeting record') : 'Outlook')}{item.isOwn !== false && item.location ? ` · ${item.location}` : ''}</span></span><span data-calendar-color={item.colorIndex === undefined ? undefined : item.colorIndex % 4} className={`crm-calendar-tag crm-calendar-${item.source}`}>{item.source === 'crm' ? 'CRM' : 'Outlook'}</span></button>)}
     </div>
     <dialog ref={dialogRef} className="crm-calendar-dialog" aria-labelledby="calendar-dialog-title" onCancel={e => { e.preventDefault(); closeDialog(); }}>
       <header><h2 id="calendar-dialog-title">{form ? form.eventId ? text('Randevuyu düzenle', 'Edit appointment') : text('Yeni randevu', 'New appointment') : text('Etkinlik ayrıntıları', 'Event details')}</h2><button type="button" aria-label={text('Kapat', 'Close')} onClick={closeDialog} disabled={saving}><X size={18} /></button></header>
-      {form ? <form onSubmit={save} id="calendar-appointment-form" className="crm-calendar-form"><label>{text('Başlık', 'Title')}<input autoFocus data-crm-field="control" required maxLength={255} value={form.subject} onChange={e => setForm({ ...form, subject: e.target.value })} /></label><div className="crm-calendar-form-dates"><label>{text('Başlangıç', 'Start')}<input data-crm-field="control" required type="datetime-local" value={form.start} onChange={e => setForm({ ...form, start: e.target.value })} /></label><label>{text('Bitiş', 'End')}<input data-crm-field="control" required type="datetime-local" value={form.end} onChange={e => setForm({ ...form, end: e.target.value })} /></label></div><label>{text('Konum', 'Location')}<input data-crm-field="control" maxLength={500} value={form.location} onChange={e => setForm({ ...form, location: e.target.value })} /></label><p className="crm-calendar-muted">{text('Türkiye saati. Randevu kendi Outlook takviminize kaydedilir; katılımcı daveti gönderilmez.', 'Istanbul time. Saved to your own Outlook calendar; no attendee invitations are sent.')}</p></form> : details && <div className="crm-calendar-detail"><h3>{details.subject}</h3><p>{formatDay(details.start.slice(0, 10))} · {details.allDay ? text('Tüm gün', 'All day') : `${details.start.slice(11)} – ${formatDay(details.end.slice(0, 10))} ${details.end.slice(11)}`}</p>{details.location && <p>{details.location}</p>}{details.notes && <p className="crm-calendar-notes">{details.notes}</p>}{(details.source === 'crm' || details.crmLinked) && <p className="crm-calendar-muted">{text('Bu kayıt müşteri kartının Toplantılar sekmesinden yönetilir.', 'Manage this record from the customer card Meetings tab.')}</p>}{details.source === 'outlook' && !details.crmLinked && !details.editable && <p className="crm-calendar-muted">{text('Bu etkinliğin katılımcı veya tekrar düzenini Outlook üzerinden yönetin.', 'Manage this event and its attendees or recurrence in Outlook.')}</p>}{safeLink(details.webLink) && <a href={safeLink(details.webLink)} target="_blank" rel="noopener noreferrer"><ExternalLink size={16} /> {text('Outlook’ta aç', 'Open in Outlook')}</a>}</div>}
+      {form ? <form onSubmit={save} id="calendar-appointment-form" className="crm-calendar-form"><label>{text('Başlık', 'Title')}<input autoFocus data-crm-field="control" required maxLength={255} value={form.subject} onChange={e => setForm({ ...form, subject: e.target.value })} /></label><div className="crm-calendar-form-dates"><label>{text('Başlangıç', 'Start')}<input data-crm-field="control" required type="datetime-local" value={form.start} onChange={e => setForm({ ...form, start: e.target.value })} /></label><label>{text('Bitiş', 'End')}<input data-crm-field="control" required type="datetime-local" value={form.end} onChange={e => setForm({ ...form, end: e.target.value })} /></label></div><label>{text('Konum', 'Location')}<input data-crm-field="control" maxLength={500} value={form.location} onChange={e => setForm({ ...form, location: e.target.value })} /></label><p className="crm-calendar-muted">{text('Türkiye saati. Randevu kendi Outlook takviminize kaydedilir; katılımcı daveti gönderilmez.', 'Istanbul time. Saved to your own Outlook calendar; no attendee invitations are sent.')}</p></form> : details && <div className="crm-calendar-detail"><h3>{details.subject}</h3><p>{formatDay(details.start.slice(0, 10))} · {details.allDay ? text('Tüm gün', 'All day') : `${details.start.slice(11)} – ${formatDay(details.end.slice(0, 10))} ${details.end.slice(11)}`}</p>{details.ownerName && <p>{details.ownerName}</p>}{details.isOwn === false && <p className="crm-calendar-muted">{text('Paylaşılan takvim: yalnızca faaliyet ve saat bilgisi görüntülenir.', 'Shared calendar: activity and time only.')}</p>}{details.location && <p>{details.location}</p>}{details.notes && <p className="crm-calendar-notes">{details.notes}</p>}{(details.source === 'crm' || details.crmLinked) && <p className="crm-calendar-muted">{text('Bu kayıt müşteri kartının Toplantılar sekmesinden yönetilir.', 'Manage this record from the customer card Meetings tab.')}</p>}{details.source === 'outlook' && details.isOwn !== false && !details.crmLinked && !details.editable && <p className="crm-calendar-muted">{text('Bu etkinliğin katılımcı veya tekrar düzenini Outlook üzerinden yönetin.', 'Manage this event and its attendees or recurrence in Outlook.')}</p>}{safeLink(details.webLink) && <a href={safeLink(details.webLink)} target="_blank" rel="noopener noreferrer"><ExternalLink size={16} /> {text('Outlook’ta aç', 'Open in Outlook')}</a>}</div>}
       {formError && <p role="alert" className="crm-calendar-error crm-calendar-detail">{formError}</p>}
       {deleteConfirm && <p role="alert" className="crm-calendar-detail">{text('Bu randevu Outlook takviminizden silinecek. Onaylıyor musunuz?', 'This appointment will be deleted from Outlook. Confirm?')}</p>}
       <footer><button type="button" onClick={closeDialog} disabled={saving}>{text('Vazgeç', 'Cancel')}</button>{form ? <button type="submit" form="calendar-appointment-form" className="crm-calendar-primary" disabled={saving}>{saving ? text('Kaydediliyor…', 'Saving…') : text('Outlook’a kaydet', 'Save to Outlook')}</button> : details?.editable && <><button type="button" disabled={saving} onClick={() => deleteConfirm ? remove() : setDeleteConfirm(true)}>{saving ? text('İşleniyor…', 'Working…') : deleteConfirm ? text('Silmeyi onayla', 'Confirm deletion') : text('Sil', 'Delete')}</button><button type="button" disabled={saving} onClick={() => { setForm({ subject: details.subject, start: details.start, end: details.end, location: details.location, eventId: details.id, transactionId: crypto.randomUUID() }); setDeleteConfirm(false); }}>{text('Düzenle', 'Edit')}</button></>}</footer>
