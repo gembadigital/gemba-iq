@@ -95,3 +95,13 @@ Müşteri kartı → Teklifler ve Teklif Yönetimi satırı/Önizle eylemi aynı
 Sözleşme kağıdı `data-contract-paper` ile kendi antet boşluğunu korur; genel kart padding kuralları bunu ezemez. Fiziksel sayfa 210×297 mm kalır. Önizleme genişliği ResizeObserver ile ölçülür, kağıt bir bütün olarak küçültülür; metin kolonları daraltılarak farklı satır akışı üretilmez. `data-contract-preview` kapsayıcısının kenar boşluğu ölçümü bozmaz. PDF ve yazdırma yollarının mevcut fiziksel kenar boşlukları korunur.
 
 Sihirbazın PDF saklama işlemi, dosya yüklendikten sonra belge kimliğini onaylı teklif kaydına yazar; bağlantı yazımı başarısızsa başarı bildirilmez. Bekleme sırasında sürüm/içerik değişmişse yeni kaydın üstüne yazılmaz. Kopyalanan teklif, asıl teklifin PDF bağlantılarını devralmaz. Bağlantı kalıcı belge kimliğidir; süreli imzalı URL veya gizli anahtar veritabanına eklenmez.
+
+## Müşteriler menüsü ve boş kart — 19 Kasım 2026
+
+Müşteriler ana menüde doğrudan sayfa bağlantısıdır; Şirketler ve Hedefler ara grubu kaldırılmıştır. Türkiye'de Şirket Arama ayrı bağlantı olarak korunur; Almanya organizasyonunda menüden kaldırılır ve eski doğrudan sayfa seçimi Müşteriler'e döner. Bu görünürlük, veri izolasyonunun yerine kullanılmaz.
+
+Yeni Şirket Ekle, küçük pencere yerine mevcut müşteri kartının boş taslağını açar. Kaydet'e kadar ilişkili sekmeler kapalıdır ve gerçek kayıt/audit yazılmaz. İsim zorunlu, aynı isimli kayıt engellenir. Kaydet işlemi saveCompaniesConfirmed ile onay bekler; hata taslağı korur ve görünürdür; Vazgeç boş kayıt üretmez. Kayıt sonrası aynı kartın bütün sekmeleri açılır. Mevcut kayıtların alan düzenleme akışı korunur.
+
+E-posta adresleri ekranlarda data-crm-email veya mailto bağlantısıyla mavi, koyu temada açık mavi görünür. Hata/durum renkleri ve PDF/A4 belge metinleri bu kurala dahil değildir. Müşteriler sayfasındaki uzun CRM veritabanı açıklaması kaldırılmıştır.
+
+Kanban kartındaki teklif numarası ve fırsat detayındaki teklif bağlantısı aynı Teklif Yönetimi kaydına gider. Eşleşmede şirket kimliği korunur; açık fırsat kimliği varsa önceliklidir, eski kayıtlarda aynı müşterinin tam teklif numarası kullanılır. Aynı müşterinin başka fırsatına ait teklifler karıştırılmaz. Müşteri bağlantısı gezinme sırasında yeni müşteri üretmez. Karşılığı olmayan eski teklif referansları yeni/uydurma teklif oluşturmaz.

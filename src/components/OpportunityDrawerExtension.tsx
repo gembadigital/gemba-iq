@@ -1,3 +1,4 @@
+import { relatedDealProposals } from "../lib/dealProposalLinks";
 import React, { useState, useEffect, useRef } from "react";
 import { useLanguage } from "../lib/LanguageContext";
 import { getSupabase } from "../lib/supabaseClient";
@@ -1266,10 +1267,7 @@ export function ProposalContractSection({
     try {
       const parsed = CrmDb.getProposals();
       // Filter proposals associated with this deal
-      let filtered = parsed.filter(p => 
-        p.companyName && deal.companyName &&
-        (p.companyName.toLowerCase().trim() === deal.companyName.toLowerCase().trim() || p.companyId === deal.companyId)
-      );
+      let filtered = relatedDealProposals(parsed, deal, showDeletedProposals);
 
       // Filter soft-deleted depending on Admin Recovery switch
       if (!showDeletedProposals) {
@@ -1303,10 +1301,7 @@ export function ProposalContractSection({
     // Reload state
     try {
       const parsed = CrmDb.getProposals();
-      let filtered = parsed.filter(p => 
-        p.companyName && deal.companyName &&
-        (p.companyName.toLowerCase().trim() === deal.companyName.toLowerCase().trim() || p.companyId === deal.companyId)
-      );
+      let filtered = relatedDealProposals(parsed, deal, showDeletedProposals);
       if (!showDeletedProposals) {
         filtered = filtered.filter(p => !(p as any).isDeleted);
       }
@@ -1770,9 +1765,10 @@ export function ProposalContractSection({
                   <h4 data-crm-heading="section" className="font-extrabold text-slate-800 dark:text-zinc-150 text-sm">
                     {activeProposal.proposalSubject}
                   </h4>
-                  <span className="font-mono text-[9px] text-slate-400 font-bold">
-                    Offer Number: #{activeProposal.proposalNumber}
-                  </span>
+                  <button type="button" className="text-xs text-blue-600 underline" onClick={() => {
+                    CrmDb.setKv("crm_active_proposal_id", activeProposal.id);
+                    window.dispatchEvent(new CustomEvent("crm-navigate", { detail: { tab: "proposal-management", id: activeProposal.id, type: "proposal" } }));
+                  }}>{t("Proposal")} #{activeProposal.proposalNumber} · {lang === "TR" ? "Teklif Yönetiminde Aç" : "Open in Proposal Management"}</button>
                 </div>
               </div>
 
@@ -2294,7 +2290,7 @@ export function ProposalContractSection({
 
             <div className="py-4 space-y-3 font-sans text-xs">
               <div className="text-slate-500 dark:text-zinc-400">
-                {t("Proposal")} #{activeProposal.proposalNumber} → <span className="font-semibold text-slate-700 dark:text-zinc-200">{deal.contactEmail}</span>
+                {t("Proposal")} #{activeProposal.proposalNumber} → <span data-crm-email="" className="font-semibold text-slate-700 dark:text-zinc-200">{deal.contactEmail}</span>
               </div>
 
               {!isLoadingSenders && senderOptions.length === 0 && (

@@ -1,3 +1,4 @@
+import { canUseCompanyDiscovery } from "./lib/customerWorkspace";
 import React, { useEffect, useRef, useState } from "react";
 import "./styles/stitch-theme.css";
 import "./styles/workspace-layout.css";
@@ -155,9 +156,7 @@ function getSidebarGroup(activeTab: ActiveTab): SidebarGroup | null {
     if (["services", "deal-management", "proposal-management", "create-proposal", "sales-dashboard"].includes(activeTab)) {
       return "deals";
     }
-    if (["companies-registry", "company-discovery"].includes(activeTab)) {
-      return "companies";
-    }
+
     if (["lead-generator", "lead-profiles", "ai-sales-assistant"].includes(activeTab)) {
       return "leads";
     }
@@ -430,12 +429,17 @@ export default function App() {
 
   // Navigation State
   const [activeTab, setActiveTab] = useState<ActiveTab>(getInitialActiveTab);
+  const companyDiscoveryAvailable = canUseCompanyDiscovery(organization);
+  useEffect(() => {
+    if (!companyDiscoveryAvailable && activeTab === "company-discovery") setActiveTab("companies-registry");
+  }, [companyDiscoveryAvailable, activeTab]);
+
   const [expandedMenu, setExpandedMenu] = useState<SidebarGroup | null>(() => getSidebarGroup(activeTab));
   const toggleMenu = (group: SidebarGroup) => {
     setExpandedMenu(current => current === group ? null : group);
   };
   const activityReportMenuExpanded = expandedMenu === "activityReport";
-  const companiesMenuExpanded = expandedMenu === "companies";
+
   const dealsMenuExpanded = expandedMenu === "deals";
   const leadsMenuExpanded = expandedMenu === "leads";
   const campaignMenuExpanded = expandedMenu === "campaign";
@@ -854,12 +858,12 @@ export default function App() {
     const breadcrumbsMap: Record<string, { parent: string; child: string }> = {
       "revenue-management": { parent: "CRM", child: "Revenue Management" },
       "management-pl": { parent: "CRM", child: "Yönetim P/L" },
-      "company-discovery": { parent: "Companies & Targets", child: "Company Search" },
+      "company-discovery": { parent: "CRM", child: "Company Search" },
       "lead-profiles": { parent: "Lead Discovery", child: "Lead Profiles" },
       "lead-generator": { parent: "Lead Discovery", child: "Lead Mail Generator" },
       "ai-sales-assistant": { parent: "Lead Discovery", child: "AI Sales Assistant" },
       "target-accounts": { parent: "Marketing & Business Development", child: "Target Accounts" },
-      "companies-registry": { parent: "Companies & Targets", child: "Customers" },
+      "companies-registry": { parent: "CRM", child: "Customers" },
       "services": { parent: "Deal Management", child: "Services" },
       "sales-dashboard": { parent: "Deal Management", child: "Sales Dashboard" },
       "deal-management": { parent: "Deal Management", child: "Deal Board" },
@@ -1095,71 +1099,8 @@ export default function App() {
               )}
             </div>
 
-            {/* Collapsible Companies sub-menu */}
-            <div className="flex flex-col gap-[4px]">
-              <button
-                type="button"
-                onClick={() => toggleMenu("companies")}
-                data-ui-nav-row="true"
-                data-ui-nav-group="true"
-                aria-expanded={companiesMenuExpanded}
-                aria-label={t("Companies & Targets")}
-                title={t("Companies & Targets")}
-                className={`w-full max-w-full overflow-hidden flex items-center transition-all group relative cursor-pointer gap-[12px] ${
-                  sidebarCollapsed ? "px-0 justify-center h-[48px] min-h-[48px] py-1" : "justify-between pl-[24px] pr-[16px] h-[48px] min-h-[48px] py-1"
-                } ${
-                  isNotionMode
-                    ? "text-slate-650 dark:text-slate-400 hover:bg-[#eaeae9]/50 dark:hover:bg-[#2c2c2c]/50"
-                    : "border-l-[4px] border-l-transparent text-slate-500 dark:text-slate-400 hover:bg-slate-100/60 dark:hover:bg-zinc-800/40 hover:text-slate-800 dark:hover:text-zinc-100"
-                }`}
-              >
-                <div data-ui-nav-main className={`flex items-center gap-[12px] ${sidebarCollapsed ? "w-full justify-center" : "truncate flex-1 min-w-0"}`}>
-                  <div data-ui-nav-icon className="w-[20px] h-[20px] flex items-center justify-center flex-shrink-0 [&_svg]:!w-[20px] [&_svg]:!h-[20px] text-slate-400 dark:text-zinc-500 [&_svg]:!text-slate-400 dark:[&_svg]:!text-zinc-500">
-                    {isNotionMode ? (
-                      <span className="text-base">🏢</span>
-                    ) : (
-                      <Building className="w-[20px] h-[20px] flex-shrink-0" />
-                    )}
-                  </div>
-                  {!sidebarCollapsed && <span data-ui-nav-label className="text-[15px] font-semibold leading-[1.4] cursor-pointer text-left flex-1 truncate">{t("Companies & Targets")}</span>}
-                </div>
-                {!sidebarCollapsed && (
-                  <ChevronDown data-ui-nav-chevron
-                     className={`w-4 h-4 text-slate-450 dark:text-zinc-500 transition-transform duration-200 flex-shrink-0 ${
-                      companiesMenuExpanded ? "" : "-rotate-90"
-                    }`}
-                  />
-                )}
-                {sidebarCollapsed && (
-                  <span className="absolute left-full ml-3 px-2.5 py-1.5 bg-slate-900 text-white dark:bg-zinc-800 dark:text-zinc-100 text-xs font-semibold rounded-md opacity-0 group-hover:opacity-100 transition-all duration-200 pointer-events-none z-50 shadow-lg translate-x-1 group-hover:translate-x-0 whitespace-nowrap">
-                    {t("Companies & Targets")}
-                  </span>
-                )}
-              </button>
-
-              {companiesMenuExpanded && (
-                <div data-ui-nav-children className="relative flex flex-col gap-[4px] w-full overflow-hidden pl-0 ml-0">
-                  {!sidebarCollapsed && (
-                    <div data-ui-nav-guide className="absolute left-[34px] top-0 bottom-0 w-[1px] bg-[#EDEBE9] dark:bg-[#323130] z-10" />
-                  )}
-                  <SidebarButton
-                    id="companies-registry"
-                    icon={isNotionMode ? <span className="text-base">🏢</span> : <Building className="w-[20px] h-[20px] flex-shrink-0 text-emerald-650" />}
-                    label="Customers"
-                    activeBorderClass="border-l-emerald-500"
-                    isSubmenu={true}
-                  />
-
-                  <SidebarButton
-                    id="company-discovery"
-                    icon={isNotionMode ? <span className="text-base">🔍</span> : <Search className="w-[20px] h-[20px] flex-shrink-0 text-amber-500" />}
-                    label="Company Search"
-                    activeBorderClass="border-l-amber-500"
-                    isSubmenu={true}
-                  />
-                </div>
-              )}
-            </div>
+            <SidebarButton id="companies-registry" icon={<Building className="w-[20px] h-[20px] flex-shrink-0" />} label="Customers" activeBorderClass="border-l-emerald-500" />
+            {companyDiscoveryAvailable && <SidebarButton id="company-discovery" icon={<Search className="w-[20px] h-[20px] flex-shrink-0" />} label="Company Search" activeBorderClass="border-l-amber-500" />}
 
             {/* Collapsible Deals sub-menu */}
             <div className="flex flex-col gap-[4px]">
@@ -1968,7 +1909,7 @@ export default function App() {
 
           {/* Content Routing tabs container */}
           <div data-crm-route={activeTab} className="transition-all duration-300">
-            {activeTab === "company-discovery" && (
+            {companyDiscoveryAvailable && activeTab === "company-discovery" && (
               <CompanyDiscoveryView />
             )}
 

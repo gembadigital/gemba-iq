@@ -1296,7 +1296,7 @@ export default function LeadProfilesView({
                           />
                         ) : (
                           <span className="inline-flex items-center gap-1.5">
-                            <span className="text-[#0078D4] hover:underline cursor-pointer">{p.email}</span>
+                            <span data-crm-email="" className="text-[#0078D4] hover:underline cursor-pointer">{p.email}</span>
                             {(() => {
                               const key = p.email?.trim().toLowerCase();
                               const occurrences = key ? emailOccurrenceCounts.get(key) || 0 : 0;

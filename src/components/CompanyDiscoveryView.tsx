@@ -1044,7 +1044,7 @@ You must output a raw valid JSON ARRAY strictly matching this structure without 
                   <div key={acc.id} className="p-3 bg-slate-50 dark:bg-zinc-900 border border-slate-150 dark:border-zinc-800/80 rounded-xl flex items-center justify-between">
                     <div>
                       <span className="text-xs font-black text-slate-800 dark:text-zinc-200 block">{acc.companyName}</span>
-                      <span className="text-[10px] text-[#0078D4] font-mono block mt-0.5">{acc.contactEmail || "Aranacak telefon yok"}</span>
+                      <span data-crm-email="" className="text-[10px] text-[#0078D4] font-mono block mt-0.5">{acc.contactEmail || "Aranacak telefon yok"}</span>
                     </div>
 
                     <div className="flex items-center gap-2">

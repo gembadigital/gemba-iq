@@ -1,0 +1,24 @@
+{
+  "unit_checks": 11,
+  "persistence_integration_checks": 10,
+  "browser_checks": 12,
+  "browser_failures": 0,
+  "browser_cases": [
+    "empty full card, cancel and required-name validation at 320/390/768/1280 light and 390/1280 dark",
+    "failed save retains draft then confirmed save/list",
+    "blue email light/dark",
+    "Germany menu and direct-route guard",
+    "Turkey company search retained",
+    "Kanban link opens exact proposal PDF detail"
+  ],
+  "live_readonly_data_audit": {
+    "linked_deals": 17,
+    "missing_proposal_records": 41,
+    "no_reference": 36
+  },
+  "live_business_data_changed": false,
+  "limitations": [
+    "41 historical references lack proposal records; no missing PDF or financial content invented",
+    "Browser tests use synthetic records; actual save rollback/reload verified through real persistence layer with fake transport"
+  ]
+}

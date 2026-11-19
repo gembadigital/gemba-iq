@@ -82,6 +82,15 @@ async function main(){
  for(const key of ['employeeCount','annualRevenue','annualRevenueCurrency','sector','healthScore','squareMeter','productionType','isoCertifications','customFields'] as const)assert.deepEqual(persisted[key],customer[key]);
  assert.equal(persisted.healthScore,0);assert.equal(persisted.sector,'Kablo');assert.equal(persisted.annualRevenue,'123456');
  ok('New customer numeric, production, sector and custom fields survive a fresh database load, including valid zeros');
+ await reset();
+ const draft:any={id:'company-new-confirmed',name:'Confirmed Customer',accountOwner:'Test',industry:'',customFields:{}};
+ failWrites=true;
+ await assert.rejects(()=>CrmDb.saveCompaniesConfirmed([draft]),/./);
+ assert.equal(CrmDb.getCompanies().some(c=>c.id===draft.id),false);
+ failWrites=false;
+ await CrmDb.saveCompaniesConfirmed([draft]);CrmDb.resetCache();await CrmDb.hydrateFromSupabase(org);
+ assert.equal(CrmDb.getCompanyById(draft.id)?.name,draft.name);
+ ok('New full-card customer creation rolls back failed saves and survives a confirmed save plus reload');
  console.log(`${passed} persistence integration tests passed using real CrmDb and service with an isolated fake transport.`);
 }
 main().catch(err=>{console.error(err);process.exitCode=1;});

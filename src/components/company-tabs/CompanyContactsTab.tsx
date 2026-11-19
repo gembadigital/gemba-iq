@@ -389,7 +389,7 @@ export default function CompanyContactsTab({
                       className="flex items-center gap-1.5 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors truncate"
                     >
                       <Mail className="w-3.5 h-3.5 text-slate-400 shrink-0" />
-                      <span>{contact.email}</span>
+                      <span data-crm-email="">{contact.email}</span>
                     </a>
                   )}
                   {contact.phone && (

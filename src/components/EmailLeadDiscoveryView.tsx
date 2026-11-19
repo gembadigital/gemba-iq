@@ -742,7 +742,7 @@ export default function EmailLeadDiscoveryView({
                         </span>
                       </div>
                     </div>
-                    <span className="text-[11px] font-mono text-slate-500 dark:text-slate-400 truncate block">
+                    <span data-crm-email="" className="text-[11px] font-mono text-slate-500 dark:text-slate-400 truncate block">
                       {conn.email}
                     </span>
                     <div className="flex items-center justify-between text-[10px] text-slate-400 pt-1.5 border-t border-slate-100 dark:border-zinc-900/60 font-mono">
@@ -1162,7 +1162,7 @@ export default function EmailLeadDiscoveryView({
                         <div className="text-[11px] text-slate-500 font-medium truncate block leading-none">
                           {lead.jobTitle}
                         </div>
-                        <div className="text-[11px] font-mono text-slate-400 truncate block">
+                        <div data-crm-email="" className="text-[11px] font-mono text-slate-400 truncate block">
                           {lead.email} | {lead.phone}
                         </div>
                         
@@ -1326,7 +1326,7 @@ export default function EmailLeadDiscoveryView({
           </div>
           {filteredOutLeads.map((f, idx) => (
             <div data-crm-grid="layout" key={idx} className="grid grid-cols-1 sm:grid-cols-4 gap-4 p-3.5 hover:bg-slate-50/50 text-slate-600 font-mono text-[11px] dark:hover:bg-zinc-900/10">
-              <span className="font-semibold text-slate-800 dark:text-slate-350">{f.email}</span>
+              <span data-crm-email="" className="font-semibold text-slate-800 dark:text-slate-350">{f.email}</span>
               <span className="text-rose-500 font-sans flex items-center gap-1 font-semibold">
                 <AlertCircle className="w-3.5 h-3.5 flex-shrink-0" /> {f.reason}
               </span>

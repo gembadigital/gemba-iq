@@ -415,7 +415,7 @@ export default function OutreachApprovalView() {
                         <Building2 className="w-3.5 h-3.5 text-slate-400" />
                         {companyName(draft)}
                       </td>
-                      <td className="p-4 text-xs text-slate-600 dark:text-zinc-300">
+                      <td data-crm-email="" className="p-4 text-xs text-slate-600 dark:text-zinc-300">
                         {(draft.recipients || []).map((r) => r.name || r.email).join(", ") || "—"}
                       </td>
                       <td className="p-4 text-xs text-slate-600 dark:text-zinc-300 max-w-xs overflow-hidden">

@@ -1944,7 +1944,7 @@ export default function MarketingHubView({ initialSubTab, onNavigateToTab }: Mar
                                 <td className="p-3 font-semibold text-slate-700 dark:text-slate-200">{account.companyName}</td>
                                 <td className="p-3">{account.city || account.locationMain || "—"}</td>
                                 <td className="p-3 font-medium text-slate-700 dark:text-slate-200">{primaryContact.fullName}</td>
-                                <td className="p-3 font-mono text-[#0078D4] dark:text-brand-400 font-semibold">{primaryContact.email}</td>
+                                <td data-crm-email="" className="p-3 font-mono text-[#0078D4] dark:text-brand-400 font-semibold">{primaryContact.email}</td>
                                 <td className="p-3">
                                   <span
                                     className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
@@ -2211,7 +2211,7 @@ export default function MarketingHubView({ initialSubTab, onNavigateToTab }: Mar
                         <td className="p-3 font-semibold text-slate-700 dark:text-slate-200">{account.companyName}</td>
                         <td className="p-3">{account.industryTag}</td>
                         <td className="p-3 font-medium text-slate-700 dark:text-slate-200">{primaryContact.fullName}</td>
-                        <td className="p-3 font-mono text-[#0078D4] dark:text-brand-400 font-semibold">{primaryContact.email}</td>
+                        <td data-crm-email="" className="p-3 font-mono text-[#0078D4] dark:text-brand-400 font-semibold">{primaryContact.email}</td>
                         <td className="p-3">
                           <span
                             className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
@@ -2741,7 +2741,7 @@ export default function MarketingHubView({ initialSubTab, onNavigateToTab }: Mar
                               </div>
                               <div className="flex items-center gap-1.5 text-[#0078D4] dark:text-brand-400 font-mono font-medium truncate">
                                 <Mail className="w-3 h-3 flex-shrink-0 text-slate-400" />
-                                <span className="truncate">{primaryContact.email}</span>
+                                <span data-crm-email="" className="truncate">{primaryContact.email}</span>
                               </div>
                             </div>
 
@@ -3683,7 +3683,7 @@ export default function MarketingHubView({ initialSubTab, onNavigateToTab }: Mar
                             {[contact.title, contact.department].filter(Boolean).join(" · ") || "—"}
                           </div>
                           <div className="text-[10px] text-slate-450 mt-0.5 flex flex-wrap gap-x-3">
-                            {contact.email && <span>{contact.email}</span>}
+                            {contact.email && <span data-crm-email="">{contact.email}</span>}
                             {contact.phone && <span>{contact.phone}</span>}
                             {contact.linkedin && <span>{contact.linkedin}</span>}
                           </div>

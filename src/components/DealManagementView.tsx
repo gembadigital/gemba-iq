@@ -1,3 +1,4 @@
+import { relatedDealProposals } from "../lib/dealProposalLinks";
 import React, { useState, useEffect, useRef } from "react";
 import { createPortal } from "react-dom";
 import { useLanguage } from "../lib/LanguageContext";
@@ -510,15 +511,10 @@ export default function DealManagementView({ initialTab = "dashboard", onNavigat
 
   const handleCompanyClick = (e: React.MouseEvent, companyName: string, companyId?: string) => {
     e.stopPropagation();
-    let id = companyId;
-    if (!id) {
-      const matched = CrmDb.getCompanies().find(c => c.name.toLowerCase().trim() === companyName.toLowerCase().trim());
-      if (matched) id = matched.id;
-    }
-    if (!id) {
-      const newComp = CrmDb.createCompany({ name: companyName });
-      id = newComp.id;
-    }
+    const companies = CrmDb.getCompanies();
+    const match = companies.find(c => c.id === companyId) || companies.find(c => c.name.toLowerCase().trim() === companyName.toLowerCase().trim());
+    if (!match) { alert(t("Company not found.")); return; }
+    const id = match.id;
     CrmDb.setKv("active_company_detail_id", id);
     window.dispatchEvent(new CustomEvent("crm-navigate", { detail: { tab: "companies-registry" } }));
   };
@@ -531,9 +527,9 @@ export default function DealManagementView({ initialTab = "dashboard", onNavigat
     e.stopPropagation();
     if (!proposalNumber) return;
     const allProposals = CrmDb.getProposals();
-    const matched =
-      (dealId && allProposals.find((p) => p.dealId === dealId && p.proposalNumber === proposalNumber)) ||
-      allProposals.find((p) => p.proposalNumber === proposalNumber);
+    const deal = CrmDb.getDeals().find(d => d.id === dealId);
+    const candidates = deal ? relatedDealProposals(allProposals, deal) : [];
+    const matched = candidates.find(p => p.proposalNumber === proposalNumber) || candidates[0];
     if (!matched) {
       alert(t("Could not find the linked proposal record."));
       return;
@@ -555,6 +551,7 @@ export default function DealManagementView({ initialTab = "dashboard", onNavigat
   const [dealViewStyle, setDealViewStyle] = useState<"kanban" | "list">("kanban");
 
   const [deals, setDeals] = useState<Deal[]>(() => CrmDb.getDeals());
+  const proposalRecords = CrmDb.getProposals();
 
   const [projects, setProjects] = useState<ProjectRecord[]>(() => {
     const loaded = CrmDb.getProjects();
@@ -2680,6 +2677,11 @@ export default function DealManagementView({ initialTab = "dashboard", onNavigat
                                     <span>{t("In Stage")}: <b className="text-[#0078D4] dark:text-blue-400">{deal.currentStageDuration || 0} {t("Days")}</b></span>
                                   </div>
 
+                                  {(() => {
+                                    const linked = relatedDealProposals(proposalRecords, deal)[0];
+                                    return linked ? <button type="button" data-deal-proposal-link={deal.id} onClick={e => handleProposalClick(e, linked.proposalNumber, deal.id)} className="mt-2 text-xs text-blue-600 dark:text-blue-400 underline">{t("Proposal")} {linked.proposalNumber}</button> : deal.proposalNumber ? <span data-deal-proposal-missing="" className="block mt-2 text-xs text-slate-500">{deal.proposalNumber} · {lang === "TR" ? "Teklif kaydı bulunamadı" : "Proposal record not found"}</span> : null;
+                                  })()}
+
                                   {/* 7+ ve 20+ Gün Teklif Bekleme Uyarı ve Hatırlatma Sistemi */}
                                   {deal.stage === "Proposal Submitted" && (deal.currentStageDuration || 0) >= 7 && (
                                     <div className={`mt-3 p-3 rounded-xl border flex flex-col sm:flex-row sm:items-center justify-between gap-2 shadow-sm ${
@@ -3515,7 +3517,7 @@ export default function DealManagementView({ initialTab = "dashboard", onNavigat
                       </div>
                       <div>
                         <span className="block text-[10px] text-zinc-400 capitalize font-mono font-bold">{t("Contact Email")}</span>
-                        <span className="font-semibold underline select-all">{selectedDeal.contactEmail || t("No official email logged")}</span>
+                        <span data-crm-email="" className="font-semibold underline select-all">{selectedDeal.contactEmail || t("No official email logged")}</span>
                       </div>
                       <div>
                         <span className="block text-[10px] text-zinc-400 capitalize font-mono font-bold">{t("Contact Phone")}</span>
@@ -3539,7 +3541,7 @@ export default function DealManagementView({ initialTab = "dashboard", onNavigat
                       </div>
                       <div>
                         <span className="block text-[8px] text-slate-400 font-mono">{t("PROPOSAL NO")}</span>
-                        <span className="font-bold">{selectedDeal.proposalNumber || t("N/A")}</span>
+                        {(() => { const linked = relatedDealProposals(proposalRecords, selectedDeal)[0]; return linked ? <button type="button" className="font-bold text-blue-600 underline" onClick={e => handleProposalClick(e, linked.proposalNumber, selectedDeal.id)}>{linked.proposalNumber}</button> : <span>{selectedDeal.proposalNumber ? `${selectedDeal.proposalNumber} · ${lang === "TR" ? "Teklif kaydı bulunamadı" : "Proposal record not found"}` : t("N/A")}</span>; })()}
                       </div>
                       <div>
                         <span className="block text-[8px] text-slate-400 font-mono">{t("MAN-DAY UNITS")}</span>

@@ -1,5 +1,7 @@
 @layer stitch-theme {
 @media screen {
+  .gemba-stitch-skin :is([data-crm-email], a[href^="mailto:"]):not([data-crm-document], [data-crm-document] *, .a4-page, .a4-page *) { color: #0078d4 !important; }
+  .gemba-stitch-skin.dark :is([data-crm-email], a[href^="mailto:"]):not([data-crm-document], [data-crm-document] *, .a4-page, .a4-page *) { color: #60a5fa !important; }
   /* Paper margins must survive legacy global card padding; no generic document selectors. */
   .gemba-stitch-skin [data-contract-preview] { padding: 0 0 48px !important; min-width: 0; }
   .gemba-stitch-skin [data-contract-paper] { padding: var(--contract-paper-padding) !important; width: 210mm !important; min-width: 210mm !important; max-width: none !important; zoom: var(--contract-preview-scale, 1); box-sizing: border-box; }

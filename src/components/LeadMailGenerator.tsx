@@ -797,7 +797,7 @@ export default function LeadMailGenerator({
                                 onChange={(e) => setEditEmail(e.target.value)}
                               />
                             ) : (
-                              <span>{r.email}</span>
+                              <span data-crm-email="">{r.email}</span>
                             )}
                           </td>
                           <td className="p-3 text-slate-700 dark:text-slate-300 font-medium">

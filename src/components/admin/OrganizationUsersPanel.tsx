@@ -543,7 +543,7 @@ export default function OrganizationUsersPanel({ onAuditLog }: OrganizationUsers
                             <div className="text-[11px] text-slate-400 mt-1">{row.job_title}</div>
                           )}
                         </td>
-                        <td className="px-4 py-4 text-slate-600 dark:text-zinc-400">
+                        <td data-crm-email="" className="px-4 py-4 text-slate-600 dark:text-zinc-400">
                           {row.email}
                         </td>
                         <td className="px-4 py-4">

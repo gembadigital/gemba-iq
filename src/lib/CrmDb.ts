@@ -583,6 +583,23 @@ export const CrmDb = {
     persistSoon(() => persistCompanies(cache.companies), "companies");
   },
 
+  async saveCompaniesConfirmed(companies: Company[]) {
+    const previous = cache.companies;
+    const attempted = companies.map(c => ({ ...c, customFields: c.customFields || {} }));
+    cache.companies = attempted;
+    try {
+      const result = await trackPersist(() => persistCompanies(attempted), "companies");
+      if (result.conflictIds.length || result.blockedDeletes) {
+        await handlePersistResult(result);
+        throw new Error("Müşteri kaydı başka bir oturumda değişti. Tekrar deneyin.");
+      }
+      this.propagateCompanyChanges(attempted);
+    } catch (error) {
+      if (cache.companies === attempted) cache.companies = previous;
+      throw error;
+    }
+  },
+
   getCompanyById(companyId: string): Company | undefined {
     return this.getCompanies().find((c) => c.id === companyId);
   },

@@ -41,6 +41,10 @@ export interface CompanyDetailViewProps {
   onOpenEditForm?: (company: Company) => void;
   customFieldDefs: CustomFieldDefinition[];
   lang: "TR" | "EN";
+  isNewCustomer?: boolean;
+  onSaveNewCustomer?: () => void;
+  savingNewCustomer?: boolean;
+  newCustomerError?: string;
   showCloseButtonOnly?: boolean; // If true, renders an 'X' close button instead of 'Back to List'
 }
 
@@ -52,6 +56,7 @@ export default function CompanyDetailView({
   onOpenEditForm,
   customFieldDefs,
   lang,
+  isNewCustomer = false, onSaveNewCustomer, savingNewCustomer = false, newCustomerError = "",
   showCloseButtonOnly = false
 }: CompanyDetailViewProps) {
   const [detailTab, setDetailTab] = useState("overview");
@@ -162,6 +167,7 @@ export default function CompanyDetailView({
             <button data-crm-button=""
               type="button"
               onClick={onClose}
+              disabled={savingNewCustomer}
               className="p-1.5 bg-white dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 text-slate-500 hover:text-rose-600 dark:hover:text-rose-400 rounded-lg cursor-pointer transition-colors"
               title={t("Close")}
             >
@@ -171,6 +177,7 @@ export default function CompanyDetailView({
             <button data-crm-button=""
               type="button"
               onClick={onClose}
+              disabled={savingNewCustomer}
               className="p-1.5 bg-white dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 text-slate-500 hover:text-slate-800 dark:hover:text-zinc-200 rounded-lg cursor-pointer transition-colors"
               title={t("Back to Registry")}
             >
@@ -178,11 +185,11 @@ export default function CompanyDetailView({
             </button>
           )}
 
-          <div aria-hidden="true" className="company-monogram">{company.name.slice(0, 2).toLocaleUpperCase(lang === "TR" ? "tr-TR" : "en")}</div>
+          <div aria-hidden="true" className="company-monogram">{company.name ? company.name.slice(0, 2).toLocaleUpperCase(lang === "TR" ? "tr-TR" : "en") : <Building className="w-5 h-5" />}</div>
           <div className="company-heading space-y-1 flex-1">
             <div className="flex flex-wrap items-center gap-2">
               <h2 data-crm-heading="page" className="text-lg font-black text-slate-900 dark:text-white font-display">
-                {company.name}
+                {company.name || (lang === "TR" ? "Yeni Müşteri" : "New Customer")}
               </h2>
               <span className={`company-status inline-block px-2.5 py-0.5 rounded-full text-[9px] font-mono font-bold uppercase tracking-wider ${
                 company.customerStatus === "Active Customer" || company.customerStatus === "Existing Customer"
@@ -219,6 +226,10 @@ export default function CompanyDetailView({
 
         {/* Quick action triggers */}
         <div data-crm-header-actions="" className="flex items-center gap-1.5 shrink-0 ml-auto md:ml-0">
+          {isNewCustomer && <>
+            <button data-crm-button="" data-crm-variant="secondary" type="button" disabled={savingNewCustomer} onClick={onClose}>{lang === "TR" ? "Vazgeç" : "Cancel"}</button>
+            <button data-crm-button="" data-new-customer-save="" type="button" disabled={savingNewCustomer} onClick={onSaveNewCustomer} className="bg-blue-600 text-white rounded-lg px-4 py-2">{savingNewCustomer ? (lang === "TR" ? "Kaydediliyor…" : "Saving…") : t("Save")}</button>
+          </>}
           {onOpenEditForm && (
             <button data-crm-button=""
               type="button"
@@ -244,6 +255,7 @@ export default function CompanyDetailView({
 
       </div>
 
+      {newCustomerError && <p role="alert" className="text-red-600 p-3">{newCustomerError}</p>}
       {/* CRM Navigation Tabs selectors (10 TAB) */}
       <div data-crm-scroll="horizontal" className="company-detail-tabs overflow-x-auto border-b border-slate-100 dark:border-zinc-900/60 pb-1 flex items-center gap-1 scrollbar-thin z-10 sticky top-0 bg-[#FAF9F8] dark:bg-[#0B0B0C] pt-1">
         {[
@@ -257,7 +269,7 @@ export default function CompanyDetailView({
           { id: "meetings", label: t("Meetings"), icon: <CalendarClock className="w-3.5 h-3.5" /> },
           { id: "revenue", label: t("Revenue Ledger"), icon: <DollarSign className="w-3.5 h-3.5" /> },
           { id: "research", label: t("Research & Activity Info"), icon: <Search className="w-3.5 h-3.5" /> }
-        ].map((tab) => {
+        ].filter(tab => !isNewCustomer || tab.id === "overview").map((tab) => {
           const active = detailTab === tab.id;
           return (
             <button data-crm-button=""

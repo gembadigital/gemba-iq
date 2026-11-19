@@ -1,3 +1,6 @@
+import { newCustomerDraft } from "../lib/customerWorkspace";
+import { useOrganization } from "../lib/OrganizationContext";
+import { normalizeTrKey } from "../lib/CrmDb";
 import React, { useState, useEffect, useMemo, useRef } from "react";
 import * as XLSX from "xlsx";
 import { useLanguage } from "../lib/LanguageContext";
@@ -215,6 +218,11 @@ export default function CompaniesView() {
 
   // State Management
   const [companies, setCompanies] = useState<Company[]>(() => CrmDb.getCompanies() as any[]);
+  const { organization } = useOrganization();
+  const [creatingCustomer, setCreatingCustomer] = useState(false);
+  const [savingCustomer, setSavingCustomer] = useState(false);
+  const [customerSaveError, setCustomerSaveError] = useState("");
+  const customerDraftRef = useRef<Company | null>(null);
   const [selectedCompany, setSelectedCompany] = useState<Company | null>(null);
   const [detailTab, setDetailTab] = useState<string>("overview");
 
@@ -327,6 +335,9 @@ export default function CompaniesView() {
       if (targetId) {
         const found = latest.find(c => c.id === targetId);
         if (found) {
+          setCreatingCustomer(false);
+          customerDraftRef.current = null;
+          setCustomerSaveError("");
           setSelectedCompany(found);
           setDetailTab("overview");
         }
@@ -346,6 +357,11 @@ export default function CompaniesView() {
     oldValue?: string,
     newValue?: string
   ) => {
+    if (creatingCustomer) {
+      customerDraftRef.current = updated;
+      setSelectedCompany(updated);
+      return;
+    }
     setCompanies(prev => prev.map(c => c.id === updated.id ? updated : c));
     setSelectedCompany(updated);
 
@@ -633,35 +649,36 @@ export default function CompaniesView() {
   };
 
   const handleOpenAddForm = () => {
-    setEditingCompany(null);
-    setFormState({
-      name: "",
-      phone: "",
-      website: "",
-      customerStatus: "Lead",
-      industry: "Manufacturing",
-      sector: "",
-      employeeCount: undefined,
-      annualRevenue: "",
-      annualRevenueCurrency: "₺",
-      accountOwner: getTenantActorName(),
-      billingAddress: "",
-      billingCity: "",
-      billingDistrict: "",
-      billingCountry: "Türkiye",
-      billingPostalCode: "",
-      shift: "1 Shift",
-      productionType: "",
-      squareMeter: "",
-      digitalInfrastructure: "ERP",
-      description: "",
-      managementTeam: "",
-      taxOffice: "",
-      taxNo: "",
-      healthScore: undefined,
-      customFields: {}
-    });
-    setIsFormOpen(true);
+    const draft = newCustomerDraft(getTenantActorName(), organization?.country || "Türkiye");
+    customerDraftRef.current = draft;
+    setCreatingCustomer(true);
+    setCustomerSaveError("");
+    setIsFormOpen(false);
+    setSelectedCompany(draft);
+  };
+
+  const handleSaveNewCustomer = async () => {
+    const draft = customerDraftRef.current;
+    if (!draft || savingCustomer) return;
+    const name = draft.name.trim();
+    if (!name) { setCustomerSaveError(t("Company Name is required!")); return; }
+    const current = CrmDb.getCompanies() as Company[];
+    if (current.some(c => normalizeTrKey(c.name) === normalizeTrKey(name))) {
+      setCustomerSaveError(lang === "TR" ? "Bu adla kayıtlı bir müşteri var. Lütfen mevcut kartı kullanın." : "A customer with this name already exists. Please use the existing card.");
+      return;
+    }
+    setSavingCustomer(true);
+    setCustomerSaveError("");
+    try {
+      const saved = { ...draft, name };
+      await CrmDb.saveCompaniesConfirmed([saved, ...current] as any);
+      setCompanies(CrmDb.getCompanies() as Company[]);
+      setSelectedCompany(saved);
+      customerDraftRef.current = null;
+      setCreatingCustomer(false);
+    } catch (error) {
+      setCustomerSaveError(error instanceof Error ? error.message : "Müşteri kaydedilemedi.");
+    } finally { setSavingCustomer(false); }
   };
 
   const handleOpenEditForm = (c: Company) => {
@@ -808,11 +825,9 @@ export default function CompaniesView() {
             <div data-crm-header-copy="">
               <h1 data-crm-heading="page" className="text-xl font-black text-slate-800 dark:text-zinc-100 flex items-center gap-2">
                 <Building className="w-5.5 h-5.5 text-[#0078D4]" />
-                <span>{t("Client Portfolio & Accounts")}</span>
+                <span>{t("Customers")}</span>
               </h1>
-              <p className="text-[11px] text-slate-400 dark:text-zinc-500 mt-1 font-sans">
-                {t("The relational single source of truth master ledger for lean manufacturing diagnostics, activities, and billing.")}
-              </p>
+
             </div>
 
             <div data-crm-header-actions="" className="flex flex-wrap items-center gap-2 w-full md:w-auto shrink-0">
@@ -1055,7 +1070,7 @@ export default function CompaniesView() {
               <div className="flex items-center justify-between pb-3 mb-1 border-b border-slate-100 dark:border-zinc-800">
                 <span className="text-xs font-bold text-slate-700 dark:text-zinc-200 flex items-center gap-1.5">
                   <Building className="w-4 h-4 text-[#0078D4]" />
-                  {t("Client Portfolio & Accounts")}
+                  {t("Customers")}
                 </span>
                 <button data-crm-button=""
                   type="button"
@@ -1307,10 +1322,14 @@ export default function CompaniesView() {
       {selectedCompany && (
         <CompanyDetailView
           company={selectedCompany}
-          onClose={() => { setSelectedCompany(null); setCompanies(CrmDb.getCompanies() as any[]); }}
+          isNewCustomer={creatingCustomer}
+          onSaveNewCustomer={handleSaveNewCustomer}
+          savingNewCustomer={savingCustomer}
+          newCustomerError={customerSaveError}
+          onClose={() => { if (savingCustomer) return; setCreatingCustomer(false); customerDraftRef.current = null; setCustomerSaveError(""); setSelectedCompany(null); setCompanies(CrmDb.getCompanies() as any[]); }}
           onUpdateCompany={handleUpdateCompanyDirect}
-          onDeleteCompany={handleDeleteCompany}
-          onOpenEditForm={handleOpenEditForm}
+          onDeleteCompany={creatingCustomer ? undefined : handleDeleteCompany}
+          onOpenEditForm={creatingCustomer ? undefined : handleOpenEditForm}
           customFieldDefs={customFieldDefs}
           lang={lang}
         />

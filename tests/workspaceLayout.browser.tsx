@@ -23,6 +23,7 @@ if(query.has('dense')) {
  fixtures.kv.crm_revenue_consultants=[{id:'consultant-1',name:'Örnek Uzun İsimli Danışman',title:'Kıdemli Operasyonel Mükemmellik Danışmanı',department:'Üretim ve Kalite',dailyCost:12000,dailySalesRate:42000,employmentType:'Full-Time',status:'Active'}];
  fixtures.kv.crm_revenue_invoices=fixtures.companies.map((c:any,i:number)=>({id:'invoice-'+i,invoiceNumber:'ORNEK20260000'+i,customerName:c.name,invoiceDate:'2026-11-10',month:'2026-11',amount:420000,deliveredDays:10,serviceType:'Training',status:'Outstanding',vatRate:20,vatAmount:84000}));
 }
+fixtures.kv.crm_lead_profiles=[{id:'lead-review',firstName:'Örnek',lastName:'Yetkili',email:'contact@example.test',company:'Örnek Şirket',leadStatus:'New',leadSegment:'Cold'}];
 (window as any).workspaceFixture=fixtures;
 const root=createRoot(document.getElementById('root')!);
 if(query.get('screen')) root.render(<PreviewBoundary><LanguageProvider><div style={{padding:16}}>{query.get('screen')==='admin'?<AdministrationCenter onClose={()=>{}} initialSubTab={query.get("panel") || undefined} />:query.get('screen')==='account'?<UserAccountSettings onClose={()=>{}} darkMode={false} onToggleTheme={()=>{}} />:<AuthLayout title="Gemba IQ hesabınıza giriş yapın" subtitle="Çalışma alanınıza güvenle bağlanın"><AuthField id="email" label="E-posta" value="" onChange={()=>{}} /><div style={{marginTop:16}}><AuthButton>Giriş yap</AuthButton></div></AuthLayout>}</div></LanguageProvider></PreviewBoundary>);

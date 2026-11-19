@@ -175,7 +175,7 @@ export default function UserAccountSettings({
           <>
             {mailbox?.mailbox_address && (
               <div className="text-xs text-slate-600 dark:text-slate-300 space-y-0.5">
-                <div className="font-bold">{mailbox.mailbox_address}</div>
+                <div data-crm-email="" className="font-bold">{mailbox.mailbox_address}</div>
                 {mailbox.connected_at && (
                   <div className="text-[10px] text-slate-400 font-mono">
                     {t("Connected:")} {new Date(mailbox.connected_at).toLocaleString()}

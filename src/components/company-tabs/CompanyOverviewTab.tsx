@@ -92,11 +92,12 @@ export default function CompanyOverviewTab({
         </label>
 
         {type === "select" ? (
-          <select data-crm-field="control"
+          <select data-company-field={String(field)} data-crm-field="control"
             defaultValue={value}
             onChange={(e) => handleFieldChange(field, e.target.value, isCustom)}
             className="w-full p-1.5 bg-white dark:bg-zinc-800 border border-slate-205 dark:border-zinc-700 rounded text-xs font-semibold text-slate-700 dark:text-zinc-200 focus:outline-none focus:border-blue-400"
           >
+            <option value="" disabled>{t("Select")}</option>
             {options.map((opt) => (
               <option key={opt} value={opt}>
                 {getTranslatedValue(opt, String(field))}
@@ -104,14 +105,14 @@ export default function CompanyOverviewTab({
             ))}
           </select>
         ) : type === "textarea" ? (
-          <textarea data-crm-field="multiline"
+          <textarea data-company-field={String(field)} data-crm-field="multiline"
             key={`${String(field)}-${value}`}
             defaultValue={value}
             onBlur={(e) => handleFieldChange(field, e.target.value, isCustom)}
             className="w-full p-1.5 bg-white dark:bg-zinc-800 border border-slate-205 dark:border-zinc-700 rounded text-xs text-slate-700 dark:text-zinc-200 focus:outline-none focus:border-blue-400 min-h-[70px] resize-y"
           />
         ) : (
-          <input data-crm-field="control"
+          <input data-company-field={String(field)} data-crm-field="control"
             key={`${String(field)}-${value}`}
             type={type === "number" ? "number" : "text"}
             defaultValue={value}
@@ -303,7 +304,7 @@ export default function CompanyOverviewTab({
           </div>
 
           {(company.isoCertifications || []).includes("Diğer") && (
-            <input data-crm-field="control"
+            <input data-company-field="isoCertificationOther" data-crm-field="control"
               type="text"
               key={`iso-other-${company.isoCertificationOther || ""}`}
               defaultValue={company.isoCertificationOther || ""}

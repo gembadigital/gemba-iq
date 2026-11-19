@@ -1827,7 +1827,7 @@ export default function TargetAccountsView({
                         </div>
                         <div>
                           <span data-crm-caption="" className="text-[10px] uppercase font-bold tracking-brand text-slate-400 block">{t("Designated Email")}</span>
-                          <span className="font-mono text-[#0078D4] dark:text-brand-400 font-bold">{selectedAccount.contactEmail || t("N/A")}</span>
+                          <span data-crm-email="" className="font-mono text-[#0078D4] dark:text-brand-400 font-bold">{selectedAccount.contactEmail || t("N/A")}</span>
                         </div>
                         <div>
                           <span data-crm-caption="" className="text-[10px] uppercase font-bold tracking-brand text-slate-400 block">{t("Department / Role")}</span>
