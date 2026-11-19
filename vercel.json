@@ -6,6 +6,7 @@
     "api/gemini/generate-proposal-email.js": { "maxDuration": 60 }
   },
   "rewrites": [
+    { "source": "/api/organization/documents/delete", "destination": "/api/organization/[...action]?action=documents-delete" },
     { "source": "/auth/callback", "destination": "/api/auth/callback" },
     { "source": "/auth/callback/", "destination": "/api/auth/callback" },
 

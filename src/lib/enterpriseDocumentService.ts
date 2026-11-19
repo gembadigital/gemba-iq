@@ -1,3 +1,4 @@
+import { organizationFetch } from "./organizationFetch";
 import { getSupabase } from "./supabaseClient";
 import { getActiveOrganizationId } from "./OrganizationContext";
 import {
@@ -435,15 +436,15 @@ export async function updateDocumentMetadata(
 }
 
 export async function deleteDocument(documentId: string): Promise<void> {
-  const client = await requireClient();
-
-  const { error } = await client
-    .from("documents")
-    .update({ is_deleted: true })
-    .eq("id", documentId);
-
-  if (error) {
-    throw new Error(error.message);
+  await requireOrgId();
+  const response = await organizationFetch("/api/organization/documents/delete", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ documentId }),
+  });
+  const result = await response.json().catch(() => null);
+  if (!response.ok || result?.success !== true) {
+    throw new Error(result?.error || "Belge silinemedi. Lütfen yeniden deneyin.");
   }
 }
 

@@ -1,3 +1,4 @@
+import { deleteDocumentHandler } from '../../lib/server/documentActions.js';
 import { resolveOrganizationAccess } from '../../lib/server/organizationAccess.js';
 import { createClient } from "@supabase/supabase-js";
 import {
@@ -246,6 +247,7 @@ export default async function handler(request, response) {
   // plain string, not an array of path segments.
   const action = Array.isArray(request.query?.action) ? request.query.action[0] : request.query?.action;
 
+  if (action === "documents-delete") return deleteDocumentHandler(request, response);
   if (action === "mailbox") return mailboxHandler(request, response);
   if (action === "members-role") return membersRoleHandler(request, response);
   if (action === "members-delete") return membersDeleteHandler(request, response);

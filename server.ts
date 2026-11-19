@@ -58,6 +58,12 @@ app.get("/api/invitations/config", async (req, res) => {
   }
 });
 
+// API: Soft-delete a document within the authenticated workspace
+app.all("/api/organization/documents/delete", async (req, res) => {
+  const { deleteDocumentHandler } = await import("./lib/server/documentActions.js");
+  return deleteDocumentHandler(req, res);
+});
+
 // API: Update organization member application role
 app.post("/api/organization/members/role", async (req, res) => {
   try {

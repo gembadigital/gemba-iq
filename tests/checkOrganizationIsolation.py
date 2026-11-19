@@ -74,6 +74,17 @@ try:
  # New auxiliary IDs do not collide with preserved legacy Turkey data.
  sql(as_user(SUPER,TR,f"insert into companies values('__org_auxiliary__','{TR}','{SUPER}',now(),now(),'{{}}');"))
  sql(as_user(DA,DE,f"insert into companies values('__org_auxiliary__:{DE}','{DE}','{DA}',now(),now(),'{{}}');"));checks.append('independent_auxiliary_rows')
+ # Reproduce the reported soft-delete RLS conflict without changing production.
+ doc='77777777-7777-4777-8777-777777777777'
+ sql(f"insert into documents(id,organization_id,uploader_id,filename,original_filename,extension,mime_type,file_size,storage_path,folder,company_id) values('{doc}','{TR}','{SUPER}','test.pdf','test.pdf','pdf','application/pdf',10,'{TR}/file.pdf','companies','tr-company');")
+ sql(as_user(TU,TR,f"update documents set is_deleted=true where id='{doc}';"),False);checks.append('direct_soft_delete_reproduces_rls_denial')
+ assert sql(f"select is_deleted from documents where id='{doc}';")=='f';checks.append('failed_direct_delete_preserves_document')
+ assert sql(f"set role service_role; update documents set is_deleted=true where organization_id='{DE}' and id='{doc}' and is_deleted=false returning id;")=='UPDATE 0';checks.append('server_delete_scoped_organization_no_match')
+ sql(f"set role service_role; update documents set is_deleted=true where organization_id='{TR}' and id='{doc}' and is_deleted=false returning id;")
+ assert sql(f"select count(*) from documents where id='{doc}' and is_deleted;")=='1';checks.append('server_command_retains_tombstone')
+ assert sql(as_user(TU,TR,f"select count(*) from documents where id='{doc}';"))=='0';checks.append('deleted_document_stays_hidden_under_rls')
+ assert sql(as_user(DA,DE,f"select count(*) from documents where id='{doc}';"))=='0';checks.append('deleted_document_stays_hidden_other_org')
+ assert sql(f"select count(*) from storage.objects;")=='2';checks.append('soft_delete_preserves_storage_files')
  # Model Vault only in this disposable database; production uses installed Supabase Vault.
  sql("""create extension pgcrypto; create schema vault;
  create table vault.secrets(id uuid primary key default gen_random_uuid(),secret text,name text unique,description text);
