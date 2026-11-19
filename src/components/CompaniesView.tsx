@@ -843,7 +843,7 @@ export default function CompaniesView() {
 
               {/* Search input */}
               <div className="relative flex-1">
-                <Search className="w-4 h-4 text-slate-400 absolute left-3 top-3" />
+                <Search className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
                 <input data-crm-leading-icon data-crm-field="control"
                   type="text"
                   placeholder={t("Search corporate grid...")}

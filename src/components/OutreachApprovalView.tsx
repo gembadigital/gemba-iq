@@ -308,7 +308,7 @@ export default function OutreachApprovalView() {
       <div data-crm-card="padded" className="bg-white dark:bg-[#151515] p-4 rounded-xl border border-slate-100 dark:border-zinc-800/80 shadow-sm flex flex-col md:flex-row items-center justify-between gap-4">
         <div className="flex flex-wrap items-center gap-3 w-full md:w-auto">
           <div className="relative">
-            <Search className="w-3.5 h-3.5 text-slate-400 absolute left-3 top-3" />
+            <Search className="w-3.5 h-3.5 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
             <input data-crm-leading-icon data-crm-field="control"
               type="text"
               placeholder={t("Search company, recipient, subject...")}

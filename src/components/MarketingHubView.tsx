@@ -2156,7 +2156,7 @@ export default function MarketingHubView({ initialSubTab, onNavigateToTab }: Mar
               <h3 data-crm-heading="section" className="text-xs font-bold text-slate-700 dark:text-slate-200 uppercase">{t("All Target Companies")}</h3>
               <div className="flex flex-wrap items-center gap-2 text-xs">
                 <div className="relative">
-                  <Search className="w-3.5 h-3.5 text-slate-400 absolute left-3 top-2.5" />
+                  <Search className="w-3.5 h-3.5 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
                   <input data-crm-leading-icon data-crm-field="control"
                     type="text"
                     placeholder={t("Search target companies...")}
@@ -2318,7 +2318,7 @@ export default function MarketingHubView({ initialSubTab, onNavigateToTab }: Mar
           <div data-crm-card="padded" className="bg-white dark:bg-[#1b1a19] border border-[#EDEBE9] dark:border-[#323130] p-3.5 rounded-2xl flex flex-wrap items-center justify-between gap-3 shadow-sm">
             <div className="flex items-center gap-3 flex-1 min-w-[260px]">
               <div className="relative flex-1 max-w-md">
-                <Search className="w-4 h-4 text-slate-400 absolute left-3 top-2.5" />
+                <Search className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
                 <input data-crm-trailing-icon data-crm-leading-icon data-crm-field="control"
                   type="text"
                   placeholder={t("Live search company, contact name, email, or city in Kanban...")}

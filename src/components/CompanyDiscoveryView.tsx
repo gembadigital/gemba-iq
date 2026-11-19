@@ -636,7 +636,7 @@ You must output a raw valid JSON ARRAY strictly matching this structure without 
                 className="w-full max-w-2xl mt-8 space-y-4"
               >
                 <div className="relative group">
-                  <Search className="absolute left-4.5 top-3.5 w-5 h-5 text-slate-400 group-focus-within:text-[#0078D4]" />
+                  <Search className="absolute left-4.5 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400 group-focus-within:text-[#0078D4]" />
                   <input data-crm-search-input data-crm-trailing-icon data-crm-leading-icon data-crm-field="control"
                     type="text"
                     value={googleQuery}
@@ -755,7 +755,7 @@ You must output a raw valid JSON ARRAY strictly matching this structure without 
                     <button
                       type="submit"
                       disabled={googleSearching}
-                      className="absolute right-3 top-2.5 text-slate-400 hover:text-[#0078D4]"
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-[#0078D4]"
                     >
                       <Search className="w-4 h-4" />
                     </button>

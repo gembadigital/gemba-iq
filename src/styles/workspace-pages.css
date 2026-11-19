@@ -42,9 +42,6 @@
   .gemba-stitch-skin [data-crm-card] [data-crm-card="padded"] { padding: 16px !important; box-shadow: none !important; }
   .gemba-stitch-skin [data-crm-label] { font: 500 12px/1.5 Inter,sans-serif !important; letter-spacing: 0 !important; text-transform: none !important; }
   .gemba-stitch-skin [data-crm-field] { min-width: 0; max-width: 100%; min-height: var(--crm-field-height); border-radius: 7px !important; font: 400 13px/1.5 Inter,sans-serif !important; padding: 9px 11px !important; box-shadow: none !important; }
-  .gemba-stitch-skin [data-crm-field][data-crm-trailing-icon] { padding-right: 36px !important; }
-  .gemba-stitch-skin [data-crm-field][data-crm-leading-icon] { padding-left: 36px !important; }
-  .gemba-stitch-skin [data-crm-field][data-crm-search-input] { padding-left: 48px !important; padding-right: 64px !important; }
   .gemba-stitch-skin [data-crm-field="multiline"] { line-height: 1.65 !important; resize: vertical; }
   .gemba-stitch-skin [data-crm-field]:disabled { opacity: .65; cursor: not-allowed; }
   .gemba-stitch-skin [data-crm-button] { min-width: 32px; min-height: 36px; border-radius: 7px !important; font-family: Inter,sans-serif !important; font-weight: 500 !important; letter-spacing: 0 !important; text-transform: none !important; line-height: 1.45; box-shadow: none !important; }
@@ -79,6 +76,10 @@
   .gemba-stitch-skin [data-crm-table] td [class*="font-extrabold"] { font-weight: 600 !important; }
   .gemba-stitch-skin [data-crm-table] tbody tr:hover { background-color: var(--stitch-field); }
   .gemba-stitch-skin [data-crm-table] [data-crm-field] { min-height: 34px; padding: 6px 8px !important; }
+  /* Reserve icon space after compact table padding too. */
+  .gemba-stitch-skin [data-crm-field][data-crm-trailing-icon] { padding-right: 40px !important; }
+  .gemba-stitch-skin [data-crm-field][data-crm-leading-icon] { padding-left: 40px !important; }
+  .gemba-stitch-skin [data-crm-field][data-crm-search-input] { padding-left: 48px !important; padding-right: 64px !important; }
   .gemba-stitch-skin [data-crm-modal] { background: var(--stitch-surface) !important; border: 1px solid var(--stitch-line) !important; border-radius: 14px !important; box-shadow: 0 24px 80px #080f2430 !important; min-width: 0; }
   .gemba-stitch-skin [data-crm-tabs] { min-width: 0; max-width: 100%; gap: 8px !important; }
   .gemba-stitch-skin [data-crm-decoration] { display: none !important; }

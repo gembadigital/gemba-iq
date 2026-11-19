@@ -1471,7 +1471,7 @@ export default function ContractManagerView() {
               </div>
               
               <div className="relative">
-                <input
+                <input data-crm-field="control" data-crm-trailing-icon
                   type="text"
                   placeholder="Yazmaya başlayın veya listeden seçin..."
                   value={companyTitle}
@@ -1485,7 +1485,7 @@ export default function ContractManagerView() {
                 <button
                   type="button"
                   onClick={() => setCompanyDropdownOpen(!companyDropdownOpen)}
-                  className="absolute right-2 top-2.5 text-slate-400 hover:text-slate-600"
+                  className="absolute right-2 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600"
                 >
                   <Search className="w-4 h-4" />
                 </button>

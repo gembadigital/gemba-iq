@@ -40,3 +40,5 @@ await fs.copyFile(base+'/tests/responsiveReview.html',out+'/responsive.html');
 
 await fs.copyFile(base+'/tests/settingsPresentationReview.html',out+'/settings-review.html');
 await fs.copyFile(base+'/tests/personalApiPresentation.html',out+'/personal-api-review.html');
+
+await fs.copyFile(base+'/tests/searchSpacingReview.html',out+'/search-spacing.html');

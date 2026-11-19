@@ -1,0 +1,22 @@
+<!doctype html><html lang="tr"><meta charset="utf-8"><title>Arama ikon boşluk kontrolü</title><style>body{font:14px system-ui}iframe{height:850px;border:1px solid #bbb}td,th{padding:5px}tr[data-ok=false]{background:#fee}</style><h1>Arama ikon boşluk kontrolü</h1><p id="status">Çalışıyor</p><iframe id="preview" title="Gerçek uygulama bileşenleri"></iframe><table><thead><tr><th>Ekran</th><th>Genişlik / tema</th><th>Alan</th><th>Sonuç</th></tr></thead><tbody id="results"></tbody></table><script type="module">
+const routes=['revenue-management','management-pl','lead-profiles','lead-generator','ai-sales-assistant','companies-registry','company-discovery','services','sales-dashboard','deal-management','proposal-management','create-proposal','todo-list','calendar','documents','target-accounts','marketing-ai-coach','marketing-overview','marketing-industry-intel','marketing-target-market','marketing-bd-pipeline','marketing-growth-health','marketing-digital-intel','marketing-kpi-okr','campaign-manager','outreach-approval','contract-manager','dashboard','designer','progress','history'];
+const frame=document.querySelector('#preview');let cases=0,fields=0,failures=0;
+for(const [width,dark] of [[320,false],[390,false],[768,false],[1280,false],[390,true],[1280,true]])for(const route of routes){
+ frame.style.width=width+'px';await new Promise(resolve=>{frame.onload=()=>setTimeout(resolve,180);frame.src='index.html?dense&route='+route+(dark?'&dark':'');});
+ const d=frame.contentDocument,issues=[];let seen=0;
+ if(!d.querySelector('[data-crm-route]'))issues.push('Uygulama yüklenmedi');
+ for(const icon of d.querySelectorAll('svg.lucide-search')){
+  if(icon.closest('nav,aside,[data-crm-document]'))continue;
+  const ir=icon.getBoundingClientRect();if(!ir.width||!ir.height)continue;
+  const parent=icon.parentElement;const input=parent.querySelector('input')||parent.parentElement?.querySelector('input');if(!input)continue;
+  const r=input.getBoundingClientRect();if(!r.width||!r.height)continue;seen++;
+  const s=d.defaultView.getComputedStyle(input),start=r.left+parseFloat(s.borderLeftWidth)+parseFloat(s.paddingLeft),end=r.right-parseFloat(s.borderRightWidth)-parseFloat(s.paddingRight);
+  const left=ir.left<r.left+r.width/2,gap=left?start-ir.right:ir.left-end;
+  if(gap<7)issues.push(input.placeholder+': ikon/metin boşluğu '+gap.toFixed(1)+'px');
+  if(Math.abs((ir.top+ir.height/2)-(r.top+r.height/2))>3)issues.push(input.placeholder+': dikey merkez');
+ }
+ const tr=document.createElement('tr');tr.dataset.ok=String(!issues.length);for(const text of [route,width+' / '+(dark?'koyu':'açık'),seen,issues.join('; ')||'GEÇTİ']){const td=document.createElement('td');td.textContent=text;tr.append(td);}document.querySelector('#results').append(tr);cases++;fields+=seen;if(issues.length)failures++;
+ document.querySelector('#status').textContent=`Çalışıyor: ${cases} görünüm, ${fields} arama alanı, ${failures} sorun`;
+}
+document.querySelector('#status').textContent=`TAMAMLANDI: ${cases} görünüm, ${fields} arama alanı, ${failures} sorun`;
+</script></html>

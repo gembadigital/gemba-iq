@@ -102,6 +102,7 @@
   .gemba-stitch-skin .proposal-kpis > div > div { font: 650 22px/1.4 Inter,sans-serif !important; font-variant-numeric: tabular-nums; letter-spacing: -.5px; margin-top: 8px; overflow-wrap: anywhere; }
   .gemba-stitch-skin .proposal-filters { padding: 16px 20px !important; }
   .gemba-stitch-skin .crm-search-field { min-height: var(--crm-field-height); padding: 0 12px !important; background: var(--stitch-field) !important; border: 1px solid var(--stitch-line) !important; border-radius: 7px !important; width: min(100%,400px) !important; }
+  .gemba-stitch-skin .crm-search-field > svg { flex-shrink: 0; }
   .gemba-stitch-skin .crm-search-field:focus-within { outline: 2px solid var(--stitch-accent); outline-offset: 2px; }
   .gemba-stitch-skin .crm-search-field input { min-width: 0; height: 38px; padding: 8px 0 !important; font-size: 13px !important; background: transparent !important; border: 0 !important; box-shadow: none !important; outline: 0 !important; }
   .gemba-stitch-skin .crm-filter-fields { gap: 18px !important; padding-top: 18px !important; margin-top: 16px !important; }

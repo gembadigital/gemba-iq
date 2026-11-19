@@ -83,3 +83,7 @@ Bulut tanım ekranı canlı Supabase ölçümü gibi gösterilmez. Sabit kullan�
 ## Kişisel API kartları — 19 Kasım 2026
 
 Hesabım ekranında Gemini/Tavily kartları aynı etiketli alan ve sarılan eylem satırı dilini kullanır. Anahtar alanı password/new-password ve boş gelir; kayıttan sonra temizlenir. Yalnızca son dört karakter gösterilir. Kaydet, Erişimi Test Et ve Kaldır aynı karttadır; yükleme/hata durumları gerçek sonucu gösterir. API anahtarları organizasyonun ortak ayarlar paneline yazılmaz. Kullanıcı Supabase konsoluna yönlendirilmez.
+
+## Arama alanlarında ikon boşluğu — 19 Kasım 2026
+
+Mutlak konumlu arama ikonları alanın dikey merkezindedir. Soldaki ikon için `data-crm-leading-icon`, sağdaki ikon/temizleme için `data-crm-trailing-icon` alanın üzerinde bulunur; ortak kurallar 40 px iç boşluk ayırır (geniş şirket araması 48 px). Bu boşluk kompakt tablo alanlarında da korunur. Yan yana flex düzenindeki teklif aramasında ikon küçülmez. Mobilde alan yüksekliği değiştiğinde ikon merkezde kalır; PDF/A4 içeriği hedeflenmez.

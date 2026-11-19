@@ -1003,7 +1003,7 @@ export default function EmailLeadDiscoveryView({
               <span className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none text-slate-400">
                 <Search className="w-3.5 h-3.5" />
               </span>
-              <input data-crm-field="control"
+              <input data-crm-field="control" data-crm-leading-icon
                 type="text"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}

@@ -240,7 +240,7 @@ export default function GlobalSearchBar() {
     <div className="relative w-full max-w-xs md:max-w-md" ref={containerRef}>
       <div className="relative flex items-center">
         <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none" />
-        <input
+        <input data-crm-field="control" data-crm-leading-icon data-crm-trailing-icon
           type="text"
           placeholder={t("Global search (Company, Deal, Proposal, Contact...)")}
           value={query}

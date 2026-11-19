@@ -2036,8 +2036,8 @@ export function ProposalContractSection({
               <div className="flex items-center gap-3">
                 {/* Search query input */}
                 <div className="relative">
-                  <Search className="w-3.5 h-3.5 text-zinc-400 absolute left-2.5 top-2" />
-                  <input data-crm-field="control"
+                  <Search className="w-3.5 h-3.5 text-zinc-400 absolute left-2.5 top-1/2 -translate-y-1/2" />
+                  <input data-crm-field="control" data-crm-leading-icon
                     type="text" 
                     placeholder={t("Search query...")}
                     value={pdfSearchQuery}

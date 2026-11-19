@@ -1,0 +1,20 @@
+{
+  "date": "2026-11-19",
+  "scope": "31 route pages, 320/390/768/1280 light and 390/1280 dark",
+  "views": 186,
+  "visible_search_fields_measured": 171,
+  "failures": 0,
+  "checks": [
+    "icon/text gap at least 7px",
+    "vertical centre within 3px",
+    "page mounted",
+    "global search typing and matching results manually verified"
+  ],
+  "fixture": "offline real React components, synthetic data, no production writes",
+  "limits": [
+    "Only visible search fields counted; hidden modal fields audited in source",
+    "Not a full search-result correctness or persistence audit"
+  ],
+  "lint": "passed",
+  "build": "passed with existing legacy CSS and large bundle warnings"
+}

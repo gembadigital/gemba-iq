@@ -150,7 +150,7 @@ export default function CompanyAutocomplete({
   return (
     <div data-crm-screen="CompanyAutocomplete" className={`relative ${className}`} ref={containerRef}>
       <div className="relative">
-        <input data-crm-field="control"
+        <input data-crm-field="control" data-crm-trailing-icon
           type="text"
           value={inputValue}
           onChange={(e) => {
@@ -165,7 +165,7 @@ export default function CompanyAutocomplete({
           placeholder={placeholder || t("Type company name...")}
           className="w-full p-2 pl-3 border border-slate-200 dark:border-zinc-800 bg-white dark:bg-zinc-800 rounded outline-none text-xs text-slate-800 dark:text-zinc-100 transition-all focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500"
         />
-        <Search className="absolute right-2.5 top-2.5 w-3.5 h-3.5 text-slate-400 pointer-events-none" />
+        <Search className="absolute right-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-slate-400 pointer-events-none" />
       </div>
 
       {isOpen && inputValue.trim() && (

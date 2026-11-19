@@ -222,7 +222,7 @@ export default function CompanyContactsTab({
       {/* Search & Actions Toolbar */}
       <div data-crm-card="padded" className="flex flex-col sm:flex-row items-center justify-between gap-3 bg-white dark:bg-[#151515] p-3.5 rounded-xl border border-slate-100 dark:border-zinc-800/80 shadow-[0_1px_2px_rgba(0,0,0,0.01)]">
         <div className="relative w-full sm:w-72">
-          <Search className="w-3.5 h-3.5 text-slate-400 absolute left-2.5 top-2.5" />
+          <Search className="w-3.5 h-3.5 text-slate-400 absolute left-2.5 top-1/2 -translate-y-1/2" />
           <input data-crm-leading-icon data-crm-field="control"
             type="text"
             placeholder={t("Search contacts...")}

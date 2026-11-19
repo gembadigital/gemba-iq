@@ -1548,7 +1548,7 @@ export default function TasksView() {
             <span className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
               <Search className="h-4 w-4 text-slate-400 dark:text-slate-500" />
             </span>
-            <input
+            <input data-crm-field="control" data-crm-leading-icon
               type="text"
               placeholder={t("Search task name or description...")}
               value={searchTerm}
