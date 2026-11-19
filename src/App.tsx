@@ -140,6 +140,7 @@ type ActiveTab = typeof ACTIVE_TABS[number];
 function getInitialActiveTab(): ActiveTab {
   try {
     const storedTab = sessionStorage.getItem(ACTIVE_TAB_STORAGE_KEY);
+    if (storedTab === "marketing-ai-coach") return "marketing-overview";
     if (ACTIVE_TABS.includes(storedTab as ActiveTab)) {
       return storedTab as ActiveTab;
     }
@@ -872,7 +873,7 @@ export default function App() {
       "todo-list": { parent: "CRM", child: "Tasks" },
       "calendar": { parent: "CRM", child: "Takvim" },
       "documents": { parent: "CRM", child: "Documents" },
-      "marketing-ai-coach": { parent: "Marketing & Business Development", child: "AI Marketing Coach" },
+      "marketing-ai-coach": { parent: "Marketing & Business Development", child: "Marketing Hub Overview" },
       "marketing-overview": { parent: "Marketing & Business Development", child: "Marketing Hub Overview" },
       "marketing-industry-intel": { parent: "Marketing & Business Development", child: "Industry Intelligence" },
       "marketing-target-market": { parent: "Marketing & Business Development", child: "Target Market & Competitor Map" },
@@ -1261,12 +1262,6 @@ export default function App() {
                     id="target-accounts"
                     icon={isNotionMode ? <span className="text-base">🎯</span> : <Target className="w-[20px] h-[20px] flex-shrink-0 text-blue-500" />}
                     label="Target Accounts"
-                    isSubmenu={true}
-                  />
-                  <SidebarButton
-                    id="marketing-ai-coach"
-                    icon={isNotionMode ? <span className="text-base">🤖</span> : <Sparkles className="w-[20px] h-[20px] flex-shrink-0 text-amber-500" />}
-                    label="AI Marketing Coach"
                     isSubmenu={true}
                   />
                   <SidebarButton
@@ -2012,7 +2007,7 @@ export default function App() {
             )}
 
             {activeTab === "marketing-ai-coach" && (
-              <MarketingHubView key="marketing-ai-coach" initialSubTab="marketing-ai-coach" onNavigateToTab={(tab) => setActiveTab(tab as any)} />
+              <MarketingHubView key="marketing-overview" initialSubTab="overview" onNavigateToTab={(tab) => setActiveTab(tab as any)} />
             )}
 
             {activeTab === "marketing-overview" && (

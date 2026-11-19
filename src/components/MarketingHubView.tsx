@@ -69,7 +69,6 @@ import { isWonStage, isLostStage } from "./SalesDashboardView";
 import type { Company } from "./CompaniesView";
 import type { Deal } from "./DealManagementView";
 import type { Proposal } from "../types/proposal";
-import AiMarketingCoachView from "./AiMarketingCoachView";
 
 // Aynı anahtar TargetAccountsView.tsx ile paylaşılıyor — "Hedef Pazar & Rakip
 // Haritası" ve "İş Geliştirme Pipeline'ı" sayfaları AYRI bir hedef firma
@@ -112,7 +111,6 @@ const BD_INITIAL_STAGE_METADATA: Record<string, { collapsed: boolean; descriptio
 };
 
 export type MarketingSubTab =
-  | "marketing-ai-coach"
   | "overview"
   | "industry-intel"
   | "target-market"
@@ -1378,12 +1376,6 @@ export default function MarketingHubView({ initialSubTab, onNavigateToTab }: Mar
 
   const subTabs: { key: MarketingSubTab; label: string; description: string; icon: React.ReactNode }[] = [
     {
-      key: "marketing-ai-coach",
-      label: "AI Marketing Coach",
-      description: "Haftalık iş planı, görev dağıtımı, önceliklendirme ve yönetici takibi.",
-      icon: <Sparkles className="w-5 h-5 flex-shrink-0 text-amber-500" />,
-    },
-    {
       key: "overview",
       label: "Marketing Hub Overview",
       description: "All Marketing & Business Development sections at a glance.",
@@ -1478,10 +1470,6 @@ export default function MarketingHubView({ initialSubTab, onNavigateToTab }: Mar
           <p className="text-[11px] text-slate-500 truncate">{t(currentTabDef.description)}</p>
         </div>
       </div>
-
-      {activeSubTab === "marketing-ai-coach" && (
-        <AiMarketingCoachView onNavigateToTab={onNavigateToTab} />
-      )}
 
       {activeSubTab === "overview" && (
         <div data-crm-stack="" className="space-y-4">
