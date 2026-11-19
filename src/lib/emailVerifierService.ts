@@ -1,3 +1,4 @@
+import { organizationFetch } from './organizationFetch';
 // Akıllı E-posta Birleştirici (CampaignDesigner) için e-posta doğrulama
 // servisi. Doğrulama, umuterturk/email-verifier (MIT) tarafından işletilen
 // ücretsiz genel API'ye (rapid-email-verifier.fly.dev) sunucu tarafındaki
@@ -66,7 +67,7 @@ export async function verifyEmails(emails: string[]): Promise<Map<string, EmailV
 
   for (const batch of batches) {
     // eslint-disable-next-line no-await-in-loop
-    const response = await fetch("/api/organization/email-verify-batch", {
+    const response = await organizationFetch("/api/organization/email-verify-batch", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",

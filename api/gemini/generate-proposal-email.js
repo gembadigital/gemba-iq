@@ -1,3 +1,4 @@
+import { assertAiAccess } from '../../lib/server/aiAccess.js';
 import { runGeminiJsonPrompt } from "../../lib/server/proposalGeminiCore.js";
 
 function buildPrompt({ companyName, contactPerson, proposalSubject, selectedServices, options, currency, language }) {
@@ -34,6 +35,7 @@ export default async function handler(request, response) {
   }
 
   try {
+    await assertAiAccess(request);
     const { companyName, contactPerson, proposalSubject, selectedServices, options, currency, language } =
       request.body || {};
 

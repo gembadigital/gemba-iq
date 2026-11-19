@@ -1,3 +1,4 @@
+import { organizationFetch } from '../lib/organizationFetch';
 import React, { useState, useEffect, useRef } from "react";
 import { 
   FileText, 
@@ -927,7 +928,7 @@ export default function ContractManagerView() {
   const loadTurkishFont = async (doc: any) => {
     try {
       const regularUrl = "https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.1.66/fonts/Roboto/Roboto-Regular.ttf";
-      const resReg = await fetch(regularUrl);
+      const resReg = await organizationFetch(regularUrl);
       if (!resReg.ok) throw new Error("Regular font failed to fetch");
       const bufferReg = await resReg.arrayBuffer();
       
@@ -942,7 +943,7 @@ export default function ContractManagerView() {
 
       try {
         const boldUrl = "https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.1.66/fonts/Roboto/Roboto-Medium.ttf";
-        const resBold = await fetch(boldUrl);
+        const resBold = await organizationFetch(boldUrl);
         if (resBold.ok) {
           const bufferBold = await resBold.arrayBuffer();
           let binaryBold = "";

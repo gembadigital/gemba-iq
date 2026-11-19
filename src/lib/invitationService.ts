@@ -1,3 +1,4 @@
+import { organizationFetch } from './organizationFetch';
 import { getSupabase } from "./supabaseClient";
 import type {
   AcceptInvitationData,
@@ -69,7 +70,7 @@ export async function sendInvitationEmail(
   message?: string;
 }> {
   const accessToken = await getAccessToken();
-  const response = await fetch("/api/invitations/send", {
+  const response = await organizationFetch("/api/invitations/send", {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
@@ -88,7 +89,7 @@ export async function sendInvitationEmail(
 
 export async function fetchInvitationEmailConfig(): Promise<{ emailConfigured: boolean }> {
   const accessToken = await getAccessToken();
-  const response = await fetch("/api/invitations/config", {
+  const response = await organizationFetch("/api/invitations/config", {
     cache: "no-store",
     headers: { Authorization: `Bearer ${accessToken}` },
   });
@@ -109,7 +110,7 @@ export async function sendCreatedInvitationEmail(
   message?: string;
 }> {
   const accessToken = await getAccessToken();
-  const response = await fetch("/api/invitations/send", {
+  const response = await organizationFetch("/api/invitations/send", {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
@@ -134,7 +135,7 @@ export async function updateOrganizationMemberRole(
   role: AppRole
 ): Promise<void> {
   const accessToken = await getAccessToken();
-  const response = await fetch("/api/organization/members/role", {
+  const response = await organizationFetch("/api/organization/members/role", {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
@@ -154,7 +155,7 @@ export async function updateOrganizationMemberRole(
 // organization they belong to, not just this one.
 export async function deleteOrganizationMember(membershipId: string): Promise<void> {
   const accessToken = await getAccessToken();
-  const response = await fetch("/api/organization/members/delete", {
+  const response = await organizationFetch("/api/organization/members/delete", {
     method: "POST",
     headers: {
       "Content-Type": "application/json",

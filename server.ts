@@ -670,6 +670,11 @@ app.post("/api/webhooks/simulate-bounce", (req, res) => {
 });
 
 // API: Gemini Word/Excel Table Converter
+app.use('/api/gemini', async (req, res, next) => {
+  try { await (await import('./lib/server/aiAccess.js')).assertAiAccess(req); next(); }
+  catch (error: any) { res.status(error.status || 503).json({ error: error.message }); }
+});
+
 app.post("/api/gemini/convert-table", async (req, res) => {
   const { pastedContent } = req.body;
 

@@ -1,10 +1,14 @@
 import { getSupabase } from "./supabaseClient";
+import { getActiveOrganizationId } from './tenantStorage';
 import type { Organization, OrganizationMember, Profile, WelcomeWizardData } from "../types/organization";
 
 export interface OrganizationBootstrap {
   profile: Profile | null;
   organization: Organization | null;
   membership: OrganizationMember | null;
+  workspaces?: { organization: Organization; membership: OrganizationMember }[];
+  isSuperadmin?: boolean;
+  aiEnabled?: boolean;
 }
 
 export async function fetchOrganizationBootstrap(userId: string): Promise<OrganizationBootstrap> {
@@ -23,34 +27,40 @@ export async function fetchOrganizationBootstrap(userId: string): Promise<Organi
     throw new Error(profileError.message);
   }
 
-  const { data: membership, error: membershipError } = await client
+  const { data: memberships, error: membershipError } = await client
     .from("organization_members")
     .select("*")
     .eq("user_id", userId)
-    .maybeSingle();
+    .order('created_at', { ascending: true });
 
   if (membershipError) {
     throw new Error(membershipError.message);
   }
 
-  let organization: Organization | null = null;
-  if (membership?.organization_id) {
-    const { data: org, error: orgError } = await client
-      .from("organizations")
-      .select("*")
-      .eq("id", membership.organization_id)
-      .maybeSingle();
+  const { data: orgs, error: orgError } = memberships?.length
+    ? await client.from('organizations').select('*').in('id', memberships.map(m => m.organization_id))
+    : { data: [], error: null };
+  if (orgError) throw new Error(orgError.message);
+  const { data: isSuperadmin, error: accessError } = await client.rpc('is_platform_superadmin');
+  if (accessError) throw new Error(accessError.message);
+  if ((memberships?.length || 0) > 1 && !isSuperadmin) throw new Error('Birden fazla organizasyon üyeliği için superadmin yetkisi gerekir.');
+  const membership = memberships?.find(m => m.organization_id === getActiveOrganizationId()) || memberships?.[0] || null;
+  const organization = orgs?.find(o => o.id === membership?.organization_id) || null;
 
-    if (orgError) {
-      throw new Error(orgError.message);
-    }
-    organization = org as Organization | null;
-  }
-
+  const { data: rules, error: rulesError } = organization
+    ? await client.from('organization_access_rules').select('ai_enabled').eq('organization_id', organization.id).maybeSingle()
+    : { data: null, error: null };
+  if (rulesError) throw new Error(rulesError.message);
   return {
+    aiEnabled: rules?.ai_enabled === true,
     profile: (profile as Profile | null) ?? null,
     organization,
     membership: (membership as OrganizationMember | null) ?? null,
+    workspaces: (memberships || []).flatMap(m => {
+      const org = orgs?.find(o => o.id === m.organization_id);
+      return org ? [{ organization: org as Organization, membership: m as OrganizationMember }] : [];
+    }),
+    isSuperadmin: isSuperadmin === true,
   };
 }
 

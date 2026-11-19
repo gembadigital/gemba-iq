@@ -1,3 +1,4 @@
+import { getActiveOrganizationId } from './tenantStorage';
 import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 
 interface SupabaseEnv {
@@ -61,6 +62,12 @@ export async function initSupabase(): Promise<SupabaseClient | null> {
     }
 
     supabaseClient = createClient(url, key, {
+      global: { fetch: (input, init) => {
+        const headers = new Headers(init?.headers);
+        const orgId = getActiveOrganizationId();
+        if (orgId) headers.set('X-Organization-Id', orgId);
+        return fetch(input, { ...init, headers });
+      } },
       auth: {
         persistSession: true,
         autoRefreshToken: true,

@@ -1,3 +1,4 @@
+import { organizationFetch } from '../lib/organizationFetch';
 import React, { useState, useEffect } from "react";
 import { useLanguage } from "../lib/LanguageContext";
 import { motion, AnimatePresence } from "motion/react";
@@ -174,7 +175,7 @@ export default function AISalesAssistant({ onOpenSettings }: AISalesAssistantPro
     setGeneratedEmailResult("");
     
     try {
-      const resp = await fetch("/api/gemini/generate-custom-pitch", {
+      const resp = await organizationFetch("/api/gemini/generate-custom-pitch", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -275,6 +276,7 @@ export default function AISalesAssistant({ onOpenSettings }: AISalesAssistantPro
       return;
     }
 
+    if (getActiveOrganizationId()) return;
     // Nothing in Supabase yet — try to migrate this browser's legacy localStorage data.
     try {
       const savedV3 = localStorage.getItem(LEGACY_COMPANY_ANALYSES_V3_KEY);
@@ -361,7 +363,7 @@ export default function AISalesAssistant({ onOpenSettings }: AISalesAssistantPro
     setActiveTab("visual");
 
     try {
-      const resp = await fetch("/api/gemini/analyze-company", {
+      const resp = await organizationFetch("/api/gemini/analyze-company", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({

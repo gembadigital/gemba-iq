@@ -1,3 +1,4 @@
+import { organizationFetch } from './organizationFetch';
 import { getSupabase } from "./supabaseClient";
 import { getActiveOrganizationId, getTenantActorName } from "./tenantStorage";
 import { persistProposals } from "./crmSupabaseService";
@@ -507,7 +508,7 @@ export async function sendProposalEmail(
     data: { session },
   } = client ? await client.auth.getSession() : { data: { session: null } };
 
-  const sendResponse = await fetch("/api/mail/send", {
+  const sendResponse = await organizationFetch("/api/mail/send", {
     method: "POST",
     headers: {
       "Content-Type": "application/json",

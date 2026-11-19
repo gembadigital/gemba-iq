@@ -1,3 +1,4 @@
+import { organizationFetch } from '../lib/organizationFetch';
 import React, { useState, useEffect, useRef } from "react";
 // Was a hardcoded external Google Drive link (lh3.googleusercontent.com).
 // That domain doesn't reliably serve CORS headers for hotlinked embedding,
@@ -995,7 +996,7 @@ export default function ServicesView({
     if (!rawPastedHtml.trim()) return;
     setIsAiConverting(true);
     try {
-      const response = await fetch("/api/gemini/convert-table", {
+      const response = await organizationFetch("/api/gemini/convert-table", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ pastedContent: rawPastedHtml }),
@@ -1041,7 +1042,7 @@ export default function ServicesView({
     if (!wizardRawPastedHtml.trim()) return;
     setIsWizardAiConverting(true);
     try {
-      const response = await fetch("/api/gemini/convert-table", {
+      const response = await organizationFetch("/api/gemini/convert-table", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ pastedContent: wizardRawPastedHtml }),
@@ -2048,7 +2049,7 @@ export default function ServicesView({
         data: { session },
       } = supabase ? await supabase.auth.getSession() : { data: { session: null } };
 
-      const response = await fetch("/api/mail/send", {
+      const response = await organizationFetch("/api/mail/send", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

@@ -1,3 +1,4 @@
+import { organizationFetch } from '../lib/organizationFetch';
 import React, { useState, useEffect } from "react";
 import { useLanguage } from "../lib/LanguageContext";
 import { getCampaignTranslation, getCampaignStatusLabel } from "./campaignI18n";
@@ -93,7 +94,7 @@ export default function SendingProgressView({
     
     const fetchTelemetry = async () => {
       try {
-        const response = await fetch("/api/tracking/status");
+        const response = await organizationFetch("/api/tracking/status");
         if (response.ok) {
           const data = await response.json();
           const { opens, bounces } = data;
@@ -322,7 +323,7 @@ export default function SendingProgressView({
             const authToken = authSession?.access_token || "";
 
             const doSendMail = async () => {
-              return fetch(endpoint, {
+              return organizationFetch(endpoint, {
                 method: "POST",
                 headers: {
                   "Content-Type": "application/json",
@@ -1151,7 +1152,7 @@ export default function SendingProgressView({
                           return;
                         }
                         try {
-                          const res = await fetch(`/api/webhooks/simulate-bounce`, {
+                          const res = await organizationFetch(`/api/webhooks/simulate-bounce`, {
                             method: "POST",
                             headers: { "Content-Type": "application/json" },
                             body: JSON.stringify({
@@ -1183,7 +1184,7 @@ export default function SendingProgressView({
                           return;
                         }
                         try {
-                          const res = await fetch(`/api/webhooks/simulate-bounce`, {
+                          const res = await organizationFetch(`/api/webhooks/simulate-bounce`, {
                             method: "POST",
                             headers: { "Content-Type": "application/json" },
                             body: JSON.stringify({
@@ -1217,7 +1218,7 @@ export default function SendingProgressView({
                         try {
                           // Trigger tracking pixel open event directly at server
                           const trackerMeta = `${session?.mail ? encodeURIComponent(session.mail) : "user"}&rec=${encodeURIComponent(email)}&service=${trackingService}&nocache=${Date.now()}`;
-                          await fetch(`/api/track?meta=${trackerMeta}`);
+                          await organizationFetch(`/api/track?meta=${trackerMeta}`);
                           alert(t("Success! Serviced 1x1 tracking pixel payload GET request for: {email}. The remarks status list will update with the [OPEN] state.").replace("{email}", email));
                         } catch (err: any) {
                           alert(err.message ? t(err.message) !== err.message ? t(err.message) : err.message : t("Simulator operation failed. Please try again."));
@@ -1232,7 +1233,7 @@ export default function SendingProgressView({
                       type="button"
                       onClick={async () => {
                         try {
-                          await fetch("/api/tracking/clear", { method: "POST" });
+                          await organizationFetch("/api/tracking/clear", { method: "POST" });
                           setPixelOpensCount(0);
                           setBouncedEmailsCount(0);
                           alert(t("All simulated counts and logs have been flushed."));

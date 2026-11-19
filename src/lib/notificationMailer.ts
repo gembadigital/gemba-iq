@@ -1,3 +1,4 @@
+import { organizationFetch } from './organizationFetch';
 // Otomatik sistem hatırlatma e-postaları için paylaşılan gönderim katmanı.
 // Önceden bu mantık sadece TasksView.tsx içinde (görev hatırlatma/eskalasyon
 // motoru için) yaşıyordu; Fırsat Yönetimi'ndeki aşama hatırlatma motoru
@@ -87,7 +88,7 @@ export async function dispatchNotificationEmail(
       data: { session },
     } = supabase ? await supabase.auth.getSession() : { data: { session: null } };
 
-    const res = await fetch("/api/mail/send", {
+    const res = await organizationFetch("/api/mail/send", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",

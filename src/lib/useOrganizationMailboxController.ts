@@ -1,3 +1,4 @@
+import { organizationFetch } from './organizationFetch';
 import { useEffect, useState } from "react";
 import type { MailboxSession, ExchangeConfig } from "../types";
 import { useAuth } from "./AuthContext";
@@ -20,7 +21,7 @@ export function useOrganizationMailboxController() {
   useEffect(() => {
     const fetchConfig = async () => {
       try {
-        const response = await fetch("/api/config");
+        const response = await organizationFetch("/api/config");
         if (response.ok) {
           const data = await response.json();
           setConfig(data);

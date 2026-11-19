@@ -1,3 +1,4 @@
+import { organizationFetch } from './organizationFetch';
 // "Yeniden Temas (Re-engagement)" onay kuyruğu — panel (oturum açmış CRM
 // kullanıcısı) tarafı. OpenClaw'ın kendi entegrasyon API key'ini hiç
 // kullanmaz; normal Supabase kullanıcı oturumu + RLS (organization_id
@@ -167,7 +168,7 @@ export async function approveAndSendOutreachDraft(
   });
 
   const accessToken = await getAccessToken();
-  const response = await fetch("/api/organization/outreach-send-internal", {
+  const response = await organizationFetch("/api/organization/outreach-send-internal", {
     method: "POST",
     headers: {
       "Content-Type": "application/json",

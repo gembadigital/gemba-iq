@@ -1,3 +1,4 @@
+import { organizationFetch } from '../lib/organizationFetch';
 import React, { useState, useEffect, useId } from "react";
 import { X, Plus, Sparkles, Check, Calculator, AlertTriangle, FileText } from "lucide-react";
 import { Proposal, ProposalOption, PRE_POPULATED_TEMPLATES, ProposalTemplate } from "../types/proposal";
@@ -285,7 +286,7 @@ export default function ProposalFormModal({
     }
     setIsAiConverting(true);
     try {
-      const response = await fetch("/api/gemini/convert-table", {
+      const response = await organizationFetch("/api/gemini/convert-table", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ pastedContent: rawPastedHtml }),

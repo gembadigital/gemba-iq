@@ -1,3 +1,4 @@
+import { organizationFetch } from '../lib/organizationFetch';
 import React, { useState, useEffect, useMemo } from "react";
 import { useLanguage } from "../lib/LanguageContext";
 import { CrmDb } from "../lib/CrmDb";
@@ -259,7 +260,7 @@ export default function CompanyDiscoveryView() {
     showToast(`${company.name} için derin yapay zeka pazar analizi başlatıldı...`, "info");
 
     try {
-      const res = await fetch("/api/gemini/analyze-company", {
+      const res = await organizationFetch("/api/gemini/analyze-company", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -363,7 +364,7 @@ You must output a raw valid JSON ARRAY strictly matching this structure without 
   }
 ]`;
 
-      const res = await fetch("/api/gemini/assist", {
+      const res = await organizationFetch("/api/gemini/assist", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ prompt: helperPrompt })
@@ -422,7 +423,7 @@ You must output a raw valid JSON ARRAY strictly matching this structure without 
     try {
       // Real Google Search, grounded via Gemini's google_search tool — no hallucinated
       // companies. See /api/gemini/company-search in server.ts.
-      const res = await fetch("/api/gemini/company-search", {
+      const res = await organizationFetch("/api/gemini/company-search", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ query })

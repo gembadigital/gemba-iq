@@ -1,3 +1,4 @@
+import { organizationFetch } from '../lib/organizationFetch';
 import React, { useState, useEffect, useRef } from "react";
 import { useLanguage } from "../lib/LanguageContext";
 import { getSystemCurrency, formatSystemNumber } from "../lib/currencyHelper";
@@ -436,7 +437,7 @@ export default function ProposalManagementView() {
     setIsEmailGenerating(true);
 
     try {
-      const response = await fetch("/api/gemini/generate-proposal-email", {
+      const response = await organizationFetch("/api/gemini/generate-proposal-email", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -535,7 +536,7 @@ export default function ProposalManagementView() {
     setIsAiLoading(true);
 
     try {
-      const response = await fetch("/api/gemini/analyze-proposal", {
+      const response = await organizationFetch("/api/gemini/analyze-proposal", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({

@@ -24,5 +24,5 @@ export function calendarDirectoryFixture() {
     },
     auth: { admin: { getUserById: async id => ({ data: { user: users.find(u => u.id === id) }, error: null }) } },
   };
-  return { users, tables, context: { user: users[0], adminClient, mailbox: { mailbox_address: users[0].email } } };
+  return { users, tables, context: { organizationId: 'org-1', user: users[0], adminClient, mailbox: { mailbox_address: users[0].email } } };
 }

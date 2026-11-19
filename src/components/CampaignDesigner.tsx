@@ -1,3 +1,4 @@
+import { organizationFetch } from '../lib/organizationFetch';
 import React, { useState, useRef, useEffect } from "react";
 import { useLanguage } from "../lib/LanguageContext";
 import { getCampaignTranslation } from "./campaignI18n";
@@ -89,7 +90,7 @@ export default function CampaignDesigner({
     setAiLoading(true);
 
     try {
-      const response = await fetch("/api/gemini/assist", {
+      const response = await organizationFetch("/api/gemini/assist", {
         method: "POST",
         headers: {
           "Content-Type": "application/json"

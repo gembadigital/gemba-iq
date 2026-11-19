@@ -1,3 +1,4 @@
+import { organizationFetch } from './organizationFetch';
 import { getSupabase } from "./supabaseClient";
 
 export type PersonalMailboxStatus = "Connected" | "Expired" | "Disconnected";
@@ -26,7 +27,7 @@ async function getAccessToken(): Promise<string> {
 
 export async function fetchPersonalMailbox(): Promise<PersonalMailbox> {
   const accessToken = await getAccessToken();
-  const response = await fetch("/api/user/mailbox", {
+  const response = await organizationFetch("/api/user/mailbox", {
     cache: "no-store",
     headers: { Authorization: `Bearer ${accessToken}` },
   });
@@ -39,7 +40,7 @@ export async function fetchPersonalMailbox(): Promise<PersonalMailbox> {
 
 export async function connectPersonalMailbox(mailboxAddress: string): Promise<PersonalMailbox> {
   const accessToken = await getAccessToken();
-  const response = await fetch("/api/user/mailbox", {
+  const response = await organizationFetch("/api/user/mailbox", {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
@@ -56,7 +57,7 @@ export async function connectPersonalMailbox(mailboxAddress: string): Promise<Pe
 
 export async function disconnectPersonalMailbox(): Promise<PersonalMailbox> {
   const accessToken = await getAccessToken();
-  const response = await fetch("/api/user/mailbox", {
+  const response = await organizationFetch("/api/user/mailbox", {
     method: "DELETE",
     headers: { Authorization: `Bearer ${accessToken}` },
   });
@@ -69,7 +70,7 @@ export async function disconnectPersonalMailbox(): Promise<PersonalMailbox> {
 
 export async function testPersonalMailbox(): Promise<{ success: true; recipient: string }> {
   const accessToken = await getAccessToken();
-  const response = await fetch("/api/user/mailbox", {
+  const response = await organizationFetch("/api/user/mailbox", {
     method: "POST",
     headers: {
       "Content-Type": "application/json",

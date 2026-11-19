@@ -1,3 +1,4 @@
+import { organizationFetch } from './organizationFetch';
 import type { MailboxSession } from "../types";
 import { getSupabase } from "./supabaseClient";
 
@@ -47,7 +48,7 @@ export async function fetchOrganizationMailbox(): Promise<{
   session: MailboxSession | null;
 }> {
   const accessToken = await getAccessToken();
-  const response = await fetch("/api/organization/mailbox", {
+  const response = await organizationFetch("/api/organization/mailbox", {
     cache: "no-store",
     headers: { Authorization: `Bearer ${accessToken}` },
   });
@@ -63,7 +64,7 @@ export async function connectOrganizationMailbox(organizationMailbox: string): P
   session: MailboxSession | null;
 }> {
   const accessToken = await getAccessToken();
-  const response = await fetch("/api/organization/mailbox", {
+  const response = await organizationFetch("/api/organization/mailbox", {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
@@ -80,7 +81,7 @@ export async function connectOrganizationMailbox(organizationMailbox: string): P
 
 export async function disconnectOrganizationMailbox(): Promise<OrganizationMailbox> {
   const accessToken = await getAccessToken();
-  const response = await fetch("/api/organization/mailbox", {
+  const response = await organizationFetch("/api/organization/mailbox", {
     method: "DELETE",
     headers: { Authorization: `Bearer ${accessToken}` },
   });
@@ -93,7 +94,7 @@ export async function disconnectOrganizationMailbox(): Promise<OrganizationMailb
 
 export async function testOrganizationMailbox(): Promise<{ success: true; recipient: string }> {
   const accessToken = await getAccessToken();
-  const response = await fetch("/api/organization/mailbox", {
+  const response = await organizationFetch("/api/organization/mailbox", {
     method: "POST",
     headers: {
       "Content-Type": "application/json",

@@ -1,3 +1,4 @@
+import { getActiveOrganizationId } from '../lib/tenantStorage';
 import React, { useState, useEffect } from "react";
 import { useLanguage } from "../lib/LanguageContext";
 import * as XLSX from "xlsx";
@@ -74,6 +75,7 @@ export default function LeadMailGenerator({
       return;
     }
     try {
+      if (getActiveOrganizationId()) return;
       const legacy = localStorage.getItem("lead_mail_records");
       if (legacy) {
         const parsed = JSON.parse(legacy);

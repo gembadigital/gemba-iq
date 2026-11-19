@@ -1,3 +1,4 @@
+import { organizationFetch } from '../../lib/organizationFetch';
 import React, { useEffect, useRef, useState } from "react";
 import { CrmDb, CrmEmail, CrmDocument } from "../../lib/CrmDb";
 import { Mail, Send, Trash2, Plus, Sparkles, Paperclip, ChevronRight, User, X, Loader2, AlertTriangle, Upload, FileText } from "lucide-react";
@@ -219,7 +220,7 @@ export default function CompanyEmailsTab({
         data: { session },
       } = supabase ? await supabase.auth.getSession() : { data: { session: null } };
 
-      const response = await fetch("/api/mail/send", {
+      const response = await organizationFetch("/api/mail/send", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

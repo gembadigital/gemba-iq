@@ -67,3 +67,7 @@ Ortak başlık/kart çakışması giderildi; tabloların metni 13 px, hücrelerd
 `tests/responsiveReview.html` artık 30 ana sayfa, 3 yönetim/hesap/giriş görünümü ve 28 detay/form/sekme durumu içerir (61 toplam). 320/390/768/1280 px açık, 390/1280 px koyu temada kontrol edilir. Yönetim alt sekmeleri ve müşteri kartının tüm sekmeleri kapsamdadır. Sonuçlar ve kapsam sınırları `docs/GENEL_KONTROL_2026-11-12.md` dosyasındadır.
 
 `tests/generalAudit.browser.tsx`, gerçek React bileşenlerini izole CRM taşıyıcısıyla kontrol eder. `tests/runCrmPersistenceTest.mjs` gerçek kayıt/birleştirme katmanında dokuz hata ve yeniden yükleme senaryosunu doğrular. Canlı veri üzerinde test kaydı veya e-posta gönderilmez. Bu denetimde açıkça belgelenen davranış hataları da düzeltildiğinden, önceki yalnız-görsel AST karşılaştırması bu sürümün davranış doğrulaması yerine kullanılmaz. Gelecek yalnız-görsel çalışmalarda o karşılaştırmaya bu denetimden sonraki commit taban olarak verilmelidir.
+
+## Organizasyon seçimi — 19 Kasım 2026
+
+Sol menüde organizasyon adı gösterilir. Superadmin için altına etiketli yerel select ve yalnızca hedef değiştiğinde görünen “Organizasyona geç / Vazgeç” eylemleri eklenir. Bekleyen kayıt sırasında eylemler devre dışıdır; hata görünür kalır. Normal kullanıcıya erişemediği organizasyonların adları veya seçicisi gösterilmez. Geçiş öncesinde açık formun kaydedilmesi açıklanır; tam sayfa yenilemesiyle önceki organizasyonun görünümü temizlenir.

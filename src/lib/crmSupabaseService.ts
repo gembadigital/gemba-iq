@@ -224,9 +224,9 @@ async function loadOrganizationCrmNow(organizationId?: string): Promise<CrmSnaps
   }
 
   const companyRows = (companiesRes.data as Row[]) || [];
-  const auxiliaryRow = companyRows.find((row) => row.id === AUXILIARY_COMPANY_ID);
+  const auxiliaryRow = companyRows.find((row) => (row.id === AUXILIARY_COMPANY_ID || row.id === `${AUXILIARY_COMPANY_ID}:${orgId}`));
   const companies = companyRows
-    .filter((row) => row.id !== AUXILIARY_COMPANY_ID)
+    .filter((row) => !(row.id === AUXILIARY_COMPANY_ID || row.id === `${AUXILIARY_COMPANY_ID}:${orgId}`))
     .map(rowToCompany);
 
   const auxiliary: OrgAuxiliaryData = auxiliaryRow
@@ -238,7 +238,7 @@ async function loadOrganizationCrmNow(organizationId?: string): Promise<CrmSnaps
   const proposalRows = (proposalsRes.data as Row[]) || [];
   const taskRows = ((tasksRes.data as Row[]) || []).filter((row) => !row.id.startsWith("__"));
 
-  rowBaselines.companies = buildBaseline(companyRows.filter((row) => row.id !== AUXILIARY_COMPANY_ID), rowToCompany);
+  rowBaselines.companies = buildBaseline(companyRows.filter((row) => !(row.id === AUXILIARY_COMPANY_ID || row.id === `${AUXILIARY_COMPANY_ID}:${orgId}`)), rowToCompany);
   rowBaselines.contacts = buildBaseline(contactRows, rowToContact);
   rowBaselines.deals = buildBaseline(dealRows, rowToDeal);
   rowBaselines.proposals = buildBaseline(proposalRows, rowToProposal);
@@ -346,8 +346,8 @@ async function loadOrganizationCrmDeltaNow(sinceIso: string, organizationId?: st
   }
 
   const companyRows = (companiesRes.data as Row[]) || [];
-  const auxiliaryRow = companyRows.find((row) => row.id === AUXILIARY_COMPANY_ID);
-  const companies = companyRows.filter((row) => row.id !== AUXILIARY_COMPANY_ID).map(rowToCompany);
+  const auxiliaryRow = companyRows.find((row) => (row.id === AUXILIARY_COMPANY_ID || row.id === `${AUXILIARY_COMPANY_ID}:${orgId}`));
+  const companies = companyRows.filter((row) => !(row.id === AUXILIARY_COMPANY_ID || row.id === `${AUXILIARY_COMPANY_ID}:${orgId}`)).map(rowToCompany);
   const auxiliary: OrgAuxiliaryData | null = auxiliaryRow
     ? { ...emptyAuxiliary(), ...(auxiliaryRow.data as Partial<OrgAuxiliaryData>) }
     : null;
@@ -359,7 +359,7 @@ async function loadOrganizationCrmDeltaNow(sinceIso: string, organizationId?: st
   const proposalRows = (proposalsRes.data as Row[]) || [];
   const taskRows = ((tasksRes.data as Row[]) || []).filter((row) => !row.id.startsWith("__"));
 
-  mergeIntoBaseline("companies", companyRows.filter((row) => row.id !== AUXILIARY_COMPANY_ID), rowToCompany, idSet(companyIdsRes));
+  mergeIntoBaseline("companies", companyRows.filter((row) => !(row.id === AUXILIARY_COMPANY_ID || row.id === `${AUXILIARY_COMPANY_ID}:${orgId}`)), rowToCompany, idSet(companyIdsRes));
   mergeIntoBaseline("contacts", contactRows, rowToContact, idSet(contactIdsRes));
   mergeIntoBaseline("deals", dealRows, rowToDeal, idSet(dealIdsRes));
   mergeIntoBaseline("proposals", proposalRows, rowToProposal, idSet(proposalIdsRes));
@@ -594,8 +594,8 @@ export async function persistAuxiliary(auxiliary: OrgAuxiliaryData, dirtyKvKeys:
     for (let attempt = 0; attempt < 4; attempt += 1) {
       const { data: existing, error } = await client
         .from("companies")
-        .select("data, updated_at")
-        .eq("id", AUXILIARY_COMPANY_ID)
+        .select("id, data, updated_at")
+        .in("id", [AUXILIARY_COMPANY_ID, `${AUXILIARY_COMPANY_ID}:${organizationId}`])
         .eq("organization_id", organizationId)
         .maybeSingle();
       if (error) throw new Error(error.message);
@@ -628,7 +628,7 @@ export async function persistAuxiliary(auxiliary: OrgAuxiliaryData, dirtyKvKeys:
 
       if (!existing) {
         const { error: insertError } = await client.from("companies").upsert(
-          [{ id: AUXILIARY_COMPANY_ID, organization_id: organizationId, created_by: createdBy, data: nextData }],
+          [{ id: `${AUXILIARY_COMPANY_ID}:${organizationId}`, organization_id: organizationId, created_by: createdBy, data: nextData }],
           { onConflict: "id" }
         );
         if (insertError) throw new Error(insertError.message);
@@ -637,7 +637,7 @@ export async function persistAuxiliary(auxiliary: OrgAuxiliaryData, dirtyKvKeys:
         let updateQuery = client
           .from("companies")
           .update({ data: nextData })
-          .eq("id", AUXILIARY_COMPANY_ID)
+          .eq("id", (existing as { id: string }).id)
           .eq("organization_id", organizationId);
         updateQuery = updateQuery.eq("updated_at", (existing as { updated_at: string }).updated_at);
         const { data: updated, error: updateError } = await updateQuery.select("id");

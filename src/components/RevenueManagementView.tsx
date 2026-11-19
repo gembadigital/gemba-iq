@@ -1,3 +1,4 @@
+import { organizationFetch } from '../lib/organizationFetch';
 import { findAcceptedRevenueProposals } from "../lib/revenueProposalMatch";
 import React, { useState, useMemo, useEffect } from "react";
 import * as XLSX from "xlsx";
@@ -823,7 +824,7 @@ export default function RevenueManagementView() {
     setAiCoachingOutput("");
 
     try {
-      const res = await fetch("/api/gemini/sales-coach", {
+      const res = await organizationFetch("/api/gemini/sales-coach", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({

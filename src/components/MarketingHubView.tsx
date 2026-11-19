@@ -1,3 +1,4 @@
+import { organizationFetch } from '../lib/organizationFetch';
 import React, { useState, useEffect, useMemo } from "react";
 import * as XLSX from "xlsx";
 import {
@@ -708,7 +709,7 @@ export default function MarketingHubView({ initialSubTab, onNavigateToTab }: Mar
     }`;
 
     try {
-      const res = await fetch("/api/gemini/company-search", {
+      const res = await organizationFetch("/api/gemini/company-search", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ query }),
@@ -1280,7 +1281,7 @@ export default function MarketingHubView({ initialSubTab, onNavigateToTab }: Mar
     setAnalysisError(null);
     setAnalysisResult(null);
     try {
-      const res = await fetch("/api/gemini/marketing-report-analysis", {
+      const res = await organizationFetch("/api/gemini/marketing-report-analysis", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({

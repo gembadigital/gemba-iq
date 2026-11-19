@@ -1,3 +1,4 @@
+import { organizationFetch } from '../lib/organizationFetch';
 import React, { useState, useEffect, useRef } from "react";
 import { useLanguage } from "../lib/LanguageContext";
 import { CrmDb } from "../lib/CrmDb";
@@ -17,7 +18,7 @@ async function fetchWithTimeout(url: string, options: RequestInit, timeoutMs: nu
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), timeoutMs);
   try {
-    return await fetch(url, { ...options, signal: controller.signal });
+    return await organizationFetch(url, { ...options, signal: controller.signal });
   } catch (err: any) {
     if (err?.name === "AbortError") {
       // Thrown as a canonical English string (dictionary key convention used

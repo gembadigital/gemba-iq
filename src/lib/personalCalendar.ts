@@ -1,3 +1,4 @@
+import { organizationFetch } from './organizationFetch';
 import { getSupabase } from "./supabaseClient";
 
 export interface CreateCalendarEventInput {
@@ -36,7 +37,7 @@ export interface CalendarOwner { userId: string; ownerName: string; isOwn: boole
 
 async function calendarFetch(path: string, body?: Record<string, unknown>, signal?: AbortSignal) {
   const token = await getAccessToken();
-  const response = await fetch(`/api/user/mailbox${path}`, {
+  const response = await organizationFetch(`/api/user/mailbox${path}`, {
     method: body ? 'POST' : 'GET', cache: 'no-store', signal,
     headers: { Authorization: `Bearer ${token}`, ...(body ? { 'Content-Type': 'application/json' } : {}) },
     ...(body ? { body: JSON.stringify(body) } : {}),
@@ -88,7 +89,7 @@ export async function createPersonalCalendarEvent(
   input: CreateCalendarEventInput
 ): Promise<CreateCalendarEventResult> {
   const accessToken = await getAccessToken();
-  const response = await fetch("/api/user/mailbox", {
+  const response = await organizationFetch("/api/user/mailbox", {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
@@ -105,7 +106,7 @@ export async function createPersonalCalendarEvent(
 
 export async function deletePersonalCalendarEvent(eventId: string): Promise<void> {
   const accessToken = await getAccessToken();
-  const response = await fetch(`/api/user/mailbox?eventId=${encodeURIComponent(eventId)}`, {
+  const response = await organizationFetch(`/api/user/mailbox?eventId=${encodeURIComponent(eventId)}`, {
     method: "DELETE",
     headers: { Authorization: `Bearer ${accessToken}` },
   });

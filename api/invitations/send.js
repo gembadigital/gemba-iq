@@ -42,7 +42,7 @@ export default async function handler(request, response) {
   }
 
   const userClient = createClient(supabaseUrl, anonKey, {
-    global: { headers: { Authorization: `Bearer ${accessToken}` } },
+    global: { headers: { Authorization: `Bearer ${accessToken}`, ...(request.headers["x-organization-id"] ? { "X-Organization-Id": request.headers["x-organization-id"] } : {}) } },
   });
 
   const {
@@ -92,7 +92,10 @@ export default async function handler(request, response) {
     invitation = createdInvitation;
   }
 
-  const origin = request.headers.origin || appUrl || "http://localhost:3000";
+  const { data: activeOrg, error: activeError } = await userClient.rpc('get_user_primary_organization_id');
+  const { data: canManage, error: manageError } = await userClient.rpc('user_can_manage_members', { p_organization_id: activeOrg });
+  if (activeError || manageError || !canManage || invitation.organization_id !== activeOrg) return response.status(403).json({ error: 'Invitation does not belong to the active organization.' });
+  const origin = appUrl || 'https://gemba-iq.vercel.app';
   const inviteLink = `${origin}/join?token=${invitation.token}`;
   const email = String(invitation.invited_email || "").trim().toLowerCase();
 

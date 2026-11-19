@@ -250,7 +250,7 @@ export default function OrganizationUsersPanel({ onAuditLog }: OrganizationUsers
     const displayName = row.full_name || row.email;
     const confirmed = window.confirm(
       t(
-        "This will permanently delete {name}'s account. This cannot be undone and they will lose access immediately. Are you sure?"
+        "{name} bu organizasyondan çıkarılacak. Diğer organizasyon üyelikleri ve oluşturduğu kayıtlar korunacak. Devam edilsin mi?"
       ).replace("{name}", displayName)
     );
     if (!confirmed) return;
@@ -259,11 +259,11 @@ export default function OrganizationUsersPanel({ onAuditLog }: OrganizationUsers
     setInviteMessage(null);
     try {
       await deleteOrganizationMember(row.membership_id);
-      onAuditLog?.("Kullanıcı Silindi", `${row.email} sistemden kalıcı olarak silindi.`);
+      onAuditLog?.("Üyelik Kaldırıldı", `${row.email} organizasyondan çıkarıldı.`);
       await loadDirectory();
       setInviteMessage({
         type: "success",
-        text: t("User deleted successfully."),
+        text: t("Kullanıcı organizasyondan çıkarıldı."),
       });
     } catch (err) {
       setInviteMessage({
@@ -602,11 +602,11 @@ export default function OrganizationUsersPanel({ onAuditLog }: OrganizationUsers
                                   type="button"
                                   disabled={deletingId === row.membership_id}
                                   onClick={() => void handleDeleteMember(row)}
-                                  title={t("Delete User")}
+                                  title={t("Organizasyondan çıkar")}
                                   className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-bold text-rose-600 border border-rose-200 hover:bg-rose-50 dark:text-rose-400 dark:border-rose-900/40 dark:hover:bg-rose-950/20 disabled:opacity-60"
                                 >
                                   <Trash2 className="w-3.5 h-3.5" />
-                                  {deletingId === row.membership_id ? t("Deleting...") : t("Delete")}
+                                  {deletingId === row.membership_id ? t("Çıkarılıyor…") : t("Organizasyondan çıkar")}
                                 </button>
                               )}
                             </div>

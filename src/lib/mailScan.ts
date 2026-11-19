@@ -1,3 +1,4 @@
+import { organizationFetch } from './organizationFetch';
 import { getSupabase } from "./supabaseClient";
 
 export interface ScannedMailMessage {
@@ -32,7 +33,7 @@ export async function scanMailbox(
   top = 50
 ): Promise<{ mailboxAddress: string; messages: ScannedMailMessage[] }> {
   const accessToken = await getAccessToken();
-  const response = await fetch("/api/mail/scan", {
+  const response = await organizationFetch("/api/mail/scan", {
     method: "POST",
     headers: {
       "Content-Type": "application/json",

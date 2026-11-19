@@ -20,6 +20,9 @@ import { setActiveOrganizationContext } from "./tenantStorage";
 import { getAppRole, isAdminRole, type AppRole } from "./roleHelpers";
 
 interface OrganizationContextValue {
+  workspaces: { organization: Organization; membership: OrganizationMember }[];
+  isSuperadmin: boolean;
+  aiEnabled: boolean;
   profile: Profile | null;
   organization: Organization | null;
   membership: OrganizationMember | null;
@@ -96,6 +99,9 @@ export function OrganizationProvider({ children }: { children: React.ReactNode }
   const [membership, setMembership] = useState<OrganizationMember | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [workspaces, setWorkspaces] = useState<{ organization: Organization; membership: OrganizationMember }[]>([]);
+  const [isSuperadmin, setIsSuperadmin] = useState(false);
+  const [aiEnabled, setAiEnabled] = useState(false);
   const loadSeq = useRef(0);
 
   const loadOrganization = useCallback(async () => {
@@ -110,6 +116,8 @@ export function OrganizationProvider({ children }: { children: React.ReactNode }
       setProfile(null);
       setOrganization(null);
       setMembership(null);
+      setWorkspaces([]);
+      setIsSuperadmin(false);
       setLoading(false);
       setError(null);
       return;
@@ -150,6 +158,9 @@ export function OrganizationProvider({ children }: { children: React.ReactNode }
       setProfile(bootstrap.profile);
       setOrganization(bootstrap.organization);
       setMembership(bootstrap.membership);
+      setWorkspaces(bootstrap.workspaces || []);
+      setIsSuperadmin(bootstrap.isSuperadmin === true);
+      setAiEnabled(bootstrap.aiEnabled === true);
 
       console.log("[invite-debug] OrganizationContext organization loaded", {
         userId: user.id,
@@ -267,6 +278,9 @@ export function OrganizationProvider({ children }: { children: React.ReactNode }
     const needsOnboarding = !!user && !loading && checkNeedsOnboarding({ profile, organization, membership });
 
     return {
+      workspaces,
+      isSuperadmin,
+      aiEnabled,
       profile,
       organization,
       membership,
@@ -285,6 +299,9 @@ export function OrganizationProvider({ children }: { children: React.ReactNode }
       companyName,
     };
   }, [
+    aiEnabled,
+    workspaces,
+    isSuperadmin,
     profile,
     organization,
     membership,

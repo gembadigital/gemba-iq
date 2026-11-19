@@ -1,3 +1,4 @@
+import { organizationFetch } from '../lib/organizationFetch';
 import React, { useState, useEffect } from "react";
 import { useAuth } from "../lib/AuthContext";
 import { useOrganization } from "../lib/OrganizationContext";
@@ -727,7 +728,7 @@ export default function AdministrationCenter({
   const fetchIntegrationHealth = async (silent?: boolean) => {
     setIsRefreshingHealth(true);
     try {
-      const res = await fetch("/api/config");
+      const res = await organizationFetch("/api/config");
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
       const data = await res.json();
       setIntegrationHealth({

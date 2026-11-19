@@ -17,6 +17,7 @@ import CompaniesView from "./components/CompaniesView";
 import ProposalManagementView from "./components/ProposalManagementView";
 import TasksView from "./components/TasksView";
 import CalendarView from "./components/CalendarView";
+import OrganizationSwitcher from './components/OrganizationSwitcher';
 import ContractManagerView from "./components/ContractManagerView";
 import OutreachApprovalView from "./components/OutreachApprovalView";
 import DocumentsView from "./components/documents/DocumentsView";
@@ -196,7 +197,7 @@ function getSidebarGroup(activeTab: ActiveTab): SidebarGroup | null {
 export default function App() {
   const { lang, setLang, t } = useLanguage();
   const { signOut } = useAuth();
-  const { actorName, actorEmail, companyName, isAdmin, organization } = useOrganization();
+  const { actorName, actorEmail, companyName, isAdmin, organization, aiEnabled = true } = useOrganization();
   const navigate = useNavigate();
   const displayName = actorName;
   const userEmail = actorEmail;
@@ -472,6 +473,7 @@ export default function App() {
   const [tavilyKey, setTavilyKey] = useState<string>(() => {
     const shared = CrmDb.getKv<string>(TAVILY_API_KEY_KV, "");
     if (shared) return shared;
+    if (organization?.id) return ""; // Never migrate an unscoped browser secret into a workspace.
     const legacyLocal = (localStorage.getItem("tavily_api_key") || "").trim();
     if (legacyLocal) {
       CrmDb.setKv(TAVILY_API_KEY_KV, legacyLocal);
@@ -983,6 +985,7 @@ export default function App() {
           </div>
 
           {/* Navigation Action Buttons list */}
+          {!sidebarCollapsed && <OrganizationSwitcher />}
           <nav aria-label={lang === "TR" ? "Ana menü" : "Main navigation"} data-ui-navigation className="flex min-h-0 flex-1 flex-col gap-[20px] overflow-x-hidden overflow-y-auto">
             {/* Collapsible Activity Report sub-menu */}
             <div className="flex flex-col gap-[4px]">
@@ -1110,13 +1113,13 @@ export default function App() {
                     isSubmenu={true}
                   />
 
-                  <SidebarButton
+                  {aiEnabled && <SidebarButton
                     id="ai-sales-assistant"
                     icon={isNotionMode ? <span className="text-base">🤖</span> : <Sparkles className="w-[20px] h-[20px] flex-shrink-0 text-amber-500 animate-pulse" />}
                     label="AI Sales Assistant"
                     extraClass="animate-pulse-subtle"
                     isSubmenu={true}
-                  />
+                  />}
                 </div>
               )}
             </div>
@@ -2048,7 +2051,7 @@ export default function App() {
               />
             )}
 
-            {activeTab === "ai-sales-assistant" && (
+            {aiEnabled && activeTab === "ai-sales-assistant" && (
               <AISalesAssistant
                 onOpenSettings={
                   isAdmin

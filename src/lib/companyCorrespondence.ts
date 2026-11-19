@@ -1,3 +1,4 @@
+import { organizationFetch } from './organizationFetch';
 import { getSupabase } from './supabaseClient';
 
 export interface ArchivedCompanyMail {
@@ -9,7 +10,7 @@ async function request(mode: string, body: Record<string, unknown>, signal?: Abo
   const client = getSupabase();
   const { data: { session } } = client ? await client.auth.getSession() : { data: { session: null } };
   if (!session?.access_token) throw new Error('E-posta arşivi için oturum açmanız gerekiyor.');
-  const response = await fetch('/api/mail/scan', { method: 'POST', cache: 'no-store', signal,
+  const response = await organizationFetch('/api/mail/scan', { method: 'POST', cache: 'no-store', signal,
     headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${session.access_token}` }, body: JSON.stringify({ mode, ...body }) });
   const result = await response.json();
   if (!response.ok) throw new Error(result.error || 'E-posta işlemi tamamlanamadı.');

@@ -1,3 +1,4 @@
+import { organizationFetch } from '../lib/organizationFetch';
 import React, { useState, useEffect } from "react";
 import { useLanguage } from "../lib/LanguageContext";
 import { CrmDb } from "../lib/CrmDb";
@@ -288,7 +289,7 @@ export default function CampaignManagerView({ onPushToMailComposer }: CampaignMa
       setAiError("");
 
       try {
-        const response = await fetch("/api/gemini/campaign-assist", {
+        const response = await organizationFetch("/api/gemini/campaign-assist", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
@@ -342,7 +343,7 @@ export default function CampaignManagerView({ onPushToMailComposer }: CampaignMa
       setAiEmailError("");
 
       try {
-        const response = await fetch("/api/gemini/campaign-assist", {
+        const response = await organizationFetch("/api/gemini/campaign-assist", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({

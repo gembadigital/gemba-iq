@@ -1,3 +1,4 @@
+import { assertAiAccess } from '../../lib/server/aiAccess.js';
 import { runCompanyAnalysis } from "../../lib/server/analyzeCompanyCore.js";
 import {
   runGeminiAssist,
@@ -25,6 +26,7 @@ export async function analyzeCompanyHandler(request, response) {
   }
 
   try {
+    await assertAiAccess(request);
     const { companyInput, tavilyApiKey } = request.body || {};
     const headerTavilyKey = request.headers["x-tavily-api-key"];
 
@@ -36,7 +38,7 @@ export async function analyzeCompanyHandler(request, response) {
     return response.status(result.status).json(result.body);
   } catch (error) {
     console.error("analyze-company handler error:", error);
-    return response.status(500).json({
+    return response.status(error.status || 500).json({
       success: false,
       error: "Araştırma tamamlanamadı. Lütfen tekrar deneyin.",
     });
@@ -52,12 +54,13 @@ export async function assistHandler(request, response) {
   }
 
   try {
+    await assertAiAccess(request);
     const { action, bodyText, promptInstruction, prompt } = request.body || {};
     const result = await runGeminiAssist({ action, bodyText, promptInstruction, prompt });
     return response.status(result.status).json(result.body);
   } catch (error) {
     console.error("assist handler error:", error);
-    return response.status(500).json({ error: error.message || "Could not complete text generation with Gemini." });
+    return response.status(error.status || 500).json({ error: error.message || "Could not complete text generation with Gemini." });
   }
 }
 
@@ -70,12 +73,13 @@ export async function companySearchHandler(request, response) {
   }
 
   try {
+    await assertAiAccess(request);
     const { query } = request.body || {};
     const result = await runGeminiCompanySearch({ query });
     return response.status(result.status).json(result.body);
   } catch (error) {
     console.error("company-search handler error:", error);
-    return response.status(500).json({ error: error.message || "Could not complete company search with Gemini." });
+    return response.status(error.status || 500).json({ error: error.message || "Could not complete company search with Gemini." });
   }
 }
 
@@ -88,12 +92,13 @@ export async function salesCoachHandler(request, response) {
   }
 
   try {
+    await assertAiAccess(request);
     const { deals, query, activeSkills } = request.body || {};
     const result = await runGeminiSalesCoach({ deals, query, activeSkills });
     return response.status(result.status).json(result.body);
   } catch (error) {
     console.error("sales-coach handler error:", error);
-    return response.status(500).json({ success: false, error: error.message || "Could not complete sales coaching request with Gemini." });
+    return response.status(error.status || 500).json({ success: false, error: error.message || "Could not complete sales coaching request with Gemini." });
   }
 }
 
@@ -106,12 +111,13 @@ export async function campaignAssistHandler(request, response) {
   }
 
   try {
+    await assertAiAccess(request);
     const { action, bodyText, promptInstruction, targetChannel, tags } = request.body || {};
     const result = await runGeminiCampaignAssist({ action, bodyText, promptInstruction, targetChannel, tags });
     return response.status(result.status).json(result.body);
   } catch (error) {
     console.error("campaign-assist handler error:", error);
-    return response.status(500).json({ error: error.message || "Could not complete campaign copy generation with Gemini." });
+    return response.status(error.status || 500).json({ error: error.message || "Could not complete campaign copy generation with Gemini." });
   }
 }
 
@@ -124,12 +130,13 @@ export async function generateCustomPitchHandler(request, response) {
   }
 
   try {
+    await assertAiAccess(request);
     const { companyName, mailType, topic, tone, extraContext, researchContext } = request.body || {};
     const result = await runGeminiCustomPitch({ companyName, mailType, topic, tone, extraContext, researchContext });
     return response.status(result.status).json(result.body);
   } catch (error) {
     console.error("generate-custom-pitch handler error:", error);
-    return response.status(500).json({ success: false, error: error.message || "Could not generate custom pitch with Gemini." });
+    return response.status(error.status || 500).json({ success: false, error: error.message || "Could not generate custom pitch with Gemini." });
   }
 }
 
@@ -142,12 +149,13 @@ export async function convertTableHandler(request, response) {
   }
 
   try {
+    await assertAiAccess(request);
     const { pastedContent } = request.body || {};
     const result = await runGeminiConvertTable({ pastedContent });
     return response.status(result.status).json(result.body);
   } catch (error) {
     console.error("convert-table handler error:", error);
-    return response.status(500).json({ error: error.message || "Could not complete table conversion with Gemini." });
+    return response.status(error.status || 500).json({ error: error.message || "Could not complete table conversion with Gemini." });
   }
 }
 
@@ -160,12 +168,13 @@ export async function marketingReportAnalysisHandler(request, response) {
   }
 
   try {
+    await assertAiAccess(request);
     const { reportText, fileName, sourceType, industryContext } = request.body || {};
     const result = await runGeminiMarketingReportAnalysis({ reportText, fileName, sourceType, industryContext });
     return response.status(result.status).json(result.body);
   } catch (error) {
     console.error("marketing-report-analysis handler error:", error);
-    return response.status(500).json({ error: error.message || "Rapor analizi tamamlanamadı." });
+    return response.status(error.status || 500).json({ error: error.message || "Rapor analizi tamamlanamadı." });
   }
 }
 
