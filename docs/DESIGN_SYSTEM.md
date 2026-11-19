@@ -70,4 +70,12 @@ Ortak başlık/kart çakışması giderildi; tabloların metni 13 px, hücrelerd
 
 ## Organizasyon seçimi — 19 Kasım 2026
 
-Sol menüde organizasyon adı gösterilir. Superadmin için altına etiketli yerel select ve yalnızca hedef değiştiğinde görünen “Organizasyona geç / Vazgeç” eylemleri eklenir. Bekleyen kayıt sırasında eylemler devre dışıdır; hata görünür kalır. Normal kullanıcıya erişemediği organizasyonların adları veya seçicisi gösterilmez. Geçiş öncesinde açık formun kaydedilmesi açıklanır; tam sayfa yenilemesiyle önceki organizasyonun görünümü temizlenir.
+Organizasyon Ayarları bölümünde superadmin için etiketli yerel select ve yalnızca hedef değiştiğinde görünen “Organizasyona geç / Vazgeç” eylemleri bulunur. Seçici ana menüde gösterilmez. Bekleyen kayıt sırasında eylemler devre dışıdır; hata görünür kalır. Normal kullanıcıya erişemediği organizasyonların adları veya seçicisi gösterilmez. Geçiş öncesinde açık formun kaydedilmesi açıklanır; tam sayfa yenilemesiyle önceki organizasyonun görünümü temizlenir.
+
+## Ayarlar ve düğme okunabilirliği — 19 Kasım 2026
+
+Superadmin organizasyon seçicisi ana menüde bulunmaz; Organizasyon Ayarları'nın organizasyon bölümündedir. Geçişin kayıt bekleme/hata davranışı korunur.
+
+Düğmelerin renkleri `class*="bg-blue-"` gibi alt metin eşleşmeleriyle belirlenmez: `hover:bg-blue-50` ve `dark:` renkleri düğmenin normal yüzey rengi değildir. Ana eylemlerde gerçek renk tokenları, ikincil eylemlerde `data-crm-variant="secondary"` kullanılır. Metin ve ikon aynı kontrastı korur. Tanımsız eski 550/650 arka plan tokenları açık CRM işaretleriyle gerçek bir yüzeye eşlenir. PDF alanları bu kuralın dışında kalır.
+
+Bulut tanım ekranı canlı Supabase ölçümü gibi gösterilmez. Sabit kullanım rakamları ve bağlı olmayan prompt alanları gerçek kayıt/entegrasyon iddiası taşıyamaz. `tests/settingsPresentationReview.html` açık/koyu temada bağlı posta kutusundaki Test düğmesini, ortak düğme renklerini ve organizasyon seçicisinin yerini 320/1280 px'te kontrol eder.

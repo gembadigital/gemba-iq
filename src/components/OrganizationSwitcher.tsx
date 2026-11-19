@@ -22,16 +22,17 @@ export default function OrganizationSwitcher() {
       setBusy(false);
     }
   }
-  return <div className="px-3 pb-3 min-w-0" data-organization-switcher>
+  if (!isSuperadmin) return null;
+  return <div className="max-w-xl min-w-0" data-organization-switcher>
     <div className="text-xs truncate" title={companyName}>{companyName}</div>
     {isSuperadmin && workspaces.length > 1 && <>
       <label className="block mt-2 text-xs" htmlFor="workspace-select">Superadmin · Organizasyon</label>
-      <select id="workspace-select" className="mt-1 w-full min-w-0 rounded-md border p-2 text-sm bg-transparent" value={target || organizationId || ''} disabled={busy} onChange={e => { setTarget(e.target.value); setError(''); }}>
+      <select data-crm-field="" id="workspace-select" className="mt-1 w-full min-w-0 rounded-md border p-2 text-sm bg-transparent" value={target || organizationId || ''} disabled={busy} onChange={e => { setTarget(e.target.value); setError(''); }}>
         {workspaces.map(w => <option key={w.organization.id} value={w.organization.id}>{w.organization.name}</option>)}
       </select>
       {target && target !== organizationId && <div role="alert" className="mt-2 text-xs">
         <p>Açık formda henüz kaydetmediğiniz değişiklikleri önce kaydedin. Organizasyon değiştiğinde ekran yeniden açılacak.</p>
-        <div className="flex gap-2 mt-2"><button type="button" disabled={busy} className="border rounded p-2" onClick={() => void switchWorkspace()}>{busy ? 'Kayıtlar bekleniyor…' : 'Organizasyona geç'}</button><button type="button" disabled={busy} onClick={() => setTarget('')}>Vazgeç</button></div>
+        <div className="flex gap-2 mt-2"><button data-crm-button="" data-crm-variant="secondary" type="button" disabled={busy} className="border rounded p-2" onClick={() => void switchWorkspace()}>{busy ? 'Kayıtlar bekleniyor…' : 'Organizasyona geç'}</button><button data-crm-button="" type="button" disabled={busy} onClick={() => setTarget('')}>Vazgeç</button></div>
       </div>}
       {error && <p role="alert" className="mt-2 text-xs text-red-500">{error}</p>}
     </>}

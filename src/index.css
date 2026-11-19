@@ -519,79 +519,14 @@ button,
   transition: all 0.15s ease-in-out !important;
 }
 
-/* Primary/Brand Solid Buttons across all pages */
-button[class*="bg-[#0078D4]"],
-button[class*="bg-blue-"],
-button[class*="bg-indigo-"],
-button[class*="bg-brand-"],
-button[class*="bg-violet-"]:not([class*="-55"]):not([class*="-105"]),
-button[class*="bg-primary"],
-button#create-company-btn-action,
+/* Only explicit variants receive unified colors. Substring matching used to
+   mistake hover:bg-blue-50 for a solid blue background and hide white text. */
 .btn-primary-unified {
   background-color: #0078D4 !important;
-  color: #ffffff !important;
+  color: #fff !important;
   border: 1px solid #005a9e !important;
-  box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05) !important;
 }
-
-button[class*="bg-[#0078D4]"]:hover,
-button[class*="bg-blue-"]:hover,
-button[class*="bg-indigo-"]:hover,
-button[class*="bg-brand-"]:hover,
-button[class*="bg-violet-"]:not([class*="-55"]):not([class*="-105"]):hover,
-button[class*="bg-primary"]:hover,
-.btn-primary-unified:hover {
-  background-color: #005a9e !important;
-  border-color: #004578 !important;
-  opacity: 1 !important;
-}
-
-button[class*="bg-[#0078D4]"] *,
-button[class*="bg-blue-"] *,
-button[class*="bg-indigo-"] *,
-button[class*="bg-brand-"] *,
-button[class*="bg-primary"] * {
-  color: #ffffff !important;
-}
-
-/* Secondary / Bordered Buttons */
-button[class*="border-[#EDEBE9]"],
-button[class*="bg-white"]:not([class*="bg-blue-"]):not([class*="bg-indigo-"]):not([class*="bg-brand-"]):not([class*="bg-[#0078D4]"]):not([class*="bg-rose-"]):not([class*="bg-red-"]):not([class*="bg-red-600"]):not([class*="bg-emerald-"]),
-button[class*="bg-[#FAF9F8]"]:not([class*="bg-[#0078D4]"]):not([class*="bg-rose-"]):not([class*="bg-red-"]),
-button[class*="border-slate-"]:not([class*="bg-[#0078D4]"]):not([class*="bg-rose-"]):not([class*="bg-red-"]):not([class*="bg-emerald-"]),
-button[class*="border-zinc-"]:not([class*="bg-[#0078D4]"]):not([class*="bg-rose-"]):not([class*="bg-red-"]):not([class*="bg-emerald-"]),
-button[class*="border-gray-"]:not([class*="bg-[#0078D4]"]):not([class*="bg-rose-"]):not([class*="bg-red-"]):not([class*="bg-emerald-"]) {
-  background-color: #ffffff !important;
-  border: 1px solid #d4d4d8 !important;
-  color: #323130 !important;
-}
-
-.dark button[class*="border-[#EDEBE9]"],
-.dark button[class*="bg-white"]:not([class*="bg-blue-"]):not([class*="bg-indigo-"]):not([class*="bg-brand-"]):not([class*="bg-[#0078D4]"]):not([class*="bg-rose-"]):not([class*="bg-red-"]):not([class*="bg-red-600"]):not([class*="bg-emerald-"]),
-.dark button[class*="bg-[#FAF9F8]"]:not([class*="bg-[#0078D4]"]):not([class*="bg-rose-"]):not([class*="bg-red-"]),
-.dark button[class*="border-slate-"]:not([class*="bg-[#0078D4]"]):not([class*="bg-rose-"]):not([class*="bg-red-"]):not([class*="bg-emerald-"]),
-.dark button[class*="border-zinc-"]:not([class*="bg-[#0078D4]"]):not([class*="bg-rose-"]):not([class*="bg-red-"]):not([class*="bg-emerald-"]),
-.dark button[class*="border-gray-"]:not([class*="bg-[#0078D4]"]):not([class*="bg-rose-"]):not([class*="bg-red-"]):not([class*="bg-emerald-"]) {
-  background-color: #252423 !important;
-  border: 1px solid #52525b !important;
-  color: #f3f2f1 !important;
-}
-
-button[class*="border-[#EDEBE9]"]:hover,
-button[class*="bg-white"]:hover:not([class*="bg-blue-"]):not([class*="bg-indigo-"]):not([class*="bg-brand-"]):not([class*="bg-[#0078D4]"]):not([class*="bg-rose-"]):not([class*="bg-red-"]):not([class*="bg-red-600"]),
-button[class*="border-slate-"]:hover:not([class*="bg-[#0078D4]"]):not([class*="bg-rose-"]),
-button[class*="border-zinc-"]:hover:not([class*="bg-[#0078D4]"]):not([class*="bg-rose-"]),
-button[class*="border-gray-"]:hover:not([class*="bg-[#0078D4]"]):not([class*="bg-rose-"]) {
-  background-color: #f3f2f1 !important;
-}
-
-.dark button[class*="border-[#EDEBE9]"]:hover,
-.dark button[class*="bg-white"]:hover:not([class*="bg-blue-"]):not([class*="bg-indigo-"]):not([class*="bg-brand-"]):not([class*="bg-[#0078D4]"]):not([class*="bg-rose-"]):not([class*="bg-red-"]):not([class*="bg-red-600"]),
-.dark button[class*="border-slate-"]:hover:not([class*="bg-[#0078D4]"]):not([class*="bg-rose-"]),
-.dark button[class*="border-zinc-"]:hover:not([class*="bg-[#0078D4]"]):not([class*="bg-rose-"]),
-.dark button[class*="border-gray-"]:hover:not([class*="bg-[#0078D4]"]):not([class*="bg-rose-"]) {
-  background-color: #1f1e1d !important;
-}
+.btn-primary-unified:hover { background-color: #005a9e !important; }
 
 /* 2. BORDER COLOR UNIFICATION (EXCLUDING BADGE BORDERS) */
 .border,

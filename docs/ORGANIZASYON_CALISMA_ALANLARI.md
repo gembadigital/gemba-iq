@@ -12,7 +12,7 @@
 
 ## Geçiş ve kayıt
 
-Seçici sol menüde organizasyon adının altında, yalnızca superadmin için görünür. Önce açık form kaydedilmeli, hedef seçilmeli ve “Organizasyona geç” kullanılmalıdır. `CrmDb.flushPendingWrites()` hata verirse geçiş durur. Başarılı geçiş tam sayfa yenilemesiyle açık bileşenleri, zamanlayıcıları ve bellek önbelleklerini birlikte sonlandırır.
+Seçici Organizasyon Ayarları → Organizasyon Ayarları bölümünde, yalnızca superadmin için görünür. Önce açık form kaydedilmeli, hedef seçilmeli ve “Organizasyona geç” kullanılmalıdır. `CrmDb.flushPendingWrites()` hata verirse geçiş durur. Başarılı geçiş tam sayfa yenilemesiyle açık bileşenleri, zamanlayıcıları ve bellek önbelleklerini birlikte sonlandırır.
 
 Aktif organizasyon `sessionStorage` içinde sekmeye özeldir. Aynı tarayıcıda iki sekme ayrı organizasyonlarda çalışabilir. API ve Supabase istekleri `X-Organization-Id` taşır. Bu değer güvenilir kimlik değildir: sunucu/SQL her istekte gerçek üyeliği doğrular. Birden fazla üyelik olup başlık yoksa ilk üyeliği seçmek yerine hata verilir.
 

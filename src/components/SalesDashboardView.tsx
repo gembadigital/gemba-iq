@@ -689,7 +689,7 @@ export default function SalesDashboardView({ deals, onSelectDeal }: SalesDashboa
             </button>
           )}
 
-          <button data-crm-button=""
+          <button data-crm-button="" data-crm-variant={isAnyFilterActive ? undefined : "secondary"}
             onClick={() => setIsFilterOpen(true)}
             className={`px-4 py-2 text-xs font-bold rounded-lg flex items-center justify-center gap-2 cursor-pointer transition-all border ${
               isAnyFilterActive 

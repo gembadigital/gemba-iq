@@ -17,7 +17,6 @@ import CompaniesView from "./components/CompaniesView";
 import ProposalManagementView from "./components/ProposalManagementView";
 import TasksView from "./components/TasksView";
 import CalendarView from "./components/CalendarView";
-import OrganizationSwitcher from './components/OrganizationSwitcher';
 import ContractManagerView from "./components/ContractManagerView";
 import OutreachApprovalView from "./components/OutreachApprovalView";
 import DocumentsView from "./components/documents/DocumentsView";
@@ -985,7 +984,6 @@ export default function App() {
           </div>
 
           {/* Navigation Action Buttons list */}
-          {!sidebarCollapsed && <OrganizationSwitcher />}
           <nav aria-label={lang === "TR" ? "Ana menü" : "Main navigation"} data-ui-navigation className="flex min-h-0 flex-1 flex-col gap-[20px] overflow-x-hidden overflow-y-auto">
             {/* Collapsible Activity Report sub-menu */}
             <div className="flex flex-col gap-[4px]">
@@ -1844,7 +1842,7 @@ export default function App() {
                       className="w-full text-left px-3 py-2 text-xs font-semibold text-slate-700 dark:text-zinc-300 hover:bg-slate-50 dark:hover:bg-zinc-800/60 transition-colors flex items-center gap-2 cursor-pointer"
                     >
                       <Sliders className="w-3.5 h-3.5 text-sky-500" />
-                      <span>{t("Supabase Configuration")}</span>
+                      <span>{lang === "TR" ? "Belge Depolama Tanımları" : "Document Storage Definitions"}</span>
                     </button>
                     
                     <button

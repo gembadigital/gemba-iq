@@ -204,7 +204,7 @@ export default function UserAccountSettings({
                 </button>
                 {status !== "Disconnected" && (
                   <>
-                    <button data-crm-button=""
+                    <button data-crm-button="" data-crm-variant="secondary"
                       type="button"
                       onClick={handleTest}
                       disabled={busy || status !== "Connected"}

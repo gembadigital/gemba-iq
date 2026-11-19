@@ -2042,7 +2042,7 @@ export default function DealManagementView({ initialTab = "dashboard", onNavigat
 
               {/* View Toggle Option Icons */}
               <div className="flex items-center bg-slate-100 dark:bg-zinc-800/80 border border-slate-200 dark:border-zinc-700 rounded-lg p-0.5 select-none">
-                <button data-crm-button=""
+                <button data-crm-button="" data-crm-variant={dealViewStyle === "kanban" ? "secondary" : undefined} aria-pressed={dealViewStyle === "kanban"}
                   type="button"
                   onClick={() => setDealViewStyle("kanban")}
                   className={`p-1 px-2 rounded-md text-[11px] font-bold transition-all flex items-center gap-1 cursor-pointer ${
@@ -2055,7 +2055,7 @@ export default function DealManagementView({ initialTab = "dashboard", onNavigat
                   <Kanban className="w-3.5 h-3.5" />
                   <span className="hidden sm:inline">{t("Board")}</span>
                 </button>
-                <button data-crm-button=""
+                <button data-crm-button="" data-crm-variant={dealViewStyle === "list" ? "secondary" : undefined} aria-pressed={dealViewStyle === "list"}
                   type="button"
                   onClick={() => setDealViewStyle("list")}
                   className={`p-1 px-2 rounded-md text-[11px] font-bold transition-all flex items-center gap-1 cursor-pointer ${

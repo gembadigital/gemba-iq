@@ -816,7 +816,7 @@ export default function CompaniesView() {
             </div>
 
             <div data-crm-header-actions="" className="flex flex-wrap items-center gap-2 w-full md:w-auto shrink-0">
-              <button data-crm-button=""
+              <button data-crm-button="" data-crm-variant="secondary"
                 type="button"
                 onClick={() => setIsFieldCustomizerOpen(true)}
                 className="px-3 py-1.5 bg-slate-50 hover:bg-slate-100 dark:bg-zinc-900 dark:hover:bg-zinc-800 border border-slate-205 dark:border-zinc-800 text-slate-650 dark:text-zinc-300 rounded-lg font-semibold flex items-center gap-1.5 cursor-pointer shadow-xs transition-colors"

@@ -53,12 +53,12 @@
     outline: 2px solid var(--stitch-accent) !important;
     outline-offset: 2px;
   }
-  .gemba-stitch-skin :where(button[class*="bg-[#0078D4]"], button[class*="bg-blue-600"], button[class*="bg-gradient-to-r"]):not(.a4-page, .a4-page *) {
+  .gemba-stitch-skin :where(button[class~="bg-[#0078D4]"], button[class~="bg-blue-600"], button[class~="bg-gradient-to-r"]):not(.a4-page, .a4-page *) {
     background: var(--stitch-accent) !important;
     border-color: var(--stitch-accent) !important;
     color: #fff !important;
   }
-  .gemba-stitch-skin :where(button[class*="bg-emerald-600"]):not(.a4-page, .a4-page *) {
+  .gemba-stitch-skin :where(button[class~="bg-emerald-600"]):not(.a4-page, .a4-page *) {
     background-color: #16804a !important;
   }
   .gemba-stitch-skin :where([class*="text-[#0078D4]"]):not(.a4-page, .a4-page *) {
@@ -266,6 +266,7 @@
 }
 
 @media screen {
+  .gemba-stitch-skin [data-ui-topbar] button[class~="bg-white"]:not([data-ui-avatar]) { color: var(--stitch-text) !important; }
   .gemba-stitch-skin [data-ui-topbar] button[data-ui-avatar] { background: #343b59 !important; color: #fff !important; border-radius: 50% !important; }
   .gemba-stitch-skin [data-ui-topbar] > div { min-width: 0; }
   .gemba-stitch-skin [data-ui-sidebar] img[src="/logos/Gdogo5.png"] { filter: brightness(0) invert(1); opacity: .65; }

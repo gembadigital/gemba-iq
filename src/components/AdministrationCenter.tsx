@@ -1,3 +1,4 @@
+import OrganizationSwitcher from './OrganizationSwitcher';
 import { organizationFetch } from '../lib/organizationFetch';
 import React, { useState, useEffect } from "react";
 import { useAuth } from "../lib/AuthContext";
@@ -161,7 +162,7 @@ export default function AdministrationCenter({
     return result;
   };
   const { user } = useAuth();
-  const { actorName, actorEmail, companyName, isAdmin } = useOrganization();
+  const { actorName, actorEmail, companyName, isAdmin, isSuperadmin, aiEnabled } = useOrganization();
   const adminDisplayName = actorName;
   const adminEmail = actorEmail;
   const adminInitials = getDisplayInitials(actorName, actorEmail);
@@ -692,29 +693,6 @@ export default function AdministrationCenter({
     setAuditLogs(prev => [nextLog, ...prev].slice(0, 1000));
   };
 
-  // 7. AI Assistant & Skill settings
-  const [aiApiKeyName, setAiApiKeyName] = useState("Sistem Entegre Gemini Key");
-  const [promptTemplates, setPromptTemplates] = useState([
-    { name: "Satış Koçu Analizi", type: "Müşteri İmza Analizörü", tokenUsage: "Orta", prompt: "Aşağıdaki e-posta gövdesinden unvan, telefon, firma adı ve e-posta parametrelerini hassasiyetle ayırarak JSON formatına dönüştür." },
-    { name: "Teklif Teklif Taslağı", type: "Otomatik Yanıtlayıcı", tokenUsage: "Yüksek", prompt: "Müşterinin belirttiği verimsizlik durumuna göre Gemba Partner yalın felsefesini anlatan şık bir B2B teklif taslağı hazırla." }
-  ]);
-
-  const [aiAgentSkills, setAiAgentSkills] = useState([
-    { name: "İmza Ayrıştırıcı (Signature Extractor)", active: true },
-    { name: "Şirket İstihbaratı ve Web Tarama (Tavily)", active: true },
-    { name: "Finansal Gelir Tahmini Raporlama", active: true },
-    { name: "Akıllı Kampanya Doğrulama", active: false }
-  ]);
-
-  // Handle saving the core prompt template alterations offline
-  const handleSavePrompt = (idx: number, text: string) => {
-    const updated = [...promptTemplates];
-    updated[idx].prompt = text;
-    setPromptTemplates(updated);
-    addAuditLog(actorName, "AI Prompt Düzenleme", `AI Prompt Şablonu güncellendi: ${updated[idx].name}`, "AI Ayarları");
-    alert("Üretken AI Talimatı (Prompt Template) başarıyla kaydedildi!");
-  };
-
   // 8. Integration Health Telemetry — real status pulled from /api/config (no more hardcoded fake "green")
   const [integrationHealth, setIntegrationHealth] = useState<{
     hasGeminiKey: boolean | null;
@@ -1068,6 +1046,10 @@ export default function AdministrationCenter({
           {/* ==================== SECTION 1: ORGANIZATION SETTINGS ==================== */}
           {activeSubTab === "organization" && (
             <div data-crm-stack="" className="space-y-6">
+              {isSuperadmin && <section data-crm-card="padded" className="space-y-2">
+                <h3 data-crm-heading="section">{L("Organizasyon Geçişi", "Switch Organization")}</h3>
+                <OrganizationSwitcher />
+              </section>}
               <div className="border-b border-slate-100 dark:border-zinc-800/80 pb-4 text-left">
                 <h3 data-crm-heading="section" className="text-lg font-bold text-slate-800 dark:text-zinc-150">
                   {L("1. Organizasyon Temel Konfigürasyonu", "1. Organization Basic Configuration")}
@@ -1528,6 +1510,9 @@ export default function AdministrationCenter({
           {/* ==================== SECTION 5: Bulut Depolama & DATA HUB ==================== */}
           {activeSubTab === "datahub" && (
             <div data-crm-stack="" className="space-y-6 animate-in fade-in duration-100">
+              <div role="note" className="rounded-lg border p-4 text-sm leading-relaxed">
+                {L("Bu bölüm belge depolama tanımlarını saklar; Supabase bağlantısını, kapasitesini, egress kullanımını veya yedek durumunu ölçmez. Buradaki açık/kapalı seçenekleri gerçek bir harici depolama bağlantısı kurulduğunu göstermez. Gerçek dosyalar uygulamanın Supabase Storage katmanında yönetilir. Kullanım ve yedek bilgileri Supabase yönetim panelinden kontrol edilmelidir.", "This section stores document storage definitions; it does not measure Supabase connectivity, capacity, egress or backup status. Enabled definitions do not prove an external connection. Actual application files are managed in Supabase Storage. Check usage and backups in the Supabase dashboard.")}
+              </div>
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-105 dark:border-[#323130] pb-4 text-left">
                 <div>
                   <h3 data-crm-heading="section" className="text-lg font-bold text-slate-800 dark:text-zinc-150">
@@ -1788,9 +1773,9 @@ export default function AdministrationCenter({
                               </span>
                             )}
                             <span className={`text-[9px] font-bold font-mono px-1.5 py-0.5 rounded ${
-                              conn.connectionHealth === "Healthy" ? "text-emerald-700 bg-emerald-50" : "text-amber-700 bg-amber-50"
+                              "text-amber-700 bg-amber-50"
                             }`}>
-                              {L("Sağlık", "Health")}: {t(conn.connectionHealth)}
+                              {L("Gerçek bağlantı doğrulanmadı", "Actual connection not verified")}
                             </span>
                           </div>
                           <h4 data-crm-heading="section" className="text-xs font-bold text-slate-800 dark:text-zinc-150 mt-1.5 truncate" title={conn.name}>{conn.name}</h4>
@@ -1800,7 +1785,7 @@ export default function AdministrationCenter({
                           <span className={`text-[9px] font-bold px-2 py-0.5 rounded-full ${
                             conn.enabled ? "text-emerald-600 bg-emerald-50 dark:bg-zinc-900/40" : "text-slate-400 bg-slate-50 dark:bg-zinc-900/20"
                           }`}>
-                            {conn.enabled ? "● Bağlantı Aktif" : "○ Erişim Kapalı"}
+                            {conn.enabled ? "● Tanım açık" : "○ Tanım kapalı"}
                           </span>
                         </div>
                       </div>
@@ -2040,98 +2025,11 @@ export default function AdministrationCenter({
 
           {/* ==================== SECTION 7: AI SETTINGS ==================== */}
           {activeSubTab === "aisettings" && (
-            <div data-crm-stack="" className="space-y-6 animate-in fade-in duration-100">
-              <div className="border-b border-slate-100 dark:border-zinc-800 pb-4 text-left">
-                <h3 data-crm-heading="section" className="text-lg font-bold text-slate-805 dark:text-zinc-150">
-                  {L("7. Yapay Zeka ve Prompt Yönetimi", "7. AI Settings & Prompt Management")}
-                </h3>
-              </div>
-
-              <div className="p-4 rounded-xl border border-indigo-150 bg-indigo-50/5 dark:border-zinc-800 dark:bg-black/10 space-y-1.5 text-xs">
-                <div className="text-[10px] font-bold text-slate-400 uppercase font-mono">
-                  {L("AKTİF HİZMET ANALİZİ", "ACTIVE SERVICE ANALYSIS")}
-                </div>
-                <div className="flex items-center justify-between">
-                  <span className="font-bold text-slate-800 dark:text-zinc-200">
-                    {L("Kullanılan Yapay Zeka Model Servisi:", "Active AI Model Service:")}
-                  </span>
-                  <span className="font-bold text-[#0078D4] font-mono">Gemini-3.5-Flash (Google SDK)</span>
-                </div>
-                <div className="flex items-center justify-between text-[11px] pt-1">
-                  <span className="text-slate-500">{L("Kimlik Tanımı:", "Identity:")}</span>
-                  <span className="text-slate-600 dark:text-slate-300 font-mono font-bold">
-                    {aiApiKeyName} {integrationHealth.hasGeminiKey === null ? "…" : integrationHealth.hasGeminiKey ? "✅" : "❌"}
-                  </span>
-                </div>
-                {integrationHealth.hasGeminiKey === false && (
-                  <div className="text-[10px] text-rose-600 font-bold pt-0.5">
-                    {L(
-                      "GEMINI_API_KEY sunucuda tanımlı değil. Şirket Arama bu nedenle çalışmıyor — Vercel Environment Variables üzerinden eklenip yeniden dağıtım (redeploy) yapılmalı.",
-                      "GEMINI_API_KEY is not set on the server. Company Search will not work until it's added under Vercel Environment Variables and redeployed."
-                    )}
-                  </div>
-                )}
-              </div>
-
-              {/* Prompt template modifiers */}
-              <div data-crm-stack="" className="space-y-4">
-                <span data-crm-caption="" className="text-[10px] font-bold text-slate-450 block uppercase font-mono tracking-wider">
-                  {L("PROMPT ŞABLONLARINI DÜZENLE", "EDIT PROMPT TEMPLATES")}
-                </span>
-                
-                {promptTemplates.map((item, idx) => (
-                  <div key={idx} className="p-4 rounded-xl border border-slate-150 dark:border-zinc-800 bg-slate-50/30 space-y-2.5">
-                    <div className="flex justify-between items-center text-xs">
-                      <span className="font-bold text-slate-800 dark:text-zinc-200 text-xs">{item.name}</span>
-                      <span className="text-[10px] bg-indigo-50 text-indigo-750 px-2 py-0.5 rounded font-bold font-mono uppercase">{item.type}</span>
-                    </div>
-                    <textarea data-crm-field="multiline"
-                      rows={3}
-                      defaultValue={item.prompt}
-                      onBlur={(e) => handleSavePrompt(idx, e.target.value)}
-                      className="w-full text-[11px] font-mono p-3 bg-white dark:bg-black text-slate-800 dark:text-zinc-300 rounded-lg border border-slate-200 dark:border-zinc-800 focus:outline-none focus:ring-1 focus:ring-indigo-650"
-                    />
-                    <div className="flex items-center justify-between text-[10px] text-slate-400">
-                      <span>{L("* Bu kutu dışına tıkladığınızda prompt doğrudan veritabanına kaydedilir.", "* Prompt is saved to the database when you click outside this box.")}</span>
-                      <span>{L("Harcama Sınıfı:", "Usage Tier:")} {item.tokenUsage}</span>
-                    </div>
-                  </div>
-                ))}
-              </div>
-
-              {/* Dynamic Skill Controls */}
-              <div className="pt-4 border-t border-slate-100 dark:border-zinc-800 space-y-3.5">
-                <div>
-                  <h4 data-crm-heading="section" className="text-xs font-bold text-slate-800 dark:text-zinc-200 uppercase tracking-widest font-mono">
-                    {L("Yapay Zeka Ajanı Yetenek Aktivasyon Listesi", "AI Agent Skill Activation List")}
-                  </h4>
-                </div>
-
-                <div data-crm-flow="" data-crm-grid="layout" className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
-                  {aiAgentSkills.map((skill, index) => (
-                    <div data-crm-card="padded" key={index} className="flex items-center justify-between p-3.5 rounded-xl border border-slate-200/60 dark:border-zinc-800/80 bg-white dark:bg-black/15 text-xs">
-                      <span className="font-bold text-slate-755 dark:text-zinc-300">{skill.name}</span>
-                      <button data-crm-button=""
-                        type="button"
-                        onClick={() => {
-                          const updated = [...aiAgentSkills];
-                          updated[index].active = !updated[index].active;
-                          setAiAgentSkills(updated);
-                          addAuditLog(actorName, "AI Yetenek Değişimi", `${skill.name} yeteneği ${updated[index].active ? "açıldı" : "kapatıldı"}.`, "AI Ayarları");
-                        }}
-                        className="text-slate-550 transition-colors"
-                      >
-                        {skill.active ? (
-                          <span className="text-emerald-500 font-bold flex items-center gap-1">🟢 {L("Aktif", "Active")}</span>
-                        ) : (
-                          <span className="text-slate-400 font-bold flex items-center gap-1">⚪ {L("Kapalı", "Off")}</span>
-                        )}
-                      </button>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            </div>
+            <section data-crm-card="padded" className="space-y-3" aria-label={L("Yapay zekâ ayarlarının durumu", "AI configuration status")}>
+              <h3 data-crm-heading="section">{L("Yapay Zekâ ve Prompt Ayarları", "AI and Prompt Settings")}</h3>
+              <p>{aiEnabled ? L("Bu ekranın prompt düzenleyicileri AI işlemlerini yönetmiyordu.", "The prompt editors on this screen did not control AI operations.") : L("Bu organizasyonda yapay zekâ API erişimi kapalıdır.", "AI API access is disabled for this organization.")}</p>
+              <p className="text-sm">{L("Önceki prompt düzenleyicileri AI işlemlerine bağlı değildi; değişiklikler yalnızca açık ekranın belleğinde tutuluyordu. Veritabanına kaydedildiği yönündeki ifade doğru değildi. Yanıltıcı düzenleme alanları kaldırıldı.", "The previous prompt editors were not connected to AI operations; changes lived only in this screen's memory. They were not saved to the database. The misleading editors have been removed.")}</p>
+            </section>
           )}
 
           {/* ==================== SECTION 8: SYSTEM HEALTH ==================== */}
@@ -2184,9 +2082,9 @@ export default function AdministrationCenter({
                   <span data-crm-caption="" className="text-[9px] font-bold text-slate-500 font-mono block uppercase">
                     {L("VERİTABANI DEPOLAMASI", "DATABASE STORAGE")}
                   </span>
-                  <div className="text-xl font-black text-slate-800 dark:text-zinc-300">62.8 MB</div>
+                  <div className="text-xl font-black text-slate-800 dark:text-zinc-300">{L("Ölçülmüyor", "Not measured")}</div>
                   <p className="text-[10px] text-slate-405 leading-none">
-                    {L("Toplam meta veri kayıt boyutu", "Total metadata records size")}
+                    {L("Canlı kapasite ve kullanım: Supabase yönetim paneli", "Live capacity and usage: Supabase dashboard")}
                   </p>
                 </div>
               </div>
