@@ -580,12 +580,12 @@ export async function sendProposalEmail(
 // preview) pass that exact file through, so the copy auto-stored in
 // Documents visually matches what the user actually sees/downloads/prints.
 // A missing capture must be retried, never replaced with a different document.
-export async function storeProposalPdf(proposal: Proposal, lang: string, preGeneratedBlob?: Blob): Promise<void> {
+export async function storeProposalPdf(proposal: Proposal, lang: string, preGeneratedBlob?: Blob): Promise<Proposal> {
   if (!preGeneratedBlob) throw new Error("Tam teklif PDF dosyası oluşturulmadan kaydedilemez.");
   const blob = preGeneratedBlob;
   const filename = `Proposal_${proposal.proposalNumber}_${proposal.currentVersion}_${proposal.companyName.replace(/[^a-zA-Z0-9_-]+/g, "_")}.pdf`;
 
-  await uploadBlobDocument({
+  const document = await uploadBlobDocument({
     blob,
     filename,
     folder: "proposals",
@@ -596,11 +596,22 @@ export async function storeProposalPdf(proposal: Proposal, lang: string, preGene
     description: `Auto-generated proposal PDF ${proposal.proposalNumber} ${proposal.currentVersion}`,
   });
 
+  // Save the exact wizard artifact ID, preserving concurrent non-document edits.
+  const proposals = CrmDb.getProposals();
+  const current = proposals.find(item => item.id === proposal.id);
+  if (!current || current.currentVersion !== proposal.currentVersion || current.documentSource !== proposal.documentSource) {
+    throw new Error("PDF hazırlanırken teklif değişti. Son sürümü tekrar kaydedin.");
+  }
+  const linked: Proposal = { ...current, pdfDocumentLinks: { ...current.pdfDocumentLinks, [proposal.currentVersion]: document.id } };
+  await CrmDb.saveProposalsConfirmed(proposals.map(item => item.id === linked.id ? linked : item));
+
   await logProposalAudit(proposal.id, "pdf_stored", {
     filename,
     version: proposal.currentVersion,
+    documentId: document.id,
   });
   await addProposalTimelineEvent(proposal.id, "pdf_generated", "PDF stored in Documents", filename);
+  return linked;
 }
 
 export async function loadProposalEnterpriseMeta(proposalId: string): Promise<{

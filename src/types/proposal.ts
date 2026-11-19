@@ -147,6 +147,8 @@ export interface Proposal {
   taxes: number;
   grandTotal: number;
 
+  /** Permanent document IDs by revision; signed download URLs are created on demand. */
+  pdfDocumentLinks?: Record<string, string>;
   currentVersion: string;
   versions: ProposalVersion[];
 

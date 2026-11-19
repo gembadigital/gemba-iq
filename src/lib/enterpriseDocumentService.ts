@@ -152,6 +152,15 @@ export async function listDocuments(filters: DocumentListFilters = {}): Promise<
   return applyFilters(docs, filters);
 }
 
+export async function getDocumentById(documentId: string): Promise<EnterpriseDocument> {
+  const client = await requireClient();
+  const organizationId = await requireOrgId();
+  const { data, error } = await client.from("documents").select("*")
+    .eq("id", documentId).eq("organization_id", organizationId).eq("is_deleted", false).single();
+  if (error || !data) throw new Error("Teklife bağlı kayıtlı PDF bulunamadı veya erişilemiyor.");
+  return data as EnterpriseDocument;
+}
+
 export async function getDocumentVersions(documentGroupId: string): Promise<EnterpriseDocument[]> {
   const client = await requireClient();
   const organizationId = await requireOrgId();

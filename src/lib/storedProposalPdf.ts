@@ -1,4 +1,4 @@
-import { listDocuments, getSignedDownloadUrl } from './enterpriseDocumentService';
+import { listDocuments, getSignedDownloadUrl, getDocumentById } from './enterpriseDocumentService';
 import type { EnterpriseDocument } from '../types/enterpriseDocument';
 import type { Proposal } from '../types/proposal';
 
@@ -13,7 +13,17 @@ export function selectStoredProposalPdf(documents: EnterpriseDocument[], proposa
   }).sort((a, b) => Date.parse(b.created_at) - Date.parse(a.created_at) || b.id.localeCompare(a.id))[0];
 }
 
-export async function loadStoredProposalPdf(proposal: Pick<Proposal, 'id' | 'currentVersion'>): Promise<string> {
+export async function loadStoredProposalPdf(proposal: Pick<Proposal, 'id' | 'currentVersion' | 'pdfDocumentLinks'>): Promise<string> {
+  const linkedId = proposal.pdfDocumentLinks?.[proposal.currentVersion];
+  if (linkedId) {
+    const linked = await getDocumentById(linkedId);
+    if (!selectStoredProposalPdf([linked], proposal)) {
+      throw new Error("Teklifin kayıtlı PDF bağlantısı geçersiz. Başka bir belge gösterilmedi.");
+    }
+    return getSignedDownloadUrl(linked);
+  }
+  // Older proposals predate permanent links. Only read their stored revision;
+  // never render or upload a replacement when opening a proposal.
   const documents = await listDocuments({ proposalId: proposal.id });
   const document = selectStoredProposalPdf(documents, proposal);
   if (!document) throw new Error(`${proposal.currentVersion} sürümü için kayıtlı teklif PDF’i bulunamadı. Teklif sihirbazından bu sürümün PDF’ini kaydedin.`);

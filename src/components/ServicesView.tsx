@@ -1654,7 +1654,8 @@ export default function ServicesView({
     try {
       const pdfResult = await capturePdfForSave(result.newProposal);
       if (!pdfResult) throw new Error("PDF oluşturulamadı.");
-      await storeProposalPdf(result.newProposal, lang, pdfResult.blob);
+      const linkedProposal = await storeProposalPdf(result.newProposal, lang, pdfResult.blob);
+      savedProposalRef.current = structuredClone(linkedProposal);
     } catch (err) {
       console.error("Proposal PDF store-on-save failed:", err);
       setToastMessage("Teklif içeriği kaydedildi, ancak PDF kaydedilemedi. PDF işlemini yeniden deneyin.");

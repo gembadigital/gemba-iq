@@ -23,5 +23,16 @@
     "Browser uses synthetic documents/auth transport",
     "Existing customer PDFs were not overwritten or regenerated",
     "Signed-in live PDF viewing requires user session; fixture flow tested instead"
+  ],
+  "direct_pdf_link_tests": 19,
+  "direct_link_checks": [
+    "wizard uploads exact provided Blob",
+    "revision document ID persisted with confirmed save",
+    "explicit ID wins over duplicate",
+    "missing explicit ID does not fallback",
+    "foreign proposal or revision denied",
+    "stale save does not overwrite new revision",
+    "failed link save not success",
+    "copy drops source links"
   ]
 }

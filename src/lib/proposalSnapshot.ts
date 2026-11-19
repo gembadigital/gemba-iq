@@ -28,7 +28,7 @@ export function copyProposalForWizard(source: Proposal, proposals: Proposal[], t
     Number(p.proposalNumber.split("-").pop()) || 0))) + 1;
   const date = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, "0")}-${String(today.getDate()).padStart(2, "0")}`;
   const { dealId, dealName, timelineEvents, auditLog, rejectedReason, cancelledReason, lossReason,
-    lossReasonNote, nextContactReminderStart, nextContactReminderEnd, documentHtml, documentSource, ...content } = copy;
+    lossReasonNote, nextContactReminderStart, nextContactReminderEnd, documentHtml, documentSource, pdfDocumentLinks, ...content } = copy;
   const draft: Proposal = { ...content, id: "", sequenceNo, proposalNumber: `${date.slice(2, 4)}${date.slice(5, 7)}-${sequenceNo}`,
     date, status: "Draft", approvalStatus: "Draft", isDraft: true, isDeleted: false,
     currentVersion: "v1.0", versions: [], lastUpdate: "" };
