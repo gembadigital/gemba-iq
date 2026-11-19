@@ -1,4 +1,4 @@
-import { assertAiAccess } from '../../lib/server/aiAccess.js';
+import { withPersonalAiHandler } from '../../lib/server/aiAccess.js';
 import { runCompanyAnalysis } from "../../lib/server/analyzeCompanyCore.js";
 import {
   runGeminiAssist,
@@ -16,7 +16,7 @@ import {
 // Functions per deployment limit — each separate file under api/ used to
 // count as its own function. Frontend URLs are unchanged.
 
-export async function analyzeCompanyHandler(request, response) {
+async function analyzeCompanyHandlerImpl(request, response) {
   response.setHeader("Content-Type", "application/json");
   response.setHeader("Cache-Control", "no-store");
 
@@ -26,13 +26,10 @@ export async function analyzeCompanyHandler(request, response) {
   }
 
   try {
-    await assertAiAccess(request);
-    const { companyInput, tavilyApiKey } = request.body || {};
-    const headerTavilyKey = request.headers["x-tavily-api-key"];
+    const { companyInput } = request.body || {};
 
     const result = await runCompanyAnalysis({
       companyInput,
-      tavilyApiKey: tavilyApiKey || headerTavilyKey,
     });
 
     return response.status(result.status).json(result.body);
@@ -45,7 +42,7 @@ export async function analyzeCompanyHandler(request, response) {
   }
 }
 
-export async function assistHandler(request, response) {
+async function assistHandlerImpl(request, response) {
   response.setHeader("Content-Type", "application/json");
 
   if (request.method !== "POST") {
@@ -54,7 +51,6 @@ export async function assistHandler(request, response) {
   }
 
   try {
-    await assertAiAccess(request);
     const { action, bodyText, promptInstruction, prompt } = request.body || {};
     const result = await runGeminiAssist({ action, bodyText, promptInstruction, prompt });
     return response.status(result.status).json(result.body);
@@ -64,7 +60,7 @@ export async function assistHandler(request, response) {
   }
 }
 
-export async function companySearchHandler(request, response) {
+async function companySearchHandlerImpl(request, response) {
   response.setHeader("Content-Type", "application/json");
 
   if (request.method !== "POST") {
@@ -73,7 +69,6 @@ export async function companySearchHandler(request, response) {
   }
 
   try {
-    await assertAiAccess(request);
     const { query } = request.body || {};
     const result = await runGeminiCompanySearch({ query });
     return response.status(result.status).json(result.body);
@@ -83,7 +78,7 @@ export async function companySearchHandler(request, response) {
   }
 }
 
-export async function salesCoachHandler(request, response) {
+async function salesCoachHandlerImpl(request, response) {
   response.setHeader("Content-Type", "application/json");
 
   if (request.method !== "POST") {
@@ -92,7 +87,6 @@ export async function salesCoachHandler(request, response) {
   }
 
   try {
-    await assertAiAccess(request);
     const { deals, query, activeSkills } = request.body || {};
     const result = await runGeminiSalesCoach({ deals, query, activeSkills });
     return response.status(result.status).json(result.body);
@@ -102,7 +96,7 @@ export async function salesCoachHandler(request, response) {
   }
 }
 
-export async function campaignAssistHandler(request, response) {
+async function campaignAssistHandlerImpl(request, response) {
   response.setHeader("Content-Type", "application/json");
 
   if (request.method !== "POST") {
@@ -111,7 +105,6 @@ export async function campaignAssistHandler(request, response) {
   }
 
   try {
-    await assertAiAccess(request);
     const { action, bodyText, promptInstruction, targetChannel, tags } = request.body || {};
     const result = await runGeminiCampaignAssist({ action, bodyText, promptInstruction, targetChannel, tags });
     return response.status(result.status).json(result.body);
@@ -121,7 +114,7 @@ export async function campaignAssistHandler(request, response) {
   }
 }
 
-export async function generateCustomPitchHandler(request, response) {
+async function generateCustomPitchHandlerImpl(request, response) {
   response.setHeader("Content-Type", "application/json");
 
   if (request.method !== "POST") {
@@ -130,7 +123,6 @@ export async function generateCustomPitchHandler(request, response) {
   }
 
   try {
-    await assertAiAccess(request);
     const { companyName, mailType, topic, tone, extraContext, researchContext } = request.body || {};
     const result = await runGeminiCustomPitch({ companyName, mailType, topic, tone, extraContext, researchContext });
     return response.status(result.status).json(result.body);
@@ -140,7 +132,7 @@ export async function generateCustomPitchHandler(request, response) {
   }
 }
 
-export async function convertTableHandler(request, response) {
+async function convertTableHandlerImpl(request, response) {
   response.setHeader("Content-Type", "application/json");
 
   if (request.method !== "POST") {
@@ -149,7 +141,6 @@ export async function convertTableHandler(request, response) {
   }
 
   try {
-    await assertAiAccess(request);
     const { pastedContent } = request.body || {};
     const result = await runGeminiConvertTable({ pastedContent });
     return response.status(result.status).json(result.body);
@@ -159,7 +150,7 @@ export async function convertTableHandler(request, response) {
   }
 }
 
-export async function marketingReportAnalysisHandler(request, response) {
+async function marketingReportAnalysisHandlerImpl(request, response) {
   response.setHeader("Content-Type", "application/json");
 
   if (request.method !== "POST") {
@@ -168,7 +159,6 @@ export async function marketingReportAnalysisHandler(request, response) {
   }
 
   try {
-    await assertAiAccess(request);
     const { reportText, fileName, sourceType, industryContext } = request.body || {};
     const result = await runGeminiMarketingReportAnalysis({ reportText, fileName, sourceType, industryContext });
     return response.status(result.status).json(result.body);
@@ -190,3 +180,12 @@ export default async function handler(request, response) {
   if (action === "marketing-report-analysis") return marketingReportAnalysisHandler(request, response);
   return response.status(404).json({ error: "Unknown gemini endpoint." });
 }
+
+export const analyzeCompanyHandler=withPersonalAiHandler(analyzeCompanyHandlerImpl);
+export const assistHandler=withPersonalAiHandler(assistHandlerImpl);
+export const companySearchHandler=withPersonalAiHandler(companySearchHandlerImpl);
+export const salesCoachHandler=withPersonalAiHandler(salesCoachHandlerImpl);
+export const campaignAssistHandler=withPersonalAiHandler(campaignAssistHandlerImpl);
+export const generateCustomPitchHandler=withPersonalAiHandler(generateCustomPitchHandlerImpl);
+export const convertTableHandler=withPersonalAiHandler(convertTableHandlerImpl);
+export const marketingReportAnalysisHandler=withPersonalAiHandler(marketingReportAnalysisHandlerImpl);

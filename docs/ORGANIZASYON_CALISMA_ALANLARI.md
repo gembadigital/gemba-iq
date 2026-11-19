@@ -24,7 +24,7 @@ Türkiye'nin eski `__org_auxiliary__` kaydı korunur; yeni organizasyonlar `__or
 
 Outlook arşivi aktif organizasyon ve müşteriyle sınırlıdır. Kişisel posta yalnızca doğrulanmış giriş hesabıyla eşleşebilir. Kurumsal posta kutusunun alanı aktif organizasyonun alanıyla eşleşmelidir. Takvim paylaşımı organizasyonun kendi onaylı kullanıcı listesini kullanır. Almanya'da Microsoft 365 erişimi, kullanılan Azure uygulamasının ilgili Microsoft tenant'ında izinli olmasına bağlıdır; Türkiye bağlantısı Almanya'ya kopyalanmaz.
 
-AI uçları oturum, aktif organizasyon ve `ai_enabled` denetler. Kapalı organizasyonlar ortak sunucu anahtarını kullanamaz. Kalıntı AI eylemlerinin arayüzden tamamen temizlenmesi ayrı bir sunum çalışmasıdır; kapalı uçlar hata verir, AI servisine istek göndermez.
+AI uçları oturum, aktif organizasyon ve kullanıcının kendi API anahtarını denetler. Ortak sunucu anahtarına veya başka kullanıcıya dönüş yoktur. Kendi anahtarı bulunmayan işlem açıklayıcı hatayla durur. Ayrıntılar: [Kişisel API Anahtarları](KISISEL_API_ANAHTARLARI.md). Almanya ayrı Microsoft tenant'ı kullandığından kendi Microsoft uygulaması kurulana kadar Outlook/takvim çağrıları Türkiye uygulamasına gönderilmez.
 
 ## Doğrulama
 

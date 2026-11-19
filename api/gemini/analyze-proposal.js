@@ -1,4 +1,4 @@
-import { assertAiAccess } from '../../lib/server/aiAccess.js';
+import { withPersonalAiHandler } from '../../lib/server/aiAccess.js';
 import { runGeminiJsonPrompt } from "../../lib/server/proposalGeminiCore.js";
 
 function buildPrompt({ companyName, proposalSubject, description, selectedServices, options, currency }) {
@@ -26,7 +26,7 @@ Yalnızca aşağıdaki JSON formatında, Türkçe olarak yanıt ver, başka hiç
 }`;
 }
 
-export default async function handler(request, response) {
+async function handlerImpl(request, response) {
   response.setHeader("Content-Type", "application/json");
   response.setHeader("Cache-Control", "no-store");
 
@@ -36,7 +36,6 @@ export default async function handler(request, response) {
   }
 
   try {
-    await assertAiAccess(request);
     const { companyName, proposalSubject, description, selectedServices, options, currency } = request.body || {};
 
     const prompt = buildPrompt({ companyName, proposalSubject, description, selectedServices, options, currency });
@@ -51,3 +50,5 @@ export default async function handler(request, response) {
     });
   }
 }
+
+export default withPersonalAiHandler(handlerImpl);

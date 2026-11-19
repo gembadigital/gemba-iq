@@ -1,9 +1,9 @@
 import assert from 'node:assert/strict';
-import { resolveOrganizationAccess, assertMailboxDomain } from '../lib/server/organizationAccess.js';
+import { resolveOrganizationAccess, assertMailboxDomain, assertMicrosoftOrganizationAccess } from '../lib/server/organizationAccess.js';
 const tr='11111111-1111-4111-8111-111111111111',de='22222222-2222-4222-8222-222222222222';
 const rows=[{user_id:'super',organization_id:tr,role:'ADMIN'},{user_id:'super',organization_id:de,role:'ADMIN'},{user_id:'german',organization_id:de,role:'USER'},{user_id:'admin',organization_id:de,role:'ADMIN'}];
 let failure=false;
-const client={from(table){let f=[];const result=()=>({error:failure?{message:'Unavailable'}:null,data:(table==='organization_members'?rows:[{organization_id:de,email_domain:'de.test'}]).filter(r=>f.every(([k,v])=>r[k]===v))});const q={select:()=>q,eq:(k,v)=>{f.push([k,v]);return q;},then:fn=>Promise.resolve(result()).then(fn),maybeSingle:async()=>({...result(),data:result().data[0]})};return q;}};
+const client={from(table){let f=[];const result=()=>({error:failure?{message:'Unavailable'}:null,data:(table==='organization_members'?rows:[{organization_id:de,email_domain:'de.test'},{organization_id:tr,email_domain:'gembapartner.com'}]).filter(r=>f.every(([k,v])=>r[k]===v))});const q={select:()=>q,eq:(k,v)=>{f.push([k,v]);return q;},then:fn=>Promise.resolve(result()).then(fn),maybeSingle:async()=>({...result(),data:result().data[0]})};return q;}};
 let passed=0;
 async function test(name,fn){await fn();passed++;console.log('PASS '+name);}
 await test('Single organization remains backward compatible',async()=>assert.equal((await resolveOrganizationAccess(client,{id:'german'})).organizationId,de));
@@ -18,5 +18,7 @@ await test('Organization admin is derived from membership',async()=>{assert.equa
 const context={adminClient:client,organizationId:de};
 await test('Own organization mailbox domain accepted',async()=>assertMailboxDomain(context,'team@de.test'));
 await test('Foreign organization mailbox domain denied',async()=>assert.rejects(()=>assertMailboxDomain(context,'team@tr.test'),e=>e.status===403));
-await test('Unconfigured mailbox domain fails closed',async()=>assert.rejects(()=>assertMailboxDomain({...context,organizationId:tr},'team@tr.test'),e=>e.status===403));
+await test('Unconfigured mailbox domain fails closed',async()=>assert.rejects(()=>assertMailboxDomain({...context,organizationId:'33333333-3333-4333-8333-333333333333'},'team@tr.test'),e=>e.status===403));
+await test('Separate Microsoft organization never uses Turkey application',async()=>assert.rejects(()=>assertMicrosoftOrganizationAccess(context),e=>e.status===403));
+await test('Existing Turkey organization may use its own Microsoft application',async()=>assertMicrosoftOrganizationAccess({...context,organizationId:tr}));
 console.log(`${passed} organization access checks passed. No live calls.`);

@@ -1,3 +1,4 @@
+import { personalCredentialsHandler } from '../../lib/server/personalProviderCredentials.js';
 import {
   connectPersonalMailbox,
   disconnectPersonalMailbox,
@@ -24,6 +25,7 @@ import {
 // and /api/organization catch-alls already do for their own actions) is a
 // natural fit, not just a function-count workaround.
 export default async function handler(request, response) {
+  if (request.query?.action === "api-credentials") return personalCredentialsHandler(request, response);
   try {
     response.setHeader("Cache-Control", "private, no-store");
     if (request.method === "GET") {

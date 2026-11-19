@@ -78,4 +78,7 @@ try {
   reset(); fixture.tables.contacts = []; r = await api('company-sync', { force: true });
   check('No valid contacts means no mailbox scan', () => { assert.equal(r.statusCode, 400); assert.equal(calls.length, 0); });
 } finally { globalThis.fetch = previousFetch; }
-console.log(`${passed} company correspondence checks passed. No live mailbox accessed.`);
+reset();fixture.tables.organization_access_rules[0].email_domain='gembapartner.de';
+  const blocked=await api('company-sync',{force:true});
+  check('Separate Microsoft tenant cannot use Turkey Graph application',()=>{assert.equal(blocked.statusCode,403);assert.equal(calls.length,0);assert.equal(fixture.tables.company_email_sync_state.length,0);});
+  console.log(`${passed} company correspondence checks passed. No live mailbox accessed.`);

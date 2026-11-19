@@ -49,15 +49,6 @@ import { useNavigate } from "react-router-dom";
 const logoImage = "https://lh3.googleusercontent.com/d/13bNnthJU4LIICB4iiF1a4GH1PEn05MBx";
 // Must exactly match the key used in AdministrationCenter.tsx and currencyHelper.ts.
 const ADMIN_ORG_SETTINGS_KEY = "crm_admin_org_settings";
-// Org-shared (Supabase-backed via CrmDb), NOT per-browser localStorage. Must
-// match the same literal string used in AISalesAssistant.tsx's
-// getTavilyApiKey(). Previously this key lived only in the admin's own
-// browser localStorage ("tavily_api_key"), which meant it worked when the
-// admin tested it on their own machine but every other user/device saw a
-// "Tavily API key missing" error, since localStorage never leaves the
-// browser it was written in.
-const TAVILY_API_KEY_KV = "crm_tavily_api_key";
-
 import {
   Recipient,
   AttachmentFile,
@@ -463,24 +454,6 @@ export default function App() {
   const [isSettingsOpen, setIsSettingsOpen] = useState<boolean>(false);
   const [isUserAccountSettingsOpen, setIsUserAccountSettingsOpen] = useState<boolean>(false);
   const [settingsActiveTab, setSettingsActiveTab] = useState<"admin-center" | "system-config">("admin-center");
-  // Org-shared via CrmDb (Supabase), same pattern as ADMIN_ORG_SETTINGS_KEY
-  // above — App.tsx only ever runs inside CrmProvider, so CrmDb is already
-  // hydrated here and safe to read synchronously. One-time migration below:
-  // if this org has never saved a shared key but this specific browser has
-  // an old localStorage-only key (from before this fix), promote it to the
-  // shared CrmDb store once so the admin doesn't have to re-type it.
-  const [tavilyKey, setTavilyKey] = useState<string>(() => {
-    const shared = CrmDb.getKv<string>(TAVILY_API_KEY_KV, "");
-    if (shared) return shared;
-    if (organization?.id) return ""; // Never migrate an unscoped browser secret into a workspace.
-    const legacyLocal = (localStorage.getItem("tavily_api_key") || "").trim();
-    if (legacyLocal) {
-      CrmDb.setKv(TAVILY_API_KEY_KV, legacyLocal);
-      return legacyLocal;
-    }
-    return "";
-  });
-  
   // Theme Toggle: Light / Dark Mode
   const [darkMode, setDarkMode] = useState<boolean>(() => {
     const saved = localStorage.getItem("theme");
@@ -2051,14 +2024,7 @@ export default function App() {
 
             {aiEnabled && activeTab === "ai-sales-assistant" && (
               <AISalesAssistant
-                onOpenSettings={
-                  isAdmin
-                    ? () => {
-                        setSettingsActiveTab("system-config");
-                        setIsSettingsOpen(true);
-                      }
-                    : undefined
-                }
+                onOpenSettings={() => setIsUserAccountSettingsOpen(true)}
               />
             )}
 
@@ -2261,77 +2227,11 @@ export default function App() {
                     />
                   </div>
                 ) : (
-                  <div className="space-y-8 max-w-4xl mx-auto animate-in fade-in duration-200 bg-white dark:bg-[#121212] p-6 rounded-2xl border border-slate-150 dark:border-zinc-800 shadow-xs">
-                    
-                    {/* Section 1: Tavily Search Engine API Key */}
-                    <div className="space-y-3">
-                      <div className="flex items-center gap-2 pb-1.5 border-b border-dashed border-slate-200 dark:border-slate-700">
-                        <span className="w-1.5 h-3 bg-[#0078D4] rounded-full"></span>
-                        <h4 className="text-xs font-bold text-slate-800 dark:text-slate-300 uppercase tracking-wider font-mono flex items-center gap-1.5">
-                          <Sparkles className="w-3.5 h-3.5 text-amber-500 animate-pulse" />
-                          {t("1. Tavily Arama Motoru API Anahtarı (Search Grounding Engine)")}
-                        </h4>
-                      </div>
-                      <p className="text-[11px] text-slate-500 leading-relaxed font-sans font-medium">
-                        {t("Used for the 'Deep Research with Tavily' button in the AI Sales Assistant module. Conducts live cyber intelligence and web searches to prepare enriched company analysis kits in seconds.")}
-                      </p>
-                      
-                      <div className="flex items-center gap-3">
-                        <input
-                          type="password"
-                          value={tavilyKey}
-                          onChange={(e) => {
-                            const val = e.target.value;
-                            setTavilyKey(val);
-                            CrmDb.setKv(TAVILY_API_KEY_KV, val.trim());
-                          }}
-                          placeholder={t("Enter your Tavily API key starting with tvly-...")}
-                          className="flex-1 text-xs bg-slate-50 dark:bg-black/30 text-slate-800 dark:text-slate-100 px-4 py-3 border border-slate-200 dark:border-zinc-805 rounded-xl focus:outline-none focus:ring-1 focus:ring-[#0078D4] font-mono"
-                        />
-                        <button
-                          type="button"
-                          onClick={() => {
-                            setTavilyKey("");
-                            CrmDb.setKv(TAVILY_API_KEY_KV, "");
-                            localStorage.removeItem("tavily_api_key");
-                          }}
-                          className="text-xs font-semibold text-rose-600 bg-rose-50 dark:bg-[#321111] dark:text-rose-400 hover:bg-rose-100 dark:hover:bg-[#4a1c1c] border border-rose-200 dark:border-rose-950/40 px-3.5 py-3 rounded-xl transition-all font-sans cursor-pointer"
-                        >
-                          {t("Clear")}
-                        </button>
-                      </div>
-                      <div className="text-[10px] text-slate-400 dark:text-slate-500 font-sans italic flex items-center gap-1">
-                        <Info className="w-3.5 h-3.5 text-slate-400 inline" />
-                        <span>
-                          {t("This key is shared across your whole organization (every user, every device) as {status}.").replace(
-                            "{status}",
-                            tavilyKey 
-                              ? `"${t("Saved: {prefix}...*****").replace("{prefix}", tavilyKey.substring(0, 8))}"`
-                              : `"${t("Empty (Enters simulation mode)")}"`
-                          )}
-                        </span>
-                      </div>
-                    </div>
-
-                    {/* Section 2: General Platform Permissions & Advanced Capability */}
-                    <div className="space-y-3 pt-6 border-t border-slate-100 dark:border-zinc-800/60">
-                      <div className="bg-[#fcfcfa] dark:bg-black/15 p-4 rounded-xl border border-slate-150 dark:border-slate-800 flex flex-col md:flex-row md:items-center justify-between gap-4">
-                        <div className="space-y-1">
-                          <span data-crm-caption className="text-[9px] font-bold text-indigo-500 uppercase tracking-widest font-mono block">PLATFORM PERMISSIONS</span>
-                          <p className="text-xs font-bold text-slate-800 dark:text-emerald-400">
-                            {t("Active Permissions & API Infrastructure (Google AI Studio Build)")}
-                          </p>
-                          <p className="text-[11px] text-slate-500 dark:text-zinc-400 font-medium">
-                            {t("This application hosts a secure server-side proxy using the Gemini 1.5 Flash model and Microsoft Graph API.")}
-                          </p>
-                        </div>
-                        <div className="text-[10px] font-mono text-slate-500 dark:text-slate-400 bg-white dark:bg-[#11100f] px-3 py-1.5 rounded-lg border border-slate-250/50 dark:border-slate-800 flex items-center gap-2">
-                          <span className="w-1.5 h-1.5 bg-emerald-500 rounded-full animate-ping"></span>
-                          <span>SECURE PROXIES ACTIVE</span>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
+                  <section data-crm-card="padded" className="p-6 space-y-3">
+                    <h3 data-crm-heading="section">{lang==='TR'?'Kişisel API Bağlantıları':'Personal API Connections'}</h3>
+                    <p>{lang==='TR'?'Gemini ve Tavily anahtarları kullanıcıya özeldir. Organizasyon genelinde ortak anahtar kullanılmaz. Kendi anahtarlarınızı Hesabım bölümünden yönetebilirsiniz.':'Gemini and Tavily keys belong to each user. Shared organization keys are not used. Manage your own keys in My Account.'}</p>
+                    <button data-crm-button="" data-crm-variant="secondary" type="button" className="px-4 py-2" onClick={()=>{setIsSettingsOpen(false);setIsUserAccountSettingsOpen(true);}}>{lang==='TR'?'Kişisel API Ayarlarını Aç':'Open Personal API Settings'}</button>
+                  </section>
                 )}
               </div>
 

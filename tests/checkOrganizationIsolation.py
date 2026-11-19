@@ -74,6 +74,28 @@ try:
  # New auxiliary IDs do not collide with preserved legacy Turkey data.
  sql(as_user(SUPER,TR,f"insert into companies values('__org_auxiliary__','{TR}','{SUPER}',now(),now(),'{{}}');"))
  sql(as_user(DA,DE,f"insert into companies values('__org_auxiliary__:{DE}','{DE}','{DA}',now(),now(),'{{}}');"));checks.append('independent_auxiliary_rows')
+ # Model Vault only in this disposable database; production uses installed Supabase Vault.
+ sql("""create extension pgcrypto; create schema vault;
+ create table vault.secrets(id uuid primary key default gen_random_uuid(),secret text,name text unique,description text);
+ create view vault.decrypted_secrets as select id,convert_from(public.pgp_sym_decrypt_bytea(decode(secret,'base64'),'test-only-vault-master'),'utf8') decrypted_secret from vault.secrets;
+ create function vault.create_secret(new_secret text,new_name text default null,new_description text default '') returns uuid language plpgsql as $$ declare sid uuid; begin insert into vault.secrets(secret,name,description) values(encode(public.pgp_sym_encrypt(new_secret,'test-only-vault-master'),'base64'),new_name,new_description) returning id into sid;return sid;end $$;
+ create function vault.update_secret(secret_id uuid,new_secret text) returns void language sql as $$ update vault.secrets set secret=encode(public.pgp_sym_encrypt(new_secret,'test-only-vault-master'),'base64') where id=secret_id $$;
+ """)
+ sql(next((ROOT/'supabase/migrations').glob('*_personal_provider_credentials.sql')).read_text())
+ sample='synthetic-provider-key-never-live-123456'
+ sql(f"set role service_role; select write_user_provider_secret('{DE}','{DA}','gemini','{sample}');")
+ assert sql(f"select secret <> '{sample}' from vault.secrets;")=='t';checks.append('provider_secret_encrypted_at_rest')
+ assert sql(f"set role service_role; select api_key='{sample}' from read_user_provider_secrets('{DE}','{DA}');")=='t';checks.append('provider_secret_server_only_read')
+ sql(as_user(DA,DE,'select * from user_provider_credentials;'),False);checks.append('provider_table_client_denied')
+ sql(as_user(DA,DE,f"select * from read_user_provider_secrets('{DE}','{DA}');"),False);checks.append('provider_decrypt_client_denied')
+ sql(f"set role anon;select * from read_user_provider_secrets('{DE}','{DA}');",False);checks.append('provider_decrypt_anonymous_denied')
+ assert sql(f"set role service_role; select count(*) from read_user_provider_secrets('{TR}','{DA}');")=='0';checks.append('provider_org_scope')
+ assert sql(f"set role service_role; select count(*) from read_user_provider_secrets('{DE}','{SUPER}');")=='0';checks.append('provider_user_scope')
+ sql(f"set role service_role; select write_user_provider_secret('{DE}','{DA}','gemini','synthetic-rotated-provider-key-9999');")
+ assert sql('select count(*) from vault.secrets;')=='1';checks.append('provider_rotation_no_duplicate_secrets')
+ sql(f"set role service_role; select write_user_provider_secret('{DE}','{TU}','gemini','{sample}');",False);checks.append('provider_foreign_membership_denied')
+ sql(f"set role service_role; select write_user_provider_secret('{DE}','{DA}','gemini',null);")
+ assert sql('select count(*) from vault.secrets;')=='0';checks.append('provider_delete_cleans_vault')
  print(json.dumps({'passed':len(checks),'checks':checks,'live_data_touched':False},ensure_ascii=False))
 finally:
  if started:subprocess.run([str(BIN/'pg_ctl'),'-D',str(data),'-m','fast','-w','stop'],capture_output=True)

@@ -79,3 +79,7 @@ Superadmin organizasyon seçicisi ana menüde bulunmaz; Organizasyon Ayarları'n
 Düğmelerin renkleri `class*="bg-blue-"` gibi alt metin eşleşmeleriyle belirlenmez: `hover:bg-blue-50` ve `dark:` renkleri düğmenin normal yüzey rengi değildir. Ana eylemlerde gerçek renk tokenları, ikincil eylemlerde `data-crm-variant="secondary"` kullanılır. Metin ve ikon aynı kontrastı korur. Tanımsız eski 550/650 arka plan tokenları açık CRM işaretleriyle gerçek bir yüzeye eşlenir. PDF alanları bu kuralın dışında kalır.
 
 Bulut tanım ekranı canlı Supabase ölçümü gibi gösterilmez. Sabit kullanım rakamları ve bağlı olmayan prompt alanları gerçek kayıt/entegrasyon iddiası taşıyamaz. `tests/settingsPresentationReview.html` açık/koyu temada bağlı posta kutusundaki Test düğmesini, ortak düğme renklerini ve organizasyon seçicisinin yerini 320/1280 px'te kontrol eder.
+
+## Kişisel API kartları — 19 Kasım 2026
+
+Hesabım ekranında Gemini/Tavily kartları aynı etiketli alan ve sarılan eylem satırı dilini kullanır. Anahtar alanı password/new-password ve boş gelir; kayıttan sonra temizlenir. Yalnızca son dört karakter gösterilir. Kaydet, Erişimi Test Et ve Kaldır aynı karttadır; yükleme/hata durumları gerçek sonucu gösterir. API anahtarları organizasyonun ortak ayarlar paneline yazılmaz. Kullanıcı Supabase konsoluna yönlendirilmez.

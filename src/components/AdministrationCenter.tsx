@@ -1,3 +1,4 @@
+import { fetchPersonalProviderStatus } from '../lib/personalProviderCredentials';
 import OrganizationSwitcher from './OrganizationSwitcher';
 import { organizationFetch } from '../lib/organizationFetch';
 import React, { useState, useEffect } from "react";
@@ -709,22 +710,23 @@ export default function AdministrationCenter({
       const res = await organizationFetch("/api/config");
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
       const data = await res.json();
+      const personal = await fetchPersonalProviderStatus();
       setIntegrationHealth({
-        hasGeminiKey: Boolean(data.hasGeminiKey),
+        hasGeminiKey: personal.providers.some(p=>p.provider==='gemini'&&p.configured),
         hasGraphCredentials: Boolean(data.hasClientKeys),
-        hasTavilyKey: Boolean(data.hasTavilyKey),
+        hasTavilyKey: personal.providers.some(p=>p.provider==='tavily'&&p.configured),
         lastChecked: new Date().toLocaleTimeString(),
         error: false,
       });
       if (!silent) {
         const missing: string[] = [];
-        if (!data.hasGeminiKey) missing.push("Gemini API Key");
+        if (!personal.providers.some(p=>p.provider==='gemini'&&p.configured)) missing.push("Gemini API Key");
         if (!data.hasClientKeys) missing.push("Microsoft Graph (Azure)");
-        if (!data.hasTavilyKey) missing.push("Tavily API Key");
+        if (!personal.providers.some(p=>p.provider==='tavily'&&p.configured)) missing.push("Tavily API Key");
         alert(
           missing.length === 0
             ? "Tüm entegrasyonlar sunucu tarafında yapılandırılmış görünüyor."
-            : `Eksik yapılandırma tespit edildi: ${missing.join(", ")}. Bu servisler Vercel Environment Variables üzerinden ayarlanmalı.`
+            : `Eksik yapılandırma tespit edildi: ${missing.join(", ")}. Kişisel AI anahtarları Hesabım bölümünden, Microsoft bağlantısı organizasyon ayarlarından yönetilir.`
         );
         addAuditLog(
           actorName,
@@ -2027,7 +2029,7 @@ export default function AdministrationCenter({
           {activeSubTab === "aisettings" && (
             <section data-crm-card="padded" className="space-y-3" aria-label={L("Yapay zekâ ayarlarının durumu", "AI configuration status")}>
               <h3 data-crm-heading="section">{L("Yapay Zekâ ve Prompt Ayarları", "AI and Prompt Settings")}</h3>
-              <p>{aiEnabled ? L("Bu ekranın prompt düzenleyicileri AI işlemlerini yönetmiyordu.", "The prompt editors on this screen did not control AI operations.") : L("Bu organizasyonda yapay zekâ API erişimi kapalıdır.", "AI API access is disabled for this organization.")}</p>
+              <p>{L("AI işlemleri yalnızca Hesabım → Kişisel API Anahtarları bölümünde kaydettiğiniz kendi anahtarlarınızla çalışır. Ortak Gemba IQ anahtarı kullanılmaz.", "AI operations use only your own keys saved under My Account → Personal API Keys. Shared Gemba IQ keys are not used.")}</p>
               <p className="text-sm">{L("Önceki prompt düzenleyicileri AI işlemlerine bağlı değildi; değişiklikler yalnızca açık ekranın belleğinde tutuluyordu. Veritabanına kaydedildiği yönündeki ifade doğru değildi. Yanıltıcı düzenleme alanları kaldırıldı.", "The previous prompt editors were not connected to AI operations; changes lived only in this screen's memory. They were not saved to the database. The misleading editors have been removed.")}</p>
             </section>
           )}
@@ -2111,7 +2113,7 @@ export default function AdministrationCenter({
 
                   <div className="flex items-center justify-between p-3 bg-slate-50/60 dark:bg-zinc-900 border border-slate-150 rounded-xl text-xs">
                     <span className="font-bold text-slate-700 dark:text-zinc-300">
-                      {L("Google Gemini API Anahtarı (GEMINI_API_KEY):", "Google Gemini API Key (GEMINI_API_KEY):")}
+                      {L("Kişisel Gemini API Anahtarı:", "Personal Gemini API Key:")}
                     </span>
                     {integrationHealth.hasGeminiKey === null ? (
                       <span data-crm-caption="" className="text-slate-400 font-bold font-mono uppercase">{L("KONTROL EDİLİYOR…", "CHECKING…")}</span>

@@ -1,3 +1,4 @@
+import PersonalProviderSettings from './PersonalProviderSettings';
 import React, { useEffect, useState } from "react";
 import { Mail, User, Plus, Trash2, CheckCircle2, Loader2 } from "lucide-react";
 import { useLanguage } from "../lib/LanguageContext";
@@ -241,6 +242,7 @@ export default function UserAccountSettings({
           </>
         )}
       </section>
+      <PersonalProviderSettings />
     </div>
   );
 }

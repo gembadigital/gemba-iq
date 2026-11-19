@@ -47,12 +47,8 @@ export async function fetchOrganizationBootstrap(userId: string): Promise<Organi
   const membership = memberships?.find(m => m.organization_id === getActiveOrganizationId()) || memberships?.[0] || null;
   const organization = orgs?.find(o => o.id === membership?.organization_id) || null;
 
-  const { data: rules, error: rulesError } = organization
-    ? await client.from('organization_access_rules').select('ai_enabled').eq('organization_id', organization.id).maybeSingle()
-    : { data: null, error: null };
-  if (rulesError) throw new Error(rulesError.message);
   return {
-    aiEnabled: rules?.ai_enabled === true,
+    aiEnabled: true, // UI availability only; the server requires the user's own key.
     profile: (profile as Profile | null) ?? null,
     organization,
     membership: (membership as OrganizationMember | null) ?? null,

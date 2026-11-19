@@ -1,3 +1,4 @@
+import { fetchPersonalProviderStatus } from '../lib/personalProviderCredentials';
 import { organizationFetch } from '../lib/organizationFetch';
 import React, { useState, useEffect } from "react";
 import { useLanguage } from "../lib/LanguageContext";
@@ -84,7 +85,7 @@ const NOT_FOUND_DECISION_MAKERS = "Karar verici bilgisi bulunamadı.";
 const NOT_FOUND_OPPORTUNITY =
   "Yeterli veri bulunamadığı için fırsat analizi oluşturulamadı.";
 const TAVILY_KEY_MESSAGE =
-  "Tavily API anahtarı bulunamadı. Lütfen Sistem Ayarları > API Anahtarları bölümünden Tavily API Key giriniz.";
+  "Tavily API anahtarı bulunamadı. Hesabım → Kişisel API Anahtarları bölümüne kendi Tavily anahtarınızı kaydedin.";
 
 function getBusinessErrorMessage(
   data?: Record<string, unknown>,
@@ -130,17 +131,6 @@ async function parseJsonApiResponse(resp: Response): Promise<Record<string, unkn
   return data;
 }
 
-// Org-shared (Supabase-backed via CrmDb), NOT per-browser localStorage. Must
-// match the same literal string used in App.tsx's TAVILY_API_KEY_KV. This
-// used to read window.localStorage directly, which only ever held whatever
-// the admin typed into their own browser — every other user/device saw
-// TAVILY_KEY_MESSAGE below even though the admin had "already saved" a key.
-const TAVILY_API_KEY_KV = "crm_tavily_api_key";
-
-function getTavilyApiKey(): string {
-  return CrmDb.getKv<string>(TAVILY_API_KEY_KV, "").trim();
-}
-
 export default function AISalesAssistant({ onOpenSettings }: AISalesAssistantProps) {
   const { lang, t } = useLanguage();
   const { confirm, confirmProps } = useConfirm();
@@ -148,7 +138,7 @@ export default function AISalesAssistant({ onOpenSettings }: AISalesAssistantPro
   const [loading, setLoading] = useState(false);
   const [loadingStep, setLoadingStep] = useState(0);
   const [error, setError] = useState<string | null>(null);
-  const [hasTavilyKey, setHasTavilyKey] = useState(() => !!getTavilyApiKey());
+  const [hasTavilyKey, setHasTavilyKey] = useState(false);
   
   // Storage of past analyses
   const [savedAnalyses, setSavedAnalyses] = useState<SavedAnalysis[]>([]);
@@ -217,14 +207,9 @@ export default function AISalesAssistant({ onOpenSettings }: AISalesAssistantPro
   ];
 
   useEffect(() => {
-    const syncTavilyKey = () => setHasTavilyKey(!!getTavilyApiKey());
-    syncTavilyKey();
-    window.addEventListener("storage", syncTavilyKey);
-    window.addEventListener("focus", syncTavilyKey);
-    return () => {
-      window.removeEventListener("storage", syncTavilyKey);
-      window.removeEventListener("focus", syncTavilyKey);
-    };
+    let cancelled=false;
+    fetchPersonalProviderStatus().then(r=>{if(!cancelled)setHasTavilyKey(r.providers.some(p=>p.provider==='tavily'&&p.configured));}).catch(()=>{if(!cancelled)setHasTavilyKey(false);});
+    return()=>{cancelled=true;};
   }, []);
 
   // Rotate loading messages
@@ -351,8 +336,7 @@ export default function AISalesAssistant({ onOpenSettings }: AISalesAssistantPro
     e.preventDefault();
     if (!companyInput.trim()) return;
 
-    const tavilyKey = getTavilyApiKey();
-    if (!tavilyKey) {
+    if (!hasTavilyKey) {
       setHasTavilyKey(false);
       return;
     }
@@ -368,7 +352,6 @@ export default function AISalesAssistant({ onOpenSettings }: AISalesAssistantPro
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           companyInput: companyInput.trim(),
-          tavilyApiKey: tavilyKey,
         }),
       });
 

@@ -3,6 +3,7 @@ export function companyMailFixture() {
   let clock = 0;
   const version = () => new Date(Date.now() + ++clock).toISOString();
   const tables: Record<string, any[]> = {
+    organization_access_rules: [{organization_id:"org-1",email_domain:"gembapartner.com"}],
     companies: [{ id: 'company-1', organization_id: 'org-1' }, { id: 'foreign-company', organization_id: 'org-2' }],
     contacts: [{ company_id: 'company-1', organization_id: 'org-1', data: { email: ' Client@Customer.test ' } }, { company_id: 'company-1', organization_id: 'org-1', data: { email: 'second@customer.test' } }],
     user_mailbox_connections: [{ user_id: mailOwner, default_mailbox: true, status: 'Connected', mailbox_address: 'owner@example.test' }],

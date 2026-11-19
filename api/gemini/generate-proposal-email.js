@@ -1,4 +1,4 @@
-import { assertAiAccess } from '../../lib/server/aiAccess.js';
+import { withPersonalAiHandler } from '../../lib/server/aiAccess.js';
 import { runGeminiJsonPrompt } from "../../lib/server/proposalGeminiCore.js";
 
 function buildPrompt({ companyName, contactPerson, proposalSubject, selectedServices, options, currency, language }) {
@@ -25,7 +25,7 @@ Kurallar:
 {"subject": "e-posta konu satırı", "body": "<p>e-posta gövdesi html olarak</p>"}`;
 }
 
-export default async function handler(request, response) {
+async function handlerImpl(request, response) {
   response.setHeader("Content-Type", "application/json");
   response.setHeader("Cache-Control", "no-store");
 
@@ -35,7 +35,6 @@ export default async function handler(request, response) {
   }
 
   try {
-    await assertAiAccess(request);
     const { companyName, contactPerson, proposalSubject, selectedServices, options, currency, language } =
       request.body || {};
 
@@ -55,3 +54,5 @@ export default async function handler(request, response) {
     });
   }
 }
+
+export default withPersonalAiHandler(handlerImpl);
