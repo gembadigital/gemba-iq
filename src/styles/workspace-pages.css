@@ -2,6 +2,11 @@
 @media screen {
   .gemba-stitch-skin :is([data-crm-email], a[href^="mailto:"]):not([data-crm-document], [data-crm-document] *, .a4-page, .a4-page *) { color: #0078d4 !important; }
   .gemba-stitch-skin.dark :is([data-crm-email], a[href^="mailto:"]):not([data-crm-document], [data-crm-document] *, .a4-page, .a4-page *) { color: #60a5fa !important; }
+  .gemba-stitch-skin [data-crm-screen="TasksView"] { padding: 0 !important; }
+  .gemba-stitch-skin [data-task-metrics] { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; margin: 14px 0; }
+  .gemba-stitch-skin [data-task-metrics] > div { min-width: 0; padding: 14px !important; }
+  .gemba-stitch-skin [data-task-metrics] > div > div:first-child { min-height: 34px; font-size: 12px !important; line-height: 1.4 !important; text-transform: none !important; letter-spacing: 0 !important; }
+  @media (max-width: 767px) { .gemba-stitch-skin [data-task-metrics] { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
   /* Paper margins must survive legacy global card padding; no generic document selectors. */
   .gemba-stitch-skin [data-contract-preview] { padding: 0 0 48px !important; min-width: 0; }
   .gemba-stitch-skin [data-contract-paper] { padding: var(--contract-paper-padding) !important; width: 210mm !important; min-width: 210mm !important; max-width: none !important; zoom: var(--contract-preview-scale, 1); box-sizing: border-box; }

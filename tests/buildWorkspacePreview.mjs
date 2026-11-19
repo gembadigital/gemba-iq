@@ -52,3 +52,5 @@ const fixturePdf=new jsPDF();fixturePdf.text("Saved proposal PDF fixture",20,30)
 await fs.copyFile(base+'/tests/documentPreviewReview.html',out+'/document-preview.html');
 
 await fs.copyFile(base+'/tests/customerWorkspaceReview.html',out+'/customer-workspace.html');
+
+await fs.copyFile(base+'/tests/taskStatsReview.html',out+'/task-stats.html');

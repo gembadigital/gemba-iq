@@ -1,0 +1,25 @@
+{
+  "views": 6,
+  "failures": 0,
+  "sizes": [
+    320,
+    390,
+    768,
+    1280
+  ],
+  "dark_sizes": [
+    390,
+    1280
+  ],
+  "checks": [
+    "KPI section above board",
+    "four columns desktop/tablet, two columns phone",
+    "board uses full task-screen width",
+    "no page horizontal overflow",
+    "task counts unchanged",
+    "list view works",
+    "fullscreen hides statistics as before"
+  ],
+  "task_logic": "All source before render return is identical to preceding commit; handlers, counts and persistence unchanged",
+  "live_data_written": false
+}

@@ -1,0 +1,20 @@
+<!doctype html><html><meta charset="utf-8"><title>Görev KPI yerleşimi</title><p id="status">Çalışıyor</p><iframe id="preview" style="height:1000px;border:0"></iframe><table><tbody id="results"></tbody></table><script type="module">
+const frame=document.querySelector('#preview'),sleep=ms=>new Promise(r=>setTimeout(r,ms));let cases=0,failures=0;
+for(const [width,dark] of [[320,false],[390,false],[768,false],[1280,false],[390,true],[1280,true]]){
+ let issues=[];frame.style.width=width+'px';await new Promise(resolve=>{frame.onload=()=>setTimeout(resolve,300);frame.src='index.html?dense&route=todo-list'+(dark?'&dark':'');});const d=frame.contentDocument;
+ try{const root=d.querySelector('[data-crm-screen=TasksView]'),stats=d.querySelector('[data-task-statistics]'),cards=[...d.querySelectorAll('[data-task-metrics] > div')],board=d.querySelector('[data-crm-kanban-column]')?.parentElement;
+ if(!root||!stats||!board||cards.length!==4)throw Error('İstatistik veya pano yüklenmedi');
+ const rs=stats.getBoundingClientRect(),rb=board.getBoundingClientRect(),rr=root.getBoundingClientRect(),positions=cards.map(c=>c.getBoundingClientRect());
+ if(rs.bottom>rb.top)issues.push('KPI panonun üzerinde değil');
+ if(Math.abs(rb.width-rr.width)>3)issues.push('Kanban tam genişlikte değil');
+ const columns=width<768?2:4;if(positions.slice(0,columns).some(r=>Math.abs(r.top-positions[0].top)>1))issues.push('KPI kartları yatay değil');
+ if(columns===2&&positions[2].top<=positions[0].top)issues.push('Mobil iki sütun değil');
+ if(root.scrollWidth>root.clientWidth+3)issues.push('Sayfa yatay taşıyor');
+ const values=cards.map(c=>c.children[1].textContent.trim());if(values.join(',')!=='8,8,0,0')issues.push('Görev sayıları değişti: '+values);
+ const list=[...d.querySelectorAll('button')].find(b=>/^(Liste|List)$/.test(b.textContent.trim()));if(!list)issues.push('Liste düğmesi yok');else{list.click();await sleep(100);if(!d.querySelector('[data-crm-screen=TasksView] table'))issues.push('Liste görünümü açılmadı');}
+ const fullscreen=d.querySelector('[data-crm-header] button[title]');if(fullscreen){fullscreen.click();await sleep(100);if(d.querySelector('[data-task-statistics]'))issues.push('Tam ekranda KPI gizlenmedi');}else issues.push('Tam ekran düğmesi yok');
+ }catch(e){issues.push(e.message);}
+ const tr=document.createElement('tr');tr.dataset.ok=String(!issues.length);tr.textContent=width+' / '+(dark?'koyu':'açık')+': '+(issues.join('; ')||'GEÇTİ');document.querySelector('#results').append(tr);cases++;if(issues.length)failures++;
+}
+document.querySelector('#status').textContent='TAMAMLANDI: '+cases+' görünüm, '+failures+' sorun';
+</script></html>

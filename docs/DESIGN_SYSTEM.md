@@ -105,3 +105,7 @@ Yeni Şirket Ekle, küçük pencere yerine mevcut müşteri kartının boş tasl
 E-posta adresleri ekranlarda data-crm-email veya mailto bağlantısıyla mavi, koyu temada açık mavi görünür. Hata/durum renkleri ve PDF/A4 belge metinleri bu kurala dahil değildir. Müşteriler sayfasındaki uzun CRM veritabanı açıklaması kaldırılmıştır.
 
 Kanban kartındaki teklif numarası ve fırsat detayındaki teklif bağlantısı aynı Teklif Yönetimi kaydına gider. Eşleşmede şirket kimliği korunur; açık fırsat kimliği varsa önceliklidir, eski kayıtlarda aynı müşterinin tam teklif numarası kullanılır. Aynı müşterinin başka fırsatına ait teklifler karıştırılmaz. Müşteri bağlantısı gezinme sırasında yeni müşteri üretmez. Karşılığı olmayan eski teklif referansları yeni/uydurma teklif oluşturmaz.
+
+## Görev istatistikleri — 19 Kasım 2026
+
+Görev İstatistikleri sağ sütunda yer almaz; üstte yatay dört KPI hücresi ve altında tamamlama çubuğudur. Mobilde hücreler iki sütuna düşer. Kanban/listenin ana gövdesi tüm kullanılabilir genişliği kullanır. Görev hesapları, filtreler ve tam ekran davranışı korunur.

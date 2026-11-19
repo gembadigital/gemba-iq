@@ -1386,9 +1386,9 @@ export default function TasksView() {
   };
 
   return (
-    <div data-crm-screen="TasksView" className="flex flex-col lg:flex-row gap-6 w-full text-slate-700 dark:text-slate-300">
+    <div data-crm-screen="TasksView" className="flex flex-col gap-6 w-full text-slate-700 dark:text-slate-300">
       
-      {/* LEFT COLUMN: MAIN TASKS WRAPPER */}
+      {/* FULL-WIDTH TASKS WRAPPER */}
       <div data-crm-stack="" className="flex-1 flex flex-col space-y-5 min-w-0">
           
          {/* VIEW HEADER & ACTIONS BAR */}
@@ -1538,6 +1538,104 @@ export default function TasksView() {
              </div>
            </div>
          </div>
+
+         {/* Horizontal statistics leave the entire page width for the board. */}
+         {!isFullScreen && (
+           <section data-task-statistics="" data-crm-card="padded" className="bg-white dark:bg-[#1b1a19] border border-[#EDEBE9] dark:border-[#323130] rounded-lg p-5 shadow-sm">
+          {/* Section Header */}
+          <div className="flex items-center gap-1.5 pb-2.5 border-b border-[#EDEBE9] dark:border-[#323130]">
+            <TrendingUp className="w-4 h-4 text-[#0078D4]" />
+            <h2 data-crm-heading="section" className="text-xs font-bold text-slate-800 dark:text-slate-100 uppercase tracking-widest font-sans">
+              Görev İstatistikleri
+            </h2>
+          </div>
+
+             <div data-task-metrics="">
+          {/* TOTAL TASKS METRIC */}
+          <div className="bg-[#FAF9F8] dark:bg-[#252423] p-4 rounded border border-[#EDEBE9] dark:border-[#323130] flex flex-col relative overflow-hidden group">
+            <div className="text-[10px] text-slate-400 dark:text-slate-500 uppercase font-black tracking-widest leading-none">
+              Toplam Görev Sayısı
+            </div>
+            <div className="text-3xl font-black text-slate-800 dark:text-slate-100 tracking-tight mt-1.5">
+              {totalCount}
+            </div>
+            {/* Sparkline Visual SVG */}
+            <div className="h-6 mt-2">
+              <svg className="w-full h-full text-blue-500" viewBox="0 0 100 20" fill="none" preserveAspectRatio="none">
+                <path d="M0,15 Q15,4 30,12 T60,5 T90,14 T100,2" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+                <path d="M0,15 Q15,4 30,12 T60,5 T90,14 T100,2 L100,20 L0,20 Z" fill="currentColor" fillOpacity="0.05" />
+              </svg>
+            </div>
+          </div>
+
+          {/* OPEN TASKS (NOT STARTED + ON HOLD) */}
+          <div className="bg-[#FAF9F8] dark:bg-[#252423] p-4 rounded border border-[#EDEBE9] dark:border-[#323130] flex flex-col relative overflow-hidden">
+            <div className="text-[10px] text-slate-400 dark:text-slate-500 uppercase font-black tracking-widest leading-none">
+              Açık Görevler (Başlanmamış + Bekleyen)
+            </div>
+            <div className="text-3xl font-black text-slate-800 dark:text-slate-100 tracking-tight mt-1.5">
+              {openCount}
+            </div>
+            {/* Trend Indicator Line */}
+            <div className="h-6 mt-2">
+              <svg className="w-full h-full text-amber-500" viewBox="0 0 100 20" fill="none" preserveAspectRatio="none">
+                <path d="M0,8 Q20,18 40,5 T80,15 T100,8" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+                <path d="M0,8 Q20,18 40,5 T80,15 T100,8 L100,20 L0,20 Z" fill="currentColor" fillOpacity="0.05" />
+              </svg>
+            </div>
+          </div>
+
+          {/* IN PROGRESS METRIC */}
+          <div className="bg-[#FAF9F8] dark:bg-[#252423] p-4 rounded border border-[#EDEBE9] dark:border-[#323130] flex flex-col relative overflow-hidden">
+            <div className="text-[10px] text-slate-400 dark:text-slate-500 uppercase font-black tracking-widest leading-none">
+              Devam Eden Görevler (Aktif)
+            </div>
+            <div className="text-3xl font-black text-[#0078D4] dark:text-blue-400 tracking-tight mt-1.5">
+              {inProgressCount}
+            </div>
+            {/* Smooth Sine Trend Line */}
+            <div className="h-6 mt-2">
+              <svg className="w-full h-full text-blue-400" viewBox="0 0 100 20" fill="none" preserveAspectRatio="none">
+                <path d="M0,18 C15,5 35,5 50,12 C65,18 85,18 100,4" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+                <path d="M0,18 C15,5 35,5 50,12 C65,18 85,18 100,4 L100,20 L0,20 Z" fill="currentColor" fillOpacity="0.05" />
+              </svg>
+            </div>
+          </div>
+
+          {/* COMPLETED METRIC */}
+          <div className="bg-[#FAF9F8] dark:bg-[#252423] p-4 rounded border border-[#EDEBE9] dark:border-[#323130] flex flex-col relative overflow-hidden">
+            <div className="text-[10px] text-slate-400 dark:text-slate-500 uppercase font-black tracking-widest leading-none">
+              Tamamlanan Görevler
+            </div>
+            <div className="text-3xl font-black text-rose-500 dark:text-emerald-500 tracking-tight mt-1.5">
+              {completedCount}
+            </div>
+            {/* Complete Trend line upward */}
+            <div className="h-6 mt-2">
+              <svg className="w-full h-full text-emerald-500" viewBox="0 0 100 20" fill="none" preserveAspectRatio="none">
+                <path d="M0,18 L25,14 L50,11 L75,6 L100,2" stroke="currentColor" strokeWidth="2" strokeLinejoin="round" />
+                <path d="M0,18 L25,14 L50,11 L75,6 L100,2 L100,20 L0,20 Z" fill="currentColor" fillOpacity="0.05" />
+              </svg>
+            </div>
+          </div>
+
+             </div>
+          {/* EXTRA PROGRESS BAR & GENERAL PERFORMANCE SCORE */}
+          <div className="p-3 bg-slate-50/50 dark:bg-black/10 border border-[#EDEBE9]/80 dark:border-zinc-800 rounded">
+            <div className="flex justify-between text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase">
+              <span>Genel Tamamlama Oranı</span>
+              <span>{totalCount > 0 ? Math.round((completedCount / totalCount) * 10) * 10 : 0}%</span>
+            </div>
+            <div className="w-full bg-slate-200 dark:bg-zinc-850 h-2 rounded-full overflow-hidden mt-2">
+              <div
+                className="bg-gradient-to-r from-[#0078D4] to-emerald-500 h-full rounded-full transition-all duration-500"
+                style={{ width: `${totalCount > 0 ? (completedCount / totalCount) * 100 : 0}%` }}
+              />
+            </div>
+          </div>
+
+           </section>
+         )}
 
          {activeMainTab === "board" && (
            <>
@@ -2716,105 +2814,6 @@ export default function TasksView() {
       </div>
     )}
     </div>
-
-      {/* RIGHT COLUMN: ANALYTICS VISUAL DASHBOARD PANEL */}
-      {!isFullScreen && (
-        <div data-crm-stack="" className="w-full lg:w-80 space-y-5 flex-shrink-0">
-        <div data-crm-stack="" data-crm-card="padded" className="bg-white dark:bg-[#1b1a19] border border-[#EDEBE9] dark:border-[#323130] rounded-lg p-5 shadow-sm space-y-5">
-          
-          {/* Section Header */}
-          <div className="flex items-center gap-1.5 pb-2.5 border-b border-[#EDEBE9] dark:border-[#323130]">
-            <TrendingUp className="w-4 h-4 text-[#0078D4]" />
-            <h2 data-crm-heading="section" className="text-xs font-bold text-slate-800 dark:text-slate-100 uppercase tracking-widest font-sans">
-              Görev İstatistikleri
-            </h2>
-          </div>
-
-          {/* TOTAL TASKS METRIC */}
-          <div className="bg-[#FAF9F8] dark:bg-[#252423] p-4 rounded border border-[#EDEBE9] dark:border-[#323130] flex flex-col relative overflow-hidden group">
-            <div className="text-[10px] text-slate-400 dark:text-slate-500 uppercase font-black tracking-widest leading-none">
-              Toplam Görev Sayısı
-            </div>
-            <div className="text-3xl font-black text-slate-800 dark:text-slate-100 tracking-tight mt-1.5">
-              {totalCount}
-            </div>
-            {/* Sparkline Visual SVG */}
-            <div className="h-6 mt-2">
-              <svg className="w-full h-full text-blue-500" viewBox="0 0 100 20" fill="none" preserveAspectRatio="none">
-                <path d="M0,15 Q15,4 30,12 T60,5 T90,14 T100,2" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
-                <path d="M0,15 Q15,4 30,12 T60,5 T90,14 T100,2 L100,20 L0,20 Z" fill="currentColor" fillOpacity="0.05" />
-              </svg>
-            </div>
-          </div>
-
-          {/* OPEN TASKS (NOT STARTED + ON HOLD) */}
-          <div className="bg-[#FAF9F8] dark:bg-[#252423] p-4 rounded border border-[#EDEBE9] dark:border-[#323130] flex flex-col relative overflow-hidden">
-            <div className="text-[10px] text-slate-400 dark:text-slate-500 uppercase font-black tracking-widest leading-none">
-              Açık Görevler (Başlanmamış + Bekleyen)
-            </div>
-            <div className="text-3xl font-black text-slate-800 dark:text-slate-100 tracking-tight mt-1.5">
-              {openCount}
-            </div>
-            {/* Trend Indicator Line */}
-            <div className="h-6 mt-2">
-              <svg className="w-full h-full text-amber-500" viewBox="0 0 100 20" fill="none" preserveAspectRatio="none">
-                <path d="M0,8 Q20,18 40,5 T80,15 T100,8" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
-                <path d="M0,8 Q20,18 40,5 T80,15 T100,8 L100,20 L0,20 Z" fill="currentColor" fillOpacity="0.05" />
-              </svg>
-            </div>
-          </div>
-
-          {/* IN PROGRESS METRIC */}
-          <div className="bg-[#FAF9F8] dark:bg-[#252423] p-4 rounded border border-[#EDEBE9] dark:border-[#323130] flex flex-col relative overflow-hidden">
-            <div className="text-[10px] text-slate-400 dark:text-slate-500 uppercase font-black tracking-widest leading-none">
-              Devam Eden Görevler (Aktif)
-            </div>
-            <div className="text-3xl font-black text-[#0078D4] dark:text-blue-400 tracking-tight mt-1.5">
-              {inProgressCount}
-            </div>
-            {/* Smooth Sine Trend Line */}
-            <div className="h-6 mt-2">
-              <svg className="w-full h-full text-blue-400" viewBox="0 0 100 20" fill="none" preserveAspectRatio="none">
-                <path d="M0,18 C15,5 35,5 50,12 C65,18 85,18 100,4" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
-                <path d="M0,18 C15,5 35,5 50,12 C65,18 85,18 100,4 L100,20 L0,20 Z" fill="currentColor" fillOpacity="0.05" />
-              </svg>
-            </div>
-          </div>
-
-          {/* COMPLETED METRIC */}
-          <div className="bg-[#FAF9F8] dark:bg-[#252423] p-4 rounded border border-[#EDEBE9] dark:border-[#323130] flex flex-col relative overflow-hidden">
-            <div className="text-[10px] text-slate-400 dark:text-slate-500 uppercase font-black tracking-widest leading-none">
-              Tamamlanan Görevler
-            </div>
-            <div className="text-3xl font-black text-rose-500 dark:text-emerald-500 tracking-tight mt-1.5">
-              {completedCount}
-            </div>
-            {/* Complete Trend line upward */}
-            <div className="h-6 mt-2">
-              <svg className="w-full h-full text-emerald-500" viewBox="0 0 100 20" fill="none" preserveAspectRatio="none">
-                <path d="M0,18 L25,14 L50,11 L75,6 L100,2" stroke="currentColor" strokeWidth="2" strokeLinejoin="round" />
-                <path d="M0,18 L25,14 L50,11 L75,6 L100,2 L100,20 L0,20 Z" fill="currentColor" fillOpacity="0.05" />
-              </svg>
-            </div>
-          </div>
-
-          {/* EXTRA PROGRESS BAR & GENERAL PERFORMANCE SCORE */}
-          <div className="p-3 bg-slate-50/50 dark:bg-black/10 border border-[#EDEBE9]/80 dark:border-zinc-800 rounded">
-            <div className="flex justify-between text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase">
-              <span>Genel Tamamlama Oranı</span>
-              <span>{totalCount > 0 ? Math.round((completedCount / totalCount) * 10) * 10 : 0}%</span>
-            </div>
-            <div className="w-full bg-slate-200 dark:bg-zinc-850 h-2 rounded-full overflow-hidden mt-2">
-              <div 
-                className="bg-gradient-to-r from-[#0078D4] to-emerald-500 h-full rounded-full transition-all duration-500"
-                style={{ width: `${totalCount > 0 ? (completedCount / totalCount) * 100 : 0}%` }}
-              />
-            </div>
-          </div>
-
-        </div>
-      </div>
-      )}
 
       {/* ADD TASK MODAL */}
       {isAddModalOpen && (
