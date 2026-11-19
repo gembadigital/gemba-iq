@@ -1295,12 +1295,6 @@ export default function App() {
                     isSubmenu={true}
                   />
                   <SidebarButton
-                    id="marketing-digital-intel"
-                    icon={isNotionMode ? <span className="text-base">🔍</span> : <Search className="w-[20px] h-[20px] flex-shrink-0 text-blue-550" />}
-                    label="Digital Marketing Intelligence"
-                    isSubmenu={true}
-                  />
-                  <SidebarButton
                     id="marketing-kpi-okr"
                     icon={isNotionMode ? <span className="text-base">🏆</span> : <Award className="w-[20px] h-[20px] flex-shrink-0 text-purple-500" />}
                     label="BD KPIs, Win/Loss & OKR"
