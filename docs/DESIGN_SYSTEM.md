@@ -87,3 +87,9 @@ Hesabım ekranında Gemini/Tavily kartları aynı etiketli alan ve sarılan eyle
 ## Arama alanlarında ikon boşluğu — 19 Kasım 2026
 
 Mutlak konumlu arama ikonları alanın dikey merkezindedir. Soldaki ikon için `data-crm-leading-icon`, sağdaki ikon/temizleme için `data-crm-trailing-icon` alanın üzerinde bulunur; ortak kurallar 40 px iç boşluk ayırır (geniş şirket araması 48 px). Bu boşluk kompakt tablo alanlarında da korunur. Yan yana flex düzenindeki teklif aramasında ikon küçülmez. Mobilde alan yüksekliği değiştiğinde ikon merkezde kalır; PDF/A4 içeriği hedeflenmez.
+
+## Kayıtlı teklif PDF’i ve sözleşme kağıdı — 19 Kasım 2026
+
+Müşteri kartı → Teklifler ve Teklif Yönetimi satırı/Önizle eylemi aynı kayıtlı PDF detayını açar. Açılış PDF üretmez, yeni dosya veya denetim/timeline kaydı yazmaz. Teklif kimliği ve aktif sürümü eşleşen, silinmemiş PDF kopyalarından en son kaydedilen dosya açılır. Eksik/hatalı dosyada görünür hata ve Yeniden dene; tarayıcı içi PDF görüntüleyemeyen cihazlar için yeni sekmede aç bağlantısı bulunur. Başka sürüm veya katalogdan üretilmiş içerik sessizce gösterilmez.
+
+Sözleşme kağıdı `data-contract-paper` ile kendi antet boşluğunu korur; genel kart padding kuralları bunu ezemez. Fiziksel sayfa 210×297 mm kalır. Önizleme genişliği ResizeObserver ile ölçülür, kağıt bir bütün olarak küçültülür; metin kolonları daraltılarak farklı satır akışı üretilmez. `data-contract-preview` kapsayıcısının kenar boşluğu ölçümü bozmaz. PDF ve yazdırma yollarının mevcut fiziksel kenar boşlukları korunur.

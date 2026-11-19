@@ -470,6 +470,16 @@ export default function ContractManagerView() {
 
   // Ref for the content area to copy/export
   const paperRef = useRef<HTMLDivElement>(null);
+  const [paperScale, setPaperScale] = useState(1);
+  useEffect(() => {
+    const paper = paperRef.current;
+    if (!paper) return;
+    const resize = () => setPaperScale(Math.min(1, paper.clientWidth / (210 * 96 / 25.4)));
+    resize();
+    const observer = new ResizeObserver(resize);
+    observer.observe(paper);
+    return () => observer.disconnect();
+  }, []);
 
   // Helper to format currency values to localize string
   const formatAsCurrency = (val: number) => {
@@ -1308,7 +1318,7 @@ export default function ContractManagerView() {
     <div data-crm-screen="ContractManagerView" id="contract-manager-module-wrapper" className="flex flex-col xl:flex-row gap-6 w-full text-slate-700 dark:text-slate-350 antialiased font-sans">
       
       {/* LEFT SECTION: CONTRACT VARIABLES FORM & TEMPLATE OPTIONS */}
-      <div data-crm-stack="" className="flex-1 max-w-xl flex flex-col space-y-5">
+      <div data-crm-stack="" className="flex-1 min-w-0 max-w-xl flex flex-col space-y-5">
         
         {/* Module Header card */}
         <div data-crm-card="padded" data-crm-header="" className="bg-white dark:bg-[#1b1a19] p-5 rounded-lg border border-[#EDEBE9] dark:border-[#323130] shadow-sm relative overflow-hidden">
@@ -1784,7 +1794,7 @@ export default function ContractManagerView() {
       </div>
 
       {/* RIGHT SECTION: DYNAMIC A4 PAPER PREVIEW & EDITING */}
-      <div data-crm-stack="" className={`flex-1 flex flex-col space-y-4 ${isFullscreen ? "fixed inset-0 bg-[#0c0d0e]/95 z-50 p-6 overflow-y-auto" : ""}`}>
+      <div data-crm-stack="" className={`flex-1 min-w-0 flex flex-col space-y-4 ${isFullscreen ? "fixed inset-0 bg-[#0c0d0e]/95 z-50 p-6 overflow-y-auto" : ""}`}>
         
         {/* ACTION BUTTON PANEL (Exports & Toggles) */}
         <div data-crm-card="padded" className="bg-white dark:bg-[#1b1a19] p-4 rounded-lg border border-[#EDEBE9] dark:border-[#323130] shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-4">
@@ -1879,12 +1889,12 @@ export default function ContractManagerView() {
         )}
 
         {/* THE PHYSICAL A4 PAPER SIMULATION AREA */}
-        <div data-crm-document="true" ref={paperRef} className="w-full flex flex-col gap-8 pb-12">
+        <div data-crm-document="true" data-contract-preview="" ref={paperRef} style={{ ["--contract-preview-scale" as string]: paperScale }} className="w-full flex flex-col gap-8 pb-12">
           {isEditMode ? (
             /* CONVENIENT SINGLE-SCREEN PAGE VIEW FOR EDITING TEXT AREA */
             <div 
-              className={`bg-white text-slate-800 shadow-2xl rounded-sm mx-auto transition-all border border-slate-200 w-full max-w-[210mm] min-h-[297mm] flex flex-col ${
-                isFullscreen ? "scale-100" : "scale-[0.99] origin-top"
+              data-contract-paper="" className={`contract-paper bg-white text-slate-800 shadow-2xl rounded-sm mx-auto transition-all border border-slate-200 w-full max-w-[210mm] min-h-[297mm] flex flex-col ${
+                "origin-top"
               }`}
               style={{ 
                 fontFamily: "Arial, sans-serif",
@@ -1892,7 +1902,8 @@ export default function ContractManagerView() {
                 backgroundSize: "100% 100%",
                 backgroundRepeat: "no-repeat",
                 backgroundColor: "#ffffff",
-                padding: selectedLetterheadId === "page_png_letterhead" ? "46mm 22mm 35mm 22mm" : "38mm 20mm 30mm 20mm"
+                ["--contract-paper-padding" as string]: selectedLetterheadId === "page_png_letterhead" ? "46mm 22mm 35mm 22mm" : "38mm 20mm 30mm 20mm",
+                padding: "var(--contract-paper-padding)"
               }}
             >
               {selectedLetterheadId !== "page_png_letterhead" && (
@@ -2060,8 +2071,8 @@ export default function ContractManagerView() {
                 return (
                   <div 
                     key={pageIndex}
-                    className={`bg-white text-slate-800 shadow-xl rounded-sm mx-auto transition-all border border-slate-200 w-full max-w-[210mm] h-[297mm] min-h-[297mm] flex flex-col ${
-                      isFullscreen ? "scale-100" : "scale-[0.99] origin-top"
+                    data-contract-paper="" className={`contract-paper bg-white text-slate-800 shadow-xl rounded-sm mx-auto transition-all border border-slate-200 w-full max-w-[210mm] h-[297mm] min-h-[297mm] flex flex-col ${
+                      "origin-top"
                     }`}
                     style={{ 
                       fontFamily: "Arial, sans-serif",
@@ -2069,7 +2080,8 @@ export default function ContractManagerView() {
                       backgroundSize: "100% 100%",
                       backgroundRepeat: "no-repeat",
                       backgroundColor: "#ffffff",
-                      padding: selectedLetterheadId === "page_png_letterhead" ? "46mm 22mm 35mm 22mm" : "38mm 20mm 30mm 20mm"
+                      ["--contract-paper-padding" as string]: selectedLetterheadId === "page_png_letterhead" ? "46mm 22mm 35mm 22mm" : "38mm 20mm 30mm 20mm",
+                padding: "var(--contract-paper-padding)"
                     }}
                   >
                     {/* HEADER LETTERHEAD WRAPPER */}

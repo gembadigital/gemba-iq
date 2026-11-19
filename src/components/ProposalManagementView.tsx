@@ -1,3 +1,4 @@
+import { loadStoredProposalPdf } from "../lib/storedProposalPdf";
 import { organizationFetch } from '../lib/organizationFetch';
 import React, { useState, useEffect, useRef } from "react";
 import { useLanguage } from "../lib/LanguageContext";
@@ -139,6 +140,9 @@ export default function ProposalManagementView() {
   // shown from the "Reject" button (replaces the old native prompt()).
   const [lossReasonProposal, setLossReasonProposal] = useState<Proposal | null>(null);
   const [detailPdfUrl, setDetailPdfUrl] = useState<string>("");
+  const [detailPdfError, setDetailPdfError] = useState("");
+  const [detailPdfLoading, setDetailPdfLoading] = useState(false);
+  const [detailPdfRetry, setDetailPdfRetry] = useState(0);
   const [proposalTimeline, setProposalTimeline] = useState<ProposalTimelineEvent[]>([]);
   const [proposalAuditLog, setProposalAuditLog] = useState<ProposalAuditLog[]>([]);
   const [wordTemplates, setWordTemplates] = useState<ProposalTemplate[]>([]);
@@ -195,43 +199,29 @@ export default function ProposalManagementView() {
   }, []);
 
   useEffect(() => {
-    let url = "";
     let cancelled = false;
+    let timer: ReturnType<typeof setTimeout> | undefined;
+    setDetailPdfUrl("");
+    setDetailPdfError("");
+    setProposalTimeline([]);
+    setProposalAuditLog([]);
+    setDetailPdfLoading(Boolean(selectedProposalForDetail));
     if (selectedProposalForDetail) {
-      // Preview, download and stored copy use the complete shared document.
-      captureProposalPdf(selectedProposalForDetail)
-        .then((captured) => {
-          if (cancelled) return;
-          if (captured) {
-            url = URL.createObjectURL(captured.blob);
-            setDetailPdfUrl(url);
-            void storeProposalPdf(selectedProposalForDetail, lang, captured.blob);
-          } else {
-            setDetailPdfUrl("");
-            console.error("Teklif PDF oluşturulamadı; önizleme yeniden açılmalı.");
-          }
-        })
-        .catch((err) => {
-          console.error("Failed to generate proposal PDF:", err);
-          if (!cancelled) setDetailPdfUrl("");
-        });
-      void loadProposalEnterpriseMeta(selectedProposalForDetail.id).then((meta) => {
+      const timeout = new Promise<never>((_, reject) => {
+        timer = setTimeout(() => reject(new Error("Kayıtlı PDF yüklenemedi. Bağlantınızı kontrol edip yeniden deneyin.")), 20000);
+      });
+      Promise.race([loadStoredProposalPdf(selectedProposalForDetail), timeout])
+        .then(url => { if (!cancelled) setDetailPdfUrl(url); })
+        .catch(error => { if (!cancelled) setDetailPdfError(error.message || "Kayıtlı PDF yüklenemedi."); })
+        .finally(() => { clearTimeout(timer); if (!cancelled) setDetailPdfLoading(false); });
+      void loadProposalEnterpriseMeta(selectedProposalForDetail.id).then(meta => {
         if (cancelled) return;
         setProposalTimeline(meta.timeline);
         setProposalAuditLog(meta.auditLog);
-      });
-    } else {
-      setDetailPdfUrl("");
-      setProposalTimeline([]);
-      setProposalAuditLog([]);
+      }).catch(() => { /* PDF access does not depend on optional history. */ });
     }
-    return () => {
-      cancelled = true;
-      if (url) {
-        URL.revokeObjectURL(url);
-      }
-    };
-  }, [selectedProposalForDetail, lang]);
+    return () => { cancelled = true; clearTimeout(timer); };
+  }, [selectedProposalForDetail, detailPdfRetry]);
 
   // Email Panel Dispatcher States
   const [sendingProposal, setSendingProposal] = useState<Proposal | null>(null);
@@ -1082,7 +1072,7 @@ export default function ProposalManagementView() {
                           window.dispatchEvent(new CustomEvent("crm-navigate", { detail: { tab: "create-proposal" } }));
                         } },
                         { label: "Teklif detaylarını düzenle", icon: <Edit size={15} />, run: () => handleEditProposal(p) },
-                        { label: "Önizle", icon: <Eye size={15} />, run: () => setViewingProposalDoc(p) },
+                        { label: "Önizle", icon: <Eye size={15} />, run: () => setSelectedProposalForDetail(p) },
                         { label: "PDF indir", icon: <FileText size={15} />, run: () => { void handleDownloadPdf(p); } },
                         { label: "Word indir", icon: <Download size={15} />, run: () => { void handleDownloadWordDoc(p); } },
                         { label: "E-posta gönder", icon: <Send size={15} />, run: () => handleOpenSendPanel(p) },
@@ -1897,25 +1887,28 @@ export default function ProposalManagementView() {
                   {/* Watermark Label */}
                   <div className="bg-slate-50 dark:bg-[#1a1918] p-2 px-4 border-b border-slate-200 dark:border-zinc-800 text-[9px] font-extrabold text-slate-400 uppercase tracking-wider font-mono flex items-center justify-between">
                     <span>{t("OFFICIAL PROPOSAL DOCUMENT (PDF)")}</span>
-                    <span className="text-emerald-500 font-bold">{t("● LIVE GENERATED")}</span>
+                    <span className="text-emerald-500 font-bold">{detailPdfLoading ? "Yükleniyor" : detailPdfUrl ? "Kayıtlı PDF" : "PDF yüklenemedi"}</span>
                   </div>
 
+                  {detailPdfUrl && <a href={detailPdfUrl} target="_blank" rel="noopener noreferrer" className="px-4 py-2 text-sm text-blue-600 underline">Kayıtlı PDF’i yeni sekmede aç</a>}
+                  {detailPdfError && <div role="alert" className="p-4 text-sm text-amber-800 bg-amber-50">{detailPdfError} <button type="button" onClick={() => setDetailPdfRetry(value => value + 1)} className="underline font-semibold">Yeniden dene</button></div>}
                   {/* Frame renderer */}
                   {detailPdfUrl ? (
                     <iframe
                       src={detailPdfUrl}
+                      onError={() => { setDetailPdfError("PDF bu tarayıcıda gösterilemedi. Yeniden deneyin veya dosyayı yeni sekmede açın."); }}
                       className="w-full h-full border-none bg-[#525659] dark:bg-[#1f1e1d]"
                       title={`PROP-${selectedProposalForDetail.proposalNumber}`}
                     />
                   ) : (
                     <div className="flex-1 flex flex-col items-center justify-center p-12 text-center space-y-4">
-                      <RefreshCw className="w-10 h-10 text-emerald-500 animate-spin" />
+                      {detailPdfLoading ? <RefreshCw className="w-10 h-10 text-emerald-500 animate-spin" /> : <AlertTriangle className="w-10 h-10 text-amber-500" />}
                       <div className="space-y-1.5">
                         <p className="font-bold text-xs text-slate-700 dark:text-zinc-300">
-                          {t("Compiling Premium PDF File...")}
+                          {detailPdfLoading ? "Kayıtlı PDF yükleniyor…" : "Kayıtlı PDF gösterilemedi"}
                         </p>
                         <p className="text-[10px] text-slate-400 font-mono">
-                          {t("Generating corporate layout using vector coordinates...")}
+                          {detailPdfLoading ? "Teklifin kaydedilmiş sürümü açılıyor." : "Tekrar denemek için yukarıdaki düğmeyi kullanın."}
                         </p>
                       </div>
                     </div>

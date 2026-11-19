@@ -1,0 +1,32 @@
+<!doctype html><html><meta charset="utf-8"><title>Belge önizleme kontrolü</title><p id="status">Çalışıyor</p><iframe id="preview" style="height:900px;border:0"></iframe><table><tbody id="results"></tbody></table><script type="module">
+const frame=document.querySelector('#preview'),sleep=ms=>new Promise(r=>setTimeout(r,ms));let checks=0,failures=0;
+const rows=[];
+for(const [width,dark] of [[320,false],[390,false],[768,false],[1280,false],[390,true],[1280,true]]){
+ await new Promise(resolve=>{frame.onload=()=>setTimeout(resolve,300);frame.style.width=width+'px';frame.src='index.html?route=contract-manager&dense'+(dark?'&dark':'');});
+ const d=frame.contentDocument,issues=[];const papers=[...d.querySelectorAll('[data-contract-paper]')];
+ if(!papers.length)issues.push('Kağıt yok');
+ for(const paper of papers){const r=paper.getBoundingClientRect(),s=d.defaultView.getComputedStyle(paper),b=paper.querySelector('.contract-content-body')?.getBoundingClientRect(),zoom=parseFloat(s.zoom)||1;
+ if(Math.abs(r.width/r.height-210/297)>.01)issues.push('A4 oranı bozuk');
+ if(b&&b.top-r.top<160*zoom)issues.push('Metin antet alanında');
+ if(b&&b.bottom>r.bottom-100*zoom)issues.push('İçerik alt antet alanına taşıyor');
+ if(r.right>width+2)issues.push('Kağıt ekrandan taşıyor');}
+ if(d.querySelector('[data-crm-route]').scrollWidth>d.querySelector('[data-crm-route]').clientWidth+3)issues.push('Sayfa yatay taşıyor');
+ rows.push({case:'contract '+width+' '+dark,issues});
+}
+for(const route of ['proposal-management','companies-registry'])for(const error of [false,true]){
+ await new Promise(resolve=>{frame.onload=()=>setTimeout(resolve,300);frame.style.width='1280px';frame.src='index.html?route='+route+'&dense'+(error?'&pdferror':'');});
+ const d=frame.contentDocument,issues=[];
+ if(route==='companies-registry'){
+ d.querySelector('tbody button').click();await sleep(120);
+ const tab=[...d.querySelectorAll('button')].find(b=>b.textContent.trim()==='Teklifler');if(!tab)issues.push('Teklif sekmesi yok');else{tab.click();await sleep(120);const p=[...d.querySelectorAll('tbody tr')].find(b=>/2611-70/.test(b.textContent));if(p)p.click();else issues.push('Müşteri teklif bağlantısı yok');}
+ }else d.querySelector('tr[data-crm-proposal-card]').click();
+ await sleep(400);
+ if(error){if(!d.querySelector('[role=alert]')?.textContent.includes('Kayıtlı PDF'))issues.push('Hata gösterilmedi');if(d.querySelector('iframe[title^="PROP-"]'))issues.push('Hatalı PDF kaldı');}
+ else if(!d.querySelector('iframe[title^="PROP-"]')?.getAttribute('src').includes('saved-proposal-fixture.pdf'))issues.push('Kayıtlı PDF açılmadı');
+ if(frame.contentWindow.savedPdfWrites)issues.push('Önizleme yeni PDF kaydetti');
+ if(d.body.textContent.includes('Compiling Premium PDF')||d.body.textContent.includes('PDF Belgesi Hazırlanıyor'))issues.push('Üretim yükleyicisi kaldı');
+ rows.push({case:route+' '+(error?'error':'saved'),issues});
+}
+for(const r of rows){const tr=document.createElement('tr');tr.dataset.ok=String(!r.issues.length);tr.textContent=r.case+': '+(r.issues.join('; ')||'GEÇTİ');document.querySelector('#results').append(tr);checks++;if(r.issues.length)failures++;}
+document.querySelector('#status').textContent='TAMAMLANDI: '+checks+' kontrol, '+failures+' sorun';
+</script></html>

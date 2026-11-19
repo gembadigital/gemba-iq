@@ -1,5 +1,8 @@
 @layer stitch-theme {
 @media screen {
+  /* Paper margins must survive legacy global card padding; no generic document selectors. */
+  .gemba-stitch-skin [data-contract-preview] { padding: 0 0 48px !important; min-width: 0; }
+  .gemba-stitch-skin [data-contract-paper] { padding: var(--contract-paper-padding) !important; width: 210mm !important; min-width: 210mm !important; max-width: none !important; zoom: var(--contract-preview-scale, 1); box-sizing: border-box; }
   /* Layout v2: explicit hooks in application UI only. Document HTML, mail
      bodies, charts and paper capture nodes never receive these hooks. */
   .gemba-stitch-skin [data-crm-viewport] { max-width: 1608px; min-width: 0; padding: 24px !important; scrollbar-gutter: stable; }

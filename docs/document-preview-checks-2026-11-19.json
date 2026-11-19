@@ -1,0 +1,27 @@
+{
+  "stored_pdf_tests": 11,
+  "browser_checks": 10,
+  "browser_failures": 0,
+  "browser_scope": [
+    "contract 320/390/768/1280 light, 390/1280 dark",
+    "proposal-management saved/error",
+    "company card proposals saved/error"
+  ],
+  "checks": [
+    "A4 ratio",
+    "content below header",
+    "content above footer",
+    "no horizontal page overflow",
+    "saved PDF source",
+    "visible loading error",
+    "preview does not store new PDF"
+  ],
+  "live_readonly_check": "2610-65 v1.1 stored document metadata matches four existing Storage files",
+  "lint": "passed",
+  "build": "passed with existing legacy CSS/bundle warnings",
+  "limits": [
+    "Browser uses synthetic documents/auth transport",
+    "Existing customer PDFs were not overwritten or regenerated",
+    "Signed-in live PDF viewing requires user session; fixture flow tested instead"
+  ]
+}
