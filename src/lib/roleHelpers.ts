@@ -41,3 +41,9 @@ export function formatAccessRole(role: AccessRole): string {
 export function canManageMemberRow(isAdmin: boolean, actorId: string | undefined, targetId: string): boolean {
   return isAdmin && !!actorId && actorId !== targetId && targetId !== PLATFORM_OWNER_USER_ID;
 }
+
+/** Shared infrastructure panels are never part of organization-admin access. */
+export function resolveAdminPanel(tab: string | undefined, isSuperadmin: boolean): string {
+  const requested = tab || "organization";
+  return !isSuperadmin && ["datahub", "systemhealth"].includes(requested) ? "organization" : requested;
+}

@@ -1,0 +1,41 @@
+{
+  "date": "2026-11-20",
+  "request": [
+    "Organization admin cannot become Super Admin",
+    "Organization admin cannot switch workspaces",
+    "Organization admin cannot access shared API keys or infrastructure settings"
+  ],
+  "changes": [
+    "Removed nonfunctional disabled permissions matrix",
+    "Platform owner sees fixed admin-boundary status",
+    "Non-superadmin cannot open datahub/systemhealth panels, including initial deep links",
+    "Organization Providers and API/storage shortcuts hidden for non-superadmin",
+    "Non-superadmin does not initialize or persist Data Hub settings or fetch health telemetry"
+  ],
+  "preserved": [
+    "Own-organization user invitations and ADMIN/USER management",
+    "Personal per-user API credentials",
+    "Normal CRM workflows and tenant-scoped Microsoft connections"
+  ],
+  "server_enforcement": "Existing private platform registry, membership scope, Vault server-only read, and per-user credential context retained and tested; no new privilege granted",
+  "checks": {
+    "typecheck": "passed",
+    "production_build": "passed",
+    "role_helpers": 16,
+    "organization_server": 14,
+    "personal_provider": 17,
+    "config_secret_privacy": 3,
+    "offline_browser": [
+      "Admin deep link to Data Hub resolves organization page, no infrastructure navigation/password inputs",
+      "Superadmin users page shows three fixed boundaries without disabled matrix",
+      "Germany admin settings dropdown has no API/provider/storage shortcuts",
+      "Germany admin can open users panel without Provider tab or disabled matrix"
+    ]
+  },
+  "live_read_only_audit": {
+    "nonempty_shared_storage_secret_entries": 0
+  },
+  "live_database_writes": false,
+  "secrets_accessed": false,
+  "emails_or_invitations_sent": false
+}

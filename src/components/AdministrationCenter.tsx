@@ -1,3 +1,4 @@
+import { resolveAdminPanel } from "../lib/roleHelpers";
 import { fetchPersonalProviderStatus } from '../lib/personalProviderCredentials';
 import OrganizationSwitcher from './OrganizationSwitcher';
 import { organizationFetch } from '../lib/organizationFetch';
@@ -115,35 +116,6 @@ export default function AdministrationCenter({
   const { confirm, confirmProps } = useConfirm();
   const isTR = selectedLanguage === "TR";
   const L = (trText: string, enText: string) => (isTR ? trText : enText);
-  const menuLabel = (menu: string) => {
-    const labels: Record<string, [string, string]> = {
-      Companies: ["Şirketler", "Companies"],
-      Leads: ["Adaylar", "Leads"],
-      Opportunities: ["Fırsatlar", "Opportunities"],
-      Proposals: ["Teklifler", "Proposals"],
-      Campaigns: ["Kampanyalar", "Campaigns"],
-      "Activity Reports": ["Faaliyet Raporları", "Activity Reports"],
-      "Revenue Reports": ["Gelir Raporları", "Revenue Reports"],
-      Administration: ["Yönetim", "Administration"],
-      "AI Assistant": ["Yapay Zeka Asistanı", "AI Assistant"],
-      "Skill Library": ["Yetenek Kütüphanesi", "Skill Library"],
-      "Email Management": ["E-posta Yönetimi", "Email Management"],
-    };
-    const pair = labels[menu];
-    return pair ? L(pair[0], pair[1]) : menu;
-  };
-  const permLabel = (perm: string) => {
-    const labels: Record<string, [string, string]> = {
-      View: ["Görüntüle", "View"],
-      Create: ["Oluştur", "Create"],
-      Edit: ["Düzenle", "Edit"],
-      Delete: ["Sil", "Delete"],
-      Export: ["Dışa Aktar", "Export"],
-      Manage: ["Yönet", "Manage"],
-    };
-    const pair = labels[perm];
-    return pair ? L(pair[0], pair[1]) : perm;
-  };
   const categoryLabel = (category: string) => {
     const labels: Record<string, [string, string]> = {
       "Proposal Templates": ["Teklif Şablonları", "Proposal Templates"],
@@ -167,7 +139,8 @@ export default function AdministrationCenter({
   const adminDisplayName = actorName;
   const adminEmail = actorEmail;
   const adminInitials = getDisplayInitials(actorName, actorEmail);
-  const [activeSubTab, setActiveSubTab] = useState<string>(initialSubTab || "organization");
+  const [requestedSubTab, setActiveSubTab] = useState<string>(initialSubTab || "organization");
+  const activeSubTab = resolveAdminPanel(requestedSubTab, isSuperadmin);
 
   React.useEffect(() => {
     if (initialSubTab) {
@@ -230,62 +203,6 @@ export default function AdministrationCenter({
   useEffect(() => {
     CrmDb.setKv("crm_simulate_email_error", simulateEmailError);
   }, [simulateEmailError]);
-
-  // 2.2 Permissions Matrix state
-  const [pMatrix, setPMatrix] = useState<{ [role: string]: { [menu: string]: string[] } }>(() => ({
-    ADMIN: {
-      "Companies": ["View", "Create", "Edit", "Delete", "Export", "Manage"],
-      "Leads": ["View", "Create", "Edit", "Delete", "Export", "Manage"],
-      "Opportunities": ["View", "Create", "Edit", "Delete", "Export", "Manage"],
-      "Proposals": ["View", "Create", "Edit", "Delete", "Export", "Manage"],
-      "Campaigns": ["View", "Create", "Edit", "Delete", "Export", "Manage"],
-      "Activity Reports": ["View", "Create", "Edit", "Delete", "Export", "Manage"],
-      "Revenue Reports": ["View", "Create", "Edit", "Delete", "Export", "Manage"],
-      "Administration": ["View", "Create", "Edit", "Delete", "Export", "Manage"],
-      "AI Assistant": ["View", "Create", "Edit", "Delete", "Export", "Manage"],
-      "Skill Library": ["View", "Create", "Edit", "Delete", "Export", "Manage"],
-      "Email Management": ["View", "Create", "Edit", "Delete", "Export", "Manage"]
-    },
-    USER: {
-      "Companies": ["View", "Create", "Edit"],
-      "Leads": ["View", "Create", "Edit"],
-      "Opportunities": ["View", "Create", "Edit"],
-      "Proposals": ["View", "Create"],
-      "Campaigns": ["View"],
-      "Activity Reports": ["View", "Create", "Edit"],
-      "Revenue Reports": ["View"],
-      "Administration": [],
-      "AI Assistant": ["View", "Create"],
-      "Skill Library": ["View", "Create", "Edit"],
-      "Email Management": ["View"]
-    }
-  }));
-
-  const menusList = [
-    "Companies", "Leads", "Opportunities", "Proposals", "Campaigns",
-    "Activity Reports", "Revenue Reports", "Administration", "AI Assistant", "Skill Library", "Email Management"
-  ];
-  const permsList = ["View", "Create", "Edit", "Delete", "Export", "Manage"];
-  const [selectedRoleForMatrix, setSelectedRoleForMatrix] = useState<string>("USER");
-
-  const togglePermission = (menu: string, perm: string) => {
-    const current = pMatrix[selectedRoleForMatrix] || {};
-    const currentPermsForMenu = current[menu] || [];
-    let updated: string[];
-    if (currentPermsForMenu.includes(perm)) {
-      updated = currentPermsForMenu.filter(p => p !== perm);
-    } else {
-      updated = [...currentPermsForMenu, perm];
-    }
-    setPMatrix({
-      ...pMatrix,
-      [selectedRoleForMatrix]: {
-        ...current,
-        [menu]: updated
-      }
-    });
-    addAuditLog(actorName, "Yetki Değişikliği", `${selectedRoleForMatrix} rolü için ${menu} yetkileri güncellendi.`, "Yetki Yönetimi");
-  };
 
   // NOTE: this file previously had a second, entirely local "Connected Mailboxes"
   // list (MailboxItem[] state + handleConnectNewMailbox/handleRemoveMailbox) with
@@ -391,6 +308,7 @@ export default function AdministrationCenter({
 
   // 5. Data Hub (Cloud Storage Connections) — shared, organization-scoped, Supabase-backed via CrmDb
   const [dataHubConnections, setDataHubConnections] = useState<StorageHubItem[]>(() => {
+    if (!isSuperadmin) return [];
     const saved = CrmDb.getKv<any[] | null>(ADMIN_DATA_HUB_KEY, null);
     if (saved) {
       // Ensure all enterprise properties exist in stored data
@@ -474,8 +392,8 @@ export default function AdministrationCenter({
   });
 
   useEffect(() => {
-    CrmDb.setKv(ADMIN_DATA_HUB_KEY, dataHubConnections);
-  }, [dataHubConnections]);
+    if (isSuperadmin) CrmDb.setKv(ADMIN_DATA_HUB_KEY, dataHubConnections);
+  }, [dataHubConnections, isSuperadmin]);
 
   const [editingConnId, setEditingConnId] = useState<string | null>(null);
   const [editForm, setEditForm] = useState<StorageHubItem | null>(null);
@@ -705,6 +623,7 @@ export default function AdministrationCenter({
   const [isRefreshingHealth, setIsRefreshingHealth] = useState(false);
 
   const fetchIntegrationHealth = async (silent?: boolean) => {
+    if (!isSuperadmin) return;
     setIsRefreshingHealth(true);
     try {
       const res = await organizationFetch("/api/config");
@@ -989,6 +908,7 @@ export default function AdministrationCenter({
             <span>{L("E-posta Şablonları", "Email Templates")}</span>
           </button>
 
+          {isSuperadmin && (
           <button data-crm-button=""
             type="button"
             onClick={() => setActiveSubTab("datahub")}
@@ -1001,6 +921,7 @@ export default function AdministrationCenter({
             <HardDrive className="w-4 h-4 text-slate-400" />
             <span>{L("Bulut Depolama ve Veri Merkezi", "Cloud Storage & Data Hub")}</span>
           </button>
+          )}
 
           <button data-crm-button=""
             type="button"
@@ -1028,6 +949,7 @@ export default function AdministrationCenter({
             <span>{L("Yapay Zeka ve Prompt Ayarları", "AI Assistant & Prompt Settings")}</span>
           </button>
 
+          {isSuperadmin && (
           <button data-crm-button=""
             type="button"
             onClick={() => setActiveSubTab("systemhealth")}
@@ -1040,6 +962,7 @@ export default function AdministrationCenter({
             <Activity className="w-4 h-4 text-slate-400" />
             <span>{L("Sistem Sağlığı Gösterge Paneli", "System Health Dashboard")}</span>
           </button>
+          )}
         </aside>
 
         {/* DETAILS WORKSPACE CONTAINER */}
@@ -1307,77 +1230,15 @@ export default function AdministrationCenter({
                 }
               />
 
-              {/* Dynamic Permissions Matrix component */}
-              <p className="text-sm text-slate-500">{L("Bu matris henüz erişim denetimine bağlı değildir. Gerçek kullanıcı rolleri yukarıdaki kullanıcı yönetiminden belirlenir.", "This matrix is not connected to access enforcement. Manage actual user roles in the user management section above.")}</p>
-
-              {/* Dynamic Permissions Matrix component */}
-              <div data-crm-stack="" className="pt-6 border-t border-slate-100 dark:border-zinc-800 space-y-4">
-                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 text-left">
-                  <div>
-                    <h4 data-crm-heading="section" className="text-sm font-bold text-slate-800 dark:text-zinc-200 uppercase tracking-wide font-mono flex items-center gap-1.5">
-                      <Lock className="w-4 h-4 text-slate-400" />
-                      {L("Rol Bazlı Menü İzin Matrisi — Taslak", "Role-Based Menu Permission Matrix — Draft")}
-                    </h4>
-                  </div>
-
-                  <div className="flex items-center gap-2">
-                    <span className="text-xs font-bold text-slate-500 font-mono">{L("Rol Seçin:", "Select Role:")}</span>
-                    <select data-crm-field="control"
-                      value={selectedRoleForMatrix}
-                      onChange={(e) => setSelectedRoleForMatrix(e.target.value)}
-                      className="text-xs bg-slate-50 dark:bg-zinc-900 border border-slate-205 md:p-2 p-1.5 rounded-lg"
-                    >
-                      <option value="ADMIN">ADMIN</option>
-                      <option value="USER">USER</option>
-                    </select>
-                  </div>
-                </div>
-
-                <div data-crm-scroll="horizontal" className="overflow-x-auto border border-slate-150 dark:border-zinc-800 rounded-xl">
-                  <table data-crm-table="" className="w-full text-left border-collapse">
-                    <thead>
-                      <tr className="bg-slate-50 dark:bg-neutral-900 text-[10px] font-bold font-mono text-slate-450 uppercase border-b border-slate-150 dark:border-zinc-800">
-                        <th className="p-3 text-left w-1/4">{L("Menü ve Yetki Grubu", "Menu & Permission Group")}</th>
-                        {permsList.map(perm => (
-                          <th key={perm} className="p-3">{permLabel(perm)}</th>
-                        ))}
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y divide-slate-100 dark:divide-zinc-800/80 text-xs">
-                      {menusList.map(menu => {
-                        const currentRolePermissions = pMatrix[selectedRoleForMatrix] || {};
-                        const menuActivePerms = currentRolePermissions[menu] || [];
-
-                        return (
-                          <tr key={menu} className="hover:bg-slate-50/50 dark:hover:bg-zinc-800/10">
-                            <td className="p-3 text-left font-bold text-slate-700 dark:text-zinc-300">{menuLabel(menu)}</td>
-                            {permsList.map(perm => {
-                              const hasPerm = menuActivePerms.includes(perm);
-                              return (
-                                <td key={perm} className="p-3">
-                                  <button data-crm-button=""
-                                    type="button"
-                                    disabled
-                                    title={L("Taslak görünüm; erişim yetkilerini değiştirmez.", "Draft view; does not change access permissions.")}
-                                    onClick={() => togglePermission(menu, perm)}
-                                    className={`w-5.5 h-5.5 rounded-md flex items-center justify-center border transition-all mx-auto ${
-                                      hasPerm
-                                        ? "bg-indigo-650 border-indigo-650 text-white"
-                                        : "bg-slate-50 border-slate-200 hover:bg-slate-100 dark:bg-zinc-900 dark:border-zinc-800 text-transparent"
-                                    }`}
-                                  >
-                                    <Check className="w-3.5 h-3.5 stroke-[3]" />
-                                  </button>
-                                </td>
-                              );
-                            })}
-                          </tr>
-                        );
-                      })}
-                    </tbody>
-                  </table>
-                </div>
-              </div>
+              {isSuperadmin && (
+                <section data-crm-card="padded" data-admin-boundaries="" className="space-y-3 border rounded-xl p-4 text-sm">
+                  <h4 className="font-semibold">{L("Admin erişim sınırları", "Admin access boundaries")}</h4>
+                  <p>{L("Super Admin yetkisi alma: Kapalı", "Acquire Super Admin privileges: Disabled")}</p>
+                  <p>{L("Başka kuruluşa geçiş: Kapalı", "Switch to another organization: Disabled")}</p>
+                  <p>{L("Ortak API anahtarları ve altyapı ayarlarına erişim: Kapalı", "Access shared API keys and infrastructure settings: Disabled")}</p>
+                  <p className="text-xs text-slate-500">{L("Admin kendi organizasyonunun ekibini yönetebilir. Kişisel API anahtarları yalnızca sahibinin hesabında yönetilir.", "Admins can manage their own organization’s team. Personal API keys are managed only in their owner’s account.")}</p>
+                </section>
+              )}
             </div>
           )}
 
@@ -1536,7 +1397,7 @@ export default function AdministrationCenter({
               </div>
 
               {/* NEW STORAGE CONNECTION FORM */}
-              {isAddStorageOpen && (
+              {isSuperadmin && isAddStorageOpen && (
                 <form data-crm-stack="" onSubmit={handleAddStorage} className="p-5 rounded-2xl border border-slate-200 bg-slate-50/50 dark:border-zinc-800 dark:bg-black/20 space-y-4 text-xs animate-in slide-in-from-top-2 duration-150">
                   <span className="font-mono font-bold text-indigo-600 dark:text-indigo-400 uppercase block tracking-wider text-[10px]">YENİ BULUT DEPOLAMA KANALI EKLE</span>
                   <div data-crm-flow="" data-crm-grid="form" className="grid grid-cols-1 sm:grid-cols-3 gap-3">
@@ -1616,7 +1477,7 @@ export default function AdministrationCenter({
               )}
 
               {/* DETAILED EDITING FORM FOR STORAGE CHANNEL */}
-              {editingConnId && editForm && (
+              {isSuperadmin && editingConnId && editForm && (
                 <div data-crm-stack="" className="p-5 rounded-2xl border border-indigo-200 bg-indigo-50/10 dark:border-zinc-700 dark:bg-black/40 space-y-4 text-xs animate-in slide-in-from-top-2 duration-150">
                   <div className="flex justify-between items-center border-b border-indigo-100 dark:border-zinc-800 pb-2">
                     <span className="font-mono font-bold text-indigo-700 dark:text-indigo-400 uppercase tracking-wider text-[11px]">⚡ DEPOLAMA BAĞLANTISINI DÜZENLE: {editForm.name}</span>

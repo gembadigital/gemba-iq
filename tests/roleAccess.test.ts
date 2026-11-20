@@ -12,3 +12,10 @@ assert.equal(canManageMemberRow(true, 'de-admin', PLATFORM_OWNER_USER_ID), false
 assert.equal(canManageMemberRow(true, 'de-admin', 'de-admin'), false);
 assert.equal(canManageMemberRow(true, undefined, 'de-user'), false);
 console.log('11 role access checks passed. No live data touched.');
+const {resolveAdminPanel}=await import('../src/lib/roleHelpers');
+assert.equal(resolveAdminPanel('datahub',false),'organization');
+assert.equal(resolveAdminPanel('systemhealth',false),'organization');
+assert.equal(resolveAdminPanel('datahub',true),'datahub');
+assert.equal(resolveAdminPanel('users',false),'users');
+assert.equal(resolveAdminPanel(undefined,false),'organization');
+console.log('5 infrastructure panel boundary checks passed.');

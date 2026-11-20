@@ -187,7 +187,7 @@ function getSidebarGroup(activeTab: ActiveTab): SidebarGroup | null {
 export default function App() {
   const { lang, setLang, t } = useLanguage();
   const { signOut } = useAuth();
-  const { actorName, actorEmail, companyName, isAdmin, organization, aiEnabled = true } = useOrganization();
+  const { actorName, actorEmail, companyName, isAdmin, isSuperadmin, organization, aiEnabled = true } = useOrganization();
   const navigate = useNavigate();
   const displayName = actorName;
   const userEmail = actorEmail;
@@ -459,6 +459,9 @@ export default function App() {
   const [isSettingsOpen, setIsSettingsOpen] = useState<boolean>(false);
   const [isUserAccountSettingsOpen, setIsUserAccountSettingsOpen] = useState<boolean>(false);
   const [settingsActiveTab, setSettingsActiveTab] = useState<"admin-center" | "system-config">("admin-center");
+  useEffect(() => {
+    if (!isSuperadmin) setSettingsActiveTab("admin-center");
+  }, [isSuperadmin]);
   // Theme Toggle: Light / Dark Mode
   const [darkMode, setDarkMode] = useState<boolean>(() => {
     const saved = localStorage.getItem("theme");
@@ -1721,6 +1724,7 @@ export default function App() {
                       <span>{t("Roles & Permissions")}</span>
                     </button>
                     
+                    {isSuperadmin && (
                     <button
                       type="button"
                       onClick={() => {
@@ -1733,7 +1737,9 @@ export default function App() {
                       <Mail className="w-3.5 h-3.5 text-emerald-500" />
                       <span>{t("API Keys & Providers")}</span>
                     </button>
+                    )}
                     
+                    {isSuperadmin && (
                     <button
                       type="button"
                       onClick={() => {
@@ -1747,6 +1753,7 @@ export default function App() {
                       <Sliders className="w-3.5 h-3.5 text-sky-500" />
                       <span>{lang === "TR" ? "Belge Depolama Tanımları" : "Document Storage Definitions"}</span>
                     </button>
+                    )}
                     
                     <button
                       type="button"
@@ -2116,6 +2123,7 @@ export default function App() {
                     <Lock className="w-3.5 h-3.5" />
                     <span>{t("Organization Settings")}</span>
                   </button>
+                  {isSuperadmin && (
                   <button
                     type="button"
                     onClick={() => setSettingsActiveTab("system-config")}
@@ -2128,6 +2136,7 @@ export default function App() {
                     <Sliders className="w-3.5 h-3.5" />
                     <span>{t("Organization Providers")}</span>
                   </button>
+                  )}
                 </div>
 
                 <div className="flex items-center gap-2">
@@ -2144,7 +2153,7 @@ export default function App() {
 
               {/* Drawer Body */}
               <div className="pt-6 pb-6 pl-6 pr-6 md:pt-8 md:pb-8 md:pl-8 md:pr-8 overflow-y-auto flex-1">
-                {settingsActiveTab === "admin-center" ? (
+                {settingsActiveTab === "admin-center" || !isSuperadmin ? (
                   <div className="animate-in fade-in duration-200">
                     <AdministrationCenter
                       onClose={() => setIsSettingsOpen(false)}
