@@ -1231,12 +1231,41 @@ export default function AdministrationCenter({
               />
 
               {isSuperadmin && (
-                <section data-crm-card="padded" data-admin-boundaries="" className="space-y-3 border rounded-xl p-4 text-sm">
-                  <h4 className="font-semibold">{L("Admin erişim sınırları", "Admin access boundaries")}</h4>
-                  <p>{L("Super Admin yetkisi alma: Kapalı", "Acquire Super Admin privileges: Disabled")}</p>
-                  <p>{L("Başka kuruluşa geçiş: Kapalı", "Switch to another organization: Disabled")}</p>
-                  <p>{L("Ortak API anahtarları ve altyapı ayarlarına erişim: Kapalı", "Access shared API keys and infrastructure settings: Disabled")}</p>
-                  <p className="text-xs text-slate-500">{L("Admin kendi organizasyonunun ekibini yönetebilir. Kişisel API anahtarları yalnızca sahibinin hesabında yönetilir.", "Admins can manage their own organization’s team. Personal API keys are managed only in their owner’s account.")}</p>
+                <section data-crm-stack="" data-admin-boundaries="" className="space-y-3 text-sm min-w-0">
+                  <h4 data-crm-heading="section" className="font-semibold">{L("Rol Bazlı Yetki Tablosu", "Role Permission Matrix")}</h4>
+                  <div data-crm-scroll="horizontal" className="overflow-x-auto rounded-xl border border-slate-200 dark:border-zinc-800">
+                    <table data-crm-table="" data-role-permission-table="" className="w-full min-w-[640px] text-left text-xs">
+                      <caption className="sr-only">{L("Mevcut erişim kurallarına göre rollerin işlem yetkileri", "Role capabilities under the current access rules")}</caption>
+                      <thead className="bg-slate-50 dark:bg-zinc-900 text-slate-500">
+                        <tr>
+                          <th scope="col" className="p-3 font-semibold">{L("İşlem / Yetki", "Action / Permission")}</th>
+                          <th scope="col" className="p-3 font-semibold">Super Admin</th>
+                          <th scope="col" className="p-3 font-semibold">Admin</th>
+                          <th scope="col" className="p-3 font-semibold">User</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-slate-100 dark:divide-zinc-800">
+                        {[
+                          [L("CRM kayıtlarına erişim", "Access CRM records"), L("Seçili organizasyon", "Selected organization"), L("Kendi organizasyonu", "Own organization"), L("Kendi organizasyonu", "Own organization")],
+                          [L("Organizasyon ayarlarını yönetme", "Manage organization settings"), L("Seçili organizasyon", "Selected organization"), L("Kendi organizasyonu", "Own organization"), L("Yok", "None")],
+                          [L("Kullanıcı davet etme", "Invite users"), L("Seçili organizasyon", "Selected organization"), L("Kendi organizasyonu", "Own organization"), L("Yok", "None")],
+                          [L("Admin / User rolü atama", "Assign Admin / User roles"), L("Seçili organizasyon", "Selected organization"), L("Kendi organizasyonu", "Own organization"), L("Yok", "None")],
+                          [L("Ekipten kullanıcı çıkarma", "Remove team members"), L("Seçili organizasyon", "Selected organization"), L("Kendi organizasyonu", "Own organization"), L("Yok", "None")],
+                          [L("Kuruluş değiştirme", "Switch organizations"), L("Üye olduğu kuruluşlar", "Member organizations"), L("Yok", "None"), L("Yok", "None")],
+                          [L("Ortak sağlayıcı / altyapı panelleri", "Shared provider / infrastructure panels"), L("Var", "Allowed"), L("Yok", "None"), L("Yok", "None")],
+                          [L("Kişisel API anahtarını yönetme", "Manage personal API key"), L("Kendi hesabı", "Own account"), L("Kendi hesabı", "Own account"), L("Kendi hesabı", "Own account")],
+                          [L("Başkasının kişisel API anahtarını görme", "View another user's personal API key"), L("Yok", "None"), L("Yok", "None"), L("Yok", "None")],
+                          [L("Super Admin yetkisine sahip olma", "Hold Super Admin privileges"), "a.zehir@gembapartner.com", L("Yok", "None"), L("Yok", "None")],
+                        ].map(([permission, ...access]) => (
+                          <tr key={permission} className="hover:bg-slate-50/50 dark:hover:bg-zinc-900/30">
+                            <th scope="row" className="p-3 font-medium text-slate-700 dark:text-zinc-200">{permission}</th>
+                            {access.map((value, index) => <td key={index} className="p-3 text-slate-600 dark:text-zinc-300">{value}</td>)}
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                  <p className="text-xs text-slate-500">{L("Mevcut erişim kurallarını gösterir. Super Admin hesabı, kişinin kendi üyeliği ve son organizasyon admini korunur. Kişisel API anahtarlarının tamamı yeniden gösterilmez.", "Shows current access rules. The Super Admin account, the current user's membership and the last organization admin are protected. Full personal API keys are never shown again.")}</p>
                 </section>
               )}
             </div>
