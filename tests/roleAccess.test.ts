@@ -1,0 +1,14 @@
+import assert from 'node:assert/strict';
+import {APP_ROLES, PLATFORM_OWNER_USER_ID, getAccessRole, formatAccessRole, canManageMemberRow} from '../src/lib/roleHelpers';
+assert.deepEqual(APP_ROLES, ['ADMIN','USER']);
+assert.equal(getAccessRole('ADMIN', true), 'SUPER_ADMIN');
+assert.equal(formatAccessRole(getAccessRole('ADMIN', true)), 'Super Admin');
+assert.equal(getAccessRole('ADMIN', false), 'ADMIN');
+assert.equal(getAccessRole('USER', false), 'USER');
+assert.equal(getAccessRole('SUPER_ADMIN', false), 'USER');
+assert.equal(canManageMemberRow(true, 'de-admin', 'de-user'), true);
+assert.equal(canManageMemberRow(false, 'de-user', 'other-user'), false);
+assert.equal(canManageMemberRow(true, 'de-admin', PLATFORM_OWNER_USER_ID), false);
+assert.equal(canManageMemberRow(true, 'de-admin', 'de-admin'), false);
+assert.equal(canManageMemberRow(true, undefined, 'de-user'), false);
+console.log('11 role access checks passed. No live data touched.');

@@ -886,7 +886,7 @@ export default function AdministrationCenter({
             </span>
             <span className="w-1.5 h-1.5 bg-emerald-500 rounded-full animate-ping"></span>
             <span data-crm-caption="" className="text-[10px] text-slate-400 font-bold uppercase font-mono">
-              {L("Yetki Sınıfı: ADMIN", "Access Level: ADMIN")}
+              {isSuperadmin ? L("Yetki Sınıfı: Super Admin", "Access Level: Super Admin") : L("Yetki Sınıfı: ADMIN", "Access Level: ADMIN")}
             </span>
           </div>
           <h2 data-crm-heading="page" className="text-xl font-bold text-slate-900 dark:text-zinc-150 font-sans tracking-tight">

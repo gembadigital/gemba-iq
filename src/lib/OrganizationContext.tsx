@@ -17,7 +17,7 @@ import {
   getPendingInvitationToken,
 } from "./invitationConstants";
 import { setActiveOrganizationContext } from "./tenantStorage";
-import { getAppRole, isAdminRole, type AppRole } from "./roleHelpers";
+import { getAccessRole, isAdminRole, type AppRole, type AccessRole } from "./roleHelpers";
 
 interface OrganizationContextValue {
   workspaces: { organization: Organization; membership: OrganizationMember }[];
@@ -28,7 +28,7 @@ interface OrganizationContextValue {
   membership: OrganizationMember | null;
   organizationId: string | null;
   memberRole: AppRole | null;
-  appRole: AppRole;
+  appRole: AccessRole;
   isAdmin: boolean;
   canInviteUsers: boolean;
   loading: boolean;
@@ -272,7 +272,7 @@ export function OrganizationProvider({ children }: { children: React.ReactNode }
     const actorEmail = user?.email ?? "";
     const companyName = organization?.name ?? "Organization";
     const memberRole = membership?.role ?? null;
-    const appRole = getAppRole(memberRole);
+    const appRole = getAccessRole(memberRole, isSuperadmin);
     const isAdmin = isAdminRole(memberRole);
     const organizationId = organization?.id ?? null;
     const needsOnboarding = !!user && !loading && checkNeedsOnboarding({ profile, organization, membership });

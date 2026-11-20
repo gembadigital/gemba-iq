@@ -1,0 +1,41 @@
+{
+  "date": "2026-11-20",
+  "scope": "Three access levels; platform owner visibility only for verified owner session",
+  "platform_owner": "a.zehir@gembapartner.com",
+  "live_read_only_audit": {
+    "platform_owner_count": 1,
+    "rls_enabled": true,
+    "anon_authenticated_registry_grants": 0
+  },
+  "effective_roles": [
+    "SUPER_ADMIN",
+    "ADMIN",
+    "USER"
+  ],
+  "assignable_organization_roles": [
+    "ADMIN",
+    "USER"
+  ],
+  "changes": [
+    "Owner session shows Super Admin in administration header and own user row",
+    "Role hierarchy section visible only to verified superadmin",
+    "Owner row has no role/delete controls for any viewer",
+    "Organization membership storage and authorization unchanged"
+  ],
+  "checks": {
+    "role_helpers": 11,
+    "server_organization_access": 14,
+    "disposable_postgresql": 52,
+    "browser_role_scenarios": 3,
+    "typecheck": "passed",
+    "production_build": "passed",
+    "diff_check": "passed"
+  },
+  "live_writes": false,
+  "invitations_or_emails_sent": false,
+  "limitations": [
+    "Germany first admin m.baysan@gembapartner.de not invited or activated in this work",
+    "UI owner-row guard is presentation only; actual authorization uses existing Supabase functions and private platform registry",
+    "Super Admin cannot be assigned through invitation or organization role selection"
+  ]
+}

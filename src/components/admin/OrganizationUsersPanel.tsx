@@ -28,6 +28,9 @@ import {
   APP_ROLES,
   formatAppRole,
   normalizeAppRole,
+  getAccessRole,
+  formatAccessRole,
+  canManageMemberRow,
   type AppRole,
 } from "../../lib/roleHelpers";
 import type {
@@ -67,7 +70,7 @@ function roleBadgeClass(role: AppRole): string {
 
 export default function OrganizationUsersPanel({ onAuditLog }: OrganizationUsersPanelProps) {
   const { lang, t } = useLanguage();
-  const { membership, actorName, companyName, isAdmin, refreshOrganization } = useOrganization();
+  const { membership, actorName, companyName, isAdmin, isSuperadmin, refreshOrganization } = useOrganization();
 
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -221,7 +224,7 @@ export default function OrganizationUsersPanel({ onAuditLog }: OrganizationUsers
   };
 
   const handleSaveRole = async (row: OrganizationDirectoryMember) => {
-    if (!canManage || row.user_id === membership?.user_id) return;
+    if (!canManageMemberRow(canManage, membership?.user_id, row.user_id)) return;
     const nextRole = roleSelections[row.membership_id] ?? normalizeAppRole(row.role);
     setSavingRoleId(row.membership_id);
     setInviteMessage(null);
@@ -245,7 +248,7 @@ export default function OrganizationUsersPanel({ onAuditLog }: OrganizationUsers
   };
 
   const handleDeleteMember = async (row: OrganizationDirectoryMember) => {
-    if (!canManage || row.user_id === membership?.user_id) return;
+    if (!canManageMemberRow(canManage, membership?.user_id, row.user_id)) return;
 
     const displayName = row.full_name || row.email;
     const confirmed = window.confirm(
@@ -314,6 +317,16 @@ export default function OrganizationUsersPanel({ onAuditLog }: OrganizationUsers
             )}
           </div>
         </div>
+
+        {isSuperadmin && (
+          <section data-crm-card="padded" data-platform-role-summary="" className="mx-6 mt-4 rounded-xl border border-slate-200 dark:border-zinc-800 p-4 space-y-2 text-sm">
+            <h4 className="font-semibold">{t("Yetki seviyeleri")}</h4>
+            <p><strong>Super Admin</strong> — a.zehir@gembapartner.com</p>
+            <p><strong>Admin</strong> — {t("Yalnızca kendi organizasyonunun kullanıcılarını ve ayarlarını yönetir.")}</p>
+            <p><strong>User</strong> — {t("Yalnızca kendi organizasyonundaki yetkili olduğu kayıtlarla çalışır.")}</p>
+            <p className="text-xs text-slate-500">{t("Super Admin yetkisi davet veya rol seçimiyle atanamaz.")}</p>
+          </section>
+        )}
 
         {!canManage && (
           <div className="mx-6 mt-4 flex items-start gap-3 rounded-xl border border-amber-200 bg-amber-50/70 dark:border-amber-900/40 dark:bg-amber-950/20 px-4 py-3 text-sm text-amber-800 dark:text-amber-300">
@@ -531,7 +544,9 @@ export default function OrganizationUsersPanel({ onAuditLog }: OrganizationUsers
                     const currentRole = normalizeAppRole(row.role);
                     const selectedRole = roleSelections[row.membership_id] ?? currentRole;
                     const isSelf = row.user_id === membership?.user_id;
-                    const hasRoleChange = selectedRole !== currentRole;
+                    const canEditRow = canManageMemberRow(canManage, membership?.user_id, row.user_id);
+                    const displayRole = getAccessRole(currentRole, isSuperadmin && isSelf);
+                    const hasRoleChange = canEditRow && selectedRole !== currentRole;
 
                     return (
                       <tr key={`member-${row.membership_id}`} className="hover:bg-slate-50/70 dark:hover:bg-zinc-900/30">
@@ -547,7 +562,7 @@ export default function OrganizationUsersPanel({ onAuditLog }: OrganizationUsers
                           {row.email}
                         </td>
                         <td className="px-4 py-4">
-                          {canManage && !isSelf ? (
+                          {canEditRow ? (
                             <select data-crm-field="control"
                               value={selectedRole}
                               onChange={(event) =>
@@ -566,7 +581,7 @@ export default function OrganizationUsersPanel({ onAuditLog }: OrganizationUsers
                             </select>
                           ) : (
                             <span className={`px-2.5 py-1 rounded-lg text-xs font-bold ${roleBadgeClass(currentRole)}`}>
-                              {formatAppRole(currentRole)}
+                              {formatAccessRole(displayRole)}
                             </span>
                           )}
                         </td>
@@ -597,7 +612,7 @@ export default function OrganizationUsersPanel({ onAuditLog }: OrganizationUsers
                                   {savingRoleId === row.membership_id ? t("Saving...") : t("Save changes")}
                                 </button>
                               )}
-                              {canManage && (
+                              {canEditRow && (
                                 <button data-crm-button=""
                                   type="button"
                                   disabled={deletingId === row.membership_id}
